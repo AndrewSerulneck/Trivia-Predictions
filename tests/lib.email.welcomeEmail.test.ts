@@ -5,8 +5,7 @@ const baseInput = {
   venueName: "Joe's Bar",
   ownerName: "Joe",
   planAmountCents: 14000,
-  tvSetupUrl: "https://play.hightopchallenge.com/tv",
-  billingUrl: "https://play.hightopchallenge.com/owner/billing",
+  dashboardUrl: "https://hightopchallenge.com/owner/dashboard",
 };
 
 describe("buildWelcomeEmail", () => {
@@ -26,19 +25,22 @@ describe("buildWelcomeEmail", () => {
     expect(withoutName.text).toContain("Hi there,");
   });
 
-  it("includes the TV setup link and billing dashboard link", () => {
+  it("opens the Partner Dashboard and removes the TV setup button", () => {
     const { html, text } = buildWelcomeEmail(baseInput);
-    expect(html).toContain(baseInput.tvSetupUrl);
-    expect(html).toContain(baseInput.billingUrl);
-    expect(text).toContain(baseInput.tvSetupUrl);
-    expect(text).toContain(baseInput.billingUrl);
+    for (const body of [html, text]) {
+      expect(body).toContain(baseInput.dashboardUrl);
+      expect(body).not.toContain("Set up your TVs");
+      expect(body).not.toContain("/owner/billing");
+      expect(body).toContain("'Venue Display.'");
+    }
   });
 
-  it("lists all six player-facing games so partners know what they're offering", () => {
+  it("lists the current games so partners know what they're offering", () => {
     const { text } = buildWelcomeEmail(baseInput);
-    for (const game of ["Trivia", "Category Blitz", "Pick'em", "Bingo", "Predictions", "Fantasy"]) {
+    for (const game of ["Live Trivia", "Speed Trivia", "Category Blitz", "Pick'em", "Prop Bingo", "Fantasy Sports"]) {
       expect(text).toContain(game);
     }
+    expect(text).not.toContain("Predictions");
   });
 
   it("returns a non-empty subject", () => {

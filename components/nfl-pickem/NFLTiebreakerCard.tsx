@@ -1,5 +1,7 @@
 "use client";
 
+import { Check } from "lucide-react";
+
 import { haptic } from "@/lib/haptics";
 
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
@@ -13,6 +15,9 @@ type TiebreakerGame = {
   startsAt: string;
   isLocked: boolean;
 };
+
+// How long the Save button stays green with "Saved!" after a successful save.
+const SAVED_FLASH_MS = 2500;
 
 const formatKickoff = (iso: string) =>
   new Date(iso).toLocaleString(undefined, {
@@ -40,6 +45,12 @@ export function NFLTiebreakerCard({
   const [saveMessage, setSaveMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [justSaved, setJustSaved] = useState(false);
+  const savedFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (savedFlashTimerRef.current) clearTimeout(savedFlashTimerRef.current);
+  }, []);
 
   useEffect(() => {
     if (!venueId || !weekId) return;
@@ -96,6 +107,7 @@ export function NFLTiebreakerCard({
     setSavedGuess(predictedTotal);
     savingRef.current = true;
     setSaveMessage("");
+    setJustSaved(false);
     setSaving(true);
     setError("");
 
@@ -108,6 +120,9 @@ export function NFLTiebreakerCard({
       const data = await response.json();
       if (!data.ok) throw new Error(data.error);
       setSaveMessage("Tiebreaker saved");
+      setJustSaved(true);
+      if (savedFlashTimerRef.current) clearTimeout(savedFlashTimerRef.current);
+      savedFlashTimerRef.current = setTimeout(() => setJustSaved(false), SAVED_FLASH_MS);
       haptic("success");
     } catch (err) {
       setSavedGuess(previousGuess);
@@ -119,6 +134,10 @@ export function NFLTiebreakerCard({
   };
 
   if (loading || !game) return null;
+
+  // The saved guess is confirmed on screen only while the box still shows it;
+  // once the player types a different number it is an unsaved edit again.
+  const showSavedGuess = savedGuess !== null && !saving && inputValue.trim() === String(savedGuess);
 
   return (
     <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-4 py-4">
@@ -147,7 +166,10 @@ export function NFLTiebreakerCard({
               inputMode="numeric"
               disabled={saving}
               value={inputValue}
-              onChange={(event) => setInputValue(event.target.value)}
+              onChange={(event) => {
+                setInputValue(event.target.value);
+                setJustSaved(false);
+              }}
               className="w-24 rounded-xl border border-[#fde68a]/30 bg-slate-950 px-3 py-2 text-[14px] font-bold text-white focus:outline-none focus:ring-2 focus:ring-[#fde68a]/40"
               aria-label="Predicted total points"
             />
@@ -155,12 +177,22 @@ export function NFLTiebreakerCard({
               type="button"
               onClick={handleSave}
               disabled={saving || inputValue === ""}
-              className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-xl bg-[#fde68a] px-4 py-2 text-footnote font-black text-[#1a2f72] disabled:opacity-50" aria-busy={saving}
+              className={`tp-player-hit-target tp-player-pressable tp-clean-button inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-footnote font-black transition-all duration-300 disabled:opacity-50 ${
+                justSaved ? "scale-105 bg-emerald-400 text-emerald-950" : "scale-100 bg-[#fde68a] text-[#1a2f72]"
+              }`}
+              aria-busy={saving}
             >
-              {(saving) ? <ButtonSpinner /> : null}
-              {saving ? "Saving…" : "Save"}
+              {saving ? <ButtonSpinner /> : null}
+              {justSaved ? <Check className="h-4 w-4" strokeWidth={3} aria-hidden /> : null}
+              {saving ? "Saving…" : justSaved ? "Saved!" : "Save"}
             </button>
           </div>
+          {showSavedGuess && (
+            <p className="mt-2 inline-flex items-center gap-1 text-caption font-bold text-emerald-400">
+              <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+              Your guess of {savedGuess} is saved
+            </p>
+          )}
           <p className="mt-2 text-caption font-semibold text-slate-500">Locks at {formatKickoff(game.startsAt)}</p>
         </>
       )}

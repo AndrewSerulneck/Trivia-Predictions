@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { getUserId, getVenueId } from "@/lib/storage";
-import { NFL_REWARD_MIN_PICKERS } from "@/lib/nflPickEmRewardWeeks";
 import { describeRewardPrize } from "@/lib/rewardDefinitions";
 import { describeReward } from "@/lib/rewardDescription";
 import type { ChallengeCampaign } from "@/types";
@@ -20,7 +19,6 @@ export function NFLPickEmRewardBanner() {
   const [venueId, setVenueId] = useState("");
   const [userId, setUserId] = useState("");
   const [campaigns, setCampaigns] = useState<NFLRewardCampaign[]>([]);
-  const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -51,7 +49,6 @@ export function NFLPickEmRewardBanner() {
         if (cancelled || !data.ok) return;
 
         setCampaigns(Array.isArray(data.campaigns) ? data.campaigns : []);
-        setParticipantCount(typeof data.participantCount === "number" ? data.participantCount : null);
       } finally {
         if (!cancelled) setLoaded(true);
       }
@@ -65,80 +62,40 @@ export function NFLPickEmRewardBanner() {
 
   if (!loaded || campaigns.length === 0) return null;
 
+  // Deliberately one short line per reward: it only tells the player a reward
+  // is attached to this game. The full rules (minimum pickers, tiebreaker,
+  // cadence) live on the venue Rewards card, not here.
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-1.5">
       {campaigns.map((campaign) => {
-        const isGameWinner = campaign.winCondition === "game_winner";
         const quotaRemaining = campaign.quotaRemaining ?? campaign.winnerQuota ?? 1;
-        const isExhausted = quotaRemaining <= 0;
-        const isWon = Boolean(campaign.viewerWon);
-        const prize = describeRewardPrize(campaign);
+        const showProgress = campaign.winCondition !== "game_winner";
         const target = Math.max(1, Number(campaign.pointsRequiredToWin ?? 1));
         const progress = Math.max(0, Number(campaign.progressPoints ?? 0));
-        const percent = Math.min(100, Math.round((progress / target) * 100));
-        const belowMinimum = participantCount !== null && participantCount < NFL_REWARD_MIN_PICKERS;
         // Same Line 1 the venue Rewards card shows (docs/reward-descriptions-plan.md).
         // Composed here, not served: Line 1 needs no calendar facts, and this route
         // is re-polled on every week switch, so it stays free of the extra read.
-        const summary = describeReward(campaign, new Date()).summary;
+        const summary = describeReward(campaign, new Date()).summary || describeRewardPrize(campaign) || campaign.name;
+
+        const status = campaign.viewerWon
+          ? "You won! See Redeem Prizes."
+          : quotaRemaining <= 0
+            ? "All prizes claimed this cycle."
+            : showProgress
+              ? `${progress.toLocaleString()}/${target.toLocaleString()} picks right · Details in Rewards`
+              : "Details in Rewards";
 
         return (
-          <section
+          <p
             key={campaign.id}
-            className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-4 py-4"
+            className="flex items-start gap-2 rounded-xl border border-[#fde68a]/25 bg-slate-900 px-3 py-2 text-caption leading-snug"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🏆</span>
-              <h2 className="text-footnote font-black uppercase tracking-[0.1em] text-[#fde68a]">
-                {campaign.name}
-              </h2>
-            </div>
-            {prize ? <p className="mt-1.5 text-[15px] font-black text-white">{prize}</p> : null}
-            {summary ? (
-              <p className="mt-1 text-caption font-semibold leading-relaxed text-slate-400">{summary}</p>
-            ) : null}
-
-            {isWon ? (
-              <p className="mt-3 text-caption font-bold text-amber-300">
-                You won! Find your coupon under Redeem Prizes.
-              </p>
-            ) : isExhausted ? (
-              <p className="mt-3 text-caption font-semibold text-slate-500">
-                All prizes for this cycle have been claimed — check back next cycle.
-              </p>
-            ) : isGameWinner ? (
-              <div className="mt-3 space-y-1.5">
-                {participantCount !== null ? (
-                  belowMinimum ? (
-                    <p className="text-caption font-bold text-amber-300">
-                      {participantCount} of {NFL_REWARD_MIN_PICKERS} players needed — at least{" "}
-                      {NFL_REWARD_MIN_PICKERS} people must make picks this week for a winner to be crowned. Tell a
-                      friend!
-                    </p>
-                  ) : (
-                    <p className="text-caption font-bold text-emerald-300">
-                      {participantCount} players in — a winner will be crowned this week.
-                    </p>
-                  )
-                ) : null}
-                <p className="text-caption text-slate-500">
-                  Tied on correct picks? The tiebreaker question decides it.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-3">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800/80">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#fde68a] to-[#f59e0b] transition-all duration-500"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-                <p className="mt-1.5 text-caption font-semibold tabular-nums text-slate-400">
-                  {progress.toLocaleString()} of {target.toLocaleString()} picks right
-                </p>
-              </div>
-            )}
-          </section>
+            <span aria-hidden>🏆</span>
+            <span className="min-w-0">
+              <span className="font-bold text-[#fde68a]">{summary}</span>{" "}
+              <span className={campaign.viewerWon ? "font-bold text-amber-300" : "text-slate-400"}>{status}</span>
+            </span>
+          </p>
         );
       })}
     </div>

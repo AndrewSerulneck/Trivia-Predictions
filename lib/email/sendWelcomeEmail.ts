@@ -1,5 +1,5 @@
 import "server-only";
-import { gameUrl } from "@/lib/domainSplit";
+import { marketingUrl } from "@/lib/domainSplit";
 import { getEmailFromAddress, resend } from "@/lib/email/resend";
 import { buildWelcomeEmail } from "@/lib/email/welcomeEmail";
 
@@ -22,8 +22,7 @@ export async function sendWelcomeEmail(input: SendWelcomeEmailInput): Promise<bo
     venueName: input.venueName,
     ownerName: input.ownerName,
     planAmountCents: input.planAmountCents,
-    tvSetupUrl: gameUrl("/tv"),
-    billingUrl: gameUrl("/owner/billing"),
+    dashboardUrl: marketingUrl("/owner/dashboard"),
   });
 
   const { error } = await resend.emails.send({

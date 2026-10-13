@@ -3368,10 +3368,10 @@ export function JoinFlow({
             <div className="mx-auto mt-4 w-full max-w-md px-1">
               <Link
                 href={homeHref(false)}
-                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-400/10 px-5 py-3 text-center text-2xl font-black text-cyan-100 shadow-lg shadow-cyan-950/20 transition-colors hover:bg-cyan-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
+                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-400/10 px-5 py-3 text-center text-base font-black leading-snug text-cyan-100 shadow-lg shadow-cyan-950/20 transition-colors hover:bg-cyan-400/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70"
               >
                 <House className="h-6 w-6 shrink-0" aria-hidden="true" />
-                Home
+                <span>Click here for the Hightop Challenge home page.</span>
               </Link>
             </div>
           )}

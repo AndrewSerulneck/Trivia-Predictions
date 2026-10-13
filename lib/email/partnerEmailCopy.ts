@@ -43,25 +43,51 @@ export const WELCOME_EMAIL = {
   /** Big heading at the top. */
   heading: "Welcome to Hightop Challenge",
 
-  /** The line under the heading. */
-  confirmation: "Your Hightop Challenge subscription for {venueName} is active — you're all set at {planAmount}/mo.",
+  /** Small celebratory label above the welcome heading. */
+  eyebrow: "Let the games begin!",
 
-  /** Heading above the feature list — plain-text version of the email only. */
+  /** The line under the heading. */
+  confirmation: "Thank you for subscribing to Hightop Challenge! Your subscription for {venueName} is active — you're all set at {planAmount}/mo.",
+
+  /** Second opening paragraph, introducing the subscription's features. */
+  introduction: "Below we explain the features that come with an HTC subscription and how you can use them to generate revenue for your business.",
+
+  /** Heading above the feature list. */
   featureTourHeading: "What you can do from your Partner Dashboard:",
 
   /** The feature tour: one entry per Partner Dashboard feature. Add, remove or reorder freely. */
   featureTour: [
     {
-      title: "Schedule live games",
+      title: "Schedule Live Games",
       body: "Put Category Blitz or Live Trivia on the calendar for game nights — pick a time, we handle the rest.",
     },
     {
+      title: "Offer Rewards",
+      body: "If you want to boost engagement, offer a prize for winning games on HTC! Offer a gift card to the user who wins at Trivia night, or a discount coupon to the user who gets the most picks right on NFL Sunday. These are just a few of many ways a Hightop Challenge subscription helps you attract more foot traffic.",
+    },
+    {
+      title: "Apply Rewards with Square",
+      body: "Hightop Challenge is integrated with Square. If your business uses Square, the rewards you offer can be applied straight to the winner's check. Just head to the Partner Dashboard and click \"Point of Sale,\" then \"connect.\"",
+    },
+    {
+      title: "Promote games and rewards on social media",
+      body: "When you schedule Live Games or offer Rewards, you're prompted to generate social media content to advertise the promotions you're offering. Share it on your social channels so guests know about the promotion, come play, and spend more of their time and money at your venue.",
+    },
+    {
       title: "Put it on your TVs",
-      body: "Link a TV in seconds with a pairing code, no typing URLs. Great for game nights and general ambiance between rounds.",
+      body: "Let other guests follow the games on your TVs by heading to your Partner Dashboard and clicking 'Venue Display.' Then follow the instructions to link a TV so other guests can follow along even if they are not playing on their phones.",
+    },
+    {
+      title: "Get guests straight to the games with QR merch",
+      body: "Make it easier for guests to find Hightop Challenge's app and website: visit the store in your Partner Dashboard and order merch with our QR code on it. We sell coasters, table tents, and other bar products that guests can scan to get straight to the games. You'll also find a free downloadable QR code you can print out or put on your own merch, including your menus.",
     },
     {
       title: "Manage billing anytime",
       body: "View invoices, update your card, or change plans from the Partner Dashboard whenever you need to.",
+    },
+    {
+      title: "The Partner Manual",
+      body: "If you forget anything we just said, don't worry! Visit the Partner Manual in the Partner Dashboard if you need to see this information again, or you can reach out to support@hightopchallenge.com anytime with questions!",
     },
   ],
 
@@ -69,13 +95,35 @@ export const WELCOME_EMAIL = {
   gamesHeading: "Games your guests can play",
 
   /** The games guests can play, listed so partners know what they're offering. */
-  games: ["Trivia", "Category Blitz", "Pick'em", "Bingo", "Predictions", "Fantasy"],
+  games: ["Live Trivia", "Speed Trivia", "Category Blitz", "Pick'em", "Prop Bingo", "Fantasy Sports"],
 
-  /** The main button (opens the TV pairing page). */
-  tvButton: "Set up your TVs",
+  /** Note beneath the games about new features and email updates. */
+  gamesUpdateNote: "Our team is constantly adding new games and features. Whenever we add a new way to help you boost revenue in the app, we'll be sure to notify you via email.",
 
-  /** The smaller link under it (opens the Partner Dashboard). */
-  dashboardLink: "Open your Partner Dashboard",
+  /** The main button (opens the Partner Dashboard). */
+  dashboardLink: "Click here to open your Partner Dashboard and get started!",
+
+  /** Social profiles — buttons open each profile so the recipient can tap Follow. */
+  socialFollow: {
+    heading: "Follow us on social media",
+    body: "Follow @thehightopchallenge on Instagram and Hightop Challenge on Facebook for tips on how to use Hightop Challenge to drive traffic, updates, and inspiration for your game nights.",
+    profiles: [
+      {
+        platform: "Instagram",
+        handle: "@thehightopchallenge",
+        icon: "instagram-v1.png",
+        button: "Follow us on Instagram",
+        url: "https://www.instagram.com/thehightopchallenge/",
+      },
+      {
+        platform: "Facebook",
+        handle: "Hightop Challenge",
+        icon: "facebook-v1.png",
+        button: "Follow us on Facebook",
+        url: "https://www.facebook.com/profile.php?id=61591104191392",
+      },
+    ],
+  },
 
   /** Sign-off at the bottom. Start a new line with \n. */
   signOff: "See you on game night,\nThe Hightop Challenge team",
@@ -130,7 +178,7 @@ export const VENUE_ADDED_EMAIL = {
   tvButton: "Set up your TVs",
 
   /** The smaller link under it (opens the Partner Dashboard). */
-  dashboardLink: "Open your Partner Dashboard",
+  dashboardLink: "Open your Partner Dashboard now to get started",
 
   /** Sign-off at the bottom. Start a new line with \n. */
   signOff: "See you on game night,\nThe Hightop Challenge team",

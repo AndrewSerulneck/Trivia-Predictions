@@ -19,8 +19,7 @@ const welcome = buildWelcomeEmail({
   venueName: "Pacific Street",
   ownerName: "Andrew",
   planAmountCents: 10000,
-  tvSetupUrl: "https://play.hightopchallenge.com/tv",
-  billingUrl: "https://play.hightopchallenge.com/owner/billing",
+  dashboardUrl: "https://hightopchallenge.com/owner/dashboard",
 });
 
 const venueAdded = buildVenueAddedEmail({
@@ -38,7 +37,9 @@ for (const [name, email] of [
   ["welcome", welcome],
   ["venue-added", venueAdded],
 ]) {
-  writeFileSync(join(OUT, `${name}.html`), email.html);
+  // Local images make file:// previews work before the new assets are deployed.
+  const previewHtml = email.html.replace(/src="https?:\/\/[^/]+\/brand\/email\//g, 'src="../../public/brand/email/');
+  writeFileSync(join(OUT, `${name}.html`), previewHtml);
   writeFileSync(join(OUT, `${name}.txt`), `Subject: ${email.subject}\n\n${email.text}\n`);
   console.log(`${name}: "${email.subject}" → tmp/email-previews/${name}.html (+ .txt)`);
 }

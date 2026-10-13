@@ -32,6 +32,12 @@ it("locks tiebreaker saves synchronously, retains a failed guess, and announces 
   fireEvent.click(button);
   await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Tiebreaker saved"));
   expect(fetch).toHaveBeenCalledTimes(3);
+  // Visible confirmation, not only the screen-reader status.
+  expect(screen.getByRole("button", { name: "Saved!" })).toBe(button);
+  expect(screen.getByText("Your guess of 42 is saved")).toBeTruthy();
+  fireEvent.change(input, { target: { value: "43" } });
+  expect(screen.getByRole("button", { name: "Save" })).toBe(button);
+  expect(screen.queryByText(/is saved/)).toBeNull();
 });
 
 describe("coupon redemption", () => {

@@ -623,44 +623,29 @@ function playerInitials(name: string): string {
 }
 
 // Player avatar framed for the chalkboard theme — chalk-cream ring by default,
-// emerald ring while the player is actively scoring. Falls back to jersey number or initials circle.
+// emerald ring while the player is actively scoring. Shows the jersey number or initials:
+// player headshots are off until we have permission to use them.
 function PlayerHeadshot({
-  src,
   name,
   jerseyNumber,
   live = false,
   sizeClass = "h-[30px] w-[30px]",
 }: {
-  src?: string | null;
   name: string;
   jerseyNumber?: string | null;
   live?: boolean;
   sizeClass?: string;
 }) {
-  const [imgFailed, setImgFailed] = useState(false);
   const ringClass = live ? "border-[#6ee7b7]/60" : "border-[#fef3c7]/55";
-
-  if (!src || imgFailed) {
-    return (
-      <div
-        className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-[#0a3128] ${ringClass} flex items-center justify-center`}
-        aria-label={`${name} avatar`}
-      >
-        <span className="text-caption font-bold leading-none text-[#fef3c7] select-none">
-          {jerseyNumber ?? playerInitials(name)}
-        </span>
-      </div>
-    );
-  }
-
   return (
-    <img
-      src={src}
-      alt={`${name} headshot`}
-      className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-[#0a3128] object-cover ${ringClass}`}
-      loading="lazy"
-      onError={() => setImgFailed(true)}
-    />
+    <div
+      className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-[#0a3128] ${ringClass} flex items-center justify-center`}
+      aria-label={`${name} avatar`}
+    >
+      <span className="text-caption font-bold leading-none text-[#fef3c7] select-none">
+        {jerseyNumber ?? playerInitials(name)}
+      </span>
+    </div>
   );
 }
 
@@ -1181,18 +1166,6 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
     () => new Set(playerPool.map((item) => normalizePlayerKey(item.playerName)).filter(Boolean)),
     [playerPool]
   );
-  const playerPoolHeadshotByName = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const item of playerPool) {
-      const key = normalizePlayerKey(item.playerName);
-      const src = String(item.headshotUrl ?? "").trim();
-      if (!key || !src || map.has(key)) {
-        continue;
-      }
-      map.set(key, src);
-    }
-    return map;
-  }, [playerPool]);
   const playerPoolJerseyByName = useMemo(() => {
     const map = new Map<string, string>();
     for (const item of playerPool) {
@@ -2730,7 +2703,6 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         }`}
                       >
                         <PlayerHeadshot
-                          src={player.headshotUrl ?? playerPoolHeadshotByName.get(normalizePlayerKey(player.playerName)) ?? null}
                           name={player.playerName}
                           jerseyNumber={player.jerseyNumber ?? playerPoolJerseyByName.get(normalizePlayerKey(player.playerName)) ?? null}
                           live={isScoring}
@@ -2962,7 +2934,6 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                   >
                                     {filled ? (
                                       <PlayerHeadshot
-                                        src={playerPoolHeadshotByName.get(normalizePlayerKey(name)) ?? null}
                                         name={name}
                                         jerseyNumber={playerPoolJerseyByName.get(normalizePlayerKey(name)) ?? null}
                                         sizeClass="h-[42px] w-[42px]"
@@ -3008,7 +2979,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                               }`)}
                             >
                               {filled ? (
-                                <PlayerHeadshot src={playerPoolHeadshotByName.get(normalizePlayerKey(name!)) ?? null} name={name!} jerseyNumber={playerPoolJerseyByName.get(normalizePlayerKey(name!)) ?? null} sizeClass="h-[34px] w-[34px]" />
+                                <PlayerHeadshot name={name!} jerseyNumber={playerPoolJerseyByName.get(normalizePlayerKey(name!)) ?? null} sizeClass="h-[34px] w-[34px]" />
                               ) : (
                                 <span className="text-base font-black text-[#fef3c7]/55">+</span>
                               )}
@@ -3146,7 +3117,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                     : "border border-white/[0.06] bg-white/[0.015]"
                                 }`}
                               >
-                                <PlayerHeadshot src={item.headshotUrl} name={item.playerName} jerseyNumber={item.jerseyNumber ?? null} />
+                                <PlayerHeadshot name={item.playerName} jerseyNumber={item.jerseyNumber ?? null} />
                                 <div className="min-w-0 leading-[1.15]">
                                   <div className="flex items-center gap-1.5">
                                     <span className="truncate text-footnote font-black text-[#fef3c7]">{item.playerName}</span>

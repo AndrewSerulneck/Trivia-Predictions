@@ -680,13 +680,10 @@ function FanLiveBadge() {
   );
 }
 
-function HeadshotAvatar({ url, initials }: { url: string; initials: string }) {
+function PositionAvatar({ initials }: { initials: string }) {
   return (
-    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-slate-700">
-      <span className="absolute inset-0 flex items-center justify-center text-caption font-black text-white/50">
-        {initials}
-      </span>
-      <img src={url} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-top" />
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-700">
+      <span className="text-caption font-black text-white/50">{initials}</span>
     </div>
   );
 }
@@ -696,18 +693,18 @@ function FanPlayerRow({
   pos,
   fp,
   live = false,
-  headshot,
+  avatar = false,
 }: {
   name: string;
   pos: string;
   fp: number;
   live?: boolean;
-  headshot?: string;
+  avatar?: boolean;
 }) {
   return (
     <div className="flex items-center gap-2.5 rounded-xl border border-[rgba(254,243,199,0.09)] bg-black/20 px-3 py-2.5">
-      {headshot ? (
-        <HeadshotAvatar url={headshot} initials={pos} />
+      {avatar ? (
+        <PositionAvatar initials={pos} />
       ) : (
         <span
           className="w-9 shrink-0 text-center text-caption font-black leading-none text-[#fde68a]"
@@ -716,7 +713,7 @@ function FanPlayerRow({
           {pos}
         </span>
       )}
-      {headshot ? (
+      {avatar ? (
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-[14px] font-bold text-white/85">{name}</span>
           <span className="text-caption font-semibold uppercase tracking-wider text-[#fde68a]/60">{pos}</span>
@@ -753,17 +750,17 @@ function FanDraftRow({
   pos,
   proj,
   drafting = false,
-  headshot,
+  avatar = false,
 }: {
   name: string;
   pos: string;
   proj: number;
   drafting?: boolean;
-  headshot?: string;
+  avatar?: boolean;
 }) {
   return (
     <div className="flex items-center gap-2 rounded-xl border border-[rgba(254,243,199,0.07)] bg-black/15 px-3 py-2.5">
-      {headshot && <HeadshotAvatar url={headshot} initials={pos} />}
+      {avatar && <PositionAvatar initials={pos} />}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-[14px] font-bold text-white/85">{name}</span>
         <span className="text-caption font-semibold text-white/40">{pos}</span>
@@ -787,18 +784,11 @@ function FanDraftRow({
   );
 }
 
-const NBA_HS: Record<string, string> = {
-  haliburton: "https://cdn.nba.com/headshots/nba/latest/1040x760/1630169.png",
-  jokic:      "https://cdn.nba.com/headshots/nba/latest/1040x760/203999.png",
-  tatum:      "https://cdn.nba.com/headshots/nba/latest/1040x760/1628369.png",
-  edwards:    "https://cdn.nba.com/headshots/nba/latest/1040x760/1630162.png",
-};
-
 function FantasyIllustration({ stepIndex }: { stepIndex: number }) {
   if (stepIndex === 0) {
     return (
       <div className="w-full space-y-2">
-        <FanPlayerRow name="T. Haliburton" pos="PG" fp={14} live headshot={NBA_HS.haliburton} />
+        <FanPlayerRow name="T. Haliburton" pos="PG" fp={14} live avatar />
         <FanEmptySlot />
         <FanEmptySlot />
       </div>
@@ -808,18 +798,18 @@ function FantasyIllustration({ stepIndex }: { stepIndex: number }) {
   if (stepIndex === 1) {
     return (
       <div className="w-full space-y-2">
-        <FanDraftRow name="Nikola Jokić" pos="C" proj={58.9} headshot={NBA_HS.jokic} />
-        <FanDraftRow name="Jayson Tatum" pos="SF" proj={51.4} drafting headshot={NBA_HS.tatum} />
-        <FanDraftRow name="A. Edwards" pos="SG" proj={46.7} headshot={NBA_HS.edwards} />
+        <FanDraftRow name="Nikola Jokić" pos="C" proj={58.9} avatar />
+        <FanDraftRow name="Jayson Tatum" pos="SF" proj={51.4} drafting avatar />
+        <FanDraftRow name="A. Edwards" pos="SG" proj={46.7} avatar />
       </div>
     );
   }
 
   return (
     <div className="w-full space-y-2">
-      <FanPlayerRow name="T. Haliburton" pos="PG" fp={28} live headshot={NBA_HS.haliburton} />
-      <FanPlayerRow name="N. Jokić" pos="C" fp={31} live headshot={NBA_HS.jokic} />
-      <FanPlayerRow name="A. Edwards" pos="SG" fp={12} live headshot={NBA_HS.edwards} />
+      <FanPlayerRow name="T. Haliburton" pos="PG" fp={28} live avatar />
+      <FanPlayerRow name="N. Jokić" pos="C" fp={31} live avatar />
+      <FanPlayerRow name="A. Edwards" pos="SG" fp={12} live avatar />
     </div>
   );
 }

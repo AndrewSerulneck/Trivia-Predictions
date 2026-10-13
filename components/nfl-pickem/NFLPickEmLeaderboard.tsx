@@ -305,9 +305,8 @@ export function NFLPickEmLeaderboard({
   }, [venueId, weekId, mode, refreshKey]);
 
   const winnerByUserId = new Map(rewardWinners.map((winner) => [winner.winnerUserId, winner]));
-  // Only for a week that has passed — the live current week's low count is
-  // already communicated by NFLPickEmRewardBanner's "N of 3 players" state,
-  // and isn't yet a decided outcome.
+  // Only for a week that has passed — the live current week's low count isn't
+  // yet a decided outcome (the 3-picker rule is spelled out on the Rewards card).
   const showNoRewardNote =
     mode === "week" &&
     hasActiveGameWinnerReward &&

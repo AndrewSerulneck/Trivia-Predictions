@@ -62,8 +62,7 @@ describe("partner email copy", () => {
       venueName: "Pacific Street",
       ownerName: "Andrew",
       planAmountCents: 10000,
-      tvSetupUrl: "https://x/tv",
-      billingUrl: "https://x/b",
+      dashboardUrl: "https://x/owner/dashboard",
     });
     const added = buildVenueAddedEmail(baseInput);
     for (const email of [welcome, added]) {

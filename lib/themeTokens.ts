@@ -269,3 +269,19 @@ export type GameThemeKey = keyof typeof GAME_THEME;
  * See docs/join-merch-store-plan.md §3a.
  */
 export const STORE_PAPER_HEX = "#fefefe";
+
+/** Inline email colours, mapped from colors_and_type.css; email clients cannot use CSS variables. */
+export const PARTNER_EMAIL_THEME = {
+  canvas: "#020617",
+  surface: "#0f172a",
+  elevated: "#1e293b",
+  border: "#334155",
+  text: "#f8fafc",
+  secondary: "#e2e8f0",
+  muted: "#94a3b8",
+  cyan: "#22d3ee",
+  cyanLight: "#67e8f9",
+  emerald: "#6ee7b7",
+  violet: "#a78bfa",
+  gold: "#d89a4f",
+} as const;
