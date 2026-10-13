@@ -2,7 +2,7 @@
 
 Created: **2026-10-12**. Owner: Andrew Serulneck.
 
-**Status: Phases 0–3 complete locally (Phase 3: 2026-10-13); Phases 4–6 not started. Latest handoff: [Phase 3](speed-trivia-uniqueness-plan_PHASE_3_HANDOFF.md). Shared fact comparison is wired into generation/import/admin writers with signed database admission, race/direct-write/pool-conversion guards, diversity planning, global budgets, metadata backfill and immutable cleanup/undo tooling. [Release/backfill/recovery runbook](speed-trivia-uniqueness-phase-3-release-runbook.md). Final gates: 4,223 tests pass / 13 environment-gated skip, clean typecheck/lint/build, isolated SQL + real concurrent-session checks. Phase 3 paid API use $0. Nothing is committed/pushed/deployed/applied; live repeats remain for Phase 5. Phase 2 proposal still has 849 active + 1,618 pending retirements with 968 approved keepers and explicitly unresolved coverage; its private manifest remains non-applyable. [Engine/evaluation/cost record](speed-trivia-uniqueness-phase-2-engine.md), [cleanup proposal](speed-trivia-uniqueness-phase-2-cleanup-summary.md). Recurring spending/pilot allowance and concrete production migration confirmation remain Phase 4 decisions.**
+**Status: Phases 0–3 built; Phase 4 authorized rollout in progress (2026-10-13). Migration `20261013120000` applied to `pkmxupsayzshvpirkaav`, matching signing key/$0.50 operation cap configured, 13,878 derived features backfilled at revision 0 with original content/status unchanged. Application/workflow publication is being verified. Nightly disabled with no legacy run in progress; leave it disabled until editorial 4.3. Andrew approved one $0.50 pilot, unspent and reserved for quality + uniqueness together. Added 4.1 rubric/evaluation, 4.2 shared editorial gate/rewrites, 4.3 quality pilot/generator release, 4.4 seven-run monitoring; Phase 5 remains final cleanup. [Phase 4 handoff](speed-trivia-uniqueness-plan_PHASE_4_HANDOFF.md), [release facts](speed-trivia-uniqueness-phase-4-release-record.md). Local implementation commit `47498cd523b48218288ae2350f5374feed9dd47e`. Gates: 4,226 tests pass / 13 environment-gated skip, clean typecheck/lint/build and isolated SQL/concurrency. No paid Phase 4 calls/admissions/retirement. Phase 2 proposal remains non-applyable: 849 active + 1,618 pending retirements, 968 approved keepers and unresolved coverage. [Engine/evaluation/cost](speed-trivia-uniqueness-phase-2-engine.md), [cleanup proposal](speed-trivia-uniqueness-phase-2-cleanup-summary.md). New editorial phases not executed.**
 
 ## 1. Developer summary and decisions
 
@@ -14,7 +14,8 @@ Andrew answered these questions on 2026-10-12. Do not ask them again:
 2. **Only repeated facts are banned. Different facts about the same artist are allowed.** This answer supersedes the initial request for a lifetime limit of one question per song, album, or artist. Avoid subject concentration through generation diversity controls, not lifetime subject bans.
 3. **Uniqueness takes priority over quantity.** A run may submit fewer questions, or none. The present target of 100 is a ceiling, not a requirement to fill by weakening checks.
 4. **Measure current API spending first, then propose a capped budget.** No monthly dollar cap has been chosen. Measure both the one-time cleanup cost and recurring generation/checking cost before paid bulk processing or rollout.
-5. Preferred engineering model: **GPT-6.1 Sol**; cheaper models are welcome when adequate. This document supplies effort recommendations below. No delegation requested.
+5. **2026-10-13 release authorization:** apply migration `20261013120000` to production project `pkmxupsayzshvpirkaav`, configure/backfill/release safeguards; cap every nightly/admin operation at $0.50 and allow one $0.50 pilot. This is a per-operation ceiling, not a shared monthly counter. Add editorial quality phases before generator release; Phase 5 remains final. Do not spend the pilot on uniqueness-only generation.
+6. Preferred engineering model: **GPT-6.1 Sol**; cheaper models are welcome when adequate. This document supplies effort recommendations below. No delegation requested.
 
 Scope: Speed Trivia only, `question_pool = 'anytime_blitz'` and `answer_format = 'multiple_choice'`, across **all categories**. Audit active, pending, and deleted rows; distinguish database states rather than calling approved rows `approved` (their status is `active`). Live Trivia content, generation, grading, schedules, rewards, points, player history, and historical game questions are out of scope.
 
@@ -75,13 +76,16 @@ These are models for the AI agent implementing the phase, not a decision to swit
 | 1 | Live inventory, backup, writer map, evaluation set, cost baseline | GPT-6.1 Sol | high | Complete; [handoff](speed-trivia-uniqueness-plan_PHASE_1_HANDOFF.md). Fresh chat for Phase 2. |
 | 2 | Shared uniqueness engine, evaluation, retirement manifest | GPT-6.1 Sol | high | Complete locally; [handoff](speed-trivia-uniqueness-plan_PHASE_2_HANDOFF.md). Fresh chat for Phase 3. |
 | 3 | Guard every Speed writer, update nightly generation, build cleanup/undo tools | GPT-6.1 Sol | high | Complete locally; [handoff](speed-trivia-uniqueness-plan_PHASE_3_HANDOFF.md). Fresh chat for Phase 4. |
-| 4 | Review and release prevention; install/backfill admission metadata safely | GPT-6.1 Sol | high | Keep the release transaction together; fresh chat after completion. |
+| 4 | Deploy prevention, configure/backfill metadata; keep generation paused for editorial work | GPT-6.1 Sol | high | Authorized and in progress. [Handoff](speed-trivia-uniqueness-plan_PHASE_4_HANDOFF.md). Pilot/resume moved to 4.3. |
+| 4.1 | Define editorial rubric, topic/difficulty policy and frozen evaluation fixtures | GPT-6.1 Sol | high | Next after safeguard deployment; no paid pilot. |
+| 4.2 | Implement shared editorial gate, bounded rewrites and meaningful local evaluation | GPT-6.1 Sol | high | One operation budget shared by generation, quality, rewrites and uniqueness. |
+| 4.3 | Run the single capped quality pilot, evaluate yield/cost and release generator | GPT-6.1 Sol | high | At most $0.50 for the one pilot; resume only after editorial and uniqueness gates pass. |
+| 4.4 | Observe seven scheduled runs, report quality/diversity/cost and tune | GPT-6.1 Sol | medium | Former Phase 6 monitoring moved here; no new standalone Phase 6. |
 | 5 | Apply and verify reviewed database cleanup, update Speed exports | GPT-6.1 Sol | high | Keep application and immediate verification together; fresh chat afterward. |
-| 6 | Observe runs, tune diversity/cost, close release record | GPT-6.1 Sol | medium | Can share Phase 5 chat if context is still small. |
 
 GPT-6.1 Sol is the recommended model throughout; no phase currently justifies requiring Astra. Use **xhigh** only for a concrete unresolved transaction/race or semantic-evaluation failure where high effort was inadequate. No default max effort or Pro mode. If an architectural defect remains unresolved, record it and explain an escalation recommendation rather than silently changing models.
 
-Cheaper optional substitution: **GPT-6 Luna, medium**, for Phase 6 reporting or mechanically formatting reports after the checks exist. Retain Sol/high for admission design, semantic calibration, migrations, rollback logic, and cleanup decisions. A cheap model may prepare labels, but cannot authorize retirement on its own.
+Cheaper optional substitution: **GPT-6 Luna, medium**, for Phase 4.4 reporting or mechanically formatting reports after the checks exist. Retain Sol/high for admission design, semantic calibration, migrations, rollback logic, and cleanup decisions. A cheap model may prepare labels, but cannot authorize retirement on its own.
 
 These are workload judgments, not benchmark guarantees. Official documentation describes [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol) as suited to complex coding at lower cost than Astra and [GPT-6 Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) for focused high-volume work. Official [effort guidance](https://developers.openai.com/api/docs/guides/deployment-checklist) recommends medium/high for diagnosis and code, reserving xhigh/max for measured gains. Checked 2026-10-12. Account availability and chat billing are not established by API pricing.
 
@@ -137,9 +141,54 @@ These are workload judgments, not benchmark guarantees. Official documentation d
 2. Reconfirm live rows/schema and snapshot drift. Before activation, prepare/backfill comparison metadata for all relevant Speed rows under the agreed one-time cap, with checkpoints. This is derived metadata, not retirement or content editing. Do not treat legacy rows as checked merely because a column defaults to `clear`.
 3. Present the actual migration and rollout procedure for required production confirmation. `CLAUDE.md` says “`supabase db push` applies to the LINKED PRODUCTION database and always asks first; never run it unprompted.” Phase instructions are not permission to skip this boundary. Do all local preparation first. Ask only for steps genuinely lacking prior authorization.
 4. Coordinate schema, server deployment, and workflow rollout so no legacy Speed writes pass during transition. A brief Speed-generation pause may be part of the prepared release; existing approved gameplay continues. Verify deployed revisions and all admission prerequisites before resuming. Rollback stops admission/generation if checks are unavailable; it does not restore unchecked importing.
-5. Run one capped manual Action and verify fresh safe pending rows (or documented valid zero-output), absence of duplicate/uncertain rows in normal review, report counts, approval/edit behavior, and preserved Live import behavior. Record GitHub run ID, commit, Vercel deployment evidence, migration ID, corpus/policy versions and measured spend. If no candidates pass, additionally prove the success path in isolated/staged testing.
+5. Verify production schema/private privileges, exact deployed safeguard/workflow revisions, configured per-operation cap, backfill counts and unchanged active gameplay/Live behavior. Leave nightly generation disabled. The single approved manual pilot, fresh safe-row verification, measured yield/spend and nightly resume now belong to Phase 4.3 after editorial work. Use isolated success evidence here; do not admit uniqueness-only generated candidates as a pilot.
 
-**Exit:** prevention verified live, agreed budget enforced, actual release facts recorded, and handoff. Do not mark deployed merely because code was pushed.
+**Exit:** prevention deployed and prerequisites verified live, approved cap configured, derived metadata backfilled, old unsafe writers stopped, nightly generation disabled, actual release facts and Phase 4 handoff recorded. The next phase is 4.1; automatic generator activation is explicitly deferred to 4.3. Do not mark deployed merely because code was pushed.
+
+## 8.1. Phase 4.1 — editorial contract and evaluation set
+
+**Model: GPT-6.1 Sol / high.** Define the editorial acceptance contract before implementation; no paid evaluation or candidate admission in this phase.
+
+1. Give each candidate separate verdicts for factual soundness/unambiguous answer; clear natural wording; distinct plausible distractors without answer-length/grammar/category clues; and worthwhile knowledge. Reject unsupported time-sensitive facts, arbitrary numeric/date obscurity and disposable celebrity detail. Fame alone does not make a fact worthwhile or worthless. Allow accessible surprising facts, durable cultural/scientific/historical knowledge and fair difficult questions. Different facts about one artist remain valid.
+2. Require explicit pass/fail/uncertain reasons for each dimension, bound to final content hash and versioned rubric/judge. Any failed or uncertain dimension prevents admission to normal review. Numeric aggregate scores cannot hide a failed dimension. Automated judgments remain fallible; do not promise guaranteed interest or truth.
+3. Freeze a labeled evaluation set with sound/weak/ambiguous/misleading/awkward questions across all nine categories, answer-position clues, implausible/duplicate distractors, culturally narrow coverage, durable versus disposable facts, worthwhile hard versus arbitrary obscure questions and same-person distinct facts. Separate calibration/held-out cases; record disputed labels as a small list rather than a large new manual queue. Sanitized examples only.
+4. Define topic/difficulty spread from measured existing inventory and recent admissions. Keep category/subtopic policy independent of fact uniqueness, avoid subject concentration, and make easy/medium/hard intelligible to players. Specify achievable small-batch targets and report deviations; never fill a quota with weak or repeated questions. Zero output is acceptable.
+5. Estimate quality-call/rewrite/cache executions, tokens/bytes and current/10×/retry-sensitive costs. Preserve the approved $0.50 total per operation. No new provider/model/paid grounding or extra pilot allowance is authorized merely by this phase; compare a prompt-only/reject-only lower-cost option.
+
+**Exit:** versioned editorial rubric, measurable frozen evaluation gates, topic/difficulty policy, cost design and `speed-trivia-uniqueness-plan_PHASE_4.1_HANDOFF.md`. No subjective “interestingness guarantee.”
+
+## 8.2. Phase 4.2 — build and evaluate the editorial gate
+
+**Model: GPT-6.1 Sol / high.** Implement locally; nightly remains disabled.
+
+1. Use one shared Speed-only editorial module for generation and applicable manual create/edit/import/approval boundaries. Check the final candidate content, not its pre-rewrite wording. Decide and document legacy-row handling: do not mass-certify or mass-edit the existing bank; failed edited/generated questions stay out of ordinary review. Keep Live content/import paths unchanged.
+2. Add explicit editorial rules to generation prompts. Run cheap deterministic checks before a bounded structured editorial judgment. Keep factual uncertainty separate from style preference. Bind cached editorial evidence to final question/options/correct answer/context and rubric/provider version; content or policy changes invalidate it.
+3. Reject weak facts. A limited rewrite may repair wording/distractors while preserving the fact, but cannot automatically make an unsupported fact true. Default to reject if rewrite budget is unavailable. Globally cap rewrite attempts/candidates/time/tokens/requests; every generation, editorial, rewrite and uniqueness call shares the same $0.50 operation budget with worst-case reservations before calls and conservative lost-call accounting.
+4. Every rewritten candidate must pass the whole editorial contract and existing frozen uniqueness gate again before DB admission. Never add rejected/uncertain candidates to normal review or bypass signed admission. Report quality failures, rewrites/rewrite successes, final difficulty/subtopic/subject and quality-cache/call usage privately. Keep final accepted batch diversity checks after rewriting.
+5. Make editorial failure/unavailable services fail closed at writing boundaries. Prefer a separate versioned signed editorial receipt if DB enforcement is needed; any new schema requires a new migration, not editing applied `20261013120000`. Prepare its exact rollout before any project-required confirmation. The current approval explicitly names only the existing migration; future migration confirmation is separate.
+6. Run meaningful rejection/rewrite/budget/cache/version/race and manual/generated/Live-separation tests plus frozen editorial and unchanged uniqueness held-out gates. No paid pilot here. Record exactly what evidence is synthetic, replayed or actually observed.
+
+**Exit:** locally validated editorial gate, measured offline costs/call bounds, concrete release instructions and `speed-trivia-uniqueness-plan_PHASE_4.2_HANDOFF.md`. No automatic publication or extra paid run implied by adding this phase.
+
+## 8.3. Phase 4.3 — single capped editorial pilot and generator release
+
+**Model: GPT-6.1 Sol / high.** Use the **one already-approved $0.50 pilot**, including generation, editorial review, rewrites and uniqueness checking together. Do not spend a second pilot allowance by splitting the operation.
+
+1. Stage/release the validated editorial implementation with generation still paused, verify exact app/workflow revisions and all prerequisites. Any additional migration still needs its concrete confirmation. Run one deliberately small candidate batch under the shared $0.50 global budget and existing time/token/retry limits. Stop safely when the earliest ceiling is hit; zero output is valid.
+2. Privately retain every generated candidate and each stage's verdict/reason, final accepted content, rejection/uncertainty/rewrites, generated/quality-passing/unique/admitted counts, actual billed tokens/spend versus conservative reservations, latency/calls/cache use and exact policy/model/revision/commit/run/deployment IDs. Reports must not expose player records or credentials.
+3. Independently review the small sample against the frozen rubric, reporting automated versus independently assessed quality. Measure topic/subtopic/subject spread, intended and independently judged difficulty, answer-position distribution, misleading clues, useful-question yield and **cost per independently useful question**. Distinguish editorial pass, uniqueness pass, pending admission and Andrew approval. If no useful questions pass, report cost/yield and an undefined cost-per-useful denominator; do not invent a successful quality result.
+4. Require every admitted pilot question to satisfy editorial and uniqueness gates, no known weak/clued/ambiguous candidate admitted, held-out editorial regressions blocked and achievable small-batch mix met or shortfall explained. Do not approve or activate pilot rows merely to make the metrics look good. Preserve isolated success evidence if the live pilot has zero admissions. Failed pilot leaves generation paused; a second paid pilot needs a new explicit allowance.
+5. Report measured benefit/cost versus Phase 4 baseline and the cheaper reject-only/fewer-question option. Resume the recorded nightly enabled state only after release gates pass. No automatic budget increase, provider swap or target-volume increase.
+
+**Exit:** actual capped pilot evidence, editorial gate verified before normal-review admission, measured useful yield/diversity/cost, exact deployment and generator resume facts, and `speed-trivia-uniqueness-plan_PHASE_4.3_HANDOFF.md`.
+
+## 8.4. Phase 4.4 — operational quality and cost monitoring
+
+**Model: GPT-6.1 Sol / medium.** This replaces the former Phase 6 so Phase 5 remains final. Observe seven consecutive scheduled runs under the same $0.50/run cap; no additional manual pilot is authorized.
+
+Measure generated/editorially passed/rejected/uncertain/rewritten/unique/admitted counts, independent bounded quality samples, topic/subtopic/subject/difficulty mix, player-facing wording/clue problems, review backlog, latency/retries/DB transfer/calls/cache use, tokens/spend and cost per useful/admitted/approved question where each denominator exists. Audit new admissions incrementally rather than rechecking the entire bank nightly. Record any Andrew-reported weak or repeated question as a regression. Tune diversity/prompts only within frozen correctness/editorial gates; substantive policy changes invalidate affected cache/evaluation evidence and require revalidation. A materially higher recurring-cost option requires informed approval.
+
+**Exit:** seven-run evidence, actual versus baseline quality/performance/cost, cap adherence, final editorial release record/context pointers and `speed-trivia-uniqueness-plan_PHASE_4.4_HANDOFF.md`. Next and final phase is Phase 5 cleanup.
 
 ## 9. Phase 5 — apply existing database cleanup
 
@@ -154,9 +203,9 @@ These are workload judgments, not benchmark guarantees. Official documentation d
 
 **Exit:** verified applied cleanup, preserved history, checked export PR state, remaining uncertainty explicitly listed, private backup/undo location recorded, and handoff. “Retired” means removed from active play/review while retained in the database for history and duplicate memory; Andrew explicitly selected this preservation policy.
 
-## 10. Cost constraints and Phase 6 monitoring
+## 10. Cost constraints and Phase 4.4 monitoring
 
-**Phase 6 model: GPT-6.1 Sol / medium**; optional Luna/medium for mechanical reporting only.
+**Phase 4.4 model: GPT-6.1 Sol / medium**; optional Luna/medium for mechanical reporting only.
 
 Current actual cost is unknown; Phase 1 measures it. Keep Gemini generation initially unless an evaluated alternative is more cost effective. A stronger generator alone is not duplicate prevention. Compare existing-provider semantic checking with cheap alternatives on the same fixed evaluation; any paid trial has a stated cap.
 
@@ -193,7 +242,7 @@ Add meaningful comparison/admission/cleanup behavior tests and an isolated SQL h
 
 Every phase, including a partial stop, must create `docs/speed-trivia-uniqueness-plan_PHASE_<N>_HANDOFF.md` and update this status line **before** calling it finished. Open with a nontechnical developer summary, then address the next agent with scope/out-of-scope; exact branch/commit/dirty/push/deployment/database/backup/undo state; recorded answers and decisions; changed paths/key functions; traps/permissions; exact commands/results and unknowns; open questions; and next steps/model/effort. Do not include secrets or private player evidence.
 
-Starting a new chat at substantial phase boundaries usually reduces the accumulated context carried into subsequent work; it still costs tokens to read project rules, this plan, the latest handoff and relevant code. Exact savings depend on caching, compaction and account billing, so no numeric savings are promised. Restarting during one debugging/release/cleanup transaction usually wastes context and can increase tokens. Phases 5–6 can share a chat when the prior context is modest.
+Starting a new chat at substantial phase boundaries usually reduces the accumulated context carried into subsequent work; it still costs tokens to read project rules, this plan, the latest handoff and relevant code. Exact savings depend on caching, compaction and account billing, so no numeric savings are promised. Restarting during one debugging/release/cleanup transaction usually wastes context and can increase tokens. Keep the Phase 4.3 release/pilot transaction together; Phase 4.4 monitoring may continue in a fresh chat. Phase 5 remains the final phase.
 
 Copy into a new chat:
 

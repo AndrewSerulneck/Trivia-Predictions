@@ -124,6 +124,20 @@ Before this, Back had 10 implementations across 5 visual treatments, Next had 2,
 - Multiple choice questions, any topic or difficulty.
 - Nightly question generation: `scripts/generate-trivia-nightly.cjs` → calls `generate-trivia-questions.cjs`.
 
+Speed Trivia uniqueness prevention **Phase 4 authorized rollout is in progress (2026-10-13)**.
+Migration `20261013120000` is applied to `pkmxupsayzshvpirkaav`; matching private signing key and
+approved $0.50 per-operation cap are configured in DB/GitHub/Vercel. All 13,878 derived features
+backfilled at revision 0; original question content/status unchanged, zero admissions/paid calls.
+Application/workflow publication is being verified. Nightly generation is disabled and stays so until
+editorial Phase 4.3. Andrew approved one $0.50 pilot, unspent and reserved for editorial + uniqueness
+checking together. New phases: 4.1 rubric/frozen evaluation, 4.2 shared editorial gate/bounded rewrites,
+4.3 capped pilot/generator release, 4.4 seven-run monitoring. **Phase 5 remains final cleanup**; former
+Phase 6 monitoring moved to 4.4. Editorial gate is planned, not built. Different facts about one person
+remain valid; no lifetime subject ban. Read `docs/speed-trivia-uniqueness-plan.md`,
+`docs/speed-trivia-uniqueness-plan_PHASE_4_HANDOFF.md` and
+`docs/speed-trivia-uniqueness-phase-4-release-record.md`. Do not reapply/down-migrate the applied SQL
+or resurrect unchecked writers. Additional future migrations require separate concrete confirmation.
+
 ### Category Blitz (formerly called "Scategories")
 - Scattergories-style word game. Each round draws one **set** of 12 categories and one shared **letter**; players race to name an answer for each category that starts with that letter. Unique answers score points (`lib/categoryBlitz.ts`).
 - **Answer grading:** Claude Haiku is the sole judge of whether a player's answer fits a category (`validateAnswersWithLLM` in `lib/categoryBlitz.ts`). This is why category quality matters so much — the category must be objective enough for an LLM to grade fairly.

@@ -41,6 +41,21 @@ legacy parsing; terminal-card corrections never belong in the active sweep. The 
 at 2026-09-19T23:48Z and verified. Do not reapply or down-migrate it. Final release must add exact commit/deployment and
 live/device verification facts to the Phase 7 handoff, release record and these context files.
 
+## Speed Trivia uniqueness (local prevention built)
+
+Plan: `docs/speed-trivia-uniqueness-plan.md`. **Phase 4 authorized rollout in progress, 2026-10-13:**
+migration `20261013120000` applied to `pkmxupsayzshvpirkaav`; private key synchronized to DB/GitHub/Vercel,
+$0.50 operation cap configured; 13,878 derived features backfilled at revision 0 without content/status
+changes or paid calls. Application/workflow publication is being verified. Old nightly was paused with
+no legacy run in progress and **must remain disabled until editorial Phase 4.3**. Andrew approved one
+$0.50 pilot; it is unspent and reserved for quality + uniqueness together. New phases 4.1 rubric/evaluation,
+4.2 shared editorial gate/rewrites, 4.3 capped pilot/generator release, 4.4 seven-run monitoring; **Phase 5
+is final cleanup**, no standalone Phase 6. Read `docs/speed-trivia-uniqueness-plan_PHASE_4_HANDOFF.md`
+and `docs/speed-trivia-uniqueness-phase-4-release-record.md`. Speed writers use shared signed admission;
+never restore unchecked imports, retired duplicates or file fallbacks. Different facts about the same
+artist remain valid. Do not reapply/edit/down-migrate the applied migration. A different future
+production migration still requires its concrete confirmation under `CLAUDE.md`.
+
 ## Join Merch Store plan (Partner Dashboard)
 
 Plan: `docs/join-merch-store-plan.md`. **Phases 1–4.6 built 2026-10-01** (look-only store;
