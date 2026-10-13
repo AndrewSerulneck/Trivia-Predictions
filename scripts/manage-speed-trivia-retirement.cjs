@@ -29,11 +29,19 @@ const run=async({client,source,apply=false,undo=false,secret=process.env.SPEED_T
  const state=await rpc(client,'speed_trivia_cleanup_state',{p_manifest_hash:manifestHash});
  // Both apply and undo bind the ORIGINAL immutable file; the DB log is authoritative.
  if(!apply){
+  // One complete revision-bound load, rather than two RPCs per retirement.
+  const corpus=await core.loadCorpus({
+   readEvidence:()=>rpc(client,'speed_trivia_inventory'),
+   readPage:({offset,limit,revision})=>rpc(client,'speed_trivia_corpus_page',{p_revision:revision,p_offset:offset,p_limit:limit}),
+  });
+  if(corpus.revision!==state.revision)throw new Error('cleanup-state-revision-drift');
+  const byId=new Map(corpus.rows.map(row=>[row.id,row]));
+  const loggedById=new Map(state.rows.map(row=>[row.row_id,row]));
   for(const entry of manifest.retirements){
-   const q=(await rpc(client,'speed_trivia_find',{p_identifier:entry.id}))[0];
-   const logged=state.rows.find(r=>r.row_id===entry.id);
+   const q=byId.get(entry.id);
+   const logged=loggedById.get(entry.id);
    if(undo){if(logged&&!logged.undone&&stateHash(q)!==stateHash(logged.after_state))throw new Error('undo-state-drift');continue;}
-   const keeper=(await rpc(client,'speed_trivia_find',{p_identifier:entry.keeperId}))[0];
+   const keeper=byId.get(entry.keeperId);
    if(!q||q.slug!==entry.slug||(!logged&&(q.status!==entry.oldStatus||core.contentHash(q)!==entry.oldContentHash))||!keeper||keeper.status!=='active'||core.contentHash(keeper)!==entry.keeperContentHash)throw new Error('retirement-state-or-keeper-drift');
   }
   return {mode:undo?'undo-dry-run':'retirement-dry-run',manifestHash,proposed:manifest.retirements.length,alreadyApplied:state.rows.length,revision:state.revision,requiresCurrentAdmission:undo};

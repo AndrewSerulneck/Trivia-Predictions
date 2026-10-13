@@ -65,7 +65,7 @@ type GithubPullResponse = {
 
 type ExportFile = {
   path: string;
-  content: string;
+  content: string | null;
 };
 
 const SPEED_TRIVIA_REPO_DIR = "data/trivia/categories";
@@ -151,6 +151,10 @@ async function fetchAllActiveSpeedQuestions(): Promise<SpeedQuestionRow[]> {
     throw new Error("Supabase admin client is not configured.");
   }
 
+  const before = await supabaseAdmin.rpc("speed_trivia_inventory");
+  if (before.error || typeof before.data?.revision !== "string") {
+    throw new Error("Speed Trivia export revision is unavailable.");
+  }
   const rows: SpeedQuestionRow[] = [];
   for (let from = 0; ; from += PAGE_SIZE) {
     const to = from + PAGE_SIZE - 1;
@@ -173,6 +177,10 @@ async function fetchAllActiveSpeedQuestions(): Promise<SpeedQuestionRow[]> {
     if (batch.length < PAGE_SIZE) break;
   }
 
+  const after = await supabaseAdmin.rpc("speed_trivia_inventory");
+  if (after.error || after.data?.revision !== before.data.revision) {
+    throw new Error("Speed Trivia changed during export. Retry with the current bank.");
+  }
   return rows;
 }
 
@@ -284,9 +292,21 @@ async function createSpeedTriviaExportPr(config: GithubConfig, files: ExportFile
   );
   const baseSha = baseRef.object.sha;
 
+  // Retired-only categories disappear from the active query. Remove their old
+  // exports too, using the same immutable base commit as the content comparison.
+  const existingFiles = await githubRequest<Array<{ type: string; path: string }>>(
+    config,
+    `/repos/${config.owner}/${config.repo}/contents/${SPEED_TRIVIA_REPO_DIR}?ref=${encodeURIComponent(baseSha)}`
+  );
+  const currentPaths = new Set(files.map(file => file.path));
+  const staleFiles: ExportFile[] = existingFiles
+    .filter(file => file.type === "file" && /^data\/trivia\/categories\/[^/]+\.v1\.json$/.test(file.path) && !currentPaths.has(file.path))
+    .map(file => ({ path: file.path, content: null }));
+
   const changedFiles: ExportFile[] = [];
-  for (const file of files) {
-    const existing = await getExistingGithubFileContent(config, file.path, config.baseBranch);
+  for (const file of [...files, ...staleFiles]) {
+    assertSpeedRepoPath(file.path);
+    const existing = file.content === null ? "exists" : await getExistingGithubFileContent(config, file.path, baseSha);
     if (existing !== file.content) {
       changedFiles.push(file);
     }
@@ -317,6 +337,10 @@ async function createSpeedTriviaExportPr(config: GithubConfig, files: ExportFile
 
   const treeEntries = [];
   for (const file of changedFiles) {
+    if (file.content === null) {
+      treeEntries.push({ path: file.path, mode: "100644", type: "blob", sha: null });
+      continue;
+    }
     const blob = await githubRequest<GithubBlobResponse>(config, `/repos/${config.owner}/${config.repo}/git/blobs`, {
       method: "POST",
       body: JSON.stringify({
@@ -362,6 +386,7 @@ async function createSpeedTriviaExportPr(config: GithubConfig, files: ExportFile
     "",
     `Questions exported: ${totalQuestions}`,
     `Category files changed: ${changedFiles.length}`,
+    `Retired-only category files removed: ${staleFiles.length}`,
     "",
     "Safety checks:",
     "- Only `status=active` rows were exported.",
