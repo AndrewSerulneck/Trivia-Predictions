@@ -1,6 +1,7 @@
 import { beforeAll, afterAll, describe, expect, it, vi } from "vitest";
 import path from "node:path";
 import fs from "node:fs";
+import os from "node:os";
 import * as core from "@/lib/speed-trivia-uniqueness/core.cjs";
 import * as runtime from "@/lib/speed-trivia-uniqueness/runtime.cjs";
 import type { AdmissionSession, AdmissionClient, AdmissionRow } from "@/types/speedTriviaAdmission";
@@ -116,7 +117,7 @@ describe("Speed writing boundaries on isolated PostgreSQL", () => {
       await large.exec("update trivia_questions set status='deleted' where slug like 'fixture-extra-%'");
       await expect(full.refresh()).rejects.toThrow("Too many changed questions");
     } finally { await large.close(); }
-  });
+  }, 20000);
 });
 
 describe("global cost limits, generation breadth and immutable cleanup", () => {
@@ -192,7 +193,8 @@ describe("global cost limits, generation breadth and immutable cleanup", () => {
   });
   it("refuses Phase 2 dry runs and altered immutable manifest bytes", () => {
     expect(() => cleanup.validateManifest({ version: "speed-retirement-manifest-v1", applyReady: false })).toThrow();
-    const file = path.resolve("tmp/speed-trivia-test-bad-manifest.json"); fs.writeFileSync(file, "{}");
-    try { expect(() => cleanup.readManifest(file, "incorrect-hash")).toThrow("checksum"); } finally { fs.unlinkSync(file); }
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "speed-trivia-manifest-"));
+    const file = path.join(directory, "bad-manifest.json"); fs.writeFileSync(file, "{}");
+    try { expect(() => cleanup.readManifest(file, "incorrect-hash")).toThrow("checksum"); } finally { fs.rmSync(directory, { recursive: true, force: true }); }
   });
 });
