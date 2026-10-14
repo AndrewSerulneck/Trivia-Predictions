@@ -7,8 +7,25 @@ import type { GameplayAnimationProps } from "@/types/animation";
 // ─── Prop type (extends base with optional pointsLabel) ───────────────────────
 
 interface SpeedTriviaCorrectAnimationProps extends GameplayAnimationProps {
+  /** Overrides the chip text. Normally omitted: the chip shows `payload.pointsAwarded`. */
   pointsLabel?: string;
 }
+
+/** The chip shows the server's real award, never a guess. `null` (no chip) while the answer is
+ *  still saving, and for a zero award. */
+export function speedTriviaPointsLabel(pointsAwarded: number | undefined): string | null {
+  if (pointsAwarded === undefined || !Number.isFinite(pointsAwarded) || pointsAwarded <= 0) return null;
+  const points = Math.round(pointsAwarded);
+  return `+${points} ${points === 1 ? "pt" : "pts"}`;
+}
+
+// ─── Timing (ms from mount) ───────────────────────────────────────────────────
+// Slowed 2026-10-13 (Andrew: the points took a while to appear and only flashed briefly).
+const POINTS_REVEAL_DELAY_MS   = 120;  // the points' beat after the pop, when the number is already in
+const POINTS_MIN_VISIBLE_MS    = 1500; // once shown, the points stay on screen at least this long
+const MIN_EXIT_AT_MS           = 2000; // the pill never leaves earlier than this
+const MAX_EXIT_AT_MS           = 3200; // ...nor later, even if the server never answers
+const EXIT_DURATION_MS         = 400;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -62,7 +79,7 @@ function generateParticles(): Particle[] {
     const baseDeg  = (360 / PARTICLE_COUNT) * i;
     const jitter   = (Math.random() - 0.5) * 30;
     const angle    = ((baseDeg + jitter) * Math.PI) / 180;
-    const distance = 55 + Math.random() * 55; // 55–110px
+    const distance = 110 + Math.random() * 80; // 110–190px: starts hidden behind the pill, bursts out past its edge
 
     return {
       id:       i,
@@ -80,10 +97,21 @@ function generateParticles(): Particle[] {
 
 export function SpeedTriviaCorrectAnimation({
   onComplete,
-  pointsLabel = "+2 pts",
+  payload,
+  pointsLabel,
 }: SpeedTriviaCorrectAnimationProps) {
-  const cancelledRef = useRef<boolean>(false);
-  const timerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const label = pointsLabel ?? speedTriviaPointsLabel(payload?.pointsAwarded);
+  // The server has answered (even with zero points) — no point waiting for a chip that won't come.
+  const settled = pointsLabel !== undefined || payload?.pointsAwarded !== undefined;
+  const cancelledRef     = useRef<boolean>(false);
+  const mountedAtRef     = useRef<number>(Date.now());
+  const pointsShownAtRef = useRef<number | null>(null);
+  const settledRef       = useRef<boolean>(settled);
+  const wakeHoldRef      = useRef<(() => void) | null>(null);
+  const holdTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const completedRef     = useRef<boolean>(false);
+  const onCompleteRef    = useRef(onComplete);
+  onCompleteRef.current  = onComplete;
 
   // Inject CSS keyframes before first paint
   useInsertionEffect(() => {
@@ -95,114 +123,138 @@ export function SpeedTriviaCorrectAnimation({
 
   const badgeControls  = useAnimationControls();
   const pointsControls = useAnimationControls();
+  const shineControls  = useAnimationControls();
 
   useEffect(() => {
-    // ── Badge: spring in → hold → exit ─────────────────────────────────────
+    const finish = (): void => {
+      if (completedRef.current || cancelledRef.current) return;
+      completedRef.current = true;
+      onCompleteRef.current();
+    };
+
+    // When the pill may leave: on its minimum beat, after the points have had their time on screen,
+    // and never past the cap. Waiting on an unsettled server stretches toward the cap.
+    const exitAt = (): number => {
+      const shownAt = pointsShownAtRef.current;
+      if (shownAt !== null) return Math.min(MAX_EXIT_AT_MS, Math.max(MIN_EXIT_AT_MS, shownAt + POINTS_MIN_VISIBLE_MS));
+      return settledRef.current ? MIN_EXIT_AT_MS : MAX_EXIT_AT_MS;
+    };
+
+    // ── Pill: spring in → hold until the points have been seen → exit ──────
     void (async (): Promise<void> => {
-      // Spring entrance to slight overshoot
       await badgeControls.start({
         scale:   1.15,
         opacity: 1,
         y:       0,
-        transition: {
-          type:      "spring",
-          stiffness: 480,
-          damping:   22,
-          mass:      0.7,
-        },
+        transition: { type: "spring", stiffness: 380, damping: 20, mass: 0.8 },
       });
-      // Settle to 1.0
       await badgeControls.start({
         scale: 1.0,
-        transition: { duration: 0.08, ease: "easeOut" },
+        transition: { duration: 0.12, ease: "easeOut" },
       });
-      // Hold ~600ms
-      await new Promise<void>((res) => {
-        timerRef.current = setTimeout(res, 600);
-      });
+      // Hold. A late points label wakes this so the deadline is re-read.
+      for (;;) {
+        if (cancelledRef.current) return;
+        const remaining = exitAt() - (Date.now() - mountedAtRef.current);
+        if (remaining <= 0) break;
+        await new Promise<void>((resolve) => {
+          wakeHoldRef.current = resolve;
+          holdTimerRef.current = setTimeout(resolve, remaining);
+        });
+        if (holdTimerRef.current !== null) clearTimeout(holdTimerRef.current);
+        wakeHoldRef.current = null;
+      }
       if (cancelledRef.current) return;
-      // Exit upward
+      // Exit upward (the points are inside the pill, so they leave with it)
       await badgeControls.start({
         y:       -40,
         opacity: 0,
-        transition: { duration: 0.3, ease: "easeIn" },
+        transition: { duration: EXIT_DURATION_MS / 1000, ease: "easeIn" },
       });
+      finish();
     })();
 
-    // ── Points counter: delayed rise and fade (beat 2) ─────────────────────
-    void (async (): Promise<void> => {
-      // Wait for badge to settle before points appear
-      await new Promise<void>((res) => setTimeout(res, 150));
-      if (cancelledRef.current) return;
-      // Snap visible
-      await pointsControls.start({
-        opacity: 1,
-        transition: { duration: 0.05 },
-      });
-      if (cancelledRef.current) return;
-      // Rise 150px — travels through the badge zone
-      await pointsControls.start({
-        y:       -150,
-        transition: {
-          duration: 0.9,
-          ease:     [0.22, 1, 0.36, 1],
-        },
-      });
-      if (cancelledRef.current) return;
-      // Fade out
-      await pointsControls.start({
-        opacity: 0,
-        transition: { duration: 0.2, ease: "easeIn" },
-      });
-    })();
+    // ── Shine: one light sweep across the pill once it has popped ──────────
+    void shineControls.start({
+      x: "360%",
+      transition: { delay: 0.28, duration: 0.7, ease: "easeOut" },
+    });
 
-    // ── Lifecycle ────────────────────────────────────────────────────────────
-    const lifecycleTimer = setTimeout(() => {
-      if (!cancelledRef.current) onComplete();
-    }, 1400);
+    // Safety net in case an animation promise never resolves.
+    const lifecycleTimer = setTimeout(finish, MAX_EXIT_AT_MS + EXIT_DURATION_MS + 300);
 
     return () => {
       cancelledRef.current = true;
       clearTimeout(lifecycleTimer);
-      if (timerRef.current !== null) clearTimeout(timerRef.current);
+      if (holdTimerRef.current !== null) clearTimeout(holdTimerRef.current);
+      wakeHoldRef.current?.();
       badgeControls.stop();
       pointsControls.stop();
+      shineControls.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    settledRef.current = settled;
+    wakeHoldRef.current?.();
+  }, [settled]);
+
+  // ── Points: revealed inside the pill once the real number is known — on its usual beat after
+  //    the pop if the server already answered, otherwise the moment the number lands. ──
+  useEffect(() => {
+    if (label === null) return;
+    const elapsedMs = Date.now() - mountedAtRef.current;
+    const delayMs   = Math.max(0, POINTS_REVEAL_DELAY_MS - elapsedMs);
+    if (pointsShownAtRef.current === null) pointsShownAtRef.current = elapsedMs + delayMs;
+    wakeHoldRef.current?.();
+    void pointsControls.start({
+      opacity: 1,
+      y:       0,
+      scale:   1,
+      transition: {
+        delay:    delayMs / 1000,
+        duration: 0.4,
+        ease:     [0.22, 1, 0.36, 1],
+      },
+    });
+  }, [label, pointsControls]);
+
   return (
     <>
-      {/* ── LAYER 1: Central burst badge ─────────────────────────────────────── */}
-      <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
+      {/* ── LAYER 1: Glow pill — one unit holding ✓ CORRECT and the points.
+          Near-opaque dark fill guarantees contrast over the bright trivia screen and the green
+          feedback flash; the "pop" comes from the glowing rim and the shine. ── */}
+      <div className="pointer-events-none fixed inset-0 z-[2] flex items-center justify-center">
         <motion.div
           animate={badgeControls}
           initial={{ scale: 0, opacity: 0, y: 20 }}
-          className="rounded-full border border-[#34d399]/70 bg-emerald-500/20 px-8 py-4 text-2xl font-black uppercase tracking-[0.12em] text-emerald-100 shadow-[0_0_60px_rgba(52,211,153,0.5)]"
-          style={{ willChange: "transform, opacity" }}
+          className="relative rounded-[28px] border-[3px] border-[#34d399] bg-[rgba(4,20,14,0.94)] px-[34px] pb-3 pt-3.5 text-center shadow-[inset_0_0_0_1px_rgba(167,243,208,0.35),0_0_28px_rgba(52,211,153,0.75),0_0_64px_rgba(52,211,153,0.4),0_10px_30px_rgba(0,0,0,0.55)] will-change-transform"
         >
-          ✓ Correct
+          {/* Shine sweep, clipped to the pill */}
+          <div className="absolute inset-0 overflow-hidden rounded-[25px]">
+            <motion.div
+              animate={shineControls}
+              initial={{ x: "-160%" }}
+              className="absolute -bottom-[20%] -top-[20%] left-0 w-2/5 -skew-x-[18deg] bg-gradient-to-r from-transparent via-white/30 to-transparent"
+            />
+          </div>
+
+          <div className="relative select-none whitespace-nowrap text-[26px] font-black uppercase leading-tight tracking-[0.12em] text-[#d1fae5] [text-shadow:0_0_12px_rgba(52,211,153,0.6)]">
+            <span className="text-[#34d399]">✓</span> Correct
+          </div>
+
+          <motion.span
+            animate={pointsControls}
+            initial={{ opacity: 0, y: 8, scale: 0.85 }}
+            className="relative mt-0.5 block select-none text-[22px] font-black leading-tight tracking-[0.06em] text-[#fde047]"
+          >
+            {/* Placeholder keeps the pill's height fixed (no jump) while the points are still hidden */}
+            {label ?? "+2 pts"}
+          </motion.span>
         </motion.div>
       </div>
-
-      {/* ── LAYER 2: Points counter rising from below badge center ──────────── */}
-      <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
-        <motion.span
-          animate={pointsControls}
-          initial={{ opacity: 0, y: 70 }}
-          className="select-none font-black tracking-[0.08em]"
-          style={{
-            fontSize:   "36px",
-            color:      "#facc15",
-            textShadow: "0 0 20px rgba(250,204,21,0.9)",
-            willChange: "transform, opacity",
-          }}
-        >
-          {pointsLabel}
-        </motion.span>
-      </div>
-
-      {/* ── LAYER 3: Particle scatter (pure CSS animation) ───────────────────── */}
+      {/* ── LAYER 2: Particle scatter (behind the card) (pure CSS animation) ───────────────────── */}
       {particles.map((p: Particle) => (
         <div
           key={p.id}

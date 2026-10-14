@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Correct Badge Options</title>
+<style>
+  :root { --bg:#0a0a0f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#1e1e26; color:#e2e8f0; font-family: system-ui, -apple-system, "Nunito", sans-serif; }
+  header { padding:20px 16px 8px; text-align:center; }
+  header h1 { margin:0 0 6px; font-size:20px; }
+  header p { margin:0; font-size:14px; color:#94a3b8; }
+  .controls { display:flex; justify-content:center; gap:10px; padding:12px; flex-wrap:wrap; }
+  .controls button { font:inherit; font-weight:700; padding:10px 18px; border-radius:999px; border:0; background:#facc15; color:#0a0a0f; cursor:pointer; }
+  .controls label { display:flex; align-items:center; gap:6px; font-size:14px; }
+  .grid { display:flex; flex-wrap:wrap; gap:24px; justify-content:center; padding:12px 16px 40px; }
+  .col { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .col h2 { margin:0; font-size:18px; }
+  .col p { margin:0; font-size:13px; color:#94a3b8; max-width:300px; text-align:center; }
+
+  /* ── Phone mock: recreation of the Speed Trivia screen ───────────── */
+  .phone { position:relative; width:320px; height:640px; border-radius:28px; overflow:hidden; background:var(--bg); border:6px solid #000; }
+  .phone::before { content:""; position:absolute; top:0; left:0; right:0; height:320px;
+    background-image: repeating-linear-gradient(115deg, transparent 0 26px, rgba(250,204,21,.85) 26px 34px, transparent 34px 42px, rgba(132,204,22,.8) 42px 48px, transparent 48px 70px);
+    opacity:.25; -webkit-mask-image:linear-gradient(180deg,#000,transparent); mask-image:linear-gradient(180deg,#000,transparent); }
+  .game { position:absolute; inset:0; padding:56px 14px 14px; display:flex; flex-direction:column; gap:10px; }
+  .q { border:2px solid rgba(250,204,21,.4); border-radius:16px; padding:14px; background:#111118; font-weight:800; font-size:15px; line-height:1.35; color:#f8fafc; }
+  .q small { display:block; color:#facc15; font-size:12px; letter-spacing:.12em; margin-bottom:6px; }
+  .opt { display:grid; grid-template-columns:26px 1fr auto; gap:10px; align-items:center; border:2px solid rgba(250,204,21,.3); border-radius:14px; padding:12px; background:#0a0a0f; font-weight:800; font-size:13px; color:#f8fafc; }
+  .opt b { display:inline-flex; width:26px; height:26px; border-radius:8px; align-items:center; justify-content:center; background:#facc15; color:#0a0a0f; font-size:14px; }
+  .opt.right { border-color:#34d399; background:rgba(16,185,129,.2); color:#a7f3d0; }
+  .opt.right b { background:#34d399; color:#052e16; }
+  .opt.right::after { content:"✓"; color:#34d399; font-weight:900; }
+  .flash { position:absolute; inset:0; background:rgba(16,185,129,.35); opacity:0; pointer-events:none; }
+  .run .flash { animation: flash 1.3s ease-out forwards; }
+  @keyframes flash { 0%{opacity:0} 8%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
+
+  .stage { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+  .badge { opacity:0; transform:scale(0); }
+  .run .badge { animation: pop 1.4s forwards; }
+  /* spring-ish entrance → overshoot 1.15 → settle → hold → exit up (matches today's timing) */
+  @keyframes pop {
+    0%   { opacity:0; transform:translateY(20px) scale(0); }
+    14%  { opacity:1; transform:translateY(0) scale(1.18); }
+    20%  { transform:translateY(0) scale(.97); }
+    25%  { transform:translateY(0) scale(1); }
+    78%  { opacity:1; transform:translateY(0) scale(1); }
+    100% { opacity:0; transform:translateY(-40px) scale(1); }
+  }
+  .pts { opacity:0; transform:translateY(8px); }
+  .run .pts { animation: pts .35s .2s cubic-bezier(.22,1,.36,1) forwards; }
+  @keyframes pts { to { opacity:1; transform:translateY(0); } }
+
+  .shine { position:absolute; inset:0; border-radius:inherit; overflow:hidden; pointer-events:none; }
+  .shine::after { content:""; position:absolute; top:-20%; bottom:-20%; width:40%; left:-60%;
+    background:linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent); transform:skewX(-18deg); }
+  .run .shine::after { animation: sweep .55s .22s ease-out forwards; }
+  @keyframes sweep { to { left:130%; } }
+
+  .particles i { position:absolute; left:50%; top:50%; border-radius:999px; opacity:0; }
+  .run .particles i { animation: scatter var(--d) var(--delay) ease-out forwards; }
+  @keyframes scatter { 0%{opacity:1; transform:translate(-50%,-50%)} 70%{opacity:1} 100%{opacity:0; transform:translate(-50%,-50%) translate(var(--tx),var(--ty))} }
+
+  /* ── Option A: Glow pill ─────────────────────────────────────────── */
+  .a { position:relative; border-radius:28px; padding:14px 34px 12px; text-align:center;
+    background:rgba(4,20,14,.94); border:3px solid #34d399;
+    box-shadow: 0 0 0 1px rgba(167,243,208,.35) inset, 0 0 28px rgba(52,211,153,.75), 0 0 64px rgba(52,211,153,.4), 0 10px 30px rgba(0,0,0,.55); }
+  .a .t { font-weight:900; font-size:26px; letter-spacing:.12em; color:#d1fae5; text-shadow:0 0 12px rgba(52,211,153,.6); }
+  .a .t span { color:#34d399; }
+  .a .pts { display:block; margin-top:2px; font-weight:900; font-size:22px; letter-spacing:.06em; color:#fde047; }
+
+  /* ── Option B: Medal card with check disc ────────────────────────── */
+  .b { position:relative; width:200px; padding:38px 18px 16px; border-radius:22px; text-align:center;
+    background:linear-gradient(180deg, rgba(6,32,22,.96), rgba(3,14,10,.96));
+    border:3px solid #34d399;
+    box-shadow: 0 0 30px rgba(52,211,153,.7), 0 0 70px rgba(52,211,153,.35), 0 12px 30px rgba(0,0,0,.6); }
+  .b .disc { position:absolute; left:50%; top:-28px; width:56px; height:56px; margin-left:-28px; border-radius:999px;
+    background:#34d399; color:#052e16; font-size:32px; font-weight:900; display:flex; align-items:center; justify-content:center;
+    border:3px solid #052e16; box-shadow:0 0 22px rgba(52,211,153,.9); }
+  .b .t { font-weight:900; font-size:24px; letter-spacing:.14em; color:#ecfdf5; }
+  .b .pts { display:inline-block; margin-top:10px; padding:4px 14px; border-radius:999px; background:#facc15; color:#0a0a0f; font-weight:900; font-size:20px; letter-spacing:.04em; box-shadow:0 0 16px rgba(250,204,21,.6); }
+
+  /* ── Option C: Scoreboard strip, check on the left ───────────────── */
+  .c { position:relative; display:flex; align-items:center; gap:14px; padding:12px 22px 12px 12px; border-radius:20px;
+    background:rgba(5,12,10,.95); border:2px solid #6ee7b7;
+    box-shadow: 0 0 0 2px rgba(16,185,129,.55), 0 0 26px rgba(52,211,153,.8), 0 0 60px rgba(52,211,153,.35), 0 10px 30px rgba(0,0,0,.6); }
+  .c .disc { width:54px; height:54px; border-radius:16px; background:linear-gradient(160deg,#6ee7b7,#10b981); color:#052e16; font-size:32px; font-weight:900; display:flex; align-items:center; justify-content:center; }
+  .c .stack { text-align:left; }
+  .c .t { font-weight:900; font-size:24px; letter-spacing:.12em; color:#ecfdf5; line-height:1.1; }
+  .c .pts { display:block; font-weight:900; font-size:20px; color:#fde047; letter-spacing:.04em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Speed Trivia — pick a “Correct” badge</h1>
+  <p>Each phone shows the trivia screen with today’s green flash on top, then the new badge (same 1.4-second timing as today).</p>
+</header>
+<div class="controls">
+  <button id="replay">▶ Replay all</button>
+  <label><input type="checkbox" id="loop" checked> Loop every 2.5 s</label>
+</div>
+<div class="grid" id="grid"></div>
+
+<template id="phone">
+  <div class="phone">
+    <div class="game">
+      <div class="q"><small>QUESTION 4 / 10</small>Which planet has the shortest day in our solar system?</div>
+      <div class="opt"><b>A</b>Mercury</div>
+      <div class="opt right"><b>B</b>Jupiter</div>
+      <div class="opt"><b>C</b>Saturn</div>
+      <div class="opt"><b>D</b>Neptune</div>
+    </div>
+    <div class="flash"></div>
+    <div class="stage"><div class="particles"></div></div>
+    <div class="stage badge-host"></div>
+  </div>
+</template>
+
+<script>
+  const options = [
+    { key:"A", name:"A · Glow pill", note:"Closest to today’s shape. One dark pill, bright green rim and glow, points in yellow underneath.",
+      html:`<div class="badge a"><div class="shine"></div><div class="t"><span>✓</span> CORRECT</div><span class="pts">+2 pts</span></div>` },
+    { key:"B", name:"B · Medal card", note:"Big green check disc sits on top of a dark card; points in a yellow chip. Most “trophy-like”.",
+      html:`<div class="badge b"><div class="shine"></div><div class="disc">✓</div><div class="t">CORRECT</div><span class="pts">+2 pts</span></div>` },
+    { key:"C", name:"C · Scoreboard strip", note:"Wide strip: solid green check tile on the left, CORRECT and points stacked on the right.",
+      html:`<div class="badge c"><div class="shine"></div><div class="disc">✓</div><div class="stack"><div class="t">CORRECT</div><span class="pts">+2 pts</span></div></div>` },
+  ];
+  const grid = document.getElementById("grid");
+  const tpl = document.getElementById("phone");
+  const colors = ["#34d399","#34d399","#facc15","#34d399","#facc15"];
+  const phones = options.map((o) => {
+    const col = document.createElement("div"); col.className = "col";
+    col.innerHTML = `<h2>${o.name}</h2>`;
+    const ph = tpl.content.firstElementChild.cloneNode(true);
+    ph.querySelector(".badge-host").innerHTML = o.html;
+    col.appendChild(ph);
+    const p = document.createElement("p"); p.textContent = o.note; col.appendChild(p);
+    grid.appendChild(col);
+    return ph;
+  });
+  const seedParticles = (ph) => {
+    const box = ph.querySelector(".particles"); box.innerHTML = "";
+    for (let i = 0; i < 10; i++) {
+      const ang = ((36 * i + (Math.random() - .5) * 30) * Math.PI) / 180;
+      const dist = 80 + Math.random() * 60, size = 6 + Math.round(Math.random() * 4);
+      const el = document.createElement("i");
+      el.style.cssText = `width:${size}px;height:${size}px;background:${colors[i%5]};--tx:${Math.cos(ang)*dist}px;--ty:${Math.sin(ang)*dist}px;--d:${600+Math.random()*300}ms;--delay:${Math.random()*150}ms`;
+      box.appendChild(el);
+    }
+  };
+  const run = () => phones.forEach((ph) => { ph.classList.remove("run"); seedParticles(ph); void ph.offsetWidth; ph.classList.add("run"); });
+  document.getElementById("replay").onclick = run;
+  let timer = setInterval(() => { if (document.getElementById("loop").checked) run(); }, 2500);
+  run();
+</script>
+</body>
+</html>
