@@ -120,7 +120,8 @@ describe("CreateBoardSheet (plan 4b)", () => {
     fireEvent.click(await screen.findByRole("button", { name: /NBA/ }));
 
     expect(await screen.findByText("Step 2 of 3")).toBeTruthy();
-    expect(screen.getByText("Choose A Game")).toBeTruthy();
+    // The header updates before AnimatePresence mounts the next panel.
+    expect(await screen.findByText("Choose A Game")).toBeTruthy();
     expect(routerPush).not.toHaveBeenCalled();
   });
 

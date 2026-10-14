@@ -255,7 +255,9 @@ describe("CreateRewardWizard — controlled step", () => {
     view.rerender(ownerProps("definition"));
     await waitFor(() => expect(view.container.querySelector("[data-step='definition'][data-step-phase='idle']")).not.toBeNull());
 
-    // NFL Pick 'Em is unscheduled (and already cached from the prefetch).
+    // Returning to Definition refreshes the schedule prefetch. Wait for the tile
+    // to accept clicks before exercising an unscheduled pick and browser Forward.
+    await waitFor(() => expect((screen.getByRole("button", { name: /NFL Pick/ }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
     onStepChange.mockClear();
     view.rerender(ownerProps("terms")); // the browser's Forward

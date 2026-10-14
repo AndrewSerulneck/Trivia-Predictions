@@ -34,6 +34,9 @@ describe.each([false])("approved-only manual review, variety schema=%s",variety=
    await expect(gate.write({status:"active"},{existing:gate.index().byId.get(b.id)!.row as AdmissionRow,approvedOnly:true})).rejects.toMatchObject({code:"duplicate"});
    expect(gate.index().byId.get(b.id)!.row.status).toBe("pending_review");
    expect(names.filter(name=>name==='speed_trivia_corpus_page')).toHaveLength(1);
+   // A new explicit operation must also see approvals from previous requests.
+   const next=await runtime.createSession({client,secret:harness.SECRET,budget:runtime.createBudget({dollars:0.50}),judge,cachedIndex:gate.index()});
+   await expect(next.write({status:"active"},{existing:next.index().byId.get(b.id)!.row as AdmissionRow,approvedOnly:true})).rejects.toMatchObject({code:"duplicate"});
    // The original retired fact remains reserved to normal new admissions.
    await expect(gate.write(row(3,"Which country launched Sputnik 1?","Soviet Union"))).rejects.toMatchObject({code:"duplicate"});
   }finally{await db.close();}
@@ -87,4 +90,22 @@ it("filters before retrieval ranking, so pending competitors cannot hide an appr
  const corpus=core.createCorpus([...pending,active],{complete:true,expectedCount:151,revision:'1'}),index=core.buildIndex(corpus),view=approvedIndex(index);
  expect(view.byId.size).toBe(1);expect(core.retrieve(view,row(998,'The Gobi Desert lies on which continent?','Asia')).matches.map(hit=>hit.id)).toEqual([active.id]);
  expect(index.byId.size).toBe(151);expect(approvedIndex(index)).toBe(view);
+});
+
+it("cancels a delayed semantic check before signed admission and consumes its late result",async()=>{
+ const db=new PGlite();try{
+  await harness.setup(db,0,false);const candidate=row(8000,"Which force attracts masses?","Gravity");await seedPending(db,[candidate]);
+  const controller=new AbortController(),budget=runtime.createBudget({dollars:0.50,signal:controller.signal});
+  const underlying=harness.clientFor(db),names:string[]=[];
+  let finish!:(results:ComparisonResult[])=>void,started!:()=>void;
+  const waiting=new Promise<void>(resolve=>{started=resolve;});
+  const delayed=vi.fn(async(tasks:ComparisonTask[])=>{started();return new Promise<ComparisonResult[]>(resolve=>{finish=resolve;});});
+  const gate=await runtime.createSession({client:{rpc:(name,args)=>{names.push(name);return underlying.rpc(name,args);}},secret:harness.SECRET,budget,judge:{modelVersion:"cancelled-synthetic",adjudicate:delayed}});
+  const writing=gate.write({status:"active"},{existing:gate.index().byId.get(candidate.id)!.row as AdmissionRow,approvedOnly:true});
+  const rejected=expect(writing).rejects.toMatchObject({code:"cancelled"});
+  await waiting;controller.abort();await rejected;
+  finish(delayed.mock.calls[0][0].map(verdict));await new Promise(resolve=>setTimeout(resolve,0));
+  expect(names).not.toContain("admit_speed_trivia");expect(gate.index().byId.get(candidate.id)!.row.status).toBe("pending_review");
+  expect(()=>budget.reserve({requests:1})).toThrow("connection closed");
+ }finally{await db.close();}
 });
