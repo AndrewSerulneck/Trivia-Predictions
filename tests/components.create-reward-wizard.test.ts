@@ -251,9 +251,9 @@ describe("CreateRewardWizard — controlled step", () => {
     fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
     await waitFor(() => expect(onStepChange).toHaveBeenCalledWith("terms", "forward"));
     view.rerender(ownerProps("terms"));
-    await waitFor(() => expect(view.container.querySelector("[data-step='terms']")).not.toBeNull());
+    await waitFor(() => expect(view.container.querySelector("[data-step='terms'][data-step-phase='idle']")).not.toBeNull());
     view.rerender(ownerProps("definition"));
-    await waitFor(() => expect(view.container.querySelector("[data-step='definition']")).not.toBeNull());
+    await waitFor(() => expect(view.container.querySelector("[data-step='definition'][data-step-phase='idle']")).not.toBeNull());
 
     // NFL Pick 'Em is unscheduled (and already cached from the prefetch).
     fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));

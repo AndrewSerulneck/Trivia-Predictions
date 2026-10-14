@@ -185,7 +185,8 @@ describe("AddVenueSheet — paying", () => {
     const handlers = setup();
     await goToReview();
 
-    expect(screen.getByText("$75.00/mo")).toBeTruthy();
+    // The review heading can appear before the async quote has loaded.
+    expect(await screen.findByText("$75.00/mo")).toBeTruthy();
     expect(screen.getByText("$175.00/mo")).toBeTruthy();
     expect(screen.getByText("$22.68")).toBeTruthy();
     expect(screen.getByText(/through Oct 20/)).toBeTruthy();

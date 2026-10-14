@@ -11,7 +11,7 @@ const row = { id: "10000000-0000-4000-8000-000000000001", slug: "fixture", statu
 const request = (method: string, body: unknown) => new Request("https://example.invalid/api/admin/trivia/questions", { method, body: JSON.stringify(body), headers: { "content-type": "application/json" } });
 const params = { params: Promise.resolve({ id: row.id }) };
 describe("admin review admission behavior", () => {
- beforeEach(() => { vi.clearAllMocks(); mocks.find.mockResolvedValue(row); mocks.open.mockResolvedValue({}); mocks.write.mockResolvedValue(row); mocks.approve.mockResolvedValue(row); });
+ beforeEach(() => { vi.clearAllMocks(); mocks.find.mockResolvedValue(row); mocks.open.mockResolvedValue({ budget: { assertTime: vi.fn() } }); mocks.write.mockResolvedValue(row); mocks.approve.mockResolvedValue(row); });
  it("approves every Speed item through one session and returns precise repeat rejection", async () => {
   const rows = [row, { ...row, id: "10000000-0000-4000-8000-000000000002" }];
   mocks.from.mockReturnValue({ select: () => ({ in: async () => ({ data: rows, error: null }) }) });
@@ -19,7 +19,8 @@ describe("admin review admission behavior", () => {
   const response = await POST(request("POST", { action: "approve", ids: rows.map(r => r.id) }));
   expect(response.status).toBe(409); expect(await response.json()).toMatchObject({ code: "duplicate", updated: 1, savedIds: [row.id], error: "This tests a fact already used. Existing question: Fixture question?" });
   expect(mocks.open).toHaveBeenCalledTimes(1); expect(mocks.approve).toHaveBeenCalledTimes(2); expect(mocks.write).not.toHaveBeenCalled(); expect(mocks.from).toHaveBeenCalledTimes(1);
-  expect(mocks.approve).toHaveBeenCalledWith(row, {});
+  expect(mocks.approve).toHaveBeenCalledWith(row, expect.objectContaining({ budget: expect.any(Object) }));
+  expect(mocks.open.mock.calls[0][0].elapsedMs).toBeLessThanOrEqual(240_000);
  });
  it("rejects retired Speed approvals and never runs raw activation", async () => {
   mocks.from.mockReturnValue({ select: () => ({ in: async () => ({ data: [{ ...row, status: "deleted" }], error: null }) }) });
@@ -36,6 +37,34 @@ describe("admin review admission behavior", () => {
   expect(response.status).toBe(503);
   expect(await response.json()).toMatchObject({ updated: 3, savedIds: rows.slice(0, 3).map(item => item.id), notProcessed: rows.slice(3).map(item => item.id), repeats: [], holds: [] });
   expect(mocks.approve).toHaveBeenCalledTimes(4);
+ });
+ it("stops a 200-item batch at the application deadline and returns saved IDs as JSON", async () => {
+  const rows = Array.from({ length: 200 }, (_, index) => ({ ...row, id: `fixture-${index}` }));
+  let checked = 0;
+  const assertTime = () => { if (checked >= 3) throw Object.assign(new Error("Run time budget exhausted."), { code: "budget_exhausted" }); };
+  mocks.open.mockResolvedValue({ budget: { assertTime } });
+  mocks.approve.mockImplementation(async () => { checked++; return row; });
+  mocks.from.mockReturnValue({ select: () => ({ in: async () => ({ data: rows, error: null }) }) });
+  const response = await POST(request("POST", { action: "approve", ids: rows.map(item => item.id) }));
+  expect(response.status).toBe(503);
+  expect(await response.json()).toMatchObject({ code: "budget_exhausted", savedIds: rows.slice(0, 3).map(item => item.id), notProcessed: rows.slice(3).map(item => item.id), error: expect.stringContaining("Saved approvals are kept") });
+  expect(mocks.approve).toHaveBeenCalledTimes(3);
+  expect(mocks.open).toHaveBeenCalledTimes(1);
+ });
+ it("does not rerun paid checking for already-approved selections", async () => {
+  mocks.from.mockReturnValue({ select: () => ({ in: async () => ({ data: [{ ...row, status: "active" }], error: null }) }) });
+  const response = await POST(request("POST", { action: "approve", ids: [row.id] }));
+  expect(await response.json()).toMatchObject({ ok: true, savedIds: [row.id] });
+  expect(mocks.open).not.toHaveBeenCalled(); expect(mocks.approve).not.toHaveBeenCalled();
+ });
+ it("recovery reads only selected statuses and cannot approve, delete or spend", async () => {
+  const statusRead = { abortSignal: vi.fn().mockResolvedValue({ data: [{ id: row.id, status: "active" }], error: null }) };
+  const select = vi.fn(() => ({ in: vi.fn(() => statusRead) }));
+  mocks.from.mockReturnValue({ select });
+  const response = await POST(request("POST", { action: "status", ids: [row.id] }));
+  expect(await response.json()).toEqual({ ok: true, items: [{ id: row.id, status: "active" }] });
+  expect(select).toHaveBeenCalledWith("id,status"); expect(mocks.open).not.toHaveBeenCalled(); expect(mocks.approve).not.toHaveBeenCalled();
+  expect((await POST(request("POST", { action: "status", ids: Array.from({ length: 201 }, (_, i) => String(i)) }))).status).toBe(400);
  });
  it("checks final edited Speed content and refuses write-in answer conversion", async () => {
   const edited = await PATCH(request("PATCH", { question: "Edited question?", options: row.options, correctAnswer: 2 }), params);
