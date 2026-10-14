@@ -48,7 +48,10 @@ Phase 4 is done: **don't redo the card, wallet or list work.**
   `/private/tmp/claude-501/-Users-andrewserulneck-Documents-Trivia-Predictions/77811c92-78f7-4f62-8c94-8179bd86a700/scratchpad/ranked-p4`
   (node_modules symlinked to the main checkout's). Based on `origin/main` `49e5537` (Phase 3 handoff). The code
   commit is "feat(rewards): Rewards card standings, wallet place and partner/admin lists (Phase 4)"; a docs commit
-  adds this note and the plan update. Both pushed to `origin/main` (approved, D11); the deploy state is in §6.
+  adds this note and the plan update (`bb529a1`). Both pushed to `origin/main` (approved, D11). Production deploy
+  `hightop-challenge-pgu6h0off-andrewserulnecks-projects.vercel.app` reached **Ready** on 2026-10-14; a read-only
+  `GET https://play.hightopchallenge.com/api/challenge-campaigns?venueId=venue-garden-state-bar` returned 200 with
+  `campaigns: []`.
 - **No migration. No data written.** Production still has **0** `ranked_places` rewards, 0 settlements, 0 ledger
   rows with a place (re-checked read-only 2026-10-14 after the code was written; the new `place` / settlement
   selects work).
