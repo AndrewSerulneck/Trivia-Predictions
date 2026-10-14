@@ -1,8 +1,9 @@
 # Live Trivia Weekly Places Reward (1st / 2nd / 3rd over the week) — Plan
 
 > **Status:** Phase 1 **done** 2026-10-14 (migration applied to production). Phase 2 **done** 2026-10-14 (weekly
-> resolver live in the existing cron; no ranked reward exists yet, so it pays nobody until Phase 3/5). Latest handoff:
-> `docs/live-trivia-weekly-places-reward-plan_PHASE_2_HANDOFF.md`. Next: **Phase 3**. Each phase ends with
+> resolver live in the existing cron; no ranked reward exists yet, so it pays nobody until Phase 3/5). Phase 3
+> **done** 2026-10-14 (server can create a weekly places reward + its wording; no UI yet, none created). Latest handoff:
+> `docs/live-trivia-weekly-places-reward-plan_PHASE_3_HANDOFF.md`. Next: **Phase 4**. Each phase ends with
 > `docs/live-trivia-weekly-places-reward-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew. **Trigger:** Garden State Bar promised posters with weekly 1st/2nd/3rd Live Trivia
 > prizes but never set up a reward, and the system can't express one today.
@@ -317,8 +318,10 @@ global CLAUDE.md. **Never run `supabase db push` without Andrew's explicit go-ah
   doesn't stop others; the game-winner sweep still runs if this one throws; game-winner minimum.
 - Out of scope: UI; any Garden State Bar data.
 
-### Phase 3: Server-side creation + reward copy
-**Model: Claude Opus 5.5 · Effort: medium**
+### Phase 3: Server-side creation + reward copy — DONE 2026-10-14
+**Model: Claude Opus 5.5 · Effort: medium** · As built: `docs/live-trivia-weekly-places-reward-plan_PHASE_3_HANDOFF.md`.
+Player panels render a ranked reward as **text only** (no gauge, no quota line); the wallet reads a ranked coupon's
+own prize snapshot. `terms_updated_at` trigger left as is (the win sentence reads only the coupon's place + week).
 - §5d server half: registry fields, `createReward` + validation (each place prize through the existing prize
   validator, 1–3 places, weekly Live Trivia only), admin + owner API routes (`app/api/admin/route.ts`,
   `app/api/owner/rewards/route.ts`) accept and return `placePrizes`. Description and fine-print templates in
