@@ -18,13 +18,17 @@ const main = async () => {
     body: "{}", signal: AbortSignal.timeout(65_000),
   });
   let bytes = 0, firstRecordMs: number | undefined, heartbeats = 0, heartbeatBeyond30 = false;
+  let previousRecordMs = 0, maxGapMs = 0;
   const measured = new Response(response.body?.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({ transform(chunk, controller) { bytes += chunk.byteLength; controller.enqueue(chunk); } })), { status: response.status, headers: response.headers });
   const final = await consumeTriviaReviewStream(measured, "diagnostic", record => {
-    firstRecordMs ??= Date.now() - started;
-    if (record.type === "heartbeat") { heartbeats++; heartbeatBeyond30 ||= Date.now() - started > 30_000; }
-    console.log(JSON.stringify({ type: record.type, receivedMs: Date.now() - started }));
+    const receivedMs = Date.now() - started;
+    firstRecordMs ??= receivedMs;
+    maxGapMs = Math.max(maxGapMs, receivedMs - previousRecordMs);
+    previousRecordMs = receivedMs;
+    if (record.type === "heartbeat") { heartbeats++; heartbeatBeyond30 ||= receivedMs > 30_000; }
+    console.log(JSON.stringify({ type: record.type, receivedMs }));
   });
-  if (final.type !== "diagnostic_complete" || !heartbeatBeyond30 || Date.now() - started < 40_000 || !response.headers.get("Cache-Control")?.includes("no-store")) throw new Error("Transport gate did not pass.");
-  console.log(JSON.stringify({ origin: origin.origin, status: response.status, firstRecordMs, heartbeats, heartbeatBeyond30, elapsedMs: Date.now() - started, bytes, final }));
+  if (final.type !== "diagnostic_complete" || firstRecordMs === undefined || firstRecordMs > 5_000 || maxGapMs > 10_000 || !heartbeatBeyond30 || Date.now() - started < 40_000 || !response.headers.get("Cache-Control")?.includes("no-store")) throw new Error("Transport gate did not pass.");
+  console.log(JSON.stringify({ origin: origin.origin, status: response.status, firstRecordMs, maxGapMs, heartbeats, heartbeatBeyond30, elapsedMs: Date.now() - started, bytes, final }));
 };
 void main().catch(() => { console.error("Transport diagnostic failed. No approval or paid check was requested."); process.exitCode = 1; });
