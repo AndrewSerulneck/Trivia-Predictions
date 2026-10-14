@@ -9,11 +9,10 @@ import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime"
 import { isCategoryBlitzSoloScoringEnabled } from "@/lib/categoryBlitzTestMode";
 import { ROUND_DURATION_SECONDS, SUBMISSION_GRACE_MS, isContinuousDefaultEnabled, roundDurationSeconds, roundIntervalSeconds, intermissionSeconds, lobbyDwellSeconds, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
 import { isReverseRound, reverseRoundPoints } from "@/lib/categoryBlitzModes";
+import { alliterationBonus } from "@/lib/categoryBlitzAlliteration";
 import {
   resolveContinuousConfig,
-  pickRandomLetter,
-  pickRandomMode,
-  assembleRandomBoard,
+  assembleContinuousBoard,
   type ResolvedContinuousConfig,
 } from "@/lib/categoryBlitzPool";
 import type {
@@ -1321,6 +1320,10 @@ const mergeCumulativeSessionTotals = async (
  *   scores 1 pt per distinct player who gave the same normalized answer, uncapped
  *   (reverseRoundPoints). A fail-CLOSED safety moderator replaces the validity
  *   judge; unsafe answers score 0 and are suppressed from the reveal.
+ * - BOTH modes: an answer that already scores gets +1 when it alliterates
+ *   (2+ words, every word on the round's letter — lib/categoryBlitzAlliteration.ts).
+ *   It is part of points_awarded, so leaderboards, session totals and Rewards
+ *   accrual carry it with no other change.
  * - Standard rounds need 3+ session participants to score; reverse rounds
  *   only need 2+ (a two-player match is real consensus). Below the minimum,
  *   the whole round is zeroed regardless of answer quality.
@@ -1504,7 +1507,8 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
       // (≥2 players) — submissionReason reads it that way. Below the 2-player
       // session minimum, consensus is meaningless and the gate zeroes the round.
       const matched = matchingPlayers >= 2;
-      const pts = insufficientPlayers ? 0 : reverseRoundPoints(matchingPlayers);
+      const basePts = insufficientPlayers ? 0 : reverseRoundPoints(matchingPlayers);
+      const pts = basePts + alliterationBonus(sub.answer, round.letter, basePts);
       updates.push({ id: sub.id, is_unique: matched, is_valid: true, invalid_reason: null, points_awarded: pts });
     }
   } else {
@@ -1544,7 +1548,8 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
       }
     }
 
-    // Step 3: compute final points (unique + correct letter + valid = 2 pts, anything else = 0).
+    // Step 3: compute final points (unique + correct letter + valid = 2 pts, anything else = 0),
+    // plus the +1 alliteration bonus on a scoring answer (both modes).
     // When insufficientPlayers (< 3), all answers score 0 regardless of content,
     // but the answer is still fully validated above so the grading reveal can
     // show whether the answer would have been correct.
@@ -1556,7 +1561,8 @@ export async function scoreRound(roundId: string): Promise<CategoryBlitzRoundRes
       const verdict   = validityMap.get(sub.id);
       const isValid   = isUnique ? (letterOk ? (verdict?.valid ?? true) : false) : null;
       const invalidReason = isUnique && letterOk && verdict && !verdict.valid ? verdict.reason : null;
-      const pts       = insufficientPlayers ? 0 : (isUnique && isValid ? POINTS_PER_UNIQUE_ANSWER : 0);
+      const basePts   = insufficientPlayers ? 0 : (isUnique && isValid ? POINTS_PER_UNIQUE_ANSWER : 0);
+      const pts       = basePts + alliterationBonus(sub.answer, round.letter, basePts);
       updates.push({ id: sub.id, is_unique: isUnique, is_valid: isValid, invalid_reason: invalidReason, points_awarded: pts });
     }
   }
@@ -2102,9 +2108,15 @@ export async function createContinuousSession(
  * Start a round for a continuous session.
  * Unlike scheduled mode:
  * - Uses pure random letter selection (no repeat avoidance)
- * - Uses weighted random mode selection
  * - Uses custom timing from continuous config
  * - No lobby dwell period
+ * Like scheduled mode, the round's mode follows the fixed cadence
+ * (isReverseRound — every 5th round is Majority Rules) and Majority Rules
+ * rounds draw from the "Blend In!" category index.
+ *
+ * `config.modeSelection` is accepted but ignored: the stored column and the
+ * admin API outlived the random mode mix (docs/category-blitz-how-to-play-plan.md
+ * Phase 1, no migration).
  */
 export async function startContinuousRound(
   sessionId: string,
@@ -2133,14 +2145,22 @@ export async function startContinuousRound(
     throw new Error(`Cannot start round on a session with status '${sessionRow.status}'.`);
   }
 
-  // Pure random selection - no tracking of used letters
-  const letter = pickRandomLetter();
-  const mode = pickRandomMode(config.modeSelection);
-  const categories = assembleRandomBoard(letter, config.categoryPool);
+  // The round's 0-based index in the session sets its mode. Two concurrent
+  // starters count the same rows, so they agree on the mode; the loser then
+  // resolves through the 23505 branch below.
+  const { count: priorRoundCount, error: countErr } = await supabaseAdmin!
+    .from("category_blitz_rounds")
+    .select("id", { count: "exact", head: true })
+    .eq("session_id", sessionId);
+  if (countErr) throw new Error(countErr.message || "Failed to count the session's rounds.");
+  const mode: CategoryBlitzMode = isReverseRound(priorRoundCount ?? 0) ? "reverse" : "standard";
 
-  if (categories.length === 0) {
-    throw new Error(`Failed to assemble a category board for letter '${letter}'. Check category pool coverage.`);
+  // Pure random letter — no tracking of used letters.
+  const board = assembleContinuousBoard(mode, config.categoryPool);
+  if (!board) {
+    throw new Error("Failed to assemble a category board for any letter. Check category pool coverage.");
   }
+  const { letter, categories } = board;
 
   const setIndex = LETTERS.indexOf(letter);
   const endsAt = new Date(Date.now() + config.roundDurationSeconds * 1000).toISOString();
@@ -2200,7 +2220,7 @@ export async function startContinuousRound(
  * Key differences from scheduled mode:
  * - No schedule windows or lobby dwell
  * - Sessions never end naturally (run until explicitly stopped)
- * - Pure random letter and mode selection
+ * - Pure random letter selection; mode follows the every-5th-round cadence
  * - Configurable timing per venue
  */
 export async function driveContinuousCategoryBlitz(

@@ -258,33 +258,6 @@ export function clearVenuePool(venueId: string): void {
 }
 
 /**
- * Pick a random letter from usable letters.
- * Unlike the scheduled mode, this does NOT avoid repeats - pure random.
- */
-export function pickRandomLetter(): string {
-  return USABLE_LETTERS[Math.floor(Math.random() * USABLE_LETTERS.length)];
-}
-
-/**
- * Pick a random mode based on the mode selection strategy.
- */
-export function pickRandomMode(
-  selection: "random" | "weighted_standard" | "weighted_reverse"
-): CategoryBlitzMode {
-  const rand = Math.random();
-  
-  switch (selection) {
-    case "weighted_standard":
-      return rand < 0.75 ? "standard" : "reverse";
-    case "weighted_reverse":
-      return rand < 0.25 ? "standard" : "reverse";
-    case "random":
-    default:
-      return rand < 0.5 ? "standard" : "reverse";
-  }
-}
-
-/**
  * Assemble a board for a letter from the venue's shuffled pool.
  * Returns ROUND_CATEGORY_COUNT categories randomly selected.
  * 
@@ -319,25 +292,51 @@ export function assembleBoardFromPool(
   return shuffle(availableCategories).slice(0, ROUND_CATEGORY_COUNT);
 }
 
-/**
- * Simplified board assembly for continuous mode.
- * No tracking of used letters or categories - pure random every time.
- */
-export function assembleRandomBoard(
+/** A venue's categories for one letter, narrowed to its custom pool when it has one. */
+function letterPoolFor(
   letter: string,
-  categoryPool: string[] = []
+  letterCategories: Record<string, string[]>,
+  categoryPool: string[],
 ): string[] {
-  const effectivePool = categoryPool.length > 0 ? categoryPool : null;
-  const letterPool = LETTER_CATEGORIES[letter] ?? [];
-  const availableCategories = effectivePool
-    ? letterPool.filter((cat) => effectivePool.includes(cat))
-    : letterPool;
-  
-  if (availableCategories.length < ROUND_CATEGORY_COUNT) {
-    return [];
+  const letterPool = letterCategories[letter] ?? [];
+  return categoryPool.length > 0 ? letterPool.filter((cat) => categoryPool.includes(cat)) : letterPool;
+}
+
+/** A random letter that can fill a whole board from this index, and that board — or null if none can. */
+function randomBoardFrom(
+  usableLetters: string[],
+  letterCategories: Record<string, string[]>,
+  categoryPool: string[],
+): { letter: string; categories: string[] } | null {
+  const candidates = usableLetters.filter(
+    (letter) => letterPoolFor(letter, letterCategories, categoryPool).length >= ROUND_CATEGORY_COUNT,
+  );
+  if (candidates.length === 0) return null;
+  const letter = candidates[Math.floor(Math.random() * candidates.length)];
+  const categories = shuffle(letterPoolFor(letter, letterCategories, categoryPool)).slice(0, ROUND_CATEGORY_COUNT);
+  return { letter, categories };
+}
+
+/**
+ * Pick the letter and board for one continuous round. Pure random — no
+ * tracking of used letters or categories.
+ *
+ * Majority Rules ("reverse") rounds draw from the "Blend In!" index
+ * (bLetters / bUsableLetters), as the scheduled engine does. If a venue's custom
+ * pool leaves no Blend-In letter with a full board, the round falls back to the
+ * standard index rather than failing — it stays a Majority Rules round, because
+ * the cadence (isReverseRound) never changes. Returns null only when even the
+ * standard index can't fill a board.
+ */
+export function assembleContinuousBoard(
+  mode: CategoryBlitzMode,
+  categoryPool: string[] = [],
+): { letter: string; categories: string[] } | null {
+  if (mode === "reverse") {
+    const blendIn = randomBoardFrom(B_USABLE_LETTERS, B_LETTER_CATEGORIES, categoryPool);
+    if (blendIn) return blendIn;
   }
-  
-  return shuffle(availableCategories).slice(0, ROUND_CATEGORY_COUNT);
+  return randomBoardFrom(USABLE_LETTERS, LETTER_CATEGORIES, categoryPool);
 }
 
 /**

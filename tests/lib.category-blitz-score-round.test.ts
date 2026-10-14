@@ -304,3 +304,115 @@ describe("scoreRound — Category Blitz global-room venue attribution (Phase 3 r
     expect(state.users.find((u) => u.id === "u7")?.points).toBe(0);
   });
 });
+
+describe("scoreRound — alliteration bonus (+1, both modes)", () => {
+  function participants(sessionId: string, userIds: string[]): Row[] {
+    return userIds.map((user_id) => ({ session_id: sessionId, user_id, venue_id: ROOM_VENUE_ID }));
+  }
+
+  it("standard mode: a unique, valid, alliterative answer scores 2 + 1; a plain one scores 2; a duplicate alliterative one scores 0", async () => {
+    const state: FakeState = {
+      category_blitz_rounds: [makeRound({ id: "round-a1", session_id: "sess-a1" })],
+      category_blitz_sessions: [{ id: "sess-a1", cumulative_totals: {} }],
+      category_blitz_session_participants: participants("sess-a1", ["u1", "u2", "u3"]),
+      category_blitz_submissions: [
+        makeSubmission({ id: "sub-allit", round_id: "round-a1", user_id: "u1", venue_id: "venue-alpha", answer: "Tasmanian Tiger", normalized_answer: "tasmanian tiger" }),
+        makeSubmission({ id: "sub-plain", round_id: "round-a1", user_id: "u2", venue_id: "venue-alpha", answer: "Turtle", normalized_answer: "turtle" }),
+        makeSubmission({ id: "sub-dup-1", round_id: "round-a1", user_id: "u2", venue_id: "venue-alpha", category_index: 1, answer: "Tiny Toad", normalized_answer: "tiny toad" }),
+        makeSubmission({ id: "sub-dup-2", round_id: "round-a1", user_id: "u3", venue_id: "venue-alpha", category_index: 1, answer: "Tiny Toad", normalized_answer: "tiny toad" }),
+      ],
+      users: [
+        { id: "u1", points: 0 },
+        { id: "u2", points: 0 },
+        { id: "u3", points: 0 },
+      ],
+    };
+    mocks.from.mockImplementation(makeFakeDb(state));
+
+    const results = await scoreRound("round-a1");
+
+    const subs = state.category_blitz_submissions;
+    expect(subs.find((s) => s.id === "sub-allit")?.points_awarded).toBe(3);
+    expect(subs.find((s) => s.id === "sub-plain")?.points_awarded).toBe(2);
+    expect(subs.find((s) => s.id === "sub-dup-1")?.points_awarded).toBe(0);
+    expect(subs.find((s) => s.id === "sub-dup-2")?.points_awarded).toBe(0);
+
+    // The bonus flows through points_awarded into users.points and the session totals.
+    expect(state.users.find((u) => u.id === "u1")?.points).toBe(3);
+    expect(results.totals.find((t) => t.userId === "u1")?.points).toBe(3);
+    const answer = results.results[0].answers.find((a) => a.userId === "u1");
+    expect(answer?.reason).toBe("correct");
+    expect(answer?.pointsAwarded).toBe(3);
+  });
+
+  it("standard mode, below the 3-player minimum: an alliterative answer still scores 0", async () => {
+    const state: FakeState = {
+      category_blitz_rounds: [makeRound({ id: "round-a2", session_id: "sess-a2" })],
+      category_blitz_sessions: [{ id: "sess-a2", cumulative_totals: {} }],
+      category_blitz_session_participants: participants("sess-a2", ["u1", "u2"]),
+      category_blitz_submissions: [
+        makeSubmission({ id: "sub-a2", round_id: "round-a2", user_id: "u1", venue_id: "venue-alpha", answer: "Tasmanian Tiger", normalized_answer: "tasmanian tiger" }),
+      ],
+      users: [{ id: "u1", points: 0 }, { id: "u2", points: 0 }],
+    };
+    mocks.from.mockImplementation(makeFakeDb(state));
+
+    await scoreRound("round-a2");
+
+    expect(state.category_blitz_submissions[0].points_awarded).toBe(0);
+    expect(mocks.applyChallengeCampaignPoints).not.toHaveBeenCalled();
+  });
+
+  it("standard mode: an LLM-invalid alliterative answer scores 0 (no bonus on a 0-point answer)", async () => {
+    mocks.anthropicCreate.mockImplementation(async (params: { messages: { content: string }[] }) => {
+      const prompt = params.messages[0]?.content ?? "";
+      const itemLines = prompt.match(/^\d+\.\s/gm) ?? [];
+      const arr = itemLines.map((_: string, i: number) => ({ index: i + 1, valid: false, reason: "not an animal" }));
+      return { content: [{ type: "text", text: JSON.stringify(arr) }], usage: { input_tokens: 10, output_tokens: 10 } };
+    });
+    const state: FakeState = {
+      category_blitz_rounds: [makeRound({ id: "round-a3", session_id: "sess-a3" })],
+      category_blitz_sessions: [{ id: "sess-a3", cumulative_totals: {} }],
+      category_blitz_session_participants: participants("sess-a3", ["u1", "u2", "u3"]),
+      category_blitz_submissions: [
+        makeSubmission({ id: "sub-a3", round_id: "round-a3", user_id: "u1", venue_id: "venue-alpha", answer: "Table Top", normalized_answer: "table top" }),
+      ],
+      users: [{ id: "u1", points: 0 }, { id: "u2", points: 0 }, { id: "u3", points: 0 }],
+    };
+    mocks.from.mockImplementation(makeFakeDb(state));
+
+    await scoreRound("round-a3");
+
+    expect(state.category_blitz_submissions[0].points_awarded).toBe(0);
+  });
+
+  it("Majority Rules: matched alliterative answers score crowd points + 1, a solo alliterative answer 1 + 1, a wrong-letter one 0", async () => {
+    const state: FakeState = {
+      category_blitz_rounds: [makeRound({ id: "round-a4", session_id: "sess-a4", mode: "reverse" })],
+      category_blitz_sessions: [{ id: "sess-a4", cumulative_totals: {} }],
+      category_blitz_session_participants: participants("sess-a4", ["u1", "u2", "u3"]),
+      category_blitz_submissions: [
+        makeSubmission({ id: "sub-m1", round_id: "round-a4", user_id: "u1", venue_id: "venue-alpha", answer: "Tiny Toad", normalized_answer: "tiny toad" }),
+        makeSubmission({ id: "sub-m2", round_id: "round-a4", user_id: "u2", venue_id: "venue-alpha", answer: "Tiny Toad", normalized_answer: "tiny toad" }),
+        makeSubmission({ id: "sub-solo", round_id: "round-a4", user_id: "u3", venue_id: "venue-alpha", category_index: 1, answer: "Tall Tree", normalized_answer: "tall tree" }),
+        makeSubmission({ id: "sub-plain", round_id: "round-a4", user_id: "u1", venue_id: "venue-alpha", category_index: 2, answer: "Tiger", normalized_answer: "tiger" }),
+        makeSubmission({ id: "sub-wrong", round_id: "round-a4", user_id: "u2", venue_id: "venue-alpha", category_index: 3, answer: "Big Bear", normalized_answer: "big bear" }),
+      ],
+      users: [{ id: "u1", points: 0 }, { id: "u2", points: 0 }, { id: "u3", points: 0 }],
+    };
+    mocks.from.mockImplementation(makeFakeDb(state));
+
+    const results = await scoreRound("round-a4");
+
+    const subs = state.category_blitz_submissions;
+    expect(subs.find((s) => s.id === "sub-m1")?.points_awarded).toBe(3); // 2 players matched + 1
+    expect(subs.find((s) => s.id === "sub-m2")?.points_awarded).toBe(3);
+    expect(subs.find((s) => s.id === "sub-solo")?.points_awarded).toBe(2); // solo 1 + 1
+    expect(subs.find((s) => s.id === "sub-plain")?.points_awarded).toBe(1); // solo, no bonus
+    expect(subs.find((s) => s.id === "sub-wrong")?.points_awarded).toBe(0);
+
+    const solo = results.results[1].answers.find((a) => a.userId === "u3");
+    expect(solo?.reason).toBe("too_obscure");
+    expect(results.totals.find((t) => t.userId === "u1")?.points).toBe(4);
+  });
+});

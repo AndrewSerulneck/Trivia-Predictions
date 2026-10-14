@@ -17,8 +17,13 @@ export const MODE_CONFIG: Record<CategoryBlitzMode, {
   reverse:  { puckLabel: "Majority Rules!",  rule: "More popular answers score more points this round!", themeKey: "blitzReverse"  },
 };
 
-// Cadence knob — flip to a random-25% strategy later without touching startRound.
-export const isReverseRound = (roundIndex: number) => roundIndex % 4 === 3;
+// The ONE home of the Majority Rules cadence, for both engines (scheduled
+// startRound and continuous startContinuousRound). roundIndex is 0-based within
+// a session, so rounds 5, 10, 15… are Majority Rules — never random (Andrew,
+// 2026-10-14, docs/category-blitz-how-to-play-plan.md §2).
+export const MAJORITY_RULES_EVERY_N_ROUNDS = 5;
+export const isReverseRound = (roundIndex: number) =>
+  roundIndex % MAJORITY_RULES_EVERY_N_ROUNDS === MAJORITY_RULES_EVERY_N_ROUNDS - 1;
 
 // Points for one submission in a "reverse" round: 1 pt per player who gave the
 // same normalized answer, uncapped.

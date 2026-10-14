@@ -29,12 +29,6 @@ interface CategoryBlitzContinuousSettingsProps {
   venueId: string;
 }
 
-const MODE_OPTIONS: { value: CategoryBlitzModeSelection; label: string }[] = [
-  { value: "random", label: "Random (50/50)" },
-  { value: "weighted_standard", label: "Weighted Standard (75/25)" },
-  { value: "weighted_reverse", label: "Weighted Reverse (25/75)" },
-];
-
 export function CategoryBlitzContinuousSettings({ venueId }: CategoryBlitzContinuousSettingsProps) {
   const [config, setConfig] = useState<ContinuousConfig | null>(null);
   const [poolState, setPoolState] = useState<PoolState | null>(null);
@@ -47,6 +41,8 @@ export function CategoryBlitzContinuousSettings({ venueId }: CategoryBlitzContin
   const [isActive, setIsActive] = useState(false);
   const [roundDuration, setRoundDuration] = useState(180);
   const [intermission, setIntermission] = useState(300);
+  // No longer chosen here — every 5th round is Majority Rules (isReverseRound).
+  // The stored value is only round-tripped on save so it is never overwritten.
   const [modeSelection, setModeSelection] = useState<CategoryBlitzModeSelection>("random");
 
   const loadConfig = useCallback(async () => {
@@ -128,7 +124,7 @@ export function CategoryBlitzContinuousSettings({ venueId }: CategoryBlitzContin
           </h3>
           <p className="text-sm text-slate-400 mt-1">
             {isContinuousDefaultEnabled()
-              ? "Category Blitz already runs continuously at every venue by default. Turn this on only to customize this venue's round timing, mode mix, or category pool — or to opt this venue out entirely."
+              ? "Category Blitz already runs continuously at every venue by default. Turn this on only to customize this venue's round timing or category pool — or to opt this venue out entirely."
               : "Run Category Blitz on an infinite loop with randomized rounds"}
           </p>
         </div>
@@ -181,25 +177,9 @@ export function CategoryBlitzContinuousSettings({ venueId }: CategoryBlitzContin
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Mode Selection
-            </label>
-            <select
-              value={modeSelection}
-              onChange={(e) => setModeSelection(e.target.value as CategoryBlitzModeSelection)}
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-ht-cyan-500/50"
-            >
-              {MODE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-slate-500 mt-1">
-              How often &quot;Blend In!&quot; (reverse) rounds appear
-            </p>
-          </div>
+          <p className="text-xs text-slate-500">
+            Every 5th round is &quot;Majority Rules&quot; — the mode mix is fixed and not set per venue.
+          </p>
 
           {poolState && !poolState.isValid && (
             <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">

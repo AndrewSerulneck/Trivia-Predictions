@@ -15,8 +15,8 @@
  *
  * "Blend In!" (reverse mode, docs/category-blitz-mode-b-plan.md) rounds are
  * exercised automatically: the cadence is deterministic (isReverseRound:
- * roundIndex % 4 === 3), so --rounds >= 4 (the default) always plays exactly
- * one reverse round at round 4, asserting the locked consensus payout (exactly
+ * roundIndex % 5 === 4), so --rounds >= 5 (the default) always plays exactly
+ * one reverse round at round 5, asserting the locked consensus payout (exactly
  * 1 pt per matching player, uncapped) plus a red-team pass against the real
  * safety moderator (political figures / hate speech / dog-whistles /
  * harassment must all score 0 and be suppressed from the reveal) and a benign
@@ -28,8 +28,8 @@
  *
  * Options:
  *   --users <n>        Synthetic players. Default: 12
- *   --rounds <n>       Rounds to play in the session. Default: 4 (the minimum
- *                      that reaches one "Blend In!" reverse round at index 3).
+ *   --rounds <n>       Rounds to play in the session. Default: 5 (the minimum
+ *                      that reaches one "Blend In!" reverse round at index 4).
  *   --llm              Use Haiku to generate realistic *valid* answers so the
  *                      2-point award path + nonzero leaderboards are exercised.
  *                      (The grader Haiku always runs regardless — this only
@@ -51,7 +51,7 @@ const { createClient } = require("@supabase/supabase-js");
 function parseArgs(argv) {
   const args = {
     users: 12,
-    rounds: 4,
+    rounds: 5,
     llm: false,
     venueId: "",
     keep: false,
@@ -60,7 +60,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 1) {
     const t = argv[i];
     if (t === "--users") { args.users = Math.max(2, Math.floor(Number(argv[++i] ?? 12))); }
-    else if (t === "--rounds") { args.rounds = Math.max(1, Math.floor(Number(argv[++i] ?? 4))); }
+    else if (t === "--rounds") { args.rounds = Math.max(1, Math.floor(Number(argv[++i] ?? 5))); }
     else if (t === "--llm") { args.llm = true; }
     else if (t === "--venue-id") { args.venueId = String(argv[++i] ?? "").trim(); }
     else if (t === "--keep") { args.keep = true; }
@@ -74,11 +74,11 @@ function printHelp() {
   console.log(`Category Blitz simulation harness
 
   node --env-file=.env.local --conditions react-server --import tsx \\
-    scripts/simulate-category-blitz.cjs [--users 12] [--rounds 4] [--llm] \\
+    scripts/simulate-category-blitz.cjs [--users 12] [--rounds 5] [--llm] \\
     [--venue-id <id>] [--keep] [--concurrency-only]
 
-  --rounds must be >= 4 to exercise a "Blend In!" (reverse) round — the
-  cadence is deterministic (every 4th round, index 3).`);
+  --rounds must be >= 5 to exercise a "Blend In!" (reverse) round — the
+  cadence is deterministic (every 5th round, index 4).`);
 }
 
 // ── Tiny assertion framework ────────────────────────────────────────────────
@@ -303,8 +303,8 @@ function buildExpectations(engine, letter, submissionsByCat) {
 
 // ── One "Blend In!" (reverse) round ─────────────────────────────────────────
 //
-// The cadence (isReverseRound: roundIndex % 4 === 3) is deterministic, so
-// running >=4 rounds always exercises exactly one reverse round at round 4.
+// The cadence (isReverseRound: roundIndex % 5 === 4) is deterministic, so
+// running >=5 rounds always exercises exactly one reverse round at round 5.
 // This exercises the LOCKED scoring curve (exactly 1 pt per matching player,
 // uncapped — reverseRoundPoints is the identity function) plus the fail-closed
 // safety moderator, against the real engine and real Haiku calls.
@@ -552,8 +552,10 @@ async function playRound(ctx, roundNumber) {
     if (actual.reason === "correct" && hasExpl) { explBad += 1; console.log(`    ${C.red}unexpected explanation on correct${C.reset} ${key}`); }
     if (actual.reason === "invalid" && hasExpl && explSamples.length < 3) explSamples.push(`"${actual.answer}" → ${actual.explanation}`);
     // Points must be internally consistent regardless of Haiku's verdict:
-    // exactly the "correct" answers, and only those, earn 2 points.
-    if ((actual.reason === "correct") !== (actual.pointsAwarded === 2)) {
+    // exactly the "correct" answers, and only those, earn 2 points (+1 when
+    // the answer alliterates — lib/categoryBlitzAlliteration.ts).
+    const correctPoints = 2 + engine.alliterationBonus(actual.answer, round.letter, 2);
+    if ((actual.reason === "correct") !== (actual.pointsAwarded === correctPoints)) {
       inconsistent += 1;
       console.log(`    ${C.red}inconsistent${C.reset} ${key}: ${actual.reason}/${actual.pointsAwarded}`);
     }
@@ -564,7 +566,7 @@ async function playRound(ctx, roundNumber) {
       if (actual.reason === exp.softReason) softOk += 1; else softBad += 1;
     }
   }
-  hard(`points/reason consistent for every scored answer (correct ⟺ +2)`, inconsistent === 0, `${inconsistent} inconsistent`);
+  hard(`points/reason consistent for every scored answer (correct ⟺ +2, +3 if alliterative)`, inconsistent === 0, `${inconsistent} inconsistent`);
   hard(`mechanical verdicts correct (duplicate/wrong_letter)`, hardBad === 0, `${hardOk} ok, ${hardBad} bad`);
   hard(`every non-scoring verdict carries an explanation (Phase 2)`, explBad === 0, `${explBad} missing/misplaced`);
   soft(`semantic verdicts matched intent (garbage→invalid, generated→correct)`, softBad === 0, `${softOk} ok, ${softBad} differed from intent`);
@@ -729,9 +731,13 @@ async function main() {
 
   const engineMod = await import("../lib/categoryBlitz.ts");
   const shared = await import("../lib/categoryBlitzShared.ts");
-  // answerStartsWithLetter lives in the shared (non server-only) module; merge
-  // it in so the expectation engine can mirror the real scoring logic exactly.
-  const engine = Object.assign({}, engineMod, { answerStartsWithLetter: shared.answerStartsWithLetter });
+  const alliteration = await import("../lib/categoryBlitzAlliteration.ts");
+  // answerStartsWithLetter / alliterationBonus live in pure (non server-only)
+  // modules; merge them in so the checks mirror the real scoring logic exactly.
+  const engine = Object.assign({}, engineMod, {
+    answerStartsWithLetter: shared.answerStartsWithLetter,
+    alliterationBonus: alliteration.alliterationBonus,
+  });
   const db = getAdminClient();
   const venueId = args.venueId || (await ensureSimVenue(db));
 

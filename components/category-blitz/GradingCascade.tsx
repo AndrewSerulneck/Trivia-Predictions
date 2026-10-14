@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import AlliterationBonusChip from "@/components/category-blitz/AlliterationBonusChip";
 import CorrectBurst from "@/components/category-blitz/CorrectBurst";
 import WrongVerdict from "@/components/category-blitz/WrongVerdict";
 import { EASE_ACCEL } from "@/lib/motionEasing";
@@ -24,13 +25,16 @@ export interface GradingAnswer {
   points: number;
   /** "reverse" ("Blend In!") cards glow brighter the more players matched — see reverseGlow below. Defaults to "standard". */
   mode?: "standard" | "reverse";
+  /** The part of `points` that was the alliteration bonus (alliterationBonus() in lib/categoryBlitzAlliteration.ts). Defaults to 0. */
+  alliterationBonus?: number;
 }
 
 /**
  * "Blend In!" (reverse) glow tier for a matched ("correct") answer — brighter
- * the more players hit it (consensus made visible). `points` is exactly the
- * matching-player count (reverseRoundPoints is the identity function), so it
- * doubles as the tier lookup. Mirrors reverseMatchGlow in CategoryBlitzGame's
+ * the more players hit it (consensus made visible). `points` is the
+ * matching-player count (reverseRoundPoints is the identity function) — callers
+ * pass the awarded points minus any alliteration bonus, so it doubles as the
+ * tier lookup. Mirrors reverseMatchGlow in CategoryBlitzGame's
  * ResultsScreen so the live cascade and the static results card agree.
  */
 function reverseGlow(points: number): { card: string; badge: string } {
@@ -177,7 +181,8 @@ const Row = ({ data, shown, reduce }: RowProps) => {
   const meta = reason === "pending" ? null : RESOLVED[reason];
   // "Blend In!" matched answers glow brighter the more players hit it —
   // consensus made visible (Phase 5). Only correct answers in a reverse round.
-  const glow = isCorrect && data.mode === "reverse" ? reverseGlow(data.points) : null;
+  const bonus = isCorrect || isTooObscure ? data.alliterationBonus ?? 0 : 0;
+  const glow = isCorrect && data.mode === "reverse" ? reverseGlow(data.points - bonus) : null;
 
   return (
     <motion.li
@@ -237,6 +242,7 @@ const Row = ({ data, shown, reduce }: RowProps) => {
                 )}
               </div>
             </div>
+            <AlliterationBonusChip bonus={bonus} />
             {(isDup || isTooObscure || (isCorrect && data.mode === "reverse")) && data.explanation && (
               <p className="mt-1 text-caption leading-snug text-slate-500">
                 {data.explanation}
@@ -253,7 +259,7 @@ const Row = ({ data, shown, reduce }: RowProps) => {
             ? `${data.category}: grading`
             : `${data.category}: ${meta?.label}${
                 isCorrect ? `, plus ${data.points} points` : ""
-              }`}
+              }${bonus > 0 ? `, including ${bonus} alliteration bonus` : ""}`}
         </span>
       )}
     </motion.li>

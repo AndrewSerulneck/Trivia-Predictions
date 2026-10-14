@@ -18,10 +18,13 @@ function createFakeSupabase(store: Record<string, Row[]>) {
     private orderCol: string | null = null;
     private orderAscending = true;
     private limitN: number | null = null;
+    private countOnly = false;
 
     constructor(private table: string) {}
 
-    select(_cols?: string) {
+    select(_cols?: string, opts?: { count?: string; head?: boolean }) {
+      // select("id", { count: "exact", head: true }) → resolve to a count only.
+      if (opts?.count) this.countOnly = true;
       return this;
     }
     eq(col: string, val: unknown) {
@@ -76,8 +79,14 @@ function createFakeSupabase(store: Record<string, Row[]>) {
     // Plain `await builder` (no maybeSingle) resolves to the full row list —
     // this is the shape runContinuousCategoryBlitzEngine's venue-listing
     // query uses.
-    then(resolve: (v: { data: Row[]; error: null }) => unknown, reject?: (e: unknown) => unknown) {
-      return Promise.resolve({ data: this.filtered(), error: null }).then(resolve, reject);
+    then(
+      resolve: (v: { data: Row[] | null; error: null; count?: number }) => unknown,
+      reject?: (e: unknown) => unknown,
+    ) {
+      const result = this.countOnly
+        ? { data: null, error: null, count: this.filtered().length }
+        : { data: this.filtered(), error: null };
+      return Promise.resolve(result).then(resolve, reject);
     }
 
     insert(payload: Row) {
@@ -139,6 +148,7 @@ vi.mock("@/lib/supabaseAdmin", () => ({
   },
 }));
 
+import letterIndexData from "@/data/category-blitz/category-letter-index.json";
 import {
   driveContinuousCategoryBlitz,
   driveVenueCategoryBlitz,
@@ -367,5 +377,86 @@ describe("scheduled engine stands down for continuous venues (Phase 4)", () => {
       "session_abandoned",
       expect.anything(),
     );
+  });
+});
+
+// Completed rounds already played in a session, oldest first, all long past
+// their intermission relative to CADENCE_NOW.
+function completedRounds(sessionId: string, venueId: string, count: number): Row[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: `prior-round-${i}`,
+    session_id: sessionId,
+    venue_id: venueId,
+    letter: "T",
+    category_set_index: 0,
+    categories: [],
+    started_at: `2026-07-15T00:${String(i).padStart(2, "0")}:00.000Z`,
+    ends_at: "2026-07-15T00:03:00.000Z",
+    scored_at: "2026-07-15T00:03:05.000Z",
+    status: "complete",
+    mode: "standard",
+    created_at: `2026-07-15T00:${String(i).padStart(2, "0")}:00.000Z`,
+  }));
+}
+
+const CADENCE_NOW = new Date("2026-07-15T06:00:00.000Z");
+const B_LETTERS = letterIndexData.bLetters as Record<string, string[]>;
+const STANDARD_LETTERS = letterIndexData.letters as Record<string, string[]>;
+
+describe("startContinuousRound — every 5th round is Majority Rules (Phase 1)", () => {
+  beforeEach(() => {
+    store = {
+      category_blitz_sessions: [openContinuousSession("venue-1")],
+      category_blitz_continuous_config: [continuousConfigRow("venue-1")],
+      category_blitz_rounds: [],
+    };
+    mocks.broadcastCategoryBlitz.mockReset();
+    delete process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT;
+  });
+
+  async function driveNextRound(priorRounds: number) {
+    store.category_blitz_rounds = completedRounds("session-venue-1", "venue-1", priorRounds);
+    const result = await driveContinuousCategoryBlitz("venue-1", CADENCE_NOW);
+    expect(result?.action).toBe("started_round");
+    return result!.round!;
+  }
+
+  it("the first four rounds of a session are standard", async () => {
+    for (const prior of [0, 1, 2, 3]) {
+      const round = await driveNextRound(prior);
+      expect(round.mode).toBe("standard");
+    }
+  });
+
+  it("rounds 5, 10 and 15 are Majority Rules; rounds 6 and 11 are standard", async () => {
+    expect((await driveNextRound(4)).mode).toBe("reverse");
+    expect((await driveNextRound(5)).mode).toBe("standard");
+    expect((await driveNextRound(9)).mode).toBe("reverse");
+    expect((await driveNextRound(10)).mode).toBe("standard");
+    expect((await driveNextRound(14)).mode).toBe("reverse");
+  });
+
+  it("ignores the stored mode_selection — even weighted_reverse follows the cadence", async () => {
+    store.category_blitz_continuous_config = [continuousConfigRow("venue-1", { mode_selection: "weighted_reverse" })];
+    for (const prior of [0, 1, 2, 3]) {
+      expect((await driveNextRound(prior)).mode).toBe("standard");
+    }
+  });
+
+  it("a Majority Rules round draws its letter and every category from the Blend In! index", async () => {
+    const round = await driveNextRound(4);
+    expect(letterIndexData.bUsableLetters).toContain(round.letter);
+    expect(round.categories).toHaveLength(letterIndexData.setSize);
+    for (const category of round.categories) {
+      expect(B_LETTERS[round.letter]).toContain(category);
+    }
+  });
+
+  it("a standard round draws from the standard index", async () => {
+    const round = await driveNextRound(0);
+    expect(letterIndexData.usableLetters).toContain(round.letter);
+    for (const category of round.categories) {
+      expect(STANDARD_LETTERS[round.letter]).toContain(category);
+    }
   });
 });

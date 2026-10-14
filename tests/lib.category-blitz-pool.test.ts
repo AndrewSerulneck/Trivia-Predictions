@@ -14,7 +14,9 @@ vi.mock("@/lib/supabaseAdmin", () => ({
   },
 }));
 
+import letterIndexData from "@/data/category-blitz/category-letter-index.json";
 import {
+  assembleContinuousBoard,
   resolveContinuousConfig,
   CONTINUOUS_DEFAULT_ROUND_DURATION_SECONDS,
   CONTINUOUS_DEFAULT_INTERMISSION_SECONDS,
@@ -121,5 +123,56 @@ describe("resolveContinuousConfig", () => {
     process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT = "true";
 
     expect(await resolveContinuousConfig("venue-1")).toBeNull();
+  });
+});
+
+describe("assembleContinuousBoard", () => {
+  const B_LETTERS = letterIndexData.bLetters as Record<string, string[]>;
+  const STANDARD_LETTERS = letterIndexData.letters as Record<string, string[]>;
+
+  it("standard: a usable letter and a full board from the standard index", () => {
+    for (let i = 0; i < 20; i += 1) {
+      const board = assembleContinuousBoard("standard");
+      expect(board).not.toBeNull();
+      expect(letterIndexData.usableLetters).toContain(board!.letter);
+      expect(board!.categories).toHaveLength(letterIndexData.setSize);
+      expect(new Set(board!.categories).size).toBe(letterIndexData.setSize);
+      for (const c of board!.categories) expect(STANDARD_LETTERS[board!.letter]).toContain(c);
+    }
+  });
+
+  it("Majority Rules: a Blend In! letter and a full board from the Blend In! index", () => {
+    for (let i = 0; i < 20; i += 1) {
+      const board = assembleContinuousBoard("reverse");
+      expect(board).not.toBeNull();
+      expect(letterIndexData.bUsableLetters).toContain(board!.letter);
+      expect(board!.categories).toHaveLength(letterIndexData.setSize);
+      for (const c of board!.categories) expect(B_LETTERS[board!.letter]).toContain(c);
+    }
+  });
+
+  it("Majority Rules respects a custom pool and only picks a letter the pool can fill", () => {
+    const letter = letterIndexData.bUsableLetters[0];
+    const pool = B_LETTERS[letter].slice(0, letterIndexData.setSize);
+    const board = assembleContinuousBoard("reverse", pool);
+    expect(board?.letter).toBe(letter);
+    expect([...board!.categories].sort()).toEqual([...pool].sort());
+  });
+
+  it("Majority Rules falls back to the standard index when a custom pool leaves no Blend In! board", () => {
+    const blendIn = new Set(Object.values(B_LETTERS).flat());
+    const letter = letterIndexData.usableLetters.find(
+      (l) => STANDARD_LETTERS[l].filter((c) => !blendIn.has(c)).length >= letterIndexData.setSize,
+    )!;
+    const pool = STANDARD_LETTERS[letter].filter((c) => !blendIn.has(c));
+    const board = assembleContinuousBoard("reverse", pool);
+    expect(board).not.toBeNull();
+    expect(board!.categories).toHaveLength(letterIndexData.setSize);
+    for (const c of board!.categories) expect(pool).toContain(c);
+  });
+
+  it("returns null when no letter can fill a board at all", () => {
+    expect(assembleContinuousBoard("standard", ["Not a real category"])).toBeNull();
+    expect(assembleContinuousBoard("reverse", ["Not a real category"])).toBeNull();
   });
 });

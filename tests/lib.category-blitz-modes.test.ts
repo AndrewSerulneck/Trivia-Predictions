@@ -1,30 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { isReverseRound, reverseRoundPoints, MODE_CONFIG } from "@/lib/categoryBlitzModes";
+import { isReverseRound, reverseRoundPoints, MODE_CONFIG, MAJORITY_RULES_EVERY_N_ROUNDS } from "@/lib/categoryBlitzModes";
 
 describe("isReverseRound", () => {
-  it("is false for the first three rounds of a session (indices 0, 1, 2)", () => {
-    expect(isReverseRound(0)).toBe(false);
-    expect(isReverseRound(1)).toBe(false);
-    expect(isReverseRound(2)).toBe(false);
+  it("is false for the first four rounds of a session (indices 0–3)", () => {
+    for (const i of [0, 1, 2, 3]) expect(isReverseRound(i)).toBe(false);
   });
 
-  it("is true on the 4th round (index 3) — the deterministic every-4th cadence", () => {
-    expect(isReverseRound(3)).toBe(true);
+  it("is true on the 5th round (index 4) — the deterministic every-5th cadence", () => {
+    expect(isReverseRound(4)).toBe(true);
+    expect(MAJORITY_RULES_EVERY_N_ROUNDS).toBe(5);
   });
 
-  it("repeats every 4 rounds (indices 7, 11, 15…), false in between", () => {
-    expect(isReverseRound(4)).toBe(false);
-    expect(isReverseRound(5)).toBe(false);
-    expect(isReverseRound(6)).toBe(false);
-    expect(isReverseRound(7)).toBe(true);
-    expect(isReverseRound(10)).toBe(false);
-    expect(isReverseRound(11)).toBe(true);
-    expect(isReverseRound(15)).toBe(true);
+  it("repeats every 5 rounds (rounds 5, 10, 15… = indices 4, 9, 14…), false in between", () => {
+    expect(isReverseRound(9)).toBe(true);
+    expect(isReverseRound(14)).toBe(true);
+    for (const i of [5, 6, 7, 8, 10, 11, 12, 13]) expect(isReverseRound(i)).toBe(false);
   });
 
-  it("never flips for a negative or non-multiple index", () => {
+  it("never puts two Majority Rules rounds back to back", () => {
     for (let i = 0; i < 100; i += 1) {
-      expect(isReverseRound(i)).toBe(i % 4 === 3);
+      expect(isReverseRound(i)).toBe(i % 5 === 4);
+      expect(isReverseRound(i) && isReverseRound(i + 1)).toBe(false);
     }
   });
 });

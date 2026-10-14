@@ -17,6 +17,8 @@ import { CB_LETTER_BADGE_LAYOUT_ID, cbCategoryRowLayoutId } from "@/lib/category
 import { EASE_SNAP } from "@/lib/motionEasing";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
 import { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
+import AlliterationBonusChip from "@/components/category-blitz/AlliterationBonusChip";
+import { alliterationBonus } from "@/lib/categoryBlitzAlliteration";
 import RevealSequence from "@/components/category-blitz/RevealSequence";
 import RoundStartReveal, { ROUND_START_REVEAL_MAX_MS } from "@/components/category-blitz/RoundStartReveal";
 import LiveLeaderboard from "@/components/category-blitz/LiveLeaderboard";
@@ -530,9 +532,10 @@ const REASON_LABEL: Record<string, string> = {
 /**
  * "Blend In!" (reverse) results card glow — a matched answer glows brighter
  * the more players hit it (docs/category-blitz-mode-b-plan.md Phase 5:
- * "consensus made visible"). `points` is exactly the matching-player count
- * (reverseRoundPoints is the identity function), so it doubles as the glow
- * tier lookup with no separate count needed. Tiers are static Tailwind
+ * "consensus made visible"). `points` is the matching-player count
+ * (reverseRoundPoints is the identity function) — callers pass the awarded
+ * points minus any alliteration bonus — so it doubles as the glow tier lookup
+ * with no separate count needed. Tiers are static Tailwind
  * literals — never interpolated — per lib/themeTokens.ts's scanning rule.
  */
 function reverseMatchGlow(points: number): { card: string; badge: string } {
@@ -1161,11 +1164,14 @@ function ResultsScreen({
         {results.results.map((cat) => {
           const viewerAnswer = cat.answers.find((a) => a.userId === userId);
           const reason = viewerAnswer?.reason;
+          const bonus = viewerAnswer
+            ? alliterationBonus(viewerAnswer.answer, results.letter, viewerAnswer.pointsAwarded)
+            : 0;
           // Reverse "correct" (matched the crowd) glows brighter the more
           // players hit it — consensus made visible (Phase 5). Standard mode
           // and every other reason keep the flat per-reason card look.
           const glow = isReverse && reason === "correct" && viewerAnswer
-            ? reverseMatchGlow(viewerAnswer.pointsAwarded)
+            ? reverseMatchGlow(viewerAnswer.pointsAwarded - bonus)
             : null;
           return (
             <div
@@ -1208,6 +1214,7 @@ function ResultsScreen({
                   ) : (
                     <p className="mt-0.5 text-sm italic text-slate-600">no answer</p>
                   )}
+                  <AlliterationBonusChip bonus={bonus} />
                   {viewerAnswer && reason && reason !== "correct" ? (
                     <div>
                       <p className={`mt-0.5 text-caption font-semibold ${
@@ -2393,6 +2400,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         explanation: mine.explanation,
         points: mine.pointsAwarded,
         mode: results.mode,
+        alliterationBonus: alliterationBonus(mine.answer, results.letter, mine.pointsAwarded),
       }];
     });
   }, [results, userId]);

@@ -84,6 +84,7 @@ const DEMO_KEY_TO_MODE_FLIP_DIRECTION: Partial<Record<DemoKey, ModeFlipDirection
 
 const MOCK_GRADING_ANSWERS: GradingAnswer[] = [
   { category: "Fruits", answer: "Mango", reason: "correct", points: 2 },
+  { category: "Desserts", answer: "Mint Mousse", reason: "correct", points: 3, alliterationBonus: 1 },
   { category: "Countries", answer: "France", reason: "duplicate", explanation: "used by another player", points: 0 },
   { category: "Animals", answer: "Mongoose", reason: "wrong_letter", explanation: "wrong letter", points: 0 },
   { category: "Movies", answer: "Moonrise", reason: "invalid", explanation: "not a movie", points: 0 },
