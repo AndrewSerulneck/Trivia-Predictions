@@ -165,6 +165,19 @@ Unauthenticated status/approve POSTs must return 401 without checking questions.
 Publishing permission already exists for this manual-review repair; do not re-ask
 about the declined audit. Preserve the isolated release approach.
 
+### Online-check repairs
+
+Initial push/PR CI runs `38591144070` / `38591204287` exposed two older UI-test
+races under the slower shared runner. `tests/components.owner-add-venue-sheet.test.ts`
+asserted the quote immediately after its review heading appeared; it now awaits
+the actual asynchronously loaded `$75.00/mo` before checking all the same amounts.
+`tests/components.create-reward-wizard.test.ts` clicked a reward before its step
+animation became idle; it now awaits the actual `data-step-phase="idle"` before
+clicking and checking browser-forward correction. No payment, reward or animation
+runtime was changed, and no assertion or test was removed. The affected UI and new
+approval test group passes 57/57, with typecheck and affected-file lint passing.
+Final online run IDs/results belong in the release addendum.
+
 ### Next steps and remaining uncertainty
 
 1. Read the final publication addendum and plan's current status before any work.
