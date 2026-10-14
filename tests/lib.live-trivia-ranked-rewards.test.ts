@@ -115,6 +115,7 @@ vi.mock("@/lib/timezone", () => ({ getVenueTimezone: vi.fn(async () => "America/
 
 import { computeCycleStart } from "@/lib/challengeCampaigns";
 import {
+  planBackfillRankedWeeks,
   planDueRankedWeeks,
   rankedRewardConfigError,
   resolveRankedPlaceRewards,
@@ -288,6 +289,87 @@ describe("planDueRankedWeeks", () => {
 
   it("throws when the reward's week can't be anchored", () => {
     expect(() => plan(makeCampaign({ activeDays: [] }), AFTER_FRIDAY)).toThrow(/week start/);
+  });
+});
+
+describe("planBackfillRankedWeeks (Phase 5: the weeks before the reward existed)", () => {
+  // Created Wednesday Oct 14 during that night's game: the resolver owns the Oct 14 week (D8).
+  const CREATED_OCT14 = "2026-10-14T23:30:00.000Z";
+  const backfill = (
+    campaign: ChallengeCampaign,
+    nowMs: number,
+    fromDate = "2026-08-05",
+    schedules = [makeSchedule()],
+  ) => planBackfillRankedWeeks({ campaign, venueId: "venue-1", schedules, timezone: TZ, nowMs, fromDate });
+
+  it("covers every ended week from --from up to the week before the reward's first live week", () => {
+    const weeks = backfill(makeCampaign({ createdAt: CREATED_OCT14 }), Date.parse("2026-10-14T23:45:00Z"));
+    expect(weeks.map((w) => w.cycleStart.toISOString())).toEqual([
+      "2026-08-05T04:00:00.000Z",
+      "2026-08-12T04:00:00.000Z",
+      "2026-08-19T04:00:00.000Z",
+      "2026-08-26T04:00:00.000Z",
+      "2026-09-02T04:00:00.000Z",
+      "2026-09-09T04:00:00.000Z",
+      "2026-09-16T04:00:00.000Z",
+      "2026-09-23T04:00:00.000Z",
+      SEP30_WEEK_KEY,
+      OCT7_WEEK_KEY,
+    ]);
+    expect(weeks[0].games.map((g) => g.occurrenceDate)).toEqual(["2026-08-05", "2026-08-06", "2026-08-07"]);
+    for (const week of weeks) {
+      expect(week.cycleStart.getTime()).toBe(
+        computeCycleStart(makeCampaign(), new Date(week.games[0].startMs), TZ).getTime(),
+      );
+    }
+  });
+
+  it("never overlaps the resolver: together they cover each week exactly once", () => {
+    const campaign = makeCampaign({ createdAt: CREATED_OCT14 });
+    const afterOct16 = Date.parse("2026-10-17T01:00:00Z");
+    const backfilled = backfill(campaign, afterOct16).map((w) => w.cycleStart.toISOString());
+    const resolved = plan(campaign, afterOct16).map((w) => w.cycleStart.toISOString());
+    expect(resolved).toEqual(["2026-10-14T04:00:00.000Z"]);
+    expect(backfilled).not.toContain("2026-10-14T04:00:00.000Z");
+    expect(backfilled[backfilled.length - 1]).toBe(OCT7_WEEK_KEY);
+  });
+
+  it("owns the creation week too when the reward was created after that week's last game ended", () => {
+    const campaign = makeCampaign({ createdAt: new Date(FRI_GAME_END + 60_000).toISOString() });
+    const weeks = backfill(campaign, FRI_GAME_END + 10 * 60_000, "2026-10-01");
+    expect(weeks.map((w) => w.cycleStart.toISOString())).toEqual([OCT7_WEEK_KEY]);
+    expect(plan(campaign, FRI_GAME_END + 10 * 60_000)).toEqual([]);
+  });
+
+  it("skips a week that hasn't ended yet", () => {
+    const campaign = makeCampaign({ createdAt: "2026-12-01T00:00:00.000Z" });
+    const weeks = backfill(campaign, FRI_GAME_END - 60_000, "2026-09-30");
+    expect(weeks.map((w) => w.cycleStart.toISOString())).toEqual([SEP30_WEEK_KEY]);
+  });
+
+  it("starts at the first week whose first game is on or after --from", () => {
+    const campaign = makeCampaign({ createdAt: CREATED_OCT14 });
+    const now = Date.parse("2026-10-14T23:45:00Z");
+    expect(backfill(campaign, now, "2026-08-06")[0].cycleStart.toISOString()).toBe("2026-08-12T04:00:00.000Z");
+    // Before the schedule existed there are no games, so nothing earlier appears.
+    expect(backfill(campaign, now, "2026-07-01")[0].cycleStart.toISOString()).toBe("2026-08-05T04:00:00.000Z");
+  });
+
+  it("keys weeks correctly across the end of daylight saving time", () => {
+    const campaign = makeCampaign({ createdAt: "2026-11-20T00:00:00.000Z" });
+    const weeks = backfill(campaign, Date.parse("2026-11-19T00:00:00Z"), "2026-10-28");
+    expect(weeks.map((w) => w.cycleStart.toISOString())).toEqual([
+      "2026-10-28T04:00:00.000Z",
+      "2026-11-04T05:00:00.000Z",
+      "2026-11-11T05:00:00.000Z",
+    ]);
+    expect(weeks[1].games.map((g) => g.occurrenceDate)).toEqual(["2026-11-04", "2026-11-05", "2026-11-06"]);
+  });
+
+  it("refuses a malformed --from or an unreadable created_at instead of guessing", () => {
+    expect(() => backfill(makeCampaign(), AFTER_FRIDAY, "8/5/2026")).toThrow(/from date/);
+    expect(() => backfill(makeCampaign({ createdAt: "not a date" }), AFTER_FRIDAY)).toThrow(/created_at/);
+    expect(() => backfill(makeCampaign({ activeDays: [] }), AFTER_FRIDAY)).toThrow(/week start/);
   });
 });
 

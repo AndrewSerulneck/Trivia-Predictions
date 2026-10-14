@@ -1,11 +1,10 @@
 # Live Trivia Weekly Places Reward (1st / 2nd / 3rd over the week) — Plan
 
-> **Status:** Phase 1 **done** 2026-10-14 (migration applied to production). Phase 2 **done** 2026-10-14 (weekly
-> resolver live in the existing cron). Phase 3 **done** 2026-10-14 (server can create a weekly places reward + its
-> wording). Phase 4 **done** 2026-10-14 (Rewards card standings, wallet place, partner/admin lists; no reward exists
-> yet, so players see no difference until Phase 5). Latest handoff:
-> `docs/live-trivia-weekly-places-reward-plan_PHASE_4_HANDOFF.md`. Next: **Phase 5** (Garden State Bar: create the
-> reward, backfill from Aug 5; needs Andrew's dry-run approval). Each phase ends with
+> **Status:** Phases 1–4 **done** 2026-10-14 (data model, weekly resolver, server creation + wording, what players /
+> partners / admins see). Phase 5 **in progress** 2026-10-14: Garden State Bar's reward is **created** in production
+> (`677a214c-b859-4c17-8e4d-9889574516e1`, live from the Oct 14 week) and the backfill script is built and dry-run
+> (13 coupons, $320 — matches §4); **the backfill is NOT applied yet — waiting on Andrew's approval** (D11). Latest
+> handoff: `docs/live-trivia-weekly-places-reward-plan_PHASE_5_HANDOFF.md`. Each phase ends with
 > `docs/live-trivia-weekly-places-reward-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew. **Trigger:** Garden State Bar promised posters with weekly 1st/2nd/3rd Live Trivia
 > prizes but never set up a reward, and the system can't express one today.
@@ -22,7 +21,7 @@ to 1st, 2nd and 3rd place**. Coupons show up on the winner's Redeem Prizes page,
 **Garden State Bar's reward:** every week, $30 gift card for 1st, $20 for 2nd, $10 for 3rd.
 
 **Paying past winners:** after the system can do this, a one-time script awards every past week since their
-first game (Aug 5, 2026). Based on today's data that is **11 gift cards worth $320** (table in §4). The current
+first game (Aug 5, 2026). Based on today's data that is **13 gift cards worth $320** (table in §4; an earlier draft said 11 — a counting slip, the table itself always added up to 13). The current
 week (Oct 14–16) gets added once Friday's game ends.
 
 **Two additions (Andrew, 2026-10-14):**
@@ -117,7 +116,7 @@ Bar will honor the backfill.
 | 2026-09-16 | Thu | shrimpsalaad 80 | ana 40 | — |
 | 2026-09-23, 09-30 | none | — | — | — |
 | 2026-10-07 | Fri | murph 90 | kellygurl 10 | — |
-| **Total** | | 7 × $30 | 5 × $20 | 1 × $10 = **$320, 11 coupons** |
+| **Total** | | 7 × $30 | 5 × $20 | 1 × $10 = **$320, 13 coupons** |
 | 2026-10-14 (in progress) | Wed so far | JKem5 200 and holloway456 200 tied after Wed (D1 decides once Fri ends) | | |
 
 Phase 5 must re-run these numbers from the shared code before issuing anything. This table is a
@@ -363,17 +362,18 @@ own prize snapshot. `terms_updated_at` trigger left as is (the win sentence read
 **Model: Claude Opus 5.5 · Effort: high** (real money; needs Phases 1–4 **deployed**)
 1. Create the reward for `venue-garden-state-bar` through `createReward` (admin route or a one-off
    `node --import tsx` script): Live Trivia, ranked places, weekly Wed/Thu/Fri (all games), places
-   1 = $30 gift card, 2 = $20, 3 = $10. Name e.g. "Weekly Trivia Champions".
+   1 = $30 gift card, 2 = $20, 3 = $10. **As built (Andrew, 2026-10-14):** created as Garden State Bar's partner
+   account (so it shows on their Partner Dashboard) with the default name "Live Trivia Challenge".
 2. `scripts/backfill-ranked-reward.cjs --campaign <id> --from 2026-08-05 --expiry-days 30 [--apply]`
    (dry run by default). It imports `rankWeekPlaces` + `loadLiveTriviaWeekTotals` and calls
    `awardRankedCyclePlaces` (with `prizeExpiresAt` = now + 30 days) per week, with
    `cycle_start = computeCycleStart(...)`. It covers every completed week from `--from` up to the week
    **before** the reward's first live week (D8: the resolver owns the creation week, unless the reward was
    created after that week's last game ended, in which case the backfill covers it too). Add an `npm run` entry.
-3. Show Andrew the dry-run table and compare it with §4 (expected $320 / 11 coupons; plus the Oct 14 week
+3. Show Andrew the dry-run table and compare it with §4 (expected $320 / 13 coupons; plus the Oct 14 week
    if the backfill owns it). Explain any difference. **Apply only after Andrew approves** (D11). Garden State
    Bar's reward has no minimum (D2) unless Andrew says otherwise.
-4. Verify: 11+ coupons in `challenge_campaign_redemptions` with `place` set, expiry ≈ issue date + 30 days,
+4. Verify: 13 coupons in `challenge_campaign_redemptions` with `place` set, expiry ≈ issue date + 30 days,
    notifications created; a re-run of the script is a no-op.
 5. Give Andrew a winners list (username, week, place, prize) to share with Garden State Bar so staff know
    what to honor. **We can't message these players outside the app.** Most have no email, so they see the

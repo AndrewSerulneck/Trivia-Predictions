@@ -44,7 +44,8 @@ import "server-only";
 // WHICH WEEKS (D8): a week counts if the reward existed before that week's last
 // game ENDED — a reward created mid-week covers the nights already played that
 // week. Weeks that ended before the reward existed are never settled here; they
-// are the backfill script's (Phase 5). Lookback is RANKED_WEEK_LOOKBACK_CYCLES
+// are the backfill script's (Phase 5: planBackfillRankedWeeks +
+// scripts/backfill-ranked-reward.cjs). Lookback is RANKED_WEEK_LOOKBACK_CYCLES
 // weeks, so a missed sweep self-heals. Deliberately separate from the
 // game-winner sweep's 6-hour ENDED_OCCURRENCE_LOOKBACK_MS.
 
@@ -79,6 +80,9 @@ export const RANKED_WEEK_LOOKBACK_CYCLES = 2;
  * see every game of both lookback weeks (the older one can start 14 days ago).
  */
 const ENUMERATION_PROBE_OFFSETS_DAYS = [0, 7, 14] as const;
+
+const probesAround = (nowMs: number): number[] =>
+  ENUMERATION_PROBE_OFFSETS_DAYS.map((offsetDays) => nowMs - offsetDays * DAY_MS);
 
 /**
  * A settlement whose cycle_start is within this distance of a due week's key is
@@ -161,17 +165,21 @@ const collectGamesByWeekKey = (params: {
   venueId: string;
   schedules: readonly TriviaScheduleRow[];
   timezone: string;
-  nowMs: number;
+  /**
+   * Instants to enumerate games around (each sees 7 days back to 14 days ahead) — see
+   * probesAround. Together they must cover every week in `keys`.
+   */
+  probesMs: readonly number[];
   keys: readonly Date[];
 }): Map<number, RankedWeekGame[]> => {
-  const { campaign, venueId, timezone, nowMs } = params;
+  const { campaign, venueId, timezone } = params;
   const gamesByKey = new Map<number, RankedWeekGame[]>(params.keys.map((key) => [key.getTime(), []]));
 
   const seen = new Set<string>();
   for (const row of params.schedules) {
     if (String(row.venue_id ?? "").trim() !== venueId) continue;
-    for (const offsetDays of ENUMERATION_PROBE_OFFSETS_DAYS) {
-      for (const occurrence of enumerateScheduleOccurrences(row, nowMs - offsetDays * DAY_MS)) {
+    for (const probeMs of params.probesMs) {
+      for (const occurrence of enumerateScheduleOccurrences(row, probeMs)) {
         const gameKey = `${row.id}|${occurrence.occurrenceDate}`;
         if (seen.has(gameKey)) continue;
         seen.add(gameKey);
@@ -230,7 +238,7 @@ export function planDueRankedWeeks(params: {
     // One minute before a cycle starts is inside the previous cycle.
     keys.push(computeCycleStart(campaign, new Date(keys[keys.length - 1].getTime() - 60_000), timezone));
   }
-  const gamesByKey = collectGamesByWeekKey({ ...params, keys });
+  const gamesByKey = collectGamesByWeekKey({ ...params, probesMs: probesAround(nowMs), keys });
 
   const due: DueRankedWeek[] = [];
   for (const key of [...keys].sort((a, b) => a.getTime() - b.getTime())) {
@@ -272,10 +280,75 @@ export function planCurrentRankedWeek(params: {
   if (cycleStart.getTime() === 0) {
     throw new Error("A weekly places reward has no week start (active days are missing).");
   }
-  const games = collectGamesByWeekKey({ ...params, keys: [cycleStart] }).get(cycleStart.getTime()) ?? [];
+  const games =
+    collectGamesByWeekKey({ ...params, probesMs: probesAround(params.nowMs), keys: [cycleStart] }).get(
+      cycleStart.getTime(),
+    ) ?? [];
   const countsForReward =
     games.length > 0 && rewardCountsWeek(params.campaign, Math.max(...games.map((game) => game.endMs)));
   return { cycleStart, games, countsForReward };
+}
+
+/**
+ * The weeks the BACKFILL owns (plan Phase 5, scripts/backfill-ranked-reward.cjs): every
+ * week whose first game is on or after `fromDate` (venue-local YYYY-MM-DD) and whose last
+ * game ended both before `nowMs` and before the reward was created — exactly the weeks
+ * planDueRankedWeeks will never settle (D8). The resolver owns the creation week (when the
+ * reward existed before its last game ended) and everything after, so the two can never
+ * both pay a week; the award RPC refuses a settled key regardless. Oldest first. Pure.
+ *
+ * Same game list and the same computeCycleStart key as the resolver; only the probe
+ * instants differ (one per week, mid-week, instead of "now and the two weeks before").
+ * Throws on an unanchorable week or an unreadable created_at (unlike the resolver, which
+ * fails closed by skipping: a backfill that can't tell which weeks it owns must stop).
+ */
+export function planBackfillRankedWeeks(params: {
+  campaign: ChallengeCampaign;
+  venueId: string;
+  schedules: readonly TriviaScheduleRow[];
+  timezone: string;
+  nowMs: number;
+  fromDate: string;
+}): DueRankedWeek[] {
+  const { campaign, timezone, nowMs, fromDate } = params;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fromDate) || !Number.isFinite(Date.parse(`${fromDate}T12:00:00Z`))) {
+    throw new Error(`Invalid from date: ${fromDate} (expected YYYY-MM-DD).`);
+  }
+  const createdAtMs = Date.parse(String(campaign.createdAt ?? ""));
+  if (!Number.isFinite(createdAtMs)) throw new Error("The reward has no readable created_at.");
+
+  // Start a week early so the week containing fromDate is enumerated whatever the
+  // timezone; weeks whose first game precedes fromDate are dropped below.
+  let key = computeCycleStart(campaign, new Date(Date.parse(`${fromDate}T12:00:00Z`) - 7 * DAY_MS), timezone);
+  if (key.getTime() === 0) {
+    throw new Error("A weekly places reward has no week start (active days are missing).");
+  }
+  const keys: Date[] = [];
+  while (key.getTime() <= nowMs) {
+    keys.push(key);
+    // 7½ days after a week's start is inside the next week, across a DST change too.
+    const next = computeCycleStart(campaign, new Date(key.getTime() + 7 * DAY_MS + DAY_MS / 2), timezone);
+    if (next.getTime() <= key.getTime()) throw new Error("Week keys did not advance.");
+    key = next;
+  }
+  // One probe per week, mid-week: each sees 7 days back to 14 ahead, the whole week.
+  const gamesByKey = collectGamesByWeekKey({
+    ...params,
+    probesMs: keys.map((weekKey) => weekKey.getTime() + 3 * DAY_MS),
+    keys,
+  });
+
+  const owned: DueRankedWeek[] = [];
+  for (const weekKey of keys) {
+    const games = gamesByKey.get(weekKey.getTime()) ?? [];
+    if (games.length === 0) continue;
+    if (games[0].occurrenceDate < fromDate) continue;
+    const lastGameEndMs = Math.max(...games.map((game) => game.endMs));
+    if (nowMs < lastGameEndMs) continue; // not over yet
+    if (createdAtMs < lastGameEndMs) continue; // the resolver's week (D8)
+    owned.push({ cycleStart: weekKey, games, lastGameEndMs });
+  }
+  return owned;
 }
 
 export const isWeekSettled = (

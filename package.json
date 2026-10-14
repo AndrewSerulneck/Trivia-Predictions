@@ -50,6 +50,7 @@
     "live-trivia:generate:nightly": "node --env-file=.env.local scripts/generate-live-trivia-nightly.cjs --total 50",
     "live-trivia:check": "node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories --check",
     "live-trivia:import": "node --env-file=.env.local scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories",
+    "rewards:backfill-ranked": "node --env-file=.env.local --conditions react-server --import tsx scripts/backfill-ranked-reward.cjs",
     "live-trivia:randomness:audit": "node --conditions react-server --import tsx scripts/audit-live-trivia-randomness.cjs",
     "live-trivia:future-reseed:dry-run": "node --env-file=.env.local --conditions react-server --import tsx scripts/reseed-live-trivia-future.cjs",
     "live-trivia:future-reseed:apply": "node --env-file=.env.local --conditions react-server --import tsx scripts/reseed-live-trivia-future.cjs --apply",
