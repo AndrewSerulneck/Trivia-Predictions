@@ -18,7 +18,7 @@ export type AdmissionBudget = {
 };
 export type AdmissionClient = { rpc: (name: string, args?: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }> };
 export type AdmissionSession = {
-  write: (row: Record<string, unknown>, options?: { existing?: AdmissionRow | null; importMode?: boolean; restore?: boolean; undo?: { manifestHash: string } }) => Promise<{ row: AdmissionRow; idempotent: boolean; evidence?: AdmissionEvidence }>;
+  write: (row: Record<string, unknown>, options?: { existing?: AdmissionRow | null; importMode?: boolean; approvedOnly?: boolean; generated?: boolean; restore?: boolean; undo?: { manifestHash: string } }) => Promise<{ row: AdmissionRow; idempotent: boolean; evidence?: AdmissionEvidence }>;
   leave: (patch: Record<string, unknown>, existing: AdmissionRow) => Promise<AdmissionRow>;
   refresh: () => Promise<void>;
   budget: AdmissionBudget;

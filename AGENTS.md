@@ -43,6 +43,8 @@ live/device verification facts to the Phase 7 handoff, release record and these 
 
 ## Speed Trivia uniqueness (complete/live)
 
+**Manual Speed approval update, 2026-10-14:** Andrew declined a $225 backlog audit and chose manual review. “Approve Selected” now checks only already-approved active Speed questions for unchanged pending→active approval; new generation/edits/imports retain full-bank pending/deleted/history repeat protection and signed admission. Batch results preserve actual saved IDs across rejection/failure. No migration, paid audit or normal-cap change. Release/handoff: `docs/speed-trivia-manual-approval-2026-10-14.md`. Root workspace has separate unpublished subject-variety work: do not deploy it before its own approved schema cutover.
+
 Plan: `docs/speed-trivia-uniqueness-plan.md`. **Complete/live, 2026-10-13:** 2,534 reviewed
 versions softly retired (862 active / 1,672 pending), retaining 990 approved keepers, all content/IDs
 and history. All six original repeated facts have one active version. Final bank **4,274 active /

@@ -54,6 +54,12 @@ export const writeSpeedTrivia = async (patch: Record<string, unknown>, existing:
   const gate = session ?? await openSpeedTriviaAdmission();
   return (await gate.write(patch, { existing })).row;
 };
+// Manual approval compares only with questions already available to players.
+// Edits, new generation and imports continue to use the complete fact bank.
+export const approveSpeedTrivia = async (existing: AdmissionRow, session?: AdmissionSession): Promise<AdmissionRow> => {
+  const gate = session ?? await openSpeedTriviaAdmission();
+  return (await gate.write({ status: "active" }, { existing, approvedOnly: true })).row;
+};
 export const convertSpeedTriviaToLive = async (patch: Record<string, unknown>, existing: AdmissionRow, session?: AdmissionSession): Promise<AdmissionRow> => {
   const gate = session ?? await openSpeedTriviaAdmission();
   return gate.leave(patch, existing);

@@ -1,30 +1,41 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-const mocks = vi.hoisted(() => ({ from: vi.fn(), find: vi.fn(), write: vi.fn(), open: vi.fn(), replace: vi.fn() }));
+const mocks = vi.hoisted(() => ({ from: vi.fn(), find: vi.fn(), write: vi.fn(), approve: vi.fn(), open: vi.fn(), replace: vi.fn() }));
 vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: { from: mocks.from } }));
 vi.mock("@/lib/adminAuth", () => ({ requireAdminAuth: async () => ({ ok: true }) }));
 vi.mock("@/lib/liveShowdownAdmin", () => ({ replaceSessionQuestion: mocks.replace }));
-vi.mock("@/lib/speedTriviaAdmission", () => ({ findTriviaAdmissionRow: mocks.find, writeSpeedTrivia: mocks.write, openSpeedTriviaAdmission: mocks.open, speedTriviaError: (e: { code?: string }) => ({ status: e.code === "duplicate" || e.code === "retired" ? 409 : 503, code: e.code, conflicts: [] }) }));
+vi.mock("@/lib/speedTriviaAdmission", () => ({ findTriviaAdmissionRow: mocks.find, writeSpeedTrivia: mocks.write, approveSpeedTrivia: mocks.approve, openSpeedTriviaAdmission: mocks.open, speedTriviaError: (e: { code?: string }) => ({ status: e.code === "duplicate" || e.code === "retired" ? 409 : 503, code: e.code, conflicts: [] }) }));
 import { POST } from "@/app/api/admin/trivia/questions/route";
 import { PATCH, DELETE } from "@/app/api/admin/trivia/questions/[id]/route";
 const row = { id: "10000000-0000-4000-8000-000000000001", slug: "fixture", status: "pending_review", question_pool: "anytime_blitz", answer_format: "multiple_choice", question: "Fixture question?", options: ["A", "B", "C", "D"], correct_answer: 0, category: "Science" };
 const request = (method: string, body: unknown) => new Request("https://example.invalid/api/admin/trivia/questions", { method, body: JSON.stringify(body), headers: { "content-type": "application/json" } });
 const params = { params: Promise.resolve({ id: row.id }) };
 describe("admin review admission behavior", () => {
- beforeEach(() => { vi.clearAllMocks(); mocks.find.mockResolvedValue(row); mocks.open.mockResolvedValue({}); mocks.write.mockResolvedValue(row); });
+ beforeEach(() => { vi.clearAllMocks(); mocks.find.mockResolvedValue(row); mocks.open.mockResolvedValue({}); mocks.write.mockResolvedValue(row); mocks.approve.mockResolvedValue(row); });
  it("approves every Speed item through one session and returns precise repeat rejection", async () => {
   const rows = [row, { ...row, id: "10000000-0000-4000-8000-000000000002" }];
   mocks.from.mockReturnValue({ select: () => ({ in: async () => ({ data: rows, error: null }) }) });
-  mocks.write.mockResolvedValueOnce({ ...row, status: "active" }).mockRejectedValueOnce(Object.assign(new Error("This tests a fact already used. Existing question: Fixture question?"), { code: "duplicate" }));
+  mocks.approve.mockResolvedValueOnce({ ...row, status: "active" }).mockRejectedValueOnce(Object.assign(new Error("This tests a fact already used. Existing question: Fixture question?"), { code: "duplicate" }));
   const response = await POST(request("POST", { action: "approve", ids: rows.map(r => r.id) }));
-  expect(response.status).toBe(409); expect((await response.json()).code).toBe("duplicate");
-  expect(mocks.open).toHaveBeenCalledTimes(1); expect(mocks.write).toHaveBeenCalledTimes(2); expect(mocks.from).toHaveBeenCalledTimes(1);
+  expect(response.status).toBe(409); expect(await response.json()).toMatchObject({ code: "duplicate", updated: 1, savedIds: [row.id], error: "This tests a fact already used. Existing question: Fixture question?" });
+  expect(mocks.open).toHaveBeenCalledTimes(1); expect(mocks.approve).toHaveBeenCalledTimes(2); expect(mocks.write).not.toHaveBeenCalled(); expect(mocks.from).toHaveBeenCalledTimes(1);
+  expect(mocks.approve).toHaveBeenCalledWith(row, {});
  });
  it("rejects retired Speed approvals and never runs raw activation", async () => {
   mocks.from.mockReturnValue({ select: () => ({ in: async () => ({ data: [{ ...row, status: "deleted" }], error: null }) }) });
-  mocks.write.mockRejectedValue(Object.assign(new Error("Retired question"), { code: "retired" }));
+  mocks.approve.mockRejectedValue(Object.assign(new Error("Retired question"), { code: "retired" }));
   expect((await POST(request("POST", { action: "approve", ids: [row.id] }))).status).toBe(409);
   expect(mocks.from).toHaveBeenCalledTimes(1);
+ });
+ it("partial-bulk preserves three committed IDs when the fourth checker fails", async () => {
+  const rows = Array.from({ length: 6 }, (_, index) => ({ ...row, id: `fixture-${index}` }));
+  mocks.from.mockReturnValue({ select: () => ({ in: async () => ({ data: rows, error: null }) }) });
+  for (const saved of rows.slice(0, 3)) mocks.approve.mockResolvedValueOnce({ ...saved, status: "active" });
+  mocks.approve.mockRejectedValueOnce(Object.assign(new Error("Question checks are unavailable for this item."), { code: "verification_unavailable" }));
+  const response = await POST(request("POST", { action: "approve", ids: rows.map(item => item.id) }));
+  expect(response.status).toBe(503);
+  expect(await response.json()).toMatchObject({ updated: 3, savedIds: rows.slice(0, 3).map(item => item.id), notProcessed: rows.slice(3).map(item => item.id), repeats: [], holds: [] });
+  expect(mocks.approve).toHaveBeenCalledTimes(4);
  });
  it("checks final edited Speed content and refuses write-in answer conversion", async () => {
   const edited = await PATCH(request("PATCH", { question: "Edited question?", options: row.options, correctAnswer: 2 }), params);

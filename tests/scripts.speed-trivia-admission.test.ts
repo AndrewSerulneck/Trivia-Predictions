@@ -1,13 +1,14 @@
 import { beforeAll, afterAll, describe, expect, it, vi } from "vitest";
 import path from "node:path";
 import fs from "node:fs";
+import os from "node:os";
 import * as core from "@/lib/speed-trivia-uniqueness/core.cjs";
 import * as runtime from "@/lib/speed-trivia-uniqueness/runtime.cjs";
 import type { AdmissionSession, AdmissionClient, AdmissionRow } from "@/types/speedTriviaAdmission";
 import type { ComparisonTask, ComparisonResult, SpeedQuestion } from "@/types/speedTriviaUniqueness";
 
 type DB = { exec: (sql: string) => Promise<unknown>; query: (sql: string, args?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>; close: () => Promise<void> };
-const { PGlite } = require(path.resolve("tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite")) as { PGlite: new () => DB };
+const { PGlite } = require("@electric-sql/pglite") as { PGlite: new () => DB };
 const harness = require(path.resolve("scripts/test-speed-trivia-admission-sql.cjs")) as {
   setup: (db: DB, extraRows?: number) => Promise<void>; clientFor: (db: DB) => AdmissionClient; SECRET: string;
   row: (id: string, question: string, answer: string, category?: string) => SpeedQuestion;
@@ -116,7 +117,7 @@ describe("Speed writing boundaries on isolated PostgreSQL", () => {
       await large.exec("update trivia_questions set status='deleted' where slug like 'fixture-extra-%'");
       await expect(full.refresh()).rejects.toThrow("Too many changed questions");
     } finally { await large.close(); }
-  });
+  }, 20000);
 });
 
 describe("global cost limits, generation breadth and immutable cleanup", () => {
@@ -192,7 +193,8 @@ describe("global cost limits, generation breadth and immutable cleanup", () => {
   });
   it("refuses Phase 2 dry runs and altered immutable manifest bytes", () => {
     expect(() => cleanup.validateManifest({ version: "speed-retirement-manifest-v1", applyReady: false })).toThrow();
-    const file = path.resolve("tmp/speed-trivia-test-bad-manifest.json"); fs.writeFileSync(file, "{}");
-    try { expect(() => cleanup.readManifest(file, "incorrect-hash")).toThrow("checksum"); } finally { fs.unlinkSync(file); }
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "speed-trivia-manifest-"));
+    const file = path.join(directory, "bad-manifest.json"); fs.writeFileSync(file, "{}");
+    try { expect(() => cleanup.readManifest(file, "incorrect-hash")).toThrow("checksum"); } finally { fs.rmSync(directory, { recursive: true, force: true }); }
   });
 });

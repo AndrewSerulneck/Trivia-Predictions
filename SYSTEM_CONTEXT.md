@@ -120,6 +120,8 @@ Before this, Back had 10 implementations across 5 visual treatments, Next had 2,
 - Internal lib: `lib/liveShowdown*.ts` (engine, grading, submission, emcee, comments, closest-guess, admin). These files are named "liveShowdown" internally but always surface to users as "Live Trivia."
 
 ### Speed Trivia (formerly called "Anytime Blitz" — do not use that name anywhere)
+
+**Manual Speed approval update, 2026-10-14:** Andrew declined a $225 backlog audit and chose manual review. “Approve Selected” now checks only already-approved active Speed questions for unchanged pending→active approval; new generation/edits/imports retain full-bank pending/deleted/history repeat protection and signed admission. Batch results preserve actual saved IDs across rejection/failure. No migration, paid audit or normal-cap change. Release/handoff: `docs/speed-trivia-manual-approval-2026-10-14.md`. Root workspace has separate unpublished subject-variety work: do not deploy it before its own approved schema cutover.
 - Solo game, available at any time, no host required.
 - Multiple choice questions, any topic or difficulty.
 - Nightly question generation: `scripts/generate-trivia-nightly.cjs` → calls `generate-trivia-questions.cjs`.

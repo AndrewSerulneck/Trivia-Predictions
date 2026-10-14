@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   formatDateLabel,
   formatTimeLabel,
@@ -36,8 +36,12 @@ describe("formatTimeLabel", () => {
 });
 
 describe("formatDateLabel", () => {
-  it("formats an ISO date", () => {
-    expect(formatDateLabel("2026-10-03", "America/New_York")).toBe("Oct 3");
+  it("formats an ISO date with the host in the requested timezone", () => {
+    // The legacy helper parses midnight in the host timezone. Make the original
+    // New York-host fixture explicit instead of depending on the runner's zone.
+    vi.stubEnv("TZ", "America/New_York");
+    try { expect(formatDateLabel("2026-10-03", "America/New_York")).toBe("Oct 3"); }
+    finally { vi.unstubAllEnvs(); }
   });
   it("shows a dash for a missing date", () => {
     expect(formatDateLabel(undefined, "America/New_York")).toBe("—");
