@@ -65,6 +65,7 @@ import {
   getChallengeFinalizedPrize,
   listChallengeCampaignProgress,
   listChallengeCampaigns,
+  listChallengeCycleSettlements,
   listChallengeCycleWinners,
   updateChallengeCampaign,
 } from "@/lib/challengeCampaigns";
@@ -370,7 +371,10 @@ export async function GET(request: Request) {
         return NextResponse.json({ ok: false, error: "challengeId is required." }, { status: 400 });
       }
       const items = await listChallengeCycleWinners(challengeId);
-      return NextResponse.json({ ok: true, items });
+      // A weekly places reward also records weeks nobody won (no scorers / below the minimum), which
+      // have no winner row. Bounded: one row per settled week of this one reward.
+      const settlements = await listChallengeCycleSettlements({ challengeIds: [challengeId], cycleStartFrom: new Date(0) });
+      return NextResponse.json({ ok: true, items, settlements });
     }
 
     if (resource === "challenge-finalized-prize") {

@@ -383,7 +383,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
 
               const isLeaderboard = campaign.challengeMode === "leaderboard";
               const isGameWinner = campaign.winCondition === "game_winner";
-              // Weekly places: no target to chart; text only until its standings card (Phase 4).
+              // Weekly places: no target to chart. Its standings live on the venue Rewards card, not here.
               const isRankedPlaces = campaign.winCondition === "ranked_places";
 
               return (

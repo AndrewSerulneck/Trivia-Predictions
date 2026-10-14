@@ -15,6 +15,7 @@ import { SCANNABLE_COUPON_LINE } from "@/lib/posStaffInstructions";
 import { SquareGiftCardPanel } from "@/components/prizes/SquareGiftCardPanel";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { isScannableGiftCardPrize } from "@/lib/pos/prizeDelivery";
+import { placeOrdinal } from "@/lib/rankedPlaceRewards";
 import type { ChallengeCampaignWin, PrizeType, PrizeWin, RewardMenuItem } from "@/types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -25,8 +26,14 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-/** What the guest won the coupon for ("You got the most NFL picks right in Week 2"); legacy rewards keep "Won from". */
+/**
+ * What the guest won the coupon for ("You got the most NFL picks right in Week 2"); legacy rewards keep "Won from".
+ * A weekly places coupon always says its place: the reward's own sentence names it ("You finished 1st in
+ * Live Trivia the week of Oct 7"), and one whose reward was edited or deleted since falls back to the
+ * place stored on the coupon, so a backfilled or older coupon still reads "1st place".
+ */
 function wonForLine(win: ChallengeCampaignWin): string {
+  if (win.place) return win.winDescription ?? `${placeOrdinal(win.place)} place: ${win.challengeName}`;
   return win.winDescription ?? `Won from: ${win.challengeName}`;
 }
 
@@ -779,11 +786,13 @@ export function PrizeWalletPanel() {
               <section className="space-y-3">
                 <h2 className="text-base font-semibold text-ht-fg-primary">Click &quot;Redeem&quot; on your rewards </h2>
                 {activeChallengeWins.map((win) => (
-                  // challengeId is null on a coupon whose reward was deleted, and
-                  // several such rows can coexist — fall back to the fields that
-                  // uniquely identify the win itself.
+                  // One reward can hold several coupons for the same player (a weekly places
+                  // reward pays a new one every week), so the coupon's own id comes first.
+                  // challengeId is null on a coupon whose reward was deleted, and several
+                  // such rows can coexist — the last fallback uses the fields that uniquely
+                  // identify the win itself.
                   <ChallengeCoupon
-                    key={win.challengeId ?? `detached:${win.cycleStart ?? ""}:${win.claimedAt ?? ""}`}
+                    key={win.redemptionId ?? win.challengeId ?? `detached:${win.cycleStart ?? ""}:${win.claimedAt ?? ""}`}
                     win={win}
                     onRedeem={handleRedeemOpen}
                   />

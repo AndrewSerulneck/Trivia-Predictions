@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // docs/live-trivia-weekly-places-reward-plan.md Phase 3 — what createChallengeCampaign writes
 // for a weekly places reward, the place-win notification, and the player panels' pinned
-// "text only, never a gauge" rendering until Phase 4's standings card.
+// "never a points gauge" rendering (Phase 4 added the standings card on the venue Rewards card).
 
 const read = (path: string): string => readFileSync(join(__dirname, "..", path), "utf8");
 
@@ -121,9 +121,15 @@ describe("awardRankedCyclePlaces — the place-win notification", () => {
   });
 });
 
-describe("player panels — a weekly places reward shows text only until Phase 4", () => {
-  it("the venue Rewards card never draws a points gauge for it", () => {
-    expect(read("components/venue/VenueChallengesPanel.tsx")).toContain(
+describe("player panels — a weekly places reward never shows a points gauge", () => {
+  it("the venue Rewards card draws the week's standing, and falls back to text — never a gauge", () => {
+    const src = read("components/venue/VenueChallengesPanel.tsx");
+    expect(src).toContain('const isRanked = challenge.winCondition === "ranked_places";');
+    expect(src).toContain("composeRankedCard(challenge.rankedPlaces)");
+    // A weekly reward can settle with fewer winners than places, so "quota used up" never applies to it.
+    expect(src).toContain("const isExhausted = !isRanked && quotaRemaining <= 0;");
+    // The fallback when the standing couldn't be built is still text only.
+    expect(src).toContain(
       'challenge.winCondition === "game_winner" || challenge.winCondition === "ranked_places" ? (',
     );
   });
@@ -134,7 +140,7 @@ describe("player panels — a weekly places reward shows text only until Phase 4
     expect(src).toMatch(/selectedChallenge\.winCondition === "ranked_places"\s*\?\s*""/);
   });
 
-  it("the Redeem Prizes 'Active Rewards' list has no gauge for it", () => {
+  it("the Redeem Prizes 'Active Rewards' list has no gauge for it (standings live on the venue card)", () => {
     const src = read("components/challenges/ChallengeRedeemPanel.tsx");
     expect(src).toContain('const isRankedPlaces = campaign.winCondition === "ranked_places";');
     expect(src).toContain(") : isRankedPlaces ? null : (");

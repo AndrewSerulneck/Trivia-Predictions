@@ -151,30 +151,21 @@ export function rankedRewardConfigError(campaign: ChallengeCampaign): string | n
 }
 
 /**
- * The reward's weeks inside the lookback whose last game has ended and that the
- * reward was live for, oldest first. Pure: the caller supplies the venue's
- * schedules and timezone. Throws when the reward's week can't be anchored
- * (computeCycleStart's epoch sentinel — no valid first active day).
+ * The venue's games for each of the given week keys. Pure. The ONE place that decides
+ * which games make up a ranked week: the resolver (planDueRankedWeeks) and the Rewards
+ * card (planCurrentRankedWeek) both read it, so the card's "so far" is exactly the
+ * resolver's final total.
  */
-export function planDueRankedWeeks(params: {
+const collectGamesByWeekKey = (params: {
   campaign: ChallengeCampaign;
   venueId: string;
   schedules: readonly TriviaScheduleRow[];
   timezone: string;
   nowMs: number;
-}): DueRankedWeek[] {
+  keys: readonly Date[];
+}): Map<number, RankedWeekGame[]> => {
   const { campaign, venueId, timezone, nowMs } = params;
-
-  const currentKey = computeCycleStart(campaign, new Date(nowMs), timezone);
-  if (currentKey.getTime() === 0) {
-    throw new Error("A weekly places reward has no week start (active days are missing).");
-  }
-  const keys: Date[] = [currentKey];
-  while (keys.length < RANKED_WEEK_LOOKBACK_CYCLES) {
-    // One minute before a cycle starts is inside the previous cycle.
-    keys.push(computeCycleStart(campaign, new Date(keys[keys.length - 1].getTime() - 60_000), timezone));
-  }
-  const gamesByKey = new Map<number, RankedWeekGame[]>(keys.map((key) => [key.getTime(), []]));
+  const gamesByKey = new Map<number, RankedWeekGame[]>(params.keys.map((key) => [key.getTime(), []]));
 
   const seen = new Set<string>();
   for (const row of params.schedules) {
@@ -197,27 +188,97 @@ export function planDueRankedWeeks(params: {
       }
     }
   }
+  for (const games of gamesByKey.values()) games.sort((a, b) => a.startMs - b.startMs);
+  return gamesByKey;
+};
 
-  // An unparseable created_at is not a licence to award; fail closed.
+/**
+ * Whether the reward counts a week whose last game ends at `lastGameEndMs`: it must have
+ * existed before that game ended (D8) and not be past its end date. An unparseable
+ * created_at is not a licence to award; fail closed.
+ */
+const rewardCountsWeek = (campaign: ChallengeCampaign, lastGameEndMs: number): boolean => {
   const createdAtMs = Date.parse(String(campaign.createdAt ?? ""));
-  if (!Number.isFinite(createdAtMs)) return [];
+  if (!Number.isFinite(createdAtMs)) return false;
+  if (createdAtMs >= lastGameEndMs) return false; // D8: the reward didn't exist yet
+  // A reward past its end date must not keep paying (admin-edited rows only).
   const closeAtMs = getCampaignCloseTimestampMs(campaign);
+  return closeAtMs === null || lastGameEndMs <= closeAtMs;
+};
+
+/**
+ * The reward's weeks inside the lookback whose last game has ended and that the
+ * reward was live for, oldest first. Pure: the caller supplies the venue's
+ * schedules and timezone. Throws when the reward's week can't be anchored
+ * (computeCycleStart's epoch sentinel — no valid first active day).
+ */
+export function planDueRankedWeeks(params: {
+  campaign: ChallengeCampaign;
+  venueId: string;
+  schedules: readonly TriviaScheduleRow[];
+  timezone: string;
+  nowMs: number;
+}): DueRankedWeek[] {
+  const { campaign, timezone, nowMs } = params;
+
+  const currentKey = computeCycleStart(campaign, new Date(nowMs), timezone);
+  if (currentKey.getTime() === 0) {
+    throw new Error("A weekly places reward has no week start (active days are missing).");
+  }
+  const keys: Date[] = [currentKey];
+  while (keys.length < RANKED_WEEK_LOOKBACK_CYCLES) {
+    // One minute before a cycle starts is inside the previous cycle.
+    keys.push(computeCycleStart(campaign, new Date(keys[keys.length - 1].getTime() - 60_000), timezone));
+  }
+  const gamesByKey = collectGamesByWeekKey({ ...params, keys });
 
   const due: DueRankedWeek[] = [];
   for (const key of [...keys].sort((a, b) => a.getTime() - b.getTime())) {
-    const games = (gamesByKey.get(key.getTime()) ?? []).sort((a, b) => a.startMs - b.startMs);
+    const games = gamesByKey.get(key.getTime()) ?? [];
     if (games.length === 0) continue;
     const lastGameEndMs = Math.max(...games.map((game) => game.endMs));
     if (nowMs < lastGameEndMs) continue; // the week's last game hasn't finished
-    if (createdAtMs >= lastGameEndMs) continue; // D8: the reward didn't exist yet
-    // A reward past its end date must not keep paying (admin-edited rows only).
-    if (closeAtMs !== null && lastGameEndMs > closeAtMs) continue;
+    if (!rewardCountsWeek(campaign, lastGameEndMs)) continue;
     due.push({ cycleStart: key, games, lastGameEndMs });
   }
   return due;
 }
 
-const isWeekSettled = (
+export type CurrentRankedWeek = {
+  /** computeCycleStart of the week containing `nowMs` — the settlement / ledger key. */
+  cycleStart: Date;
+  /** Every game of the week, earliest first (played, in progress and still to come). */
+  games: RankedWeekGame[];
+  /**
+   * False when the reward doesn't count this week: no games, or the reward was created
+   * after the week's last game ended (D8), so the resolver will never settle it.
+   */
+  countsForReward: boolean;
+};
+
+/**
+ * The week containing `nowMs`, for the Rewards card's live standing. Pure. Shares the
+ * game list and the D8 rule with planDueRankedWeeks (above). Throws when the reward's
+ * week can't be anchored, exactly as planDueRankedWeeks does.
+ */
+export function planCurrentRankedWeek(params: {
+  campaign: ChallengeCampaign;
+  venueId: string;
+  schedules: readonly TriviaScheduleRow[];
+  timezone: string;
+  nowMs: number;
+}): CurrentRankedWeek {
+  const cycleStart = computeCycleStart(params.campaign, new Date(params.nowMs), params.timezone);
+  if (cycleStart.getTime() === 0) {
+    throw new Error("A weekly places reward has no week start (active days are missing).");
+  }
+  const games = collectGamesByWeekKey({ ...params, keys: [cycleStart] }).get(cycleStart.getTime()) ?? [];
+  const countsForReward =
+    games.length > 0 && rewardCountsWeek(params.campaign, Math.max(...games.map((game) => game.endMs)));
+  return { cycleStart, games, countsForReward };
+}
+
+export const isWeekSettled = (
   settlements: readonly ChallengeCycleSettlementRecord[],
   campaignId: string,
   cycleStartMs: number,

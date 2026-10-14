@@ -306,3 +306,19 @@ export const rankedPlaceWinMessage = (params: {
   const won = params.prize ? ` and won ${describeRewardPrizeInSentence(params.prize)}` : "";
   return `You finished ${placeOrdinal(params.place)} in "${params.campaignName}"${won}! Tap here to view your coupon before it expires.`;
 };
+
+/**
+ * The exact terms of a weekly places reward, for the partner's and admin's lists: "Weekly top 3.
+ * 1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card. At least 4 players need
+ * to play each week." The minimum clause is optional.
+ */
+export const describeRankedTerms = (
+  prizes: readonly RewardPlacePrize[] | null | undefined,
+  minPlayers: number | null | undefined,
+): string => {
+  const count = prizes?.length ?? 0;
+  const ladder = describePlacePrizeLadder(prizes);
+  const lead = count === 1 ? "Weekly winner." : count > 1 ? `Weekly top ${count}.` : "Weekly places reward.";
+  const min = minPlayers ? ` At least ${minPlayers} players need to play each week.` : "";
+  return `${lead}${ladder ? ` ${ladder}` : ""}${min}`;
+};

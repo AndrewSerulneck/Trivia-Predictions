@@ -10,6 +10,7 @@ import {
   rewardHeadline,
   type ChallengeCampaignCard,
 } from "@/components/venue/venueHubShared";
+import { composeRankedCard } from "@/lib/rankedPlaceCard";
 import { playHaptic } from "@/lib/nativeHaptics";
 import { formatCalendarDate as formatUpcomingDate } from "@/lib/formatCalendarDate";
 
@@ -94,7 +95,11 @@ function VenueChallengesPanelInner({
                 // missing — inferring from winnerUserId is wrong for recurring rewards,
                 // whose winnerUserId is always null regardless of quota state.
                 const quotaRemaining = challenge.quotaRemaining ?? challenge.winnerQuota ?? 1;
-                const isExhausted = quotaRemaining <= 0;
+                // A weekly places reward pays up to N players and can settle with fewer (or none), so
+                // "quota used up" is meaningless for it: its card reads the week's own state instead.
+                const isRanked = challenge.winCondition === "ranked_places";
+                const rankedCard = isRanked && challenge.rankedPlaces ? composeRankedCard(challenge.rankedPlaces) : null;
+                const isExhausted = !isRanked && quotaRemaining <= 0;
                 const winnerUsernames = challenge.winnerUsernames ?? [];
                 const isWon = isWinner || isExhausted;
                 // An NFL reward whose first week is still in the future: real
@@ -167,7 +172,11 @@ function VenueChallengesPanelInner({
                             >
                               All Claimed
                             </span>
-                          ) : isUpcoming ? (
+                          ) : rankedCard?.status === "week_complete" ? (
+                            <span className="inline-flex items-center rounded-full border border-slate-600/50 bg-slate-700/50 px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-slate-400">
+                              Week Complete
+                            </span>
+                          ) : isUpcoming || rankedCard?.status === "upcoming" ? (
                             <span
                               className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-amber-300"
                               style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)" }}
@@ -199,8 +208,21 @@ function VenueChallengesPanelInner({
                       </div>
                     ) : null}
 
-                    {/* Body: leaderboard, progress bar, or won state */}
-                    {isWon && isWinner ? (
+                    {/* Body: weekly standing, leaderboard, progress bar, or won state */}
+                    {rankedCard ? (
+                      <div className="mt-3 space-y-2">
+                        {isWinner ? (
+                          <div className="inline-flex items-center rounded-full border border-amber-300/35 bg-amber-300/10 px-3 py-1.5 text-sm font-black uppercase tracking-[0.08em] text-amber-300">
+                            {isBusy ? "Opening…" : "Prize won! Tap to Claim Reward."}
+                          </div>
+                        ) : null}
+                        {rankedCard.lines.map((line) => (
+                          <p key={line} className="text-base text-slate-300">
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    ) : isWon && isWinner ? (
                       <div className="mt-3 inline-flex items-center rounded-full px-3 py-1.5 text-sm font-black uppercase tracking-[0.08em] text-amber-300"
                         style={{ border: "1px solid rgba(251,191,36,0.35)", background: "rgba(251,191,36,0.12)" }}>
                         {/* prizeClaimedAt is the AWARD timestamp (challenge_campaign_redemptions.claimed_at
@@ -233,9 +255,9 @@ function VenueChallengesPanelInner({
                     ) : challenge.winCondition === "game_winner" || challenge.winCondition === "ranked_places" ? (
                       // No points target to bar-chart — the reward goes to whoever wins
                       // (or, for a weekly places reward, to the week's top players: its
-                      // standings card is Phase 4 of docs/live-trivia-weekly-places-reward-plan.md,
-                      // so until then it shows its composed text only, never a gauge),
-                      // resolved by the winner-rewards cron once the contest ends. A composed
+                      // standings render above from `rankedPlaces`, and only reach here when
+                      // that state couldn't be built, so it shows its composed text, never a
+                      // gauge), resolved by the winner-rewards cron once the contest ends. A composed
                       // summary above already says what to do and what you win; only a legacy
                       // hand-written reward (isCustom) needs this line.
                       challenge.description?.isCustom !== false ? (

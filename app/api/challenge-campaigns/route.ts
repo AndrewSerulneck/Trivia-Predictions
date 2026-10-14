@@ -4,6 +4,7 @@ import {
   getChallengeCampaignSnapshotForUser,
   listChallengeCampaigns,
 } from "@/lib/challengeCampaigns";
+import { attachRankedPlaceCards } from "@/lib/rankedPlaceCardData";
 import { attachRewardDescriptions } from "@/lib/rewards";
 import { resolveRequestUserId } from "@/lib/serverSession";
 
@@ -56,9 +57,12 @@ export async function GET(request: Request) {
       // read — see attachRewardDescriptions in lib/rewards.ts. The venue page
       // polls this every 30 s per player, so the schedule / NFL-week reads behind
       // the wording are reused for a few minutes per server instance.
+      // A weekly places reward also carries the viewer's live standing this week (or how the week
+      // ended): cached per reward, so a poll costs a lookup, not a query (lib/rankedPlaceCardData.ts).
+      const described = await attachRewardDescriptions(filtered, venueId, new Date(), { cachedReads: true });
       return NextResponse.json({
         ok: true,
-        campaigns: await attachRewardDescriptions(filtered, venueId, new Date(), { cachedReads: true }),
+        campaigns: await attachRankedPlaceCards(described, venueId, userId),
       });
     }
 
@@ -73,9 +77,10 @@ export async function GET(request: Request) {
       campaigns: snapshots,
       venueId,
     });
+    const described = await attachRewardDescriptions(withLeaderboard, venueId, new Date(), { cachedReads: true });
     return NextResponse.json({
       ok: true,
-      campaigns: await attachRewardDescriptions(withLeaderboard, venueId, new Date(), { cachedReads: true }),
+      campaigns: await attachRankedPlaceCards(described, venueId, null),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load challenge campaigns.";

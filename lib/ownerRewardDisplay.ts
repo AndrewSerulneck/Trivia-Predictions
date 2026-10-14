@@ -1,5 +1,6 @@
 import { OWNER_COMPETITION_TEMPLATES } from "@/lib/ownerCompetitionTemplates";
 import { getRewardDefinition } from "@/lib/rewardDefinitions";
+import { describeRankedTerms } from "@/lib/rankedPlaceRewards";
 import { describeCampaignGameWinnerTerms } from "@/lib/rewardGameSlots";
 import { periodForCadence, renderTermsSentence } from "@/lib/rewardTerms";
 import type { ChallengeCampaign } from "@/types";
@@ -58,14 +59,22 @@ export const formatTimeLabel = (time: string | undefined): string => {
  */
 export const rewardTermsText = (competition: OwnerCompetition): string | null => {
   if (!competition.rewardDefinitionId) return null;
-  if (competition.winCondition === "game_winner" && competition.gameWinnerSlots) {
-    return describeCampaignGameWinnerTerms(competition);
+  // A weekly places reward has no "N rewards a week" quota sentence: its terms ARE the prize ladder.
+  if (competition.winCondition === "ranked_places") {
+    return describeRankedTerms(competition.placePrizes, competition.minPlayers);
   }
-  return renderTermsSentence(
+  // The partner's optional "at least N players" minimum is part of a game-winner reward's terms too.
+  const minimum = competition.minPlayers
+    ? ` At least ${competition.minPlayers} players need to play for a winner to be named.`
+    : "";
+  if (competition.winCondition === "game_winner" && competition.gameWinnerSlots) {
+    return `${describeCampaignGameWinnerTerms(competition)}${minimum}`;
+  }
+  return `${renderTermsSentence(
     competition.winnerQuota,
     periodForCadence(competition.recurringType),
     competition.winCondition,
-  );
+  )}${minimum}`;
 };
 
 export const splitCompetitions = (

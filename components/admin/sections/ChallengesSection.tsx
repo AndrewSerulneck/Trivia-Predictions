@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import type { RewardDescription, Venue } from "@/types";
+import type { RewardDescription, RewardPlacePrize, Venue } from "@/types";
 import { PaginationBar, BulkActionBar, TH, TD, TR } from "@/components/admin/AdminShell";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import { ExitBackButton } from "@/components/navigation/ExitBackButton";
+import { describeRankedTerms, placeOrdinal } from "@/lib/rankedPlaceRewards";
+import { buildRankedWeekHistory, type RankedWeekHistoryRow } from "@/lib/rankedWeekHistory";
 import {
   CreateRewardWizard,
   type CreateRewardSubmission,
@@ -30,6 +32,16 @@ type CycleWinnerRecord = {
   finalizedAt: string;
   prizeType: string | null;
   prizeRedeemedAt: string | null;
+  /** Weekly places rewards only: the place won (1-3). */
+  place?: number | null;
+};
+
+type SettlementRecord = {
+  challengeId: string;
+  cycleStart: string;
+  outcome: "awarded" | "no_scorers" | "below_minimum";
+  participantCount: number;
+  minPlayers: number | null;
 };
 
 type FinalizedPrize = {
@@ -70,11 +82,66 @@ type AdminChallengeCampaign = {
   prizeGiftCertificateAmount?: number | null;
   isActive: boolean;
   // ── Rewards: game-winner win condition ──
-  winCondition?: "points_threshold" | "game_winner";
+  winCondition?: "points_threshold" | "game_winner" | "ranked_places";
+  /** Weekly places rewards: one prize per place, 1st first. */
+  placePrizes?: RewardPlacePrize[] | null;
+  minPlayers?: number | null;
   // Composed server-side (attachRewardDescriptions). `isCustom: false` means guests see this
   // automatic wording instead of `rules`.
   description?: RewardDescription;
 };
+
+/** A weekly places reward's settled weeks: winners by place, prize, redeemed, and why a week had no winner. */
+function RankedWeeksTable({ rows }: { rows: RankedWeekHistoryRow[] }) {
+  if (rows.length === 0) return <p className="text-xs text-slate-400">No weeks settled yet.</p>;
+  return (
+    <table className="w-full text-xs">
+      <thead>
+        <tr className="text-left text-slate-500">
+          <th className="pb-1 pr-6 font-semibold">Week of</th>
+          <th className="pb-1 pr-6 font-semibold">Place</th>
+          <th className="pb-1 pr-6 font-semibold">Winner</th>
+          <th className="pb-1 pr-6 font-semibold">Points</th>
+          <th className="pb-1 pr-6 font-semibold">Prize</th>
+          <th className="pb-1 font-semibold">Redeemed</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => {
+          const week = new Date(row.cycleStart).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+          if (row.winners.length === 0) {
+            return (
+              <tr key={row.cycleStart} className="border-t border-indigo-100">
+                <td className="py-1 pr-6 text-slate-700">{week}</td>
+                <td className="py-1 text-slate-500" colSpan={5}>
+                  No winner — {row.note ?? "nothing was awarded."}
+                </td>
+              </tr>
+            );
+          }
+          return row.winners.map((winner, index) => (
+            <tr key={`${row.cycleStart}-${winner.place}`} className="border-t border-indigo-100">
+              <td className="py-1 pr-6 text-slate-700">{index === 0 ? week : ""}</td>
+              <td className="py-1 pr-6 font-medium text-slate-900">{placeOrdinal(winner.place)}</td>
+              <td className="py-1 pr-6 font-medium text-slate-900">{winner.username ?? "Deleted player"}</td>
+              <td className="py-1 pr-6 text-slate-700">{winner.points}</td>
+              <td className="py-1 pr-6 text-slate-700">{winner.prize}</td>
+              <td className="py-1">
+                {winner.redeemedAt ? (
+                  <span className="text-emerald-700">
+                    {new Date(winner.redeemedAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                  </span>
+                ) : (
+                  <span className="text-amber-600">Pending</span>
+                )}
+              </td>
+            </tr>
+          ));
+        })}
+      </tbody>
+    </table>
+  );
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -205,6 +272,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [expandedWinnersId, setExpandedWinnersId] = useState<string | null>(null);
   const [cycleWinnersCache, setCycleWinnersCache] = useState<Record<string, CycleWinnerRecord[]>>({});
+  const [settlementsCache, setSettlementsCache] = useState<Record<string, SettlementRecord[]>>({});
   const [winnersLoading, setWinnersLoading] = useState(false);
   const [expandedPrizeId, setExpandedPrizeId] = useState<string | null>(null);
   const [finalizedPrizeCache, setFinalizedPrizeCache] = useState<Record<string, FinalizedPrize | null>>({});
@@ -220,9 +288,15 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     setWinnersLoading(true);
     try {
       const res = await fetch(`/api/admin?resource=challenge-cycle-winners&challengeId=${campaignId}`, { cache: "no-store" });
-      const payload = (await res.json()) as { ok: boolean; items?: CycleWinnerRecord[]; error?: string };
+      const payload = (await res.json()) as {
+        ok: boolean;
+        items?: CycleWinnerRecord[];
+        settlements?: SettlementRecord[];
+        error?: string;
+      };
       if (payload.ok) {
         setCycleWinnersCache((prev) => ({ ...prev, [campaignId]: payload.items ?? [] }));
+        setSettlementsCache((prev) => ({ ...prev, [campaignId]: payload.settlements ?? [] }));
       }
     } finally {
       setWinnersLoading(false);
@@ -269,7 +343,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   // reward ignores pointsRequiredToWin entirely (resolved by the
   // resolve-live-trivia-winners cron, not points accrual), so the raw field
   // below must not look editable for it.
-  const [editingWinCondition, setEditingWinCondition] = useState<"points_threshold" | "game_winner" | null>(null);
+  const [editingWinCondition, setEditingWinCondition] = useState<"points_threshold" | "game_winner" | "ranked_places" | null>(null);
   const [formRecurring, setFormRecurring] = useState<CampaignRecurringType>("none");
   const [formActive, setFormActive] = useState(true);
   const [formPrizeType, setFormPrizeType] = useState<PrizeType | "none">("none");
@@ -1018,6 +1092,14 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                 each game ends.
               </p>
             </div>
+          ) : formChallengeMode === "progress" && editingWinCondition === "ranked_places" ? (
+            <div>
+              <label className={lbl}>Points Required to Win</label>
+              <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800">
+                This reward pays the top players of each week — it has no points target to edit.
+                Each week is settled automatically after that week&apos;s last Live Trivia game.
+              </p>
+            </div>
           ) : formChallengeMode === "progress" ? (
             <div>
               <label className={lbl}>Points Required to Win</label>
@@ -1309,6 +1391,14 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                           Game Winner
                         </span>
                       ) : null}
+                      {c.winCondition === "ranked_places" ? (
+                        <span className="ml-2 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-caption font-semibold uppercase tracking-wide text-amber-700">
+                          Weekly Places
+                        </span>
+                      ) : null}
+                      {c.winCondition === "ranked_places" ? (
+                        <div className="text-xs text-slate-500">{describeRankedTerms(c.placePrizes, c.minPlayers)}</div>
+                      ) : null}
                       <div className="text-xs text-slate-400">
                         {new Date(c.createdAt).toLocaleDateString()}
                       </div>
@@ -1437,6 +1527,14 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-700">Past Cycle Winners</p>
                         {winnersLoading && !cycleWinnersCache[c.id] ? (
                           <p className="text-xs text-slate-400">Loading…</p>
+                        ) : c.winCondition === "ranked_places" ? (
+                          <RankedWeeksTable
+                            rows={buildRankedWeekHistory({
+                              winners: cycleWinnersCache[c.id] ?? [],
+                              settlements: settlementsCache[c.id] ?? [],
+                              placePrizes: c.placePrizes,
+                            })}
+                          />
                         ) : (cycleWinnersCache[c.id] ?? []).length === 0 ? (
                           <p className="text-xs text-slate-400">No cycle winners recorded yet.</p>
                         ) : (

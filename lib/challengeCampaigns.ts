@@ -1917,6 +1917,8 @@ export type ChallengeCycleWinnerRecord = {
   finalizedAt: string;
   prizeType: string | null;
   prizeRedeemedAt: string | null;
+  /** "ranked_places" rewards only: the place won (1-3). Null on every other reward's rows. */
+  place?: number | null;
 };
 
 export async function listChallengeCycleWinners(challengeId: string): Promise<ChallengeCycleWinnerRecord[]> {
@@ -1926,12 +1928,14 @@ export async function listChallengeCycleWinners(challengeId: string): Promise<Ch
 
   const { data, error } = await supabaseAdmin!
     .from("challenge_cycle_winners")
-    .select("id, challenge_id, cycle_start, winner_user_id, venue_id, points_earned, finalized_at, prize_type")
+    .select("id, challenge_id, cycle_start, winner_user_id, venue_id, points_earned, finalized_at, prize_type, place")
     .eq("challenge_id", cid)
     .order("cycle_start", { ascending: false })
+    .order("place", { ascending: true, nullsFirst: false })
     .returns<Array<{
       id: string; challenge_id: string; cycle_start: string; winner_user_id: string | null;
       venue_id: string; points_earned: number; finalized_at: string; prize_type: string | null;
+      place: number | null;
     }>>();
   if (error) throw new Error(error.message ?? "Failed to load cycle winners.");
   if (!data || data.length === 0) return [];
@@ -1964,6 +1968,53 @@ export async function listChallengeCycleWinners(challengeId: string): Promise<Ch
     finalizedAt: r.finalized_at,
     prizeType: r.prize_type,
     prizeRedeemedAt: r.winner_user_id ? redemptionMap.get(`${r.winner_user_id}:${r.cycle_start}`) ?? null : null,
+    place: normalizePlace(r.place),
+  }));
+}
+
+/**
+ * Who took each place in ONE settled week of a ranked-places reward, 1st first (usernames
+ * only; a player who deleted their account has a null name). One ledger read plus one
+ * username read, bounded by the reward's place count. `toleranceMs` matches a ledger key
+ * that differs from `cycleStart` by less than that (the resolver's timezone-fallback
+ * guard, SETTLED_WEEK_MATCH_TOLERANCE_MS). Throws on a read error.
+ */
+export async function listRankedCycleWinners(params: {
+  challengeId: string;
+  cycleStart: Date;
+  toleranceMs: number;
+}): Promise<Array<{ place: number; winnerUserId: string | null; username: string | null }>> {
+  assertConfigured();
+  const centre = params.cycleStart.getTime();
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_cycle_winners")
+    .select("winner_user_id, place")
+    .eq("challenge_id", params.challengeId)
+    .gte("cycle_start", new Date(centre - params.toleranceMs).toISOString())
+    .lte("cycle_start", new Date(centre + params.toleranceMs).toISOString())
+    .not("place", "is", null)
+    .order("place", { ascending: true })
+    .returns<Array<{ winner_user_id: string | null; place: number | null }>>();
+  if (error) throw new Error(error.message ?? "Failed to load the week's winners.");
+  const rows = (data ?? []).flatMap((row) => {
+    const place = normalizePlace(row.place);
+    return place === null ? [] : [{ place, winnerUserId: row.winner_user_id }];
+  });
+  const userIds = [...new Set(rows.flatMap((row) => (row.winnerUserId ? [row.winnerUserId] : [])))];
+  const usernameById = new Map<string, string>();
+  if (userIds.length > 0) {
+    const { data: users, error: usersError } = await supabaseAdmin!
+      .from("users")
+      .select("id, username")
+      .in("id", userIds)
+      .returns<Array<{ id: string; username: string }>>();
+    if (usersError) throw new Error(usersError.message ?? "Failed to load the week's winner names.");
+    for (const user of users ?? []) usernameById.set(user.id, user.username);
+  }
+  return rows.map((row) => ({
+    place: row.place,
+    winnerUserId: row.winnerUserId,
+    username: row.winnerUserId ? usernameById.get(row.winnerUserId) ?? null : null,
   }));
 }
 

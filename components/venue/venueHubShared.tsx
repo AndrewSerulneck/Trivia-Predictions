@@ -7,8 +7,10 @@ import type {
   RewardMenuItem,
   RewardDiscountKind,
   RewardDescription,
+  RewardPlacePrize,
   ChallengeGameType as RewardDefinitionGameType,
 } from "@/types";
+import type { RankedPlaceCardState } from "@/lib/rankedPlaceCard";
 import { describeRewardPrize, REWARD_DEFINITIONS } from "@/lib/rewardDefinitions";
 
 // Shared types, constants, helpers, and presentational sub-components used by
@@ -83,6 +85,12 @@ export type ChallengeCampaignCard = {
   prizeDiscountKind?: RewardDiscountKind | null;
   prizeDiscountValue?: number | null;
   prizeGiftCertificateAmount?: number | null;
+  // ── Weekly places reward (win condition "ranked_places", Phase 4) ──
+  /** One prize per place, 1st first. Set only on a weekly places reward. */
+  placePrizes?: RewardPlacePrize[] | null;
+  minPlayers?: number | null;
+  /** The viewer's standing this week, or how the week ended (lib/rankedPlaceCard.ts). Absent = show the description alone. */
+  rankedPlaces?: RankedPlaceCardState | null;
 };
 
 export const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
@@ -260,6 +268,13 @@ function isCompletePrize(card: ChallengeCampaignCard): boolean {
  * label like "Gift card".
  */
 export function rewardHeadline(card: ChallengeCampaignCard): string {
+  // A weekly places reward has no single prize: one place pays that prize, several say how many win.
+  if (card.winCondition === "ranked_places") {
+    const prizes = card.placePrizes ?? [];
+    if (prizes.length === 1) return describeRewardPrize(prizes[0]) || card.name;
+    if (prizes.length > 1) return `Weekly prizes for the top ${prizes.length}`;
+    return card.name;
+  }
   if (!isCompletePrize(card)) return card.name;
   const described = describeRewardPrize(card);
   return described || card.name;
