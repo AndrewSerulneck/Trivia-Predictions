@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+// Match the existing hosting limit; stop checking a minute earlier to return results.
+export const maxDuration = 300;
+const BULK_CHECK_TIME_MS = 240_000;
+
 type QuestionStatus = "pending_review" | "active" | "deleted";
 type QuestionPool = "live_showdown" | "anytime_blitz";
 
@@ -117,6 +121,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const started = Date.now();
   const savedIds: string[] = [], repeats: { id: string; code: string; conflicts: string[] }[] = [], holds: { id: string; code: string }[] = [];
   let requestedIds: string[] = [];
   try {
@@ -136,8 +141,8 @@ export async function POST(request: Request) {
       ? Array.from(new Set(body.ids.map((id) => String(id ?? "").trim()).filter(Boolean)))
       : [];
 
-    if (action !== "approve" && action !== "delete") {
-      return NextResponse.json({ ok: false, error: "Unknown action. Use 'approve' or 'delete'." }, { status: 400 });
+    if (action !== "approve" && action !== "delete" && action !== "status") {
+      return NextResponse.json({ ok: false, error: "Unknown action. Use 'approve', 'delete' or 'status'." }, { status: 400 });
     }
     if (ids.length === 0) {
       return NextResponse.json({ ok: false, error: "ids is required." }, { status: 400 });
@@ -146,14 +151,29 @@ export async function POST(request: Request) {
     requestedIds = ids;
     const nextStatus: QuestionStatus = action === "approve" ? "active" : "deleted";
     if (ids.length > 200) return NextResponse.json({ ok: false, error: "Choose at most 200 questions." }, { status: 400 });
+    if (action === "status") {
+      // Recovery reads only the selected IDs; it never runs paid checks or writes.
+      let statusRead = supabaseAdmin.from("trivia_questions").select("id,status").in("id", ids);
+      if (pool) statusRead = statusRead.eq("question_pool", pool);
+      const { data, error } = await statusRead.abortSignal(AbortSignal.timeout(10_000));
+      if (error) throw new Error("Could not confirm saved questions. Refresh Question Review before continuing.");
+      return NextResponse.json({ ok: true, items: data ?? [] });
+    }
     let read = supabaseAdmin.from("trivia_questions").select("*").in("id", ids);
     if (pool) read = read.eq("question_pool", pool);
     const { data: rows, error: readError } = await read;
     if (readError || !rows) throw new Error("Could not verify selected questions.");
-    const gate = action === "approve" && rows.some(row => row.question_pool === "anytime_blitz") ? await openSpeedTriviaAdmission() : undefined;
+    const gate = action === "approve" && rows.some(row => row.question_pool === "anytime_blitz" && row.status !== "active") ? await openSpeedTriviaAdmission({ elapsedMs: Math.max(1, BULK_CHECK_TIME_MS - (Date.now() - started)) }) : undefined;
     const data: { id: string }[] = [];
     let firstRejection: unknown = null;
     for (const row of rows) {
+      if (action === "approve" && row.status === "active") {
+        // A stale selection or interrupted response must not recheck/recharge it.
+        savedIds.push(row.id);
+        data.push({ id: row.id });
+        continue;
+      }
+      gate?.budget.assertTime();
       if (action === "approve" && row.question_pool === "anytime_blitz") {
         try { await approveSpeedTrivia(row, gate); }
         catch (error) {
@@ -179,7 +199,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, action, status: nextStatus, updated: data.length, savedIds, repeats, holds, notProcessed });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, updated: savedIds.length, savedIds, repeats, holds, notProcessed: requestedIds.filter(id => !new Set([...savedIds, ...repeats.map(row => row.id), ...holds.map(row => row.id)]).has(id)), error: error instanceof Error ? error.message : "Failed to update trivia questions.", code: speedTriviaError(error).code, conflicts: speedTriviaError(error).conflicts },
+      { ok: false, updated: savedIds.length, savedIds, repeats, holds, notProcessed: requestedIds.filter(id => !new Set([...savedIds, ...repeats.map(row => row.id), ...holds.map(row => row.id)]).has(id)), error: speedTriviaError(error).code === "budget_exhausted" ? "Approval paused at the time or checking budget limit. Saved approvals are kept; the remaining questions still need review. Try a smaller selection next." : error instanceof Error ? error.message : "Failed to update trivia questions.", code: speedTriviaError(error).code, conflicts: speedTriviaError(error).conflicts },
       { status: speedTriviaError(error).status }
     );
   }

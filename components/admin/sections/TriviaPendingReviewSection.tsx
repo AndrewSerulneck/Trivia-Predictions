@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Download, GitPullRequest, Sparkles, Trash2 } from "lucide-react";
 import { PaginationBar } from "@/components/admin/AdminShell";
 import { getErrorMessage } from "@/lib/errors";
+import { runTriviaBulkAction } from "@/lib/triviaBulkAction";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 
 type QuestionPool = "live_showdown" | "anytime_blitz";
@@ -171,19 +172,18 @@ export function TriviaPendingReviewSection() {
       setError("");
       setSuccess("");
       try {
-        const response = await fetch("/api/admin/trivia/questions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action, ids, pool: activeTab }),
-        });
-        const payload = (await response.json()) as { ok: boolean; updated?: number; savedIds?: string[]; repeats?: { id: string }[]; holds?: { id: string }[]; notProcessed?: string[]; error?: string };
+        const payload = await runTriviaBulkAction(action, ids, activeTab);
         const saved = payload.savedIds ?? [];
         const idSet = new Set(saved);
         setItems((prev) => prev.filter((item) => !idSet.has(item.id)));
         setTotal((prev) => Math.max(0, prev - saved.length));
         setSelectedIds((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !idSet.has(id))));
-        setSuccess(`${action === "approve" ? "Approved" : "Deleted"} ${saved.length} question(s). Repeats: ${payload.repeats?.length ?? 0}. Unresolved: ${payload.holds?.length ?? 0}. Not processed: ${payload.notProcessed?.length ?? 0}.`);
-        if (!response.ok || !payload.ok) setError(payload.error ?? "Some questions could not be saved. Saved changes are counted above.");
+        setSuccess(payload.unconfirmed ? "" : `${action === "approve" ? "Approved" : "Deleted"} ${saved.length} question(s). Confirmed repeats: ${payload.repeats?.length ?? 0}. Unresolved: ${payload.holds?.length ?? 0}. Not processed: ${payload.notProcessed?.length ?? 0}.`);
+        if (payload.recovered) {
+          // Lost responses do not identify repeats. Require a fresh deliberate selection.
+          setSelectedIds({});
+        }
+        if (!payload.ok) setError(payload.error ?? "Some questions could not be saved. Saved changes are counted above.");
       } catch (err) {
         setError(getErrorMessage(err, "Bulk action failed."));
       } finally {
@@ -404,6 +404,7 @@ export function TriviaPendingReviewSection() {
               <button
                 key={tab.pool}
                 type="button"
+                disabled={bulkBusy}
                 onClick={() => setActiveTab(tab.pool)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium ${
                   isActive ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -458,7 +459,7 @@ export function TriviaPendingReviewSection() {
           disabled={bulkBusy || selectedCount === 0}
           className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
         >
-          Approve Selected{selectedCount > 0 ? ` (${selectedCount})` : ""}
+          {bulkBusy ? "Working…" : "Approve Selected"}{selectedCount > 0 ? ` (${selectedCount})` : ""}
         </button>
         <button
           type="button"

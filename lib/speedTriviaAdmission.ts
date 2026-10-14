@@ -1,6 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { AdmissionError, createSession } from "@/lib/speed-trivia-uniqueness/runtime.cjs";
+import { AdmissionError, createBudget, createSession } from "@/lib/speed-trivia-uniqueness/runtime.cjs";
 import type { AdmissionRow, AdmissionSession } from "@/types/speedTriviaAdmission";
 import type { SpeedIndex } from "@/types/speedTriviaUniqueness";
 
@@ -23,25 +23,33 @@ export const findTriviaAdmissionRow = async (identifier: string): Promise<Admiss
   if (error) throw new AdmissionError("verification_unavailable", "Could not load the current question.");
   return data as AdmissionRow | null;
 };
-export const openSpeedTriviaAdmission = (): Promise<AdmissionSession> => {
+export const openSpeedTriviaAdmission = (options?: { elapsedMs: number }): Promise<AdmissionSession> => {
   if (!supabaseAdmin) throw new AdmissionError("verification_unavailable", "Supabase admin client is not configured.");
-  return serialized(async () => {
-    const session = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache });
+  // Start the deadline before waiting for another local request. Keep the same
+  // approved dollar ceiling, including retries and all items in this request.
+  const budget = options ? createBudget({ dollars: Number(process.env.SPEED_TRIVIA_MAX_DOLLARS), elapsedMs: options.elapsedMs }) : undefined;
+  const opening = serialized(async () => {
+    budget?.assertTime();
+    const session = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget });
     try { await session.refresh(); } catch (error) { cachedIndex = null; throw error; }
     cachedIndex = session.index();
-    session.write = (row, options) => serialized(async () => {
-      // Another local request may have advanced the shared index since this session opened.
-      const fresh = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget: session.budget });
-      try {
-        const result = await fresh.write(row, options);
-        cachedIndex = fresh.index();
-        if (pairCache.size > 20000) pairCache.clear();
-        return result;
-      } catch (error) {
-        cachedIndex = error instanceof AdmissionError && error.code === "verification_unavailable" ? null : fresh.index();
-        throw error;
-      }
-    });
+    session.write = (row, options) => {
+      const writing = serialized(async () => {
+        session.budget.assertTime();
+        // Another local request may have advanced the shared index since this session opened.
+        const fresh = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget: session.budget });
+        try {
+          const result = await fresh.write(row, options);
+          cachedIndex = fresh.index();
+          if (pairCache.size > 20000) pairCache.clear();
+          return result;
+        } catch (error) {
+          cachedIndex = error instanceof AdmissionError && error.code === "verification_unavailable" ? null : fresh.index();
+          throw error;
+        }
+      });
+      return budget ? budget.limit(writing) : writing;
+    };
     session.leave = (patch, existing) => serialized(async () => {
       const fresh = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget: session.budget });
       try { const result = await fresh.leave(patch, existing); cachedIndex = fresh.index(); return result; }
@@ -49,6 +57,7 @@ export const openSpeedTriviaAdmission = (): Promise<AdmissionSession> => {
     });
     return session;
   });
+  return budget ? budget.limit(opening) : opening;
 };
 export const writeSpeedTrivia = async (patch: Record<string, unknown>, existing: AdmissionRow | null = null, session?: AdmissionSession): Promise<AdmissionRow> => {
   const gate = session ?? await openSpeedTriviaAdmission();
