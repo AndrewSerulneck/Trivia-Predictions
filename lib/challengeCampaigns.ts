@@ -1945,6 +1945,77 @@ export async function listChallengeCycleWinners(challengeId: string): Promise<Ch
   }));
 }
 
+/**
+ * Every active, unresolved "ranked_places" reward — the weekly resolver's input
+ * (lib/liveTriviaRankedRewards.ts). A direct filtered query on the partial index
+ * idx_challenge_campaigns_ranked_places, NOT listChallengeCampaigns(): that one
+ * caps at 200 rows across every venue and runs the leaderboard finalizers, so a
+ * ranked reward could silently drop out of the sweep once enough unrelated
+ * rewards exist. Throws on a read error (the sweep must not mistake a failed read
+ * for "no ranked rewards").
+ */
+export async function listActiveRankedPlaceCampaigns(): Promise<ChallengeCampaign[]> {
+  assertConfigured();
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select(CAMPAIGN_SELECT_COLUMNS)
+    .eq("win_condition", "ranked_places")
+    .eq("is_active", true)
+    .is("winner_user_id", null)
+    .order("created_at", { ascending: true })
+    .returns<ChallengeCampaignRow[]>();
+  if (error) throw new Error(error.message ?? "Failed to load ranked-place rewards.");
+  return (data ?? []).map((row) => mapCampaignRow(row));
+}
+
+export type ChallengeCycleSettlementRecord = {
+  challengeId: string;
+  cycleStart: string;
+  venueId: string;
+  outcome: "awarded" | "no_scorers" | "below_minimum";
+  participantCount: number;
+  winnerCount: number;
+  minPlayers: number | null;
+  settledAt: string;
+};
+
+/**
+ * Settled weeks of ranked-place rewards (`challenge_cycle_settlements`, written
+ * only by award_ranked_cycle_places), for the given rewards at or after
+ * `cycleStartFrom`. One bounded read: the weekly resolver passes its lookback, so
+ * it returns at most a few rows per reward. Throws on a read error — the resolver
+ * must never treat a failed read as "nothing settled yet".
+ */
+export async function listChallengeCycleSettlements(params: {
+  challengeIds: readonly string[];
+  cycleStartFrom: Date;
+}): Promise<ChallengeCycleSettlementRecord[]> {
+  assertConfigured();
+  const ids = [...new Set(params.challengeIds.map((id) => String(id ?? "").trim()).filter(Boolean))];
+  if (ids.length === 0) return [];
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_cycle_settlements")
+    .select("challenge_id, cycle_start, venue_id, outcome, participant_count, winner_count, min_players, settled_at")
+    .in("challenge_id", ids)
+    .gte("cycle_start", params.cycleStartFrom.toISOString())
+    .returns<Array<{
+      challenge_id: string; cycle_start: string; venue_id: string;
+      outcome: ChallengeCycleSettlementRecord["outcome"]; participant_count: number;
+      winner_count: number; min_players: number | null; settled_at: string;
+    }>>();
+  if (error) throw new Error(error.message ?? "Failed to load cycle settlements.");
+  return (data ?? []).map((r) => ({
+    challengeId: r.challenge_id,
+    cycleStart: r.cycle_start,
+    venueId: r.venue_id,
+    outcome: r.outcome,
+    participantCount: Number(r.participant_count) || 0,
+    winnerCount: Number(r.winner_count) || 0,
+    minPlayers: r.min_players ?? null,
+    settledAt: r.settled_at,
+  }));
+}
+
 export type ChallengeFinalizedPrize = {
   winnerUserId: string;
   winnerUsername: string | null;

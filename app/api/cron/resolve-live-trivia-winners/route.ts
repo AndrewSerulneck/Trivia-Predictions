@@ -1,29 +1,58 @@
 import { NextResponse } from "next/server";
 import { isCronAuthorized } from "@/lib/cronAuth";
+import { resolveRankedPlaceRewards } from "@/lib/liveTriviaRankedRewards";
 import { resolveGameWinnerRewards } from "@/lib/liveTriviaWinnerRewards";
 
 // Awards "winner of the game" rewards for Live Trivia occurrences that have
-// finished. Live Trivia has no game-over event, so this sweep is what closes out
-// a game. Resolution is idempotent (see lib/liveTriviaWinnerRewards.ts), so
-// running every minute is safe and a missed run self-heals on the next sweep.
+// finished, then settles weekly 1st/2nd/3rd ("ranked_places") rewards whose week's
+// last game has finished. Live Trivia has no game-over event, so this sweep is
+// what closes out a game and a week. Both are idempotent (see
+// lib/liveTriviaWinnerRewards.ts and lib/liveTriviaRankedRewards.ts), so running
+// every few minutes is safe and a missed run self-heals on the next sweep.
+//
+// Each sweep runs in its own try/catch: one throwing never stops the other. The
+// game-winner report stays at the top level of the response (its shape before the
+// weekly sweep existed); the weekly one is under `rankedPlaces`. Any sweep that
+// threw makes the response a 500 with `ok: false`.
+
+const errorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
 
 export async function POST(request: Request) {
   if (!isCronAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized cron request." }, { status: 401 });
   }
 
+  const nowMs = Date.now();
+
+  let gameWinner: Awaited<ReturnType<typeof resolveGameWinnerRewards>> | null = null;
+  let gameWinnerError: string | null = null;
   try {
-    const report = await resolveGameWinnerRewards(Date.now());
-    return NextResponse.json({ ok: true, ...report });
+    gameWinner = await resolveGameWinnerRewards(nowMs);
   } catch (error) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: error instanceof Error ? error.message : "Failed to resolve game winners.",
-      },
-      { status: 500 }
-    );
+    gameWinnerError = errorMessage(error, "Failed to resolve game winners.");
+    console.error("[GameWinnerReward] sweep-failed", { message: gameWinnerError });
   }
+
+  let rankedPlaces: Awaited<ReturnType<typeof resolveRankedPlaceRewards>> | null = null;
+  let rankedPlacesError: string | null = null;
+  try {
+    rankedPlaces = await resolveRankedPlaceRewards(nowMs);
+  } catch (error) {
+    rankedPlacesError = errorMessage(error, "Failed to resolve weekly places rewards.");
+    console.error("[RankedReward] sweep-failed", { message: rankedPlacesError });
+  }
+
+  const ok = gameWinnerError === null && rankedPlacesError === null;
+  return NextResponse.json(
+    {
+      ok,
+      ...(gameWinner ?? {}),
+      ...(gameWinnerError !== null ? { error: gameWinnerError } : {}),
+      rankedPlaces: rankedPlaces ?? { error: rankedPlacesError },
+    },
+    { status: ok ? 200 : 500 },
+  );
 }
 
 export async function GET(request: Request) {

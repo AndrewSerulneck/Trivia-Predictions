@@ -1,7 +1,8 @@
 # Live Trivia Weekly Places Reward (1st / 2nd / 3rd over the week) — Plan
 
-> **Status:** Phase 1 **done** 2026-10-14 (migration applied to production, code on `main`). Latest handoff:
-> `docs/live-trivia-weekly-places-reward-plan_PHASE_1_HANDOFF.md`. Next: **Phase 2**. Each phase ends with
+> **Status:** Phase 1 **done** 2026-10-14 (migration applied to production). Phase 2 **done** 2026-10-14 (weekly
+> resolver live in the existing cron; no ranked reward exists yet, so it pays nobody until Phase 3/5). Latest handoff:
+> `docs/live-trivia-weekly-places-reward-plan_PHASE_2_HANDOFF.md`. Next: **Phase 3**. Each phase ends with
 > `docs/live-trivia-weekly-places-reward-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew. **Trigger:** Garden State Bar promised posters with weekly 1st/2nd/3rd Live Trivia
 > prizes but never set up a reward, and the system can't express one today.
@@ -291,8 +292,20 @@ global CLAUDE.md. **Never run `supabase db push` without Andrew's explicit go-ah
 **Model: Claude Opus 5.5 · Effort: high** (money-moving SQL under concurrency)
 - As built: §5a and §5b. Handoff: `docs/live-trivia-weekly-places-reward-plan_PHASE_1_HANDOFF.md`.
 
-### Phase 2: Weekly resolver in the existing cron
+### Phase 2: Weekly resolver in the existing cron — DONE 2026-10-14
 **Model: Claude Opus 5.5 · Effort: high**
+- **As built** (handoff `docs/live-trivia-weekly-places-reward-plan_PHASE_2_HANDOFF.md`):
+  `resolveRankedPlaceRewards(nowMs)` + pure `planDueRankedWeeks` / `rankedRewardConfigError` in
+  `lib/liveTriviaRankedRewards.ts`; reads via new `listActiveRankedPlaceCampaigns` / `listChallengeCycleSettlements`
+  (`lib/challengeCampaigns.ts`) and `loadLiveTriviaSchedulesForVenues` (`lib/liveShowdownEngine.ts`); the cron
+  route runs it after the game-winner sweep (each in its own try/catch; weekly report under `rankedPlaces`).
+  Settlements are matched within ±12h of the key (`SETTLED_WEEK_MATCH_TOLERANCE_MS`) to absorb a key computed
+  in the wrong timezone (`getVenueTimezone` silently falls back to New York on a read error).
+- **Regrade question — answered: no grace window.** Nothing changes `live_showdown_answers.points_awarded` after a
+  game's window ends: answers are graded on submit (`lib/liveShowdownSubmission.ts`), and closest-guess points are
+  settled by live-state polls only while the game is active (`settleClosestGuessQuestion` via
+  `getLiveShowdownState`). The only post-game writers are deletes (admin schedule reset/delete in
+  `lib/liveShowdownAdmin.ts`; player account deletion).
 - `lib/liveTriviaRankedRewards.ts` + wiring in `app/api/cron/resolve-live-trivia-winners/route.ts` (§5c).
   Report shape like `ResolveGameWinnerRewardsReport` (`weeksSettled`, `noScorers`, `belowMinimum`,
   `tiebreakUnresolved`, `errors`).

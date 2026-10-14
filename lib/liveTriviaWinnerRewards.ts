@@ -39,6 +39,16 @@ import "server-only";
 // matters for more than fairness: standings order among equal scores comes from
 // DB row order, which is not stable across queries, so an unsorted subset could
 // award a DIFFERENT set of players on a re-sweep and blow past the cap.
+//
+// MINIMUM PLAYERS (D7, docs/live-trivia-weekly-places-reward-plan.md): a reward
+// may set min_players ("pay out only if at least N players took part"). A player
+// took part if they answered at least one question in the game, scored or not —
+// i.e. one row of loadOccurrenceFinalStandings. Below the minimum nobody wins that
+// game, and the reward stays live for the next one (the same as a game nobody
+// scored in). There is no settlement row for a single game, so the 6h lookback
+// re-checks it on each sweep; that is one bounded read, and the
+// `[GameWinnerReward] below-minimum` log line is written only on sweeps shortly
+// after the game ends so it isn't repeated for six hours.
 
 import {
   awardCycleWinner,
@@ -63,6 +73,18 @@ import type { ChallengeCampaign } from "@/types";
  */
 export const GAME_WINNER_TIE_QUOTA_CAP = 5;
 
+/** Only sweeps this soon after a game ends log a below-minimum game (see MINIMUM PLAYERS). */
+export const BELOW_MINIMUM_LOG_WINDOW_MS = 10 * 60 * 1000;
+
+export type GameWinnerBelowMinimum = {
+  scheduleId: string;
+  occurrenceDate: string;
+  venueId: string;
+  campaignId: string;
+  participantCount: number;
+  minPlayers: number;
+};
+
 export type GameWinnerResolution = {
   scheduleId: string;
   occurrenceDate: string;
@@ -82,6 +104,8 @@ export type ResolveGameWinnerRewardsReport = {
   occurrencesExamined: number;
   campaignsExamined: number;
   resolutions: GameWinnerResolution[];
+  /** Rewards that awarded nobody at a game because too few players took part (D7). */
+  belowMinimum: GameWinnerBelowMinimum[];
   errors: Array<{ scope: string; message: string }>;
 };
 
@@ -163,6 +187,7 @@ export async function resolveGameWinnerRewards(
     occurrencesExamined: 0,
     campaignsExamined: 0,
     resolutions: [],
+    belowMinimum: [],
     errors: [],
   };
 
@@ -246,8 +271,32 @@ export async function resolveGameWinnerRewards(
     // This is what makes re-running the sweep a no-op.
     const cycleStart = new Date(occurrence.startMs);
     const now = new Date(nowMs);
+    // Everyone who answered at least once, scored or not (D7's "took part").
+    const participantCount = standings.length;
 
     for (const campaign of campaigns) {
+      const minPlayers = campaign.minPlayers ?? null;
+      if (minPlayers !== null && participantCount < minPlayers) {
+        report.belowMinimum.push({
+          scheduleId: occurrence.scheduleId,
+          occurrenceDate: occurrence.occurrenceDate,
+          venueId: occurrence.venueId,
+          campaignId: campaign.id,
+          participantCount,
+          minPlayers,
+        });
+        if (nowMs - occurrence.endMs < BELOW_MINIMUM_LOG_WINDOW_MS) {
+          console.info("[GameWinnerReward] below-minimum", {
+            campaignId: campaign.id,
+            scheduleId: occurrence.scheduleId,
+            occurrenceDate: occurrence.occurrenceDate,
+            participantCount,
+            minPlayers,
+          });
+        }
+        continue;
+      }
+
       const awardedUserIds: string[] = [];
       try {
         for (const winner of winners) {

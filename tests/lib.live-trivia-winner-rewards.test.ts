@@ -555,4 +555,71 @@ describe("resolveGameWinnerRewards", () => {
       expect(report.resolutions).toEqual([]);
     });
   });
+
+  describe("minimum players (D7)", () => {
+    it("awards nobody when fewer players took part than the reward's minimum", async () => {
+      store.campaigns = [makeCampaign({ minPlayers: 4 })];
+
+      const report = await resolveGameWinnerRewards(NOW);
+
+      expect(report.resolutions).toEqual([]);
+      expect(store.ledger).toEqual([]);
+      expect(awardCycleWinner).not.toHaveBeenCalled();
+      expect(report.belowMinimum).toEqual([
+        {
+          scheduleId: "sched-1",
+          occurrenceDate: "2026-07-20",
+          venueId: "venue-1",
+          campaignId: "camp-1",
+          participantCount: 3,
+          minPlayers: 4,
+        },
+      ]);
+      // A one-off reward below its minimum is NOT spent: the next game can still resolve it.
+      expect(store.deactivated).toEqual([]);
+    });
+
+    it("counts players who answered but scored 0 as taking part", async () => {
+      store.campaigns = [makeCampaign({ minPlayers: 4 })];
+      store.standings.set("sched-1@2026-07-20", [
+        { userId: "user-win", totalPoints: 120 },
+        { userId: "user-2", totalPoints: 90 },
+        { userId: "user-3", totalPoints: 40 },
+        { userId: "user-zero", totalPoints: 0 },
+      ]);
+
+      const report = await resolveGameWinnerRewards(NOW);
+
+      expect(report.belowMinimum).toEqual([]);
+      expect(report.resolutions[0].awardedUserIds).toEqual(["user-win"]);
+    });
+
+    it("applies each reward's own minimum at the same game", async () => {
+      store.campaigns = [
+        makeCampaign({ id: "camp-strict", minPlayers: 10 }),
+        makeCampaign({ id: "camp-none", minPlayers: null }),
+      ];
+
+      const report = await resolveGameWinnerRewards(NOW);
+
+      expect(report.belowMinimum.map((row) => row.campaignId)).toEqual(["camp-strict"]);
+      expect(report.resolutions.map((row) => row.campaignId)).toEqual(["camp-none"]);
+    });
+
+    it("logs a below-minimum game only on sweeps shortly after it ends", async () => {
+      store.campaigns = [makeCampaign({ minPlayers: 4 })];
+      const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
+      try {
+        await resolveGameWinnerRewards(NOW);
+        expect(info).toHaveBeenCalledWith("[GameWinnerReward] below-minimum", expect.any(Object));
+        info.mockClear();
+
+        const later = await resolveGameWinnerRewards(GAME_END + 2 * 60 * 60 * 1000);
+        expect(later.belowMinimum).toHaveLength(1);
+        expect(info).not.toHaveBeenCalled();
+      } finally {
+        info.mockRestore();
+      }
+    });
+  });
 });

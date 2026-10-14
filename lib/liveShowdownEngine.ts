@@ -984,16 +984,22 @@ const SCHEDULE_COLUMNS_LEGACY =
   "id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled";
 
 // Loads schedule rows, transparently falling back to the pre-recurring-columns
-// schema. Pass a venueId to scope to a single venue; omit it to load all venues
-// (used by the per-occurrence seeder cron).
-async function loadScheduleRows(venueId?: string): Promise<TriviaScheduleRow[]> {
+// schema. Pass a venueId to scope to a single venue, an array to scope to a few
+// venues (the weekly ranked-reward resolver: one read for every ranked reward's
+// venue), or omit it to load all venues (used by the per-occurrence seeder cron).
+async function loadScheduleRows(venueScope?: string | readonly string[]): Promise<TriviaScheduleRow[]> {
   const admin = supabaseAdmin;
   if (!admin) return [];
 
-  const limit = venueId ? 200 : 2000;
+  // A blank single venue id keeps its old meaning ("all venues"); an empty ARRAY means none.
+  const venueIds =
+    typeof venueScope === "string" ? (venueScope ? [venueScope] : null) : venueScope ? [...venueScope] : null;
+  if (venueIds !== null && venueIds.length === 0) return [];
+  const limit = venueIds ? 200 * venueIds.length : 2000;
   const buildQuery = (columns: string) => {
     let query = admin.from("trivia_schedules").select(columns);
-    if (venueId) query = query.eq("venue_id", venueId);
+    if (venueIds?.length === 1) query = query.eq("venue_id", venueIds[0]);
+    else if (venueIds) query = query.in("venue_id", venueIds);
     return query.order("start_time", { ascending: false }).limit(limit);
   };
 
@@ -1016,6 +1022,18 @@ async function loadScheduleRows(venueId?: string): Promise<TriviaScheduleRow[]> 
   }
 
   return (withRecurring.data ?? []) as unknown as TriviaScheduleRow[];
+}
+
+/**
+ * Every Live Trivia schedule at these venues, in one read. For the weekly
+ * ranked-places resolver (lib/liveTriviaRankedRewards.ts), which enumerates each
+ * reward's week with enumerateScheduleOccurrences — the same source of truth as
+ * the seeder, the live-state resolver and the game-winner sweep. Throws on a read
+ * error; an empty venue list returns [] without a query.
+ */
+export async function loadLiveTriviaSchedulesForVenues(venueIds: readonly string[]): Promise<TriviaScheduleRow[]> {
+  const ids = [...new Set(venueIds.map((id) => toSafeVenueId(id)).filter(Boolean))];
+  return loadScheduleRows(ids);
 }
 
 // A single concrete occurrence of a schedule: when it starts, when it ends, and
