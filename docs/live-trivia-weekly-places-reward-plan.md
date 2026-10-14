@@ -1,9 +1,11 @@
 # Live Trivia Weekly Places Reward (1st / 2nd / 3rd over the week) — Plan
 
 > **Status:** Phase 1 **done** 2026-10-14 (migration applied to production). Phase 2 **done** 2026-10-14 (weekly
-> resolver live in the existing cron; no ranked reward exists yet, so it pays nobody until Phase 3/5). Phase 3
-> **done** 2026-10-14 (server can create a weekly places reward + its wording; no UI yet, none created). Latest handoff:
-> `docs/live-trivia-weekly-places-reward-plan_PHASE_3_HANDOFF.md`. Next: **Phase 4**. Each phase ends with
+> resolver live in the existing cron). Phase 3 **done** 2026-10-14 (server can create a weekly places reward + its
+> wording). Phase 4 **done** 2026-10-14 (Rewards card standings, wallet place, partner/admin lists; no reward exists
+> yet, so players see no difference until Phase 5). Latest handoff:
+> `docs/live-trivia-weekly-places-reward-plan_PHASE_4_HANDOFF.md`. Next: **Phase 5** (Garden State Bar: create the
+> reward, backfill from Aug 5; needs Andrew's dry-run approval). Each phase ends with
 > `docs/live-trivia-weekly-places-reward-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew. **Trigger:** Garden State Bar promised posters with weekly 1st/2nd/3rd Live Trivia
 > prizes but never set up a reward, and the system can't express one today.
@@ -43,12 +45,13 @@ Bar will honor the backfill.
 | D3 | Expiry of backfilled coupons | **30 days from the day issued** (normal coupons: 7 days, `PRIZE_EXPIRY_MS` in `lib/challengeCampaigns.ts`). |
 | D4 | Prize flexibility | **Any prize per place.** Each place gets its own full prize (gift card, or menu item with a $ or % discount), for example 1st = $30 gift card, 2nd = free appetizer. |
 | D5 | Garden State Bar prizes | Weekly gift cards: 1st **$30**, 2nd **$20**, 3rd **$10**. |
-| D6 | Backfill start | From their first Live Trivia game, **2026-08-05**. |
+| D6 | Backfill start | From their first Live Trivia game, **2026-08-05**. **Confirmed by Andrew 2026-10-14.** |
 | D7 | Minimum players | **Partner's choice, per reward.** Optional "pay out only if at least N players took part" (N = 2–100) on competitive rewards: ranked places and game winner. Off = no minimum (D2 still holds). Not offered on points-target rewards (a personal goal) or NFL Pick 'Em (it already has a fixed 3+ pickers rule). A "player who took part" = anyone who answered at least one question in that week (ranked) or game (game winner), scored or not. |
 | D8 | Reward created mid-week | **Starts immediately.** The week it is created in counts (all of that week's games, including nights already played), as long as the reward existed before that week's last game ended. Created after the week's last game ended → starts the next week. |
 | D9 | Past winners for partners | A **Past Winners** row in the Partner Dashboard menu → list of past games and rewards → tap one for its history (Phase 8). |
 | D10 | Defaults confirmed | Weekly only, 1–3 places; players see their live standing on the Rewards card; no feature flag. |
-| D11 | Approvals | DB change in Phase 1 approved. Push + deploy of Phases 1–4 approved. Backfill dry run is shown to Andrew and approved before any coupon is issued. Garden State Bar confirmed it will honor ~$320 plus up to $60 for the Oct 14 week. |
+| D11 | Approvals | DB change in Phase 1 approved. Push + deploy of Phases 1–4 approved. Backfill dry run is shown to Andrew and approved before any coupon is issued. Garden State Bar confirmed it will honor ~$320 plus up to $60 for the Oct 14 week. **Phase 8 push + deploy approved too (Andrew, 2026-10-14).** |
+| D12 | Category Blitz in Past Winners | **No** (Andrew, 2026-10-14). Past Winners = Live Trivia games + rewards only. |
 
 ### Defaults (planner's, confirmed by Andrew 2026-10-14 except where D7/D8 changed them)
 
@@ -336,12 +339,25 @@ own prize snapshot. `terms_updated_at` trigger left as is (the win sentence read
   snapshot, so editing the ladder or the minimum can't make an old coupon's sentence wrong. Revisit only if
   Phase 3's win sentence reads either column from the live reward.
 
-### Phase 4: What players, partners and admins see
-**Model: Claude Sonnet 5.5 · Effort: high**
-- §5e. Cached standings (§6). Add new closable popups to `tests/native-back-review-fixes.test.ts` if any.
-- The card mentions the minimum when set ("Needs at least 4 players this week — 3 so far").
-- Tests: card states (no scores yet, ranked, settled-won, settled-not-won, below minimum), wallet "1st place", owner/admin lists.
-- Andrew: phone check of the Rewards card and wallet (add a short section to the reward device checklist).
+### Phase 4: What players, partners and admins see — DONE 2026-10-14
+**Model: Claude Sonnet 5.5 · Effort: high** · As built: `docs/live-trivia-weekly-places-reward-plan_PHASE_4_HANDOFF.md`.
+- **Rewards card** (`components/venue/VenueChallengesPanel.tsx`): the route attaches `rankedPlaces`
+  (`RankedPlaceCardState`, `lib/rankedPlaceCard.ts`; words from the pure `composeRankedCard`) built by
+  `attachRankedPlaceCards` (`lib/rankedPlaceCardData.ts`). One cached "board" per reward per server instance
+  (60 s live, 10 min once settled, never past its week); a player's own rank is a lookup. It reuses the
+  resolver's own week/game planner (`planCurrentRankedWeek`, same file as `planDueRankedWeeks`) and
+  `orderWeekStandings`, so the card's rank is the rank the resolver pays. States: no scores, ranked (and
+  outside the places), not scored, games left / last game, minimum so far / reached, settled won, settled not
+  won (winners by place), no scorers, below minimum, starts next week. A ranked card never says "All Claimed"
+  and stays openable.
+- **Wallet:** a coupon with a `place` and no reward sentence reads "1st place: {reward}"; the wallet list key is now
+  the coupon's own id (a player with two weeks' coupons from one reward used to collide on the reward id).
+- **Partner/admin lists:** `rewardTermsText` prints the ladder (+ minimum; game-winner terms also print a minimum);
+  admin shows a Weekly Places badge, a ladder line, a per-week History (`lib/rankedWeekHistory.ts`, reused by
+  Phase 8) with the reason a week had no winner, and "no points target" on edit. `GET /api/admin?resource=
+  challenge-cycle-winners` now also returns `settlements`; `listChallengeCycleWinners` returns `place`.
+- Not changed: the resolver's behavior, `createReward`, the Redeem Prizes "Active Rewards" list (text only), the
+  reward Details popup (no new popup, so nothing added to `tests/native-back-review-fixes.test.ts`).
 
 ### Phase 5: Garden State Bar: create the reward and pay past weeks
 **Model: Claude Opus 5.5 · Effort: high** (real money; needs Phases 1–4 **deployed**)
@@ -380,7 +396,7 @@ own prize snapshot. `terms_updated_at` trigger left as is (the win sentence read
 - Migration for `live_trivia_occurrence_summaries` (service_role only) + PGlite test; routes + owner-scope
   tests (a partner can't read another venue's history: 403); sheet + steps; menu row + contract tests;
   device-checklist section for Andrew.
-- Deploy: not covered by the Phases 1–4 approval — ask Andrew before pushing.
+- Deploy: **approved by Andrew 2026-10-14** (D11). Category Blitz is NOT included (D12).
 
 ### Phase 7: First live week, docs, cost check
 **Model: Claude Sonnet 5.5 · Effort: medium**
@@ -405,8 +421,7 @@ own prize snapshot. `terms_updated_at` trigger left as is (the win sentence read
 
 ## 9. Open items for Andrew
 
-Answered 2026-10-14: Garden State Bar honors the backfill (D11); defaults kept (D10); mid-week start (D8).
+Answered 2026-10-14: Garden State Bar honors the backfill (D11); defaults kept (D10); mid-week start (D8);
+**backfill starts Aug 5 (D6)**; **Category Blitz is not in Past Winners (D12)**; **Phase 8 may be deployed (D11)**.
 
-1. Any reason to start the backfill later than Aug 5 (e.g., posters went up later)? No answer yet → Aug 5 (D6).
-2. Phase 8: should Category Blitz round winners appear in Past Winners too? Default: Live Trivia + rewards only.
-3. Phase 8 deploy approval (not covered by "Phases 1–4").
+Still open: the backfill dry-run approval (Phase 5) and the phone checks (`docs/reward-descriptions-device-checklist.md` §B).
