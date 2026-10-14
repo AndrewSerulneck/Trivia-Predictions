@@ -40,14 +40,14 @@ describe("terms text", () => {
   it("a weekly places reward states its ladder, never an 'N rewards a week' quota", () => {
     const terms = rewardTermsText(competition({ placePrizes: LADDER }));
     expect(terms).toBe(
-      "Weekly top 3. 1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card.",
+      "Weekly top 3. 1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card.",
     );
     expect(terms).not.toMatch(/make \d+ of these/);
   });
 
   it("states the minimum when the partner set one", () => {
     expect(rewardTermsText(competition({ placePrizes: LADDER, minPlayers: 4 }))).toBe(
-      "Weekly top 3. 1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card. At least 4 players need to play each week.",
+      "Weekly top 3. 1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card. At least 4 players need to play each week.",
     );
   });
 

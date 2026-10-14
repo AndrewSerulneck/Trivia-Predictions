@@ -75,7 +75,7 @@ describe("describeReward — weekly places", () => {
   it("Garden State Bar's reward reads as the plan's sentence", () => {
     expect(describeReward(ranked(), NOW)).toEqual({
       summary:
-        "Finish top 3 in Live Trivia across Wednesday, Thursday and Friday nights each week. 1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card.",
+        "Finish top 3 in Live Trivia across Wednesday, Thursday and Friday nights each week. 1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card.",
       when:
         "Live Trivia runs Wednesdays, Thursdays and Fridays at 8:00 PM. Your points from every game that week add up. Winners are named after Friday's game.",
       fineprint: "Ties go to whoever reached their score first. One place per player each week.",
@@ -102,7 +102,7 @@ describe("describeReward — weekly places", () => {
       prizeDiscountValue: 100,
     };
     expect(describePlacePrizeLadder([giftCard(1, 30), appetizer])).toBe(
-      "1st wins a $30 gift card and 2nd a free appetizer.",
+      "1st place wins a $30 gift card and 2nd place wins a free appetizer.",
     );
   });
 

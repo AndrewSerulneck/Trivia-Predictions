@@ -463,7 +463,7 @@ const describeScheduleReward = (
 
 /**
  * "Finish top 3 in Live Trivia across Wednesday, Thursday and Friday nights each week. 1st
- * wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card."
+ * place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card."
  *
  * The nights are the games that count (lib/liveTriviaRankedRewards.ts): the pinned games when
  * the reward is pinned, else every recurring game the venue runs, else the reward's own

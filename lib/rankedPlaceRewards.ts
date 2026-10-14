@@ -279,17 +279,15 @@ export const rankedWeekNights = (days: readonly string[]): RewardWeekday[] => {
 };
 
 /**
- * The prize ladder inside a sentence: "1st wins a $30 gift card, 2nd a $20 gift card and 3rd
- * a $10 gift card." One place: "The winner gets a $30 gift card." Empty ladder → "".
+ * The prize ladder inside a sentence: "1st place wins a $30 gift card, 2nd place wins a $20
+ * gift card and 3rd place wins a $10 gift card." One place: "The winner gets a $30 gift card." Empty ladder → "".
  */
 export const describePlacePrizeLadder = (prizes: readonly RewardPlacePrize[] | null | undefined): string => {
   const ladder = [...(prizes ?? [])].sort((a, b) => a.place - b.place);
   if (ladder.length === 0) return "";
   if (ladder.length === 1) return `The winner gets ${describeRewardPrizeInSentence(ladder[0])}.`;
-  const parts = ladder.map((prize, index) =>
-    index === 0
-      ? `${placeOrdinal(prize.place)} wins ${describeRewardPrizeInSentence(prize)}`
-      : `${placeOrdinal(prize.place)} ${describeRewardPrizeInSentence(prize)}`,
+  const parts = ladder.map(
+    (prize) => `${placeOrdinal(prize.place)} place wins ${describeRewardPrizeInSentence(prize)}`,
   );
   return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}.`;
 };
@@ -309,7 +307,8 @@ export const rankedPlaceWinMessage = (params: {
 
 /**
  * The exact terms of a weekly places reward, for the partner's and admin's lists: "Weekly top 3.
- * 1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card. At least 4 players need
+ * 1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift
+ * card. At least 4 players need
  * to play each week." The minimum clause is optional.
  */
 export const describeRankedTerms = (

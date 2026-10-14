@@ -41,7 +41,7 @@ export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge
  *   {when}      — win lines only: "the week of Oct 6", "in Week 5", "in the 2026 season"
  *   {top}       — weekly places: "top 3", "top 2", "1st"
  *   {across}    — weekly places: "across Wednesday, Thursday and Friday nights", "on Tuesday night"
- *   {ladder}    — weekly places: "1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card."
+ *   {ladder}    — weekly places: "1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card."
  *   {place}     — weekly places win line: "1st"
  *
  * Never write "this venue" — the guest is standing in it.

@@ -1315,7 +1315,7 @@ describe("createReward — weekly places (ranked_places)", () => {
       expect.objectContaining({ place: 3, prizeKind: "gift_card", prizeGiftCertificateAmount: 10 }),
     ]);
     expect(created().rules).toBe(
-      "Finish top 3 in Live Trivia across Wednesday, Thursday and Friday nights each week. 1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card.",
+      "Finish top 3 in Live Trivia across Wednesday, Thursday and Friday nights each week. 1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card.",
     );
   });
 

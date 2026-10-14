@@ -1,9 +1,11 @@
 # Live Trivia Weekly Places Reward (1st / 2nd / 3rd over the week) — Plan
 
 > **Status:** Phases 1–4 **done** 2026-10-14 (data model, weekly resolver, server creation + wording, what players /
-> partners / admins see). Phase 5 **in progress** 2026-10-14: Garden State Bar's reward is **created** in production
-> (`677a214c-b859-4c17-8e4d-9889574516e1`, live from the Oct 14 week) and the backfill script is built and dry-run
-> (13 coupons, $320 — matches §4); **the backfill is NOT applied yet — waiting on Andrew's approval** (D11). Latest
+> partners / admins see). Phase 5 **done** 2026-10-14: Garden State Bar's reward is live in production
+> (`677a214c-b859-4c17-8e4d-9889574516e1`, from the Oct 14 week) and Andrew approved + applied the backfill
+> (13 coupons, $320, 10 weeks settled, expiry 2026-11-13; verified, re-run is a no-op). Wording changed to
+> "1st place wins …, 2nd place wins … and 3rd place wins …" (Andrew, 2026-10-14). Phase 6 (wizard) in progress.
+> Latest
 > handoff: `docs/live-trivia-weekly-places-reward-plan_PHASE_5_HANDOFF.md`. Each phase ends with
 > `docs/live-trivia-weekly-places-reward-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew. **Trigger:** Garden State Bar promised posters with weekly 1st/2nd/3rd Live Trivia

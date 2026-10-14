@@ -1,4 +1,4 @@
-# Live Trivia Weekly Places Reward — Phase 5 handoff (2026-10-14, PAUSED for approval)
+# Live Trivia Weekly Places Reward — Phase 5 handoff (2026-10-14, DONE — backfill applied)
 
 Plan: `docs/live-trivia-weekly-places-reward-plan.md`. Phase 5 is **half done**: it stopped on purpose at the
 approval gate (plan D11). This note is for whoever finishes Phase 5 (apply + verify + winners list) and then
@@ -153,3 +153,17 @@ Plan §2 D1–D12 still hold. New today (Andrew, 2026-10-14):
 **Model: Claude Opus 5.5 · Effort: high** for the apply (real money). On Andrew's "yes": steps 1–5 of §6, then
 update this note (or write a short addendum) and the plan status line to "Phase 5 done". Then Phase 6 (Claude
 Sonnet 5.5, high) from a fresh worktree of `origin/main` (merge/push this branch first if Andrew approved it).
+
+---
+
+## Addendum — backfill applied (2026-10-14 ~19:09 ET, Andrew approved)
+
+- Dry run re-checked (13 coupons / $320), then applied with `--expect-coupons 13 --expiry-days 30`. Result: 7 weeks
+  `awarded`, 3 `no_scorers` (Sep 2, 23, 30). Verified read-only: 13 `challenge_campaign_redemptions` (places 1×7 at $30,
+  2×5 at $20, 3×1 at $10), all expiring 2026-11-13T23:09Z; 13 `challenge_cycle_winners`; 10 `challenge_cycle_settlements`;
+  13 notifications. Re-run with `--expect-coupons 0` → all `skipped_settled`.
+- **Wording changed (Andrew):** the ladder now reads "1st place wins a $30 gift card, 2nd place wins a $20 gift card and
+  3rd place wins a $10 gift card." (`describePlacePrizeLadder` in `lib/rankedPlaceRewards.ts`; tests + device checklist
+  updated). The reward row's stored `rules` text was updated to match (one `UPDATE` on `677a214c…`).
+  The Rewards card text is computed live from the code, so it changes when this is deployed.
+- Still open: the Oct 14 week is settled by the resolver after Friday's game ends (Phase 7 watches it).

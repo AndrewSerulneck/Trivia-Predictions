@@ -83,14 +83,14 @@ a real phone, signed in as a player at that venue.
 
 | | Where | What you should see |
 |---|---|---|
-| ☐ | **Rewards card**, before anyone has scored this week | Headline **"Weekly prizes for the top 3"**; the description sentence ("Finish top 3 in Live Trivia across Wednesday, Thursday and Friday nights each week. 1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card."); then **"No scores yet this week. Play Live Trivia to get on the board."** and the games left. Chip **In Progress**. **No points bar.** |
+| ☐ | **Rewards card**, before anyone has scored this week | Headline **"Weekly prizes for the top 3"**; the description sentence ("Finish top 3 in Live Trivia across Wednesday, Thursday and Friday nights each week. 1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card."); then **"No scores yet this week. Play Live Trivia to get on the board."** and the games left. Chip **In Progress**. **No points bar.** |
 | ☐ | **Rewards card**, after you score in a game | **"You're 2nd with 140 pts this week."** and **"Friday's game decides it."** (or "N games left this week. The last one is Friday."). Come back after the next game — the rank and points update within about a minute. |
 | ☐ | **Rewards card** if you rank below the prize places | "You're 5th with 30 pts this week." and "Only the top 3 win a prize." |
 | ☐ | **Rewards card** when the partner set a minimum | **"Needs at least 4 players this week — 3 so far."** then, once enough played, "Minimum of 4 players reached." |
 | ☐ | **Rewards card**, after the last game of the week | "That was the week's last game. Winners are named shortly." Within a few minutes it flips to chip **Week Complete** and **"This week's winners: 1st …, 2nd …, 3rd …."** The card must **not** say "All Claimed" and must still open the rules. |
 | ☐ | **Rewards card** if you won | Chip **You Won**, **"Prize won! Tap to Claim Reward."** and **"You finished 1st. Your prize is in Redeem Prizes."** Tapping opens Redeem Prizes. You also get the phone notification "You finished 1st in …". |
 | ☐ | **Redeem Prizes** coupon from a weekly places win | Says the place — **"You finished 1st in Live Trivia the week of Oct 7"** (or "1st place: {reward name}" if the reward was edited since) — and the **right prize for that place** ($30 for 1st, $20 for 2nd …). Two coupons from two different weeks both show (none missing or doubled). |
-| ☐ | **Partner Dashboard → Rewards** row | Under the name, the ladder: **"Weekly top 3. 1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card."** (plus the minimum sentence if set). |
+| ☐ | **Partner Dashboard → Rewards** row | Under the name, the ladder: **"Weekly top 3. 1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card."** (plus the minimum sentence if set). |
 | ☐ | **Admin → Rewards** list | A **Weekly Places** badge and the ladder under the name. **History** lists each week with place, winner, points, prize, redeemed — and weeks nobody won say why ("Only 2 players — the minimum was 4."). Edit shows "no points target to edit". |
 | ☐ | Small phone (iPhone SE size) | Nothing runs off the card; text is readable. |
 
