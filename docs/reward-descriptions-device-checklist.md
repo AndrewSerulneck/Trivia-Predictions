@@ -94,6 +94,23 @@ a real phone, signed in as a player at that venue.
 | ☐ | **Admin → Rewards** list | A **Weekly Places** badge and the ladder under the name. **History** lists each week with place, winner, points, prize, redeemed — and weeks nobody won say why ("Only 2 players — the minimum was 4."). Edit shows "no points target to edit". |
 | ☐ | Small phone (iPhone SE size) | Nothing runs off the card; text is readable. |
 
+## C. Create Reward wizard: weekly places + minimum players — added 2026-10-14
+
+**Plan:** `docs/live-trivia-weekly-places-reward-plan.md` (Phase 6). Check on a real phone in the Partner
+Dashboard (Menu → Rewards → Create). **Don't finish creating a reward at a real venue just to test it** — dev
+and the live site share one database. Walk up to the last step and tap Close, or use the hidden test venue
+(`venue-hightop-test`).
+
+| | Where | What you should see |
+|---|---|---|
+| ☐ | **Live Trivia → "How is this reward won?"** at a venue with a repeating game | **Three** choices: Points target, Winner of the game, **Top players this week (1st, 2nd, 3rd)**. At a venue with no repeating game there are still only the first two. |
+| ☐ | Pick **Top players this week** | "How many places?" with **1st only / Top 2 / Top 3** (Top 3 selected). A line naming the venue's real nights ("points from all Wednesday, Thursday and Friday games add up"). A blue note: **"Starts right away. Created mid-week, this week still counts…"**. No points-target box and no "How many, how often?" sentence. |
+| ☐ | **Minimum players?** | **No minimum** selected. Tap **Set a minimum**: a number box appears (4). Type 1 or 101: red message and **Next stays greyed**. Type 5: Next works. Also appears for **Winner of the game**; **not** for Points target. |
+| ☐ | **Prize step** with Top 3 | A row of tabs **1st place / 2nd place / 3rd place**. Each tab has its own prize (menu item or gift card). On 2nd and 3rd, **"Same prize as 1st place"** copies the 1st prize. Switching tabs keeps what you typed. With **1st only** there is just one tab. |
+| ☐ | **Confirm** | Rows: Won by (Top 3 each week), a row per place with its prize, Minimum players (a number or None). The **"What guests will see"** box reads e.g. "Finish top 3 in Live Trivia across … each week. 1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card." |
+| ☐ | The Back gesture on the phone | Steps back one question at a time (Prize → Terms → Definition), like the other rewards. Closing mid-way asks "discard?" |
+| ☐ | Small phone (iPhone SE size) | The three tabs and the three-choice "How is this reward won?" fit; nothing runs off the screen. |
+
 ## Result
 
 - Date checked: ________ · Phone / iOS: ________ · Deployed build or local: ________

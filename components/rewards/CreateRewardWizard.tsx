@@ -66,6 +66,7 @@ import {
 } from "@/lib/rewardTerms";
 import {
   REWARD_WEEKDAY_KEYS,
+  REWARD_WEEKDAY_LABEL,
   deriveGameWinnerTerms,
   describeGameWinnerSlots,
   isGamePickerEnabled,
@@ -73,9 +74,22 @@ import {
   slotKey,
   type RewardGameSlot,
 } from "@/lib/rewardGameSlots";
-import { prizeCanBeScannableGiftCard } from "@/lib/pos/prizeDelivery";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
-import { parsePosValueDollars, prizeNeedsPosValue } from "@/lib/pos/prizeValue";
+import {
+  DEFAULT_PRIZE_DRAFT,
+  derivePrizeFromDraft,
+  parseMinPlayersInput,
+  placePrizeFromInput,
+  type PrizeDraft,
+} from "@/lib/rewardPrizeDraft";
+import {
+  MAX_RANKED_PLACES,
+  REWARD_MIN_PLAYERS_MAX,
+  REWARD_MIN_PLAYERS_MIN,
+  describeRankedTerms,
+  placeOrdinal,
+  rankedWeekNights,
+} from "@/lib/rankedPlaceRewards";
 import {
   SCANNABLE_CHOICE_DISCOUNT,
   SCANNABLE_CHOICE_GIFT_CARD,
@@ -143,6 +157,10 @@ export type CreateRewardSubmission = {
   gameWinnerSlots?: ChallengeGameWinnerSlot[] | null;
   /** NFL rewards: the chosen week scope. The server honors only its `kind`. */
   nflWeekScope?: NFLRewardWeekScope | null;
+  /** Weekly places ("ranked_places"): one prize per place, 1st first (1-3). `prize` repeats the 1st. */
+  placePrizes?: RewardPrizeInput[];
+  /** "Only pay out if at least N players took part" (2-100). Sent only when the partner set one. */
+  minPlayers?: number;
 };
 
 export type CreateRewardWizardVenue = { id: string; name: string };
@@ -196,6 +214,17 @@ const MENU_ITEM_OPTIONS: Array<{ value: RewardMenuItem; label: string }> = [
   { value: "wine_bottle", label: "Bottle of Wine" },
   { value: "other", label: "Other" },
 ];
+
+/** "$30.00 gift card" / "50% off Appetizer" — one prize in the Confirm summary. */
+const summarizePrize = (prize: RewardPrizeInput): string => {
+  if (prize.prizeKind === "gift_card") return `$${prize.amount.toFixed(2)} gift card`;
+  const itemLabel =
+    prize.menuItem === "other"
+      ? prize.menuItemName || "Item"
+      : MENU_ITEM_OPTIONS.find((o) => o.value === prize.menuItem)?.label ?? prize.menuItem;
+  const discountLabel = prize.discountKind === "percent" ? `${prize.discountValue}% off` : `$${prize.discountValue.toFixed(2)} off`;
+  return `${discountLabel} ${itemLabel}${prize.posDelivery === "gift_card" ? " (Square gift card)" : ""}`;
+};
 
 type Styles = {
   card: string;
@@ -270,8 +299,6 @@ const VARIANT_STYLES: Record<"admin" | "owner", Styles> = {
   },
 };
 
-type PrizeChoice = "menu_item" | "gift_card";
-
 const EMPTY_SHAPES: RewardScheduleShape[] = [];
 const EMPTY_GAME_SLOTS: RewardGameSlot[] = [];
 const EMPTY_SCHEDULE_DAYS: string[] = [];
@@ -345,16 +372,24 @@ export function CreateRewardWizard({
   // everywhere else.
   const [selectedSlotKeys, setSelectedSlotKeys] = useState<Set<string>>(new Set());
 
-  const [prizeChoice, setPrizeChoice] = useState<PrizeChoice>("menu_item");
-  const [menuItem, setMenuItem] = useState<RewardMenuItem>("appetizer");
-  const [menuItemName, setMenuItemName] = useState("");
-  const [discountKind, setDiscountKind] = useState<RewardDiscountKind>("percent");
-  const [discountValue, setDiscountValue] = useState("50");
-  const [giftCardAmount, setGiftCardAmount] = useState("25");
+  // ── Weekly places (Phase 6) ─────────────────────────────────────────────────
+  // How many places pay (1-3), the optional "at least N players took part" minimum, and
+  // which place's prize the prize step is editing. Only read when the reward is won by
+  // weekly places (or, for the minimum, by "winner of the game").
+  const [placeCount, setPlaceCount] = useState(MAX_RANKED_PLACES);
+  const [minPlayersOn, setMinPlayersOn] = useState(false);
+  const [minPlayersText, setMinPlayersText] = useState("4");
+  const [activePlace, setActivePlace] = useState(0);
+
+  // One prize draft per place. A reward that isn't won by places only ever uses index 0, which
+  // is the single prize the wizard always had; the other two sit untouched.
+  const [drafts, setDrafts] = useState<PrizeDraft[]>(() =>
+    Array.from({ length: MAX_RANKED_PLACES }, () => ({ ...DEFAULT_PRIZE_DRAFT })),
+  );
+  const patchDraft = (index: number, patch: Partial<PrizeDraft>) =>
+    setDrafts((prev) => prev.map((draft, i) => (i === index ? { ...draft, ...patch } : draft)));
   // "Most it takes off at the register ($, optional)" — asked only when the venue has a POS and the prize is % off.
-  const [posValue, setPosValue] = useState("");
   const [posValueError, setPosValueError] = useState<string | null>(null);
-  const [scannableGiftCard, setScannableGiftCard] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -427,6 +462,20 @@ export function CreateRewardWizard({
 
   const isNFLDefinition = definition?.id === NFL_PICKEM_DEFINITION_ID;
   const nflSeason = context?.nflSeason ?? null;
+
+  // Weekly places (Phase 6): offered for a definition that supports it AND a venue with at least one
+  // recurring game — the same two things createReward re-checks. The nights are those games in week
+  // order, first night first (the week's anchor), exactly as the server derives them.
+  const rankedNights = useMemo(
+    () => rankedWeekNights((context?.gameSlots ?? EMPTY_GAME_SLOTS).filter((slot) => slot.recurring).map((slot) => slot.weekday)),
+    [context],
+  );
+  const rankedOffered = Boolean(definition?.supportsRankedPlaces) && rankedNights.length > 0;
+  const rankedNightLabels = rankedNights.map((day) => REWARD_WEEKDAY_LABEL[day]);
+  const rankedNightsText =
+    rankedNightLabels.length > 1
+      ? `${rankedNightLabels.slice(0, -1).join(", ")} and ${rankedNightLabels[rankedNightLabels.length - 1]}`
+      : rankedNightLabels[0] ?? "";
   const effectiveThreshold = useMemo(() => {
     const custom = parseInt(customThreshold, 10);
     return Number.isFinite(custom) && custom > 0 ? custom : threshold;
@@ -621,41 +670,45 @@ export function CreateRewardWizard({
     }
   };
 
-  const asksPosValue = Boolean(context?.posConnected) && prizeNeedsPosValue(prizeChoice, discountKind);
-  // Dollar-off prizes only, for everyone while the POS switch is on (Andrew, 2026-10-06).
-  const asksPosDelivery = isPosIntegrationsEnabled() && prizeChoice === "menu_item" && prizeCanBeScannableGiftCard("menu_item", discountKind);
-  const posDeliveryGiftCard = asksPosDelivery && scannableGiftCard;
-  const posValueCents = asksPosValue ? parsePosValueDollars(posValue) : null;
-  // The register limit is OPTIONAL (Andrew, POS plan §6 item 3, 2026-10-06): blank = no limit.
-  // Only something typed that isn't a dollar amount stops the partner.
-  const posValueInvalid = asksPosValue && posValue.trim() !== "" && posValueCents === null;
+  // ── Prizes ──────────────────────────────────────────────────────────────────
+  // Each draft becomes the prize the server validates by the same derivation the wizard always
+  // used (lib/rewardPrizeDraft.ts). Index 0 is THE prize of every reward that isn't won by places.
+  const prizeEnvironment = {
+    posConnected: Boolean(context?.posConnected),
+    posIntegrations: isPosIntegrationsEnabled(),
+  };
+  const posConnected = prizeEnvironment.posConnected;
+  const derivedPrizes = useMemo(
+    () => drafts.map((draft) => derivePrizeFromDraft(draft, { posConnected, posIntegrations: isPosIntegrationsEnabled() })),
+    [drafts, posConnected],
+  );
+  const isRanked = winCondition === "ranked_places";
+  // The draft the prize step is editing right now: always the first unless places are on.
+  const editIndex = isRanked ? Math.min(activePlace, placeCount - 1) : 0;
+  const editDraft = drafts[editIndex];
+  const { asksPosValue, asksPosDelivery, posValueCents, posValueInvalid, prize } = derivedPrizes[editIndex];
+  // Every place that pays, 1st first. Empty unless the reward is won by places.
+  const placePrizeInputs = useMemo(
+    () => (isRanked ? derivedPrizes.slice(0, placeCount).map((derived) => derived.prize) : []),
+    [isRanked, derivedPrizes, placeCount],
+  );
+  const placePrizes = useMemo(
+    () => placePrizeInputs.map((input, index) => placePrizeFromInput(index + 1, input)),
+    [placePrizeInputs],
+  );
+  const firstInvalidPosPlace = isRanked
+    ? derivedPrizes.slice(0, placeCount).findIndex((derived) => derived.posValueInvalid)
+    : posValueInvalid
+      ? 0
+      : -1;
 
-  const prize: RewardPrizeInput = useMemo(() => {
-    if (prizeChoice === "gift_card") {
-      return { prizeKind: "gift_card", amount: Math.max(0.01, Number(giftCardAmount) || 0) };
-    }
-    return {
-      prizeKind: "menu_item",
-      menuItem,
-      menuItemName: menuItem === "other" ? menuItemName.trim() : null,
-      discountKind,
-      discountValue: Math.max(0.01, Number(discountValue) || 0),
-      // Sent only when asked, so a venue without a POS submits exactly what it did before.
-      ...(posValueCents !== null ? { posValueCents } : {}),
-      // Same rule: only when chosen, so every other submission is byte-for-byte what it was.
-      ...(posDeliveryGiftCard ? { posDelivery: "gift_card" as const } : {}),
-    };
-  }, [prizeChoice, giftCardAmount, menuItem, menuItemName, discountKind, discountValue, posValueCents, posDeliveryGiftCard]);
-
-  const prizeSummary = useMemo(() => {
-    if (prize.prizeKind === "gift_card") return `$${prize.amount.toFixed(2)} gift card`;
-    const itemLabel =
-      prize.menuItem === "other"
-        ? prize.menuItemName || "Item"
-        : MENU_ITEM_OPTIONS.find((o) => o.value === prize.menuItem)?.label ?? prize.menuItem;
-    const discountLabel = prize.discountKind === "percent" ? `${prize.discountValue}% off` : `$${prize.discountValue.toFixed(2)} off`;
-    return `${discountLabel} ${itemLabel}${prize.posDelivery === "gift_card" ? " (Square gift card)" : ""}`;
-  }, [prize]);
+  // ── Minimum players (D7) ─────────────────────────────────────────────────────
+  // Offered where the reward is a contest between players: weekly places and Live Trivia's
+  // "winner of the game". Never a points target (a personal goal) and never NFL (its own 3-pickers rule).
+  const offersMinPlayers = !isNFLDefinition && (isRanked || isGameWinner);
+  const minPlayersParsed = offersMinPlayers && minPlayersOn ? parseMinPlayersInput(minPlayersText) : null;
+  const minPlayersError = minPlayersParsed && !minPlayersParsed.ok ? minPlayersParsed.message : null;
+  const minPlayers = minPlayersParsed?.ok ? minPlayersParsed.value : null;
 
   // cadence / activeDays / winnerQuota for the preview AND the submission — the
   // same deriveRewardTerms (lib/rewardTerms.ts) createReward runs, so what the
@@ -665,16 +718,20 @@ export function CreateRewardWizard({
   const pickedSlotTerms = useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms : null;
   const derivedTerms = useMemo(
     () =>
-      isNFLDefinition && !nflTerms
-        ? null
-        : deriveRewardTerms({
-            nflTerms,
-            pickedSlots: pickedSlotTerms,
-            sentenceCadence: cadenceForPeriod(period),
-            sentenceQuantity: effectiveQuantity,
-            scheduleDays: context?.scheduleDays ?? EMPTY_SCHEDULE_DAYS,
-          }),
-    [isNFLDefinition, nflTerms, pickedSlotTerms, period, effectiveQuantity, context],
+      isRanked
+        ? // Weekly by definition; its quota is its place count; its nights are the counted games
+          // (the same three facts createReward derives for a ranked reward).
+          { cadence: "weekly" as const, activeDays: rankedNights as string[], winnerQuota: placeCount }
+        : isNFLDefinition && !nflTerms
+          ? null
+          : deriveRewardTerms({
+              nflTerms,
+              pickedSlots: pickedSlotTerms,
+              sentenceCadence: cadenceForPeriod(period),
+              sentenceQuantity: effectiveQuantity,
+              scheduleDays: context?.scheduleDays ?? EMPTY_SCHEDULE_DAYS,
+            }),
+    [isRanked, rankedNights, placeCount, isNFLDefinition, nflTerms, pickedSlotTerms, period, effectiveQuantity, context],
   );
 
   // "What guests will see" — the same composer the server runs for the venue
@@ -684,7 +741,7 @@ export function CreateRewardWizard({
     if (!definition || !context || !derivedTerms) return null;
     // A one-off-only venue has no period, but its reward still submits (cadence
     // "none") and describeReward words it, so the preview shows there too.
-    if (!isNFLDefinition && !pickedSlotTerms && !period && !isOneOffOnly) return null;
+    if (!isRanked && !isNFLDefinition && !pickedSlotTerms && !period && !isOneOffOnly) return null;
     const now = new Date();
     // "Starts Thu, Sep 10" until the reward's first covered NFL week begins — the
     // exact rule the venue page uses (nflRewardUpcomingStartDate), fed the dates
@@ -714,12 +771,15 @@ export function CreateRewardWizard({
           ? selectedSlots.map((slot) => ({ scheduleId: slot.scheduleId, weekday: slot.weekday }))
           : null,
         nflWeekScope: isNFLDefinition ? nflScope : null,
-        prizeKind: prize.prizeKind,
-        prizeMenuItem: prize.prizeKind === "menu_item" ? prize.menuItem : null,
-        prizeMenuItemName: prize.prizeKind === "menu_item" ? prize.menuItemName : null,
-        prizeDiscountKind: prize.prizeKind === "menu_item" ? prize.discountKind : null,
-        prizeDiscountValue: prize.prizeKind === "menu_item" ? prize.discountValue : null,
-        prizeGiftCertificateAmount: prize.prizeKind === "gift_card" ? prize.amount : null,
+        // A weekly places reward keeps its prizes in the ladder; its own prize columns stay empty.
+        placePrizes: isRanked ? placePrizes : null,
+        minPlayers: offersMinPlayers ? minPlayers : null,
+        prizeKind: isRanked ? null : prize.prizeKind,
+        prizeMenuItem: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItem : null,
+        prizeMenuItemName: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItemName : null,
+        prizeDiscountKind: !isRanked && prize.prizeKind === "menu_item" ? prize.discountKind : null,
+        prizeDiscountValue: !isRanked && prize.prizeKind === "menu_item" ? prize.discountValue : null,
+        prizeGiftCertificateAmount: !isRanked && prize.prizeKind === "gift_card" ? prize.amount : null,
         schedule: { slots: context.gameSlots },
         nfl: isNFLDefinition ? { upcomingStartDate, seasonEndDate: nflSeason?.seasonEndDate ?? null } : null,
         timezone: context.timezone,
@@ -741,11 +801,20 @@ export function CreateRewardWizard({
     effectiveThreshold,
     winCondition,
     prize,
+    isRanked,
+    placePrizes,
+    offersMinPlayers,
+    minPlayers,
   ]);
 
   const handleSubmit = async () => {
     if (!definition) return;
-    if (isNFLDefinition) {
+    if (isRanked) {
+      if (!rankedOffered) {
+        setSubmitError("Weekly places need at least one repeating Live Trivia game.");
+        return;
+      }
+    } else if (isNFLDefinition) {
       if (!nflTermsResult || !nflTermsResult.ok) {
         setSubmitError(nflTermsResult?.message ?? NFL_WEEK_SCOPE_INVALID_MESSAGE);
         return;
@@ -759,11 +828,18 @@ export function CreateRewardWizard({
       setSubmitError(termsError);
       return;
     }
-    if (prize.prizeKind === "menu_item" && prize.menuItem === "other" && !prize.menuItemName) {
-      setSubmitError("Enter a name for the menu item.");
+    if (minPlayersError) {
+      setSubmitError(minPlayersError);
       return;
     }
-    if (posValueInvalid) {
+    const prizesToCheck = isRanked ? placePrizeInputs : [derivedPrizes[0].prize];
+    for (const [index, input] of prizesToCheck.entries()) {
+      if (input.prizeKind === "menu_item" && input.menuItem === "other" && !input.menuItemName) {
+        setSubmitError(isRanked ? `${placeOrdinal(index + 1)} place: enter a name for the menu item.` : "Enter a name for the menu item.");
+        return;
+      }
+    }
+    if (firstInvalidPosPlace >= 0) {
       setSubmitError(POS_VALUE_INVALID_MESSAGE);
       return;
     }
@@ -779,7 +855,7 @@ export function CreateRewardWizard({
         winCondition,
         threshold: effectiveThreshold,
         winnerQuota: derivedTerms.winnerQuota,
-        prize,
+        prize: isRanked ? placePrizeInputs[0] : derivedPrizes[0].prize,
         gameWinnerSlots:
           pickedSlotTerms
             ? selectedSlots.map((slot) => ({ scheduleId: slot.scheduleId, weekday: slot.weekday }))
@@ -787,6 +863,9 @@ export function CreateRewardWizard({
         // The server only honors `kind` — season/fromWeek are re-derived from
         // its own reading of nfl_pickem_weeks (see lib/rewards.ts).
         nflWeekScope: isNFLDefinition ? nflScope : undefined,
+        // Only when set, so every other reward submits exactly what it always did.
+        ...(isRanked ? { placePrizes: placePrizeInputs } : {}),
+        ...(offersMinPlayers && minPlayers !== null ? { minPlayers } : {}),
       });
       if (!result.ok) {
         setSubmitError(result.error);
@@ -895,11 +974,11 @@ export function CreateRewardWizard({
           {definition.supportsGameWinner ? (
             <div>
               <p className={s.label}>How is this reward won?</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className={rankedOffered ? "grid grid-cols-1 gap-2 sm:grid-cols-3" : "grid grid-cols-2 gap-2"}>
                 <button
                   type="button"
                   onClick={() => setWinCondition("points_threshold")}
-                  className={`${s.chip} ${!isGameWinner ? s.chipActive : ""}`}
+                  className={`${s.chip} ${!isGameWinner && !isRanked ? s.chipActive : ""}`}
                 >
                   Points target
                 </button>
@@ -910,9 +989,20 @@ export function CreateRewardWizard({
                 >
                   {isNFLDefinition ? "Most picks right" : "Winner of the game"}
                 </button>
+                {rankedOffered ? (
+                  <button
+                    type="button"
+                    onClick={() => setWinCondition("ranked_places")}
+                    className={`${s.chip} ${isRanked ? s.chipActive : ""}`}
+                  >
+                    Top players this week (1st, 2nd, 3rd)
+                  </button>
+                ) : null}
               </div>
               <p className={`mt-1.5 ${s.helpText}`}>
-                {isNFLDefinition
+                {isRanked
+                  ? "Players' points from every game in the week add up. The top scorers each win a prize."
+                  : isNFLDefinition
                   ? isGameWinner
                     ? "The guest with the most correct picks wins."
                     : "Guests win by getting a set number of picks right."
@@ -926,7 +1016,7 @@ export function CreateRewardWizard({
           {/* 2. Points target — only meaningful when that's how it's won. NFL
               renders its own copy of this below the week-scope picker (§3),
               matching the phase doc's win-condition → scope → target order. */}
-          {isGameWinner || isNFLDefinition ? null : (
+          {isGameWinner || isRanked || isNFLDefinition ? null : (
             <div>
               <p className={s.label}>Points target</p>
               <div className="grid grid-cols-4 gap-2">
@@ -1122,6 +1212,35 @@ export function CreateRewardWizard({
                 <div className={s.error}>{nflTermsResult.message}</div>
               ) : null}
             </div>
+          ) : isRanked ? (
+            <div className="space-y-3">
+              <div>
+                <p className={s.label}>How many places?</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {Array.from({ length: MAX_RANKED_PLACES }, (_, index) => index + 1).map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setPlaceCount(count)}
+                      className={`${s.chip} ${placeCount === count ? s.chipActive : ""}`}
+                    >
+                      {count === 1 ? "1st only" : `Top ${count}`}
+                    </button>
+                  ))}
+                </div>
+                <p className={`mt-1.5 ${s.helpText}`}>
+                  Every week, points from all {rankedNightsText} games add up.{" "}
+                  {placeCount === 1
+                    ? "The top scorer wins."
+                    : `The top ${placeCount} scorers each win a prize, one place each.`}{" "}
+                  A tie goes to whoever reached their score first.
+                </p>
+              </div>
+              <div className={s.notice}>
+                <strong>Starts right away.</strong> Created mid-week, this week still counts, including nights already
+                played, as long as this week&apos;s last game hasn&apos;t finished. If it has, it starts next week.
+              </div>
+            </div>
           ) : useGamePicker ? (
             <div>
               <p className={s.label}>Which games?</p>
@@ -1280,6 +1399,47 @@ export function CreateRewardWizard({
             </div>
           )}
 
+          {/* D7: "only pay out if at least N players took part" — contests between players only. */}
+          {offersMinPlayers ? (
+            <div>
+              <p className={s.label}>Minimum players?</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMinPlayersOn(false)}
+                  className={`${s.chip} ${!minPlayersOn ? s.chipActive : ""}`}
+                >
+                  No minimum
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMinPlayersOn(true)}
+                  className={`${s.chip} ${minPlayersOn ? s.chipActive : ""}`}
+                >
+                  Set a minimum
+                </button>
+              </div>
+              {minPlayersOn ? (
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={REWARD_MIN_PLAYERS_MIN}
+                  max={REWARD_MIN_PLAYERS_MAX}
+                  aria-label="Minimum players"
+                  value={minPlayersText}
+                  onChange={(e) => setMinPlayersText(e.target.value)}
+                  className={`mt-2 ${s.input}`}
+                />
+              ) : null}
+              <p className={`mt-1.5 ${s.helpText}`}>
+                {isRanked
+                  ? "Pay out only if at least this many players answered a question that week. Below it, nobody wins and the week is recorded."
+                  : "Name a winner only if at least this many players answered a question in that game."}
+              </p>
+              {minPlayersError ? <div className={`mt-1.5 ${s.error}`}>{minPlayersError}</div> : null}
+            </div>
+          ) : null}
+
           <WizardFooter
             variant="inline"
             tone={footerTone}
@@ -1287,14 +1447,14 @@ export function CreateRewardWizard({
             backLabel={definition.name}
             nextLabel="Next: Offer a Prize"
             nextDisabled={
-              isNFLDefinition
-                ? !(nflTermsResult?.ok ?? false)
-                : useGamePicker
-                  ? !gameWinnerTerms.ok
-                  : Boolean(termsError)
+              isRanked
+                ? Boolean(minPlayersError)
+                : isNFLDefinition
+                  ? !(nflTermsResult?.ok ?? false)
+                  : (useGamePicker ? !gameWinnerTerms.ok : Boolean(termsError)) || Boolean(minPlayersError)
             }
             onNext={() => {
-              if (!isGameWinner) {
+              if (!isGameWinner && !isRanked) {
                 // The step is the definition's, not a fixed 10: Live Trivia
                 // targets are points (step 10), NFL targets are correct picks
                 // (step 1). Same rule the server re-checks in createReward.
@@ -1321,20 +1481,59 @@ export function CreateRewardWizard({
             Prize
           </p>
 
+          {/* Weekly places: one prize per place. Every other reward has exactly one prize, no tabs. */}
+          {isRanked ? (
+            <div className="space-y-2">
+              <p className={s.helpText}>Choose a prize for each place.</p>
+              <div
+                role="tablist"
+                aria-label="Prize for each place"
+                className={`grid gap-2 ${placeCount === 1 ? "grid-cols-1" : placeCount === 2 ? "grid-cols-2" : "grid-cols-3"}`}
+              >
+                {Array.from({ length: placeCount }, (_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    role="tab"
+                    aria-selected={editIndex === index}
+                    onClick={() => {
+                      setActivePlace(index);
+                      setPosValueError(null);
+                    }}
+                    className={`${s.chip} ${editIndex === index ? s.chipActive : ""}`}
+                  >
+                    {placeOrdinal(index + 1)} place
+                  </button>
+                ))}
+              </div>
+              {editIndex > 0 ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDrafts((prev) => prev.map((draft, index) => (index === editIndex ? { ...prev[0] } : draft)))
+                  }
+                  className={s.secondaryButton}
+                >
+                  Same prize as 1st place
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-2 gap-2">
-            {(["menu_item", "gift_card"] as PrizeChoice[]).map((choice) => (
+            {(["menu_item", "gift_card"] as const).map((choice) => (
               <button
                 key={choice}
                 type="button"
-                onClick={() => setPrizeChoice(choice)}
-                className={`${s.chip} ${prizeChoice === choice ? s.chipActive : ""}`}
+                onClick={() => patchDraft(editIndex, { choice })}
+                className={`${s.chip} ${editDraft.choice === choice ? s.chipActive : ""}`}
               >
                 {choice === "menu_item" ? "Menu Item" : "Gift Card"}
               </button>
             ))}
           </div>
 
-          {prizeChoice === "menu_item" ? (
+          {editDraft.choice === "menu_item" ? (
             <div className="space-y-3">
               <div>
                 <p className={s.label}>Item</p>
@@ -1343,21 +1542,21 @@ export function CreateRewardWizard({
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => setMenuItem(opt.value)}
-                      className={`${s.chip} ${menuItem === opt.value ? s.chipActive : ""}`}
+                      onClick={() => patchDraft(editIndex, { menuItem: opt.value })}
+                      className={`${s.chip} ${editDraft.menuItem === opt.value ? s.chipActive : ""}`}
                     >
                       {opt.label}
                     </button>
                   ))}
                 </div>
               </div>
-              {menuItem === "other" ? (
+              {editDraft.menuItem === "other" ? (
                 <div>
                   <label className={s.label}>Item name</label>
                   <input
                     type="text"
-                    value={menuItemName}
-                    onChange={(e) => setMenuItemName(e.target.value)}
+                    value={editDraft.menuItemName}
+                    onChange={(e) => patchDraft(editIndex, { menuItemName: e.target.value })}
                     placeholder="e.g. Loaded Nachos"
                     className={s.input}
                   />
@@ -1366,28 +1565,28 @@ export function CreateRewardWizard({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setDiscountKind("percent")}
-                  className={`${s.chip} ${discountKind === "percent" ? s.chipActive : ""}`}
+                  onClick={() => patchDraft(editIndex, { discountKind: "percent" })}
+                  className={`${s.chip} ${editDraft.discountKind === "percent" ? s.chipActive : ""}`}
                 >
                   Percentage off
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDiscountKind("dollar")}
-                  className={`${s.chip} ${discountKind === "dollar" ? s.chipActive : ""}`}
+                  onClick={() => patchDraft(editIndex, { discountKind: "dollar" })}
+                  className={`${s.chip} ${editDraft.discountKind === "dollar" ? s.chipActive : ""}`}
                 >
                   Dollar amount off
                 </button>
               </div>
               <div>
-                <label className={s.label}>{discountKind === "percent" ? "Percent off" : "Dollar amount off"}</label>
+                <label className={s.label}>{editDraft.discountKind === "percent" ? "Percent off" : "Dollar amount off"}</label>
                 <input
                   type="number"
                   min={0.01}
-                  max={discountKind === "percent" ? 100 : undefined}
-                  step={discountKind === "percent" ? 1 : 0.01}
-                  value={discountValue}
-                  onChange={(e) => setDiscountValue(e.target.value)}
+                  max={editDraft.discountKind === "percent" ? 100 : undefined}
+                  step={editDraft.discountKind === "percent" ? 1 : 0.01}
+                  value={editDraft.discountValue}
+                  onChange={(e) => patchDraft(editIndex, { discountValue: e.target.value })}
                   className={s.input}
                 />
               </div>
@@ -1402,9 +1601,9 @@ export function CreateRewardWizard({
                       key={option.label}
                       type="button"
                       role="radio"
-                      aria-checked={scannableGiftCard === option.value}
-                      onClick={() => setScannableGiftCard(option.value)}
-                      className={`${s.chip} w-full text-left ${scannableGiftCard === option.value ? s.chipActive : ""}`}
+                      aria-checked={editDraft.scannableGiftCard === option.value}
+                      onClick={() => patchDraft(editIndex, { scannableGiftCard: option.value })}
+                      className={`${s.chip} w-full text-left ${editDraft.scannableGiftCard === option.value ? s.chipActive : ""}`}
                     >
                       <span className="block font-bold">{option.label}</span>
                       <span className="block text-xs font-normal opacity-80">{option.help}</span>
@@ -1421,9 +1620,9 @@ export function CreateRewardWizard({
                     id="reward-pos-value"
                     type="text"
                     inputMode="decimal"
-                    value={posValue}
+                    value={editDraft.posValue}
                     onChange={(e) => {
-                      setPosValue(e.target.value);
+                      patchDraft(editIndex, { posValue: e.target.value });
                       setPosValueError(null);
                     }}
                     placeholder="e.g. 12"
@@ -1438,13 +1637,16 @@ export function CreateRewardWizard({
             </div>
           ) : (
             <div>
-              <label className={s.label}>Gift card amount ($)</label>
+              <label className={s.label} htmlFor="reward-gift-card-amount">
+                Gift card amount ($)
+              </label>
               <input
+                id="reward-gift-card-amount"
                 type="number"
                 min={0.01}
                 step="0.01"
-                value={giftCardAmount}
-                onChange={(e) => setGiftCardAmount(e.target.value)}
+                value={editDraft.giftCardAmount}
+                onChange={(e) => patchDraft(editIndex, { giftCardAmount: e.target.value })}
                 className={s.input}
               />
             </div>
@@ -1455,7 +1657,8 @@ export function CreateRewardWizard({
             tone={footerTone}
             onBack={() => goTo("terms", "back")}
             onNext={() => {
-              if (posValueInvalid) {
+              if (firstInvalidPosPlace >= 0) {
+                setActivePlace(firstInvalidPosPlace);
                 setPosValueError(POS_VALUE_INVALID_MESSAGE);
                 return;
               }
@@ -1477,14 +1680,33 @@ export function CreateRewardWizard({
               <span>Reward</span>
               <span className="font-bold">{definition.name}</span>
             </div>
-            <div className={s.summaryRow}>
-              <span>Prize</span>
-              <span className="font-bold">{prizeSummary}</span>
-            </div>
-            {posValueCents !== null ? (
+            {isRanked ? (
+              <>
+                <div className={s.summaryRow}>
+                  <span>Won by</span>
+                  <span className="font-bold">{placeCount === 1 ? "Top scorer each week" : `Top ${placeCount} each week`}</span>
+                </div>
+                {placePrizeInputs.map((input, index) => (
+                  <div key={index} className={s.summaryRow}>
+                    <span>{placeOrdinal(index + 1)} place</span>
+                    <span className="font-bold">{summarizePrize(input)}</span>
+                  </div>
+                ))}
+                <div className={s.summaryRow}>
+                  <span>Minimum players</span>
+                  <span className="font-bold">{minPlayers !== null ? `At least ${minPlayers}` : "None"}</span>
+                </div>
+              </>
+            ) : (
+              <div className={s.summaryRow}>
+                <span>Prize</span>
+                <span className="font-bold">{summarizePrize(derivedPrizes[0].prize)}</span>
+              </div>
+            )}
+            {!isRanked && derivedPrizes[0].posValueCents !== null ? (
               <div className={s.summaryRow}>
                 <span>Most off at the register</span>
-                <span className="font-bold">${(posValueCents / 100).toFixed(2)}</span>
+                <span className="font-bold">${(derivedPrizes[0].posValueCents / 100).toFixed(2)}</span>
               </div>
             ) : null}
           </div>
@@ -1501,7 +1723,9 @@ export function CreateRewardWizard({
 
           {/* The terms the partner just agreed to, restated verbatim. */}
           <p className={s.sentence}>
-            {isNFLDefinition
+            {isRanked
+              ? describeRankedTerms(placePrizes, minPlayers)
+              : isNFLDefinition
               ? describeNFLWeekScope(nflScope, winCondition, { quantity, threshold: effectiveThreshold })
               : useGamePicker && gameWinnerTerms.ok
                 ? describeGameWinnerSlots(selectedSlots)

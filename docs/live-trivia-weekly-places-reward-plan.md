@@ -4,9 +4,9 @@
 > partners / admins see). Phase 5 **done** 2026-10-14: Garden State Bar's reward is live in production
 > (`677a214c-b859-4c17-8e4d-9889574516e1`, from the Oct 14 week) and Andrew approved + applied the backfill
 > (13 coupons, $320, 10 weeks settled, expiry 2026-11-13; verified, re-run is a no-op). Wording changed to
-> "1st place wins …, 2nd place wins … and 3rd place wins …" (Andrew, 2026-10-14). Phase 6 (wizard) in progress.
-> Latest
-> handoff: `docs/live-trivia-weekly-places-reward-plan_PHASE_5_HANDOFF.md`. Each phase ends with
+> "1st place wins …, 2nd place wins … and 3rd place wins …" (Andrew, 2026-10-14). Phase 6 (Create Reward wizard) **built** 2026-10-14, committed on branch
+> `live-trivia-ranked-places-phase6`, **not pushed** (awaiting Andrew). Latest
+> handoff: `docs/live-trivia-weekly-places-reward-plan_PHASE_6_HANDOFF.md`. Each phase ends with
 > `docs/live-trivia-weekly-places-reward-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew. **Trigger:** Garden State Bar promised posters with weekly 1st/2nd/3rd Live Trivia
 > prizes but never set up a reward, and the system can't express one today.
@@ -388,8 +388,12 @@ own prize snapshot. `terms_updated_at` trigger left as is (the win sentence read
 - §5d wizard half in the one shared `CreateRewardWizard.tsx`. Pin the new steps in the wizard tests
   (`tests/components.create-reward-wizard.test.ts`) and keep the admin snapshots of existing paths unchanged.
   Run `npm run test` (owner-menu/dashboard contracts).
-- Copy: mid-week creation says "Starts next Wednesday" (from the schedule).
-- Andrew: phone pass on the Partner Dashboard flow.
+- Copy: ~~mid-week creation says "Starts next Wednesday"~~ — **replaced (D8 supersedes it):** the wizard says "Starts
+  right away. Created mid-week, this week still counts … as long as this week's last game hasn't finished. If it has,
+  it starts next week."
+- Andrew: phone pass on the Partner Dashboard flow (`docs/reward-descriptions-device-checklist.md` §C).
+- **As built:** `docs/live-trivia-weekly-places-reward-plan_PHASE_6_HANDOFF.md`. Minimum players and the per-place prize
+  tabs live inside the existing Terms and Prize steps (no new step ids).
 
 ### Phase 8: Past winners on the Partner Dashboard (D9)
 **Model: Claude Sonnet 5.5 · Effort: high**
