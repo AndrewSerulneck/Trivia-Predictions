@@ -103,13 +103,30 @@ and the live site share one database. Walk up to the last step and tap Close, or
 
 | | Where | What you should see |
 |---|---|---|
-| ☐ | **Live Trivia → "How is this reward won?"** at a venue with a repeating game | **Three** choices: Points target, Winner of the game, **Top players this week (1st, 2nd, 3rd)**. At a venue with no repeating game there are still only the first two. |
+| ☐ | **Live Trivia → "How is this reward won?"** at any venue with a Live Trivia game | **Three** choices: Points target, Winner of the game, **Top players this week (1st, 2nd, 3rd)**. This shows **even when the venue has only one, non-repeating game** (Andrew, 2026-10-14); then the line under it says "Points from every Live Trivia game in the same week add up, so a single game decides its week", and "What guests will see" names no weekday ("across all of the week's games … after the week's last game"). |
 | ☐ | Pick **Top players this week** | "How many places?" with **1st only / Top 2 / Top 3** (Top 3 selected). A line naming the venue's real nights ("points from all Wednesday, Thursday and Friday games add up"). A blue note: **"Starts right away. Created mid-week, this week still counts…"**. No points-target box and no "How many, how often?" sentence. |
 | ☐ | **Minimum players?** | **No minimum** selected. Tap **Set a minimum**: a number box appears (4). Type 1 or 101: red message and **Next stays greyed**. Type 5: Next works. Also appears for **Winner of the game**; **not** for Points target. |
 | ☐ | **Prize step** with Top 3 | A row of tabs **1st place / 2nd place / 3rd place**. Each tab has its own prize (menu item or gift card). On 2nd and 3rd, **"Same prize as 1st place"** copies the 1st prize. Switching tabs keeps what you typed. With **1st only** there is just one tab. |
 | ☐ | **Confirm** | Rows: Won by (Top 3 each week), a row per place with its prize, Minimum players (a number or None). The **"What guests will see"** box reads e.g. "Finish top 3 in Live Trivia across … each week. 1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card." |
 | ☐ | The Back gesture on the phone | Steps back one question at a time (Prize → Terms → Definition), like the other rewards. Closing mid-way asks "discard?" |
 | ☐ | Small phone (iPhone SE size) | The three tabs and the three-choice "How is this reward won?" fit; nothing runs off the screen. |
+
+## D. Past Winners (Partner Dashboard) — added 2026-10-14
+
+**Plan:** `docs/live-trivia-weekly-places-reward-plan.md` (Phase 8). Looking only — nothing on this screen
+changes anything, so it is safe to try at a real venue (Garden State Bar has the most history).
+
+| | Where | What you should see |
+|---|---|---|
+| ☐ | **Menu** (logo, top left) | A row **Past Winners** — "Games & rewards history", trophy icon — right **below Order Join Merch**. |
+| ☐ | Tap it | A dark sheet slides up: **Past winners**, the venue's name, two tabs **Live Trivia games / Rewards**. Games show first, newest first: date ("Fri, Oct 9"), game name · number of players, and "🏆 winner · points" (a tie lists both, "Nobody scored" when nobody did, "Playing now" during a game). |
+| ☐ | Tap a game | Its final standings: #1, #2… with usernames and points, ties share a number, top 10 (plus anyone tied with 10th). **Only usernames** — no emails or anything else. |
+| ☐ | Phone **Back** | From a game or reward → back to the list. From the list → the sheet closes. A Back button at the bottom does the same. |
+| ☐ | **Rewards** tab | Each reward that has ever paid here: its name, how it's won ("Top 3 players each week", "Winner of the game", "Reach 500 points"), "· Ended" if it's over, the latest week/date and its winners ("1st · Snooker, 2nd · Kuch"). Garden State Bar: **Weekly Trivia Champions** with 10+ weeks. |
+| ☐ | Tap a reward | Every week (newest first): who took each place, points, the prize, and **Redeemed / Not redeemed yet**. A week nobody won says why (e.g. "Only 2 players — the minimum was 4"). A player who deleted their account shows as "Deleted player" with no redeemed status. |
+| ☐ | **Show more** | Appears under a list of 20; loads the next 20 below without jumping to the top. |
+| ☐ | Switch venue (multi-venue account) | Reopening Past Winners shows the other venue's games and rewards only. |
+| ☐ | Small phone (iPhone SE size) | Rows and tabs fit; long names cut off with "…" rather than running off the screen. |
 
 ## Result
 

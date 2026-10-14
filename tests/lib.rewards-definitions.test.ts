@@ -1353,13 +1353,26 @@ describe("createReward — weekly places (ranked_places)", () => {
     expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
   });
 
-  it("refuses when the venue's Live Trivia isn't weekly (one-off only)", async () => {
+  // Andrew, 2026-10-14: offered even when the venue has a single scheduled game. The week is
+  // anchored on that game's night; the reward is still weekly.
+  it("accepts a venue whose only Live Trivia game is a one-off, anchored on that game's night", async () => {
     mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
       makeSchedule({ recurringType: "none", recurringDays: [] }),
     ]);
-    const error = await createRanked().catch((e: unknown) => e);
-    expect(error).toBeInstanceOf(RewardTermsError);
-    expect((error as Error).message).toBe(REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE);
+    await createRanked();
+    expect(created()).toEqual(
+      expect.objectContaining({ winCondition: "ranked_places", recurringType: "weekly", activeDays: ["tue"], winnerQuota: 3 }),
+    );
+  });
+
+  it("a one-off special night never moves the anchor of a venue with a repeating game", async () => {
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
+      wedThuFri(),
+      // 2026-07-21 is a Tuesday.
+      makeSchedule({ id: "sched-off", recurringType: "none", recurringDays: [] }),
+    ]);
+    await createRanked();
+    expect(created()).toEqual(expect.objectContaining({ activeDays: ["wed", "thu", "fri"] }));
   });
 
   it("refuses pinned games that aren't weekly, and narrows to pinned weekly games", async () => {

@@ -341,7 +341,7 @@ const describeScheduleReward = (
   const runsLine = recurringSlots.length > 0 ? `${game} runs ${describeRunsOn(recurringSlots)}.` : checkScheduleLine(game);
 
   if (input.winCondition === "ranked_places") {
-    return describeRankedPlacesReward(templates, input, recurringSlots, runsLine);
+    return describeRankedPlacesReward(templates, input, recurringSlots, runsLine, allSlots !== null);
   }
 
   if (input.winCondition === "game_winner") {
@@ -468,12 +468,17 @@ const describeScheduleReward = (
  * The nights are the games that count (lib/liveTriviaRankedRewards.ts): the pinned games when
  * the reward is pinned, else every recurring game the venue runs, else the reward's own
  * activeDays (schedule unknown). They read in week order from the week's first night.
+ *
+ * A venue with no repeating game (the option is offered even for a single one-off game — Andrew,
+ * 2026-10-14) names no weekday: its activeDays are only the week's anchor, not a night that
+ * repeats, so it reads "across all of the week's games" and "after the week's last game".
  */
 const describeRankedPlacesReward = (
   templates: ScheduleTemplates,
   input: RewardDescriptionInput,
   recurringSlots: readonly RewardScheduleSlotFact[],
   runsLine: string,
+  scheduleKnown: boolean,
 ): RewardDescription => {
   const ladder = [...(input.placePrizes ?? [])].sort((a, b) => a.place - b.place);
   const placeCount = ladder.length > 0 ? ladder.length : Math.max(1, Math.round(Number(input.winnerQuota) || 1));
@@ -486,7 +491,9 @@ const describeRankedPlacesReward = (
     ? pinned.map((slot) => slot.weekday)
     : countedSlots.length > 0
       ? countedSlots.map((slot) => slot.weekday)
-      : input.activeDays ?? [];
+      : scheduleKnown
+        ? []
+        : input.activeDays ?? [];
   const nights = rankedWeekNights(sourceDays);
   const across =
     nights.length === 0 || nights.length === 7

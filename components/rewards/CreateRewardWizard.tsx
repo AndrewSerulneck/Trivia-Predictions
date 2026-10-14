@@ -88,7 +88,7 @@ import {
   REWARD_MIN_PLAYERS_MIN,
   describeRankedTerms,
   placeOrdinal,
-  rankedWeekNights,
+  rankedNightsForVenue,
 } from "@/lib/rankedPlaceRewards";
 import {
   SCANNABLE_CHOICE_DISCOUNT,
@@ -463,13 +463,23 @@ export function CreateRewardWizard({
   const isNFLDefinition = definition?.id === NFL_PICKEM_DEFINITION_ID;
   const nflSeason = context?.nflSeason ?? null;
 
-  // Weekly places (Phase 6): offered for a definition that supports it AND a venue with at least one
-  // recurring game — the same two things createReward re-checks. The nights are those games in week
-  // order, first night first (the week's anchor), exactly as the server derives them.
+  // Weekly places (Phase 6): offered for every definition that supports it, whenever the venue has a
+  // Live Trivia game — even a single one-off game (Andrew, 2026-10-14). The nights are the repeating
+  // games, else the one-off games, in week order, first night first (the week's anchor):
+  // rankedNightsForVenue, the same rule createReward stores.
   const rankedNights = useMemo(
-    () => rankedWeekNights((context?.gameSlots ?? EMPTY_GAME_SLOTS).filter((slot) => slot.recurring).map((slot) => slot.weekday)),
+    () =>
+      rankedNightsForVenue({
+        gameSlots: context?.gameSlots ?? EMPTY_GAME_SLOTS,
+        scheduleDays: context?.scheduleDays ?? EMPTY_SCHEDULE_DAYS,
+      }),
     [context],
   );
+  // Matches rankedNightsForVenue's fallback chain: repeating slots → yes; only one-off slots → no;
+  // no slots at all (nights from the schedule's days) → whether the venue has a repeating schedule.
+  const rankedSlots = context?.gameSlots ?? EMPTY_GAME_SLOTS;
+  const rankedHasRepeatingGame =
+    rankedSlots.some((slot) => slot.recurring) || (rankedSlots.length === 0 && Boolean(context?.hasRecurringSchedule));
   const rankedOffered = Boolean(definition?.supportsRankedPlaces) && rankedNights.length > 0;
   const rankedNightLabels = rankedNights.map((day) => REWARD_WEEKDAY_LABEL[day]);
   const rankedNightsText =
@@ -811,7 +821,7 @@ export function CreateRewardWizard({
     if (!definition) return;
     if (isRanked) {
       if (!rankedOffered) {
-        setSubmitError("Weekly places need at least one repeating Live Trivia game.");
+        setSubmitError("Top players this week needs a scheduled Live Trivia game.");
         return;
       }
     } else if (isNFLDefinition) {
@@ -1229,7 +1239,9 @@ export function CreateRewardWizard({
                   ))}
                 </div>
                 <p className={`mt-1.5 ${s.helpText}`}>
-                  Every week, points from all {rankedNightsText} games add up.{" "}
+                  {rankedHasRepeatingGame
+                    ? `Every week, points from all ${rankedNightsText} games add up. `
+                    : "Points from every Live Trivia game in the same week add up, so a single game decides its week. "}
                   {placeCount === 1
                     ? "The top scorer wins."
                     : `The top ${placeCount} scorers each win a prize, one place each.`}{" "}

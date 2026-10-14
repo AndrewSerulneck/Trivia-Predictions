@@ -738,8 +738,8 @@ describe("CreateRewardWizard — scannable gift card choice (POS)", () => {
 // ─── Weekly places (docs/live-trivia-weekly-places-reward-plan.md Phase 6) ──────────────
 // A third way to win a Live Trivia reward: top 1-3 players over the week, a prize per place, and
 // an optional "at least N players took part" minimum (also offered for "Winner of the game").
-// It is offered only where createReward would accept it (a recurring game exists), so every
-// snapshot above — a venue with no game slots — is unchanged.
+// It is offered wherever the venue has a Live Trivia game, even a single one-off (Andrew,
+// 2026-10-14), so the admin "terms" snapshot above shows its chip; the other steps are unchanged.
 describe("CreateRewardWizard — weekly places", () => {
   const pickLiveTrivia = async (context: RewardCreationContextDTO = PICKER_CONTEXT) => {
     const view = renderForSubmit(context);
@@ -768,8 +768,41 @@ describe("CreateRewardWizard — weekly places", () => {
 
   const submitted = (onSubmit: ReturnType<typeof vi.fn>) => (onSubmit.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
 
-  it("is not offered when the venue has no repeating game (the existing flow is untouched)", async () => {
-    await pickLiveTrivia(LIVE_CONTEXT);
+  // Andrew, 2026-10-14: always an option once the venue has a Live Trivia game, even a single one-off.
+  it("is offered at a venue whose only game is a one-off, and submits weekly", async () => {
+    const ONE_OFF_ONLY: RewardCreationContextDTO = {
+      ...LIVE_CONTEXT,
+      hasRecurringSchedule: false,
+      scheduleDays: ["tue"],
+      allowedCadences: [],
+      scheduleShapes: [{ recurringType: "none", weekdayCount: 1 }],
+      gameSlots: [
+        {
+          scheduleId: "sched-once",
+          weekday: "tue",
+          recurring: false,
+          title: "Halloween Special",
+          timeLabel: "8:00 PM",
+          dateLabel: "Tue, Oct 13",
+          label: "Tue, Oct 13 8:00 PM — Halloween Special",
+        },
+      ],
+    };
+    const { onSubmit } = await pickLiveTrivia(ONE_OFF_ONLY);
+    await chooseWeeklyPlaces();
+    expect(screen.getByText(/a single game decides its week/)).toBeTruthy();
+    await toPrizeStep();
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    await screen.findByText("Confirm");
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(submitted(onSubmit)).toEqual(
+      expect.objectContaining({ winCondition: "ranked_places", cadence: "weekly", winnerQuota: 3 }),
+    );
+  });
+
+  it("is not offered when no game night can be resolved at all", async () => {
+    await pickLiveTrivia({ ...LIVE_CONTEXT, scheduleDays: [], gameSlots: [] });
     expect(screen.queryByRole("button", { name: /Top players this week/ })).toBeNull();
     expect(screen.queryByText("Minimum players?")).toBeNull();
   });

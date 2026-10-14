@@ -279,6 +279,28 @@ export const rankedWeekNights = (days: readonly string[]): RewardWeekday[] => {
 };
 
 /**
+ * The nights a weekly places reward counts when it isn't pinned to chosen games, first night first
+ * (the week's anchor, see rankedWeekNights). The ONE rule the wizard previews and createReward stores:
+ *   1. the venue's repeating games' nights — a one-off special night never moves the anchor;
+ *   2. no repeating game: the one-off games' nights. The option is offered even when the venue has a
+ *      single scheduled game (Andrew, 2026-10-14); that week pays its top players, and any game added
+ *      later counts toward its own week;
+ *   3. no resolvable game at all: the weekdays the venue's schedules run on.
+ * Every Live Trivia game at the venue still counts toward its week's points (the resolver groups games
+ * by cycle key); this only decides where the week starts.
+ */
+export const rankedNightsForVenue = (context: {
+  gameSlots: ReadonlyArray<{ weekday: string; recurring: boolean }>;
+  scheduleDays?: readonly string[] | null;
+}): RewardWeekday[] => {
+  const recurring = context.gameSlots.filter((slot) => slot.recurring).map((slot) => slot.weekday);
+  if (recurring.length > 0) return rankedWeekNights(recurring);
+  const oneOff = context.gameSlots.map((slot) => slot.weekday);
+  if (oneOff.length > 0) return rankedWeekNights(oneOff);
+  return rankedWeekNights(context.scheduleDays ?? []);
+};
+
+/**
  * The prize ladder inside a sentence: "1st place wins a $30 gift card, 2nd place wins a $20
  * gift card and 3rd place wins a $10 gift card." One place: "The winner gets a $30 gift card." Empty ladder → "".
  */

@@ -72,6 +72,23 @@ const allText = (input: RewardDescriptionInput): string => {
 };
 
 describe("describeReward — weekly places", () => {
+  // Andrew, 2026-10-14: offered with a single one-off game. Its activeDays are only the week's
+  // anchor, so no weekday is promised as a repeating night.
+  it("a venue with only a one-off game names no repeating night", () => {
+    const halloween: RewardGameScheduleShape = {
+      scheduleId: "sched-once",
+      title: "Halloween Special",
+      recurringType: "none",
+      weekdays: [],
+      startTime: "2026-10-21T00:00:00.000Z",
+      timezone: TZ,
+    };
+    const d = describeReward(ranked({ activeDays: ["tue"], schedule: { slots: enumerateGameSlots([halloween]) } }), NOW);
+    expect(d.summary).toContain("across all of the week's games");
+    expect(d.when).toContain("Winners are named after the week's last game.");
+    expect(`${d.summary} ${d.when}`).not.toMatch(/Tuesday/);
+  });
+
   it("Garden State Bar's reward reads as the plan's sentence", () => {
     expect(describeReward(ranked(), NOW)).toEqual({
       summary:

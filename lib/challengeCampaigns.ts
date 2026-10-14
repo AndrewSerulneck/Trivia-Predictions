@@ -2041,6 +2041,28 @@ export async function listActiveRankedPlaceCampaigns(): Promise<ChallengeCampaig
   return (data ?? []).map((row) => mapCampaignRow(row));
 }
 
+const CAMPAIGN_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The rewards with these ids, any state (active or not, resolved or not), for Past Winners
+ * (docs/live-trivia-weekly-places-reward-plan.md §5f). A direct bounded read — the caller passes
+ * at most a page of ids, found from the venue's own ledger — NOT listChallengeCampaigns(): that one
+ * runs the leaderboard finalizers and is shaped for the live panels. Malformed ids are dropped (an
+ * `in` filter with a non-uuid would fail the whole read). Throws on a read error.
+ */
+export async function listChallengeCampaignsByIds(ids: readonly string[]): Promise<ChallengeCampaign[]> {
+  assertConfigured();
+  const wanted = [...new Set(ids.map((id) => String(id ?? "").trim()))].filter((id) => CAMPAIGN_ID_PATTERN.test(id));
+  if (wanted.length === 0) return [];
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select(CAMPAIGN_SELECT_COLUMNS)
+    .in("id", wanted)
+    .returns<ChallengeCampaignRow[]>();
+  if (error) throw new Error(error.message ?? "Failed to load rewards.");
+  return (data ?? []).map((row) => mapCampaignRow(row));
+}
+
 export type ChallengeCycleSettlementRecord = {
   challengeId: string;
   cycleStart: string;

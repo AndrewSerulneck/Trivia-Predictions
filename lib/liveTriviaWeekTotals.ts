@@ -15,6 +15,9 @@ export type LiveTriviaGameRef = { scheduleId: string; occurrenceDate: string };
 
 type WeekTotalsRpcRow = { user_id: string; total_points: number | string; reached_at: string | null };
 
+/** The live_trivia_week_totals function isn't deployed (deploy skew): callers may say "not available yet". */
+export class LiveTriviaWeekTotalsMissingError extends Error {}
+
 /** Fails closed: any RPC error throws (a missing function logs `[RankedReward] week-totals-rpc-missing`). */
 export const loadLiveTriviaWeekTotals = async (
   games: readonly LiveTriviaGameRef[],
@@ -37,6 +40,7 @@ export const loadLiveTriviaWeekTotals = async (
   if (error) {
     if (isMissingFunction(error, "live_trivia_week_totals")) {
       console.error("[RankedReward] week-totals-rpc-missing");
+      throw new LiveTriviaWeekTotalsMissingError(`live_trivia_week_totals RPC failed: ${error.message}`);
     }
     throw new Error(`live_trivia_week_totals RPC failed: ${error.message}`);
   }

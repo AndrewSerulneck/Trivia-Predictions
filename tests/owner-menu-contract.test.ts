@@ -13,10 +13,11 @@ import { OWNER_MENU_ITEMS, visibleOwnerMenuItems } from "@/components/owner/menu
 const read = (path: string): string => readFileSync(join(__dirname, "..", path), "utf8");
 
 describe("owner menu contract", () => {
-  it("lists the six rows in the specified order (POS flag off, the default)", () => {
+  it("lists the seven rows in the specified order (POS flag off, the default)", () => {
     expect(visibleOwnerMenuItems(false).map((item) => item.label)).toEqual([
       "Venue Display",
       "Order Join Merch",
+      "Past Winners",
       "Billing",
       "Partner Manual",
       "Game Settings",
@@ -28,6 +29,7 @@ describe("owner menu contract", () => {
     expect(OWNER_MENU_ITEMS.map((item) => item.label)).toEqual([
       "Venue Display",
       "Order Join Merch",
+      "Past Winners",
       "Billing",
       "Point of Sale",
       "Partner Manual",
@@ -42,6 +44,7 @@ describe("owner menu contract", () => {
     expect(visibleOwnerMenuItems(false).map((item) => item.href ?? null)).toEqual([
       "/owner/display",
       null,
+      null,
       "/owner/billing",
       null,
       "/owner/game-settings",
@@ -53,10 +56,25 @@ describe("owner menu contract", () => {
     const store = OWNER_MENU_ITEMS.find((item) => item.id === "store");
     expect(store?.sheet).toBe("store");
     expect(store?.hint).toBe("QR coasters, tents & table cards");
-    expect(OWNER_MENU_ITEMS.filter((item) => item.sheet).map((item) => item.id)).toEqual(["store", "pos"]);
+    expect(OWNER_MENU_ITEMS.filter((item) => item.sheet).map((item) => item.id)).toEqual(["store", "history", "pos"]);
     const src = read("components/owner/OwnerAppBar.tsx");
     expect(src).toContain("pushSheet(window.history, window.location, sheet)");
     expect(src).not.toMatch(/router\.push\([^)]*sheet=/);
+  });
+
+  // docs/live-trivia-weekly-places-reward-plan.md §5f (Phase 8): after Order Join Merch, a dark
+  // URL-mirrored sheet hosted by the dashboard page, never a page of its own.
+  it("Past Winners opens the URL-mirrored history sheet, hosted by the dashboard page", () => {
+    const history = OWNER_MENU_ITEMS.find((item) => item.id === "history");
+    expect(history?.label).toBe("Past Winners");
+    expect(history?.hint).toBe("Games & rewards history");
+    expect(history?.sheet).toBe("history");
+    expect(history?.href).toBeUndefined();
+    const page = read("app/owner/dashboard/page.tsx");
+    expect(page).toContain("<PastWinnersSheet nav={sheet} venue={venue} />");
+    const sheet = read("components/owner/history/PastWinnersSheet.tsx");
+    expect(sheet).not.toMatch(/router\.(push|replace)/);
+    expect(sheet).toContain('nav.displayStepFor("history")');
   });
 
   it("OwnerAppBar never navigates to a sheet URL, however it is built (join-merch Phase 4.1, F5)", () => {

@@ -54,6 +54,7 @@ import {
   MAX_RANKED_PLACES,
   REWARD_MIN_PLAYERS_MAX,
   REWARD_MIN_PLAYERS_MIN,
+  rankedNightsForVenue,
   rankedWeekNights,
 } from "@/lib/rankedPlaceRewards";
 import { getLocalDateKey, getVenueTimezone } from "@/lib/timezone";
@@ -143,8 +144,11 @@ export const REWARD_INVALID_PRIZE_MESSAGE = "Choose a valid prize for this rewar
 // 400 by type with no route change.
 export const REWARD_RANKED_PLACES_UNSUPPORTED_MESSAGE =
   "This reward can't be offered to the top players of the week.";
+/** Pinned games for a top-players reward must repeat weekly (unpinned, any scheduled game will do). */
 export const REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE =
   "Top players this week needs a Live Trivia game that runs every week. Schedule a weekly game first.";
+export const REWARD_RANKED_PLACES_NO_GAMES_MESSAGE =
+  "Top players this week needs a scheduled Live Trivia game. Schedule a game first.";
 export const REWARD_RANKED_PLACES_LADDER_MESSAGE = `Choose a prize for each place, from 1 to ${MAX_RANKED_PLACES} places.`;
 export const REWARD_PLACE_PRIZES_NOT_RANKED_MESSAGE =
   "A prize for each place is only for a top-players-this-week reward.";
@@ -1215,17 +1219,17 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // venue plays; NFL = all seven days for both cadences) live on deriveRewardTerms.
   //
   // A weekly places reward ignores the client's cadence and N outright: it is weekly by
-  // definition, its quota is its place count, and its nights are the recurring games that
-  // count (the pinned ones, else every recurring game), ordered first night first.
+  // definition, its quota is its place count, and its nights are the games that count (the
+  // pinned ones, else every recurring game, else the one-off games), ordered first night first.
   let rankedNights: string[] = [];
   if (isRanked) {
     if (slots && slots.terms.cadence !== "weekly") {
       throw new RewardTermsError(REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE);
     }
-    rankedNights = rankedWeekNights(
-      slots ? slots.terms.weekdays : context.gameSlots.filter((slot) => slot.recurring).map((slot) => slot.weekday),
-    );
-    if (rankedNights.length === 0) throw new RewardTermsError(REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE);
+    // Unpinned: the venue's repeating nights, else its one-off games' nights (offered even with a
+    // single scheduled game) — rankedNightsForVenue is the one rule the wizard previews too.
+    rankedNights = slots ? rankedWeekNights(slots.terms.weekdays) : rankedNightsForVenue(context);
+    if (rankedNights.length === 0) throw new RewardTermsError(REWARD_RANKED_PLACES_NO_GAMES_MESSAGE);
   }
   const { cadence, activeDays, winnerQuota } =
     isRanked && placePrizes

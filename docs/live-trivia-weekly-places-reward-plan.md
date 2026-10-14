@@ -5,9 +5,12 @@
 > (`677a214c-b859-4c17-8e4d-9889574516e1`, from the Oct 14 week) and Andrew approved + applied the backfill
 > (13 coupons, $320, 10 weeks settled, expiry 2026-11-13; verified, re-run is a no-op). Wording changed to
 > "1st place wins …, 2nd place wins … and 3rd place wins …" (Andrew, 2026-10-14). Phase 6 (Create Reward wizard) **built** 2026-10-14, committed on branch
-> `live-trivia-ranked-places-phase6`, **not pushed** (awaiting Andrew). Latest
-> handoff: `docs/live-trivia-weekly-places-reward-plan_PHASE_6_HANDOFF.md`. Each phase ends with
-> `docs/live-trivia-weekly-places-reward-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
+> `live-trivia-ranked-places-phase6`, **not pushed**. Phase 8 (Past Winners) **built** 2026-10-14 + "Top players
+> this week" offered even with a single game (D13) + code-review fixes, committed on branch
+> `live-trivia-ranked-places-phase8` (on top of Phase 6), **not pushed**, migration
+> `20261014213000_owner_past_winners_summaries.sql` **not applied**. Latest handoff:
+> `docs/live-trivia-weekly-places-reward-plan_PHASE_8_HANDOFF.md`. Next: **Phase 7** (after Fri 2026-10-16's game).
+> Each phase ends with `docs/live-trivia-weekly-places-reward-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew. **Trigger:** Garden State Bar promised posters with weekly 1st/2nd/3rd Live Trivia
 > prizes but never set up a reward, and the system can't express one today.
 
@@ -53,6 +56,7 @@ Bar will honor the backfill.
 | D10 | Defaults confirmed | Weekly only, 1–3 places; players see their live standing on the Rewards card; no feature flag. |
 | D11 | Approvals | DB change in Phase 1 approved. Push + deploy of Phases 1–4 approved. Backfill dry run is shown to Andrew and approved before any coupon is issued. Garden State Bar confirmed it will honor ~$320 plus up to $60 for the Oct 14 week. **Phase 8 push + deploy approved too (Andrew, 2026-10-14).** |
 | D12 | Category Blitz in Past Winners | **No** (Andrew, 2026-10-14). Past Winners = Live Trivia games + rewards only. |
+| D13 | Single-game venues | **"Top players this week" is always an option** once the venue has a Live Trivia game, even a single non-repeating one (Andrew, 2026-10-14). The week anchors on the repeating nights, else the one-off games' nights (`rankedNightsForVenue`, `lib/rankedPlaceRewards.ts`); every game in the week still counts. Pinned games must still repeat weekly. With no repeating game, the guest wording names no weekday. |
 
 ### Defaults (planner's, confirmed by Andrew 2026-10-14 except where D7/D8 changed them)
 
@@ -246,31 +250,32 @@ the moment they reached their final total.
   cycle-winners panel): show the ladder and, per settled week, the winners by place.
 - Text-size floor (12px), `text-caption`/`text-footnote` inside games, no inline styles.
 
-### 5f. Past winners for partners (Phase 8, D9)
+### 5f. Past winners for partners (Phase 8, D9) — AS BUILT 2026-10-14
 
 - **Menu row** "Past Winners" (hint "Games & rewards history", Lucide `Trophy`) in
-  `components/owner/menu/ownerMenuItems.ts`, placed after Order Join Merch; pin the new order in
-  `tests/owner-menu-contract.test.ts`. It opens a URL-mirrored dark `OwnerSheet` (`?sheet=history[&step=…]`,
-  `lib/ownerSheetParams.ts` + `lib/useOwnerSheet.ts`; never `router.push` a step) for the selected venue.
-- **Step 1 — list**, two sections, newest first, 20 per page with "Show more" (keyset on date):
-  - **Live Trivia games**: one row per past occurrence that had answers — date, schedule name, player count,
-    winner + points.
-  - **Rewards**: one row per reward (active and archived) that ever settled a cycle — name, how it's won,
-    last winner(s).
-- **Step 2 — detail**: a game → final standings (top 10, ties shown); a reward → every settled week/cycle with
-  winners by place, prize, and whether the coupon was redeemed; weeks nobody won say why ("Only 2 players —
-  your minimum is 4", from `challenge_cycle_settlements`). Usernames only — never player ids, emails or
-  anything else (partners must not see more than the TV leaderboard shows).
-- **Server**: `GET /api/owner/history?venueId=…&kind=games|rewards&before=…` and
-  `GET /api/owner/history/[kind]/[id]` behind `requireOwnerAuth` + venue ownership check. Games list = a new
-  service-role RPC `live_trivia_occurrence_summaries(p_schedule_ids uuid[], p_before date, p_limit int)`
-  grouping `live_showdown_answers` by `(schedule_id, occurrence_date)` with player count and top scorer
-  (uses `idx_lsa_occurrence`). Rewards = `challenge_cycle_winners` + `challenge_campaign_redemptions` +
-  `challenge_cycle_settlements` for the venue's rewards, bounded by page size.
-- **Cost:** only on demand (a partner opening the sheet), 1–2 bounded queries per view, no cron, no polling.
-  At 100 venues × a few views/week it is negligible.
-- **Out of scope:** Category Blitz (continuous mode has no discrete "games" with winners; ask Andrew if he
-  wants its round winners later), editing or re-awarding anything from this screen, CSV export.
+  `components/owner/menu/ownerMenuItems.ts`, after Order Join Merch (pinned in `tests/owner-menu-contract.test.ts`).
+  It opens a URL-mirrored dark `OwnerSheet` `?sheet=history[&step=game|reward]`
+  (`components/owner/history/PastWinnersSheet.tsx`), hosted by the dashboard page (`HistorySheetHost`, keyed by
+  venue) so it opens while venues load. Which game/reward is open lives in memory: a reload on a detail step
+  corrects back to the list (`nav.correctStep`).
+- **List**, two tabs, newest first, 20 per page with "Show more": **Live Trivia games** (date, schedule name, player
+  count, winner(s) + points; "Playing now" names nobody) and **Rewards** (every reward that ever paid or settled a
+  week **at this venue**: name, how it's won, latest cycle + its winners). The Rewards tab loads only when chosen.
+- **Detail**: a game → final standings (scorers only, competition-ranked, top 10 + ties); a reward → its newest
+  52 cycles with winners by place, prize, Redeemed / Not redeemed yet (unknown for a deleted player), and why a
+  week paid nobody (`challenge_cycle_settlements`, shared wording `lib/rankedWeekHistory.ts`). Usernames only.
+- **Server** (`lib/ownerHistory.ts`, display shapes + pure rules `lib/ownerHistoryDisplay.ts`, gate
+  `lib/ownerHistoryRoute.ts` `withOwnerVenue` = `requireOwnerAuth` + venue in `auth.venueIds` BEFORE any read):
+  `GET /api/owner/history?venueId&kind=games|rewards&before`, `GET /api/owner/history/games/[scheduleId]?venueId&date`,
+  `GET /api/owner/history/rewards/[rewardId]?venueId`. 401/400/403/404, 503 while an RPC is missing.
+- **Migration** `20261014213000_owner_past_winners_summaries.sql` (renamed from `…013000` so it sorts after
+  Speed Trivia's `20261014020000`): `live_trivia_occurrence_summaries(p_schedule_ids, p_before date, p_limit)`
+  (index walk on `idx_lsa_occurrence`, a page never splits a date) and
+  `challenge_reward_history_summaries(p_venue_id, p_before_at, p_before_id, p_limit)` (rewards found from the
+  venue's own ledger + settlements, keyset-paged in SQL, returns `p_limit + 1` rows) + index
+  `idx_challenge_cycle_winners_venue`. service_role only. PGlite: `npm run test:owner-history-sql`.
+- **Cost:** only on demand, no cron, no polling. A list page = 3 bounded reads; a detail = 3–5.
+- **Out of scope:** Category Blitz (D12), editing or re-awarding anything from this screen, CSV export.
 
 ## 6. Cost estimate (CLAUDE.md "cost-conscious engineering")
 
@@ -395,8 +400,8 @@ own prize snapshot. `terms_updated_at` trigger left as is (the win sentence read
 - **As built:** `docs/live-trivia-weekly-places-reward-plan_PHASE_6_HANDOFF.md`. Minimum players and the per-place prize
   tabs live inside the existing Terms and Prize steps (no new step ids).
 
-### Phase 8: Past winners on the Partner Dashboard (D9)
-**Model: Claude Sonnet 5.5 · Effort: high**
+### Phase 8: Past winners on the Partner Dashboard (D9) — BUILT 2026-10-14 (not deployed)
+**Model: Claude Sonnet 5.5 · Effort: high** · As built: §5f; handoff `…_PHASE_8_HANDOFF.md`.
 - §5f. Can start any time after Phase 2 (it reads settlements); needs Phase 4's display helpers for the
   reward detail if they exist by then, otherwise build them here and let Phase 4 reuse them.
 - Migration for `live_trivia_occurrence_summaries` (service_role only) + PGlite test; routes + owner-scope
@@ -428,6 +433,8 @@ own prize snapshot. `terms_updated_at` trigger left as is (the win sentence read
 ## 9. Open items for Andrew
 
 Answered 2026-10-14: Garden State Bar honors the backfill (D11); defaults kept (D10); mid-week start (D8);
-**backfill starts Aug 5 (D6)**; **Category Blitz is not in Past Winners (D12)**; **Phase 8 may be deployed (D11)**.
+**backfill starts Aug 5 (D6)**; **Category Blitz is not in Past Winners (D12)**; **Phase 8 may be deployed (D11)**;
+**single-game venues get the option (D13)**.
 
-Still open: the backfill dry-run approval (Phase 5) and the phone checks (`docs/reward-descriptions-device-checklist.md` §B).
+Still open: pushing Phases 6 + 8 and applying the Phase 8 migration (Phase 8 handoff §7), and the phone checks
+(`docs/reward-descriptions-device-checklist.md` §B, §C, §D).
