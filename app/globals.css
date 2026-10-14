@@ -1693,6 +1693,29 @@ a[role="button"][class*="text-caption"] {
   }
 }
 
+/* Sad-emoji rain: falls the full viewport height (top edge clears the bottom), fully opaque
+   the whole way, with gravity-style ease-in after a short hang. Fixed layer, so no clipping. */
+@keyframes tp-rain-drip {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.9);
+    animation-timing-function: ease-out;
+  }
+  15% {
+    transform: translate3d(0, 6vh, 0) rotate(6deg) scale(1.04);
+    animation-timing-function: ease-in;
+  }
+  100% {
+    transform: translate3d(var(--rain-drift, 0px), calc(100vh + 2.4em), 0) rotate(36deg) scale(1.08);
+    transform: translate3d(var(--rain-drift, 0px), calc(100dvh + 2.4em), 0) rotate(36deg) scale(1.08);
+  }
+}
+
+.animate-tp-rain-drip {
+  animation: tp-rain-drip forwards;
+  animation-iteration-count: 1;
+  will-change: transform;
+}
+
 .animate-tp-rain {
   animation: tp-rain linear forwards;
   animation-iteration-count: 1;
@@ -2420,6 +2443,7 @@ a[role="button"][class*="text-caption"] {
   .animate-tp-countdown-critical,
   .animate-tp-answer-shimmer,
   .animate-tp-rain,
+  .animate-tp-rain-drip,
   .animate-tp-points-burst,
   .animate-tp-points-fall,
   .animate-tp-popup-sheet-up,
@@ -2462,6 +2486,6 @@ a[role="button"][class*="text-caption"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-tp-rain, .animate-tp-points-burst { visibility: hidden; }
+  .animate-tp-rain, .animate-tp-rain-drip, .animate-tp-points-burst { visibility: hidden; }
   .tp-game-card-btn, .tp-game-card-btn.is-opening { transition: none !important; transform: none !important; }
 }

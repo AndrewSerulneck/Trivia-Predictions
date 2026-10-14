@@ -5,6 +5,7 @@ import { haptic } from "@/lib/haptics";
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { getUserId } from "@/lib/storage";
@@ -81,7 +82,7 @@ const FIREWORK_BURST_DURATION_MAX_MS = 2500;
 const CORRECT_FEEDBACK_FLASH_DURATION_MS = 1300;
 const INCORRECT_FEEDBACK_FLASH_DURATION_MS = 1300;
 const FIREWORK_HIDE_DELAY_MS = 2700;
-const RAIN_HIDE_DELAY_MS = 2700;
+const RAIN_HIDE_BUFFER_MS = 150;
 const TRIVIA_ROUND_ENDED_ACTIVE_KEY = "tp:trivia:round-ended-active:v1";
 const TRIVIA_LIVE_PREVIEW_STORAGE_KEY = "tp:trivia:live-preview:v1";
 const TRIVIA_LIVE_PREVIEW_MAX_AGE_MS = 60 * 60 * 1000;
@@ -329,7 +330,9 @@ export function TriviaGame({
 }) {
   const reducedMotion = useReducedMotion();
   const router = useRouter();
-  const { triggerAnimation } = useAnimationTrigger();
+  const { triggerAnimation, updateAnimationPayload, dismissAnimation } = useAnimationTrigger();
+  // The Correct pill of the current question, removed when the player taps Next Question.
+  const correctAnimationIdRef = useRef<number | null>(null);
   const venuePresence = useVenuePresence();
   const gameRootRef = useRef<HTMLDivElement>(null);
   const nextQuestionButtonRef = useRef<HTMLButtonElement>(null);
@@ -356,6 +359,10 @@ export function TriviaGame({
   const [showRewardPulse, setShowRewardPulse] = useState(false);
   const [feedbackFlash, setFeedbackFlash] = useState<FeedbackFlash>(null);
   const [rainEmojis, setRainEmojis] = useState<RainToken[]>([]);
+  const [portalReady, setPortalReady] = useState(false);
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
   const [fireworks, setFireworks] = useState<FireworkToken[]>([]);
   const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
   const [roundEndedMessage, setRoundEndedMessage] = useState("");
@@ -643,11 +650,14 @@ export function TriviaGame({
   const triggerCelebration = useCallback(
     (isCorrect: boolean) => {
       setFeedbackFlash(isCorrect ? "correct" : "incorrect");
+      let rainHideDelayMs = 0;
       if (isCorrect) {
         setFireworks([]);
         setRainEmojis([]);
       } else {
-        setRainEmojis(Array.from({ length: RAIN_ITEM_COUNT }, (_, index) => createRainToken(INCORRECT_EMOJIS, index)));
+        const rainTokens = Array.from({ length: RAIN_ITEM_COUNT }, (_, index) => createRainToken(INCORRECT_EMOJIS, index));
+        rainHideDelayMs = Math.max(...rainTokens.map((token) => token.delayMs + token.durationMs)) + RAIN_HIDE_BUFFER_MS;
+        setRainEmojis(rainTokens);
         setFireworks([]);
       }
 
@@ -671,7 +681,7 @@ export function TriviaGame({
       } else {
         rainTimeoutRef.current = window.setTimeout(() => {
           setRainEmojis([]);
-        }, RAIN_HIDE_DELAY_MS);
+        }, rainHideDelayMs);
       }
     },
     []
@@ -978,8 +988,11 @@ export function TriviaGame({
 
       triggerCelebration(localOutcome === "correct");
 
+      // The badge pops now; its points chip waits for the server's real award (multiplier included).
+      let correctAnimationId: number | null = null;
       if (localOutcome === "correct") {
-        triggerAnimation("SPEED_TRIVIA_CORRECT");
+        correctAnimationId = triggerAnimation("SPEED_TRIVIA_CORRECT");
+        correctAnimationIdRef.current = correctAnimationId;
       } else if (localOutcome === "incorrect") {
         triggerAnimation("SPEED_TRIVIA_WRONG");
       }
@@ -1028,6 +1041,9 @@ export function TriviaGame({
           }
 
           if (wasCorrect) {
+            if (correctAnimationId !== null) {
+              updateAnimationPayload(correctAnimationId, { pointsAwarded });
+            }
             const savedLabel = payload.result.saved ? "saved" : "recorded";
             setRewardPulse(
               challengeActive
@@ -1093,6 +1109,7 @@ export function TriviaGame({
       selectedAnswer,
       triggerAnimation,
       triggerCelebration,
+      updateAnimationPayload,
       triggerPointsFlow,
       triviaQuotaLocked,
       venuePresence,
@@ -1145,6 +1162,13 @@ export function TriviaGame({
   }, [isRoundStarted, preRoundCountdown, finished, selectedAnswer, isSubmitting, secondsRemaining, chooseAnswer, triviaQuotaLocked]);
 
   const nextQuestion = () => {
+    if (correctAnimationIdRef.current !== null) {
+      dismissAnimation(correctAnimationIdRef.current);
+      correctAnimationIdRef.current = null;
+    }
+    if (flashTimeoutRef.current) {
+      window.clearTimeout(flashTimeoutRef.current);
+    }
     setFeedbackFlash(null);
     setRainEmojis([]);
     setFireworks([]);
@@ -1765,26 +1789,30 @@ export function TriviaGame({
         />
       ) : null}
 
-      {/* Rain emojis */}
-      {rainEmojis.length > 0 ? (
-        <div className="pointer-events-none absolute inset-0 z-20">
-          {rainEmojis.map((item) => (
-            <span
-              key={item.id}
-              className={`absolute top-[-20px] animate-tp-rain ${item.sizeClass} font-black`}
-              style={{
-                left: `${item.left}%`,
-                marginLeft: "-0.5em",
-                animationDelay: `${item.delayMs}ms`,
-                animationDuration: `${item.durationMs}ms`,
-                ["--rain-drift" as string]: `${item.drift}px`,
-              }}
-            >
-              {item.emoji}
-            </span>
-          ))}
-        </div>
-      ) : null}
+      {/* Rain emojis — portalled to <body> so they fall past the real bottom edge of the screen
+          (the game's wrappers are overflow-hidden and one animates a transform). */}
+      {rainEmojis.length > 0 && portalReady
+        ? createPortal(
+            <div className="pointer-events-none fixed inset-0 z-[1100] overflow-hidden" aria-hidden="true">
+              {rainEmojis.map((item) => (
+                <span
+                  key={item.id}
+                  className={`absolute top-[-1.2em] animate-tp-rain-drip ${item.sizeClass} font-black`}
+                  style={{
+                    left: `${item.left}%`,
+                    marginLeft: "-0.5em",
+                    animationDelay: `${item.delayMs}ms`,
+                    animationDuration: `${item.durationMs}ms`,
+                    ["--rain-drift" as string]: `${item.drift}px`,
+                  }}
+                >
+                  {item.emoji}
+                </span>
+              ))}
+            </div>,
+            document.body
+          )
+        : null}
 
       {/* Fireworks */}
       {fireworks.length > 0 ? (

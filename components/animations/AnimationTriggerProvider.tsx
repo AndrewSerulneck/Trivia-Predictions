@@ -17,13 +17,25 @@ type AnimationTriggerState = {
 
 type AnimationTriggerContextValue = {
   active: QueuedAnimation | null;
-  triggerAnimation: (type: AnimationType, payload?: AnimationPayload) => void;
+  /** Queues an animation and returns its id (for `updateAnimationPayload`). */
+  triggerAnimation: (type: AnimationType, payload?: AnimationPayload) => number;
+  /** Merges late-arriving data (e.g. the server's points) into a queued or playing animation.
+   *  A no-op once that animation has finished. */
+  updateAnimationPayload: (id: number, patch: AnimationPayload) => void;
   completeAnimation: (id: number) => void;
+  /** Removes an animation now, whether it is playing or still queued (e.g. the player moved on). */
+  dismissAnimation: (id: number) => void;
 };
 
 type AnimationAction =
   | { type: "TRIGGER"; payload: QueuedAnimation }
-  | { type: "COMPLETE"; payload: { id: number } };
+  | { type: "COMPLETE"; payload: { id: number } }
+  | { type: "DISMISS"; payload: { id: number } }
+  | { type: "UPDATE_PAYLOAD"; payload: { id: number; patch: AnimationPayload } };
+
+function patchAnimation(item: QueuedAnimation, id: number, patch: AnimationPayload): QueuedAnimation {
+  return item.id === id ? { ...item, payload: { ...item.payload, ...patch } } : item;
+}
 
 const INITIAL_STATE: AnimationTriggerState = {
   queue: [],
@@ -51,6 +63,28 @@ function animationReducer(state: AnimationTriggerState, action: AnimationAction)
     };
   }
 
+  if (action.type === "DISMISS") {
+    if (state.active?.id === action.payload.id) {
+      const [next, ...rest] = state.queue;
+      return { queue: rest, active: next ?? null };
+    }
+    if (!state.queue.some((item) => item.id === action.payload.id)) {
+      return state;
+    }
+    return { ...state, queue: state.queue.filter((item) => item.id !== action.payload.id) };
+  }
+
+  if (action.type === "UPDATE_PAYLOAD") {
+    const { id, patch } = action.payload;
+    if (state.active?.id !== id && !state.queue.some((item) => item.id === id)) {
+      return state;
+    }
+    return {
+      queue: state.queue.map((item) => patchAnimation(item, id, patch)),
+      active: state.active ? patchAnimation(state.active, id, patch) : null,
+    };
+  }
+
   return state;
 }
 
@@ -64,26 +98,38 @@ function nextAnimationId(): number {
 export function AnimationTriggerProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(animationReducer, INITIAL_STATE);
 
-  const triggerAnimation = useCallback((type: AnimationType, payload?: AnimationPayload) => {
+  const triggerAnimation = useCallback((type: AnimationType, payload?: AnimationPayload): number => {
     const haptic = hapticForAnimation(type);
     if (haptic) playHaptic(haptic);
+    const id = nextAnimationId();
     dispatch({
       type: "TRIGGER",
-      payload: { id: nextAnimationId(), type, payload },
+      payload: { id, type, payload },
     });
+    return id;
+  }, []);
+
+  const updateAnimationPayload = useCallback((id: number, patch: AnimationPayload) => {
+    dispatch({ type: "UPDATE_PAYLOAD", payload: { id, patch } });
   }, []);
 
   const completeAnimation = useCallback((id: number) => {
     dispatch({ type: "COMPLETE", payload: { id } });
   }, []);
 
+  const dismissAnimation = useCallback((id: number) => {
+    dispatch({ type: "DISMISS", payload: { id } });
+  }, []);
+
   const value = useMemo<AnimationTriggerContextValue>(
     () => ({
       active: state.active,
       triggerAnimation,
+      updateAnimationPayload,
       completeAnimation,
+      dismissAnimation,
     }),
-    [completeAnimation, state.active, triggerAnimation]
+    [completeAnimation, dismissAnimation, state.active, triggerAnimation, updateAnimationPayload]
   );
 
   return (
@@ -91,12 +137,19 @@ export function AnimationTriggerProvider({ children }: { children: React.ReactNo
   );
 }
 
-export function useAnimationTrigger(): Pick<AnimationTriggerContextValue, "triggerAnimation"> {
+export function useAnimationTrigger(): Pick<
+  AnimationTriggerContextValue,
+  "triggerAnimation" | "updateAnimationPayload" | "dismissAnimation"
+> {
   const context = useContext(AnimationTriggerContext);
   if (!context) {
     throw new Error("useAnimationTrigger must be used within AnimationTriggerProvider");
   }
-  return { triggerAnimation: context.triggerAnimation };
+  return {
+    triggerAnimation: context.triggerAnimation,
+    updateAnimationPayload: context.updateAnimationPayload,
+    dismissAnimation: context.dismissAnimation,
+  };
 }
 
 export function useAnimationOverlayState(): Pick<

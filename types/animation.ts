@@ -30,6 +30,10 @@ export interface AnimationPayload {
    *  every existing trigger site keeps its current behavior untouched. See
    *  docs/category-blitz-mode-flip-reverse-transition-plan.md. */
   modeFlipDirection?: "toReverse" | "toStandard";
+  /** SPEED_TRIVIA_CORRECT: the points the server actually awarded (Challenge multiplier
+   *  included). Absent while the answer is still being saved — the badge's points chip
+   *  waits for it rather than guessing a number. */
+  pointsAwarded?: number;
 }
 
 export type GameplayAnimationProps = {
