@@ -221,7 +221,26 @@ export type ChallengeMode = "progress" | "leaderboard";
  * of a finished Live Trivia occurrence regardless of score; those campaigns are
  * resolved by the resolve-live-trivia-winners cron, never by points accrual.
  */
-export type ChallengeWinCondition = "points_threshold" | "game_winner";
+export type ChallengeWinCondition = "points_threshold" | "game_winner" | "ranked_places";
+/**
+ * One place's prize on a "ranked_places" reward (1st / 2nd / 3rd over a week — see
+ * docs/live-trivia-weekly-places-reward-plan.md). Each place carries a full prize of its own.
+ * Stored snake_case in `challenge_campaigns.place_prizes`; parsed by normalizePlacePrizes
+ * (lib/rankedPlaceRewards.ts), the one home of that shape.
+ */
+export type RewardPlacePrize = {
+  /** 1, 2 or 3. */
+  place: number;
+  prizeKind: RewardPrizeKind;
+  /** Gift-card prizes: the dollar amount. */
+  prizeGiftCertificateAmount: number | null;
+  prizeMenuItem: RewardMenuItem | null;
+  prizeMenuItemName: string | null;
+  prizeDiscountKind: RewardDiscountKind | null;
+  prizeDiscountValue: number | null;
+  prizePosValueCents: number | null;
+  prizePosDelivery: PrizePosDelivery | null;
+};
 /**
  * One scheduled game a game-winner reward is pinned to. The `{scheduleId,
  * weekday}` PAIR is the identity — two schedules on the same weekday (a 6pm and
@@ -316,9 +335,17 @@ export interface ChallengeCampaign {
    * How this reward is won. "points_threshold" (default) resolves via points
    * accrual against pointsRequiredToWin; "game_winner" is awarded to the top
    * scorer(s) of a finished Live Trivia occurrence by the resolver cron and
-   * ignores pointsRequiredToWin entirely.
+   * ignores pointsRequiredToWin entirely. "ranked_places" pays 1st/2nd/3rd over a
+   * week, each its own prize (placePrizes), settled once by the weekly resolver.
    */
   winCondition: ChallengeWinCondition;
+  /** "ranked_places" rewards only: one prize per place, ordered 1st first. Null otherwise. */
+  placePrizes?: RewardPlacePrize[] | null;
+  /**
+   * Competitive rewards ("game_winner", "ranked_places"): pay out only if at least this many
+   * players took part. Null = no minimum.
+   */
+  minPlayers?: number | null;
   /** Winners awarded per cycle (one-time rewards: total). Defaults to 1. */
   winnerQuota: number;
   /**
@@ -396,6 +423,8 @@ export interface ChallengeCampaignWin {
    * a dollar-off menu prize; use isScannableGiftCardPrize (lib/pos/prizeDelivery.ts).
    */
   prizePosDelivery?: PrizePosDelivery | null;
+  /** "ranked_places" coupons: the place won (1-3), from the coupon's own snapshot. Null otherwise. */
+  place?: number | null;
   /**
    * The live reward's terms, for saying what the coupon was won FOR
    * (describeRewardWin, lib/rewardDescription.ts). Null when the reward has been

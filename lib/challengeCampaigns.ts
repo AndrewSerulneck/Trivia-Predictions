@@ -9,6 +9,8 @@ import {
   normalizeGameWinnerSlots,
   serializeGameWinnerSlots,
 } from "@/lib/rewardGameSlots";
+import { normalizePlacePrizes, rankedPlacesRpcPayload, type RankedPlace } from "@/lib/rankedPlaceRewards";
+import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import type {
   ChallengeCampaign,
   ChallengeCampaignProgress,
@@ -76,12 +78,15 @@ type ChallengeCampaignRow = {
   prize_menu_item_name: string | null;
   prize_discount_kind: string | null;
   prize_discount_value: number | null;
+  // Ranked-places rewards (20261014010000_live_trivia_ranked_places.sql).
+  place_prizes: unknown;
+  min_players: number | null;
 };
 
 // Single source of truth for the campaign SELECT list (was duplicated across the
 // list + create-insert queries). Includes created_by_owner_id (Phase 9a).
 const CAMPAIGN_SELECT_COLUMNS =
-  "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active, created_by_owner_id, win_condition, winner_quota, game_winner_slots, nfl_week_scope, reward_definition_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value";
+  "id, created_at, name, image_url, image_scale, image_focus_x, image_focus_y, image_fit, rules, venue_ids, schedule_type, active_days, start_date, start_time, end_day, end_time, end_date, game_types, challenge_mode, leaderboard_display_limit, leaderboard_tiebreaker, point_multiplier, points_required_to_win, recurring_type, display_order, winner_user_id, prize_type, prize_gift_certificate_amount, is_active, created_by_owner_id, win_condition, winner_quota, game_winner_slots, nfl_week_scope, reward_definition_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, place_prizes, min_players";
 
 type ChallengeCampaignProgressRow = {
   id: string;
@@ -172,8 +177,19 @@ function normalizeWinnerQuota(value: number | null | undefined): number {
 // Unknown/legacy/null values fall back to the historical points-threshold
 // behavior, so a row written before the win_condition column existed keeps
 // resolving exactly as it did.
+//
+// "ranked_places" MUST be recognised here: mapped to "points_threshold" it would be paid by the
+// points-accrual path, whose sentinel target of 1 would make every guest a winner. (The
+// award_cycle_winner RPC also refuses a ranked reward, 20261014010000.)
 function normalizeWinCondition(value: string | null | undefined): ChallengeWinCondition {
-  return String(value ?? "").trim() === "game_winner" ? "game_winner" : "points_threshold";
+  const normalized = String(value ?? "").trim();
+  if (normalized === "game_winner" || normalized === "ranked_places") return normalized;
+  return "points_threshold";
+}
+
+function normalizeMinPlayers(value: number | null | undefined): number | null {
+  const n = Number(value);
+  return value === null || value === undefined || !Number.isFinite(n) || n < 2 ? null : Math.trunc(n);
 }
 
 // Coupons are minted for winners of any campaign that carries a prize. Rewards
@@ -500,6 +516,8 @@ function mapCampaignRow(
     winnerQuota: normalizeWinnerQuota(row.winner_quota),
     gameWinnerSlots: normalizeGameWinnerSlots(row.game_winner_slots),
     nflWeekScope: normalizeNFLWeekScope(row.nfl_week_scope),
+    placePrizes: normalizePlacePrizes(row.place_prizes),
+    minPlayers: normalizeMinPlayers(row.min_players),
     rewardDefinitionId: row.reward_definition_id?.trim() || null,
     ...resolveRewardPrize(row),
     isActive: Boolean(row.is_active),
@@ -2073,6 +2091,76 @@ export async function awardCycleWinner(params: {
   return { won, exhausted };
 }
 
+export type RankedCycleAwardStatus = "awarded" | "no_scorers" | "below_minimum" | "already_resolved";
+
+type AwardRankedCyclePlacesRpcRow = { status: string; winners_awarded: number };
+
+const RANKED_CYCLE_AWARD_STATUSES: readonly RankedCycleAwardStatus[] = [
+  "awarded",
+  "no_scorers",
+  "below_minimum",
+  "already_resolved",
+];
+
+/**
+ * Ranked-places rewards (docs/live-trivia-weekly-places-reward-plan.md): settle ONE week of a
+ * "ranked_places" reward through the `award_ranked_cycle_places` RPC — the only writer of ranked
+ * wins. All or nothing: a settlement row, plus one ledger row and one coupon per place (each
+ * coupon snapshots THAT place's prize), under the same advisory lock as award_cycle_winner. A
+ * week already settled returns "already_resolved" and writes nothing, so re-running is safe.
+ *
+ * `places` and `participantCount` come from rankWeekPlaces (lib/rankedPlaceRewards.ts); an empty
+ * `places` records a week nobody won ("no_scorers" / "below_minimum") so it is never re-read.
+ * `cycleStart` MUST be computeCycleStart(campaign, <an instant in that week>, venueTz).
+ * `prizeExpiresAt` defaults to the normal 7 days; the backfill passes its own (D3: 30 days).
+ *
+ * Fails closed: any RPC error throws, and a missing function logs `[RankedReward] rpc-missing`.
+ * Win notifications are best-effort after the commit, like awardCycleWinner's.
+ */
+export async function awardRankedCyclePlaces(params: {
+  campaign: Pick<ChallengeCampaign, "id" | "name">;
+  venueId: string;
+  cycleStart: Date;
+  places: readonly RankedPlace[];
+  participantCount: number;
+  now: Date;
+  prizeExpiresAt?: Date;
+}): Promise<{ status: RankedCycleAwardStatus; winnersAwarded: number }> {
+  assertConfigured();
+  const { campaign, venueId, places, now } = params;
+  const prizeExpiresAtIso = (params.prizeExpiresAt ?? new Date(now.getTime() + PRIZE_EXPIRY_MS)).toISOString();
+
+  const { data, error } = await supabaseAdmin!.rpc("award_ranked_cycle_places", {
+    p_challenge_id: campaign.id,
+    p_cycle_start: params.cycleStart.toISOString(),
+    p_venue_id: venueId,
+    p_winners: rankedPlacesRpcPayload(places),
+    p_participant_count: Math.max(0, Math.trunc(params.participantCount)),
+    p_prize_expires_at: prizeExpiresAtIso,
+  });
+  if (error) {
+    if (isMissingFunction(error, "award_ranked_cycle_places")) {
+      console.error("[RankedReward] rpc-missing", { campaignId: campaign.id });
+    }
+    throw new Error(`award_ranked_cycle_places RPC failed: ${error.message}`);
+  }
+
+  const row = (Array.isArray(data) ? data[0] : data) as AwardRankedCyclePlacesRpcRow | null;
+  const status = RANKED_CYCLE_AWARD_STATUSES.find((s) => s === row?.status);
+  if (!status) {
+    throw new Error(`award_ranked_cycle_places returned an unknown status: ${String(row?.status)}`);
+  }
+  const winnersAwarded = Math.max(0, Number(row?.winners_awarded ?? 0));
+
+  if (status === "awarded") {
+    for (const place of places) {
+      await notifyPrizeWinBestEffort({ userId: place.userId, campaignId: campaign.id, campaignName: campaign.name });
+    }
+  }
+
+  return { status, winnersAwarded };
+}
+
 /**
  * Fire the prize-win notification without ever throwing. The redemption coupon
  * is already durably committed by the award_cycle_winner RPC, so a transient
@@ -2214,8 +2302,10 @@ export async function applyChallengeCampaignPoints(params: {
     // top scorer(s) of a finished Live Trivia occurrence by the
     // resolve-live-trivia-winners cron (lib/liveTriviaWinnerRewards.ts). Its
     // points_required_to_win is a NOT NULL sentinel, so without this guard every
-    // such campaign would fire here on the player's very first point.
-    const resolvedByCron = campaign.winCondition === "game_winner";
+    // such campaign would fire here on the player's very first point. A "ranked_places"
+    // reward is the same: settled once a week by its own resolver
+    // (award_ranked_cycle_places). Anything that is not a points target is never paid here.
+    const resolvedByCron = campaign.winCondition !== "points_threshold";
     if (
       campaign.challengeMode === "progress" &&
       !resolvedByCron &&

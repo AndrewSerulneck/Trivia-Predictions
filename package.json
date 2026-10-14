@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:nfl-week-scope-sql": "node scripts/test-nfl-week-scope-sql.cjs",
+    "test:ranked-places-sql": "node scripts/test-ranked-places-sql.cjs",
     "test:account-deletion-sql": "PLAYER_DELETE_PGLITE_MODULE=../tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite node scripts/test-player-account-deletion.cjs",
     "test:multi-venue-billing-sql": "MULTI_VENUE_PGLITE_MODULE=${MULTI_VENUE_PGLITE_MODULE:-../tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite} node scripts/test-multi-venue-billing-sql.cjs",
     "test:god-mode-join": "vitest run tests/god-mode-join-contract.test.ts tests/lib.join-venue-list.test.ts tests/lib.join-venue-entry.test.ts tests/api.join.venue-profile-with-account.test.ts tests/api.join.profile.test.ts tests/lib.venue-presence-god-mode.test.ts",
