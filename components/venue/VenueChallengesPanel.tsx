@@ -230,8 +230,11 @@ function VenueChallengesPanelInner({
                       // Legacy leaderboard-mode rewards finish out their current cycle, but
                       // standings are never rendered on this panel (Rewards is progress-only).
                       <p className="mt-3 text-base text-slate-500">In progress — check back for results.</p>
-                    ) : challenge.winCondition === "game_winner" ? (
-                      // No points target to bar-chart — the reward goes to whoever wins,
+                    ) : challenge.winCondition === "game_winner" || challenge.winCondition === "ranked_places" ? (
+                      // No points target to bar-chart — the reward goes to whoever wins
+                      // (or, for a weekly places reward, to the week's top players: its
+                      // standings card is Phase 4 of docs/live-trivia-weekly-places-reward-plan.md,
+                      // so until then it shows its composed text only, never a gauge),
                       // resolved by the winner-rewards cron once the contest ends. A composed
                       // summary above already says what to do and what you win; only a legacy
                       // hand-written reward (isCustom) needs this line.

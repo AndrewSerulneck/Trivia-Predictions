@@ -35,6 +35,7 @@ import {
   type RewardWeekday,
 } from "@/lib/rewardGameSlots";
 import { NFL_REWARD_MIN_PICKERS, normalizeNFLWeekScope } from "@/lib/nflPickEmRewardWeeks";
+import { describePlacePrizeLadder, placeOrdinal, rankedWeekNights } from "@/lib/rankedPlaceRewards";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -85,7 +86,14 @@ export type RewardDescriptionInput = Pick<
   Partial<
     Pick<
       ChallengeCampaign,
-      "rewardDefinitionId" | "gameWinnerSlots" | "nflWeekScope" | "quotaRemaining" | "isActive" | "endDate"
+      | "rewardDefinitionId"
+      | "gameWinnerSlots"
+      | "nflWeekScope"
+      | "quotaRemaining"
+      | "isActive"
+      | "endDate"
+      | "placePrizes"
+      | "minPlayers"
     >
   > &
   RewardPrizeSummaryInput & {
@@ -115,6 +123,8 @@ export type RewardWinFacts = {
   timezone?: string | null;
   /** The NFL week the win belongs to, resolved by the caller from `nfl_pickem_weeks`. */
   nflWeekNumber?: number | null;
+  /** Weekly places coupons: the place won (1-3), from the coupon's own row. */
+  place?: number | null;
 };
 
 /** lib/timezone.ts getVenueTimezone's default — the zone a date falls back to, so never UTC. */
@@ -330,6 +340,10 @@ const describeScheduleReward = (
   const recurringSlots = allSlots?.filter((slot) => slot.recurring) ?? [];
   const runsLine = recurringSlots.length > 0 ? `${game} runs ${describeRunsOn(recurringSlots)}.` : checkScheduleLine(game);
 
+  if (input.winCondition === "ranked_places") {
+    return describeRankedPlacesReward(templates, input, recurringSlots, runsLine);
+  }
+
   if (input.winCondition === "game_winner") {
     const pinned = normalizeGameWinnerSlots(input.gameWinnerSlots ?? null);
 
@@ -443,6 +457,70 @@ const describeScheduleReward = (
     fineprint: firstPlayersLine(quota, `to hit ${threshold}`, ""),
     isCustom: false,
   };
+};
+
+// ── Weekly places (ranked_places) ───────────────────────────────────────────
+
+/**
+ * "Finish top 3 in Live Trivia across Wednesday, Thursday and Friday nights each week. 1st
+ * wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card."
+ *
+ * The nights are the games that count (lib/liveTriviaRankedRewards.ts): the pinned games when
+ * the reward is pinned, else every recurring game the venue runs, else the reward's own
+ * activeDays (schedule unknown). They read in week order from the week's first night.
+ */
+const describeRankedPlacesReward = (
+  templates: ScheduleTemplates,
+  input: RewardDescriptionInput,
+  recurringSlots: readonly RewardScheduleSlotFact[],
+  runsLine: string,
+): RewardDescription => {
+  const ladder = [...(input.placePrizes ?? [])].sort((a, b) => a.place - b.place);
+  const placeCount = ladder.length > 0 ? ladder.length : Math.max(1, Math.round(Number(input.winnerQuota) || 1));
+  const top = placeCount === 1 ? "1st" : `top ${placeCount}`;
+
+  const pinned = normalizeGameWinnerSlots(input.gameWinnerSlots ?? null);
+  const pinnedKeys = pinned ? new Set(pinned.map(slotKey)) : null;
+  const countedSlots = pinnedKeys ? recurringSlots.filter((slot) => pinnedKeys.has(slotKey(slot))) : recurringSlots;
+  const sourceDays = pinned
+    ? pinned.map((slot) => slot.weekday)
+    : countedSlots.length > 0
+      ? countedSlots.map((slot) => slot.weekday)
+      : input.activeDays ?? [];
+  const nights = rankedWeekNights(sourceDays);
+  const across =
+    nights.length === 0 || nights.length === 7
+      ? "across all of the week's games"
+      : `${nights.length === 1 ? "on" : "across"} ${describeNights(nights, countedSlots.map((slot) => slot.timeLabel))}`;
+
+  const lastNight = nights.length > 0 && nights.length < 7 ? REWARD_WEEKDAY_LABEL[nights[nights.length - 1]] : null;
+  const settles = lastNight
+    ? `Your points from every game that week add up. Winners are named after ${lastNight}'s game.`
+    : "Your points from every game that week add up. Winners are named after the week's last game.";
+
+  const minimum = minPlayersOf(input);
+  return {
+    summary: fill(templates.rankedPlacesWeekly, {
+      top,
+      across,
+      ladder: describePlacePrizeLadder(ladder) || `Win ${describeRewardPrizeInSentence({})}.`,
+    }).trim(),
+    when: `${runsLine} ${settles}`,
+    fineprint: [
+      "Ties go to whoever reached their score first.",
+      "One place per player each week.",
+      minimum ? `At least ${minimum} players need to play that week for prizes to be awarded.` : "",
+    ]
+      .filter(Boolean)
+      .join(" "),
+    isCustom: false,
+  };
+};
+
+/** The partner's minimum, when it is a real one (2-100). */
+const minPlayersOf = (input: Pick<RewardDescriptionInput, "minPlayers">): number | null => {
+  const value = Number(input.minPlayers);
+  return Number.isInteger(value) && value >= 2 ? value : null;
 };
 
 // ── NFL-season rewards ──────────────────────────────────────────────────────
@@ -566,7 +644,15 @@ export function describeReward(input: RewardDescriptionInput, now: Date): Reward
     return describeNFLReward(templates, input, prize, now) ?? legacyDescription(input);
   }
 
-  const description = describeScheduleReward(definition, templates, input, prize);
+  const scheduled = describeScheduleReward(definition, templates, input, prize);
+  // A game-winner reward's optional minimum (D7). The ranked composer states its own.
+  const minimum = input.winCondition === "game_winner" ? minPlayersOf(input) : null;
+  const description = minimum
+    ? {
+        ...scheduled,
+        fineprint: `${scheduled.fineprint ?? ""} At least ${minimum} players need to play for a winner to be named.`.trim(),
+      }
+    : scheduled;
   const next = nextContestLine(input, null);
   return next ? { ...description, when: next } : description;
 }
@@ -611,6 +697,13 @@ export function describeRewardWin(input: RewardDescriptionInput, win: RewardWinF
   }
 
   const zone = win.timezone || DEFAULT_VENUE_TIMEZONE;
+  if (input.winCondition === "ranked_places") {
+    // The coupon's own place; without it there is nothing true to say, so "Won from: …" stays.
+    const place = Number(win.place);
+    const parts = zonedParts(cycleStart, zone);
+    if (!Number.isInteger(place) || place < 1 || !parts) return null;
+    return fill(templates.wonRankedPlace, { place: placeOrdinal(place), when: `the week of ${monthDay(parts)}` });
+  }
   if (input.winCondition === "game_winner") {
     const date = formatInstantDate(cycleStart, zone);
     return date ? fill(templates.wonGameWinner, { date }) : null;

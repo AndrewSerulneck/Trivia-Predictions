@@ -772,7 +772,8 @@ describe("registry description templates", () => {
       for (const [key, template] of Object.entries(definition.description)) {
         if (key === "calendar") continue;
         expect(template.toLowerCase(), `${definition.id}.${key}`).not.toContain("this venue");
-        if (!key.startsWith("won")) expect(template, `${definition.id}.${key}`).toContain("{prize}");
+        // A weekly places sentence names its prizes through the ladder (one per place).
+        if (!key.startsWith("won")) expect(template, `${definition.id}.${key}`).toMatch(/\{prize\}|\{ladder\}/);
       }
     }
   });

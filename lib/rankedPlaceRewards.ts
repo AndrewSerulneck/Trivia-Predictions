@@ -18,10 +18,16 @@
 //     least one question, scored or not), nobody wins that week.
 
 import { normalizePrizePosDelivery } from "@/lib/pos/prizeDelivery";
+import { describeRewardPrizeInSentence } from "@/lib/rewardDefinitions";
+import { REWARD_WEEKDAY_KEYS, isRewardWeekday, type RewardWeekday } from "@/lib/rewardGameSlots";
 import type { RewardDiscountKind, RewardMenuItem, RewardPlacePrize, RewardPrizeKind } from "@/types";
 
 /** Most places a ranked reward can pay (matches the database checks). */
 export const MAX_RANKED_PLACES = 3;
+
+/** The partner's optional "at least N players took part" (D7) — matches the database check. */
+export const REWARD_MIN_PLAYERS_MIN = 2;
+export const REWARD_MIN_PLAYERS_MAX = 100;
 
 /** One player's week, as the live_trivia_week_totals RPC returns it. */
 export type WeekPlayerTotal = {
@@ -234,3 +240,69 @@ export const rankedPlacesRpcPayload = (
   places: readonly RankedPlace[],
 ): Array<{ user_id: string; place: number; points: number }> =>
   places.map((p) => ({ user_id: p.userId, place: p.place, points: p.totalPoints }));
+
+// ── Copy and week shape (Phase 3) ───────────────────────────────────────────────────────
+
+/** "1st", "2nd", "3rd" (and "4th"… for completeness; a ranked reward stops at 3). */
+export const placeOrdinal = (place: number): string => {
+  const n = Math.trunc(Number(place));
+  const tens = n % 100;
+  if (tens >= 11 && tens <= 13) return `${n}th`;
+  const suffix = n % 10 === 1 ? "st" : n % 10 === 2 ? "nd" : n % 10 === 3 ? "rd" : "th";
+  return `${n}${suffix}`;
+};
+
+/**
+ * A ranked reward's game nights in WEEK order, first night first — the order its
+ * `activeDays` must be stored in, because computeCycleStart anchors the weekly cycle on
+ * `activeDays[0]`. The first night is the one after the longest gap between nights, so
+ * Wed/Thu/Fri starts on Wednesday and a wrap-around Fri/Sat/Sun starts on Friday (a Sunday
+ * anchor would split that week's games across two cycles). Equal gaps → the earliest
+ * Sunday-first weekday wins, so the answer never depends on input order. Unknown days are dropped.
+ */
+export const rankedWeekNights = (days: readonly string[]): RewardWeekday[] => {
+  const present = new Set(days.map((day) => String(day ?? "").trim().toLowerCase()).filter(isRewardWeekday));
+  const sorted = REWARD_WEEKDAY_KEYS.filter((day) => present.has(day));
+  if (sorted.length <= 1) return sorted;
+  let startIndex = 0;
+  let longestGap = -1;
+  for (let i = 0; i < sorted.length; i += 1) {
+    const prev = REWARD_WEEKDAY_KEYS.indexOf(sorted[(i - 1 + sorted.length) % sorted.length]);
+    const here = REWARD_WEEKDAY_KEYS.indexOf(sorted[i]);
+    const gap = (here - prev + 7) % 7 || 7;
+    if (gap > longestGap) {
+      longestGap = gap;
+      startIndex = i;
+    }
+  }
+  return [...sorted.slice(startIndex), ...sorted.slice(0, startIndex)];
+};
+
+/**
+ * The prize ladder inside a sentence: "1st wins a $30 gift card, 2nd a $20 gift card and 3rd
+ * a $10 gift card." One place: "The winner gets a $30 gift card." Empty ladder → "".
+ */
+export const describePlacePrizeLadder = (prizes: readonly RewardPlacePrize[] | null | undefined): string => {
+  const ladder = [...(prizes ?? [])].sort((a, b) => a.place - b.place);
+  if (ladder.length === 0) return "";
+  if (ladder.length === 1) return `The winner gets ${describeRewardPrizeInSentence(ladder[0])}.`;
+  const parts = ladder.map((prize, index) =>
+    index === 0
+      ? `${placeOrdinal(prize.place)} wins ${describeRewardPrizeInSentence(prize)}`
+      : `${placeOrdinal(prize.place)} ${describeRewardPrizeInSentence(prize)}`,
+  );
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}.`;
+};
+
+/**
+ * The in-app notification for a place win. No date on purpose: the Phase 5 backfill pays past
+ * weeks through the same award call, and "this week" would be wrong there.
+ */
+export const rankedPlaceWinMessage = (params: {
+  place: number;
+  campaignName: string;
+  prize: RewardPlacePrize | null | undefined;
+}): string => {
+  const won = params.prize ? ` and won ${describeRewardPrizeInSentence(params.prize)}` : "";
+  return `You finished ${placeOrdinal(params.place)} in "${params.campaignName}"${won}! Tap here to view your coupon before it expires.`;
+};

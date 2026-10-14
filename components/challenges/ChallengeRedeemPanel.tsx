@@ -383,6 +383,8 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
 
               const isLeaderboard = campaign.challengeMode === "leaderboard";
               const isGameWinner = campaign.winCondition === "game_winner";
+              // Weekly places: no target to chart; text only until its standings card (Phase 4).
+              const isRankedPlaces = campaign.winCondition === "ranked_places";
 
               return (
                 <li key={campaign.id} className="space-y-2">
@@ -390,7 +392,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                     <div>
                       <p className="text-sm font-semibold leading-tight text-white">{campaign.name}</p>
                       <p className="text-caption text-cyan-400/70">{gameTypeLabel(campaign.gameTypes)}</p>
-                      {!isLeaderboard && !isGameWinner && progressDelta > 0 ? (
+                      {!isLeaderboard && !isGameWinner && !isRankedPlaces && progressDelta > 0 ? (
                         <span className="mt-1 inline-block rounded-full bg-emerald-400/20 px-2 py-0.5 text-caption font-black uppercase tracking-[0.08em] text-emerald-300 animate-pulse">
                           +{progressDelta.toLocaleString()} pts since last visit
                         </span>
@@ -420,7 +422,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
                     campaign.description?.isCustom !== false ? (
                       <p className="text-caption text-cyan-300/60">Awarded to the winner.</p>
                     ) : null
-                  ) : (
+                  ) : isRankedPlaces ? null : (
                     <GaugeBar
                       current={campaign.progressPoints}
                       target={campaign.pointsRequiredToWin}

@@ -35,6 +35,13 @@ import {
   renderRewardRequirement,
 } from "@/lib/rewardDefinitions";
 import {
+  REWARD_MIN_PLAYERS_RANGE_MESSAGE,
+  REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE,
+  REWARD_PLACE_PRIZES_NOT_RANKED_MESSAGE,
+  REWARD_RANKED_PLACES_LADDER_MESSAGE,
+  REWARD_RANKED_PLACES_UNSUPPORTED_MESSAGE,
+  REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE,
+  RewardTermsError,
   REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
   REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE,
   REWARD_UNKNOWN_DEFINITION_MESSAGE,
@@ -1245,5 +1252,230 @@ describe("createReward — Square delivery for a dollar-off prize", () => {
     const unknown = { ...DOLLAR_PRIZE, posDelivery: "scan" } as unknown as RewardPrizeInput;
     await expect(create(unknown)).rejects.toThrow(REWARD_INVALID_PRIZE_MESSAGE);
     expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+});
+
+// ── Weekly places ("ranked_places") + minimum players — live-trivia-weekly-places-reward-plan Phase 3 ──
+
+describe("createReward — weekly places (ranked_places)", () => {
+  // Garden State Bar's shape: one schedule, Wed/Thu/Fri (stored out of order on purpose).
+  // 2026-07-22T00:00Z = Tuesday Jul 21, 8:00 PM ET... so anchor the start on a Wednesday:
+  // 2026-07-23T00:00Z = Wednesday Jul 22, 8:00 PM ET.
+  const wedThuFri = () =>
+    makeSchedule({ id: "sched-gsb", title: "Trivia Night", recurringDays: ["fri", "wed", "thu"], startTime: "2026-07-23T00:00:00.000Z" });
+  const giftCard = (amount: number): RewardPrizeInput => ({ prizeKind: "gift_card", amount });
+  const GSB_LADDER = [giftCard(30), giftCard(20), giftCard(10)];
+
+  const createRanked = (overrides: Partial<Parameters<typeof createReward>[0]> = {}) =>
+    createReward({
+      venueId: "venue-1",
+      definitionId: "live_trivia_challenge",
+      // Both deliberately wrong: a ranked reward is weekly with quota = places, whatever is sent.
+      cadence: "monthly",
+      winCondition: "ranked_places",
+      threshold: 500,
+      winnerQuota: 9,
+      prize: APPETIZER_PRIZE,
+      placePrizes: GSB_LADDER,
+      ...overrides,
+    });
+
+  const created = () => mocks.createChallengeCampaign.mock.calls[0]?.[0] as Record<string, unknown>;
+
+  beforeEach(() => {
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([wedThuFri()]);
+  });
+
+  it("expands into one venue, weekly, quota = places, Wednesday first, ladder in place_prizes", async () => {
+    await createRanked({ minPlayers: 4, createdByOwnerId: "owner-gsb" });
+    expect(mocks.createChallengeCampaign).toHaveBeenCalledTimes(1);
+    expect(created()).toEqual(
+      expect.objectContaining({
+        winCondition: "ranked_places",
+        venueIds: ["venue-1"],
+        recurringType: "weekly",
+        activeDays: ["wed", "thu", "fri"],
+        winnerQuota: 3,
+        pointsRequiredToWin: 1,
+        minPlayers: 4,
+        gameWinnerSlots: null,
+        rewardDefinitionId: "live_trivia_challenge",
+        createdByOwnerId: "owner-gsb",
+        // The single `prize` is not read: the campaign-level prize columns stay null.
+        prizeKind: null,
+        prizeMenuItem: null,
+        prizeDiscountKind: null,
+        prizeDiscountValue: null,
+        prizeGiftCertificateAmount: null,
+      }),
+    );
+    expect(created().placePrizes).toEqual([
+      expect.objectContaining({ place: 1, prizeKind: "gift_card", prizeGiftCertificateAmount: 30 }),
+      expect.objectContaining({ place: 2, prizeKind: "gift_card", prizeGiftCertificateAmount: 20 }),
+      expect.objectContaining({ place: 3, prizeKind: "gift_card", prizeGiftCertificateAmount: 10 }),
+    ]);
+    expect(created().rules).toBe(
+      "Finish top 3 in Live Trivia across Wednesday, Thursday and Friday nights each week. 1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card.",
+    );
+  });
+
+  it("anchors a wrap-around week on its first night (Fri/Sat/Sun → Friday first)", async () => {
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
+      makeSchedule({ recurringDays: ["sun", "sat", "fri"], startTime: "2026-07-25T00:00:00.000Z" }),
+    ]);
+    await createRanked();
+    expect(created().activeDays).toEqual(["fri", "sat", "sun"]);
+  });
+
+  it("pays 1 or 2 places too, each with its own prize kind", async () => {
+    await createRanked({ placePrizes: [giftCard(30), APPETIZER_PRIZE] });
+    expect(created().winnerQuota).toBe(2);
+    expect((created().placePrizes as Array<Record<string, unknown>>)[1]).toEqual(
+      expect.objectContaining({ place: 2, prizeKind: "menu_item", prizeMenuItem: "appetizer", prizeDiscountKind: "percent", prizeDiscountValue: 50 }),
+    );
+    mocks.createChallengeCampaign.mockClear();
+    await createRanked({ placePrizes: [giftCard(25)] });
+    expect(created().winnerQuota).toBe(1);
+  });
+
+  it("refuses an empty, missing or 4-place ladder", async () => {
+    for (const placePrizes of [[], null, undefined, [giftCard(1), giftCard(2), giftCard(3), giftCard(4)]]) {
+      await expect(createRanked({ placePrizes })).rejects.toThrow(REWARD_RANKED_PLACES_LADDER_MESSAGE);
+    }
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("runs every place prize through the prize validator", async () => {
+    await expect(createRanked({ placePrizes: [giftCard(30), giftCard(0)] })).rejects.toThrow(REWARD_INVALID_PRIZE_MESSAGE);
+    await expect(
+      createRanked({ placePrizes: [{ prizeKind: "menu_item", menuItem: "appetizer", discountKind: "percent", discountValue: 150 }] }),
+    ).rejects.toThrow(REWARD_INVALID_PRIZE_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("refuses when the venue's Live Trivia isn't weekly (one-off only)", async () => {
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
+      makeSchedule({ recurringType: "none", recurringDays: [] }),
+    ]);
+    const error = await createRanked().catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(RewardTermsError);
+    expect((error as Error).message).toBe(REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE);
+  });
+
+  it("refuses pinned games that aren't weekly, and narrows to pinned weekly games", async () => {
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([
+      wedThuFri(),
+      makeSchedule({ id: "sched-off", recurringType: "none", recurringDays: [], startTime: "2026-07-22T23:00:00.000Z" }),
+    ]);
+    await expect(createRanked({ gameWinnerSlots: [{ scheduleId: "sched-off", weekday: "wed" }] })).rejects.toThrow(
+      REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE,
+    );
+    await createRanked({
+      gameWinnerSlots: [
+        { scheduleId: "sched-gsb", weekday: "fri" },
+        { scheduleId: "sched-gsb", weekday: "thu" },
+      ],
+    });
+    expect(created()).toEqual(
+      expect.objectContaining({
+        activeDays: ["thu", "fri"],
+        winnerQuota: 3,
+        // Stored as sent (the game-winner path's behaviour); activeDays carries the week order.
+        gameWinnerSlots: [
+          { scheduleId: "sched-gsb", weekday: "fri" },
+          { scheduleId: "sched-gsb", weekday: "thu" },
+        ],
+      }),
+    );
+  });
+
+  it("is refused for NFL Pick 'Em (no weekly venue game)", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+    await expect(
+      createReward({
+        venueId: "venue-1",
+        definitionId: "nfl_pickem_challenge",
+        cadence: "weekly",
+        winCondition: "ranked_places",
+        threshold: 1,
+        winnerQuota: 1,
+        nflWeekScope: { kind: "weekly", season: 2026 },
+        prize: APPETIZER_PRIZE,
+        placePrizes: GSB_LADDER,
+      }),
+    ).rejects.toThrow(REWARD_RANKED_PLACES_UNSUPPORTED_MESSAGE);
+  });
+
+  it("refuses a place ladder on any other kind of reward instead of dropping it", async () => {
+    for (const winCondition of ["points_threshold", "game_winner"] as const) {
+      await expect(createRanked({ winCondition, cadence: "weekly", winnerQuota: 3 })).rejects.toThrow(
+        REWARD_PLACE_PRIZES_NOT_RANKED_MESSAGE,
+      );
+    }
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+});
+
+describe("createReward — minimum players (D7)", () => {
+  const create = (overrides: Partial<Parameters<typeof createReward>[0]>) =>
+    createReward({
+      venueId: "venue-1",
+      definitionId: "live_trivia_challenge",
+      cadence: "weekly",
+      winCondition: "game_winner",
+      threshold: 1,
+      winnerQuota: 1,
+      prize: APPETIZER_PRIZE,
+      ...overrides,
+    });
+
+  beforeEach(() => {
+    mocks.listVenueLiveShowdownSchedules.mockResolvedValue([makeSchedule()]);
+  });
+
+  it("stores 2 and 100 on a game-winner reward, and null when not sent", async () => {
+    await create({ minPlayers: 2 });
+    await create({ minPlayers: 100 });
+    await create({});
+    await create({ minPlayers: null });
+    expect(mocks.createChallengeCampaign.mock.calls.map((call) => (call[0] as Record<string, unknown>).minPlayers)).toEqual([
+      2,
+      100,
+      null,
+      null,
+    ]);
+    expect((mocks.createChallengeCampaign.mock.calls[0][0] as Record<string, unknown>).rules).toBe(
+      "Win any Live Trivia game this week and win 50% off an appetizer.",
+    );
+  });
+
+  it("refuses 1, 101, fractions and junk", async () => {
+    for (const minPlayers of [0, 1, 101, 2.5, Number.NaN]) {
+      await expect(create({ minPlayers })).rejects.toThrow(REWARD_MIN_PLAYERS_RANGE_MESSAGE);
+    }
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("refuses it on a points target", async () => {
+    await expect(create({ winCondition: "points_threshold", threshold: 500, winnerQuota: 1, minPlayers: 3 })).rejects.toThrow(
+      REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE,
+    );
+  });
+
+  it("refuses it on NFL Pick 'Em (it has its own fixed 3+ pickers rule)", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+    await expect(
+      createReward({
+        venueId: "venue-1",
+        definitionId: "nfl_pickem_challenge",
+        cadence: "weekly",
+        winCondition: "game_winner",
+        threshold: 1,
+        winnerQuota: 1,
+        nflWeekScope: { kind: "weekly", season: 2026 },
+        prize: APPETIZER_PRIZE,
+        minPlayers: 5,
+      }),
+    ).rejects.toThrow(REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE);
   });
 });

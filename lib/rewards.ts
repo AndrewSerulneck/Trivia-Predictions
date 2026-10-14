@@ -50,6 +50,12 @@ import { listNFLSeasonWeekDates, listNFLWeeks, type NFLWeekDates } from "@/lib/n
 import { normalizePrizePosDelivery, prizeCanBeScannableGiftCard } from "@/lib/pos/prizeDelivery";
 import { POS_VALUE_MAX_CENTS } from "@/lib/pos/prizeValue";
 import { describeReward, describeRewardWin, type RewardDescription } from "@/lib/rewardDescription";
+import {
+  MAX_RANKED_PLACES,
+  REWARD_MIN_PLAYERS_MAX,
+  REWARD_MIN_PLAYERS_MIN,
+  rankedWeekNights,
+} from "@/lib/rankedPlaceRewards";
 import { getLocalDateKey, getVenueTimezone } from "@/lib/timezone";
 import type {
   CampaignRecurringType,
@@ -60,6 +66,7 @@ import type {
   PrizePosDelivery,
   RewardDiscountKind,
   RewardMenuItem,
+  RewardPlacePrize,
   RewardPrizeKind,
 } from "@/types";
 
@@ -130,6 +137,20 @@ export const REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE =
 export const REWARD_INVALID_QUANTITY_MESSAGE =
   "Enter how many of this prize are available.";
 export const REWARD_INVALID_PRIZE_MESSAGE = "Choose a valid prize for this reward.";
+
+// Weekly places ("ranked_places", docs/live-trivia-weekly-places-reward-plan.md) and the
+// partner's minimum players (D7). All raised as RewardTermsError, so every route maps them to
+// 400 by type with no route change.
+export const REWARD_RANKED_PLACES_UNSUPPORTED_MESSAGE =
+  "This reward can't be offered to the top players of the week.";
+export const REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE =
+  "Top players this week needs a Live Trivia game that runs every week. Schedule a weekly game first.";
+export const REWARD_RANKED_PLACES_LADDER_MESSAGE = `Choose a prize for each place, from 1 to ${MAX_RANKED_PLACES} places.`;
+export const REWARD_PLACE_PRIZES_NOT_RANKED_MESSAGE =
+  "A prize for each place is only for a top-players-this-week reward.";
+export const REWARD_MIN_PLAYERS_RANGE_MESSAGE = `Minimum players must be a whole number from ${REWARD_MIN_PLAYERS_MIN} to ${REWARD_MIN_PLAYERS_MAX}.`;
+export const REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE =
+  "A minimum number of players is only for a win-the-game or top-players-this-week Live Trivia reward.";
 
 /**
  * A terms-sentence violation ("you run 1 game a week, you can't promise 2
@@ -694,7 +715,7 @@ export async function attachRewardWinDescriptions<T extends ChallengeCampaignWin
       ...win,
       winDescription: describeRewardWin(
         { ...terms, rules: win.challengeRules },
-        { cycleStart: win.cycleStart ?? null, timezone: winTimezone(win), nflWeekNumber },
+        { cycleStart: win.cycleStart ?? null, timezone: winTimezone(win), nflWeekNumber, place: win.place ?? null },
       ),
     };
   });
@@ -1003,9 +1024,58 @@ export type CreateRewardParams = {
    * the reward over weeks that already played.
    */
   nflWeekScope?: NFLRewardWeekScope | null;
+  /**
+   * Weekly places ("ranked_places") only: one prize per place, 1st first, 1 to 3 of them.
+   * Each goes through the same prize validator as `prize`, which a ranked reward ignores
+   * (its campaign-level prize columns stay null). Sent for any other win condition = refused.
+   */
+  placePrizes?: RewardPrizeInput[] | null;
+  /**
+   * The partner's optional "only pay out if at least N players took part" (D7): 2-100, on
+   * "ranked_places" and Live Trivia "game_winner" only. Null/absent = no minimum.
+   */
+  minPlayers?: number | null;
   /** Stamp the creating owner (null/absent = admin-created). */
   createdByOwnerId?: string | null;
 };
+
+/** One prize per place, through the ordinary prize validator. */
+function normalizePlacePrizeInputs(input: RewardPrizeInput[] | null | undefined): RewardPlacePrize[] {
+  if (!Array.isArray(input) || input.length < 1 || input.length > MAX_RANKED_PLACES) {
+    throw new RewardTermsError(REWARD_RANKED_PLACES_LADDER_MESSAGE);
+  }
+  return input.map((raw, index) => {
+    const prize = normalizeRewardPrize(raw);
+    return {
+      place: index + 1,
+      prizeKind: prize.prizeKind,
+      prizeGiftCertificateAmount: prize.prizeGiftCertificateAmount,
+      prizeMenuItem: prize.prizeMenuItem,
+      prizeMenuItemName: prize.prizeMenuItemName,
+      prizeDiscountKind: prize.prizeDiscountKind,
+      prizeDiscountValue: prize.prizeDiscountValue,
+      prizePosValueCents: prize.prizePosValueCents,
+      prizePosDelivery: prize.prizePosDelivery,
+    };
+  });
+}
+
+/** D7: null = no minimum; anything else must be a whole 2-100 on a competitive Live Trivia reward. */
+function normalizeMinPlayersInput(
+  raw: number | null | undefined,
+  winCondition: ChallengeWinCondition,
+  isNFLReward: boolean,
+): number | null {
+  if (raw === null || raw === undefined) return null;
+  if (isNFLReward || winCondition === "points_threshold") {
+    throw new RewardTermsError(REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE);
+  }
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < REWARD_MIN_PLAYERS_MIN || value > REWARD_MIN_PLAYERS_MAX) {
+    throw new RewardTermsError(REWARD_MIN_PLAYERS_RANGE_MESSAGE);
+  }
+  return value;
+}
 
 /**
  * Create a Reward — validate the chosen definition, cadence, threshold, quantity,
@@ -1023,6 +1093,10 @@ export type CreateRewardParams = {
  *   - slot-pinned game-winner reward → the same two shapes, except the cadence,
  *     quota and activeDays all come from the picked games rather than from the
  *     client (see the slot block below).
+ *   - weekly places ("ranked_places") → always weekly, for this one venue; quota =
+ *     place count; activeDays = the counted game nights in week order, FIRST NIGHT
+ *     FIRST (rankedWeekNights), because that is the week's anchor; place_prizes
+ *     holds the prizes and the campaign-level prize columns stay null.
  */
 export async function createReward(params: CreateRewardParams): Promise<ChallengeCampaign> {
   const definition = getRewardDefinition(params.definitionId);
@@ -1042,10 +1116,23 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   if (!context.scheduled) throw new Error(unavailableMessage);
 
   const winCondition: ChallengeWinCondition =
-    params.winCondition === "game_winner" ? "game_winner" : "points_threshold";
+    params.winCondition === "game_winner" || params.winCondition === "ranked_places"
+      ? params.winCondition
+      : "points_threshold";
   if (winCondition === "game_winner" && !definition.supportsGameWinner) {
     throw new Error(REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE);
   }
+  const isRanked = winCondition === "ranked_places";
+  if (isRanked && !definition.supportsRankedPlaces) {
+    throw new RewardTermsError(REWARD_RANKED_PLACES_UNSUPPORTED_MESSAGE);
+  }
+  const minPlayers = normalizeMinPlayersInput(params.minPlayers, winCondition, isNFLReward);
+  // Present-but-wrong is refused, never silently dropped: a ladder on any other reward would
+  // mean the partner was shown prizes nobody can win.
+  if (!isRanked && Array.isArray(params.placePrizes) && params.placePrizes.length > 0) {
+    throw new RewardTermsError(REWARD_PLACE_PRIZES_NOT_RANKED_MESSAGE);
+  }
+  const placePrizes = isRanked ? normalizePlacePrizeInputs(params.placePrizes) : null;
 
   // ── Slot-pinned game-winner rewards ───────────────────────────────────────
   // When the partner picked specific games, that selection IS the terms: the
@@ -1054,9 +1141,11 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // taken on trust, because every unit of quota is a real coupon at a real game
   // (docs/rewards-game-winner-picker-plan.md Phase 3). A selection is only
   // honored for game_winner; a points-target reward keeps the terms sentence.
+  // A weekly places reward may be pinned the same way: then only the pinned games count
+  // (lib/liveTriviaRankedRewards.ts reads game_winner_slots for both).
   const slotSelection =
     !isNFLReward &&
-    winCondition === "game_winner" &&
+    (winCondition === "game_winner" || isRanked) &&
     params.gameWinnerSlots !== undefined &&
     params.gameWinnerSlots !== null
       ? validateGameWinnerSlots(context.gameSlots, params.gameWinnerSlots)
@@ -1124,13 +1213,30 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // sentence uses the client's cadence and N, and both are validated below.
   // activeDays rules (slot-pinned = the pinned weekdays only, never every day the
   // venue plays; NFL = all seven days for both cadences) live on deriveRewardTerms.
-  const { cadence, activeDays, winnerQuota } = deriveRewardTerms({
-    nflTerms,
-    pickedSlots: slots ? slots.terms : null,
-    sentenceCadence: params.cadence ?? "none",
-    sentenceQuantity: Math.round(Number(params.winnerQuota)),
-    scheduleDays: context.scheduleDays,
-  });
+  //
+  // A weekly places reward ignores the client's cadence and N outright: it is weekly by
+  // definition, its quota is its place count, and its nights are the recurring games that
+  // count (the pinned ones, else every recurring game), ordered first night first.
+  let rankedNights: string[] = [];
+  if (isRanked) {
+    if (slots && slots.terms.cadence !== "weekly") {
+      throw new RewardTermsError(REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE);
+    }
+    rankedNights = rankedWeekNights(
+      slots ? slots.terms.weekdays : context.gameSlots.filter((slot) => slot.recurring).map((slot) => slot.weekday),
+    );
+    if (rankedNights.length === 0) throw new RewardTermsError(REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE);
+  }
+  const { cadence, activeDays, winnerQuota } =
+    isRanked && placePrizes
+      ? { cadence: "weekly" as const, activeDays: rankedNights, winnerQuota: placePrizes.length }
+      : deriveRewardTerms({
+          nflTerms,
+          pickedSlots: slots ? slots.terms : null,
+          sentenceCadence: params.cadence ?? "none",
+          sentenceQuantity: Math.round(Number(params.winnerQuota)),
+          scheduleDays: context.scheduleDays,
+        });
   if (!isSupportedRewardCadence(cadence)) {
     throw new Error(REWARD_UNSUPPORTED_CADENCE_MESSAGE);
   }
@@ -1139,9 +1245,10 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // NULL, so we write the sentinel 1 — it is never evaluated, because
   // recordChallengeProgress skips game_winner campaigns entirely and the
   // resolver cron is the only thing that awards them.
+  // A weekly places reward has no target either (its award RPC is the only writer).
   const isGameWinner = winCondition === "game_winner";
-  const threshold = isGameWinner ? 1 : Math.round(Number(params.threshold));
-  if (!isGameWinner) {
+  const threshold = isGameWinner || isRanked ? 1 : Math.round(Number(params.threshold));
+  if (!isGameWinner && !isRanked) {
     if (!Number.isFinite(threshold) || threshold < 1) throw new Error(REWARD_INVALID_THRESHOLD_MESSAGE);
     if (!isValidRewardThreshold(threshold, definition)) {
       throw new RewardTermsError(rewardThresholdStepMessage(definition));
@@ -1167,7 +1274,7 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // has none. Its quota is already range-checked inside deriveNFLWeekScopeTerms
   // (1…REWARD_MAX_QUANTITY for a picks target, exactly 1 for a week winner —
   // refused, never clamped).
-  if (!slots && !nflTerms) {
+  if (!slots && !nflTerms && !isRanked) {
     const termsError = validateRewardTerms(rewardScheduleFacts(context), {
       winCondition,
       period: periodForCadence(cadence),
@@ -1179,7 +1286,8 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     throw new Error(REWARD_INVALID_QUANTITY_MESSAGE);
   }
 
-  const prize = normalizeRewardPrize(params.prize);
+  // A weekly places reward's prizes are its ladder; the single `prize` is not read.
+  const prize = isRanked ? null : normalizeRewardPrize(params.prize);
 
   // Defense in depth: a WEEKLY reward must never expand with activeDays: [] —
   // computeCycleStart anchors the weekly cycle on activeDays[0] and silently
@@ -1206,7 +1314,9 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
         rewardDefinitionId: definition.id,
         gameWinnerSlots: slots ? slots.slots : null,
         nflWeekScope,
-        ...prize,
+        placePrizes,
+        minPlayers,
+        ...(prize ?? {}),
         schedule: { slots: context.gameSlots },
       },
       new Date(),
@@ -1238,14 +1348,16 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     // Read back by Phase 7's resolver to know which weeks this reward covers.
     nflWeekScope,
     rewardDefinitionId: definition.id,
-    prizeKind: prize.prizeKind,
-    prizeMenuItem: prize.prizeMenuItem,
-    prizeMenuItemName: prize.prizeMenuItemName,
-    prizeDiscountKind: prize.prizeDiscountKind,
-    prizeDiscountValue: prize.prizeDiscountValue,
-    prizeGiftCertificateAmount: prize.prizeGiftCertificateAmount,
-    prizePosValueCents: prize.prizePosValueCents,
-    prizePosDelivery: prize.prizePosDelivery,
+    prizeKind: prize?.prizeKind ?? null,
+    prizeMenuItem: prize?.prizeMenuItem ?? null,
+    prizeMenuItemName: prize?.prizeMenuItemName ?? null,
+    prizeDiscountKind: prize?.prizeDiscountKind ?? null,
+    prizeDiscountValue: prize?.prizeDiscountValue ?? null,
+    prizeGiftCertificateAmount: prize?.prizeGiftCertificateAmount ?? null,
+    prizePosValueCents: prize?.prizePosValueCents ?? null,
+    prizePosDelivery: prize?.prizePosDelivery ?? null,
+    placePrizes,
+    minPlayers,
     createdByOwnerId: params.createdByOwnerId ?? null,
   });
 }

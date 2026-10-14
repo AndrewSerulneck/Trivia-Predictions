@@ -39,6 +39,10 @@ export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge
  *   {fromWeek}  — the first NFL week a season-long reward covers: "5"
  *   {week}      — the one NFL week a single-week reward covers: "9"
  *   {when}      — win lines only: "the week of Oct 6", "in Week 5", "in the 2026 season"
+ *   {top}       — weekly places: "top 3", "top 2", "1st"
+ *   {across}    — weekly places: "across Wednesday, Thursday and Friday nights", "on Tuesday night"
+ *   {ladder}    — weekly places: "1st wins a $30 gift card, 2nd a $20 gift card and 3rd a $10 gift card."
+ *   {place}     — weekly places win line: "1st"
  *
  * Never write "this venue" — the guest is standing in it.
  */
@@ -61,6 +65,10 @@ export type RewardDescriptionTemplates =
       wonGameWinner: string;
       /** Prize-wallet coupon: what the guest won a points-target reward for. */
       wonPoints: string;
+      /** Weekly 1st / 2nd / 3rd places over the week's games ("ranked_places"). */
+      rankedPlacesWeekly: string;
+      /** Prize-wallet coupon: the place a guest finished in a weekly places reward. */
+      wonRankedPlace: string;
     }
   | {
       calendar: "nfl_season";
@@ -101,6 +109,14 @@ export type RewardDefinition = {
   supportsGameWinner: boolean;
   /** Requirement copy used when winCondition is "game_winner". */
   gameWinnerRequirement: string;
+  /**
+   * Whether this reward can pay 1st / 2nd / 3rd place over a week of the game's points
+   * ("ranked_places", docs/live-trivia-weekly-places-reward-plan.md). Needs a weekly game
+   * the venue schedules itself, so only Live Trivia has it — never NFL Pick 'Em.
+   */
+  supportsRankedPlaces: boolean;
+  /** Requirement copy used when winCondition is "ranked_places". Null when unsupported. */
+  rankedPlacesRequirement: string | null;
   /** Suggested point targets the wizard offers (free entry is also allowed). */
   thresholdOptions: number[];
   /** Pre-selected threshold. */
@@ -131,6 +147,8 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
     requirementTemplate: "Earn {threshold} points in Live Trivia",
     supportsGameWinner: true,
     gameWinnerRequirement: "Win the Live Trivia game",
+    supportsRankedPlaces: true,
+    rankedPlacesRequirement: "Finish at the top of Live Trivia this week",
     thresholdOptions: [300, 500, 750, 1000],
     defaultThreshold: 500,
     thresholdStep: 10,
@@ -146,6 +164,8 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
       pointsUndated: "Earn {threshold} points in Live Trivia and win {prize}.",
       wonGameWinner: "You won Live Trivia on {date}",
       wonPoints: "You earned {threshold} points in Live Trivia {when}",
+      rankedPlacesWeekly: "Finish {top} in Live Trivia {across} each week. {ladder}",
+      wonRankedPlace: "You finished {place} in Live Trivia {when}",
     },
   },
   {
@@ -161,6 +181,8 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
     requirementTemplate: "Get {threshold} NFL picks right",
     supportsGameWinner: true,
     gameWinnerRequirement: "Get the most NFL picks right at this venue",
+    supportsRankedPlaces: false,
+    rankedPlacesRequirement: null,
     thresholdOptions: [5, 10, 25, 50],
     defaultThreshold: 10,
     thresholdStep: 1,
@@ -196,6 +218,9 @@ export function renderRewardRequirement(
   winCondition: ChallengeWinCondition = "points_threshold",
 ): string {
   if (winCondition === "game_winner") return definition.gameWinnerRequirement;
+  if (winCondition === "ranked_places" && definition.rankedPlacesRequirement) {
+    return definition.rankedPlacesRequirement;
+  }
   const safeThreshold = Math.max(1, Math.round(Number(threshold)));
   return definition.requirementTemplate.replace("{threshold}", safeThreshold.toLocaleString("en-US"));
 }

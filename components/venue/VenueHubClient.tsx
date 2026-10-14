@@ -1497,7 +1497,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       // Navigation refuses to guess: null (no Play Now button) unless the
       // reward's definition id identified the game — see rewardPlayVenueGameKey.
       venueGameKey: rewardPlayVenueGameKey(selectedChallenge.name, selectedChallenge.rewardDefinitionId),
-      quotaLine: rewardQuotaLine(selectedChallenge.winnerQuota, selectedChallenge.quotaRemaining),
+      // A weekly places reward's quota is its places, all paid at once when the week ends —
+      // "2 of 3 rewards left" would be false. Its standings arrive with Phase 4.
+      quotaLine:
+        selectedChallenge.winCondition === "ranked_places"
+          ? ""
+          : rewardQuotaLine(selectedChallenge.winnerQuota, selectedChallenge.quotaRemaining),
       progress: Math.max(0, Number(selectedChallenge.progressPoints ?? 0)),
       target: Math.max(1, Number(selectedChallenge.pointsRequiredToWin ?? 1)),
       upcomingStartDate,
@@ -1505,8 +1510,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       // actually accruing: game_winner has no target, legacy leaderboard rows
       // carry no per-viewer progress, and an upcoming NFL reward sits at 0 until
       // its first week opens (which would read as "you're losing", not "not yet").
+      // A weekly places reward ("ranked_places") has no target either.
       showGauge:
         selectedChallenge.winCondition !== "game_winner" &&
+        selectedChallenge.winCondition !== "ranked_places" &&
         selectedChallenge.challengeMode !== "leaderboard" &&
         !upcomingStartDate,
     };

@@ -43,7 +43,7 @@ export type ChallengeCampaignCard = {
     isBetweenCycles?: boolean;
     nextCycleStart?: string;
   };
-  winCondition?: "points_threshold" | "game_winner";
+  winCondition?: "points_threshold" | "game_winner" | "ranked_places";
   pointsRequiredToWin: number;
   progressPoints: number;
   winnerUserId?: string | null;

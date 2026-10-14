@@ -49,6 +49,10 @@ export async function POST(request: Request) {
      */
     nflWeekScope?: NFLRewardWeekScope | null;
     prize?: RewardPrizeInput;
+    /** Weekly places ("ranked_places"): one prize per place, 1st first (1-3). */
+    placePrizes?: RewardPrizeInput[] | null;
+    /** Optional "at least N players took part" (2-100) on game-winner / weekly places rewards. */
+    minPlayers?: number | null;
   };
 
   const venueId = String(body.venueId ?? "").trim();
@@ -73,6 +77,8 @@ export async function POST(request: Request) {
       gameWinnerSlots: Array.isArray(body.gameWinnerSlots) ? body.gameWinnerSlots : undefined,
       nflWeekScope: body.nflWeekScope ?? null,
       prize: body.prize as RewardPrizeInput,
+      placePrizes: Array.isArray(body.placePrizes) ? body.placePrizes : null,
+      minPlayers: body.minPlayers ?? null,
       createdByOwnerId: auth.ownerId,
     });
     return NextResponse.json({ ok: true, reward });

@@ -844,3 +844,60 @@ describe("listChallengeCampaignWinsForUser — prizePosDelivery comes from the c
     warn.mockRestore();
   });
 });
+
+// docs/live-trivia-weekly-places-reward-plan.md Phase 3: a weekly places reward has NO single
+// prize (each place has its own, in place_prizes), so its coupon must read its OWN snapshot.
+describe("listChallengeCampaignWinsForUser — weekly places coupons", () => {
+  const rankedCampaign = () =>
+    campaignRow({
+      win_condition: "ranked_places",
+      recurring_type: "weekly",
+      active_days: ["wed", "thu", "fri"],
+      winner_quota: 3,
+      prize_type: null,
+      prize_kind: null,
+      prize_gift_certificate_amount: null,
+      place_prizes: [
+        { place: 1, prize_kind: "gift_card", prize_gift_certificate_amount: 30 },
+        { place: 2, prize_kind: "gift_card", prize_gift_certificate_amount: 20 },
+      ],
+    });
+  const coupon = (overrides: Row = {}): Row => ({
+    challenge_id: "camp-1",
+    winner_user_id: "u1",
+    venue_id: VENUE_ID,
+    cycle_start: "2026-07-15T04:00:00+00:00",
+    created_at: "2026-07-18T03:00:00+00:00",
+    claimed_at: "2026-07-18T03:00:00+00:00",
+    prize_expires_at: "2026-07-25T03:00:00.000Z",
+    prize_redeemed_at: null,
+    reward_name: "Live Trivia Challenge",
+    prize_type: null,
+    prize_kind: "gift_card",
+    prize_gift_certificate_amount: 20,
+    place: 2,
+    ...overrides,
+  });
+
+  it("shows the place's own prize and its place, not the live reward's empty prize", async () => {
+    store.challenge_campaigns = [rankedCampaign()];
+    store.challenge_campaign_redemptions.push(coupon());
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.prizeKind).toBe("gift_card");
+    expect(win.prizeGiftCertificateAmount).toBe(20);
+    expect(win.place).toBe(2);
+    expect(win.rewardTerms?.winCondition).toBe("ranked_places");
+  });
+
+  it("every other coupon still reads the live reward and has no place", async () => {
+    store.challenge_campaigns = [campaignRow({ prize_kind: "gift_card", prize_gift_certificate_amount: 50, prize_type: null })];
+    store.challenge_campaign_redemptions.push(coupon({ place: null, prize_gift_certificate_amount: 40 }));
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.prizeGiftCertificateAmount).toBe(50);
+    expect(win.place).toBeNull();
+  });
+});

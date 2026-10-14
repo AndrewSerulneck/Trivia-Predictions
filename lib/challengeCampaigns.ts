@@ -9,7 +9,13 @@ import {
   normalizeGameWinnerSlots,
   serializeGameWinnerSlots,
 } from "@/lib/rewardGameSlots";
-import { normalizePlacePrizes, rankedPlacesRpcPayload, type RankedPlace } from "@/lib/rankedPlaceRewards";
+import {
+  normalizePlacePrizes,
+  rankedPlaceWinMessage,
+  rankedPlacesRpcPayload,
+  serializePlacePrizes,
+  type RankedPlace,
+} from "@/lib/rankedPlaceRewards";
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import type {
   ChallengeCampaign,
@@ -28,6 +34,7 @@ import type {
   NFLWeekScope,
   PrizePosDelivery,
   PrizeType,
+  RewardPlacePrize,
   RewardPrizeKind,
   RewardMenuItem,
   RewardDiscountKind,
@@ -124,6 +131,8 @@ type ChallengeCampaignRedemptionSnapshotRow = {
   prize_discount_value: number | null;
   /** Absent when read before migration 20261007030714 is applied (listChallengeCampaignWinsForUser). */
   prize_pos_delivery?: string | null;
+  /** Weekly places coupons: 1-3. Null on every other coupon. */
+  place?: number | null;
 };
 
 type ChallengeLeaderboardProgressRow = {
@@ -1482,6 +1491,13 @@ export async function createChallengeCampaign(input: {
    * for every non-NFL reward. See `NFLWeekScope` in types/index.ts.
    */
   nflWeekScope?: NFLWeekScope | null;
+  /**
+   * Weekly places rewards only: one prize per place (validated by createReward). Written only
+   * when set, like the POS columns, so every other reward's insert is unchanged.
+   */
+  placePrizes?: RewardPlacePrize[] | null;
+  /** Competitive rewards' optional minimum players (2-100). Written only when set. */
+  minPlayers?: number | null;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
   const name = String(input.name ?? "").trim();
@@ -1563,6 +1579,12 @@ export async function createChallengeCampaign(input: {
     // Same rule for the delivery (20261007030714_square_scannable_prizes.sql): only "gift_card"
     // is ever sent, so a deploy ahead of the migration still saves every ordinary reward.
     ...(prizePosDelivery === "gift_card" ? { prize_pos_delivery: "gift_card" } : {}),
+    // 20261014010000_live_trivia_ranked_places.sql checks both: place_prizes is set exactly
+    // when the reward is ranked_places, min_players only on a competitive reward.
+    ...(input.placePrizes && input.placePrizes.length > 0
+      ? { place_prizes: serializePlacePrizes(input.placePrizes) }
+      : {}),
+    ...(Number.isInteger(input.minPlayers) ? { min_players: input.minPlayers } : {}),
   };
 
   const { data, error } = await supabaseAdmin!
@@ -2189,7 +2211,7 @@ const RANKED_CYCLE_AWARD_STATUSES: readonly RankedCycleAwardStatus[] = [
  * Win notifications are best-effort after the commit, like awardCycleWinner's.
  */
 export async function awardRankedCyclePlaces(params: {
-  campaign: Pick<ChallengeCampaign, "id" | "name">;
+  campaign: Pick<ChallengeCampaign, "id" | "name"> & Partial<Pick<ChallengeCampaign, "placePrizes">>;
   venueId: string;
   cycleStart: Date;
   places: readonly RankedPlace[];
@@ -2225,7 +2247,16 @@ export async function awardRankedCyclePlaces(params: {
 
   if (status === "awarded") {
     for (const place of places) {
-      await notifyPrizeWinBestEffort({ userId: place.userId, campaignId: campaign.id, campaignName: campaign.name });
+      await notifyPrizeWinBestEffort({
+        userId: place.userId,
+        campaignId: campaign.id,
+        campaignName: campaign.name,
+        message: rankedPlaceWinMessage({
+          place: place.place,
+          campaignName: campaign.name,
+          prize: campaign.placePrizes?.find((prize) => prize.place === place.place) ?? null,
+        }),
+      });
     }
   }
 
@@ -2243,6 +2274,8 @@ async function notifyPrizeWinBestEffort(params: {
   userId: string;
   campaignId: string;
   campaignName: string;
+  /** Overrides the generic copy (a weekly places win names its place and prize). */
+  message?: string;
 }): Promise<void> {
   const { userId, campaignId, campaignName } = params;
   const maxAttempts = 3;
@@ -2250,7 +2283,7 @@ async function notifyPrizeWinBestEffort(params: {
     try {
       await createNotification({
         userId,
-        message: `You won a prize in "${campaignName}"! Tap here to view your coupon before it expires.`,
+        message: params.message ?? `You won a prize in "${campaignName}"! Tap here to view your coupon before it expires.`,
         type: "success",
         linkUrl: "/redeem-prizes",
       });
@@ -2822,7 +2855,11 @@ export async function listChallengeCampaignWinsForUser(params: {
       prizeDiscountKind: row.prize_discount_kind,
       prizePosDelivery: row.prize_pos_delivery,
     });
-    const prizeSource: RewardPrizeSourceRow = (snapshotScannable ? undefined : campaign) ?? snapshotPrize;
+    // And a weekly places coupon: its reward has no single prize (each place has its own, in
+    // place_prizes), so only the coupon's own snapshot says what THIS place won.
+    const rankedCoupon = campaign ? normalizeWinCondition(campaign.win_condition) === "ranked_places" : false;
+    const prizeSource: RewardPrizeSourceRow =
+      (snapshotScannable || rankedCoupon ? undefined : campaign) ?? snapshotPrize;
     const prizeType = campaign?.prize_type ?? row.prize_type;
     return {
       // The exact coupon a Redeem tap names (redeemChallengePrize) — never another cycle's.
@@ -2836,13 +2873,14 @@ export async function listChallengeCampaignWinsForUser(params: {
       claimedAt: row.claimed_at ?? null,
       prizeType: VALID_PRIZE_TYPES.includes(prizeType as PrizeType) ? (prizeType as PrizeType) : null,
       prizeGiftCertificateAmount:
-        campaign?.prize_gift_certificate_amount ?? row.prize_gift_certificate_amount ?? null,
+        (rankedCoupon ? null : campaign?.prize_gift_certificate_amount) ?? row.prize_gift_certificate_amount ?? null,
       prizeExpiresAt: row.prize_expires_at ?? null,
       prizeRedeemedAt: row.prize_redeemed_at ?? null,
       ...resolveRewardPrize(prizeSource),
       // Always the coupon's OWN snapshot, never the live reward: how the prize is taken at a
       // Square register was fixed when it was won.
       prizePosDelivery: normalizePrizePosDelivery(row.prize_pos_delivery),
+      place: normalizePlace(row.place),
       // What the coupon was won FOR (describeRewardWin) needs the live reward's
       // terms; a deleted reward has none, and a reward whose terms changed after
       // this win (terms_updated_at > the redemption's created_at, the award
@@ -2865,8 +2903,15 @@ export async function listChallengeCampaignWinsForUser(params: {
   });
 }
 
+// `place` is from 20261014010000_live_trivia_ranked_places.sql (applied 2026-10-14, before this read).
 const WALLET_REDEMPTION_COLUMNS =
-  "id, challenge_id, winner_user_id, venue_id, claimed_at, created_at, prize_expires_at, prize_redeemed_at, cycle_start, reward_name, prize_type, prize_gift_certificate_amount, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value";
+  "id, challenge_id, winner_user_id, venue_id, claimed_at, created_at, prize_expires_at, prize_redeemed_at, cycle_start, reward_name, prize_type, prize_gift_certificate_amount, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, place";
+
+/** A coupon's place (1-3), or null for every coupon that isn't a weekly places win. */
+const normalizePlace = (value: unknown): number | null => {
+  const place = Number(value);
+  return value !== null && value !== undefined && Number.isInteger(place) && place >= 1 && place <= 3 ? place : null;
+};
 
 const WALLET_CAMPAIGN_COLUMNS =
   "id, name, rules, prize_type, prize_gift_certificate_amount, winner_user_id, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, reward_definition_id, win_condition, recurring_type, points_required_to_win, active_days, winner_quota, nfl_week_scope, game_winner_slots";
