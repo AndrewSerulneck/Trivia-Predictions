@@ -8,6 +8,7 @@ export type AdmissionRow = Omit<SpeedQuestion, "question_pool" | "answer_format"
   [key: string]: unknown;
 };
 export type AdmissionBudget = {
+  signal?: AbortSignal;
   reserve: (amount: Record<string, number>) => Record<string, number>;
   settle: (reserved: Record<string, number>, actual: Record<string, number | string>) => void;
   assertTime: () => void;

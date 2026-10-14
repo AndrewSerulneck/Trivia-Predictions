@@ -23,11 +23,11 @@ export const findTriviaAdmissionRow = async (identifier: string): Promise<Admiss
   if (error) throw new AdmissionError("verification_unavailable", "Could not load the current question.");
   return data as AdmissionRow | null;
 };
-export const openSpeedTriviaAdmission = (options?: { elapsedMs: number }): Promise<AdmissionSession> => {
+export const openSpeedTriviaAdmission = (options?: { elapsedMs: number; signal?: AbortSignal }): Promise<AdmissionSession> => {
   if (!supabaseAdmin) throw new AdmissionError("verification_unavailable", "Supabase admin client is not configured.");
   // Start the deadline before waiting for another local request. Keep the same
   // approved dollar ceiling, including retries and all items in this request.
-  const budget = options ? createBudget({ dollars: Number(process.env.SPEED_TRIVIA_MAX_DOLLARS), elapsedMs: options.elapsedMs }) : undefined;
+  const budget = options ? createBudget({ dollars: Number(process.env.SPEED_TRIVIA_MAX_DOLLARS), elapsedMs: options.elapsedMs, signal: options.signal }) : undefined;
   const opening = serialized(async () => {
     budget?.assertTime();
     const session = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget });
@@ -41,10 +41,14 @@ export const openSpeedTriviaAdmission = (options?: { elapsedMs: number }): Promi
         try {
           const result = await fresh.write(row, options);
           cachedIndex = fresh.index();
+          session.index = fresh.index;
+          session.corpus = fresh.corpus;
           if (pairCache.size > 20000) pairCache.clear();
           return result;
         } catch (error) {
           cachedIndex = error instanceof AdmissionError && error.code === "verification_unavailable" ? null : fresh.index();
+          session.index = fresh.index;
+          session.corpus = fresh.corpus;
           throw error;
         }
       });

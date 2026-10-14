@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Download, GitPullRequest, Sparkles, Trash2 } from "lucide-react";
 import { PaginationBar } from "@/components/admin/AdminShell";
 import { getErrorMessage } from "@/lib/errors";
 import { runTriviaBulkAction } from "@/lib/triviaBulkAction";
+import type { TriviaReviewCounts, TriviaReviewRow } from "@/types/triviaReview";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 
 type QuestionPool = "live_showdown" | "anytime_blitz";
@@ -69,6 +70,12 @@ export function TriviaPendingReviewSection() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({});
   const [bulkBusy, setBulkBusy] = useState(false);
+  const bulkLock = useRef(false);
+  const [reviewRows, setReviewRows] = useState<Record<string, TriviaReviewRow>>({});
+  const [reviewCounts, setReviewCounts] = useState<TriviaReviewCounts | null>(null);
+  const [checkingQuestion, setCheckingQuestion] = useState("");
+  const [continuing, setContinuing] = useState(false);
+  const [reviewNeedsRefresh, setReviewNeedsRefresh] = useState(false);
   const [exportingJson, setExportingJson] = useState(false);
   const [convertingLiveExport, setConvertingLiveExport] = useState(false);
   const [liveExportItems, setLiveExportItems] = useState<LiveExportQuestion[]>([]);
@@ -78,6 +85,13 @@ export function TriviaPendingReviewSection() {
   const [savingEdit, setSavingEdit] = useState(false);
 
   const fetchPending = useCallback(async (pool: QuestionPool, targetPage: number) => {
+    if (bulkLock.current) return;
+    setReviewRows({});
+    setReviewCounts(null);
+    setCheckingQuestion("");
+    setContinuing(false);
+    setReviewNeedsRefresh(false);
+    setSelectedIds({});
     setLoading(true);
     setError("");
     setSuccess("");
@@ -145,10 +159,12 @@ export function TriviaPendingReviewSection() {
   const allFilteredSelected = filteredItems.length > 0 && selectedCount === filteredItems.length;
 
   const toggleSelect = useCallback((id: string) => {
+    setContinuing(false);
     setSelectedIds((prev) => ({ ...prev, [id]: !prev[id] }));
   }, []);
 
   const toggleSelectAll = useCallback(() => {
+    setContinuing(false);
     setSelectedIds((prev) => {
       if (filteredItems.length > 0 && filteredItems.every((item) => prev[item.id])) {
         const next = { ...prev };
@@ -168,29 +184,60 @@ export function TriviaPendingReviewSection() {
         setError("Select at least one question first.");
         return;
       }
+      if (bulkLock.current || loading || savingEdit || convertingLiveExport || exportingJson || editingId || reviewNeedsRefresh) return;
+      bulkLock.current = true;
       setBulkBusy(true);
+      setContinuing(false);
       setError("");
       setSuccess("");
+      setCheckingQuestion("");
+      setReviewCounts(action === "approve" && activeTab === "anytime_blitz" ? { checked: 0, approved: 0, repeats: 0, unresolved: 0, remaining: ids.length } : null);
+      setReviewRows(prev => Object.fromEntries(Object.entries(prev).filter(([id]) => !ids.includes(id))));
+      const removed = new Set<string>();
+      const removeSaved = (saved: string[]) => {
+        const fresh = saved.filter(id => !removed.has(id));
+        for (const id of fresh) removed.add(id);
+        setItems(prev => prev.filter(item => !removed.has(item.id)));
+        setTotal(prev => Math.max(0, prev - fresh.length));
+      };
       try {
-        const payload = await runTriviaBulkAction(action, ids, activeTab);
-        const saved = payload.savedIds ?? [];
-        const idSet = new Set(saved);
-        setItems((prev) => prev.filter((item) => !idSet.has(item.id)));
-        setTotal((prev) => Math.max(0, prev - saved.length));
-        setSelectedIds((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !idSet.has(id))));
-        setSuccess(payload.unconfirmed ? "" : `${action === "approve" ? "Approved" : "Deleted"} ${saved.length} question(s). Confirmed repeats: ${payload.repeats?.length ?? 0}. Unresolved: ${payload.holds?.length ?? 0}. Not processed: ${payload.notProcessed?.length ?? 0}.`);
-        if (payload.recovered) {
-          // Lost responses do not identify repeats. Require a fresh deliberate selection.
-          setSelectedIds({});
+        const payload = await runTriviaBulkAction(action, ids, activeTab, fetch, record => {
+          if (record.type === "checking") setCheckingQuestion(record.question);
+          if (record.type === "row") {
+            setReviewRows(prev => ({ ...prev, [record.result.id]: record.result }));
+            setReviewCounts(record.counts);
+            setCheckingQuestion("");
+            if (record.result.outcome === "approved") removeSaved([record.result.id]);
+          }
+        });
+        removeSaved(payload.savedIds);
+        const finished = new Set([...payload.savedIds, ...(payload.repeats ?? []).map(row => row.id), ...(payload.holds ?? []).map(row => row.id)]);
+        const unfinished = ids.filter(id => !finished.has(id));
+        if (action === "approve" && activeTab === "anytime_blitz") {
+          setReviewCounts({ checked: finished.size, approved: payload.savedIds.length, repeats: payload.repeats?.length ?? 0, unresolved: payload.holds?.length ?? 0, remaining: unfinished.length });
+          setReviewRows(prev => ({ ...prev,
+            ...Object.fromEntries((payload.repeats ?? []).map(row => [row.id, { ...row, outcome: "repeat" as const }])),
+            ...Object.fromEntries((payload.holds ?? []).map(row => [row.id, { ...row, outcome: "unresolved" as const }])),
+          }));
         }
+        const paused = payload.paused && !payload.unconfirmed;
+        setSelectedIds(paused ? Object.fromEntries(unfinished.map(id => [id, true])) : {});
+        setContinuing(Boolean(paused && unfinished.length));
+        setReviewNeedsRefresh(Boolean(payload.unconfirmed || payload.recovered && !paused));
+        setSuccess(paused ? "Paused at the time or checking budget limit. Saved approvals are kept. Only unchecked questions are selected for Continue. Each Continue click has its own $0.50 cap."
+          : payload.unconfirmed ? "" : `${action === "approve" ? "Approved" : "Deleted"} ${payload.savedIds.length} question(s).`);
         if (!payload.ok) setError(payload.error ?? "Some questions could not be saved. Saved changes are counted above.");
       } catch (err) {
-        setError(getErrorMessage(err, "Bulk action failed."));
+        setSelectedIds({});
+        setReviewNeedsRefresh(true);
+        setError(getErrorMessage(err, "Bulk action failed. Refresh Question Review before continuing."));
       } finally {
+        setCheckingQuestion("");
+        bulkLock.current = false;
         setBulkBusy(false);
       }
     },
-    [activeTab, filteredItems, selectedIds]
+    [activeTab, filteredItems, selectedIds, loading, savingEdit, convertingLiveExport, exportingJson, editingId, reviewNeedsRefresh]
   );
 
   const exportApprovedSpeedJson = useCallback(async () => {
@@ -318,6 +365,9 @@ export function TriviaPendingReviewSection() {
   }, [liveExportItems]);
 
   const startEdit = useCallback((item: PendingQuestion) => {
+    setContinuing(false);
+    setReviewRows(prev => Object.fromEntries(Object.entries(prev).filter(([id]) => id !== item.id)));
+    setReviewCounts(null);
     setEditingId(item.id);
     setEditDraft({
       question: item.question,
@@ -390,7 +440,7 @@ export function TriviaPendingReviewSection() {
   );
 
   return (
-    <div className="space-y-4">
+    <fieldset disabled={bulkBusy || loading || savingEdit || convertingLiveExport || exportingJson} className="min-w-0 space-y-4">
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-base font-semibold text-slate-900">Question Review</h2>
         <p className="mt-1 text-sm text-slate-500">
@@ -423,7 +473,7 @@ export function TriviaPendingReviewSection() {
           <label className={adminLabel}>Category</label>
           <select
             value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
+            onChange={(event) => { setCategoryFilter(event.target.value); setContinuing(false); }}
             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
           >
             {categoryOptions.map((option) => (
@@ -452,25 +502,44 @@ export function TriviaPendingReviewSection() {
         </div>
       ) : null}
 
+      {activeTab === "anytime_blitz" ? (
+        <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+          <p>Checking compares with approved questions. Each Approve or Continue click has a $0.50 cap for the whole selection, including retries.</p>
+          {reviewCounts ? (
+            <div role="status" aria-live="polite" className="mt-2">
+              Checked: {reviewCounts.checked} · Approved: {reviewCounts.approved} · Repeats: {reviewCounts.repeats} · Unresolved: {reviewCounts.unresolved} · Remaining: {reviewCounts.remaining}
+              {bulkBusy ? <p className="mt-1">{checkingQuestion ? `Checking: ${checkingQuestion}` : "Preparing the next check…"}</p> : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => void runBulkAction("approve")}
-          disabled={bulkBusy || selectedCount === 0}
+          disabled={bulkBusy || selectedCount === 0 || Boolean(editingId) || reviewNeedsRefresh}
           className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
         >
-          {bulkBusy ? "Working…" : "Approve Selected"}{selectedCount > 0 ? ` (${selectedCount})` : ""}
+          {bulkBusy ? "Working…" : continuing ? "Continue" : "Approve Selected"}{selectedCount > 0 ? ` (${selectedCount})` : ""}
         </button>
         <button
           type="button"
           onClick={() => void runBulkAction("delete")}
-          disabled={bulkBusy || selectedCount === 0}
+          disabled={bulkBusy || selectedCount === 0 || Boolean(editingId) || reviewNeedsRefresh}
           className="rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
         >
           Delete Selected{selectedCount > 0 ? ` (${selectedCount})` : ""}
         </button>
         {activeTab === "anytime_blitz" ? (
           <>
+            <button type="button" disabled={bulkBusy || !Object.values(reviewRows).some(row => row.outcome === "repeat") || reviewNeedsRefresh}
+              onClick={() => { setContinuing(false); setSelectedIds(Object.fromEntries(filteredItems.filter(item => reviewRows[item.id]?.outcome === "repeat").map(item => [item.id, true]))); }}
+              className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 disabled:opacity-50">
+              Select Confirmed Repeats
+            </button>
+            <button type="button" onClick={() => void fetchPending(activeTab, page)} className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700">Refresh Review</button>
+
             <button
               type="button"
               onClick={() => void convertSelectedToLiveExport()}
@@ -633,6 +702,15 @@ export function TriviaPendingReviewSection() {
                         ) : (
                           <span className="font-medium">{item.question}</span>
                         )}
+                        {reviewRows[item.id] ? (
+                          <div className="mt-2 space-y-1 text-sm text-slate-700" data-testid={`review-result-${item.id}`}>
+                            <p className="font-semibold">{reviewRows[item.id].outcome === "repeat" ? "Confirmed repeat" : "Unresolved"}</p>
+                            {reviewRows[item.id].reason ? <p>{reviewRows[item.id].reason}</p> : null}
+                            {reviewRows[item.id].matches?.map(match => (
+                              <p key={match.id}>Approved question: {match.question} · Answer: {match.answer}</p>
+                            ))}
+                          </div>
+                        ) : null}
                       </td>
                       <td className="px-4 py-3 text-slate-700">
                         {isEditing && editDraft ? (
@@ -740,6 +818,6 @@ export function TriviaPendingReviewSection() {
           />
         ) : null}
       </div>
-    </div>
+    </fieldset>
   );
 }

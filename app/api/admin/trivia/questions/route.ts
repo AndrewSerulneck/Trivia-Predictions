@@ -2,10 +2,13 @@ import { openSpeedTriviaAdmission, approveSpeedTrivia, speedTriviaError } from "
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { runProgressiveTriviaApproval } from "@/lib/triviaReviewApproval";
+import { REVIEW_NO_CACHE, triviaReviewStream } from "@/lib/triviaReviewTransport";
 
 // Match the existing hosting limit; stop checking a minute earlier to return results.
 export const maxDuration = 300;
 const BULK_CHECK_TIME_MS = 240_000;
+const reviewJson = (body: unknown, init?: ResponseInit) => NextResponse.json(body, { ...init, headers: { ...REVIEW_NO_CACHE, ...init?.headers } });
 
 type QuestionStatus = "pending_review" | "active" | "deleted";
 type QuestionPool = "live_showdown" | "anytime_blitz";
@@ -79,10 +82,10 @@ export async function GET(request: Request) {
   try {
     const auth = await requireAdminAuth(request);
     if (!auth.ok) {
-      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
+      return reviewJson({ ok: false, error: auth.error }, { status: auth.status });
     }
     if (!supabaseAdmin) {
-      return NextResponse.json({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
+      return reviewJson({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
     }
 
     const url = new URL(request.url);
@@ -111,9 +114,9 @@ export async function GET(request: Request) {
     }
 
     const items = ((data ?? []) as unknown as TriviaQuestionRow[]).map(mapRow);
-    return NextResponse.json({ ok: true, items, total: count ?? 0, limit, offset });
+    return reviewJson({ ok: true, items, total: count ?? 0, limit, offset });
   } catch (error) {
-    return NextResponse.json(
+    return reviewJson(
       { ok: false, error: error instanceof Error ? error.message : "Failed to load trivia questions." },
       { status: 500 }
     );
@@ -127,13 +130,13 @@ export async function POST(request: Request) {
   try {
     const auth = await requireAdminAuth(request);
     if (!auth.ok) {
-      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status });
+      return reviewJson({ ok: false, error: auth.error }, { status: auth.status });
     }
     if (!supabaseAdmin) {
-      return NextResponse.json({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
+      return reviewJson({ ok: false, error: "Supabase admin client is not configured." }, { status: 500 });
     }
 
-    const body = (await request.json()) as { action?: string; ids?: unknown; pool?: string };
+    const body = (await request.json()) as { action?: string; ids?: unknown; pool?: string; progressive?: boolean };
     const action = String(body.action ?? "").trim().toLowerCase();
     const poolParam = String(body.pool ?? "").trim();
     const pool = VALID_POOLS.has(poolParam) ? poolParam : null;
@@ -142,22 +145,27 @@ export async function POST(request: Request) {
       : [];
 
     if (action !== "approve" && action !== "delete" && action !== "status") {
-      return NextResponse.json({ ok: false, error: "Unknown action. Use 'approve', 'delete' or 'status'." }, { status: 400 });
+      return reviewJson({ ok: false, error: "Unknown action. Use 'approve', 'delete' or 'status'." }, { status: 400 });
     }
     if (ids.length === 0) {
-      return NextResponse.json({ ok: false, error: "ids is required." }, { status: 400 });
+      return reviewJson({ ok: false, error: "ids is required." }, { status: 400 });
     }
 
     requestedIds = ids;
     const nextStatus: QuestionStatus = action === "approve" ? "active" : "deleted";
-    if (ids.length > 200) return NextResponse.json({ ok: false, error: "Choose at most 200 questions." }, { status: 400 });
+    if (ids.length > 200) return reviewJson({ ok: false, error: "Choose at most 200 questions." }, { status: 400 });
+    if (body.progressive === true) {
+      if (action !== "approve" || pool !== "anytime_blitz") return reviewJson({ ok: false, error: "Progress is available for Speed Trivia approval only." }, { status: 400, headers: REVIEW_NO_CACHE });
+      return triviaReviewStream(request.signal, { type: "start", version: 1, mode: "review", total: ids.length },
+        (emit, signal) => runProgressiveTriviaApproval(ids, started, signal, emit));
+    }
     if (action === "status") {
       // Recovery reads only the selected IDs; it never runs paid checks or writes.
       let statusRead = supabaseAdmin.from("trivia_questions").select("id,status").in("id", ids);
       if (pool) statusRead = statusRead.eq("question_pool", pool);
       const { data, error } = await statusRead.abortSignal(AbortSignal.timeout(10_000));
       if (error) throw new Error("Could not confirm saved questions. Refresh Question Review before continuing.");
-      return NextResponse.json({ ok: true, items: data ?? [] });
+      return reviewJson({ ok: true, items: data ?? [] });
     }
     let read = supabaseAdmin.from("trivia_questions").select("*").in("id", ids);
     if (pool) read = read.eq("question_pool", pool);
@@ -194,11 +202,11 @@ export async function POST(request: Request) {
     const notProcessed = ids.filter(id => !examined.has(id));
     if (firstRejection) {
       const failure = speedTriviaError(firstRejection);
-      return NextResponse.json({ ok: false, action, updated: savedIds.length, savedIds, repeats, holds, notProcessed, code: failure.code, conflicts: failure.conflicts, error: firstRejection instanceof Error ? firstRejection.message : "Some questions could not be approved. Saved changes are listed separately." }, { status: failure.status });
+      return reviewJson({ ok: false, action, updated: savedIds.length, savedIds, repeats, holds, notProcessed, code: failure.code, conflicts: failure.conflicts, error: firstRejection instanceof Error ? firstRejection.message : "Some questions could not be approved. Saved changes are listed separately." }, { status: failure.status });
     }
-    return NextResponse.json({ ok: true, action, status: nextStatus, updated: data.length, savedIds, repeats, holds, notProcessed });
+    return reviewJson({ ok: true, action, status: nextStatus, updated: data.length, savedIds, repeats, holds, notProcessed });
   } catch (error) {
-    return NextResponse.json(
+    return reviewJson(
       { ok: false, updated: savedIds.length, savedIds, repeats, holds, notProcessed: requestedIds.filter(id => !new Set([...savedIds, ...repeats.map(row => row.id), ...holds.map(row => row.id)]).has(id)), error: speedTriviaError(error).code === "budget_exhausted" ? "Approval paused at the time or checking budget limit. Saved approvals are kept; the remaining questions still need review. Try a smaller selection next." : error instanceof Error ? error.message : "Failed to update trivia questions.", code: speedTriviaError(error).code, conflicts: speedTriviaError(error).conflicts },
       { status: speedTriviaError(error).status }
     );
