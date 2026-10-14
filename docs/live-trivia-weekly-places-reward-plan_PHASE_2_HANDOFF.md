@@ -52,8 +52,11 @@ Phase 3 decision forces it.
   (Phase 2)", on top of `4614a0f` (Phase 1 handoff). A follow-up commit adds this note. Both are pushed to
   `origin/main` from branch `live-trivia-ranked-places-phase2` (worktree
   `/private/tmp/claude-501/-Users-andrewserulneck-Documents-Trivia-Predictions/b1b94891-fa54-4921-ae44-1d3291c69836/scratchpad/ranked-p2`).
-  Push + deploy was pre-approved by Andrew (D11, Phases 1–4). The Vercel deploy status after the push was
-  checked; see §6.
+  Push + deploy was pre-approved by Andrew (D11, Phases 1–4). Production deploy
+  `hightop-challenge-4k56s6fcr-andrewserulnecks-projects.vercel.app` reached **Ready** on 2026-10-14 (created
+  17:56 EDT). Its first cron runs, at 18:00 and 18:05 EDT, logged no errors and returned no 5xx
+  (`vercel logs --since 15m --environment production --query resolve-live-trivia-winners [--status-code 5xx]`).
+  This docs-only follow-up commit triggers one more deploy, which is harmless.
 - **No migration in Phase 2.** Nothing applied to production. No data written. Production still has **0 ranked
   rewards** and **0 rows** in `challenge_cycle_settlements`, so the new sweep returns `campaignsExamined: 0`
   on every run.
