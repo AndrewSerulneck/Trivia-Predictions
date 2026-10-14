@@ -4,7 +4,7 @@ import * as runtime from "@/lib/speed-trivia-uniqueness/runtime.cjs";
 import type { AdmissionClient } from "@/types/speedTriviaAdmission";
 import type { SpeedQuestion } from "@/types/speedTriviaUniqueness";
 type DB = { exec: (sql: string) => Promise<unknown>; query: (sql: string, args?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>; close: () => Promise<void> };
-const { PGlite } = require(path.resolve("tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite")) as { PGlite: new () => DB };
+const { PGlite } = require("@electric-sql/pglite") as { PGlite: new () => DB };
 const harness = require(path.resolve("scripts/test-speed-trivia-admission-sql.cjs")) as { setup: (db: DB) => Promise<void>; clientFor: (db: DB) => AdmissionClient; SECRET: string; row: (id: string, question: string, answer: string) => SpeedQuestion };
 const response = (id: string) => new Response(JSON.stringify({ candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify([{ id, decision: "unique", explanation: "Different synthetic facts", fact: "Synthetic comparison", qualityA: "sound", qualityB: "sound", confidence: "high" }]) }] } }], usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 80 } }));
 

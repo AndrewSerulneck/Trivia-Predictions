@@ -176,15 +176,14 @@ export function TriviaPendingReviewSection() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action, ids, pool: activeTab }),
         });
-        const payload = (await response.json()) as { ok: boolean; updated?: number; error?: string };
-        if (!response.ok || !payload.ok) {
-          throw new Error(payload.error ?? "Bulk action failed.");
-        }
-        const idSet = new Set(ids);
+        const payload = (await response.json()) as { ok: boolean; updated?: number; savedIds?: string[]; repeats?: { id: string }[]; holds?: { id: string }[]; notProcessed?: string[]; error?: string };
+        const saved = payload.savedIds ?? [];
+        const idSet = new Set(saved);
         setItems((prev) => prev.filter((item) => !idSet.has(item.id)));
-        setTotal((prev) => Math.max(0, prev - ids.length));
-        setSelectedIds({});
-        setSuccess(`${action === "approve" ? "Approved" : "Deleted"} ${payload.updated ?? ids.length} question(s).`);
+        setTotal((prev) => Math.max(0, prev - saved.length));
+        setSelectedIds((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !idSet.has(id))));
+        setSuccess(`${action === "approve" ? "Approved" : "Deleted"} ${saved.length} question(s). Repeats: ${payload.repeats?.length ?? 0}. Unresolved: ${payload.holds?.length ?? 0}. Not processed: ${payload.notProcessed?.length ?? 0}.`);
+        if (!response.ok || !payload.ok) setError(payload.error ?? "Some questions could not be saved. Saved changes are counted above.");
       } catch (err) {
         setError(getErrorMessage(err, "Bulk action failed."));
       } finally {

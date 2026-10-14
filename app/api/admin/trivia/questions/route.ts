@@ -1,4 +1,4 @@
-import { openSpeedTriviaAdmission, writeSpeedTrivia, speedTriviaError } from "@/lib/speedTriviaAdmission";
+import { openSpeedTriviaAdmission, approveSpeedTrivia, speedTriviaError } from "@/lib/speedTriviaAdmission";
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -117,6 +117,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const savedIds: string[] = [], repeats: { id: string; code: string; conflicts: string[] }[] = [], holds: { id: string; code: string }[] = [];
+  let requestedIds: string[] = [];
   try {
     const auth = await requireAdminAuth(request);
     if (!auth.ok) {
@@ -141,6 +143,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "ids is required." }, { status: 400 });
     }
 
+    requestedIds = ids;
     const nextStatus: QuestionStatus = action === "approve" ? "active" : "deleted";
     if (ids.length > 200) return NextResponse.json({ ok: false, error: "Choose at most 200 questions." }, { status: 400 });
     let read = supabaseAdmin.from("trivia_questions").select("*").in("id", ids);
@@ -149,20 +152,34 @@ export async function POST(request: Request) {
     if (readError || !rows) throw new Error("Could not verify selected questions.");
     const gate = action === "approve" && rows.some(row => row.question_pool === "anytime_blitz") ? await openSpeedTriviaAdmission() : undefined;
     const data: { id: string }[] = [];
+    let firstRejection: unknown = null;
     for (const row of rows) {
       if (action === "approve" && row.question_pool === "anytime_blitz") {
-        await writeSpeedTrivia({ status: "active" }, row, gate);
+        try { await approveSpeedTrivia(row, gate); }
+        catch (error) {
+          const failure = speedTriviaError(error);
+          if (failure.code === "duplicate") { repeats.push({ id: row.id, code: failure.code, conflicts: failure.conflicts }); firstRejection ??= error; continue; }
+          if (failure.code === "uncertain" || failure.code === "retired") { holds.push({ id: row.id, code: failure.code }); firstRejection ??= error; continue; }
+          throw error;
+        }
       } else {
         const { error } = await supabaseAdmin.from("trivia_questions").update({ status: nextStatus }).eq("id", row.id);
         if (error) throw new Error(error.message);
       }
       data.push({ id: row.id });
+      savedIds.push(row.id);
     }
 
-    return NextResponse.json({ ok: true, action, status: nextStatus, updated: (data ?? []).length });
+    const examined = new Set([...savedIds, ...repeats.map(row => row.id), ...holds.map(row => row.id)]);
+    const notProcessed = ids.filter(id => !examined.has(id));
+    if (firstRejection) {
+      const failure = speedTriviaError(firstRejection);
+      return NextResponse.json({ ok: false, action, updated: savedIds.length, savedIds, repeats, holds, notProcessed, code: failure.code, conflicts: failure.conflicts, error: firstRejection instanceof Error ? firstRejection.message : "Some questions could not be approved. Saved changes are listed separately." }, { status: failure.status });
+    }
+    return NextResponse.json({ ok: true, action, status: nextStatus, updated: data.length, savedIds, repeats, holds, notProcessed });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed to update trivia questions.", code: speedTriviaError(error).code, conflicts: speedTriviaError(error).conflicts },
+      { ok: false, updated: savedIds.length, savedIds, repeats, holds, notProcessed: requestedIds.filter(id => !new Set([...savedIds, ...repeats.map(row => row.id), ...holds.map(row => row.id)]).has(id)), error: error instanceof Error ? error.message : "Failed to update trivia questions.", code: speedTriviaError(error).code, conflicts: speedTriviaError(error).conflicts },
       { status: speedTriviaError(error).status }
     );
   }

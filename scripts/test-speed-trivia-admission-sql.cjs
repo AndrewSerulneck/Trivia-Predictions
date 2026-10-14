@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const core=require('../lib/speed-trivia-uniqueness/core.cjs');
 const runtime=require('../lib/speed-trivia-uniqueness/runtime.cjs');
-const {PGlite}=require(path.resolve(process.env.SPEED_TRIVIA_PGLITE_MODULE||'tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite'));
+const {PGlite}=require(process.env.SPEED_TRIVIA_PGLITE_MODULE?path.resolve(process.env.SPEED_TRIVIA_PGLITE_MODULE):'@electric-sql/pglite');
 const SECRET='isolated-test-key-only-00000000000000000000';
 const MIGRATION='supabase/migrations/20261013120000_speed_trivia_admission.sql';
 const setup=async (db,extraRows=0)=>{

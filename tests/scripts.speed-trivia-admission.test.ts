@@ -7,7 +7,7 @@ import type { AdmissionSession, AdmissionClient, AdmissionRow } from "@/types/sp
 import type { ComparisonTask, ComparisonResult, SpeedQuestion } from "@/types/speedTriviaUniqueness";
 
 type DB = { exec: (sql: string) => Promise<unknown>; query: (sql: string, args?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>; close: () => Promise<void> };
-const { PGlite } = require(path.resolve("tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite")) as { PGlite: new () => DB };
+const { PGlite } = require("@electric-sql/pglite") as { PGlite: new () => DB };
 const harness = require(path.resolve("scripts/test-speed-trivia-admission-sql.cjs")) as {
   setup: (db: DB, extraRows?: number) => Promise<void>; clientFor: (db: DB) => AdmissionClient; SECRET: string;
   row: (id: string, question: string, answer: string, category?: string) => SpeedQuestion;
