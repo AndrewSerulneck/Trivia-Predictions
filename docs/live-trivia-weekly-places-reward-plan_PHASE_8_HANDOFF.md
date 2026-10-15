@@ -139,3 +139,17 @@ ranked reward to chosen games in the wizard.
 
 1. On Andrew's go-ahead, run §7.1 in that order, then open Game Results at Garden State Bar to confirm.
 2. Phase 7 (Claude Sonnet 5.5, medium) after Friday 2026-10-16's game. Read the plan + Phase 5, 6 and 8 handoffs first.
+
+## Update 2026-10-14 (later): renamed and deployed
+
+- **Renamed "Past Winners" → "Game Results"** (Andrew): menu row label, sheet title, heading, tab-list label and
+  error/empty copy. Component is now `components/owner/history/GameResultsSheet.tsx` (test
+  `tests/components.owner-game-results-sheet.test.ts`). Unchanged on purpose: sheet id `history`
+  (`?sheet=history`), the `/api/owner/history*` routes, `lib/ownerHistory*.ts`, and the migration file name.
+- **Migration `20261014213000_owner_past_winners_summaries.sql` APPLIED** to production via
+  `supabase --workdir <this worktree> db push` from the main checkout (dry run showed only this file; the worktree
+  needed `supabase/.temp/project-ref` copied in, untracked). Verified: `challenge_reward_history_summaries` for
+  `venue-garden-state-bar` returns reward `677a214c-…` with `cycle_count` 10.
+- **Phases 6 + 8 pushed to `origin/main`** from this worktree. Gates before push: tsc clean, lint clean, vitest
+  384 files / 4,520 tests passed, build succeeded.
+- Still open: Andrew's phone checks (checklist §C and §D); Phase 7 after Fri 2026-10-16.

@@ -4,11 +4,7 @@
 > partners / admins see). Phase 5 **done** 2026-10-14: Garden State Bar's reward is live in production
 > (`677a214c-b859-4c17-8e4d-9889574516e1`, from the Oct 14 week) and Andrew approved + applied the backfill
 > (13 coupons, $320, 10 weeks settled, expiry 2026-11-13; verified, re-run is a no-op). Wording changed to
-> "1st place wins …, 2nd place wins … and 3rd place wins …" (Andrew, 2026-10-14). Phase 6 (Create Reward wizard) **built** 2026-10-14, committed on branch
-> `live-trivia-ranked-places-phase6`, **not pushed**. Phase 8 (Game Results) **built** 2026-10-14 + "Top players
-> this week" offered even with a single game (D13) + code-review fixes, committed on branch
-> `live-trivia-ranked-places-phase8` (on top of Phase 6), **not pushed**, migration
-> `20261014213000_owner_past_winners_summaries.sql` **not applied**. Latest handoff:
+> "1st place wins …, 2nd place wins … and 3rd place wins …" (Andrew, 2026-10-14). Phase 6 (Create Reward wizard) and Phase 8 (**Game Results**, renamed from "Past Winners" by Andrew) + D13 **deployed** 2026-10-14: migration `20261014213000_owner_past_winners_summaries.sql` applied to production, code pushed to `main`. Latest handoff:
 > `docs/live-trivia-weekly-places-reward-plan_PHASE_8_HANDOFF.md`. Next: **Phase 7** (after Fri 2026-10-16's game).
 > Each phase ends with `docs/live-trivia-weekly-places-reward-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew. **Trigger:** Garden State Bar promised posters with weekly 1st/2nd/3rd Live Trivia
