@@ -27,6 +27,8 @@ import WrongLetterReject from "@/components/category-blitz/WrongLetterReject";
 import TimerUrgency from "@/components/category-blitz/TimerUrgency";
 import SubmitLockAnimation from "@/components/category-blitz/SubmitLockAnimation";
 import IntermissionStatus from "@/components/category-blitz/IntermissionStatus";
+import { CategoryBlitzRulesSheet, HowToPlayButton } from "@/components/category-blitz/CategoryBlitzRulesSheet";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 import SessionCompleteFireworks from "@/components/category-blitz/SessionCompleteFireworks";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
@@ -581,7 +583,9 @@ function formatIdleCountdown(seconds: number): string {
 async function fetchCategoryBlitzNextWindowAt(venueId: string): Promise<number | null> {
   const testModeParam = isCategoryBlitzTestModeEnabled() ? "&testMode=1" : "";
   try {
-    const res = await fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}${testModeParam}`);
+    // `peek=1`: this only needs nextWindowAt; the session hook's own poll is
+    // what drives the game (category-blitz-how-to-play-plan Phase 5).
+    const res = await fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}${testModeParam}&peek=1`);
     const json = (await res.json()) as { ok: boolean; nextWindowAt?: string | null };
     return json.nextWindowAt ? new Date(json.nextWindowAt).getTime() : null;
   } catch {
@@ -648,6 +652,7 @@ function ContinuousWaitScreen({
   lobbyCountdown: number | null;
   playerCount?: number;
 }) {
+  const [rulesOpen, setRulesOpen] = useState(false);
   const isUrgent = lobbyCountdown != null && lobbyCountdown <= 10;
   // Same anti-flash grace as IntermissionStatus: for a continuous venue this
   // screen is usually a sub-second transient while the first poll self-heals
@@ -673,7 +678,9 @@ function ContinuousWaitScreen({
           </>
         )}
         <p className="mt-3 text-sm text-emerald-100/80">One letter · 12 categories · 3 minutes</p>
+        <HowToPlayButton onClick={() => setRulesOpen(true)} />
       </div>
+      <CategoryBlitzRulesSheet open={rulesOpen} onClose={() => setRulesOpen(false)} />
     </div>
   );
 }
@@ -1872,12 +1879,12 @@ export const AnsweringScreen = memo(function AnsweringScreen({
   // the swap at the end of the morph window is a pure element-type change with
   // identical geometry — nothing moves when the projection node goes away.
   const letterBadgeClassName = `flex shrink-0 items-center justify-center rounded-2xl ${
-    compactChrome ? "h-9 w-9" : "h-14 w-14"
+    compactChrome ? "h-9 w-9" : "h-[3.75rem] w-[3.75rem]"
   } ${theme.letterGradient} ${theme.letterGlow}`;
   const letterBadgeGlyph = (
     <span
       className={`[font-family:var(--ht-font-display)] font-black leading-none text-slate-950 ${
-        compactChrome ? "text-2xl" : "text-4xl"
+        compactChrome ? "text-2xl" : "text-[2.75rem]"
       }`}
     >
       {letter}
@@ -2043,8 +2050,7 @@ export const AnsweringScreen = memo(function AnsweringScreen({
       {/* Footer. This used to be the pinned editor — a second copy of the
           active row's category and answer, sitting above the keyboard. The
           rows now own real inputs (see AnswerRow), so the duplicate is gone
-          and nothing is left here but submit-error recovery and the autosave
-          reassurance line. It renders NOTHING while a row is being typed into,
+          and nothing is left here but submit-error recovery. It renders NOTHING while a row is being typed into,
           handing its full height to the answer list. */}
       {submitState === "error" ? (
         <div
@@ -2061,15 +2067,6 @@ export const AnsweringScreen = memo(function AnsweringScreen({
           >
             Retry
           </button>
-        </div>
-      ) : submitState === "idle" && !isExpired && !compactChrome ? (
-        <div
-          data-category-blitz-footer
-          className={`shrink-0 border-t ${theme.borderSoft} bg-slate-950 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3`}
-        >
-          <p className={`text-center text-xs font-semibold uppercase tracking-[0.1em] ${theme.textAccentSoft}`}>
-            Answers save automatically — graded when the timer runs out
-          </p>
         </div>
       ) : null}
     </div>
@@ -2101,8 +2098,11 @@ function Header({
   if (compact) return null;
   return (
     <div className={`shrink-0 border-b ${BORDER_ACTIVE} bg-slate-950 px-4 py-3`}>
-      <div className="flex items-center gap-2">
+      <div className="relative flex items-center gap-2">
         {onBack ? <ExitBackButton onExit={onBack} label="Back to venue" /> : null}
+        <h1 className="pointer-events-none absolute inset-x-0 text-center text-xl font-black uppercase tracking-[0.12em] text-white [font-family:var(--ht-font-display)]">
+          Category Blitz
+        </h1>
         {error && (
           <span className="ml-auto text-caption font-black uppercase tracking-widest text-rose-400">
             Reconnecting…
@@ -2150,7 +2150,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     return () => window.clearTimeout(hydrateId);
   }, []);
 
-  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete } = useCategoryBlitzSession(
+  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, hasLoaded, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete } = useCategoryBlitzSession(
     isHydrated ? venueId : "",
     isHydrated ? userId : ""
   );
@@ -2616,7 +2616,12 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
           "idle" phase (no session at all) keeps LobbyScreen: scheduled venues
           genuinely idle there, and for continuous venues it's a sub-second
           transient while the first poll self-heals the session. */}
-      {(phase === "idle" || phase === "lobby") &&
+      {(phase === "idle" || phase === "lobby") && !hasLoaded && !error && (
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          <HightopLoader variant="plain" size="lg" delayMs={0} label="Loading Category Blitz" showLabel />
+        </div>
+      )}
+      {(phase === "idle" || phase === "lobby") && (hasLoaded || error) &&
         (isContinuous ? (
           <ContinuousWaitScreen lobbyCountdown={lobbyCountdown} playerCount={session?.playerCount} />
         ) : (

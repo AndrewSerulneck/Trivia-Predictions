@@ -5,6 +5,7 @@ function installVenueScreenMocks(supabaseAdmin: unknown) {
   vi.doMock("@/lib/categoryBlitz", () => ({
     driveVenueCategoryBlitz: vi.fn(),
     getRoundResults: vi.fn(),
+    peekCategoryBlitz: vi.fn(),
   }));
   vi.doMock("@/lib/categoryBlitzSchedules", () => ({
     getNextScheduleOccurrence: vi.fn(),

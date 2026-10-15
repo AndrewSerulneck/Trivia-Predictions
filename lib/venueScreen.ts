@@ -1,6 +1,6 @@
 import "server-only";
 
-import { driveContinuousCategoryBlitz, driveVenueCategoryBlitz, getRoundResults } from "@/lib/categoryBlitz";
+import { driveVenueCategoryBlitz, getRoundResults, peekCategoryBlitz } from "@/lib/categoryBlitz";
 import { getNextScheduleOccurrence, listSchedules } from "@/lib/categoryBlitzSchedules";
 import { lobbyDwellSeconds, nextRoundStartAtMs } from "@/lib/categoryBlitzShared";
 import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
@@ -95,6 +95,10 @@ export type VenueScreenState =
           startsAt: string;
           recurringDays?: string[];
         } | null;
+        // Continuous Category Blitz is on here but asleep (nobody has the game
+        // open), so the TV invites players to start it instead of showing a
+        // round. Absent/false for scheduled venues and venues with it off.
+        categoryBlitzOnDemand?: boolean;
         sponsorSlots: VenueScreenSponsorSlot[];
       };
       updatedAt: number;
@@ -110,6 +114,9 @@ export type VenueScreenCategoryBlitzInput = {
   // results/intermission "next letter in" countdown. Null when no active round
   // to count down from (e.g. idle with only a scheduled preview).
   nextRoundStartsAt: string | null;
+  // Continuous mode is on but the game is asleep (category-blitz-how-to-play-plan
+  // Phase 5): no live round to show, so the idle screen says "play anytime".
+  asleep?: boolean;
 };
 
 export type VenueScreenSelectionInput = {
@@ -341,17 +348,28 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
   // below; the surrounding screen still keys on the real venue elsewhere.
   const roomId = resolveCategoryBlitzRoomId(venueId);
 
-  // Continuous mode takes precedence and drives its own session/rounds with no
-  // schedule windows. driveContinuousCategoryBlitz returns null when continuous
-  // mode isn't enabled for the venue, so scheduled venues fall straight through.
-  const continuous = await driveContinuousCategoryBlitz(roomId, now).catch(() => null);
-  if (continuous?.session && continuous.session.status !== "complete") {
-    const continuousSession = continuous.session;
-    // driveContinuousCategoryBlitz already resolved the venue's continuous
-    // config for its own pacing decisions and now returns it, so reuse that
-    // instead of issuing a second resolveContinuousConfig read per poll.
-    const continuousConfig = continuous.config;
-    const continuousRound = await getLatestCategoryBlitzRound(continuousSession.id).catch(() => null);
+  // Continuous mode takes precedence and runs its own session/rounds with no
+  // schedule windows. The TV only PEEKS: it never creates a session or starts a
+  // round, so a TV left on all night doesn't keep the game running ("sleep when
+  // idle", docs/category-blitz-how-to-play-plan.md Phase 5). Players opening the
+  // game wake it; the TV picks the live round up on its next poll. A peek that
+  // finds continuous mode off (null config) falls through to the scheduled path.
+  const peek = await peekCategoryBlitz(roomId, now).catch(() => null);
+  const continuousConfig = peek?.continuousConfig ?? null;
+  if (peek && continuousConfig && (!peek.session || !peek.awake)) {
+    return {
+      session: null,
+      round: null,
+      leaderboard: null,
+      nextStartsAt: null,
+      nextRecurringDays: [],
+      nextRoundStartsAt: null,
+      asleep: true,
+    };
+  }
+  if (peek?.session && continuousConfig && peek.session.status !== "complete") {
+    const continuousSession = peek.session;
+    const continuousRound = peek.latestRound;
     const continuousResults =
       continuousRound && (continuousRound.status === "complete" || continuousSession.status === "scoring")
         ? await getRoundResults(continuousRound.id).catch(() => null)
@@ -359,12 +377,10 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
     // Continuous sessions pace on the venue's own config; the shared anchor
     // computes when the next round begins so the results/intermission countdown
     // is real instead of a hardcoded 0.
-    const continuousTiming = continuousConfig
-      ? {
-          roundDurationSeconds: continuousConfig.roundDurationSeconds,
-          intermissionSeconds: continuousConfig.intermissionSeconds,
-        }
-      : null;
+    const continuousTiming = {
+      roundDurationSeconds: continuousConfig.roundDurationSeconds,
+      intermissionSeconds: continuousConfig.intermissionSeconds,
+    };
     return {
       session: continuousSession,
       round: continuousRound,
@@ -524,6 +540,7 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
             recurringDays: categoryBlitz.nextRecurringDays ?? [],
           }
         : null,
+      categoryBlitzOnDemand: categoryBlitz.asleep === true,
       sponsorSlots: input.idle?.sponsorSlots ?? [],
     },
     updatedAt,

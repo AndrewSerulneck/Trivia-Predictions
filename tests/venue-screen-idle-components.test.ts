@@ -134,6 +134,23 @@ describe("Idle venue screen components", () => {
     expect(html).not.toContain("Next up");
   });
 
+  it("invites players to start an asleep Category Blitz instead of showing a time", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(IdleVenueScreen, {
+        state: makeIdleState({
+          nextLiveTrivia: null,
+          nextCategoryBlitz: null,
+          categoryBlitzOnDemand: true,
+        }),
+        nowMs,
+      }),
+    );
+
+    expect(html).toContain("Category Blitz");
+    expect(html).toContain("Play anytime");
+    expect(html).toContain("Start it on your phone");
+  });
+
   it("formats longer idle countdowns for large TV display", () => {
     expect(formatIdleCountdown(null)).toBe("Schedule coming soon");
     expect(formatIdleCountdown(45)).toBe("0:45");

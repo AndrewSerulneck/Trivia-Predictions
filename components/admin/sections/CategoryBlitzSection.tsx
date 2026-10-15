@@ -162,7 +162,8 @@ function LiveSessionPanel({ venueId }: { venueId: string }) {
     }
     setLoading(true);
     try {
-      const response = await fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}`, {
+      // `peek=1`: viewing the admin panel must not wake a sleeping game.
+      const response = await fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}&peek=1`, {
         cache: "no-store",
       });
       const json = (await response.json()) as { ok: boolean; session?: CategoryBlitzSession | null };

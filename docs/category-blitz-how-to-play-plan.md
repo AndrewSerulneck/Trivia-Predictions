@@ -1,8 +1,14 @@
 # Category Blitz — How-to-Play, Cadence, Letter & Sleep-When-Idle Plan
 
 **Status:** Plan written 2026-10-14, revised the same day with Andrew's second round of answers.
-**Phase 1 (scoring & cadence) built 2026-10-14** on local branch `category-blitz-scoring-cadence`,
-uncommitted, not deployed. Handoff: `docs/category-blitz-how-to-play-plan_PHASE_1_HANDOFF.md`. Next: Phase 2.
+**Phase 4 re-scoped 2026-10-14** (Andrew): no full-width letter band — keep the top-left badge, slightly bigger.
+**Phase 1 (scoring & cadence) committed 2026-10-14** as `b1030fd` on local branch `category-blitz-scoring-cadence`
+(not pushed, not deployed). **Phase 2 (tutorial cards + local-build fix) built 2026-10-14**, uncommitted.
+**Phase 3 (rules popup, footer removal, lobby-flash fix) built 2026-10-14**, uncommitted.
+**Phase 4 (letter badge 56→60px, the plan's fallback size; 64px wrapped the rule at 360px) built 2026-10-14**, uncommitted.
+**Phase 5 (sleep when idle: `peek=1` / `peekCategoryBlitz`, scoring-only continuous cron, TV "Play anytime") built
+2026-10-14**, uncommitted, not deployed. Baseline before deploy: ~2,470 rounds/day.
+Latest handoff: `docs/category-blitz-how-to-play-plan_PHASE_5_HANDOFF.md`. Next: Phase 6 — **only after Phase 5 is deployed**.
 **Owner decisions:** Andrew, 2026-10-14 (§2). Do not re-ask them.
 
 ## 1. What Andrew asked for
@@ -24,7 +30,7 @@ uncommitted, not deployed. Handoff: `docs/category-blitz-how-to-play-plan_PHASE_
 | Alliteration bonus (new — **does not exist today**) | **+1 point, in BOTH modes.** Answer must be 2+ words, every word starting with the round's letter, and must already score (standard: valid + unique; Majority Rules: passed moderation + right letter + earned crowd points). |
 | Majority Rules cadence | **Exactly every 5th round** (rounds 5, 10, 15… of a session). Never random. The admin "mode selection" control is hidden because it no longer does anything. |
 | Majority Rules categories | **Fix it**: continuous Majority Rules rounds use the Majority Rules ("Blend In") category index, as the scheduled engine already does. |
-| Bigger letter | **Full-width letter band** across the top of the answering screen: very large letter, rule beneath, timer at right. Collapses back to today's small badge while the keyboard is open. |
+| Bigger letter | **Revised 2026-10-14 (Andrew changed his mind):** keep today's letter badge in the top-left of the answering header, just **slightly bigger**. No full-width band and no layout change. Andrew: the mobile keyboard handling is fragile and was hard to get working in browsers, so don't disturb it. The keyboard-open (`compactChrome`) badge stays exactly as it is. |
 | Card 4 artwork | Follow Andrew's example: `docs/category-blitz-how-to-play/card-4-example.jpg` (§3). Show **+2**, not the example's +1 — real scoring is 2 per unique answer. |
 | Card 5 artwork | Same layout as Card 4 (Andrew: "use this as an example for Card 5 as well"). |
 | Card 6 artwork | **Small example**: Animal → "Alligator", "5 players said it → +5 pts", in Majority Rules colours. |
@@ -47,6 +53,7 @@ sits **above** the graphic and is noticeably larger than today's body text.
 | 2 | Your job is to name something in each category that starts with that round's letter. | **Keep** today's step-1 art (timer + answer rows); may trim to 4 rows to fit. |
 | 3 | Each round lasts 3 minutes! Your responses get graded when time runs out. | New: stopwatch/clock (drawn SVG or Lucide `Timer`) with a "3:00" readout. Any motion respects Reduce Motion. |
 | 4 | Unique answers score points. | Per the example image: category **"BIRDS"** in large bold type in the middle; on the left an answer chip **"Ostrich"**, on the right **"Owl"**; above each chip a hand-drawn-style burst reading **"+2"**; below each chip a small player tile (simple illustrated icon + a made-up name, e.g. "Sam", "Jess"). |
+| 4b | No points for same answers! | Added 2026-10-14 (Andrew). Card 4's layout, but Sam and Jess both answer **"Ostrich"** under **"BIRDS"** and each burst reads a dimmed **"0"**. |
 | 5 | Bonus points are awarded for alliteration! | Same layout as Card 4: **"FRUIT"** in the middle, one player's chip **"Prickly Pear"** with a "+2" burst and a second, differently coloured **"+1 alliteration bonus"** burst. The other side can be empty or show a plain answer (e.g. "Peach", +2) for contrast. |
 | 6 | Be careful! Some rounds are "Majority Rules" mode, where the point is to give the answer you think will be most popular in each category. The point is to try and predict what other people in the room will answer. Hope you're good at reading minds! | Small example (§2). "Be careful!" may be set as the large line with the rest as body text — words unchanged. |
 
@@ -195,6 +202,13 @@ Cost: +1 count query per round start. Negligible (and far fewer round starts aft
 **Model: Claude Opus 5.5 · Effort: medium** (visual craft; must fit a fixed-size card on small
 phones without touching the other games' cards).
 
+0. **Unblock the local build first.** `npm run build` type-checks every `.ts` file the tsconfig
+   `include` globs match, including the git-ignored scratch folder `tmp/` (`.gitignore:22`). A
+   Speed Trivia probe there
+   (`tmp/speed-trivia-uniqueness-private/progressive-review-2026-10-14/phase-3/speed-trivia-phase3-browser-probe.ts`)
+   has type errors, so every local build fails after "Compiled successfully". Vercel builds from
+   git and never sees `tmp/`. Fix: add `"tmp"` to `tsconfig.json` `exclude` (beside `native`).
+   Don't edit, move or delete the probe file — it is someone else's Speed Trivia work.
 1. One source of copy: a `CATEGORY_BLITZ_HOW_TO_PLAY` array (new `lib/categoryBlitzHowToPlay.ts`,
    or inside `lib/venueGameCards.ts`) holding each card's display text and its list-version text
    (§3). The `category-blitz` `steps` and `rules` are built from it; Phase 3's popup reads it too.
@@ -229,18 +243,29 @@ phones without touching the other games' cards).
    first render of `/category-blitz/play` never contains the old rules text.
 6. Update `app/faqs/page.tsx` Category Blitz copy (every 5th round; alliteration bonus).
 
-### Phase 4 — Full-width letter band
-**Model: Claude Opus 5.5 · Effort: high** (layout morph + mobile-keyboard compact chrome are
-historically fragile here — see `docs/category-blitz-mobile-keyboard-handoff.md`).
+### Phase 4 — Slightly bigger letter badge (revised 2026-10-14)
+**Model: Claude Opus 5.5 · Effort: medium** (a two-class change, but it sits next to the
+mobile-keyboard chrome, which is fragile — read `docs/category-blitz-mobile-keyboard-handoff.md`
+first).
 
-1. Replace the header row with a band: very large letter (~5–6rem glyph), the mode rule beneath
-   it, timer at the right; mode colours from `theme` (standard vs Majority Rules).
-2. Keep `layoutId={CB_LETTER_BADGE_LAYOUT_ID}` on the letter element so the round-start reveal
-   still morphs into it; keep the "drop to plain div after the morph" behaviour.
-3. `compactChrome` (keyboard open) keeps today's small 36px badge row so answer rows keep their
-   space.
-4. Run `scripts/verify-category-blitz-mobile-shell.cjs` and the `verify` skill; screenshot both
-   modes, keyboard open and closed.
+Andrew changed his mind: **no full-width band.** The letter stays where it is (top-left of the
+answering header, `AnsweringScreen` in `CategoryBlitzGame.tsx`, search `letterBadgeClassName`),
+just slightly bigger. Do not restructure the header, move the timer or the mode rule, or touch
+anything keyboard-related.
+
+1. Keyboard **closed** only: badge `h-14 w-14` (56px) → `h-16 w-16` (64px); glyph `text-4xl`
+   (36px) → `text-5xl` (48px). If the mode rule text wraps worse at 360px width, settle for
+   60px / `text-[2.75rem]` rather than shrinking anything else.
+2. Keyboard **open** (`compactChrome`): **unchanged** — `h-9 w-9`, `text-2xl`, `py-1.5` header.
+3. Keep `layoutId={CB_LETTER_BADGE_LAYOUT_ID}` and the "drop to plain div after the morph"
+   behaviour exactly as they are. The shared `letterBadgeClassName` already gives the morphing
+   and plain forms identical geometry — change the size only there. Check the round-start reveal
+   still lands cleanly on the larger badge.
+4. Out of scope: `compactChrome` logic, `visualViewport`/keyboard detection, the footer/answer-row
+   layout, the reveal badge's own size.
+5. Run `scripts/verify-category-blitz-mobile-shell.cjs` and the `verify` skill; screenshot both
+   modes, keyboard open and closed, at 360px and 390px widths. Keyboard-open screenshots should be
+   pixel-identical in layout to before.
 
 ### Phase 5 — Sleep when idle
 **Model: Claude Opus 5.5 · Effort: high** (changes the engine that runs every venue's game; a
@@ -327,7 +352,7 @@ table is touched.
 2. `verify` skill end-to-end on Category Blitz: venue home → tap game (no lobby flash) → tutorial
    (7 cards) → join → round → intermission → "How to play" popup; a second browser joins the same
    round; close both and confirm no new round starts.
-3. Device checklist for Andrew (real phone): tutorial readability, popup, letter band, keyboard
+3. Device checklist for Andrew (real phone): tutorial readability, popup, bigger letter badge, keyboard
    open/close, Android Back closes popup, Majority Rules on round 5, alliteration chip, TV shows the
    asleep state then wakes when a player opens the game.
 4. Add a Category Blitz bullet to `CLAUDE.md`: cadence home (`isReverseRound`), alliteration home

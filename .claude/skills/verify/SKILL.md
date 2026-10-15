@@ -78,7 +78,9 @@ For Category Blitz specifically:
   expire for real or see below).
 - **No cron needed in dev:** any `GET /api/category-blitz/sessions?venueId=...`
   poll (a real client tab, or a bare `curl`) calls `driveVenueCategoryBlitz`,
-  which self-heals/scores expired rounds on every request. If your Playwright
+  which self-heals/scores expired rounds on every request (continuous venues:
+  `driveContinuousCategoryBlitz`, which also starts the next round — the game
+  sleeps when nobody calls it; `&peek=1` only reads). If your Playwright
   browser already closed, just `curl` the sessions endpoint once to trigger
   scoring instead of waiting for a live tab.
 

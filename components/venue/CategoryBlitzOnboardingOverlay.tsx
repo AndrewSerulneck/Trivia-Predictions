@@ -155,20 +155,27 @@ export function CategoryBlitzOnboardingOverlay({
             </AnimatePresence>
           </div>
         </div>
-        <div className="flex shrink-0 items-center justify-center gap-2 pt-3">
+        {/* Each 44px button is a transparent tap area around a small dot, so all
+            7 fit side by side on a 320px phone (7 × 44 = 308px). */}
+        <div className="flex shrink-0 items-center justify-center pt-1">
           {steps.map((_, index) => (
             <button
               key={index}
               type="button"
               onClick={() => transitionToStep(index)}
-              className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button h-2 rounded-full transition-all duration-200 ${
-                index === currentStep ? `w-6 ${GAME_STEP_DOT_ACTIVE[GAME_KEY]}` : "w-2 bg-white/30"
-              }`)}
+              className="tp-player-hit-target tp-player-pressable inline-flex items-center justify-center !border-0 !bg-transparent !p-0 !shadow-none"
               aria-label={`Go to step ${index + 1}`}
-            />
+              aria-current={index === currentStep ? "step" : undefined}
+            >
+              <span
+                className={`block h-2 rounded-full transition-all duration-200 ${
+                  index === currentStep ? `w-6 ${GAME_STEP_DOT_ACTIVE[GAME_KEY]}` : "w-2 bg-white/30"
+                }`}
+              />
+            </button>
           ))}
         </div>
-        <div className="grid shrink-0 grid-cols-2 gap-2 pt-3 sm:pt-4">
+        <div className="grid shrink-0 grid-cols-2 gap-2 pt-1 sm:pt-2">
           <button
             type="button"
             onClick={currentStep > 0 ? goToPreviousStep : handleClose}

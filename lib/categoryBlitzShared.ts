@@ -145,6 +145,33 @@ export const nextRoundStartAtMs = (
 };
 
 /**
+ * How long past a continuous round's next-round instant the game still counts
+ * as awake. Only the open game page starts rounds (docs/category-blitz-how-to-play-plan.md
+ * Phase 5, "sleep when idle"): its boundary kick lands within ~0–10s and its
+ * fallback poll within 15s, so 30s covers a slow wake without making a
+ * genuinely idle venue look live for long.
+ */
+export const CATEGORY_BLITZ_SLEEP_GRACE_MS = 30_000;
+
+/**
+ * True while a continuous venue's game is running: a round is in play, or its
+ * results/intermission are still showing. False once the next round was due
+ * (plus the grace) and nobody with the game open started it — the game is
+ * asleep. A session with no rounds is asleep too. Read-only callers (venue
+ * home's LIVE badge, the TV, the admin panel) use this instead of "a session
+ * exists", because continuous sessions stay open forever.
+ */
+export const isContinuousGameAwake = (
+  latestRound: { scoredAt: string | null; startedAt: string } | null,
+  testMode: boolean,
+  continuousTiming: CategoryBlitzContinuousTiming,
+  nowMs: number,
+): boolean => {
+  if (!latestRound) return false;
+  return nowMs < nextRoundStartAtMs(latestRound, testMode, continuousTiming) + CATEGORY_BLITZ_SLEEP_GRACE_MS;
+};
+
+/**
  * True when `answer` starts with `letter`, ignoring a leading "the"/"a"/"an"
  * and case. A bare article with nothing after it ("a", "the") is rejected
  * rather than treated as starting with the article's own letter.

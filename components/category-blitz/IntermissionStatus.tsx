@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { CategoryBlitzRulesSheet, HowToPlayButton } from "@/components/category-blitz/CategoryBlitzRulesSheet";
 import { useDelayedFlag } from "@/lib/hooks/useDelayedFlag";
 
 const BORDER_CARD = "border-emerald-400/30";
@@ -36,6 +38,7 @@ interface IntermissionStatusProps {
 const IntermissionStatus = ({ nextRoundStartsIn, compact = false }: IntermissionStatusProps) => {
   const expired = nextRoundStartsIn != null && nextRoundStartsIn <= 0;
   const showLoading = useDelayedFlag(expired, LOADING_GRACE_MS);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   if (nextRoundStartsIn == null) {
     return (
@@ -70,6 +73,8 @@ const IntermissionStatus = ({ nextRoundStartsIn, compact = false }: Intermission
       >
         {formatMmSs(nextRoundStartsIn)}
       </p>
+      <HowToPlayButton onClick={() => setRulesOpen(true)} compact={compact} />
+      <CategoryBlitzRulesSheet open={rulesOpen} onClose={() => setRulesOpen(false)} />
     </div>
   );
 };

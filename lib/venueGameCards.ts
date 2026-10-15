@@ -1,9 +1,12 @@
 export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy" | "category-blitz" | "nfl-pickem";
 
+import { CATEGORY_BLITZ_RULES, CATEGORY_BLITZ_TUTORIAL_CARDS } from "@/lib/categoryBlitzHowToPlay";
+
 export type GameOnboardingStep = {
-  stepLabel: string;
+  /** Small eyebrow above the card. Category Blitz cards have none. */
+  stepLabel?: string;
   heading: string;
-  body: string | string[];
+  body?: string | string[];
 };
 
 export type VenueGameCardConfig = {
@@ -12,7 +15,7 @@ export type VenueGameCardConfig = {
   path: string;
   cardClassName: string;
   rules: string[];
-  steps: [GameOnboardingStep, GameOnboardingStep, GameOnboardingStep] | [GameOnboardingStep, GameOnboardingStep, GameOnboardingStep, GameOnboardingStep];
+  steps: GameOnboardingStep[];
   visibleOnVenueHome?: boolean;
 };
 
@@ -145,39 +148,9 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     title: "Category Blitz",
     path: "/category-blitz",
     cardClassName: "bg-emerald-600 text-white",
-    visibleOnVenueHome: false,  // card only shown when a live session exists
-    rules: [
-      "-Each round, one letter and 12 categories are revealed",
-      "-Players must name something in each category starting with that letter",
-      "-Be quick! You have 3 minutes to fill all 12 categories",
-      "-Only unique answers earn points.",
-      "-The point is to be original. If someone else thought of the same response as you in any category, no points!",
-      "-Watch out! In Majority Rules rounds, the rules flip — the point is to match the crowd. More popular answers score more points.",
-    ],
-    steps: [
-      {
-        stepLabel: "What is it?",
-        heading: "A live word game for the whole venue.",
-        body: "A letter drops at the beginning of each round. Your goal is to fill every category with something that starts with that letter.",
-      },
-      {
-        stepLabel: "How it works",
-        heading: "Think fast. Type faster.",
-        body: "You get 3 minutes to fill all 12 categories. Your answers lock when the timer expires.",
-      },
-      {
-        stepLabel: "Scoring",
-        heading: "Players get points for unique answers.",
-        body: [
-          "If someone else in the room thought of the same answer as you, neither of you get points. So be creative!",
-        ],
-      },
-      {
-        stepLabel: "Watch out!",
-        heading: "Sometimes the rules flip.",
-        body: "In 'Majority Rules' mode, you win by giving the answer you think most other players will write. Be predictable, not creative!",
-      },
-    ],
+    visibleOnVenueHome: false,  // unread: VENUE_HOME_GAME_KEYS always shows this card; a "LIVE" badge appears only while a round is awake (peek=1)
+    rules: CATEGORY_BLITZ_RULES,
+    steps: CATEGORY_BLITZ_TUTORIAL_CARDS.map(({ statement, detail }) => ({ heading: statement, body: detail })),
   },
   {
     key: "bingo",

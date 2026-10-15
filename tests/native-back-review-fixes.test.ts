@@ -184,6 +184,7 @@ describe("R1 — the audited popups are wired", () => {
     ["components/venue/VenueHubClient.tsx", 'useNativeBackHandler("overlay", isMenuOpen ? () => setIsMenuOpen(false) : null)'],
     ["components/venue/VenueHubClient.tsx", 'useNativeBackHandler("overlay", selectedChallengeDetail ? () => setSelectedChallengeId(null) : null)'],
     ["components/venue/CategoryBlitzOnboardingOverlay.tsx", 'useNativeBackHandler("overlay", open ?'],
+    ["components/owner/sheet/useModalOverlay.ts", 'useNativeBackHandler("overlay", open ? requestClose : null)'],
     ["components/ui/AccountMenu.tsx", 'useNativeBackHandler("overlay", isMenuOpen ? () => setIsMenuOpen(false) : null)'],
     ["components/ui/AccountMenu.tsx", 'useNativeBackHandler("overlay", isUsernameModalOpen ?'],
     ["components/social-share/StoryCaptureModal.tsx", 'useNativeBackHandler("overlay", isOpen ? closeModal : null)'],

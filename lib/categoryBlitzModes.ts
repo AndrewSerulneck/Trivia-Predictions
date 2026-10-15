@@ -25,6 +25,13 @@ export const MAJORITY_RULES_EVERY_N_ROUNDS = 5;
 export const isReverseRound = (roundIndex: number) =>
   roundIndex % MAJORITY_RULES_EVERY_N_ROUNDS === MAJORITY_RULES_EVERY_N_ROUNDS - 1;
 
+// Standard-round points for one valid answer nobody else gave.
+export const POINTS_PER_UNIQUE_ANSWER = 2;
+
+// Fewest session participants for a round to award any points (Majority Rules
+// needs only a pair to match). Below this every answer scores 0.
+export const minPlayersToScoreFor = (mode: CategoryBlitzMode | (string & {})): number => (mode === "reverse" ? 2 : 3);
+
 // Points for one submission in a "reverse" round: 1 pt per player who gave the
 // same normalized answer, uncapped.
 export const reverseRoundPoints = (matchingPlayerCount: number): number => matchingPlayerCount;

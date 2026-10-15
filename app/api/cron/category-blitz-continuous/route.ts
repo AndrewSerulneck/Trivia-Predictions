@@ -3,10 +3,10 @@ import { isCronAuthorized } from "@/lib/cronAuth";
 import { runContinuousCategoryBlitzEngine } from "@/lib/categoryBlitz";
 
 /**
- * Drives every venue with continuous Category Blitz mode enabled: scores expired
- * rounds and starts the next one once its intermission has elapsed. Mirrors the
- * scheduled engine's cron (category-blitz-score) so rounds keep advancing even
- * when no player is actively polling the sessions endpoint.
+ * Scores expired continuous Category Blitz rounds — so a round is still graded
+ * when every player closed the app mid-round. It never starts a round: the game
+ * "sleeps when idle" and only a player with the game open starts the next one
+ * (docs/category-blitz-how-to-play-plan.md Phase 5). An idle tick is one query.
  */
 export async function POST(request: Request) {
   if (!isCronAuthorized(request)) {

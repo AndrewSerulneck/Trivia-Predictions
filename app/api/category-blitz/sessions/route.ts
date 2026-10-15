@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
-import { createSession, driveContinuousCategoryBlitz, driveVenueCategoryBlitz, registerSessionPresence } from "@/lib/categoryBlitz";
+import { createSession, driveContinuousCategoryBlitz, driveVenueCategoryBlitz, peekCategoryBlitz, registerSessionPresence } from "@/lib/categoryBlitz";
 import { resolveContinuousConfig } from "@/lib/categoryBlitzPool";
 import { categoryBlitzChannelName } from "@/lib/categoryBlitzShared";
 import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
@@ -16,6 +16,13 @@ import { isSessionEnforced, readSession } from "@/lib/serverSession";
  * lookup) so it self-heals a stale session AND advances/fires rounds on
  * every poll — this is what makes the game playable without the production
  * cron, which never runs against `next dev` or preview deployments.
+ *
+ * Continuous venues "sleep when idle" (docs/category-blitz-how-to-play-plan.md
+ * Phase 5): this drive is the ONLY thing that starts a continuous round, so
+ * only the open game page may call it. Anything that merely looks — venue home,
+ * the admin panel — passes `peek=1`, which reads without creating or starting
+ * anything and adds `live` (a round is in play or its results are showing).
+ * The TV reads through `peekCategoryBlitz` directly (lib/venueScreen.ts).
  */
 export async function GET(request: Request) {
   try {
@@ -35,6 +42,34 @@ export async function GET(request: Request) {
     const roomId = resolveCategoryBlitzRoomId(venueId);
 
     const now = new Date();
+
+    if (searchParams.get("peek") === "1") {
+      const peek = await peekCategoryBlitz(roomId, now);
+      let nextWindowAt: string | null = null;
+      if (!peek.continuousConfig) {
+        const nextOcc = getNextScheduleOccurrence(await listSchedules(roomId), now);
+        nextWindowAt = nextOcc ? nextOcc.windowStart.toISOString() : null;
+      }
+      const session = peek.session
+        ? {
+            ...peek.session,
+            ...(peek.continuousConfig
+              ? {
+                  roundDurationSeconds: peek.continuousConfig.roundDurationSeconds,
+                  intermissionSeconds: peek.continuousConfig.intermissionSeconds,
+                }
+              : {}),
+            venueId, // concealment, as below
+          }
+        : null;
+      return NextResponse.json({
+        ok: true,
+        session,
+        nextWindowAt,
+        realtimeChannel: categoryBlitzChannelName(roomId),
+        live: peek.awake,
+      });
+    }
 
     // Continuous mode is driven by a separate engine and has no schedule
     // windows. resolveContinuousConfig returns null unless continuous mode is

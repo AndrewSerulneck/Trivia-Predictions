@@ -1034,18 +1034,19 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     categoryBlitzRequestRef.current = controller;
     const signal = controller.signal;
     try {
+      // `peek=1`: look only. Venue home must never wake a sleeping game —
+      // only the open game page starts rounds (category-blitz-how-to-play-plan
+      // Phase 5). `live` = a round is in play or its results are showing.
       const payload = await fetchJsonWithTimeout<{
         ok: boolean;
-        session?: { status?: string } | null;
+        live?: boolean;
       }>(
-        `/api/category-blitz/sessions?venueId=${encodeURIComponent(venue.id)}`,
+        `/api/category-blitz/sessions?venueId=${encodeURIComponent(venue.id)}&peek=1`,
         3600,
         signal
       );
       if (signal.aborted) return;
-      const status = payload?.session?.status ?? null;
-      const active = status === "lobby" || status === "active" || status === "scoring";
-      setCategoryBlitzSessionActive(active);
+      setCategoryBlitzSessionActive(payload?.live === true);
     } catch {
       // Non-fatal — category-blitz card simply won't appear.
     } finally {

@@ -152,6 +152,7 @@ import letterIndexData from "@/data/category-blitz/category-letter-index.json";
 import {
   driveContinuousCategoryBlitz,
   driveVenueCategoryBlitz,
+  peekCategoryBlitz,
   runCategoryBlitzEngine,
   runContinuousCategoryBlitzEngine,
 } from "@/lib/categoryBlitz";
@@ -185,7 +186,30 @@ function openContinuousSession(venueId: string, overrides: Partial<Row> = {}): R
   };
 }
 
-describe("runContinuousCategoryBlitzEngine — venue selection (Phase 2)", () => {
+// A round in a continuous session, relative to SLEEP_NOW. Defaults to a round
+// that finished and was scored long ago — the game is asleep.
+function continuousRound(venueId: string, overrides: Partial<Row> = {}): Row {
+  return {
+    id: `round-${venueId}`,
+    session_id: `session-${venueId}`,
+    venue_id: venueId,
+    letter: "T",
+    category_set_index: 0,
+    categories: [],
+    started_at: "2026-07-15T00:00:00.000Z",
+    ends_at: "2026-07-15T00:03:00.000Z",
+    scored_at: "2026-07-15T00:03:05.000Z",
+    status: "complete",
+    mode: "standard",
+    created_at: "2026-07-15T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+const SLEEP_NOW = new Date("2026-07-15T06:00:00.000Z");
+const minutesBefore = (minutes: number): string => new Date(SLEEP_NOW.getTime() - minutes * 60_000).toISOString();
+
+describe("runContinuousCategoryBlitzEngine — sleep when idle (how-to-play plan Phase 5)", () => {
   beforeEach(() => {
     store = {
       category_blitz_sessions: [],
@@ -196,48 +220,128 @@ describe("runContinuousCategoryBlitzEngine — venue selection (Phase 2)", () =>
     delete process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT;
   });
 
-  it("drives venues with an open continuous session and dedupes duplicate rows", async () => {
-    store.category_blitz_sessions = [
-      openContinuousSession("venue-1"),
-      openContinuousSession("venue-2"),
-    ];
-    store.category_blitz_continuous_config = [
-      continuousConfigRow("venue-1"),
-      continuousConfigRow("venue-2"),
-    ];
+  it("never starts a round, even when an open session's intermission ended long ago", async () => {
+    store.category_blitz_sessions = [openContinuousSession("venue-1"), openContinuousSession("venue-2")];
+    store.category_blitz_continuous_config = [continuousConfigRow("venue-1"), continuousConfigRow("venue-2")];
+    store.category_blitz_rounds = [continuousRound("venue-1"), continuousRound("venue-2")];
 
-    const result = await runContinuousCategoryBlitzEngine(new Date("2026-07-15T00:00:05.000Z"));
+    const result = await runContinuousCategoryBlitzEngine();
 
-    expect(result.errors).toEqual([]);
-    expect(new Set(result.driven)).toEqual(new Set(["venue-1", "venue-2"]));
+    expect(result).toEqual({ scored: [], errors: [] });
+    expect(store.category_blitz_rounds).toHaveLength(2);
+    expect(mocks.broadcastCategoryBlitz).not.toHaveBeenCalled();
   });
 
-  it("ignores venues with a completed continuous session and venues with no session at all", async () => {
-    store.category_blitz_sessions = [
-      openContinuousSession("venue-1"),
-      openContinuousSession("venue-2", { status: "complete" }),
-    ];
-    // venue-3 has an active override config row but has never been opened by
-    // a player — no session exists yet, so it must NOT be swept.
-    store.category_blitz_continuous_config = [
-      continuousConfigRow("venue-1"),
-      continuousConfigRow("venue-3"),
-    ];
-
-    const result = await runContinuousCategoryBlitzEngine(new Date("2026-07-15T00:00:05.000Z"));
-
-    expect(result.driven).toEqual(["venue-1"]);
-  });
-
-  it("also drives a venue whose session exists only because of the global default (no override row)", async () => {
+  it("never creates a session for a venue that has continuous mode on but no session", async () => {
     process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT = "true";
-    store.category_blitz_sessions = [openContinuousSession("venue-default")];
-    // No category_blitz_continuous_config row for venue-default at all.
+    store.category_blitz_continuous_config = [continuousConfigRow("venue-3")];
 
-    const result = await runContinuousCategoryBlitzEngine(new Date("2026-07-15T00:00:05.000Z"));
+    await runContinuousCategoryBlitzEngine();
 
-    expect(result.errors).toEqual([]);
-    expect(result.driven).toEqual(["venue-default"]);
+    expect(store.category_blitz_sessions).toEqual([]);
+    expect(store.category_blitz_rounds).toEqual([]);
+  });
+
+  it("still grades a round every player left mid-round, and starts nothing after it", async () => {
+    store.category_blitz_sessions = [openContinuousSession("venue-1")];
+    store.category_blitz_continuous_config = [continuousConfigRow("venue-1")];
+    store.category_blitz_rounds = [continuousRound("venue-1", { status: "active", scored_at: null })];
+
+    const result = await runContinuousCategoryBlitzEngine();
+
+    // The fake can't run scoreRound to completion; what matters is that the
+    // expired round was picked up for grading (scored, or attempted).
+    const attempted = [...result.scored, ...result.errors.map((e) => e.split(":")[0])];
+    expect(attempted).toEqual(["round-venue-1"]);
+    expect(store.category_blitz_rounds).toHaveLength(1);
+  });
+});
+
+describe("peekCategoryBlitz — look without waking (how-to-play plan Phase 5)", () => {
+  beforeEach(() => {
+    store = {
+      category_blitz_sessions: [],
+      category_blitz_continuous_config: [continuousConfigRow("venue-1")],
+      category_blitz_rounds: [],
+    };
+    mocks.broadcastCategoryBlitz.mockReset();
+    delete process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT;
+  });
+
+  it("continuous on with no session: asleep, and creates nothing", async () => {
+    const peek = await peekCategoryBlitz("venue-1", SLEEP_NOW);
+
+    expect(peek.continuousConfig).not.toBeNull();
+    expect(peek.session).toBeNull();
+    expect(peek.awake).toBe(false);
+    expect(store.category_blitz_sessions).toEqual([]);
+  });
+
+  it("a round in play is awake", async () => {
+    store.category_blitz_sessions = [openContinuousSession("venue-1")];
+    store.category_blitz_rounds = [
+      continuousRound("venue-1", { status: "active", scored_at: null, started_at: minutesBefore(1), ends_at: minutesBefore(-2) }),
+    ];
+
+    const peek = await peekCategoryBlitz("venue-1", SLEEP_NOW);
+
+    expect(peek.awake).toBe(true);
+    expect(peek.latestRound?.id).toBe("round-venue-1");
+  });
+
+  it("results/intermission still showing is awake (intermission 300s, scored 2 min ago)", async () => {
+    store.category_blitz_sessions = [openContinuousSession("venue-1")];
+    store.category_blitz_rounds = [
+      continuousRound("venue-1", { started_at: minutesBefore(5), ends_at: minutesBefore(2), scored_at: minutesBefore(2) }),
+    ];
+
+    expect((await peekCategoryBlitz("venue-1", SLEEP_NOW)).awake).toBe(true);
+  });
+
+  it("next round overdue and nobody started it: asleep, and starts nothing", async () => {
+    store.category_blitz_sessions = [openContinuousSession("venue-1")];
+    store.category_blitz_rounds = [continuousRound("venue-1")];
+
+    const peek = await peekCategoryBlitz("venue-1", SLEEP_NOW);
+
+    expect(peek.session?.id).toBe("session-venue-1");
+    expect(peek.awake).toBe(false);
+    expect(store.category_blitz_rounds).toHaveLength(1);
+    expect(mocks.broadcastCategoryBlitz).not.toHaveBeenCalled();
+  });
+
+  it("a scheduled venue (continuous off) with an open session reads as live, as before", async () => {
+    store.category_blitz_continuous_config = [];
+    store.category_blitz_sessions = [scheduledSession("venue-1")];
+
+    const peek = await peekCategoryBlitz("venue-1", SLEEP_NOW);
+
+    expect(peek.continuousConfig).toBeNull();
+    expect(peek.session?.id).toBe("sched-session-venue-1");
+    expect(peek.awake).toBe(true);
+  });
+});
+
+describe("driveContinuousCategoryBlitz — a player wakes a sleeping game (how-to-play plan Phase 5)", () => {
+  beforeEach(() => {
+    store = {
+      category_blitz_sessions: [openContinuousSession("venue-1")],
+      category_blitz_continuous_config: [continuousConfigRow("venue-1")],
+      category_blitz_rounds: [continuousRound("venue-1")],
+    };
+    mocks.broadcastCategoryBlitz.mockReset();
+    delete process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT;
+  });
+
+  it("starts a fresh round at once, with the full round length", async () => {
+    const before = Date.now();
+    const result = await driveContinuousCategoryBlitz("venue-1", SLEEP_NOW);
+
+    expect(result?.action).toBe("started_round");
+    const endsInMs = new Date(result!.round!.endsAt).getTime() - before;
+    expect(endsInMs).toBeGreaterThanOrEqual(180_000);
+    expect(endsInMs).toBeLessThan(185_000);
+    expect(store.category_blitz_rounds).toHaveLength(2);
   });
 });
 

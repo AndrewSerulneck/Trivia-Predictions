@@ -69,6 +69,8 @@ export interface CategoryBlitzSessionState {
   /** Seconds until the lobby's round starts, or null when there's no known start time (e.g. a manual session). */
   lobbyCountdown:  number | null;
   isConnected:     boolean;
+  /** True once the first session response has landed (any answer, including "no session"). */
+  hasLoaded:       boolean;
   error:           string | null;
   /**
    * True once `error` has persisted across several consecutive poll failures
@@ -138,8 +140,10 @@ const ESCALATE_AFTER_FAILURES = 4;
 // assemble the board and INSERT the row on demand. Nothing fires at T=0, so
 // before this existed a player who watched the intermission countdown hit zero
 // waited out the rest of the 15s fallback poll — ~7.5s on average — staring at
-// "Loading categories…" while the server sat idle. The one-minute cron is only
-// a backstop and is usually slower still.
+// "Loading categories…" while the server sat idle. Since "sleep when idle"
+// (docs/category-blitz-how-to-play-plan.md Phase 5) the cron no longer starts
+// rounds at all: this kick and the fallback poll below are the only things
+// that do, which is exactly what keeps an empty venue's game asleep.
 //
 // So: when the countdown reaches zero, ask for the round instead of waiting to
 // be told about it. Whichever client lands first creates the round; everyone
@@ -186,6 +190,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   const [nextRoundCountdown, setNextRoundCountdown] = useState<NextRoundCountdown | null>(null);
   const [lobbyCountdown, setLobbyCountdown] = useState<number | null>(null);
   const [isConnected,   setIsConnected]   = useState(false);
+  const [hasLoaded,      setHasLoaded]      = useState(false);
   const [error,         setError]         = useState<string | null>(null);
   const [errorEscalated, setErrorEscalated] = useState(false);
   /** The live-events channel this client subscribes to, handed back by the
@@ -598,6 +603,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       setErrorEscalated(false);
       const s = json.session ?? null;
       setSession(s);
+      setHasLoaded(true);
       sessionIdRef.current = s?.id ?? null;
       if (!s) {
         setRound(null);
@@ -1024,5 +1030,5 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   // public shape.
   const nextRoundStartsIn = nextRoundCountdown?.secondsRemaining ?? null;
 
-  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, isConnected, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete };
+  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, isConnected, hasLoaded, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete };
 }

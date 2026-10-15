@@ -4,6 +4,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/categoryBlitz", () => ({
   driveVenueCategoryBlitz: vi.fn(),
   getRoundResults: vi.fn(),
+  peekCategoryBlitz: vi.fn(),
 }));
 vi.mock("@/lib/categoryBlitzSchedules", () => ({
   getNextScheduleOccurrence: vi.fn(),
@@ -361,6 +362,30 @@ describe("selectVenueScreenState", () => {
       recurringDays: ["thu", "sat"],
     });
     expect(state.idle?.sponsorSlots).toEqual(sponsorSlots);
+  });
+
+  it("an asleep continuous Category Blitz shows the idle screen with a play-anytime invite, not a stale round", () => {
+    // Sleep when idle (docs/category-blitz-how-to-play-plan.md Phase 5): the TV
+    // never wakes the game, so while nobody plays it shows the idle screen.
+    const state = selectVenueScreenState({
+      venue,
+      liveTrivia: makeInactiveLive(),
+      categoryBlitz: {
+        session: null,
+        round: null,
+        leaderboard: null,
+        nextStartsAt: null,
+        nextRecurringDays: [],
+        nextRoundStartsAt: null,
+        asleep: true,
+      },
+      updatedAt,
+    });
+
+    expect(state.mode).toBe("idle");
+    expect(state.categoryBlitz).toBeNull();
+    expect(state.idle?.categoryBlitzOnDemand).toBe(true);
+    expect(state.idle?.nextCategoryBlitz).toBeNull();
   });
 
   it("maps active sponsor rows and filters sponsors outside their date window", () => {

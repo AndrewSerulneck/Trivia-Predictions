@@ -45,7 +45,7 @@ const FAQ_ITEMS: FaqItem[] = [
       {
         title: "Category Blitz",
         description:
-          "A competitive, fast-paced trivia game where players must name items in a category that start with a given letter. Each round has 12 categories and a 3-minute time limit. Points are awarded for unique answers. But watch out, sometimes the rules can flip to 'Majority Rules' mode, where popular answers score more points.",
+          "A competitive, fast-paced trivia game where players must name items in a category that start with a given letter. Each round has 12 categories and a 3-minute time limit. Points are awarded for unique answers, with a bonus point when every word of your answer starts with the round's letter. But watch out: every 5th round flips to 'Majority Rules' mode, where popular answers score more points.",
       },
       {
         title: "Live Trivia",

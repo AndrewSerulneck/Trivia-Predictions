@@ -22,7 +22,10 @@ import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 
 export type NextGame = {
   label: string;
-  startsAt: string | number | Date;
+  /** Scheduled games: shown as a time above the label. */
+  startsAt?: string | number | Date;
+  /** Replaces the time line for a game with no start time (e.g. "Play anytime"). */
+  kicker?: string;
   countdownText?: string;
 };
 
@@ -190,7 +193,7 @@ export function TvIdleAttract({
                     transition={{ duration: reduceMotion ? 0.15 : 0.85, ease: EASE }}
                   >
                     <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "0.32em", textTransform: "uppercase", color: BRAND.slate }}>
-                      {formatTime(game.startsAt)}
+                      {game.kicker ?? (game.startsAt !== undefined ? formatTime(game.startsAt) : "")}
                     </div>
 
                     <div style={{ fontSize: 72, fontWeight: 900, lineHeight: 1.04, letterSpacing: "-0.03em", marginTop: 12 }}>

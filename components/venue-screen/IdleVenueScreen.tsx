@@ -102,6 +102,14 @@ export function IdleVenueScreen({ state, nowMs }: IdleVenueScreenProps) {
       startsAt: categoryBlitz.startsAt,
       countdownText: display?.value,
     });
+  } else if (state.idle.categoryBlitzOnDemand) {
+    // Continuous Category Blitz is on but asleep — it only runs while a player
+    // has it open (category-blitz-how-to-play-plan Phase 5), so invite one to.
+    nextGames.push({
+      label: "Category Blitz",
+      kicker: "Play anytime",
+      countdownText: "Start it on your phone",
+    });
   }
 
   return <TvIdleAttract venueName={venueName} nextGames={nextGames} nowMs={nowMs} />;
