@@ -6,7 +6,8 @@
 `hightop-challenge-l71s5p89s`). Phase 5 confirmed live: zero new rounds in the first 10 idle minutes.
 **Phase 6 done 2026-10-15:** 193,590 empty rounds deleted from `category_blitz_rounds` (196,295 → 2,705); all 219
 rounds with answers kept. `VACUUM FULL` not run (Andrew's call).
-Latest handoff: `docs/category-blitz-how-to-play-plan_PHASE_6_HANDOFF.md`. Next: Phase 7 — verification & release record.
+**Phase 7 done 2026-10-15** (gates green, CLAUDE.md bullet added; browser run + phone pass left to Andrew).
+Latest handoff: `docs/category-blitz-how-to-play-plan_PHASE_7_HANDOFF.md`. Plan complete.
 **Owner decisions:** Andrew, 2026-10-14 (§2). Do not re-ask them.
 
 ## 1. What Andrew asked for

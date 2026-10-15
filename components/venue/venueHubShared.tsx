@@ -121,7 +121,7 @@ export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
   bingo: "Track your squares as you watch today's games on TV.",
   pickem: "Predict the winners of today's matchups across every major sport.",
   fantasy: "Draft the ultimate roster. The better they perform, the more points you earn.",
-  "category-blitz": "Only unique answers get points.",
+  "category-blitz": "Our twist on a classic word game.",
   "nfl-pickem": "Pick the most winners each week.",
 };
 

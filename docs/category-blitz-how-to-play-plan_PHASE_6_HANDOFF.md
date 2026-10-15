@@ -16,8 +16,8 @@
 - **About 2,400 empty rounds from the last 24 hours are still there.** The rule was "only delete rounds older than a
   day", and those were made by the old engine just before the deploy. Running the same script again tomorrow clears
   them. It's safe to run any time.
-- **The database file hasn't shrunk yet** (the table still shows 114 MB). Postgres reuses the freed space for new rows,
-  so it won't grow, but the size number only drops after a one-time compaction. That's your call — see "Open questions".
+- **The table has been compacted** (2026-10-14 ~22:00 ET, on your go-ahead): 114 MB → 1.6 MB. Same 2,706 rounds and
+  2,093 answers before and after.
 - **Needs you:** a real-phone check of the new tutorial, rules popup and bigger letter (Phase 7), and the optional
   compaction below.
 
@@ -47,7 +47,9 @@ engine change, any further data deletion except re-running this script.
 ### 3. Decisions already made (don't re-ask)
 - Andrew authorised the delete on 2026-10-14, Category Blitz rounds only, never a round with an answer.
 - Deploying = push to `main` (Vercel builds production from it). Andrew asked for this explicitly this session.
-- `VACUUM FULL` was **not** run — the plan says offer it, don't run it.
+- `VACUUM (FULL, ANALYZE) public.category_blitz_rounds` **was run** on Andrew's go-ahead, 2026-10-15 ~02:00 UTC, via
+  `supabase db query --linked` (the Management API accepts it; took ~3 s). 114 MB → 1,592 kB (heap 93 MB → 1,264 kB);
+  rows 2,706 and submissions 2,093 unchanged. Don't repeat it for the small follow-up delete.
 
 ### 4. Files
 - **New:** `scripts/cleanup-empty-category-blitz-rounds.cjs`. Dry run by default; `--apply` deletes; `--log <file>`
@@ -98,10 +100,9 @@ engine change, any further data deletion except re-running this script.
   holds the pre-deploy baseline (~2,470 rounds/day).
 
 ### 7. Open questions for Andrew
-- **Compact the table?** `VACUUM FULL public.category_blitz_rounds;` (Supabase SQL editor). It locks that table for a
-  few seconds at this size, during which Category Blitz can't read or write rounds. It returns roughly 110 MB. Not
-  needed for correctness.
-- Re-run the cleanup once tomorrow for the last ~2,400 pre-deploy empty rounds? (Recommended; I can do it.)
+- ~~Compact the table?~~ Done (see §3).
+- Re-run the cleanup for the last ~2,400 pre-deploy empty rounds: **Andrew said yes.** A session-only reminder was set
+  for 2026-10-15 21:47 ET; if that session closed, just run §6's two commands on or after that time.
 - Plan §7 (still not asked): a small daily prune of empty rounds older than 7 days.
 - Optional: a QR code on the TV's "Play anytime" card once `play.hightopchallenge.com` is live.
 
