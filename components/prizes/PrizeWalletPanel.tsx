@@ -15,8 +15,15 @@ import { SCANNABLE_COUPON_LINE } from "@/lib/posStaffInstructions";
 import { SquareGiftCardPanel } from "@/components/prizes/SquareGiftCardPanel";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { isScannableGiftCardPrize } from "@/lib/pos/prizeDelivery";
-import { placeOrdinal } from "@/lib/rankedPlaceRewards";
-import type { ChallengeCampaignWin, PrizeType, PrizeWin, RewardMenuItem } from "@/types";
+import { PrizeCard } from "@/components/prizes/PrizeCard";
+import {
+  prizeCardBack,
+  prizeCardFace,
+  prizeExpiryInfo,
+  type PrizeCardFace,
+  type PrizeExpiryTone,
+} from "@/lib/prizeCardFace";
+import type { ChallengeCampaignWin, PrizeWin } from "@/types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -26,361 +33,109 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+const EXPIRY_CLASS: Record<PrizeExpiryTone, string> = {
+  urgent: "font-semibold text-red-400",
+  soon: "font-semibold text-amber-400",
+  normal: "",
+};
+
+/** Under every list card: the action and the details are on the back now (plan §2.8, Q6 default). */
+const TAP_FOR_DETAILS = "Tap the card for details";
+
+// ─── Prize cards (docs/prize-gift-card-redesign-plan.md Phase 3) ─────────────
+
+type WalletPrize = "gift_card" | "menu_item" | "legacy";
+
 /**
- * What the guest won the coupon for ("You got the most NFL picks right in Week 2"); legacy rewards keep "Won from".
- * A weekly places coupon always says its place: the reward's own sentence names it ("You finished 1st in
- * Live Trivia the week of Oct 7"), and one whose reward was edited or deleted since falls back to the
- * place stored on the coupon, so a backfilled or older coupon still reads "1st place".
+ * Which prize this coupon draws as, with the wallet's long-standing precedence: the Rewards prize
+ * model first (the backend derives prizeKind from a legacy prizeType when it is null, so this
+ * covers every row), then the legacy types. Null = nothing the wallet knows how to show.
  */
-function wonForLine(win: ChallengeCampaignWin): string {
-  if (win.place) return win.winDescription ?? `${placeOrdinal(win.place)} place: ${win.challengeName}`;
-  return win.winDescription ?? `Won from: ${win.challengeName}`;
-}
-
-function getExpiryInfo(expiresAt: string): {
-  label: string;
-  className: string;
-} {
-  const ms = new Date(expiresAt).getTime() - Date.now();
-  const hours = ms / (1000 * 60 * 60);
-  if (hours <= 24) {
-    return { label: "Expires today!", className: "text-red-400 font-semibold" };
+function walletPrizeOf(win: ChallengeCampaignWin): WalletPrize | null {
+  if (win.prizeKind === "gift_card") return "gift_card";
+  if (win.prizeKind === "menu_item") return "menu_item";
+  if (win.prizeType === "wine_bottle" || win.prizeType === "free_appetizer" || win.prizeType === "gift_certificate") {
+    return "legacy";
   }
-  if (hours <= 48) {
-    return { label: "Expires tomorrow", className: "text-amber-400 font-semibold" };
-  }
-  const days = Math.ceil(hours / 24);
-  return { label: `Expires in ${days} days`, className: "text-ht-fg-muted" };
-}
-
-function prizeLabel(prizeType: PrizeType): string {
-  if (prizeType === "wine_bottle") return "BOTTLE OF WINE";
-  if (prizeType === "free_appetizer") return "FREE APPETIZER";
-  return "GIFT CERTIFICATE";
-}
-
-// ── Rewards (Phase 2/6) prize-model display helpers ──────────────────────────
-
-const MENU_ITEM_LABEL: Record<RewardMenuItem, string> = {
-  whole_order: "Whole Order",
-  appetizer: "Appetizer",
-  entree: "Entrée",
-  dessert: "Dessert",
-  wine_bottle: "Bottle of Wine",
-  other: "Menu Item",
-};
-
-function menuItemLabel(win: ChallengeCampaignWin): string {
-  if (win.prizeMenuItem === "other") return win.prizeMenuItemName?.trim() || "Menu Item";
-  return win.prizeMenuItem ? MENU_ITEM_LABEL[win.prizeMenuItem] : "Menu Item";
-}
-
-function discountLabel(win: ChallengeCampaignWin): string {
-  if (win.prizeDiscountKind === "percent" && win.prizeDiscountValue != null) {
-    return win.prizeDiscountValue >= 100 ? "FREE" : `${win.prizeDiscountValue}% OFF`;
-  }
-  if (win.prizeDiscountKind === "dollar" && win.prizeDiscountValue != null) {
-    return `$${win.prizeDiscountValue.toFixed(2)} OFF`;
-  }
-  return "";
-}
-
-// ─── Coupon Cards ─────────────────────────────────────────────────────────────
-
-type CouponCardProps = {
-  win: ChallengeCampaignWin;
-  onRedeem: (win: ChallengeCampaignWin) => void;
-  large?: boolean;
-};
-
-function WineCoupon({ win, onRedeem, large }: CouponCardProps) {
-  const expiry = win.prizeExpiresAt ? getExpiryInfo(win.prizeExpiresAt) : null;
-  const redeemed = Boolean(win.prizeRedeemedAt);
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-rose-700/60 bg-gradient-to-br from-rose-950 to-rose-900/80 p-4">
-      <div className="absolute inset-x-0 top-0 flex h-1.5">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div key={i} className={`flex-1 ${i % 2 === 0 ? "bg-rose-700/60" : "bg-rose-950"}`} />
-        ))}
-      </div>
-      <div className="mt-2">
-        <p className="text-caption font-bold uppercase tracking-[0.2em] text-rose-400/70">Prize Coupon</p>
-        <p className={`mt-0.5 font-black tracking-wide text-rose-100 ${large ? "text-2xl" : "text-xl"}`}>
-          BOTTLE OF WINE
-        </p>
-        <p className="mt-1 text-xs text-rose-300/80">{wonForLine(win)}</p>
-      </div>
-      <div className="my-3 border-t border-dashed border-rose-700/50" />
-      <div className="flex items-end justify-between">
-        <div className="space-y-0.5">
-          <p className="text-caption text-rose-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
-          {expiry && !redeemed && (
-            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
-          )}
-        </div>
-        {redeemed ? (
-          <span className="rounded-full border border-rose-700/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-rose-400/60">
-            Redeemed
-          </span>
-        ) : !large ? (
-          <button
-            type="button"
-            onClick={() => onRedeem(win)}
-            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-rose-500/60 bg-rose-500/20 px-6 py-3 text-sm font-bold text-rose-200 hover:bg-rose-500/30"
-          >
-            Redeem
-          </button>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function AppetizerCoupon({ win, onRedeem, large }: CouponCardProps) {
-  const expiry = win.prizeExpiresAt ? getExpiryInfo(win.prizeExpiresAt) : null;
-  const redeemed = Boolean(win.prizeRedeemedAt);
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-700/60 bg-gradient-to-br from-emerald-950 to-emerald-900/80 p-4">
-      <div className="absolute inset-0 rounded-2xl border-4 border-emerald-700/20 m-1.5 pointer-events-none" />
-      <p className="text-caption font-bold uppercase tracking-[0.2em] text-emerald-400/70">Prize Coupon</p>
-      <p className={`mt-0.5 font-black tracking-wide text-emerald-100 ${large ? "text-2xl" : "text-xl"}`}>
-        FREE APPETIZER
-      </p>
-      <p className="mt-1 text-xs text-emerald-300/80">{wonForLine(win)}</p>
-      <div className="my-3 border-t border-dashed border-emerald-700/50" />
-      <div className="flex items-end justify-between">
-        <div className="space-y-0.5">
-          <p className="text-caption text-emerald-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
-          {expiry && !redeemed && (
-            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
-          )}
-        </div>
-        {redeemed ? (
-          <span className="rounded-full border border-emerald-700/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-400/60">
-            Redeemed
-          </span>
-        ) : !large ? (
-          <button
-            type="button"
-            onClick={() => onRedeem(win)}
-            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-emerald-500/60 bg-emerald-500/20 px-6 py-3 text-sm font-bold text-emerald-200 hover:bg-emerald-500/30"
-          >
-            Redeem
-          </button>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function GiftCertificateCoupon({ win, onRedeem, large }: CouponCardProps) {
-  const expiry = win.prizeExpiresAt ? getExpiryInfo(win.prizeExpiresAt) : null;
-  const redeemed = Boolean(win.prizeRedeemedAt);
-  const amount = win.prizeGiftCertificateAmount;
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/60 bg-gradient-to-br from-amber-950 to-amber-900/80 p-4">
-      <div className="absolute inset-0 rounded-2xl border-4 border-double border-amber-500/30 m-1 pointer-events-none" />
-      <p className="text-caption font-bold uppercase tracking-[0.2em] text-amber-400/70">Prize Coupon</p>
-      {amount != null && (
-        <p className={`font-black text-amber-300 ${large ? "text-4xl" : "text-3xl"}`}>
-          ${amount.toFixed(2)}
-        </p>
-      )}
-      <p className={`font-black tracking-wide text-amber-100 ${large ? "text-xl" : "text-lg"}`}>
-        GIFT CERTIFICATE
-      </p>
-      <p className="mt-1 text-xs text-amber-300/80">{wonForLine(win)}</p>
-      <div className="my-3 border-t border-dashed border-amber-500/40" />
-      <div className="flex items-end justify-between">
-        <div className="space-y-0.5">
-          <p className="text-caption text-amber-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
-          {expiry && !redeemed && (
-            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
-          )}
-        </div>
-        {redeemed ? (
-          <span className="rounded-full border border-amber-500/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-400/60">
-            Redeemed
-          </span>
-        ) : !large ? (
-          <button
-            type="button"
-            onClick={() => onRedeem(win)}
-            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-6 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
-          >
-            Redeem
-          </button>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function GiftCardCoupon({ win, onRedeem, large }: CouponCardProps) {
-  const expiry = win.prizeExpiresAt ? getExpiryInfo(win.prizeExpiresAt) : null;
-  const redeemed = Boolean(win.prizeRedeemedAt);
-  const amount = win.prizeGiftCertificateAmount;
-  // Turned into a Square gift card (docs/pos-rewards-integration-plan.md Phase 2): redeemed in
-  // our records, but the card lives on at Square until its balance is spent.
-  const squareIssued = win.squareGiftCard === "issued";
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/60 bg-gradient-to-br from-amber-950 to-amber-900/80 p-4">
-      <div className="absolute inset-0 rounded-2xl border-4 border-double border-amber-500/30 m-1 pointer-events-none" />
-      <p className="text-caption font-bold uppercase tracking-[0.2em] text-amber-400/70">Prize Coupon</p>
-      {amount != null && (
-        <p className={`font-black text-amber-300 ${large ? "text-4xl" : "text-3xl"}`}>
-          ${amount.toFixed(2)}
-        </p>
-      )}
-      <p className={`font-black tracking-wide text-amber-100 ${large ? "text-xl" : "text-lg"}`}>
-        GIFT CARD
-      </p>
-      <p className="mt-1 text-xs text-amber-300/80">{wonForLine(win)}</p>
-      <div className="my-3 border-t border-dashed border-amber-500/40" />
-      <div className="flex items-end justify-between">
-        <div className="space-y-0.5">
-          <p className="text-caption text-amber-400/70">Awarded {formatDate(win.claimedAt ?? "")}</p>
-          {expiry && !redeemed && (
-            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
-          )}
-        </div>
-        {squareIssued && !large ? (
-          <button
-            type="button"
-            onClick={() => onRedeem(win)}
-            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-4 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
-          >
-            Show gift card
-          </button>
-        ) : redeemed ? (
-          <span className="rounded-full border border-amber-500/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-400/60">
-            {win.squareGiftCard === "used" ? "Used" : "Redeemed"}
-          </span>
-        ) : !large ? (
-          <button
-            type="button"
-            onClick={() => onRedeem(win)}
-            className="tp-player-hit-target tp-player-pressable tp-clean-button rounded-lg border border-amber-400/60 bg-amber-500/20 px-6 py-3 text-sm font-bold text-amber-200 hover:bg-amber-500/30"
-          >
-            Redeem
-          </button>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function MenuItemCoupon({ win, onRedeem, large }: CouponCardProps) {
-  const expiry = win.prizeExpiresAt ? getExpiryInfo(win.prizeExpiresAt) : null;
-  const redeemed = Boolean(win.prizeRedeemedAt);
-  const isWineBottle = win.prizeMenuItem === "wine_bottle";
-  const isAppetizer = win.prizeMenuItem === "appetizer";
-  // Preserve the thematic wine/appetizer looks; everything else (entrée, dessert,
-  // whole order, other) shares a generic indigo theme.
-  const theme = isWineBottle
-    ? {
-        border: "border-rose-700/60",
-        gradient: "from-rose-950 to-rose-900/80",
-        eyebrow: "text-rose-400/70",
-        title: "text-rose-100",
-        sub: "text-rose-300/80",
-        divider: "border-rose-700/50",
-        awarded: "text-rose-400/70",
-        redeemedText: "border-rose-700/50 text-rose-400/60",
-        buttonBorder: "border-rose-500/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30",
-      }
-    : isAppetizer
-      ? {
-          border: "border-emerald-700/60",
-          gradient: "from-emerald-950 to-emerald-900/80",
-          eyebrow: "text-emerald-400/70",
-          title: "text-emerald-100",
-          sub: "text-emerald-300/80",
-          divider: "border-emerald-700/50",
-          awarded: "text-emerald-400/70",
-          redeemedText: "border-emerald-700/50 text-emerald-400/60",
-          buttonBorder: "border-emerald-500/60 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30",
-        }
-      : {
-          border: "border-indigo-600/60",
-          gradient: "from-indigo-950 to-indigo-900/80",
-          eyebrow: "text-indigo-400/70",
-          title: "text-indigo-100",
-          sub: "text-indigo-300/80",
-          divider: "border-indigo-700/50",
-          awarded: "text-indigo-400/70",
-          redeemedText: "border-indigo-700/50 text-indigo-400/60",
-          buttonBorder: "border-indigo-500/60 bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30",
-        };
-
-  const discount = discountLabel(win);
-  // A dollar-off prize the partner set to "Scannable gift card": it becomes a Square gift card
-  // (redeemed in our records the moment it does), so the badge mirrors GiftCardCoupon.
-  const scannable = isScannableGiftCardPrize(win);
-  const squareIssued = scannable && win.squareGiftCard === "issued";
-
-  return (
-    <div className={`relative overflow-hidden rounded-2xl border-2 ${theme.border} bg-gradient-to-br ${theme.gradient} p-4`}>
-      <p className={`text-caption font-bold uppercase tracking-[0.2em] ${theme.eyebrow}`}>Prize Coupon</p>
-      {discount && (
-        <p className={`font-black text-amber-300 ${large ? "text-3xl" : "text-2xl"}`}>{discount}</p>
-      )}
-      <p className={`font-black tracking-wide ${theme.title} ${large ? "text-xl" : "text-lg"}`}>
-        {menuItemLabel(win).toUpperCase()}
-      </p>
-      <p className={`mt-1 text-xs ${theme.sub}`}>{wonForLine(win)}</p>
-      {/* Only where it really can be a card (Square connected here, attachSquareGiftCardStates); otherwise
-          it is an ordinary coupon and must not promise one. */}
-      {scannable && win.squareGiftCard ? (
-        <p className={`mt-1 text-xs font-bold ${theme.sub}`}>{SCANNABLE_COUPON_LINE}</p>
-      ) : null}
-      <div className={`my-3 border-t border-dashed ${theme.divider}`} />
-      <div className="flex items-end justify-between">
-        <div className="space-y-0.5">
-          <p className={`text-caption ${theme.awarded}`}>Awarded {formatDate(win.claimedAt ?? "")}</p>
-          {expiry && !redeemed && (
-            <p className={`text-caption ${expiry.className}`}>{expiry.label}</p>
-          )}
-        </div>
-        {squareIssued && !large ? (
-          <button
-            type="button"
-            onClick={() => onRedeem(win)}
-            className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button rounded-lg border px-4 py-3 text-sm font-bold ${theme.buttonBorder}`)}
-          >
-            Show gift card
-          </button>
-        ) : redeemed ? (
-          <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${theme.redeemedText}`}>
-            {scannable && win.squareGiftCard === "used" ? "Used" : "Redeemed"}
-          </span>
-        ) : !large ? (
-          <button
-            type="button"
-            onClick={() => onRedeem(win)}
-            className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button rounded-lg border px-6 py-3 text-sm font-bold ${theme.buttonBorder}`)}
-          >
-            Redeem
-          </button>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function ChallengeCoupon({ win, onRedeem, large }: CouponCardProps) {
-  // Rewards (Phase 2+) prize model takes precedence; the backend derives
-  // prizeKind from legacy prizeType when null, so this covers every row.
-  if (win.prizeKind === "gift_card") return <GiftCardCoupon win={win} onRedeem={onRedeem} large={large} />;
-  if (win.prizeKind === "menu_item") return <MenuItemCoupon win={win} onRedeem={onRedeem} large={large} />;
-  if (win.prizeType === "wine_bottle") return <WineCoupon win={win} onRedeem={onRedeem} large={large} />;
-  if (win.prizeType === "free_appetizer") return <AppetizerCoupon win={win} onRedeem={onRedeem} large={large} />;
-  if (win.prizeType === "gift_certificate") return <GiftCertificateCoupon win={win} onRedeem={onRedeem} large={large} />;
   return null;
+}
+
+/**
+ * THE which-button decision for a prize in the list, unchanged from the coupons it replaced:
+ * a prize already turned into a Square gift card → "Show gift card" (gift-card prizes, and
+ * dollar-off menu prizes set to a scannable gift card); otherwise redeemed → no button (the card's
+ * own chip says Redeemed / Used); otherwise → "Redeem". Legacy prizes never become Square cards
+ * here. It decides the button on the back of the card (plan §2.8).
+ */
+function prizeActionOf(win: ChallengeCampaignWin): "Show gift card" | "Redeem" | null {
+  const kind = walletPrizeOf(win);
+  const squareIssued =
+    win.squareGiftCard === "issued" &&
+    (kind === "gift_card" || (kind === "menu_item" && isScannableGiftCardPrize(win)));
+  if (squareIssued) return "Show gift card";
+  if (win.prizeRedeemedAt) return null;
+  return "Redeem";
+}
+
+/**
+ * The list's face. A redeemed prize with no button never looks ready: the one case is a legacy
+ * gift certificate (no prizeKind) that became a Square card, which the face calls spendable but
+ * the list has never offered to show — it keeps the old coupon's "Redeemed".
+ */
+function walletFaceOf(win: ChallengeCampaignWin, venueName: string | null): PrizeCardFace {
+  const face = prizeCardFace(win, venueName);
+  if (face.status !== "ready" || !win.prizeRedeemedAt || prizeActionOf(win)) return face;
+  return { ...face, status: "redeemed", ariaLabel: `${face.ariaLabel}, redeemed` };
+}
+
+type WalletPrizeCardProps = {
+  win: ChallengeCampaignWin;
+  venueName: string | null;
+  onRedeem: (win: ChallengeCampaignWin) => void;
+};
+
+/**
+ * One prize in the list: the card (tap it to see the back, where the action now sits —
+ * plan §2.8), then one muted line: the expiry and "Tap the card for details".
+ */
+function WalletPrizeCard({ win, venueName, onRedeem }: WalletPrizeCardProps) {
+  if (!walletPrizeOf(win)) return null;
+  const expiry = win.prizeExpiresAt && !win.prizeRedeemedAt ? prizeExpiryInfo(win.prizeExpiresAt) : null;
+  // Only where it really can be a card (Square connected here, attachSquareGiftCardStates); otherwise
+  // it is an ordinary coupon and must not promise one.
+  const scannableLine = win.prizeKind === "menu_item" && isScannableGiftCardPrize(win) && Boolean(win.squareGiftCard);
+  const actionLabel = prizeActionOf(win);
+
+  return (
+    // A div, not an <article>: phones pad every .tp-page-main article/section by 0.625rem !important.
+    <div data-prize-wallet-item className="space-y-2.5">
+      <PrizeCard
+        face={walletFaceOf(win, venueName)}
+        back={prizeCardBack(win)}
+        action={actionLabel ? { label: actionLabel, onPress: () => onRedeem(win) } : undefined}
+      />
+      <div className="max-w-sm space-y-0.5 px-1 text-footnote text-ht-fg-muted">
+        <p className="line-clamp-2">
+          {expiry ? (
+            <>
+              <span className={EXPIRY_CLASS[expiry.tone]}>{expiry.label}</span>
+              {" · "}
+            </>
+          ) : null}
+          <span>{TAP_FOR_DETAILS}</span>
+        </p>
+        {scannableLine ? <p className="font-semibold">{SCANNABLE_COUPON_LINE}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The large card shown to staff inside the live frame. It flips too (what it was won for, terms,
+ * expiry are on its back), but carries no action: Confirm Redemption below it is the one redeem.
+ */
+function LargePrizeCard({ win, venueName }: { win: ChallengeCampaignWin; venueName: string | null }) {
+  return <PrizeCard face={prizeCardFace(win, venueName)} back={prizeCardBack(win)} size="large" inLiveFrame />;
 }
 
 // ─── Redeem Modal ─────────────────────────────────────────────────────────────
@@ -434,9 +189,11 @@ function RedeemModal({
   return (
     <div
       role="dialog" aria-modal="true" aria-label="Confirm redemption"
-      className="fixed inset-0 z-[6200] flex flex-col items-center overflow-y-auto bg-black/75 p-4 pb-[max(env(safe-area-inset-bottom),16px)]"
+      className="fixed inset-0 z-[6200] flex flex-col items-center overflow-y-auto bg-black/90 p-4 pb-[max(env(safe-area-inset-bottom),16px)]"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
+      {/* 90% black, not 75%: the prize card has no box of its own, and the list behind must not
+          show through around it. */}
       {/* The live coupon makes this taller than a short phone: auto margins pin it to the bottom
           (centred from sm up) when it fits, and let the whole sheet scroll when it doesn't. */}
       <div className="mt-auto w-full max-w-sm animate-in slide-in-from-bottom-4 duration-200 space-y-4 sm:my-auto">
@@ -446,7 +203,8 @@ function RedeemModal({
             win={win}
             userId={userId}
             venueId={venueId}
-            coupon={<ChallengeCoupon win={win} onRedeem={() => {}} large />}
+            coupon={<LargePrizeCard win={win} venueName={venueName} />}
+            venueName={venueName}
             frame={frame}
             onIssued={onSquareIssued}
             onAlreadyRedeemed={onSquareAlreadyRedeemed}
@@ -461,15 +219,10 @@ function RedeemModal({
           </div>
         ) : (
           <>
-            <div className="rounded-2xl border border-ht-border-hairline bg-ht-elevated p-4 text-center space-y-1">
-              <p className="text-sm font-semibold text-ht-fg-primary">
-                Show this coupon to venue staff
-              </p>
-              <p className="text-xs text-ht-fg-muted">
-                Tap &ldquo;Confirm Redemption&rdquo; once the staff member has acknowledged it.
-              </p>
-            </div>
-            {frame(<ChallengeCoupon win={win} onRedeem={() => {}} large />)}
+            <p className="rounded-2xl border border-ht-border-hairline bg-ht-elevated px-4 py-3 text-center text-sm font-semibold text-ht-fg-primary">
+              Show this to staff, then tap Confirm Redemption.
+            </p>
+            {frame(<LargePrizeCard win={win} venueName={venueName} />)}
             {/* Menu-item prize at a Square venue (POS plan Phase 2d): which Square discount staff tap. */}
             {win.squareDiscount ? <SquareDiscountHint win={win} userId={userId} venueId={venueId} /> : null}
             <div className="flex gap-3">
@@ -776,24 +529,24 @@ export function PrizeWalletPanel() {
         {isEmpty ? (
           <div className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-8 text-center">
             <p className="text-sm text-ht-fg-muted">
-              Sorry, you currently do not have any prizes to redeem.
+              No prizes yet. Win a Reward here and it will show up in this list.
             </p>
           </div>
         ) : (
           <>
             {/* Challenge prize coupons */}
             {activeChallengeWins.length > 0 && (
-              <section className="space-y-3">
-                <h2 className="text-base font-semibold text-ht-fg-primary">Click &quot;Redeem&quot; on your rewards </h2>
+              <section aria-label="Your prizes" className="space-y-6">
                 {activeChallengeWins.map((win) => (
                   // One reward can hold several coupons for the same player (a weekly places
                   // reward pays a new one every week), so the coupon's own id comes first.
                   // challengeId is null on a coupon whose reward was deleted, and several
                   // such rows can coexist — the last fallback uses the fields that uniquely
                   // identify the win itself.
-                  <ChallengeCoupon
+                  <WalletPrizeCard
                     key={win.redemptionId ?? win.challengeId ?? `detached:${win.cycleStart ?? ""}:${win.claimedAt ?? ""}`}
                     win={win}
+                    venueName={venueName || null}
                     onRedeem={handleRedeemOpen}
                   />
                 ))}

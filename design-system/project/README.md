@@ -178,6 +178,17 @@ opposite of polite SaaS copy.
 
 ## VISUAL FOUNDATIONS
 
+### Minimal and simple
+
+Every surface shows the fewest words, colors and elements it needs to do
+its job. One focal point per card, one accent per surface. No decorative
+borders, double rules, dashed dividers or ornament. Secondary details sit
+below the object in one muted line, or behind a tap. If a word doesn't help
+the player act, cut it. Use whitespace and type hierarchy, not boxes and
+color. Motion is small and earns its place (a tap bounce, a proof-of-life
+sparkle), never ambient decoration. The north star stays dark, electric and
+high-contrast, but restrained: **one glow, not five.**
+
 ### Colors
 
 - **One canvas.** `--ht-canvas: #020617` (slate‑950). No alternate page
@@ -252,6 +263,27 @@ opposite of polite SaaS copy.
   ink shadow from `.tp-comic-card` is forbidden.
 - **Inner glow** (cyan halo around primary CTAs) is permitted on idle states:
   `0 0 0 1px rgba(34,211,238,0.30), 0 8px 28px rgba(34,211,238,0.18)`.
+
+### Prize cards
+
+Every prize on Redeem Prizes (dollar gift card, menu-item prize, Square gift
+card) is drawn as the same **digital gift card**. Plan:
+`docs/prize-gift-card-redesign-plan.md` (§2 is the spec).
+
+- **Shape:** ISO ID-1 card ratio 1.586 : 1, `rounded-2xl`, up to `max-w-sm`.
+- **Finish:** midnight navy base (`#0f172a` → `#020617`) with exactly one soft
+  cyan→violet glow in the top-right corner, a 1px inner hairline and one soft
+  drop shadow. Tokens: `--ht-prize-card-*` in `colors_and_type.css`, mirrored
+  as `PRIZE_CARD` in `lib/themeTokens.ts`. No per-prize-type color themes.
+- **Face:** only three things: the prize ("$25", "Free Appetizer"), the venue
+  name, and a small "GIFT CARD" / "REWARD" label. Logo top-left. What it was
+  won for and the expiry go in one muted line under the card.
+- **Type:** Nunito only (no Bree Serif); title case for the prize, uppercase
+  only for the small label.
+- **Motion:** the logo bounces when tapped (`logo-tap-bounce`); Reduce Motion
+  swaps the travel for a brief opacity dip.
+- **Redeemed / used:** the whole card goes grayscale at 60% opacity with one
+  small chip. Nothing else changes.
 
 ### Buttons
 

@@ -43,6 +43,17 @@ describe("buildWelcomeEmail", () => {
     expect(text).not.toContain("Predictions");
   });
 
+  it("explains where guests find their prizes, with the versioned card picture", () => {
+    const { html, text } = buildWelcomeEmail(baseInput);
+    expect(html).toContain("Where guests find their prizes");
+    expect(html).toContain("tap the card to flip it over");
+    expect(html).toContain('src="https://hightopchallenge.com/brand/email/prize-card-v2.png"');
+    expect(html).toContain('alt="A Hightop Challenge digital gift card for $25"');
+    expect(html).toContain('width="480"');
+    expect(text).toContain("Where guests find their prizes");
+    expect(text).toContain("Confirm Redemption");
+  });
+
   it("returns a non-empty subject", () => {
     const { subject } = buildWelcomeEmail(baseInput);
     expect(subject.length).toBeGreaterThan(0);

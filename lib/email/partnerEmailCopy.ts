@@ -91,6 +91,15 @@ export const WELCOME_EMAIL = {
     },
   ],
 
+  /** Where guests find a prize after winning a Reward (with a picture of the digital gift card). */
+  prizesSection: {
+    title: "Where guests find their prizes",
+    body: "When a guest wins one of your Rewards, we let them know right away. Their prize appears as a digital gift card in Redeem Prizes, in the Hightop Challenge menu. To use it, they tap the card to flip it over, then tap Redeem on the back. Your staff tap the card (it sparkles and shows the live time, so a screenshot won't work), and the guest taps Confirm Redemption. If you use Square, gift cards can be rung up like any other Square gift card.",
+    imageAlt: "A Hightop Challenge digital gift card for $25",
+    /** Versioned file in public/brand/email/. New artwork gets a new name (-v2), never an overwrite. */
+    imageFile: "prize-card-v2.png",
+  },
+
   /** Heading above the list of games. */
   gamesHeading: "Games your guests can play",
 

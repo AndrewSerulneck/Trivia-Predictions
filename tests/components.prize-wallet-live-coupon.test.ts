@@ -4,6 +4,7 @@ import { createElement } from "react";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { formatCouponDate } from "@/lib/liveCouponClock";
 import type { ChallengeCampaignWin } from "@/types";
+import { findPrizeCardAction } from "@/tests/helpers/prizeCardBack";
 
 // docs/reward-live-redemption-plan.md Phase 2, end to end at the wallet: the list stays calm, the
 // coupon shown to staff (RedeemModal) is live — server time, guest, venue — and Phase 1's
@@ -49,7 +50,7 @@ const installFetch = (walletWins: ChallengeCampaignWin[], redeem: RedeemReply, w
 };
 
 const openCoupon = async () => {
-  fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+  fireEvent.click(await findPrizeCardAction("Redeem"));
   return screen.getByRole("dialog", { name: "Confirm redemption" });
 };
 
@@ -69,7 +70,7 @@ describe("PrizeWalletPanel — the live coupon", () => {
   it("keeps the wallet list calm: nothing moves until a coupon is opened", async () => {
     installFetch([win()], { status: 200, body: { ok: true } });
     const { container } = render(createElement(PrizeWalletPanel));
-    await screen.findByRole("button", { name: "Redeem" });
+    await findPrizeCardAction("Redeem");
     expect(container.querySelector("[data-live-coupon]")).toBeNull();
     expect(container.querySelector("[data-live-coupon-band]")).toBeNull();
     expect(container.querySelector("[data-live-coupon-clock]")).toBeNull();
@@ -88,7 +89,7 @@ describe("PrizeWalletPanel — the live coupon", () => {
     expect(live.querySelector("[data-live-coupon-clock]")?.textContent).toMatch(/^\d{1,2}:\d{2}:\d{2} (AM|PM)$/);
     expect(live.querySelector("[data-live-coupon-holder]")?.textContent).toBe("Rick · The Tap Room");
     expect(within(live).getByText(/Staff: tap the coupon/)).not.toBeNull();
-    // Plan A's "what you won it for" line is still on the coupon.
+    // Plan A's "what you won it for" line is still on the coupon: the For row on the card's back (prize-card plan Phase 4).
     expect(within(live).getByText("You won Live Trivia on Tue, Sep 29")).not.toBeNull();
   });
 

@@ -234,6 +234,18 @@ migrations are grandfathered — see `docs/supabase-data-api-grants-plan.md`).
   (`isGamePickerEnabled()` in `lib/rewardGameSlots.ts`), which gates ONLY the wizard's
   game-picker UI branch — not cadence support, not the archive/delete split, not the slot
   cascade. Don't describe other Rewards work as "inert until a flag flips."
+- **Every prize is drawn as ONE digital gift card** (`docs/prize-gift-card-redesign-plan.md`, built
+  2026-10-15). One component, `components/prizes/PrizeCard.tsx` (back laid out by `PrizeCardBackFace.tsx`,
+  logo `PrizeCardLogo.tsx`); what it says comes only from `lib/prizeCardFace.ts` (`prizeCardFace`,
+  `prizeCardBack`); colours only from `PRIZE_CARD` in `lib/themeTokens.ts`. Never add per-prize colour
+  themes, dashed/double borders or a second card. Tapping a card (not the logo) flips it; the list's
+  action ("Redeem" / "Show gift card", decided by `prizeActionOf` in `PrizeWalletPanel.tsx`) is on the
+  back; Confirm Redemption in the live sheet stays the only redeem. No overflow/opacity/filter on the
+  flip's perspective root or rotating element (iOS flattens the 3D). A bare `<button>` on the card
+  needs `!border-0` plus `[&:not(:disabled)]:!p-0`/`!min-h-0`, or the global phone button rules pad it.
+  `npm run prize-card:render` draws specimens; `-- --email` writes the email picture. **Email pictures
+  under `public/brand/email/` are cached long: new artwork ships under a NEW file name (`-v2`), never
+  overwrite**, then update `imageFile` in `lib/email/partnerEmailCopy.ts`.
 - **Redemption = in-app coupon, staff-taps-redeemed.** No POS or gift-card-issuance
   integration; winners see a coupon on `/redeem-prizes` (`components/prizes/PrizeWalletPanel.tsx`).
 - **A coupon is redeemed ONLY through the `redeem_challenge_prize` RPC** (migration
@@ -962,6 +974,7 @@ Partner Dashboard **2,056 KB → 352 KB** and **10.4 s → 2.1 s** to the load e
 ## Code Style & Constraints
 - **TypeScript:** Strict mode enabled. Absolutely no `any`. Use explicit types imported from `@/types`.
 - **Functions:** Prefer arrow functions for components and utilities.
+- **Design: minimal and simple** (2026-10-15). Show the fewest words, colors and elements a surface needs: one focal point, one accent, no decorative borders/dividers, secondary details in one muted line, motion only where it earns its place. Rule + rationale: brand README "Minimal and simple" (`design-system/hightop-challenge-design-system/project/README.md`). Prize cards: `docs/prize-gift-card-redesign-plan.md`.
 - **Imports:** Always use absolute path alias `@/` (e.g., `@/lib/supabase`, `@/components/ui/PageShell`). No relative imports (`../`).
 - **Styling:** Tailwind utility classes only. No custom CSS, no CSS modules, no inline `style={{}}`. Design tokens reside in `lib/themeTokens.ts`.
   - **Exception — `components/venue-screen/*` (the venue TV display):** inline `style={{}}` is permitted for dynamic/animated values — framer-motion keyframes, computed gradients, per-rank/per-entry colors — that Tailwind utility classes genuinely can't express. `lib/venueScreenBrand.ts` is the intentional second token source for this feature area (mirrors `lib/themeTokens.ts`'s role but scoped to the TV surface). Static, non-dynamic styling on this surface should still prefer Tailwind classes where practical.

@@ -270,6 +270,41 @@ export type GameThemeKey = keyof typeof GAME_THEME;
  */
 export const STORE_PAPER_HEX = "#fefefe";
 
+/**
+ * Prize gift card (Redeem Prizes). Mirrors the `--ht-prize-card-*` tokens in
+ * design-system/hightop-challenge-design-system/project/colors_and_type.css.
+ * Class strings are written in full so Tailwind generates them. One glow, not five.
+ * Spec: docs/prize-gift-card-redesign-plan.md §2.
+ */
+export const PRIZE_CARD = {
+  /** White card, a whisper of grey toward the bottom-right so it reads as printed stock. */
+  base: "bg-gradient-to-br from-white to-slate-100",
+  /** The single cyan→violet glow, anchored top-right, transparent by ~60% (softer on white). */
+  glow: "bg-[radial-gradient(circle_at_100%_0%,rgba(34,211,238,0.22),rgba(139,92,246,0.14)_30%,transparent_60%)]",
+  /** Faint top-edge highlight so it reads as a printed card. */
+  highlight: "bg-gradient-to-b from-white/60 to-transparent",
+  /** 1px inner hairline. */
+  edge: "ring-1 ring-inset ring-slate-900/10",
+  /** One soft drop shadow. */
+  shadow: "shadow-[0_18px_40px_-12px_rgba(0,0,0,0.65)]",
+  /** ISO ID-1 ratio, full width up to max-w-sm. */
+  shape: "aspect-[1.586/1] w-full max-w-sm rounded-2xl",
+  text: "text-slate-950",
+  labelText: "text-slate-500",
+  venueText: "text-slate-600",
+  /** The "Expired" / "Redeemed" status chip on the front. */
+  chip: "bg-slate-900/[0.06] text-slate-600",
+  /** The back's one action button ("Redeem" / "Show gift card"). */
+  action: "bg-slate-950 text-white hover:bg-slate-800",
+  /** Keyboard focus ring for controls on the card face. */
+  focusRing: "focus-visible:outline-slate-900/60",
+  /** The back's one accent: the "Redeemed {date, time}" stamp (§2.8). */
+  stamp: "bg-cyan-50 text-cyan-800 ring-1 ring-inset ring-cyan-600/25",
+  /** Expiry urgency on the back (the wallet line's amber/red, on white). */
+  urgentText: "font-semibold text-red-600",
+  soonText: "font-semibold text-amber-700",
+} as const;
+
 /** Inline email colours, mapped from colors_and_type.css; email clients cannot use CSS variables. */
 export const PARTNER_EMAIL_THEME = {
   canvas: "#020617",

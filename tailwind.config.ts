@@ -144,6 +144,36 @@ const config: Config = {
           "0%, 100%": { opacity: "0.45" },
           "50%": { opacity: "1" },
         },
+        // PrizeCard's logo (docs/prize-gift-card-redesign-plan.md §2.5): one quick hop with a
+        // squash-and-stretch landing, on an `origin-bottom` element. Transform only; restarted on
+        // every tap by re-keying. Reduce Motion gets `logo-tap-dip`, an opacity blink with no travel.
+        "logo-tap-bounce": {
+          "0%": {
+            transform: "translateY(0) scaleX(1) scaleY(1)",
+            animationTimingFunction: "cubic-bezier(0.2, 0.7, 0.35, 1)",
+          },
+          "32%": {
+            transform: "translateY(-10px) scaleX(0.97) scaleY(1.05)",
+            animationTimingFunction: "cubic-bezier(0.55, 0, 0.85, 0.4)",
+          },
+          "56%": {
+            transform: "translateY(0) scaleX(1.06) scaleY(0.92)",
+            animationTimingFunction: "cubic-bezier(0.2, 0.7, 0.35, 1)",
+          },
+          "72%": {
+            transform: "translateY(-3px) scaleX(0.99) scaleY(1.02)",
+            animationTimingFunction: "cubic-bezier(0.55, 0, 0.85, 0.4)",
+          },
+          "86%": {
+            transform: "translateY(0) scaleX(1.02) scaleY(0.98)",
+            animationTimingFunction: "ease-out",
+          },
+          "100%": { transform: "translateY(0) scaleX(1) scaleY(1)" },
+        },
+        "logo-tap-dip": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.6" },
+        },
         // LiveCouponFrame (docs/reward-live-redemption-plan.md Phase 2) — the motion a screenshot
         // can't fake. Transform/opacity only. `coupon-spark` reads its direction from the
         // `--sx` / `--sy` custom properties each dot sets through an arbitrary-property class.
@@ -174,6 +204,8 @@ const config: Config = {
         "logo-loader-spin": "logo-arrive-spin 0.95s ease-out both, logo-spin 2.6s linear 0.95s infinite",
         "logo-loader-shadow": "logo-arrive-shadow 0.95s ease-out both, logo-hop-shadow 2.6s linear 0.95s infinite",
         "logo-pulse": "logo-pulse 1.6s ease-in-out infinite",
+        "logo-tap-bounce": "logo-tap-bounce 0.6s linear both",
+        "logo-tap-dip": "logo-tap-dip 0.2s ease-in-out both",
         "coupon-shimmer": "coupon-shimmer 2.6s linear infinite",
         "coupon-spark": "coupon-spark 0.6s ease-out forwards",
         "coupon-flash": "coupon-flash 0.5s ease-out forwards",

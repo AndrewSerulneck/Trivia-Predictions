@@ -231,6 +231,13 @@
   --ht-track-eyebrow: 0.14em; /* uppercase section labels             */
   --ht-track-title:   0.045em;/* game card titles                     */
   --ht-track-tight:  -0.01em; /* big question text                    */
+
+  /* Prize card (digital gift card on Redeem Prizes) — one glow, not five.
+     Mirrored as PRIZE_CARD in lib/themeTokens.ts. Spec: docs/prize-gift-card-redesign-plan.md §2 */
+  --ht-prize-card-base-from:   #0f172a;                 /* slate-900, top-left  */
+  --ht-prize-card-base-to:     #020617;                 /* slate-950, bottom-right */
+  --ht-prize-card-glow-cyan:   rgba(34, 211, 238, 0.35); /* cyan-400 @ 35%  */
+  --ht-prize-card-glow-violet: rgba(139, 92, 246, 0.25); /* violet-500 @ 25% */
 }
 
 /* =============================================================

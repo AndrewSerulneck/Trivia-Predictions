@@ -135,9 +135,16 @@ describe("guest surfaces", () => {
   });
 
   it("the prize wallet has one 'Won from' fallback, behind winDescription", () => {
+    // wonForLine moved to lib/prizeCardFace.ts (docs/prize-gift-card-redesign-plan.md Phase 3).
+    const face = read("lib/prizeCardFace.ts");
+    expect(face.match(/Won from:/g)).toHaveLength(1);
+    expect(face).toContain("win.winDescription ??");
     const wallet = read("components/prizes/PrizeWalletPanel.tsx");
-    expect(wallet.match(/Won from:/g)).toHaveLength(1);
-    expect(wallet).toContain("win.winDescription ??");
-    expect(wallet.match(/wonForLine\(win\)/g)).toHaveLength(5);
+    expect(wallet).not.toContain("Won from:");
+    // Phase 4: "what it was won for" is the For row on the back of every card (list and redeem
+    // sheet), built once by prizeCardBack; the wallet no longer draws the line itself.
+    expect(face).toMatch(/key: "for", label: "For", value: wonForLine\(win\)/);
+    expect(wallet).not.toContain("wonForLine");
+    expect(wallet.match(/prizeCardBack\(win\)/g)).toHaveLength(2);
   });
 });

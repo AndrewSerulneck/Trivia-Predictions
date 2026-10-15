@@ -322,8 +322,11 @@ original incident. Calibrate variety/win rates separately from grading correctne
   (`winner_quota`, `reward_definition_id`, `prize_kind`, etc. — see the plan §3a) and a
   count-guarded, atomically-capped multi-winner ledger (`challenge_cycle_winners` +
   `award_cycle_winner` RPC — see the plan §3b).
-- Prize delivery is an **in-app live coupon**: winners see a coupon on `/redeem-prizes`
-  (`components/prizes/PrizeWalletPanel.tsx`); staff check the live coupon (tap → sparkle,
+- Prize delivery is an **in-app digital gift card** (live coupon): winners see every prize as one
+  midnight-navy gift card on `/redeem-prizes` (`components/prizes/PrizeWalletPanel.tsx` →
+  `PrizeCard`, faces from `lib/prizeCardFace.ts`; `docs/prize-gift-card-redesign-plan.md`). Tapping
+  the card flips it to its details (won / for / terms / expires, a "Redeemed {date, time}" stamp)
+  and the Redeem button, which opens the live sheet; staff check the live coupon (tap → sparkle,
   clock matches now) and the guest confirms, once-only via `redeem_challenge_prize` — see §2
   "Prize flow". POS redemption is Plan C (`docs/pos-rewards-integration-plan.md`): Square
   gift cards built in Phase 2 (flag-gated off); Clover is Phase 3.
@@ -360,6 +363,7 @@ original incident. Calibrate variety/win rates separately from grading correctne
 - **Canonical source of truth for brand:** `design-system/hightop-challenge-design-system/project/colors_and_type.css` — defines all CSS custom properties for colors, typography, and surface tokens.
 - **Code implementation:** `lib/themeTokens.ts` — maps brand tokens to Tailwind class strings per game/context. Must stay in sync with the design system.
 - **Rule:** When brand guidelines change (fonts, colors, etc.), update `colors_and_type.css` first, then propagate to `lib/themeTokens.ts` and any Tailwind config. Never change individual component colors without updating these central files first.
+- **Design principle: minimal and simple (2026-10-15).** Every surface shows the fewest words, colors and elements it needs. One focal point per card, one accent per surface; no decorative borders, double rules, dashed dividers or ornament; secondary details sit below the object in one muted line or behind a tap; if a word doesn't help the player act, cut it. Motion is small and earns its place (a tap bounce, a proof-of-life sparkle), never ambient decoration. Dark, electric, high-contrast, but restrained: one glow, not five. Full text: brand README "Minimal and simple".
 - Typography:
   - Headings: **Bree Serif**
   - Body/UI: **Nunito** (weights 400–900)
@@ -378,7 +382,7 @@ original incident. Calibrate variety/win rates separately from grading correctne
   - Sports Bingo: orange → red → pink
   - Pick'Em: blue → violet → pink
   - Fantasy: violet → blue → cyan
-  - Prizes / redeem: gold (`#d89a4f`)
+  - Prizes / redeem: gold (`#d89a4f`) stays the prize accent on the Rewards panel and badges. Prize *cards* on Redeem Prizes use the midnight + cyan→violet finish (`PRIZE_CARD` in `lib/themeTokens.ts`, `--ht-prize-card-*`), not gold. Plan: `docs/prize-gift-card-redesign-plan.md`.
 
 ## 11. Technical Stack
 - Framework/runtime:

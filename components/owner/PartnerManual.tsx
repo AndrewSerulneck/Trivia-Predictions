@@ -2,6 +2,7 @@
 
 import { useRef, useState, type RefObject } from "react";
 import { PARTNER_MANUAL } from "@/lib/partnerManual";
+import { PrizeCard, SAMPLE_PRIZE_CARD_FACE } from "@/components/prizes/PrizeCard";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 
 type PartnerManualProps = {
@@ -69,6 +70,11 @@ export const PartnerManual = ({
           <section key={section.heading} className="border-t border-ht-hairline pt-5">
             <h3 className="text-lg font-black text-ht-primary">{section.heading}</h3>
             {section.body ? <p className="mt-2 text-sm font-semibold leading-6 text-ht-muted">{section.body}</p> : null}
+            {section.figure === "prize-card" ? (
+              <div className="mt-4">
+                <PrizeCard face={SAMPLE_PRIZE_CARD_FACE} />
+              </div>
+            ) : null}
             {section.subsections?.length ? (
               <div className="mt-5 space-y-4 border-l-2 border-ht-cyan-500/30 pl-4">
                 {section.subsections.map((subsection) => (

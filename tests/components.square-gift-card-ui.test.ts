@@ -11,6 +11,7 @@ import {
 import type { PosConnectionStatus } from "@/lib/pos/types";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 import type { ChallengeCampaignWin } from "@/types";
+import { findPrizeCardAction, flipPrizeCards } from "@/tests/helpers/prizeCardBack";
 
 // docs/pos-rewards-integration-plan.md Phase 2 — what a guest and a partner see:
 //   * the prize wallet's Square path (offer → "Get my Square gift card" → number + barcode;
@@ -69,7 +70,7 @@ describe("Prize wallet — Square gift card", () => {
   it("offers the Square card, creates it on tap, and shows the number + barcode inside the live frame", async () => {
     const calls = installFetch([win({ squareGiftCard: "available" })], { status: 200, body: { ok: true, giftCard: GIFT_CARD } });
     render(createElement(PrizeWalletPanel));
-    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    fireEvent.click(await findPrizeCardAction("Redeem"));
     const dialog = screen.getByRole("dialog", { name: "Confirm redemption" });
     expect(within(dialog).getByText("Pay with a Square gift card")).not.toBeNull();
     expect(within(dialog).queryByRole("button", { name: "Confirm Redemption" })).toBeNull();
@@ -79,8 +80,18 @@ describe("Prize wallet — Square gift card", () => {
     expect(await within(dialog).findByLabelText("Gift card number")).not.toBeNull();
     expect(within(dialog).getByLabelText("Gift card number").textContent).toBe("7783 3200 1234 5678");
     expect(within(dialog).getByRole("img", { name: "Gift card barcode" })).not.toBeNull();
-    expect(within(dialog).getByText("$25.00 left")).not.toBeNull();
+    // The card's headline is the balance left; the starting amount is on the staff line (plan §2.4).
+    expect(dialog.querySelector("[data-live-coupon] [data-prize-card-headline]")?.textContent).toBe("$25");
+    expect(within(dialog).getByRole("group", { name: "Gift card, $25 left, The Tap Room" })).not.toBeNull();
+    expect(within(dialog).getByText(/Started at \$25\.00/)).not.toBeNull();
     expect(dialog.querySelector("[data-live-coupon] [data-square-gift-card]")).not.toBeNull();
+    // Its back (plan §2.8) reads as the Square card it now is — even though the win this sheet
+    // opened with still said "available" — and carries no button.
+    const back = dialog.querySelector("[data-live-coupon] [data-prize-card-back]") as HTMLElement;
+    expect(back.querySelector("[data-prize-card-stamp]")?.textContent).toBe("Turned into a Square gift card");
+    expect(back.querySelector('[data-prize-card-back-row="terms"]')?.textContent).toContain("over one or more visits");
+    expect(back.querySelector('[data-prize-card-back-row="expires"]')).toBeNull();
+    expect(back.querySelector("[data-prize-card-action]")).toBeNull();
 
     const post = calls.find((c) => c.url.startsWith("/api/prizes/square-gift-card"));
     expect(JSON.parse(String(post?.init?.body))).toEqual({ userId: "user-1", venueId: "venue-1", redemptionId: "red-1" });
@@ -91,7 +102,7 @@ describe("Prize wallet — Square gift card", () => {
   it("still lets staff redeem the normal way before a card exists", async () => {
     installFetch([win({ squareGiftCard: "available" })], { status: 200, body: { ok: true, giftCard: GIFT_CARD } });
     render(createElement(PrizeWalletPanel));
-    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    fireEvent.click(await findPrizeCardAction("Redeem"));
     const dialog = screen.getByRole("dialog", { name: "Confirm redemption" });
     fireEvent.click(within(dialog).getByRole("button", { name: /Redeem the normal way/ }));
     expect(within(dialog).getByRole("button", { name: "Confirm Redemption" })).not.toBeNull();
@@ -108,8 +119,14 @@ describe("Prize wallet — Square gift card", () => {
     };
     installFetch([win({ ...scannable, squareGiftCard: "available" })], { status: 200, body: { ok: true, giftCard: GIFT_CARD } });
     render(createElement(PrizeWalletPanel));
-    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
-    expect(await screen.findByText(/into a \$5\.00 Square gift card/)).toBeTruthy();
+    fireEvent.click(await findPrizeCardAction("Redeem"));
+    // The offer sentence uses the card's own money style ("$5", not "$5.00").
+    expect(await screen.findByText(/into a \$5 Square gift card/)).toBeTruthy();
+    // Once the sheet makes the card, its face is a GIFT CARD, not the menu prize's REWARD.
+    fireEvent.click(screen.getByRole("button", { name: "Get my Square gift card" }));
+    const ready = await screen.findByText(/Started at/);
+    const readyCard = ready.closest("[role=dialog]")?.querySelector("[data-prize-card]");
+    expect(readyCard?.querySelector("[data-prize-card-label]")?.textContent).toBe("GIFT CARD");
     cleanup();
 
     installFetch(
@@ -117,12 +134,13 @@ describe("Prize wallet — Square gift card", () => {
       { status: 200, body: { ok: true, giftCard: GIFT_CARD } },
     );
     render(createElement(PrizeWalletPanel));
-    expect(await screen.findByRole("button", { name: "Show gift card" })).toBeTruthy();
+    expect(await findPrizeCardAction("Show gift card")).toBeTruthy();
     cleanup();
 
     installFetch([win({ ...scannable, squareGiftCard: "used", prizeRedeemedAt: new Date().toISOString() })], { status: 200, body: {} });
     render(createElement(PrizeWalletPanel));
     expect(await screen.findByText("Used")).toBeTruthy();
+    await flipPrizeCards();
     expect(screen.queryByRole("button", { name: "Show gift card" })).toBeNull();
   });
 
@@ -138,7 +156,7 @@ describe("Prize wallet — Square gift card", () => {
     // No squareGiftCard state = no Square here (or POS off): an ordinary coupon.
     installFetch([win(scannable)], { status: 200, body: {} });
     render(createElement(PrizeWalletPanel));
-    expect(await screen.findByRole("button", { name: "Redeem" })).toBeTruthy();
+    expect(await findPrizeCardAction("Redeem")).toBeTruthy();
     expect(screen.queryByText(/Paid as a Square gift card/)).toBeNull();
     cleanup();
 
@@ -153,9 +171,9 @@ describe("Prize wallet — Square gift card", () => {
       { status: 200, body: { ok: true, giftCard: { ...GIFT_CARD, balanceCents: 900 } } },
     );
     render(createElement(PrizeWalletPanel));
-    fireEvent.click(await screen.findByRole("button", { name: "Show gift card" }));
+    fireEvent.click(await findPrizeCardAction("Show gift card"));
     const dialog = screen.getByRole("dialog", { name: "Confirm redemption" });
-    expect(await within(dialog).findByText("$9.00 left")).not.toBeNull();
+    expect(await within(dialog).findByRole("group", { name: "Gift card, $9 left, The Tap Room" })).not.toBeNull();
     expect(calls.filter((c) => c.url.startsWith("/api/prizes/square-gift-card"))).toHaveLength(1);
   });
 
@@ -163,13 +181,16 @@ describe("Prize wallet — Square gift card", () => {
     installFetch([win({ squareGiftCard: "used", prizeRedeemedAt: new Date().toISOString() })], { status: 200, body: {} });
     render(createElement(PrizeWalletPanel));
     expect(await screen.findByText("Used")).not.toBeNull();
+    // Even face-down (where the action would be), a spent card offers nothing; its back says so.
+    await flipPrizeCards();
     expect(screen.queryByRole("button", { name: "Show gift card" })).toBeNull();
+    expect(document.querySelector("[data-prize-card-stamp]")?.textContent).toBe("Used up");
   });
 
   it("closes and explains when the coupon was already redeemed the normal way", async () => {
     installFetch([win({ squareGiftCard: "available" })], { status: 409, body: { ok: false, code: "already_redeemed", error: "This prize was already redeemed." } });
     render(createElement(PrizeWalletPanel));
-    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    fireEvent.click(await findPrizeCardAction("Redeem"));
     fireEvent.click(screen.getByRole("button", { name: "Get my Square gift card" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(await screen.findByText("This prize was already redeemed.")).not.toBeNull();
@@ -178,7 +199,7 @@ describe("Prize wallet — Square gift card", () => {
   it("offers Try again when Square is unreachable", async () => {
     installFetch([win({ squareGiftCard: "available" })], { status: 502, body: { ok: false, code: "square_error", error: "Couldn't reach Square right now. Please try again in a minute." } });
     render(createElement(PrizeWalletPanel));
-    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    fireEvent.click(await findPrizeCardAction("Redeem"));
     fireEvent.click(screen.getByRole("button", { name: "Get my Square gift card" }));
     expect(await screen.findByRole("button", { name: "Try again" })).not.toBeNull();
   });
@@ -218,7 +239,7 @@ describe("Prize wallet — Square discount (menu-item prize)", () => {
     const calls = stub([MENU_WIN], { status: 200, body: { ok: true, discount: { name: NAME } } });
     render(createElement(PrizeWalletPanel));
     expect(calls.some((c) => c.url.startsWith("/api/prizes/square-discount"))).toBe(false);
-    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    fireEvent.click(await findPrizeCardAction("Redeem"));
     const dialog = screen.getByRole("dialog", { name: "Confirm redemption" });
     expect(await within(dialog).findByText(NAME)).not.toBeNull();
     expect(dialog.querySelector("[data-square-discount]")).not.toBeNull();
@@ -232,7 +253,7 @@ describe("Prize wallet — Square discount (menu-item prize)", () => {
   it("shows nothing extra when Square can't be reached — the normal coupon still works", async () => {
     const calls = stub([MENU_WIN], { status: 502, body: { ok: false, code: "square_error" } });
     render(createElement(PrizeWalletPanel));
-    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    fireEvent.click(await findPrizeCardAction("Redeem"));
     const dialog = screen.getByRole("dialog", { name: "Confirm redemption" });
     await waitFor(() => expect(calls.some((c) => c.url.startsWith("/api/prizes/square-discount"))).toBe(true));
     expect(dialog.querySelector("[data-square-discount]")).toBeNull();
@@ -242,7 +263,7 @@ describe("Prize wallet — Square discount (menu-item prize)", () => {
   it("never asks for a coupon without the flag", async () => {
     const calls = stub([{ ...MENU_WIN, squareDiscount: undefined }], { status: 200, body: { ok: true, discount: { name: NAME } } });
     render(createElement(PrizeWalletPanel));
-    fireEvent.click(await screen.findByRole("button", { name: "Redeem" }));
+    fireEvent.click(await findPrizeCardAction("Redeem"));
     expect(screen.getByRole("button", { name: "Confirm Redemption" })).not.toBeNull();
     expect(calls.some((c) => c.url.startsWith("/api/prizes/square-discount"))).toBe(false);
   });

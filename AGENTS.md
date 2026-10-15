@@ -96,6 +96,26 @@ Read the plan's §1 "Decisions already made" before asking Andrew anything. Hand
 `assets/store-src/`, run `npm run store:images`, then extend `tests/lib.merch-pricing.test.ts`. The
 store UI reads the catalog, so no component change is needed.
 
+## Prize gift card redesign (built 2026-10-15; device pass open)
+
+Plan: `docs/prize-gift-card-redesign-plan.md` (Andrew's decisions in §1 — don't re-ask; handoffs
+`docs/prize-gift-card-redesign-plan_PHASE_<N>_HANDOFF.md`). Every prize on `/redeem-prizes` becomes
+one midnight-navy digital gift card (`PRIZE_CARD` tokens in `lib/themeTokens.ts`). **Design rule for
+all new UI: minimal and simple** — fewest words/colors/elements, one focal point, one accent, no
+decorative borders; see the brand README "Minimal and simple". Andrew approved the card on
+2026-10-15 (logo 2×) and added a flip. Phases 1–5 are done (uncommitted): tapping a card (not the
+logo) flips it to its back — won / for / terms / expires, a "Redeemed {date, time}" stamp, and the
+list's action ("Redeem" opens the live sheet; Confirm Redemption is still the only redeem). The one
+face/back rules live in `lib/prizeCardFace.ts` (`prizeCardFace`, `prizeCardBack`), the which-button
+rule in `prizeActionOf` (`components/prizes/PrizeWalletPanel.tsx`), the flip in `PrizeCard.tsx` (no
+overflow/opacity/filter on the perspective root or the rotating element — iOS flattens the 3D).
+Wallet tests reach the back's action through `tests/helpers/prizeCardBack.ts`. Partner copy (Phase 5):
+the Welcome Email's `prizesSection` (`lib/email/partnerEmailCopy.ts`, picture
+`public/brand/email/prize-card-v2.png` from `npm run prize-card:render -- --email` — a new picture
+gets a NEW file name) and the Partner Manual section "Where Guests Find Their Prizes" (live
+`PrizeCard` figure, sample face, no `back`). Phase 6 (review + wrap-up) is done; all six phases are
+uncommitted. What's left is Andrew's phone pass, `docs/prize-gift-card-redesign-device-checklist.md`.
+
 ## Adding a new Reward definition
 
 The Rewards system (`docs/rewards-system-plan.md`) lets a venue offer a

@@ -4,6 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NFLTiebreakerCard } from "@/components/nfl-pickem/NFLTiebreakerCard";
 import { PrizeWalletPanel } from "@/components/prizes/PrizeWalletPanel";
+import { findPrizeCardAction } from "@/tests/helpers/prizeCardBack";
 
 vi.mock("@/lib/storage", () => ({ getUserId: () => "user", getUsername: () => "guest", getVenueId: () => "venue" }));
 const presence = { capturePresenceFailure: () => null, isInteractionBlocked: false };
@@ -51,7 +52,7 @@ describe("coupon redemption", () => {
     });
     vi.stubGlobal("fetch", fetch);
     render(React.createElement(PrizeWalletPanel));
-    const redeem = await screen.findByRole("button", { name: /redeem/i });
+    const redeem = await findPrizeCardAction(/redeem/i);
     fireEvent.click(redeem);
     const confirm = screen.getByRole("button", { name: "Confirm Redemption" });
     act(() => { confirm.click(); confirm.click(); });

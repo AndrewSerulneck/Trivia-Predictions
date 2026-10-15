@@ -55,6 +55,16 @@ export const buildWelcomeEmail = (input: WelcomeEmailInput): WelcomeEmailContent
   }).join("");
   const featureCardsText = copy.featureTour.map((feature) => `- ${feature.title}: ${feature.body}`).join("\n");
 
+  const prizes = copy.prizesSection;
+  const prizesHtml = `
+            <tr>
+              <td style="padding:12px 24px 0;">
+                <h2 style="margin:0 0 12px; font-size:19px; line-height:1.4; color:${theme.text};">${escapeHtml(prizes.title)}</h2>
+                <p style="margin:0 0 16px; font-size:15px; color:${theme.secondary}; line-height:1.65;">${escapeHtml(prizes.body)}</p>
+                <img src="${assetUrl(prizes.imageFile)}" width="480" alt="${escapeHtml(prizes.imageAlt)}" style="display:block; width:100%; max-width:480px; height:auto; margin:0 auto; border:0; border-radius:16px;" />
+              </td>
+            </tr>`;
+
   const socialCardsHtml = copy.socialFollow.profiles.map((profile) => `
     <tr>
       <td style="padding:0 0 12px;">
@@ -129,8 +139,9 @@ export const buildWelcomeEmail = (input: WelcomeEmailInput): WelcomeEmailContent
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${featureCardsHtml}</table>
               </td>
             </tr>
+            ${prizesHtml}
             <tr>
-              <td style="padding:12px 24px 0;">
+              <td style="padding:24px 24px 0;">
                 <h2 style="margin:0 0 12px; font-size:19px; text-align:center; color:${theme.text};">${escapeHtml(copy.gamesHeading)}</h2>
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" align="center" style="table-layout:fixed;">${gamesHtml}</table>
                 <p style="margin:16px 0 0; text-align:center; font-size:14px; color:${theme.secondary}; line-height:1.65;">${escapeHtml(copy.gamesUpdateNote)}</p>
@@ -174,6 +185,9 @@ ${copy.introduction}
 
 ${copy.featureTourHeading}
 ${featureCardsText}
+
+${prizes.title}
+${prizes.body}
 
 ${copy.gamesHeading}:
 ${gameRows.map((games) => games.join(" · ")).join("\n")}

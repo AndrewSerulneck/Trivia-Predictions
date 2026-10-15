@@ -2,6 +2,8 @@
 // Small email-compatible PNGs; never serve the 1.7 MB logo in an email.
 // Run: node scripts/build-partner-email-assets.cjs
 // New artwork must use new filenames; preserve assets already referenced by sent emails.
+// Not built here: public/brand/email/prize-card-v2.png (welcome email prize card) comes from
+// `npm run prize-card:render -- --email` (scripts/render-prize-card.cjs); a new picture = a new -v2 name.
 const { mkdirSync, statSync } = require("node:fs");
 const { join } = require("node:path");
 const sharp = require("sharp");

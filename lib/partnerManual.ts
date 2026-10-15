@@ -15,6 +15,8 @@ type PartnerManualSubsection = {
 
 type PartnerManualSection = PartnerManualSubsection & {
   subsections?: readonly PartnerManualSubsection[];
+  /** A live picture drawn by PartnerManual.tsx under the body (the sample prize card). */
+  figure?: "prize-card";
 };
 
 /**
@@ -73,6 +75,11 @@ export const PARTNER_MANUAL: {
     {
       heading: "Offer Rewards",
       body: "Incentivize guests to visit by offering rewards for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. NFL Pick 'Em rewards can run every week, all season, or for a single NFL week you choose. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Offer Rewards on your dashboard to get started.",
+    },
+    {
+      heading: "Where Guests Find Their Prizes",
+      body: "When a guest wins one of your Rewards, we let them know right away. Their prize appears as a digital gift card in Redeem Prizes, in the Hightop Challenge menu. To use it, they tap the card to flip it over (the back shows what it was won for, its terms and when it expires), then tap Redeem on the back. Your staff tap the card (it sparkles and shows the live time, so a screenshot won't work), and the guest taps Confirm Redemption. Once a prize is redeemed, the back of the card shows when, so you can always tell if it was used early. If you use Square, gift cards can be rung up like any other Square gift card.",
+      figure: "prize-card",
     },
     {
       heading: "Point of Sale (Square)",

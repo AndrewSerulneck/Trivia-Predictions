@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { Code128Barcode } from "@/components/prizes/Code128Barcode";
+import { PrizeCard } from "@/components/prizes/PrizeCard";
+import { formatPrizeDollars, prizeCardBack, prizeCardFace, type PrizeCardBack, type PrizeCardFace } from "@/lib/prizeCardFace";
 import { haptic } from "@/lib/haptics";
 import { squareGiftCardDollars } from "@/lib/pos/prizeDelivery";
 import { GUEST_SQUARE_GIFT_CARD_LINE } from "@/lib/posStaffInstructions";
@@ -31,8 +33,10 @@ export type SquareGiftCardPanelProps = {
   win: ChallengeCampaignWin;
   userId: string;
   venueId: string;
-  /** The coupon as the wallet draws it, shown on the offer screen. */
+  /** The prize card as the wallet draws it, shown on the offer screen. */
   coupon: ReactNode;
+  /** For the gift card's face once it exists (from the wallet response; null = no venue line). */
+  venueName: string | null;
   /** The live coupon frame (moving shimmer, server clock, screen kept awake while staff type). */
   frame: (node: ReactNode) => ReactNode;
   /** The coupon just became a Square gift card — refresh the wallet behind the sheet. */
@@ -50,11 +54,43 @@ const dollars = (cents: number): string => `$${(cents / 100).toFixed(2)}`;
 
 const GENERIC_ERROR = "Couldn't reach Square right now. Please try again in a minute.";
 
+/** The win as the Square gift card it now is, even when this sheet only just made it. */
+const asIssuedCard = (win: ChallengeCampaignWin): ChallengeCampaignWin => ({
+  ...win,
+  squareGiftCard: win.squareGiftCard === "used" ? "used" : "issued",
+});
+
+/**
+ * The card face once the Square gift card exists (docs/prize-gift-card-redesign-plan.md §2.4):
+ * the headline is the balance left, like a coffee-shop app; the starting amount is on the staff line.
+ */
+const giftCardFace = (win: ChallengeCampaignWin, venueName: string | null, giftCard: GiftCard): PrizeCardFace => {
+  // As the back does: a card this sheet just made still says "available" on the win, and a
+  // dollar-off menu prize would otherwise keep its "REWARD" label on a gift card.
+  const face = prizeCardFace(asIssuedCard(win), venueName);
+  const active = giftCard.state === "ACTIVE";
+  const headline = active ? formatPrizeDollars(giftCard.balanceCents / 100) : "Not active";
+  return {
+    ...face,
+    headline,
+    headlineKind: active ? "amount" : "phrase",
+    ariaLabel: [active ? `Gift card, ${headline} left` : "Gift card, not active", face.venueName].filter(Boolean).join(", "),
+  };
+};
+
+/**
+ * Its back. The card exists now even when this sheet just made it (the win still says
+ * "available"), so the back reads as a Square card: its own terms and the "Turned into a Square
+ * gift card" stamp, never the coupon's expiry.
+ */
+const giftCardBack = (win: ChallengeCampaignWin): PrizeCardBack => prizeCardBack(asIssuedCard(win));
+
 export const SquareGiftCardPanel = ({
   win,
   userId,
   venueId,
   coupon,
+  venueName,
   frame,
   onIssued,
   onAlreadyRedeemed,
@@ -124,7 +160,7 @@ export const SquareGiftCardPanel = ({
           <div className="space-y-1 rounded-2xl border border-ht-border-hairline bg-ht-elevated p-4 text-center">
             <p className="text-sm font-semibold text-ht-fg-primary">Pay with a Square gift card</p>
             <p className="text-xs text-ht-fg-muted">
-              We&apos;ll turn this prize into a {amount != null ? `$${amount.toFixed(2)} ` : ""}Square gift card. Staff ring
+              We&apos;ll turn this prize into a {amount != null ? `${formatPrizeDollars(amount)} ` : ""}Square gift card. Staff ring
               it up at the register like any gift card, and you can use it over more than one visit. {GUEST_SQUARE_GIFT_CARD_LINE}
             </p>
           </div>
@@ -187,22 +223,19 @@ export const SquareGiftCardPanel = ({
       {phase.kind === "ready" ? (
         <>
           {frame(
-          <div className="space-y-3 rounded-2xl border-2 border-amber-500/60 bg-gradient-to-br from-amber-950 to-amber-900/80 p-4" data-square-gift-card>
-            <div className="flex items-baseline justify-between gap-2">
-              <p className="text-caption font-bold uppercase tracking-[0.2em] text-amber-400/70">Square gift card</p>
-              <p className="text-xs font-bold text-amber-200">
-                {phase.giftCard.state === "ACTIVE" ? `${dollars(phase.giftCard.balanceCents)} left` : "Not active"}
-              </p>
-            </div>
-            <p className="text-center font-mono text-2xl font-black tracking-wider text-amber-100" aria-label="Gift card number">
-              {phase.giftCard.gan}
-            </p>
-            <Code128Barcode value={phase.giftCard.gan.replace(/\s+/g, "")} label="Gift card barcode" />
-            <p className="text-xs text-amber-200/80">
-              <span className="font-bold">Staff:</span> take payment → Gift card → enter this number (or scan the
-              barcode). Started at {dollars(phase.giftCard.amountCents)}.
-            </p>
-          </div>,
+            <div className="space-y-3">
+              <PrizeCard face={giftCardFace(win, venueName, phase.giftCard)} back={giftCardBack(win)} size="large" inLiveFrame />
+              <div className="space-y-3 rounded-2xl bg-ht-elevated p-4" data-square-gift-card>
+                <p className="text-center font-mono text-2xl font-black tracking-wider text-ht-fg-primary" aria-label="Gift card number">
+                  {phase.giftCard.gan}
+                </p>
+                <Code128Barcode value={phase.giftCard.gan.replace(/\s+/g, "")} label="Gift card barcode" />
+                <p className="text-footnote text-ht-fg-muted">
+                  <span className="font-bold text-ht-fg-secondary">Staff:</span> take payment → Gift card → enter this number
+                  (or scan the barcode). Started at {dollars(phase.giftCard.amountCents)}.
+                </p>
+              </div>
+            </div>,
           )}
           <button
             type="button"
