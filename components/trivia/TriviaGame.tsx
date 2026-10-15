@@ -18,11 +18,13 @@ import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { isPopupBlocking, isPopupVisible, subscribePopupBlockingChange } from "@/components/ui/popupBlocking";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
+import type { SelectionInfo } from "@/types/speedTriviaVariety";
 import type { TriviaQuestion } from "@/types";
 
 type TriviaApiResponse = {
   ok: boolean;
   questions?: TriviaQuestion[];
+  selection?: SelectionInfo;
   error?: string;
 };
 
@@ -337,6 +339,7 @@ export function TriviaGame({
   const gameRootRef = useRef<HTMLDivElement>(null);
   const nextQuestionButtonRef = useRef<HTMLButtonElement>(null);
   const [questions, setQuestions] = useState<TriviaQuestion[]>(initialQuestions);
+  const [selectionReason, setSelectionReason] = useState<SelectionInfo["reason"]>(null);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [quota, setQuota] = useState<TriviaQuota | null>(null);
@@ -747,8 +750,9 @@ export function TriviaGame({
       }
 
       try {
-        const items = await fetchTriviaQuestions(userId, selectedCategory);
-        setQuestions(items);
+        const result = await fetchTriviaSelection(userId, selectedCategory);
+        setQuestions(result.questions ?? []);
+        setSelectionReason(result.selection?.reason ?? null);
         resetRoundState();
         await loadQuota();
         const startingPoints = await loadCurrentUserPoints();
@@ -1632,7 +1636,7 @@ export function TriviaGame({
     return (
       <div className="flex h-full min-h-0 items-center justify-center bg-transparent p-4">
         <div className="rounded-xl border border-[rgba(250,204,21,0.3)] bg-[rgba(250,204,21,0.05)] p-4 text-caption text-[#facc15]">
-          No new trivia questions available right now.
+          {selectionReason ? "A varied round is unavailable right now. Try another category." : "No new trivia questions available right now."}
         </div>
       </div>
     );
@@ -1682,9 +1686,9 @@ export function TriviaGame({
               <p className="mb-3 font-black uppercase tracking-[0.14em] text-[#84cc16] text-footnote">Rules</p>
               <ul className="space-y-3">
                 {([
-                  [`${QUESTIONS_PER_ROUND}`, "questions per round"],
+                  [`${questions.length}`, "questions this round"],
                   [`${QUESTION_TIME_LIMIT_SECONDS}s`, "per question"],
-                  [`${ROUND_LIMIT_PER_WINDOW}`, "rounds per hour"],
+                  [`${ROUND_LIMIT_PER_WINDOW * QUESTIONS_PER_ROUND}`, "questions per hour"],
                   [`+${POINTS_PER_CORRECT}`, "points per correct answer"],
                 ] as [string, string][]).map(([value, label]) => (
                   <li key={label} className="flex items-center gap-3">
@@ -1709,6 +1713,7 @@ export function TriviaGame({
                   </p>
                 </div>
               )}
+              {selectionReason && questions.length > 0 ? <p className="text-footnote text-slate-300">This round has {questions.length} questions to keep the subjects varied.</p> : null}
               {questions.length === 0 && onChangeCategory ? (
                 <>
                   <div className="mb-1 rounded-[12px] border border-[rgba(250,204,21,0.2)] bg-[rgba(250,204,21,0.06)] px-4 py-3 text-center">
@@ -2067,7 +2072,7 @@ export function TriviaGame({
   );
 }
 
-export async function fetchTriviaQuestions(userId?: string, category?: string | null): Promise<TriviaQuestion[]> {
+const fetchTriviaSelection = async (userId?: string, category?: string | null): Promise<TriviaApiResponse> => {
   const query = new URLSearchParams();
   if (userId) {
     query.set("userId", userId);
@@ -2081,5 +2086,9 @@ export async function fetchTriviaQuestions(userId?: string, category?: string | 
   if (!payload.ok || !payload.questions) {
     throw new Error(payload.error ?? "Failed to load trivia.");
   }
-  return payload.questions;
+  return payload;
+};
+
+export async function fetchTriviaQuestions(userId?: string, category?: string | null): Promise<TriviaQuestion[]> {
+  return (await fetchTriviaSelection(userId, category)).questions ?? [];
 }

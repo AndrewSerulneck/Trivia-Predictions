@@ -1,0 +1,17 @@
+import type { SpeedCorpus } from "@/types/speedTriviaUniqueness";
+import type { ReferenceEvidence, Disposition } from "@/lib/speed-trivia-uniqueness/review.cjs";
+export type AuditTarget = {id:string;contentHash:string;stateHash:string};
+export type AuditPlan = {version:string;policyVersion:string;modelVersion:string;corpusRevision:string;corpusDigest:string;targetHash:string;referenceHash:string;taskHash:string;targets:AuditTarget[];tasks:Record<string,unknown>[];summary:{targetRows:number;tasks:number;cached:number;uncached:number;provisionalFamilies:number;retryCeiling:number;meanEstimateDollars:number;allLostReservationDollars:number;paidRequests:number;mutations:number};refresh?:{basePlanHash:string;baseCorpusDigest:string;changedRows:number;originalTargetHash:string;concurrent:unknown[]}};
+export type LedgerConfig = {auditId:string;planHash:string;modelVersion:string;capMicrodollars:number;maxRequests:number;maxRetries:number;maxInputTokens:number;maxOutputTokens:number};
+export type AuditApproval = LedgerConfig & {approvedBy:string;questionTransferApproved:boolean};
+export type Claim = {dollars:number;inputTokens:number;outputTokens:number};
+export type Ledger = {scope:(key:string,attempt?:number)=>{reserve:(claim:Claim)=>string;settle:(id:string,actual:Claim)=>void;commit:()=>void};summary:()=>{dollars:number;microdollars:number;requests:number;retries:number;unsettled:number};close:()=>void;owner:{nonce:string;host:string;pid:number}};
+export const MODEL_VERSION:string;
+export const VERSION:string;
+export function openLedger(directory:string,config:LedgerConfig,options?:{now?:()=>number;sliceMs?:number}):Ledger;
+export function recoverLock(directory:string,nonce:string):void;
+export function durableAppend(file:string,value:unknown):void;
+export function readLines(file:string):unknown[];
+export function planAudit(input:{corpus:SpeedCorpus;targets:AuditTarget[];cache?:Map<string,unknown>;references:ReferenceEvidence;modelVersion?:string}):AuditPlan;
+export function refreshAuditPlan(input:{baseCorpus:SpeedCorpus;basePlan:AuditPlan;corpus:SpeedCorpus;references:ReferenceEvidence;cache?:Map<string,unknown>}):AuditPlan;
+export function runAudit(input:{corpus:SpeedCorpus;plan:AuditPlan;cache?:Map<string,unknown>;references:ReferenceEvidence;directory:string;approval?:AuditApproval|null;paid?:boolean;transport?:typeof fetch;concurrency?:number;sliceMs?:number;refreshBase?:{baseCorpus:SpeedCorpus;basePlan:AuditPlan}}):Promise<{summary:Record<string,number>;budget?:Record<string,unknown>;stop?:string|null;outcomes?:{id:string;disposition:Disposition}[];groups?:unknown[]}>;

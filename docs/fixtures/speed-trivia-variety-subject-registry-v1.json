@@ -1,0 +1,921 @@
+{
+  "version": "speed-subject-registry-v1",
+  "purpose": "Frozen bounded Phase 1 measurement/evaluation registry; incomplete, not a universal entity catalog. Creator links apply only to creator-focused prompts; no automatic full franchise/creator expansion.",
+  "entities": [
+    {
+      "key": "person:taylor-swift",
+      "kind": "person",
+      "name": "Taylor Swift",
+      "aliases": [
+        "Taylor Swift"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:michael-jackson",
+      "kind": "person",
+      "name": "Michael Jackson",
+      "aliases": [
+        "Michael Jackson"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:beyoncé",
+      "kind": "person",
+      "name": "Beyoncé",
+      "aliases": [
+        "Beyoncé",
+        "Beyonce"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:adele",
+      "kind": "person",
+      "name": "Adele",
+      "aliases": [
+        "Adele"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:lady-gaga",
+      "kind": "person",
+      "name": "Lady Gaga",
+      "aliases": [
+        "Lady Gaga"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:madonna",
+      "kind": "person",
+      "name": "Madonna",
+      "aliases": [
+        "Madonna"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:billie-eilish",
+      "kind": "person",
+      "name": "Billie Eilish",
+      "aliases": [
+        "Billie Eilish"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:jimi-hendrix",
+      "kind": "person",
+      "name": "Jimi Hendrix",
+      "aliases": [
+        "Jimi Hendrix"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:whitney-houston",
+      "kind": "person",
+      "name": "Whitney Houston",
+      "aliases": [
+        "Whitney Houston"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:dolly-parton",
+      "kind": "person",
+      "name": "Dolly Parton",
+      "aliases": [
+        "Dolly Parton"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:louis-armstrong",
+      "kind": "person",
+      "name": "Louis Armstrong",
+      "aliases": [
+        "Louis Armstrong"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:miles-davis",
+      "kind": "person",
+      "name": "Miles Davis",
+      "aliases": [
+        "Miles Davis"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:aretha-franklin",
+      "kind": "person",
+      "name": "Aretha Franklin",
+      "aliases": [
+        "Aretha Franklin"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:bob-marley",
+      "kind": "person",
+      "name": "Bob Marley",
+      "aliases": [
+        "Bob Marley"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:elvis-presley",
+      "kind": "person",
+      "name": "Elvis Presley",
+      "aliases": [
+        "Elvis Presley"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:bob-dylan",
+      "kind": "person",
+      "name": "Bob Dylan",
+      "aliases": [
+        "Bob Dylan"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:lil-nas-x",
+      "kind": "person",
+      "name": "Lil Nas X",
+      "aliases": [
+        "Lil Nas X"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:freddie-mercury",
+      "kind": "person",
+      "name": "Freddie Mercury",
+      "aliases": [
+        "Freddie Mercury"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:ludwig-van-beethoven",
+      "kind": "person",
+      "name": "Ludwig van Beethoven",
+      "aliases": [
+        "Ludwig van Beethoven",
+        "Beethoven"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:wolfgang-amadeus-mozart",
+      "kind": "person",
+      "name": "Wolfgang Amadeus Mozart",
+      "aliases": [
+        "Wolfgang Amadeus Mozart",
+        "Mozart"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:johann-sebastian-bach",
+      "kind": "person",
+      "name": "Johann Sebastian Bach",
+      "aliases": [
+        "Johann Sebastian Bach",
+        "Bach"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:arnold-schoenberg",
+      "kind": "person",
+      "name": "Arnold Schoenberg",
+      "aliases": [
+        "Arnold Schoenberg"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:charlie-parker",
+      "kind": "person",
+      "name": "Charlie Parker",
+      "aliases": [
+        "Charlie Parker"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:johannes-gutenberg",
+      "kind": "person",
+      "name": "Johannes Gutenberg",
+      "aliases": [
+        "Johannes Gutenberg"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:julius-caesar",
+      "kind": "person",
+      "name": "Julius Caesar",
+      "aliases": [
+        "Julius Caesar"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:muhammad-ali",
+      "kind": "person",
+      "name": "Muhammad Ali",
+      "aliases": [
+        "Muhammad Ali"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:michael-phelps",
+      "kind": "person",
+      "name": "Michael Phelps",
+      "aliases": [
+        "Michael Phelps"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:usain-bolt",
+      "kind": "person",
+      "name": "Usain Bolt",
+      "aliases": [
+        "Usain Bolt"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:jack-nicklaus",
+      "kind": "person",
+      "name": "Jack Nicklaus",
+      "aliases": [
+        "Jack Nicklaus"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:christopher-nolan",
+      "kind": "person",
+      "name": "Christopher Nolan",
+      "aliases": [
+        "Christopher Nolan"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:quentin-tarantino",
+      "kind": "person",
+      "name": "Quentin Tarantino",
+      "aliases": [
+        "Quentin Tarantino"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:wes-anderson",
+      "kind": "person",
+      "name": "Wes Anderson",
+      "aliases": [
+        "Wes Anderson"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:thomas-jefferson",
+      "kind": "person",
+      "name": "Thomas Jefferson",
+      "aliases": [
+        "Thomas Jefferson"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:joseph-stalin",
+      "kind": "person",
+      "name": "Joseph Stalin",
+      "aliases": [
+        "Joseph Stalin"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:genghis-khan",
+      "kind": "person",
+      "name": "Genghis Khan",
+      "aliases": [
+        "Genghis Khan"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:martin-luther-king-jr.",
+      "kind": "person",
+      "name": "Martin Luther King Jr.",
+      "aliases": [
+        "Martin Luther King Jr."
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:jane-austen",
+      "kind": "person",
+      "name": "Jane Austen",
+      "aliases": [
+        "Jane Austen"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:william-shakespeare",
+      "kind": "person",
+      "name": "William Shakespeare",
+      "aliases": [
+        "William Shakespeare"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:j.-k.-rowling",
+      "kind": "person",
+      "name": "J. K. Rowling",
+      "aliases": [
+        "J. K. Rowling",
+        "J K Rowling",
+        "JK Rowling"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:j.-r.-r.-tolkien",
+      "kind": "person",
+      "name": "J. R. R. Tolkien",
+      "aliases": [
+        "J. R. R. Tolkien",
+        "J R R Tolkien",
+        "JRR Tolkien"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:gabriel-garcía-márquez",
+      "kind": "person",
+      "name": "Gabriel García Márquez",
+      "aliases": [
+        "Gabriel García Márquez",
+        "Gabriel Garcia Marquez"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:rabindranath-tagore",
+      "kind": "person",
+      "name": "Rabindranath Tagore",
+      "aliases": [
+        "Rabindranath Tagore"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:j.-m.-coetzee",
+      "kind": "person",
+      "name": "J. M. Coetzee",
+      "aliases": [
+        "J. M. Coetzee",
+        "J M Coetzee"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:derek-walcott",
+      "kind": "person",
+      "name": "Derek Walcott",
+      "aliases": [
+        "Derek Walcott"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:pablo-neruda",
+      "kind": "person",
+      "name": "Pablo Neruda",
+      "aliases": [
+        "Pablo Neruda"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:liu-cixin",
+      "kind": "person",
+      "name": "Liu Cixin",
+      "aliases": [
+        "Liu Cixin"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:wislawa-szymborska",
+      "kind": "person",
+      "name": "Wislawa Szymborska",
+      "aliases": [
+        "Wislawa Szymborska",
+        "Wisława Szymborska"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:umberto-eco",
+      "kind": "person",
+      "name": "Umberto Eco",
+      "aliases": [
+        "Umberto Eco"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:yukio-mishima",
+      "kind": "person",
+      "name": "Yukio Mishima",
+      "aliases": [
+        "Yukio Mishima"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "person:aleksandr-solzhenitsyn",
+      "kind": "person",
+      "name": "Aleksandr Solzhenitsyn",
+      "aliases": [
+        "Aleksandr Solzhenitsyn"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "group:the-beatles",
+      "kind": "group",
+      "name": "The Beatles",
+      "aliases": [
+        "The Beatles",
+        "Beatles"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "group:queen",
+      "kind": "group",
+      "name": "Queen",
+      "aliases": [
+        "Queen"
+      ],
+      "creators": [],
+      "ambiguous": true
+    },
+    {
+      "key": "group:pink-floyd",
+      "kind": "group",
+      "name": "Pink Floyd",
+      "aliases": [
+        "Pink Floyd"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "group:bts",
+      "kind": "group",
+      "name": "BTS",
+      "aliases": [
+        "BTS"
+      ],
+      "creators": [],
+      "ambiguous": true
+    },
+    {
+      "key": "group:fleetwood-mac",
+      "kind": "group",
+      "name": "Fleetwood Mac",
+      "aliases": [
+        "Fleetwood Mac"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "group:nirvana",
+      "kind": "group",
+      "name": "Nirvana",
+      "aliases": [
+        "Nirvana"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "group:boston-celtics",
+      "kind": "group",
+      "name": "Boston Celtics",
+      "aliases": [
+        "Boston Celtics"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "group:miami-dolphins",
+      "kind": "group",
+      "name": "Miami Dolphins",
+      "aliases": [
+        "Miami Dolphins"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "group:pittsburgh-steelers",
+      "kind": "group",
+      "name": "Pittsburgh Steelers",
+      "aliases": [
+        "Pittsburgh Steelers"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:bohemian-rhapsody",
+      "kind": "work",
+      "name": "Bohemian Rhapsody",
+      "aliases": [
+        "Bohemian Rhapsody"
+      ],
+      "creators": [
+        "group:queen"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:billie-jean",
+      "kind": "work",
+      "name": "Billie Jean",
+      "aliases": [
+        "Billie Jean"
+      ],
+      "creators": [
+        "person:michael-jackson"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:bad-romance",
+      "kind": "work",
+      "name": "Bad Romance",
+      "aliases": [
+        "Bad Romance"
+      ],
+      "creators": [
+        "person:lady-gaga"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:poker-face",
+      "kind": "work",
+      "name": "Poker Face",
+      "aliases": [
+        "Poker Face"
+      ],
+      "creators": [
+        "person:lady-gaga"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:bad-guy",
+      "kind": "work",
+      "name": "Bad Guy",
+      "aliases": [
+        "Bad Guy"
+      ],
+      "creators": [
+        "person:billie-eilish"
+      ],
+      "ambiguous": true
+    },
+    {
+      "key": "work:shake-it-off",
+      "kind": "work",
+      "name": "Shake It Off",
+      "aliases": [
+        "Shake It Off"
+      ],
+      "creators": [
+        "person:taylor-swift"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:purple-haze",
+      "kind": "work",
+      "name": "Purple Haze",
+      "aliases": [
+        "Purple Haze"
+      ],
+      "creators": [
+        "person:jimi-hendrix"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:someone-like-you",
+      "kind": "work",
+      "name": "Someone Like You",
+      "aliases": [
+        "Someone Like You"
+      ],
+      "creators": [
+        "person:adele"
+      ],
+      "ambiguous": true
+    },
+    {
+      "key": "work:the-dark-side-of-the-moon",
+      "kind": "work",
+      "name": "The Dark Side of the Moon",
+      "aliases": [
+        "The Dark Side of the Moon"
+      ],
+      "creators": [
+        "group:pink-floyd"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:pride-and-prejudice",
+      "kind": "work",
+      "name": "Pride and Prejudice",
+      "aliases": [
+        "Pride and Prejudice"
+      ],
+      "creators": [
+        "person:jane-austen"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:don-quixote",
+      "kind": "work",
+      "name": "Don Quixote",
+      "aliases": [
+        "Don Quixote"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:harry-potter",
+      "kind": "work",
+      "name": "Harry Potter",
+      "aliases": [
+        "Harry Potter"
+      ],
+      "creators": [
+        "person:j.-k.-rowling"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:the-lord-of-the-rings",
+      "kind": "work",
+      "name": "The Lord of the Rings",
+      "aliases": [
+        "The Lord of the Rings"
+      ],
+      "creators": [
+        "person:j.-r.-r.-tolkien"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:the-name-of-the-rose",
+      "kind": "work",
+      "name": "The Name of the Rose",
+      "aliases": [
+        "The Name of the Rose"
+      ],
+      "creators": [
+        "person:umberto-eco"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:confessions-of-a-mask",
+      "kind": "work",
+      "name": "Confessions of a Mask",
+      "aliases": [
+        "Confessions of a Mask"
+      ],
+      "creators": [
+        "person:yukio-mishima"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:the-gulag-archipelago",
+      "kind": "work",
+      "name": "The Gulag Archipelago",
+      "aliases": [
+        "The Gulag Archipelago",
+        "Gulag Archipelago"
+      ],
+      "creators": [
+        "person:aleksandr-solzhenitsyn"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:one-hundred-years-of-solitude",
+      "kind": "work",
+      "name": "One Hundred Years of Solitude",
+      "aliases": [
+        "One Hundred Years of Solitude"
+      ],
+      "creators": [
+        "person:gabriel-garcía-márquez"
+      ],
+      "ambiguous": false
+    },
+    {
+      "key": "work:stranger-things",
+      "kind": "work",
+      "name": "Stranger Things",
+      "aliases": [
+        "Stranger Things"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:breaking-bad",
+      "kind": "work",
+      "name": "Breaking Bad",
+      "aliases": [
+        "Breaking Bad"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:game-of-thrones",
+      "kind": "work",
+      "name": "Game of Thrones",
+      "aliases": [
+        "Game of Thrones"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:the-office",
+      "kind": "work",
+      "name": "The Office",
+      "aliases": [
+        "The Office"
+      ],
+      "creators": [],
+      "ambiguous": true
+    },
+    {
+      "key": "work:the-simpsons",
+      "kind": "work",
+      "name": "The Simpsons",
+      "aliases": [
+        "The Simpsons"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:squid-game",
+      "kind": "work",
+      "name": "Squid Game",
+      "aliases": [
+        "Squid Game"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:toy-story",
+      "kind": "work",
+      "name": "Toy Story",
+      "aliases": [
+        "Toy Story"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:the-matrix",
+      "kind": "work",
+      "name": "The Matrix",
+      "aliases": [
+        "The Matrix"
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:super-mario-bros.",
+      "kind": "work",
+      "name": "Super Mario Bros.",
+      "aliases": [
+        "Super Mario Bros."
+      ],
+      "creators": [],
+      "ambiguous": false
+    },
+    {
+      "key": "work:minecraft",
+      "kind": "work",
+      "name": "Minecraft",
+      "aliases": [
+        "Minecraft"
+      ],
+      "creators": [],
+      "ambiguous": true
+    },
+    {
+      "key": "work:fortnite",
+      "kind": "work",
+      "name": "Fortnite",
+      "aliases": [
+        "Fortnite"
+      ],
+      "creators": [],
+      "ambiguous": true
+    }
+  ]
+}

@@ -103,6 +103,12 @@ export async function GET(request: Request) {
       .eq("status", status);
     if (pool) query = query.eq("question_pool", pool);
     if (categoryParam) query = query.eq("category", categoryParam);
+    if (status === "pending_review" && pool !== "live_showdown") {
+      const queue = url.searchParams.get("queue") ?? "ready";
+      if (pool === "anytime_blitz" && queue === "held") query = query.eq("speed_review_state->>state", "held");
+      else if (pool === "anytime_blitz" && queue === "unverified") query = query.is("speed_review_state", null);
+      else query = query.or("question_pool.neq.anytime_blitz,speed_review_state->>state.eq.ready");
+    }
 
     const { data, count, error } = await query
       .order("created_at", { ascending: false })

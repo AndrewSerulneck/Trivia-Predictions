@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTriviaQuestions, submitTriviaAnswer, TriviaLimitReachedError } from "@/lib/trivia";
+import { getTriviaQuestionSelection, submitTriviaAnswer, TriviaLimitReachedError } from "@/lib/trivia";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
 import { maybeRequireActiveVenuePresenceForUser, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
@@ -7,8 +7,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId")?.trim() || undefined;
   const category = searchParams.get("category")?.trim() || undefined;
-  const questions = await getTriviaQuestions(15, userId, category);
-  return NextResponse.json({ ok: true, questions });
+  const result = await getTriviaQuestionSelection(15, userId, category);
+  return NextResponse.json({ ok: true, ...result });
 }
 
 export async function POST(request: Request) {

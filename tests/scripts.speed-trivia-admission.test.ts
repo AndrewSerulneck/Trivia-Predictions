@@ -10,7 +10,7 @@ import type { ComparisonTask, ComparisonResult, SpeedQuestion } from "@/types/sp
 type DB = { exec: (sql: string) => Promise<unknown>; query: (sql: string, args?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>; close: () => Promise<void> };
 const { PGlite } = require("@electric-sql/pglite") as { PGlite: new () => DB };
 const harness = require(path.resolve("scripts/test-speed-trivia-admission-sql.cjs")) as {
-  setup: (db: DB, extraRows?: number) => Promise<void>; clientFor: (db: DB) => AdmissionClient; SECRET: string;
+  setup: (db: DB, extraRows?: number, variety?: boolean) => Promise<void>; clientFor: (db: DB) => AdmissionClient; SECRET: string;
   row: (id: string, question: string, answer: string, category?: string) => SpeedQuestion;
 };
 const generation = require(path.resolve("lib/speed-trivia-uniqueness/generation.cjs")) as {
@@ -31,7 +31,7 @@ const candidate = (n: number, question: string, answer: string, category = "Scie
 
 describe("Speed writing boundaries on isolated PostgreSQL", () => {
   beforeAll(async () => {
-    db = new PGlite(); await harness.setup(db);
+    db = new PGlite(); await harness.setup(db, 0, true);
     const underlying = harness.clientFor(db);
     client = { rpc: (name, args) => { calls.push(name); return underlying.rpc(name, args); } };
     session = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge });
@@ -108,7 +108,7 @@ describe("Speed writing boundaries on isolated PostgreSQL", () => {
     expect((await editing.write({ status: "active" }, { existing: changed.row })).row.status).toBe("active");
   });
   it("pages all 1,203 actual SQL rows and fails closed when more than 500 changes arrive", async () => {
-    const large = new PGlite(); await harness.setup(large, 1201);
+    const large = new PGlite(); await harness.setup(large, 1201, true);
     try {
       const base = harness.clientFor(large), pages: number[] = [];
       const reader: AdmissionClient = { rpc: (name, args) => { if (name === "speed_trivia_corpus_page") pages.push(Number(args?.p_offset)); return base.rpc(name, args); } };
@@ -152,20 +152,20 @@ describe("global cost limits, generation breadth and immutable cleanup", () => {
     await expect(generation.generateOnce({ prompt: "small", count: 1, model: "unpriced-model", apiKey: "fixture-only", budget, transport })).rejects.toThrow("price configuration");
   });
   it("admits a staged novel candidate, limits subjects, and reports a valid shortfall", async () => {
-    const isolated = new PGlite(); await harness.setup(isolated);
+    const isolated = new PGlite(); await harness.setup(isolated, 0, true);
     try {
       const gate = await runtime.createSession({ client: harness.clientFor(isolated), secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1, candidates: 2 }), judge });
-      const generated = { question: "Which weather pattern warms the equatorial Pacific?", options: ["El Niño", "La Niña", "Monsoon", "Chinook"], correctAnswer: 0, difficulty: "medium", primarySubject: "El Niño", subtopic: "climate" };
+      const generated = { question: "Which weather pattern warms the equatorial Pacific?", options: ["El Niño", "La Niña", "Monsoon", "Chinook"], correctAnswer: 0, difficulty: "medium", primarySubject: "El Niño", subtopic: generation.planTopics(gate.corpus()).find(p => p.category === "Geography")!.topics[0].topic };
       const transport = async () => ({ ok: true, json: async () => ({ usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 }, candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify([generated, generated]) }] } }] }) });
       const report = await generation.runGeneration({ session: gate, total: 2, batchSize: 2, category: "Geography", apiKey: "fixture-only", transport });
-      expect(report).toMatchObject({ generated: 2, admitted: 1, diversityBlocked: 1, shortfall: 1, fatal: null });
+      expect(report).toMatchObject({ generated: 2, admitted: 1, duplicate: 1, diversityBlocked: 0, shortfall: 1, fatal: null });
       expect(gate.corpus().rows.some(r => r.question === generated.question && r.status === "pending_review")).toBe(true);
-      expect(gate.corpus().rows.find(r => r.question === generated.question)?.speed_generation_metadata?.subtopic).toBe("climate");
-      expect(generation.planTopics(gate.corpus()).find(p => p.category === "Geography")?.topics.find(t => t.topic === "climate")?.count).toBe(1);
+      expect(gate.corpus().rows.find(r => r.question === generated.question)?.speed_generation_metadata?.subtopic).toBe(generated.subtopic);
+      expect(generation.planTopics(gate.corpus()).find(p => p.category === "Geography")?.topics.find(t => t.topic === generated.subtopic)?.count).toBe(1);
     } finally { await isolated.close(); }
   });
   it("reports zero novel output and never treats verification failure as an allowed category error", async () => {
-    const isolated = new PGlite(); await harness.setup(isolated);
+    const isolated = new PGlite(); await harness.setup(isolated, 0, true);
     try {
       const makeSession = () => runtime.createSession({ client: harness.clientFor(isolated), secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1, candidates: 2 }), judge });
       const zero = await makeSession();
@@ -173,19 +173,19 @@ describe("global cost limits, generation breadth and immutable cleanup", () => {
       expect(await generation.runGeneration({ session: zero, total: 2, batchSize: 2, apiKey: "fixture-only", transport: response([]) })).toMatchObject({ admitted: 0, shortfall: 2, fatal: null });
       const failing = await makeSession();
       failing.write = async () => { throw new runtime.AdmissionError("verification_unavailable", "Checker unavailable"); };
-      const candidate = { question: "Which climate pattern warms the equatorial Pacific?", options: ["El Niño", "La Niña", "Monsoon", "Chinook"], correctAnswer: 0, primarySubject: "El Niño", subtopic: "climate" };
+      const candidate = { question: "Which climate pattern warms the equatorial Pacific?", options: ["El Niño", "La Niña", "Monsoon", "Chinook"], correctAnswer: 0, primarySubject: "El Niño", subtopic: generation.planTopics(failing.corpus()).find(p => p.category === "Geography")!.topics[0].topic };
       await expect(generation.runGeneration({ session: failing, total: 2, batchSize: 2, category: "Geography", apiKey: "fixture-only", allowCategoryErrors: true, transport: response([candidate]) })).rejects.toMatchObject({ code: "verification_unavailable", report: { fatal: "verification_unavailable", admitted: 0 } });
     } finally { await isolated.close(); }
   });
   it("reports a normal shortfall when the deadline falls between accepted candidates", async () => {
-    const isolated = new PGlite(); await harness.setup(isolated);
+    const isolated = new PGlite(); await harness.setup(isolated, 0, true);
     let elapsed = 0;
     try {
       const budget = runtime.createBudget({ dollars: 1, elapsedMs: 5000, now: () => elapsed });
       const gate = await runtime.createSession({ client: harness.clientFor(isolated), secret: harness.SECRET, budget, judge });
       const write = gate.write;
       gate.write = async (input, options) => { const result = await write(input, options); elapsed = 5000; return result; };
-      const generated = { question: "Which climate pattern warms the equatorial Pacific?", options: ["El Niño", "La Niña", "Monsoon", "Chinook"], correctAnswer: 0, primarySubject: "El Niño", subtopic: "climate" };
+      const generated = { question: "Which climate pattern warms the equatorial Pacific?", options: ["El Niño", "La Niña", "Monsoon", "Chinook"], correctAnswer: 0, primarySubject: "El Niño", subtopic: generation.planTopics(gate.corpus()).find(p => p.category === "Geography")!.topics[0].topic };
       const transport = async () => ({ ok: true, json: async () => ({ usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 }, candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify([generated]) }] } }] }) });
       expect(await generation.runGeneration({ session: gate, total: 2, batchSize: 1, category: "Geography", apiKey: "fixture-only", transport })).toMatchObject({ admitted: 1, generated: 1, shortfall: 1, fatal: null });
       expect(gate.corpus().rows.filter(row => row.question === generated.question)).toHaveLength(1);

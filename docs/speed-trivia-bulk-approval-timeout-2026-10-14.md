@@ -5,8 +5,9 @@ were approved before it stopped, and those approvals are saved. This repair
 stops checking after four minutes, returns the saved results, and keeps unfinished
 questions pending. If a response is lost, the page checks which selected questions
 are already saved without automatically approving again. The checking budget stays
-unchanged. At preparation, this repair is tested locally and awaits publication;
-the local repository's release addendum records the final publication state.
+unchanged. This repair is now live on both website domains. Andrew can refresh
+Question Review and continue with smaller selections. The separate paid backlog
+audit remains declined; no answer or approval is needed for this repair.
 
 ## Handoff to the next agent
 
@@ -193,3 +194,44 @@ Final online run IDs/results belong in the release addendum.
 5. No developer answer is needed to finish this repair. The future variety cutover
    and any new paid audit remain separately unauthorized. The original plan names
    Sol/high for Phase 3; no parallel agents were used or requested for this repair.
+
+## Final publication addendum — 2026-10-14T15:51:44.590Z
+
+- COMPLETE/LIVE: [PR #8](https://github.com/AndrewSerulneck/Trivia-Predictions/pull/8)
+  merged `2026-10-14T15:49:42Z`. Exact main/production source **`244ac0bb2d029c11ea150793ce2eab395f871f62`**.
+- Review head **`27087deaac5358d6a6c74bb79cca2fa86f14f7dc`**, branch
+  `fix/speed-trivia-bulk-timeout`; isolated worktree is clean. Fetched comparison
+  `git diff --exit-code HEAD origin/main` returned zero: the production merge tree
+  exactly equals the tested release tree. Root local main remains `1932091` with
+  future work and equivalent local fixes uncommitted. Root handoff/context updates
+  in this addendum are local; committed handoff contains preparation and CI repairs.
+- Release commits: generated references `2a4aaae62a771b0c16f1afe63d11ded53d6a83d2`;
+  application/tests/handoff `b4328f7c8d84dcacb74c029e708dff8da30a03d0`;
+  existing UI-test waits and notes `27087deaac5358d6a6c74bb79cca2fa86f14f7dc`.
+- READY **`dpl_Gut4nT9YNfkHtaWkspupDQKzy9kA`**, URL
+  `hightop-challenge-6j9r4xs2d-andrewserulnecks-projects.vercel.app`.
+  `hightopchallenge.com` and `play.hightopchallenge.com` independently resolve to
+  this deployment and exact source SHA at **2026-10-14T15:51:44.590Z**. Unauthenticated approval
+  and read-only status POSTs on both hosts return 401 before data access.
+- Final online checks **38591881335** (push) / **38591891546** (PR), both Vercel
+  previews and all PR checks pass. Final exact-tree local suite **4,272 pass /
+  13 environment skips**, 363 passing files / one skipped file; typecheck, lint,
+  202-page production build pass. Built functions config confirms this route's
+  `maxDuration` is exactly 300, matching the measured incident limit.
+- Root private evidence directory
+  `tmp/speed-trivia-uniqueness-private/manual-approval-timeout-2026-10-14/` contains
+  `incident-summary.json`, `merged-pr-and-checks.json`, `live-domain-verification.json`,
+  `full-tests-after-ci-repair.log`, `build-final.log`, `ui-tests.log`,
+  `nfl-refresh.log` and `mlb-refresh.log`. Domain verification helper:
+  `/private/tmp/speed-trivia-timeout-live-verification.cjs`; run with the expected
+  exact SHA argument from the isolated worktree, never print raw credentials.
+- No paid live approval reproduction, positive provider call, migration, question
+  deletion, undo, or generation run was performed by the agent. The five admissions
+  observed in the failed request were Andrew's own approval operation. Old frozen
+  Phase 3 evidence is historical and must not be reused as a fresh pending manifest
+  after those approvals. Normal-operation costs/latency after release remain
+  unmeasured until the next user-initiated approval; do not spend to manufacture a
+  positive test or start automatic continuation.
+- No permission remains pending for this repair. Andrew's publishing instruction
+  was used; the exact-head merge succeeded. The declined paid audit and the separate
+  future subject-variety migration/runtime cutover remain unauthorized.

@@ -1,0 +1,14 @@
+import type { SpeedIndex, SpeedQuestion, FactDecision, AdmissionEvidence, CheckOptions } from "@/types/speedTriviaUniqueness";
+import type { AdmissionClient } from "@/types/speedTriviaAdmission";
+export type DirectProof = {aId:string;bId:string;aHash:string;bHash:string;modelVersion:string;policyVersion:string;result:FactDecision};
+export type KeeperProof = AdmissionEvidence & {excludedSiblings?:{id:string;contentHash:string}[];verifiedComparisonCount:number;selfQuality?:FactDecision};
+export type ReferenceEvidence = Record<string, unknown> & {directNeighbours?:Record<string,string[]>};
+export type Disposition = {state:"active"|"retired_repeat"|"hold"|"not_processed"|"pending_family";reason?:string;keeperId?:string;matches?:string[]};
+export function cachedVerdict(cache:Map<string,unknown>,a:SpeedQuestion,b:SpeedQuestion,modelVersion:string):FactDecision|null;
+export function directProof(loser:SpeedQuestion,keeper:SpeedQuestion,result:FactDecision,modelVersion:string):DirectProof;
+export function externalIndex(index:SpeedIndex,exclusions:Set<string>):SpeedIndex;
+export function verifyKeeper(index:SpeedIndex,keeper:SpeedQuestion,losers:SpeedQuestion[],proofs:DirectProof[],judge:CheckOptions):Promise<{ready:boolean;evidence:KeeperProof}>;
+export function makeAuthority(input:{index:SpeedIndex;kind:"family"|"activate"|"retire"|"hold";keeper?:SpeedQuestion;losers?:SpeedQuestion[];proofs?:DirectProof[];keeperProof?:KeeperProof;rows?:SpeedQuestion[];reason?:string;references:ReferenceEvidence;operationId:string;now?:number}):Record<string,unknown>;
+export function disposition(row:SpeedQuestion,evidence:AdmissionEvidence & {failure?:string},index:SpeedIndex):Disposition;
+export function proposeStars(index:SpeedIndex,targets:string[],cache:Map<string,unknown>,modelVersion:string,references:ReferenceEvidence):{keeper:SpeedQuestion;losers:SpeedQuestion[];proofs:DirectProof[]}[];
+export function applyAuthority(client:AdmissionClient,secret:string,authority:Record<string,unknown>):Promise<unknown>;

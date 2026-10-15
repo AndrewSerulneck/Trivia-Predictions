@@ -20,14 +20,14 @@ const seedPending=async(db:PGlite,rows:SpeedQuestion[])=>{
  for(const r of rows)await db.query("insert into trivia_questions(id,slug,question,options,correct_answer,category,status,normalized_question_key) values($1,$2,$3,$4::jsonb,0,$5,'pending_review',$6)",[r.id,r.slug,r.question,JSON.stringify(r.options),r.category,core.exactKey(r.question)]);
  await db.exec('alter table trivia_questions enable trigger all;set role service_role;');
 };
-describe.each([false])("approved-only manual review, variety schema=%s",variety=>{
+describe.each([false,true])("approved-only manual review, variety schema=%s",variety=>{
  it("ignores waiting/deleted competitors, then blocks the next version after the first is approved",async()=>{
   const db=new PGlite();try{
    await harness.setup(db,0,variety);
    const a=row(1,"Which country sent Sputnik 1 into orbit?","Soviet Union"),b=row(2,"Sputnik 1 was launched by which country?","Soviet Union");
    await seedPending(db,[a,b]);
    const names:string[]=[],client=harness.clientFor(db),adjudicate=vi.fn(judge.adjudicate);
-   const gate=await runtime.createSession({client:{rpc:(name,args)=>{names.push(name);return client.rpc(name,args);}},secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge:{...judge,adjudicate}});
+   const gate=await runtime.createSession({client:{rpc:(name,args)=>{names.push(name);return client.rpc(name,args);}},secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge:{...judge,adjudicate},prerequisitesChecked:!variety});
    const pending=gate.index().byId.get(a.id)!.row as AdmissionRow;
    expect((await gate.write({status:"active"},{existing:pending,approvedOnly:true})).row.status).toBe("active");
    expect(adjudicate.mock.calls.flatMap(([tasks])=>tasks).every(task=>task.b.status==='active')).toBe(true);
@@ -35,7 +35,7 @@ describe.each([false])("approved-only manual review, variety schema=%s",variety=
    expect(gate.index().byId.get(b.id)!.row.status).toBe("pending_review");
    expect(names.filter(name=>name==='speed_trivia_corpus_page')).toHaveLength(1);
    // A new explicit operation must also see approvals from previous requests.
-   const next=await runtime.createSession({client,secret:harness.SECRET,budget:runtime.createBudget({dollars:0.50}),judge,cachedIndex:gate.index()});
+   const next=await runtime.createSession({client,secret:harness.SECRET,budget:runtime.createBudget({dollars:0.50}),judge,cachedIndex:gate.index(),prerequisitesChecked:!variety});
    await expect(next.write({status:"active"},{existing:next.index().byId.get(b.id)!.row as AdmissionRow,approvedOnly:true})).rejects.toMatchObject({code:"duplicate"});
    // The original retired fact remains reserved to normal new admissions.
    await expect(gate.write(row(3,"Which country launched Sputnik 1?","Soviet Union"))).rejects.toMatchObject({code:"duplicate"});
@@ -48,12 +48,12 @@ describe.each([false])("approved-only manual review, variety schema=%s",variety=
    const underlying=harness.clientFor(db);let race=true;
    const client:AdmissionClient={rpc:async(name,args)=>{
     if(name==='admit_speed_trivia'&&race){race=false;
-     const other=await runtime.createSession({client:underlying,secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge});
+     const other=await runtime.createSession({client:underlying,secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge,prerequisitesChecked:!variety});
      await other.write({status:'active'},{existing:other.index().byId.get(b.id)!.row as AdmissionRow,approvedOnly:true});
      return {data:null,error:{message:'stale-speed-revision'}};
     }return underlying.rpc(name,args);
    }};
-   const gate=await runtime.createSession({client,secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge});
+   const gate=await runtime.createSession({client,secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge,prerequisitesChecked:!variety});
    await expect(gate.write({status:'active'},{existing:gate.index().byId.get(a.id)!.row as AdmissionRow,approvedOnly:true})).rejects.toMatchObject({code:'duplicate'});
    expect(gate.budget.summary().retries).toBe(1);
    expect(approvedIndex(gate.index()).byId.has(b.id)).toBe(true);
@@ -62,7 +62,7 @@ describe.each([false])("approved-only manual review, variety schema=%s",variety=
  it("removes retired competitors from the cached approval view and refuses scope misuse",async()=>{
   const db=new PGlite();try{
    await harness.setup(db,0,variety);const a=row(6,"Which continent is home to the Gobi Desert?","Asia");await seedPending(db,[a]);
-   const gate=await runtime.createSession({client:harness.clientFor(db),secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge});
+   const gate=await runtime.createSession({client:harness.clientFor(db),secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge,prerequisitesChecked:!variety});
    const pending=gate.index().byId.get(a.id)!.row as AdmissionRow;
    await expect(gate.write({status:'active'},{existing:pending,approvedOnly:true})).rejects.toMatchObject({code:'duplicate'});
    const view=approvedIndex(gate.index());await db.exec("update trivia_questions set status='deleted' where slug='gobi'");
@@ -75,7 +75,7 @@ describe.each([false])("approved-only manual review, variety schema=%s",variety=
  it("still checks approval accuracy and keeps waiting facts blocked for new generation",async()=>{
   const db=new PGlite();try{
    await harness.setup(db,0,variety);const a=row(8,'Which force keeps planets in orbit?','Gravity');await seedPending(db,[a]);
-   const gate=await runtime.createSession({client:harness.clientFor(db),secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),
+   const gate=await runtime.createSession({client:harness.clientFor(db),secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),prerequisitesChecked:!variety,
     judge:{modelVersion:'invalid-approval-synthetic',adjudicate:async tasks=>tasks.map(task=>({...verdict(task),qualityA:'invalid' as const,decision:'uncertain' as const,explanation:'Synthetic incorrect premise'}))}});
    await expect(gate.write({status:'active'},{existing:gate.index().byId.get(a.id)!.row as AdmissionRow,approvedOnly:true})).rejects.toMatchObject({code:'uncertain'});
    expect(gate.index().byId.get(a.id)!.row.status).toBe('pending_review');
@@ -94,7 +94,7 @@ it("filters before retrieval ranking, so pending competitors cannot hide an appr
 
 it("cancels a delayed semantic check before signed admission and consumes its late result",async()=>{
  const db=new PGlite();try{
-  await harness.setup(db,0,false);const candidate=row(8000,"Which force attracts masses?","Gravity");await seedPending(db,[candidate]);
+  await harness.setup(db,0,true);const candidate=row(8000,"Which force attracts masses?","Gravity");await seedPending(db,[candidate]);
   const controller=new AbortController(),budget=runtime.createBudget({dollars:0.50,signal:controller.signal});
   const underlying=harness.clientFor(db),names:string[]=[];
   let finish!:(results:ComparisonResult[])=>void,started!:()=>void;

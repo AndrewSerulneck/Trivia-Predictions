@@ -8,7 +8,7 @@ const runtime=require('../lib/speed-trivia-uniqueness/runtime.cjs');
 const {PGlite}=require(process.env.SPEED_TRIVIA_PGLITE_MODULE?path.resolve(process.env.SPEED_TRIVIA_PGLITE_MODULE):'@electric-sql/pglite');
 const SECRET='isolated-test-key-only-00000000000000000000';
 const MIGRATION='supabase/migrations/20261013120000_speed_trivia_admission.sql';
-const setup=async (db,extraRows=0)=>{
+const setup=async (db,extraRows=0,variety=false)=>{
  await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
  create table public.trivia_questions(id uuid primary key default gen_random_uuid(),slug text unique default ('q-'||gen_random_uuid()),question text not null,options jsonb not null,correct_answer int not null,category text,difficulty text,question_pool text not null default 'anytime_blitz',answer_format text not null default 'multiple_choice',status text not null default 'active' check(status in ('active','pending_review','deleted')),image_url text,created_at timestamptz not null default now());
  grant select,insert,update,delete on public.trivia_questions to service_role;
@@ -23,11 +23,12 @@ const setup=async (db,extraRows=0)=>{
  await db.exec(fs.readFileSync('supabase/migrations/20260609103000_prevent_duplicate_trivia_question_text.sql','utf8'));
  await db.exec('drop index idx_trivia_questions_pool_question_key_active; create unique index idx_trivia_questions_speed_question_key_active on public.trivia_questions(normalized_question_key) where question_pool=\'anytime_blitz\' and status<>\'deleted\';');
  await db.exec(fs.readFileSync(MIGRATION,'utf8'));
+ if(variety)await db.exec(fs.readFileSync('supabase/migrations/20261014020000_speed_trivia_variety_review.sql','utf8'));
  await db.query('update public.speed_trivia_control set admission_secret=$1',[SECRET]);
  await db.exec('set role service_role');
 };
 const call=async(db,name,args={})=>{
- const entries=Object.entries(args),params=entries.map(([k,v])=>k==='p_keys'?'{'+v.map(s=>JSON.stringify(s)).join(',')+'}':typeof v==='object'&&v!==null?JSON.stringify(v):v);
+ const entries=Object.entries(args),params=entries.map(([k,v])=>['p_keys','p_ids'].includes(k)?'{'+v.map(s=>JSON.stringify(s)).join(',')+'}':typeof v==='object'&&v!==null?JSON.stringify(v):v);
  const sql=`select public.${name}(${entries.map(([k],i)=>`${k} => $${i+1}`).join(',')}) result`;
  return (await db.query(sql,params)).rows[0].result;
 };
@@ -87,7 +88,7 @@ const run=async()=>{
  await rejects("update trivia_questions set slug='changed' where slug='gobi'",/identity-change/);
  await rejects("update trivia_questions set question_pool='live_showdown',answer_format='write_in' where slug='retired'",/speed-admission-required/);
  const leaving=(await call(db,'speed_trivia_find',{p_identifier:c.id}))[0];
- const gate=await runtime.createSession({client:clientFor(db),secret:SECRET,budget:runtime.createBudget({dollars:1}),judge:{modelVersion:'no-call-leave-fixture',adjudicate:async()=>{throw new Error('must not call paid checks for a Live departure');}}});
+ const gate=await runtime.createSession({client:clientFor(db),secret:SECRET,budget:runtime.createBudget({dollars:1}),prerequisitesChecked:true,judge:{modelVersion:'no-call-leave-fixture',adjudicate:async()=>{throw new Error('must not call paid checks for a Live departure');}}});
  await gate.leave({question_pool:'live_showdown',answer_format:'write_in'},leaving);
  await db.query('update trivia_questions set speed_revision=0 where id=$1',[c.id]);
  await rejects('delete from trivia_questions where id=$1',/speed-physical-delete-forbidden/,[c.id]);

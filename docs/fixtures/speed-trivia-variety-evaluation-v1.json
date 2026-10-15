@@ -1,0 +1,372 @@
+{
+  "version": "speed-variety-evaluation-v1",
+  "synthetic": true,
+  "cases": [
+    {
+      "id": "alias-full",
+      "question": "Which performer released the album described as Taylor Swift's debut?",
+      "answer": "Taylor Swift",
+      "expected": [
+        "person:taylor-swift"
+      ]
+    },
+    {
+      "id": "surname-ambiguous",
+      "question": "Which Swift designed this fictional telescope?",
+      "answer": "A. Swift",
+      "expected": [],
+      "unknown": true
+    },
+    {
+      "id": "diacritics",
+      "question": "Which singer is credited as Beyoncé on this recording?",
+      "answer": "Beyonce",
+      "expected": [
+        "person:beyoncé"
+      ]
+    },
+    {
+      "id": "non-ascii-letter",
+      "question": "Which poet is named Wisława Szymborska?",
+      "answer": "Wisława Szymborska",
+      "expected": [
+        "person:wislawa-szymborska"
+      ]
+    },
+    {
+      "id": "initials",
+      "question": "Who wrote this J. K. Rowling novel?",
+      "answer": "J K Rowling",
+      "expected": [
+        "person:j.-k.-rowling"
+      ]
+    },
+    {
+      "id": "group-alias",
+      "question": "Which band is known as the Beatles?",
+      "answer": "The Beatles",
+      "expected": [
+        "group:the-beatles"
+      ]
+    },
+    {
+      "id": "queen-person",
+      "question": "Which queen ruled this kingdom?",
+      "answer": "Victoria",
+      "expected": [],
+      "unknown": true
+    },
+    {
+      "id": "queen-band",
+      "question": "Which rock band recorded Bohemian Rhapsody?",
+      "answer": "Queen",
+      "expected": [
+        "group:queen",
+        "work:bohemian-rhapsody"
+      ]
+    },
+    {
+      "id": "work-creator",
+      "question": "Which artist released Shake It Off?",
+      "answer": "Taylor Swift",
+      "expected": [
+        "person:taylor-swift",
+        "work:shake-it-off"
+      ]
+    },
+    {
+      "id": "artist-labelled-song",
+      "question": "Which album contains Taylor Swift's song Shake It Off?",
+      "answer": "An album",
+      "expected": [
+        "person:taylor-swift",
+        "work:shake-it-off"
+      ]
+    },
+    {
+      "id": "work-technique",
+      "question": "Which narrative technique structures Pride and Prejudice?",
+      "answer": "Free indirect discourse",
+      "expected": [
+        "work:pride-and-prejudice"
+      ],
+      "noCreator": true
+    },
+    {
+      "id": "work-adaptation",
+      "question": "Which actor played the lead in an adaptation of Pride and Prejudice?",
+      "answer": "An actor",
+      "expected": [
+        "work:pride-and-prejudice"
+      ],
+      "noCreator": true
+    },
+    {
+      "id": "multi-subject",
+      "question": "Which musician collaborated with Beyoncé and Lady Gaga?",
+      "answer": "A performer",
+      "expected": [
+        "person:beyoncé",
+        "person:lady-gaga"
+      ]
+    },
+    {
+      "id": "distractor-only",
+      "question": "What material is this pot made from?",
+      "answer": "Clay",
+      "expected": [],
+      "distractors": [
+        "Taylor Swift",
+        "Beyoncé",
+        "Queen"
+      ]
+    },
+    {
+      "id": "generic-country-one",
+      "question": "Which country contains this mountain?",
+      "answer": "France",
+      "expected": []
+    },
+    {
+      "id": "generic-country-two",
+      "question": "Which country hosted this treaty signing?",
+      "answer": "France",
+      "expected": []
+    },
+    {
+      "id": "generic-material-one",
+      "question": "What material forms this vessel?",
+      "answer": "Copper",
+      "expected": []
+    },
+    {
+      "id": "generic-material-two",
+      "question": "What metal conducts in this wire?",
+      "answer": "Copper",
+      "expected": []
+    },
+    {
+      "id": "incidental-comparison",
+      "question": "Unlike Taylor Swift, which chemist developed this process?",
+      "answer": "A chemist",
+      "expected": [],
+      "unknown": true
+    },
+    {
+      "id": "ambiguous-work",
+      "question": "Where is the office located?",
+      "answer": "Upstairs",
+      "expected": []
+    },
+    {
+      "id": "cross-category",
+      "question": "Who wrote the book discussed in this science question by Jane Austen?",
+      "answer": "Jane Austen",
+      "expected": [
+        "person:jane-austen"
+      ],
+      "category": "Science"
+    },
+    {
+      "id": "two-facts-valid",
+      "question": "Which instrument did this named artist play at this event?",
+      "answer": "Michael Jackson",
+      "expected": [
+        "person:michael-jackson"
+      ],
+      "factValidity": "different-facts-may-be-valid"
+    },
+    {
+      "id": "shared-title",
+      "question": "Which film titled Crash won this award?",
+      "answer": "Crash",
+      "expected": [],
+      "unknown": true
+    },
+    {
+      "id": "unknown-person",
+      "question": "Who created this unfamiliar named sculpture?",
+      "answer": "Aster Vale",
+      "expected": [],
+      "unknown": true
+    },
+    {
+      "id": "clock-29-pending_review",
+      "kind": "clock",
+      "ageDays": 29,
+      "status": "pending_review",
+      "expectedBlocked": true
+    },
+    {
+      "id": "clock-29-deleted",
+      "kind": "clock",
+      "ageDays": 29,
+      "status": "deleted",
+      "expectedBlocked": true
+    },
+    {
+      "id": "clock-29-active",
+      "kind": "clock",
+      "ageDays": 29,
+      "status": "active",
+      "expectedBlocked": true
+    },
+    {
+      "id": "clock-30-pending_review",
+      "kind": "clock",
+      "ageDays": 30,
+      "status": "pending_review",
+      "expectedBlocked": false
+    },
+    {
+      "id": "clock-31-active",
+      "kind": "clock",
+      "ageDays": 31,
+      "status": "active",
+      "expectedBlocked": false
+    },
+    {
+      "id": "threshold-at-24",
+      "kind": "concentration",
+      "bankCount": 24,
+      "expectedBlocked": true
+    },
+    {
+      "id": "threshold-before-24",
+      "kind": "concentration",
+      "bankCount": 23,
+      "expectedBlocked": false
+    },
+    {
+      "id": "multiple-counts-all",
+      "kind": "generation",
+      "subjects": [
+        "person:beyoncé",
+        "person:lady-gaga"
+      ],
+      "blockedSubject": "person:lady-gaga",
+      "expectedBlocked": true
+    },
+    {
+      "id": "queen-of-soul",
+      "question": "Which singer is called the Queen of Soul?",
+      "answer": "Aretha Franklin",
+      "expected": [
+        "person:aretha-franklin"
+      ]
+    },
+    {
+      "id": "selection-full",
+      "kind": "selection",
+      "candidates": 30,
+      "distinctIdentifiedSubjects": 30,
+      "expectedCount": 15,
+      "expectedMaximumPerKnownSubject": 1
+    },
+    {
+      "id": "selection-insufficient",
+      "kind": "selection",
+      "candidates": 30,
+      "distinctIdentifiedSubjects": 4,
+      "allIdentified": true,
+      "expectedCount": 4,
+      "expectedReason": "insufficient_subject_variety"
+    },
+    {
+      "id": "selection-unknowns",
+      "kind": "selection",
+      "candidates": 15,
+      "knownSubjectRows": 0,
+      "expectedCount": 15,
+      "expectedCoverage": "unknown"
+    },
+    {
+      "id": "selection-unseen-first",
+      "kind": "selection",
+      "unseenEligible": 15,
+      "seenEligible": 15,
+      "expectedSeenSelected": 0
+    },
+    {
+      "id": "selection-balance",
+      "kind": "selection",
+      "categories": 9,
+      "eligiblePerCategory": 20,
+      "expectedMinPerCategory": 1,
+      "expectedMaxPerCategory": 2
+    },
+    {
+      "id": "family-nontransitive",
+      "kind": "family",
+      "edges": [
+        "A-B",
+        "B-C"
+      ],
+      "forbiddenRetirement": "C against A without direct evidence"
+    },
+    {
+      "id": "family-atomic",
+      "kind": "family",
+      "keeperBefore": "pending_review",
+      "losersBefore": [
+        "pending_review"
+      ],
+      "expected": "one transaction activates keeper and retires direct proven losers"
+    },
+    {
+      "id": "cache-direction",
+      "kind": "cache",
+      "qualityA": "sound",
+      "qualityB": "invalid",
+      "reverseExpectedQualityA": "invalid"
+    },
+    {
+      "id": "partial-bulk",
+      "kind": "bulk",
+      "saved": 3,
+      "failureAfter": 3,
+      "expectedSaved": 3,
+      "expectedNotProcessed": "remaining IDs"
+    },
+    {
+      "id": "provider-failure",
+      "kind": "backlog",
+      "provider": "timeout",
+      "expected": "hold:provider_unavailable"
+    },
+    {
+      "id": "exact-unverified",
+      "kind": "backlog",
+      "decision": "duplicate",
+      "quality": "unverified",
+      "expected": "hold:evidence_incomplete"
+    },
+    {
+      "id": "distinct-concentrated",
+      "kind": "backlog",
+      "decision": "unique",
+      "quality": "sound",
+      "subjectBankCount": 99,
+      "expected": "active"
+    },
+    {
+      "id": "retired-memory",
+      "kind": "backlog",
+      "duplicateToDeleted": true,
+      "noKeeperEvidence": true,
+      "expected": "hold:reservation_review"
+    },
+    {
+      "id": "ledger-crash",
+      "kind": "ledger",
+      "settlementMissing": true,
+      "expected": "full reservation retained"
+    },
+    {
+      "id": "admission-replay",
+      "kind": "admission",
+      "changedHash": true,
+      "expected": "refuse stale authority"
+    }
+  ]
+}

@@ -208,3 +208,33 @@ to collect metrics. No developer answer or mandatory phase remains outstanding.
 For a future task, read this plan and Phase 2 contract, inspect current origin/main
 without pulling over dirty root, and preserve the applied schema/full-bank guards.
 Keep monitoring optional; start new implementation only on a new concrete request.
+
+## Final documentation publication verification
+
+Final documentation commit **`fbdcc3fba32acc90e6d9f3ad6829e85b813a2791`**
+was pushed to `origin/main` from the isolated worktree. It changes exactly four
+files: `AGENTS.md`, `SYSTEM_CONTEXT.md`, the reliability plan and this handoff.
+All application files are identical to published/tested application `dd45c62`.
+The isolated branch `fix/speed-trivia-progress-review` is clean at `fbdcc3f`;
+root local `main` remains `1932091` with its preserved uncommitted work. Final
+documentation was committed/pushed; this exact verification supplement and final
+context/status additions remain local in the dirty root, avoiding another
+documentation-triggered production rebuild.
+
+Final READY production **`dpl_33xUyb9UBXZbHXbiU2ugRzaiwvph`**, URL
+`https://hightop-challenge-o0h38et98-andrewserulnecks-projects.vercel.app`,
+exact source `fbdcc3fba32acc90e6d9f3ad6829e85b813a2791`, project
+`prj_yjIvzEUquV1gPWBsgOIluVp8v1ci`, independently resolved through both live
+domains at **2026-10-14T17:15:05.859345Z**. Final live transport/auth checks
+completed before **2026-10-14T17:17:59.659915+00:00**. Chromium apex: first 733 ms, maximum gap
+5,116 ms, eight heartbeats, 45,728 ms, 483 bytes. Node play: first 621 ms,
+maximum gap 5,056 ms, eight heartbeats, 45,565 ms, 483 bytes. Both finish
+cleanly beyond 30 seconds with zero question/provider operations. All six
+401/400/no-cache refusal cases pass again on each final live domain.
+
+Application main CI **38603795144** passed. Final documentation main CI
+**38604775607** also passed tests, lint and build; no final CI gate remains open.
+Final evidence: `final-production-source.json`,
+`final-documentation-publication.json`,
+`final-transport-verification-summary.json` in the ignored Phase 3 directory.
+No paid user-operation timing/cost measurement has been initiated.

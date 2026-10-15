@@ -1,5 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
+import { selectVariedTrivia } from "@/lib/speedTriviaSelection";
+import type { SelectionInfo } from "@/types/speedTriviaVariety";
 import { randomInt } from "node:crypto";
 import type { TriviaQuestion } from "@/types";
 
@@ -92,58 +94,11 @@ function shuffleInPlace<T>(items: T[]): T[] {
   return items;
 }
 
-function categoryKey(category?: string): string {
-  const value = category?.trim();
-  return value && value.length > 0 ? value : "uncategorized";
-}
-
-function pickBalancedRandomQuestions(questions: TriviaQuestion[], limit: number): TriviaQuestion[] {
-  if (questions.length <= limit) {
-    return shuffleInPlace([...questions]);
-  }
-
-  const buckets = new Map<string, TriviaQuestion[]>();
-  for (const question of questions) {
-    const key = categoryKey(question.category);
-    const existing = buckets.get(key) ?? [];
-    existing.push(question);
-    buckets.set(key, existing);
-  }
-
-  for (const bucket of buckets.values()) {
-    shuffleInPlace(bucket);
-  }
-
-  const selected: TriviaQuestion[] = [];
-  let keys = shuffleInPlace([...buckets.keys()]);
-  let cursor = 0;
-
-  while (selected.length < limit && keys.length > 0) {
-    if (cursor >= keys.length) {
-      cursor = 0;
-      keys = shuffleInPlace(keys);
-    }
-
-    const key = keys[cursor];
-    const bucket = buckets.get(key) ?? [];
-    const nextQuestion = bucket.pop();
-
-    if (!nextQuestion) {
-      keys.splice(cursor, 1);
-      continue;
-    }
-
-    selected.push(nextQuestion);
-    cursor += 1;
-  }
-
-  return selected;
-}
-
-export async function getTriviaQuestions(limit = 15, userId?: string, category?: string): Promise<TriviaQuestion[]> {
+export async function getTriviaQuestionSelection(limit = 15, userId?: string, category?: string): Promise<{ questions: TriviaQuestion[]; selection: SelectionInfo }> {
+  const fallback = () => selectVariedTrivia(shuffleInPlace(FALLBACK_QUESTIONS.filter(question => !category || question.category === category)), limit);
   const client = supabaseAdmin;
   if (!client) {
-    return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, limit);
+    return fallback();
   }
 
   const safeLimit = Math.max(1, Math.min(limit, 100));
@@ -157,7 +112,7 @@ export async function getTriviaQuestions(limit = 15, userId?: string, category?:
       .limit(MAX_CANDIDATE_QUESTIONS * 5);
 
     if (answersError) {
-      return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
+      return fallback();
     }
 
     answeredQuestionIds = new Set(
@@ -182,12 +137,12 @@ export async function getTriviaQuestions(limit = 15, userId?: string, category?:
     : await countQuery;
 
   if (countError) {
-    return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
+    return fallback();
   }
 
   const total = Math.max(0, totalQuestionCount ?? 0);
   if (total === 0) {
-    return [];
+    return selectVariedTrivia([], safeLimit);
   }
 
   const candidatesById = new Map<string, TriviaQuestionRow>();
@@ -201,7 +156,7 @@ export async function getTriviaQuestions(limit = 15, userId?: string, category?:
 
     const { data, error } = safeCategory ? await rowQuery.eq("category", safeCategory) : await rowQuery;
     if (error || !data) {
-      return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
+      return fallback();
     }
     for (const row of data) {
       const typed = row as TriviaQuestionRow;
@@ -245,24 +200,15 @@ export async function getTriviaQuestions(limit = 15, userId?: string, category?:
 
   const candidateRows = [...candidatesById.values()];
   if (candidateRows.length === 0) {
-    return pickBalancedRandomQuestions(FALLBACK_QUESTIONS, safeLimit);
+    return fallback();
   }
 
   const mapped = shuffleInPlace(candidateRows.map((row) => mapQuestionRow(row)));
-  if (!userId) {
-    return pickBalancedRandomQuestions(mapped, safeLimit);
-  }
+  return selectVariedTrivia(mapped, safeLimit, answeredQuestionIds);
+}
 
-  const unseen = mapped.filter((question) => !answeredQuestionIds.has(question.id));
-  if (unseen.length >= safeLimit) {
-    return pickBalancedRandomQuestions(unseen, safeLimit);
-  }
-
-  const seen = mapped.filter((question) => answeredQuestionIds.has(question.id));
-  const pickedUnseen = pickBalancedRandomQuestions(unseen, safeLimit);
-  const remaining = Math.max(0, safeLimit - pickedUnseen.length);
-  const pickedSeen = remaining > 0 ? pickBalancedRandomQuestions(seen, remaining) : [];
-  return shuffleInPlace([...pickedUnseen, ...pickedSeen]).slice(0, safeLimit);
+export async function getTriviaQuestions(limit = 15, userId?: string, category?: string): Promise<TriviaQuestion[]> {
+  return (await getTriviaQuestionSelection(limit, userId, category)).questions;
 }
 
 export async function getTriviaQuota(

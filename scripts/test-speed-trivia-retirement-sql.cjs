@@ -6,7 +6,7 @@ const fs=require('node:fs');
 const core=require('../lib/speed-trivia-uniqueness/core.cjs');
 const runtime=require('../lib/speed-trivia-uniqueness/runtime.cjs');
 const cleanup=require('./manage-speed-trivia-retirement.cjs');
-const {PGlite}=require(path.resolve(process.env.SPEED_TRIVIA_PGLITE_MODULE||'tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite'));
+const {PGlite}=require(process.env.SPEED_TRIVIA_PGLITE_MODULE?path.resolve(process.env.SPEED_TRIVIA_PGLITE_MODULE):'@electric-sql/pglite');
 const {setup,call,clientFor,checked,row,SECRET}=require('./test-speed-trivia-admission-sql.cjs');
 const run=async()=>{
  const db=new PGlite();await setup(db);
@@ -37,7 +37,7 @@ const run=async()=>{
   const replay=await call(db,'speed_trivia_retire_batch',args);assert.equal(replay.rows[0].idempotent,true);
   const state=await call(db,'speed_trivia_cleanup_state',{p_manifest_hash:source.manifestHash});assert.equal(state.rows.length,1);assert.equal(state.rows[0].before_state.question,state.rows[0].after_state.question);
   await db.exec('reset role');assert.equal((await db.query('select count(*)::int n from trivia_answers')).rows[0].n,2);await db.exec('set role service_role');
-  const session=await runtime.createSession({client,secret:SECRET,budget:runtime.createBudget({dollars:1}),judge:{modelVersion:'copied-db-undo-fixture',adjudicate:async tasks=>tasks.map(t=>({id:t.id,decision:'duplicate',explanation:'Existing keeper reserves this fact',fact:'Gobi is in Asia',qualityA:'sound',qualityB:'sound',confidence:'high'}))}});
+  const session=await runtime.createSession({client,prerequisitesChecked:true,secret:SECRET,budget:runtime.createBudget({dollars:1}),judge:{modelVersion:'copied-db-undo-fixture',adjudicate:async tasks=>tasks.map(t=>({id:t.id,decision:'duplicate',explanation:'Existing keeper reserves this fact',fact:'Gobi is in Asia',qualityA:'sound',qualityB:'sound',confidence:'high'}))}});
   await assert.rejects(()=>session.write(state.rows[0].before_state,{existing:state.rows[0].after_state,restore:true,undo:{manifestHash:source.manifestHash}}),error=>error.code==='duplicate');
   // Test transaction rollback on invalid keeper, and invalid signature/checksum.
   const malformed={...manifest,corpusRevision:result.revision,retirements:[{...entry,keeperContentHash:'wrong',oldStatus:'deleted'}]};

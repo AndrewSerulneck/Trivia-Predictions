@@ -1,0 +1,1 @@
+export function prerequisites(env?: Record<string, string | undefined>): {ready:boolean; checks:Record<string,boolean>; reasons:string[];normalCapDollars:number|null;subjectPolicy:string;factPolicy:string};

@@ -57,6 +57,7 @@ function formatDate(value: string): string {
 }
 
 export function TriviaPendingReviewSection() {
+  const [reviewQueue, setReviewQueue] = useState<"ready" | "held" | "unverified">("ready");
   const [activeTab, setActiveTab] = useState<QuestionPool>("live_showdown");
   const [items, setItems] = useState<PendingQuestion[]>([]);
   const [total, setTotal] = useState(0);
@@ -101,6 +102,7 @@ export function TriviaPendingReviewSection() {
       const params = new URLSearchParams({
         status: "pending_review",
         pool,
+        queue: reviewQueue,
         limit: String(PAGE_LIMIT),
         offset: String((targetPage - 1) * PAGE_LIMIT),
       });
@@ -130,7 +132,7 @@ export function TriviaPendingReviewSection() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [reviewQueue]);
 
   useEffect(() => {
     setCategoryFilter("all");
@@ -469,6 +471,14 @@ export function TriviaPendingReviewSection() {
           })}
         </div>
 
+        {activeTab === "anytime_blitz" ? (
+          <div className="mt-4 max-w-xs">
+            <label className={adminLabel}>Review queue</label>
+            <select value={reviewQueue} onChange={(event) => setReviewQueue(event.target.value as typeof reviewQueue)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
+              <option value="ready">Verified and ready</option><option value="held">Held for resolution</option><option value="unverified">Legacy questions awaiting checks</option>
+            </select>
+          </div>
+        ) : null}
         <div className="mt-4 max-w-xs">
           <label className={adminLabel}>Category</label>
           <select

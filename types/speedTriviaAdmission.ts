@@ -19,7 +19,9 @@ export type AdmissionBudget = {
 };
 export type AdmissionClient = { rpc: (name: string, args?: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }> };
 export type AdmissionSession = {
-  write: (row: Record<string, unknown>, options?: { existing?: AdmissionRow | null; importMode?: boolean; approvedOnly?: boolean; generated?: boolean; restore?: boolean; undo?: { manifestHash: string } }) => Promise<{ row: AdmissionRow; idempotent: boolean; evidence?: AdmissionEvidence }>;
+  operationId: string;
+  subjectState: () => ReturnType<typeof import("@/lib/speed-trivia-uniqueness/subjects.cjs").createState>;
+  write: (row: Record<string, unknown>, options?: { existing?: AdmissionRow | null; importMode?: boolean; approvedOnly?: boolean; generated?: boolean; subjectProposals?: import("@/types/speedTriviaVariety").SubjectProposal[]; restore?: boolean; undo?: { manifestHash: string } }) => Promise<{ row: AdmissionRow; idempotent: boolean; evidence?: AdmissionEvidence }>;
   leave: (patch: Record<string, unknown>, existing: AdmissionRow) => Promise<AdmissionRow>;
   refresh: () => Promise<void>;
   budget: AdmissionBudget;
@@ -27,4 +29,4 @@ export type AdmissionSession = {
   index: () => SpeedIndex;
   client: AdmissionClient;
 };
-export type SessionOptions = { client: AdmissionClient; secret?: string; budget?: AdmissionBudget; judge?: CheckOptions; cache?: Map<string, unknown>; apiKey?: string; cachedIndex?: SpeedIndex | null };
+export type SessionOptions = { client: AdmissionClient; secret?: string; budget?: AdmissionBudget; judge?: CheckOptions; cache?: Map<string, unknown>; apiKey?: string; prerequisitesChecked?: boolean; cachedIndex?: SpeedIndex | null };

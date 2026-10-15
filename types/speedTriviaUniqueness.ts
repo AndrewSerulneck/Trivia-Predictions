@@ -1,3 +1,4 @@
+import type { SubjectEvidence } from "@/types/speedTriviaVariety";
 export type SpeedQuestion = {
   id: string;
   slug?: string;
@@ -12,6 +13,8 @@ export type SpeedQuestion = {
   image_url?: string | null;
   image_context?: Record<string, unknown> | null;
   created_at?: string;
+  speed_subject_evidence?: SubjectEvidence | null;
+  speed_review_state?: { state: "ready" | "unverified" | "held"; contentHash: string; reason?: string } | null;
   speed_generation_metadata?: { version: "speed-subject-plan-v1"; primarySubject: string; subtopic: string } | null;
 };
 export type FactDecision = {

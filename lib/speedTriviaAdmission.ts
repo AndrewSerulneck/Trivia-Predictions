@@ -37,7 +37,7 @@ export const openSpeedTriviaAdmission = (options?: { elapsedMs: number; signal?:
       const writing = serialized(async () => {
         session.budget.assertTime();
         // Another local request may have advanced the shared index since this session opened.
-        const fresh = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget: session.budget });
+        const fresh = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget: session.budget, prerequisitesChecked: true });
         try {
           const result = await fresh.write(row, options);
           cachedIndex = fresh.index();
@@ -55,7 +55,7 @@ export const openSpeedTriviaAdmission = (options?: { elapsedMs: number; signal?:
       return budget ? budget.limit(writing) : writing;
     };
     session.leave = (patch, existing) => serialized(async () => {
-      const fresh = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget: session.budget });
+      const fresh = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget: session.budget, prerequisitesChecked: true });
       try { const result = await fresh.leave(patch, existing); cachedIndex = fresh.index(); return result; }
       catch (error) { cachedIndex = error instanceof AdmissionError && error.code === "verification_unavailable" ? null : fresh.index(); throw error; }
     });
