@@ -2044,7 +2044,7 @@ export async function listActiveRankedPlaceCampaigns(): Promise<ChallengeCampaig
 const CAMPAIGN_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * The rewards with these ids, any state (active or not, resolved or not), for Past Winners
+ * The rewards with these ids, any state (active or not, resolved or not), for Game Results
  * (docs/live-trivia-weekly-places-reward-plan.md §5f). A direct bounded read — the caller passes
  * at most a page of ids, found from the venue's own ledger — NOT listChallengeCampaigns(): that one
  * runs the leaderboard finalizers and is shaped for the live panels. Malformed ids are dropped (an

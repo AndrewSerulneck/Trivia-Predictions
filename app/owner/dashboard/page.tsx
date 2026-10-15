@@ -11,7 +11,7 @@ import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
 import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/RewardsFlow";
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
 import { PosConnectionsSheet } from "@/components/owner/pos/PosConnectionsSheet";
-import { PastWinnersSheet } from "@/components/owner/history/PastWinnersSheet";
+import { GameResultsSheet } from "@/components/owner/history/GameResultsSheet";
 import { AddVenueSheet, type AddedVenue } from "@/components/owner/add-venue/AddVenueSheet";
 import { MerchStoreSheet } from "@/components/owner/store/MerchStoreSheet";
 import { Dropdown } from "@/components/ui/Dropdown";
@@ -390,12 +390,12 @@ const PosSheetHost = ({ venue }: { venue: Venue | null }) => {
   return <PosConnectionsSheet nav={sheet} venue={venue} posResult={posResult} />;
 };
 
-// Past Winners (?sheet=history), hosted by the page like the store so the menu row opens it while
+// Game Results (?sheet=history), hosted by the page like the store so the menu row opens it while
 // venues load (docs/live-trivia-weekly-places-reward-plan.md §5f). Keyed by venue at the call site, so a
 // venue switch starts from empty lists. Requests only while open.
 const HistorySheetHost = ({ venue }: { venue: Venue | null }) => {
   const sheet = useOwnerSheet();
-  return <PastWinnersSheet nav={sheet} venue={venue} />;
+  return <GameResultsSheet nav={sheet} venue={venue} />;
 };
 
 // Add a venue (?sheet=add-venue), hosted by the page like the store: it acts on the page's venue list

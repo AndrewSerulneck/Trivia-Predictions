@@ -5,7 +5,7 @@
 > (`677a214c-b859-4c17-8e4d-9889574516e1`, from the Oct 14 week) and Andrew approved + applied the backfill
 > (13 coupons, $320, 10 weeks settled, expiry 2026-11-13; verified, re-run is a no-op). Wording changed to
 > "1st place wins …, 2nd place wins … and 3rd place wins …" (Andrew, 2026-10-14). Phase 6 (Create Reward wizard) **built** 2026-10-14, committed on branch
-> `live-trivia-ranked-places-phase6`, **not pushed**. Phase 8 (Past Winners) **built** 2026-10-14 + "Top players
+> `live-trivia-ranked-places-phase6`, **not pushed**. Phase 8 (Game Results) **built** 2026-10-14 + "Top players
 > this week" offered even with a single game (D13) + code-review fixes, committed on branch
 > `live-trivia-ranked-places-phase8` (on top of Phase 6), **not pushed**, migration
 > `20261014213000_owner_past_winners_summaries.sql` **not applied**. Latest handoff:
@@ -33,7 +33,7 @@ week (Oct 14–16) gets added once Friday's game ends.
 - **Minimum players, partner's choice.** When creating a competitive reward (this weekly one, or the
   existing "win the game" one), the partner can say "only pay out if at least N players took part". Off by
   default. A week (or game) below the minimum pays nobody, and that is recorded so the partner can see why.
-- **Past winners on the Partner Dashboard.** A new menu row, **Past Winners**, lists past Live Trivia games
+- **Past winners on the Partner Dashboard.** A new menu row, **Game Results**, lists past Live Trivia games
   and rewards; tapping one shows its history (who won each game / each week, and what they won). Phase 8.
 
 **What needs you:** the backfill dry-run approval (Phase 5), and the phone checks listed per phase.
@@ -52,10 +52,10 @@ Bar will honor the backfill.
 | D6 | Backfill start | From their first Live Trivia game, **2026-08-05**. **Confirmed by Andrew 2026-10-14.** |
 | D7 | Minimum players | **Partner's choice, per reward.** Optional "pay out only if at least N players took part" (N = 2–100) on competitive rewards: ranked places and game winner. Off = no minimum (D2 still holds). Not offered on points-target rewards (a personal goal) or NFL Pick 'Em (it already has a fixed 3+ pickers rule). A "player who took part" = anyone who answered at least one question in that week (ranked) or game (game winner), scored or not. |
 | D8 | Reward created mid-week | **Starts immediately.** The week it is created in counts (all of that week's games, including nights already played), as long as the reward existed before that week's last game ended. Created after the week's last game ended → starts the next week. |
-| D9 | Past winners for partners | A **Past Winners** row in the Partner Dashboard menu → list of past games and rewards → tap one for its history (Phase 8). |
+| D9 | Past winners for partners | A **Game Results** row in the Partner Dashboard menu → list of past games and rewards → tap one for its history (Phase 8). Renamed from "Past Winners" to **Game Results** (Andrew, 2026-10-14); component `GameResultsSheet`, sheet id still `history`. |
 | D10 | Defaults confirmed | Weekly only, 1–3 places; players see their live standing on the Rewards card; no feature flag. |
 | D11 | Approvals | DB change in Phase 1 approved. Push + deploy of Phases 1–4 approved. Backfill dry run is shown to Andrew and approved before any coupon is issued. Garden State Bar confirmed it will honor ~$320 plus up to $60 for the Oct 14 week. **Phase 8 push + deploy approved too (Andrew, 2026-10-14).** |
-| D12 | Category Blitz in Past Winners | **No** (Andrew, 2026-10-14). Past Winners = Live Trivia games + rewards only. |
+| D12 | Category Blitz in Game Results | **No** (Andrew, 2026-10-14). Game Results = Live Trivia games + rewards only. |
 | D13 | Single-game venues | **"Top players this week" is always an option** once the venue has a Live Trivia game, even a single non-repeating one (Andrew, 2026-10-14). The week anchors on the repeating nights, else the one-off games' nights (`rankedNightsForVenue`, `lib/rankedPlaceRewards.ts`); every game in the week still counts. Pinned games must still repeat weekly. With no repeating game, the guest wording names no weekday. |
 
 ### Defaults (planner's, confirmed by Andrew 2026-10-14 except where D7/D8 changed them)
@@ -252,10 +252,10 @@ the moment they reached their final total.
 
 ### 5f. Past winners for partners (Phase 8, D9) — AS BUILT 2026-10-14
 
-- **Menu row** "Past Winners" (hint "Games & rewards history", Lucide `Trophy`) in
+- **Menu row** "Game Results" (hint "Games & rewards history", Lucide `Trophy`) in
   `components/owner/menu/ownerMenuItems.ts`, after Order Join Merch (pinned in `tests/owner-menu-contract.test.ts`).
   It opens a URL-mirrored dark `OwnerSheet` `?sheet=history[&step=game|reward]`
-  (`components/owner/history/PastWinnersSheet.tsx`), hosted by the dashboard page (`HistorySheetHost`, keyed by
+  (`components/owner/history/GameResultsSheet.tsx`), hosted by the dashboard page (`HistorySheetHost`, keyed by
   venue) so it opens while venues load. Which game/reward is open lives in memory: a reload on a detail step
   corrects back to the list (`nav.correctStep`).
 - **List**, two tabs, newest first, 20 per page with "Show more": **Live Trivia games** (date, schedule name, player
@@ -433,7 +433,7 @@ own prize snapshot. `terms_updated_at` trigger left as is (the win sentence read
 ## 9. Open items for Andrew
 
 Answered 2026-10-14: Garden State Bar honors the backfill (D11); defaults kept (D10); mid-week start (D8);
-**backfill starts Aug 5 (D6)**; **Category Blitz is not in Past Winners (D12)**; **Phase 8 may be deployed (D11)**;
+**backfill starts Aug 5 (D6)**; **Category Blitz is not in Game Results (D12)**; **Phase 8 may be deployed (D11)**;
 **single-game venues get the option (D13)**.
 
 Still open: pushing Phases 6 + 8 and applying the Phase 8 migration (Phase 8 handoff §7), and the phone checks

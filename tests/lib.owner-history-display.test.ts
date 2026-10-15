@@ -12,7 +12,7 @@ import {
 } from "@/lib/ownerHistoryDisplay";
 import { rankedNightsForVenue } from "@/lib/rankedPlaceRewards";
 
-// docs/live-trivia-weekly-places-reward-plan.md §5f (Phase 8): the Past Winners wording and paging rules.
+// docs/live-trivia-weekly-places-reward-plan.md §5f (Phase 8): the Game Results wording and paging rules.
 
 const ID_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 const ID_B = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";

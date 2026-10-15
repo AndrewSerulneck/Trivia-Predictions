@@ -27,7 +27,7 @@ import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import { getVenueTimezone } from "@/lib/timezone";
 import type { ChallengeCampaign } from "@/types";
 
-// Past Winners on the Partner Dashboard (docs/live-trivia-weekly-places-reward-plan.md §5f, Phase 8).
+// Game Results on the Partner Dashboard (docs/live-trivia-weekly-places-reward-plan.md §5f, Phase 8).
 // Read-only. The routes (app/api/owner/history/**) check the owner controls `venueId` BEFORE calling
 // anything here; every function below also scopes every read to that one venue (its own schedules,
 // ledger rows with venue_id = venueId), so a reward shared with another venue never leaks that

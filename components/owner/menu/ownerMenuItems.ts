@@ -14,7 +14,7 @@ import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 
 // The Partner Dashboard menu rows, in display order
 // (docs/partner-dashboard-app-redesign-plan.md §4b; Order Join Merch added by
-// docs/join-merch-store-plan.md; Past Winners by docs/live-trivia-weekly-places-reward-plan.md §5f).
+// docs/join-merch-store-plan.md; Game Results by docs/live-trivia-weekly-places-reward-plan.md §5f).
 // Sign Out is NOT a row: it renders after the divider, last, from OwnerAppBar.
 // tests/owner-menu-contract.test.ts pins this order.
 //
@@ -38,7 +38,7 @@ export type OwnerMenuItem =
 export const OWNER_MENU_ITEMS: readonly OwnerMenuItem[] = [
   { id: "display", label: "Venue Display", hint: "Put games on your TVs", icon: Tv, href: "/owner/display" },
   { id: "store", label: "Order Join Merch", hint: "QR coasters, tents & table cards", icon: ShoppingBag, sheet: "store" },
-  { id: "history", label: "Past Winners", hint: "Games & rewards history", icon: Trophy, sheet: "history" },
+  { id: "history", label: "Game Results", hint: "Games & rewards history", icon: Trophy, sheet: "history" },
   { id: "billing", label: "Billing", hint: "Plan, card & invoices", icon: CreditCard, href: "/owner/billing" },
   // docs/pos-rewards-integration-plan.md Phase 1. Hidden while the POS flag is off (see below).
   { id: "pos", label: "Point of Sale", hint: "Prizes off the bill in Square & Clover", icon: ReceiptText, sheet: "pos" },

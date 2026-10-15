@@ -2,11 +2,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createElement, useState } from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { PastWinnersSheet } from "@/components/owner/history/PastWinnersSheet";
+import { GameResultsSheet } from "@/components/owner/history/GameResultsSheet";
 import type { OwnerSheetId } from "@/lib/ownerSheetParams";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 
-// docs/live-trivia-weekly-places-reward-plan.md §5f (Phase 8): the Past Winners sheet reads only while
+// docs/live-trivia-weekly-places-reward-plan.md §5f (Phase 8): the Game Results sheet reads only while
 // open, only for the selected venue, and mirrors the detail screen into `step`.
 
 const GAME = {
@@ -57,7 +57,7 @@ const Host = ({ initiallyOpen }: { initiallyOpen: boolean }) => {
     "div",
     null,
     createElement("button", { type: "button", onClick: () => setSheet((now) => (now ? null : "history")) }, "toggle"),
-    createElement(PastWinnersSheet, { nav, venue: { id: "venue-1", name: "Garden State Bar" } }),
+    createElement(GameResultsSheet, { nav, venue: { id: "venue-1", name: "Garden State Bar" } }),
   );
 };
 
@@ -67,7 +67,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("PastWinnersSheet", () => {
+describe("GameResultsSheet", () => {
   it("requests nothing while closed", async () => {
     vi.stubGlobal("fetch", fetchMock);
     render(createElement(Host, { initiallyOpen: false }));

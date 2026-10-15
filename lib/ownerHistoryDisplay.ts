@@ -1,8 +1,8 @@
-// Past Winners on the Partner Dashboard (docs/live-trivia-weekly-places-reward-plan.md §5f, Phase 8):
+// Game Results on the Partner Dashboard (docs/live-trivia-weekly-places-reward-plan.md §5f, Phase 8):
 // the wire shapes the sheet reads, plus the pure rules for wording and ordering them.
 //
 // Pure and client-safe (no Supabase, no `server-only`): lib/ownerHistory.ts builds these shapes on
-// the server and components/owner/history/PastWinnersSheet.tsx renders them.
+// the server and components/owner/history/GameResultsSheet.tsx renders them.
 //
 // PRIVACY. A partner sees USERNAMES and points only — what the TV leaderboard already shows. No
 // shape here has a player id, email or anything else about a player. A player who deleted their

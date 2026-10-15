@@ -18,7 +18,7 @@ import {
 } from "@/lib/ownerHistoryDisplay";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 
-// The Partner Dashboard's "Past Winners" sheet (docs/live-trivia-weekly-places-reward-plan.md §5f,
+// The Partner Dashboard's "Game Results" sheet (docs/live-trivia-weekly-places-reward-plan.md §5f,
 // Phase 8): past Live Trivia games and rewards at the selected venue, and who won each.
 //
 // URL-MIRRORED like the other dashboard sheets: `?sheet=history` is the list (two tabs: Games,
@@ -72,11 +72,11 @@ const getJson = async <T,>(url: string, pick: (json: Record<string, unknown>) =>
     const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     const value = json.ok === true ? pick(json) : undefined;
     if (!res.ok || value === undefined) {
-      return { ok: false, message: typeof json.error === "string" ? json.error : "Couldn't load past winners." };
+      return { ok: false, message: typeof json.error === "string" ? json.error : "Couldn't load game results." };
     }
     return { ok: true, value };
   } catch {
-    return { ok: false, message: "Couldn't load past winners. Check your connection." };
+    return { ok: false, message: "Couldn't load game results. Check your connection." };
   }
 };
 
@@ -220,13 +220,13 @@ const RewardDetailScreen = ({ row, detail, onRetry }: { row: OwnerRewardHistoryR
   </div>
 );
 
-export type PastWinnersSheetProps = {
+export type GameResultsSheetProps = {
   nav: UseOwnerSheetResult;
   /** The dashboard's selected venue; null while venues load or on an account with none. */
   venue: { id: string; name: string } | null;
 };
 
-export const PastWinnersSheet = ({ nav, venue }: PastWinnersSheetProps) => {
+export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
   const open = nav.sheet === "history";
   const venueId = venue?.id ?? null;
   const [tab, setTab] = useState<Tab>("games");
@@ -286,7 +286,7 @@ export const PastWinnersSheet = ({ nav, venue }: PastWinnersSheetProps) => {
       if (result.ok && rows) {
         return { status: "ready", rows: before ? [...prev.rows, ...rows] : rows, nextBefore, loadingMore: false, error: null };
       }
-      const message = result.ok ? "Couldn't load past winners." : result.message;
+      const message = result.ok ? "Couldn't load game results." : result.message;
       // A failed "Show more" keeps the rows and says so under them; a failed first page is an error screen.
       return before ? { ...prev, loadingMore: false, error: message } : { ...idleList<Row>(), status: "error", error: message };
     };
@@ -353,13 +353,13 @@ export const PastWinnersSheet = ({ nav, venue }: PastWinnersSheetProps) => {
 
   const renderList = (): ReactNode => {
     if (!venue) {
-      return <p className={EMPTY_CLASS}>Choose a venue to see its past winners.</p>;
+      return <p className={EMPTY_CLASS}>Choose a venue to see its game results.</p>;
     }
     const list = tab === "games" ? games : rewards;
     return (
       <div className="space-y-3">
-        <StepHeading hint={venue.name}>Past winners</StepHeading>
-        <div role="tablist" aria-label="Past winners" className="grid grid-cols-2 gap-2">
+        <StepHeading hint={venue.name}>Game results</StepHeading>
+        <div role="tablist" aria-label="Game results" className="grid grid-cols-2 gap-2">
           {(["games", "rewards"] as const).map((id) => (
             <button
               key={id}
@@ -377,7 +377,7 @@ export const PastWinnersSheet = ({ nav, venue }: PastWinnersSheetProps) => {
         </div>
         {list.status === "idle" || list.status === "loading" ? <HightopLoader size="md" className="py-8" /> : null}
         {list.status === "error" ? <ListError
-            message={list.error ?? "Couldn't load past winners."}
+            message={list.error ?? "Couldn't load game results."}
             onRetry={() => (tab === "games" ? setGames(idleList()) : setRewards(idleList()))}
           /> : null}
         {list.status === "ready" && list.rows.length === 0 ? (
@@ -418,7 +418,7 @@ export const PastWinnersSheet = ({ nav, venue }: PastWinnersSheetProps) => {
     screen === "list" ? undefined : <WizardFooter variant="inline" tone="dark" onBack={() => nav.goBack(null)} />;
 
   return (
-    <OwnerSheet open={open} onRequestClose={nav.closeSheet} title="Past Winners" footer={footer} scrollKey={screen}>
+    <OwnerSheet open={open} onRequestClose={nav.closeSheet} title="Game Results" footer={footer} scrollKey={screen}>
       <SlideSteps steps={SCREENS} current={screen} renderStep={renderScreen} />
     </OwnerSheet>
   );

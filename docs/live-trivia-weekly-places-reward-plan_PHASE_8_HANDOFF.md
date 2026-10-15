@@ -1,13 +1,13 @@
 # Live Trivia Weekly Places Reward — Phase 8 handoff (2026-10-14)
 
-Plan: `docs/live-trivia-weekly-places-reward-plan.md`. Phase 8 = **Past Winners** on the Partner Dashboard (§5f).
+Plan: `docs/live-trivia-weekly-places-reward-plan.md`. Phase 8 = **Game Results** on the Partner Dashboard (§5f).
 This session also made "Top players this week" an option at every venue with a Live Trivia game, even a single
 one-off game (decision D13), and fixed everything a code review of this work found. Next: **Phase 7**.
 
 ## For Andrew (plain English)
 
 - **What changed:**
-  - **Past Winners.** A new Partner Dashboard menu row, **Past Winners** (below Order Join Merch). It opens a sheet
+  - **Game Results.** A new Partner Dashboard menu row, **Game Results** (below Order Join Merch). It opens a sheet
     with two tabs. **Live Trivia games** lists each past game, newest first, with the number of players and who
     won. Tap one to see its final top 10. **Rewards** lists every reward that has paid out at that venue. Tap one to
     see each week's winners, by place, with the prize and whether the coupon was redeemed. A week nobody won says
@@ -19,7 +19,7 @@ one-off game (decision D13), and fixed everything a code review of this work fou
     after the week's last game").
 - **Is it live?** **No.** It is committed on branch `live-trivia-ranked-places-phase8`, which sits **on top of the
   unpushed Phase 6 wizard**. Pushing it puts both live for every partner. It also needs one small database change
-  (two read-only lookups and one index). Until that change is applied, the Past Winners screen says "not available
+  (two read-only lookups and one index). Until that change is applied, the Game Results screen says "not available
   yet" and nothing else is affected.
 - **Needs you:** (1) say "push" to apply the database change and deploy Phases 6 + 8. (2) Phone checks: sections
   **C** and **D** of `docs/reward-descriptions-device-checklist.md`. Section D only looks at data, so it is safe to
@@ -32,9 +32,9 @@ one-off game (decision D13), and fixed everything a code review of this work fou
 
 Phase 8 is **done in code, not deployed**. Next is **Phase 7** (plan §7): watch Garden State Bar's first live week.
 It settles after **Fri 2026-10-16**'s game ends (≈ 2026-10-17T01:25Z) on the next `/api/cron/resolve-live-trivia-winners`
-sweep. Then add the CLAUDE.md/AGENTS.md "Weekly places rewards" section (include Past Winners + D13), point
+sweep. Then add the CLAUDE.md/AGENTS.md "Weekly places rewards" section (include Game Results + D13), point
 `docs/rewards-system-plan.md` at it, and compare usage with §6.
-Out of scope: Category Blitz in Past Winners (D12); editing or re-awarding from Past Winners; CSV export; pinning a
+Out of scope: Category Blitz in Game Results (D12); editing or re-awarding from Game Results; CSV export; pinning a
 ranked reward to chosen games in the wizard.
 
 ### 2. Starting state
@@ -54,7 +54,7 @@ ranked reward to chosen games in the wizard.
 
 ### 3. Decisions already made (don't re-ask)
 
-- D9 (Past Winners), D12 (no Category Blitz), D11 (Phase 8 deploy approved — but see §7: it ships with the
+- D9 (Game Results), D12 (no Category Blitz), D11 (Phase 8 deploy approved — but see §7: it ships with the
   unpushed Phase 6, and `supabase db push` always asks first).
 - **D13 (Andrew, 2026-10-14): "Top players this week" is always an option** once the venue has a Live Trivia game,
   even a single one-off. One rule, `rankedNightsForVenue` (`lib/rankedPlaceRewards.ts`): repeating nights, else
@@ -63,7 +63,7 @@ ranked reward to chosen games in the wizard.
   (`REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE`). No game night at all → `REWARD_RANKED_PLACES_NO_GAMES_MESSAGE`.
 - Consequence: the admin wizard "terms" snapshot changed (one line: the third chip now shows, because its fixture
   venue has `scheduleDays: ["fri"]`). Prize/confirm/definition snapshots are unchanged. Updated deliberately.
-- Past Winners shows a reward if it **paid or settled a week at this venue**, found from the venue's own ledger,
+- Game Results shows a reward if it **paid or settled a week at this venue**, found from the venue's own ledger,
   not from the reward's current `venue_ids`. A reward that later dropped the venue still shows its history there.
   Its detail opens if the reward is offered here (or everywhere) OR has rows here; otherwise 404.
 - A deleted player's coupon is gone, so their "redeemed" status is `null` (unknown) and the sheet shows nothing,
@@ -87,7 +87,7 @@ ranked reward to chosen games in the wizard.
   any read; maps errors; `Cache-Control: no-store`.
 - Routes: `app/api/owner/history/route.ts`, `app/api/owner/history/games/[scheduleId]/route.ts`,
   `app/api/owner/history/rewards/[rewardId]/route.ts`.
-- UI: `components/owner/history/PastWinnersSheet.tsx`; `HistorySheetHost` in `app/owner/dashboard/page.tsx`;
+- UI: `components/owner/history/GameResultsSheet.tsx`; `HistorySheetHost` in `app/owner/dashboard/page.tsx`;
   menu row in `components/owner/menu/ownerMenuItems.ts`; `"history"` in `OWNER_SHEET_IDS` (`lib/ownerSheetParams.ts`).
 - `lib/challengeCampaigns.ts`: `listChallengeCampaignsByIds(ids)` (bounded, drops non-uuid ids).
 - `lib/liveTriviaWeekTotals.ts`: `LiveTriviaWeekTotalsMissingError` (thrown only for a missing function; the
@@ -97,7 +97,7 @@ ranked reward to chosen games in the wizard.
   `describeRankedPlacesReward` in `lib/rewardDescription.ts` gets `scheduleKnown`.
 - Tests: `tests/api.owner.history.test.ts` (401/400/403/404/503/500), `tests/lib.owner-history.test.ts`
   (venue scoping, no ids leaked, in-progress games, partial ledger cycle, deleted player, cursor round trip),
-  `tests/lib.owner-history-display.test.ts`, `tests/components.owner-past-winners-sheet.test.ts` (no fetch while
+  `tests/lib.owner-history-display.test.ts`, `tests/components.owner-game-results-sheet.test.ts` (no fetch while
   closed, tabs, detail, Show-more race), `scripts/test-owner-history-sql.cjs` (`npm run test:owner-history-sql`),
   plus updates to `tests/owner-menu-contract.test.ts`, `tests/components.create-reward-wizard.test.ts` (+ snapshot),
   `tests/lib.rewards-definitions.test.ts`, `tests/lib.ranked-places-reward-copy.test.ts`.
@@ -114,7 +114,7 @@ ranked reward to chosen games in the wizard.
 - `occurrence_date` is venue-local: never convert it (`formatOccurrenceDate` builds the label from the string).
 - Detail of a game still being played shows no standings and the list names no winner ("Playing now").
 - The dashboard page must not name `/api/owner/venues` (first-load tripwire). The history routes are separate.
-- Dev shares the production DB. Past Winners only reads, but never test reward creation at a real venue.
+- Dev shares the production DB. Game Results only reads, but never test reward creation at a real venue.
 
 ### 6. Build / run / test
 
@@ -123,7 +123,7 @@ ranked reward to chosen games in the wizard.
   `npm run test:ranked-places-sql` passes · `npm run build` succeeded (the three `/api/owner/history*` routes are
   listed as dynamic). Don't run typecheck and build at the same time.
 - **Not verified:** real browser/phone rendering, and the RPCs against production data (they aren't applied yet).
-  After applying, a quick check: open Past Winners at Garden State Bar. Expect the Oct 9 game (murph 90) and
+  After applying, a quick check: open Game Results at Garden State Bar. Expect the Oct 9 game (murph 90) and
   "Weekly Trivia Champions" with 10 settled weeks.
 
 ### 7. Open questions for Andrew
@@ -133,9 +133,9 @@ ranked reward to chosen games in the wizard.
    only `20261014213000` unless the Speed Trivia `…020000` file is present in the pushing checkout. Push from this
    worktree, which doesn't have it), then `git push origin HEAD:main` from the worktree, then watch the Vercel
    deploy reach Ready.
-2. Phone checks: checklist §C (wizard incl. the single-game case) and §D (Past Winners).
+2. Phone checks: checklist §C (wizard incl. the single-game case) and §D (Game Results).
 
 ### 8. Recommended next steps
 
-1. On Andrew's go-ahead, run §7.1 in that order, then open Past Winners at Garden State Bar to confirm.
+1. On Andrew's go-ahead, run §7.1 in that order, then open Game Results at Garden State Bar to confirm.
 2. Phase 7 (Claude Sonnet 5.5, medium) after Friday 2026-10-16's game. Read the plan + Phase 5, 6 and 8 handoffs first.

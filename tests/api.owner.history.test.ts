@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// docs/live-trivia-weekly-places-reward-plan.md §5f (Phase 8): every Past Winners route goes through
+// docs/live-trivia-weekly-places-reward-plan.md §5f (Phase 8): every Game Results route goes through
 // withOwnerVenue — a signed-in partner AND a venueId they control, checked BEFORE any history is read.
 
 const mocks = vi.hoisted(() => ({
@@ -81,7 +81,7 @@ describe("GET /api/owner/history", () => {
     mocks.listOwnerGameHistory.mockRejectedValueOnce(new Error("relation users does not exist"));
     const failed = await list("venueId=venue-1&kind=games");
     expect(failed.status).toBe(500);
-    expect(((await failed.json()) as { error: string }).error).toBe("Couldn't load past winners.");
+    expect(((await failed.json()) as { error: string }).error).toBe("Couldn't load game results.");
     spy.mockRestore();
   });
 });

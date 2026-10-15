@@ -3,7 +3,7 @@ import { listOwnerGameHistory, listOwnerRewardHistory } from "@/lib/ownerHistory
 import { withOwnerVenue } from "@/lib/ownerHistoryRoute";
 
 /**
- * GET /api/owner/history?venueId=…&kind=games|rewards&before=… — one page of a venue's Past Winners
+ * GET /api/owner/history?venueId=…&kind=games|rewards&before=… — one page of a venue's Game Results
  * (docs/live-trivia-weekly-places-reward-plan.md §5f). `before` is the previous page's `nextBefore`.
  */
 export async function GET(request: Request) {

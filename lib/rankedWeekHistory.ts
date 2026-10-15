@@ -1,6 +1,6 @@
 // A weekly places reward's settled weeks as rows: who took each place, what they won, whether
 // the coupon was redeemed, and why a week with no winner had none
-// (docs/live-trivia-weekly-places-reward-plan.md §5e; Phase 8's Past Winners reuses it).
+// (docs/live-trivia-weekly-places-reward-plan.md §5e; Phase 8's Game Results reuses it).
 //
 // Pure and client-safe. Inputs come from the ledger (challenge_cycle_winners, `place` set) and
 // challenge_cycle_settlements. The prize shown is the reward's CURRENT ladder entry for the place:

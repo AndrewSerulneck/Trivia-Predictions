@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Isolated PostgreSQL verification of supabase/migrations/20261014213000_owner_past_winners_summaries.sql
-// (docs/live-trivia-weekly-places-reward-plan.md Phase 8, Past Winners). No network, no application
+// (docs/live-trivia-weekly-places-reward-plan.md Phase 8, Game Results). No network, no application
 // imports, never touches the linked Supabase project. Runs on PGlite (devDependency):
 //   npm run test:owner-history-sql
 // or point at another copy: OWNER_HISTORY_PGLITE_MODULE=/path/to/node_modules/@electric-sql/pglite node scripts/test-owner-history-sql.cjs

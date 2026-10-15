@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { OwnerHistoryNotFoundError, OwnerHistoryUnavailableError } from "@/lib/ownerHistory";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 
-// The one gate every Past Winners route goes through (docs/live-trivia-weekly-places-reward-plan.md
+// The one gate every Game Results route goes through (docs/live-trivia-weekly-places-reward-plan.md
 // §5f): a signed-in partner, and a `venueId` they control — checked BEFORE any history is read.
 // Partners only ever read; nothing here writes.
 
@@ -37,6 +37,6 @@ export const withOwnerVenue = async (
       return NextResponse.json({ ok: false, error: error.message }, { status: 503 });
     }
     console.error("[OwnerHistory] read-failed", error instanceof Error ? error.message : error);
-    return NextResponse.json({ ok: false, error: "Couldn't load past winners." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Couldn't load game results." }, { status: 500 });
   }
 };

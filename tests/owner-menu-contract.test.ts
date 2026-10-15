@@ -17,7 +17,7 @@ describe("owner menu contract", () => {
     expect(visibleOwnerMenuItems(false).map((item) => item.label)).toEqual([
       "Venue Display",
       "Order Join Merch",
-      "Past Winners",
+      "Game Results",
       "Billing",
       "Partner Manual",
       "Game Settings",
@@ -29,7 +29,7 @@ describe("owner menu contract", () => {
     expect(OWNER_MENU_ITEMS.map((item) => item.label)).toEqual([
       "Venue Display",
       "Order Join Merch",
-      "Past Winners",
+      "Game Results",
       "Billing",
       "Point of Sale",
       "Partner Manual",
@@ -64,15 +64,15 @@ describe("owner menu contract", () => {
 
   // docs/live-trivia-weekly-places-reward-plan.md §5f (Phase 8): after Order Join Merch, a dark
   // URL-mirrored sheet hosted by the dashboard page, never a page of its own.
-  it("Past Winners opens the URL-mirrored history sheet, hosted by the dashboard page", () => {
+  it("Game Results opens the URL-mirrored history sheet, hosted by the dashboard page", () => {
     const history = OWNER_MENU_ITEMS.find((item) => item.id === "history");
-    expect(history?.label).toBe("Past Winners");
+    expect(history?.label).toBe("Game Results");
     expect(history?.hint).toBe("Games & rewards history");
     expect(history?.sheet).toBe("history");
     expect(history?.href).toBeUndefined();
     const page = read("app/owner/dashboard/page.tsx");
-    expect(page).toContain("<PastWinnersSheet nav={sheet} venue={venue} />");
-    const sheet = read("components/owner/history/PastWinnersSheet.tsx");
+    expect(page).toContain("<GameResultsSheet nav={sheet} venue={venue} />");
+    const sheet = read("components/owner/history/GameResultsSheet.tsx");
     expect(sheet).not.toMatch(/router\.(push|replace)/);
     expect(sheet).toContain('nav.displayStepFor("history")');
   });

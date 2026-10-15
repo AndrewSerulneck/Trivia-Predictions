@@ -200,7 +200,7 @@ export async function planRankedRewardBackfill(params: {
  * Pay a plan's unsettled weeks, oldest first, through the award RPC (one transaction per
  * week). Refuses — before writing anything — unless `expectCoupons` equals the plan's
  * coupon count, so an apply can only issue what the approved dry run showed. Weeks nobody
- * scored in are settled too (recorded as no_scorers), so the Past Winners history and the
+ * scored in are settled too (recorded as no_scorers), so the Game Results history and the
  * resolver both see them as done. Stops at the first error; a re-run skips settled weeks.
  */
 export async function applyRankedRewardBackfill(params: {
