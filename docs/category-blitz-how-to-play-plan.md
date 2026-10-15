@@ -2,13 +2,11 @@
 
 **Status:** Plan written 2026-10-14, revised the same day with Andrew's second round of answers.
 **Phase 4 re-scoped 2026-10-14** (Andrew): no full-width letter band — keep the top-left badge, slightly bigger.
-**Phase 1 (scoring & cadence) committed 2026-10-14** as `b1030fd` on local branch `category-blitz-scoring-cadence`
-(not pushed, not deployed). **Phase 2 (tutorial cards + local-build fix) built 2026-10-14**, uncommitted.
-**Phase 3 (rules popup, footer removal, lobby-flash fix) built 2026-10-14**, uncommitted.
-**Phase 4 (letter badge 56→60px, the plan's fallback size; 64px wrapped the rule at 360px) built 2026-10-14**, uncommitted.
-**Phase 5 (sleep when idle: `peek=1` / `peekCategoryBlitz`, scoring-only continuous cron, TV "Play anytime") built
-2026-10-14**, uncommitted, not deployed. Baseline before deploy: ~2,470 rounds/day.
-Latest handoff: `docs/category-blitz-how-to-play-plan_PHASE_5_HANDOFF.md`. Next: Phase 6 — **only after Phase 5 is deployed**.
+**Phases 1–5 deployed to production 2026-10-15** (~01:09 UTC; `origin/main` `9208f85` + `58d57c3`, Vercel
+`hightop-challenge-l71s5p89s`). Phase 5 confirmed live: zero new rounds in the first 10 idle minutes.
+**Phase 6 done 2026-10-15:** 193,590 empty rounds deleted from `category_blitz_rounds` (196,295 → 2,705); all 219
+rounds with answers kept. `VACUUM FULL` not run (Andrew's call).
+Latest handoff: `docs/category-blitz-how-to-play-plan_PHASE_6_HANDOFF.md`. Next: Phase 7 — verification & release record.
 **Owner decisions:** Andrew, 2026-10-14 (§2). Do not re-ask them.
 
 ## 1. What Andrew asked for
