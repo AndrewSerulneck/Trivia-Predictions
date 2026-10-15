@@ -272,6 +272,15 @@ the moment they reached their final total.
   `idx_challenge_cycle_winners_venue`. service_role only. PGlite: `npm run test:owner-history-sql`.
 - **Cost:** only on demand, no cron, no polling. A list page = 3 bounded reads; a detail = 3–5.
 - **Out of scope:** Category Blitz (D12), editing or re-awarding anything from this screen, CSV export.
+- **Games tab grouped (Andrew, 2026-10-14, after Phase 8):** Month → Week (Mon–Sun, cut at month edges) → Day,
+  plus Year on top once the venue's first game is over a year old. Months/weeks fold; only the newest of each
+  starts open. Pure rules: `groupGameHistory` / `groupsByYear` / `defaultOpenGroupKeys` in
+  `lib/ownerHistoryDisplay.ts`. The first page also returns `firstGameDate` (one index probe per schedule,
+  skipping the `1970-01-01` backfill sentinel, best-effort). Paging is unchanged (20 games/page); a group older
+  than the oldest loaded date shows "N+ games" until Show more fills it.
+- **Dashboard reward rows (Andrew, 2026-10-14):** a tappable reward row (dashboard card and Rewards sheet list)
+  says only "Tap to see reward details" (`REWARD_ROW_DETAILS_HINT`, `components/owner/rewards/RewardRow.tsx`).
+  The detail screen now carries the guest summary, when, terms and fine print; ended (History) rows are unchanged.
 
 ## 6. Cost estimate (CLAUDE.md "cost-conscious engineering")
 

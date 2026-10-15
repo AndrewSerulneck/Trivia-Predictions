@@ -81,9 +81,10 @@ describe("GameResultsSheet", () => {
     await screen.findByText(/murph · 90 pts/);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/owner/history?venueId=venue-1&kind=games");
-    expect(screen.getByText(/Weekday Trivia · 5 players/)).toBeTruthy();
+    expect(screen.getByText("5 players")).toBeTruthy();
+    expect(screen.getByText("Fri, Oct 9")).toBeTruthy(); // the day heading above the game
 
-    fireEvent.click(screen.getByRole("button", { name: /Fri, Oct 9/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Weekday Trivia/ }));
     await screen.findByText("kellygurl");
     expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/owner/history/games/sched-1?venueId=venue-1&date=2026-10-09");
 
@@ -117,5 +118,54 @@ describe("GameResultsSheet", () => {
     await screen.findByText(/murph · 90 pts/);
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(screen.queryByText(/oldtimer/)).toBeNull();
+  });
+});
+
+describe("GameResultsSheet grouping (Andrew, 2026-10-14)", () => {
+  const game = (occurrenceDate: string, winner: string) => ({ ...GAME, occurrenceDate, winners: [winner] });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("groups by month, week and day, with only the newest month and week open", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-14T16:00:00Z"));
+    const games = [game("2026-10-09", "murph"), game("2026-10-01", "early_oct"), game("2026-09-25", "september")];
+    vi.stubGlobal("fetch", vi.fn(async () => json({ ok: true, games, nextBefore: null, firstGameDate: "2026-08-05" })));
+    render(createElement(Host, { initiallyOpen: true }));
+
+    await screen.findByText(/murph · 90 pts/);
+    const october = screen.getByRole("button", { name: /October 2026/ });
+    expect(october.getAttribute("aria-expanded")).toBe("true");
+    expect(october.textContent).toContain("2 games");
+    expect(screen.getByRole("button", { name: /Oct 5 – 11/ }).getAttribute("aria-expanded")).toBe("true");
+    // Older week and month are folded shut: their games aren't on screen.
+    expect(screen.getByRole("button", { name: /Oct 1 – 4/ }).getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByText(/early_oct/)).toBeNull();
+    const september = screen.getByRole("button", { name: /September 2026/ });
+    expect(september.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByText(/september ·/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /^2026/ })).toBeNull(); // under a year: no year headings
+
+    fireEvent.click(september);
+    fireEvent.click(screen.getByRole("button", { name: /Sep 21 – 27/ }));
+    expect(screen.getByText(/september · 90 pts/)).toBeTruthy();
+    fireEvent.click(october); // and the newest month folds shut too
+    expect(screen.queryByText(/murph · 90 pts/)).toBeNull();
+  });
+
+  it("adds year headings once the venue's first game is more than a year old", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2027-10-14T16:00:00Z"));
+    const games = [game("2027-10-13", "murph"), game("2026-12-30", "last_year")];
+    vi.stubGlobal("fetch", vi.fn(async () => json({ ok: true, games, nextBefore: "2026-12-30", firstGameDate: "2026-08-05" })));
+    render(createElement(Host, { initiallyOpen: true }));
+
+    await screen.findByText(/murph · 90 pts/);
+    expect(screen.getByRole("button", { name: /^2027/ }).getAttribute("aria-expanded")).toBe("true");
+    // More pages exist and 2026 starts before the oldest loaded game, so its count is open-ended.
+    expect(screen.getByRole("button", { name: /^2026/ }).textContent).toContain("1+ games");
+    expect(screen.getByRole("button", { name: /^October/ })).toBeTruthy(); // no year repeated under a year
   });
 });

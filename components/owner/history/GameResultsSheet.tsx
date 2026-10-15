@@ -1,18 +1,25 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { ChevronRight } from "lucide-react";
 import { WizardFooter } from "@/components/navigation/WizardFooter";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
 import { StepHeading } from "@/components/owner/sheet/StepHeading";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import {
+  defaultOpenGroupKeys,
   formatOccurrenceDate,
+  gameCountLabel,
+  groupGameHistory,
+  groupsByYear,
   playerCountLabel,
   rewardWinnerLabel,
   winnersLabel,
   type OwnerGameDetail,
   type OwnerGameHistoryRow,
+  type OwnerGameMonthGroup,
+  type OwnerGameWeekGroup,
   type OwnerRewardDetail,
   type OwnerRewardHistoryRow,
 } from "@/lib/ownerHistoryDisplay";
@@ -26,6 +33,11 @@ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 // phone's Back returns to the list or closes. Which game/reward is open lives in memory, so a reload
 // on a detail step corrects back to the list (nav.correctStep). Hosted by the dashboard page in its
 // own Suspense (HistorySheetHost) and keyed by venue, so a venue switch starts clean.
+//
+// GROUPED (Andrew, 2026-10-14): the Games tab is Month → Week → Day, plus Year on top once the venue
+// has run Live Trivia for more than a year (groupGameHistory, lib/ownerHistoryDisplay.ts). Months and
+// weeks fold open and shut; only the newest of each starts open, so the list stays short however
+// long the venue's history gets.
 //
 // READ-ONLY and ON DEMAND: one request per list page (the Rewards tab's first page only when that tab
 // is opened), one per detail tap; nothing while closed, no polling. Usernames only — never a player id.
@@ -46,7 +58,7 @@ type ListState<Row> = {
 const idleList = <Row,>(): ListState<Row> => ({ status: "idle", rows: [], nextBefore: null, loadingMore: false, error: null });
 
 type PageResult =
-  | { ok: true; value: { kind: "games"; rows: OwnerGameHistoryRow[]; nextBefore: string | null } | { kind: "rewards"; rows: OwnerRewardHistoryRow[]; nextBefore: string | null } }
+  | { ok: true; value: { kind: "games"; rows: OwnerGameHistoryRow[]; nextBefore: string | null; firstGameDate?: string | null } | { kind: "rewards"; rows: OwnerRewardHistoryRow[]; nextBefore: string | null } }
   | { ok: false; message: string };
 
 type Selected =
@@ -85,6 +97,43 @@ const historyUrl = (venueId: string, kind: Tab, before: string | null): string =
 
 const thisYear = (): number => new Date().getFullYear();
 
+/** Today on the partner's device, YYYY-MM-DD (their phone is in the venue's timezone in practice). */
+const todayIso = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+};
+
+const GROUP_HEADER_CLASS: Record<"year" | "month" | "week", string> = {
+  year: "min-h-11 px-1 text-lg font-black text-ht-primary",
+  month: "min-h-11 rounded-xl border border-ht-hairline bg-ht-elevated/60 px-3 font-black text-ht-primary",
+  week: "min-h-11 px-2 text-sm font-black text-ht-secondary",
+};
+
+const GroupHeader = ({
+  level,
+  label,
+  count,
+  open,
+  onToggle,
+}: {
+  level: "year" | "month" | "week";
+  label: string;
+  count: string;
+  open: boolean;
+  onToggle: () => void;
+}) => (
+  <button
+    type="button"
+    aria-expanded={open}
+    onClick={onToggle}
+    className={`flex w-full items-center gap-2 text-left transition active:translate-y-px ${GROUP_HEADER_CLASS[level]}`}
+  >
+    <ChevronRight className={`h-4 w-4 shrink-0 text-ht-muted transition-transform ${open ? "rotate-90" : ""}`} aria-hidden />
+    <span className="min-w-0 flex-1 truncate">{label}</span>
+    <span className="shrink-0 text-xs font-semibold text-ht-muted">{count}</span>
+  </button>
+);
+
 const ShowMore = ({ busy, onClick }: { busy: boolean; onClick: () => void }) => (
   <div className="flex justify-center">
     <button type="button" onClick={onClick} disabled={busy} className={`${LINK_CLASS} disabled:opacity-60`}>
@@ -111,10 +160,8 @@ const GameRow = ({ game, onOpen }: { game: OwnerGameHistoryRow; onOpen: () => vo
   return (
     <button type="button" onClick={onOpen} className={ROW_CLASS}>
       <div className="min-w-0 flex-1">
-        <div className="font-black text-ht-primary">{formatOccurrenceDate(game.occurrenceDate, thisYear())}</div>
-        <div className="mt-0.5 truncate text-xs font-semibold text-ht-muted">
-          {game.scheduleName} · {playerCountLabel(game.playerCount)}
-        </div>
+        <div className="truncate font-black text-ht-primary">{game.scheduleName}</div>
+        <div className="mt-0.5 text-xs font-semibold text-ht-muted">{playerCountLabel(game.playerCount)}</div>
         <div className={`mt-1 text-xs font-bold ${game.winners.length > 0 ? "text-ht-emerald-300" : "text-ht-muted"}`}>{result}</div>
       </div>
       <span className="shrink-0 text-lg text-slate-500" aria-hidden>
@@ -235,6 +282,10 @@ export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
   const [selected, setSelected] = useState<Selected | null>(null);
   const [detail, setDetail] = useState<Detail>({ status: "loading" });
   const [detailAttempt, setDetailAttempt] = useState(0);
+  // The venue's first game (from the first Games page): over a year ago → group by year too.
+  const [firstGameDate, setFirstGameDate] = useState<string | null>(null);
+  // Groups the partner folded open or shut, against each group's default (only the newest open).
+  const [toggledGroups, setToggledGroups] = useState<ReadonlySet<string>>(() => new Set());
 
   // Each open shows fresh lists: a game that ended since the last look must appear.
   const [wasOpen, setWasOpen] = useState(false);
@@ -243,6 +294,8 @@ export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
     if (open) {
       setGames(idleList());
       setRewards(idleList());
+      setFirstGameDate(null);
+      setToggledGroups(new Set());
     }
   }
   // Bumped on every open/close: a "Show more" still in flight from an earlier open must not land
@@ -269,7 +322,12 @@ export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
       return kind === "games"
         ? getJson(historyUrl(venueId, "games", before), (json) =>
             Array.isArray(json.games)
-              ? { kind: "games" as const, rows: json.games as OwnerGameHistoryRow[], nextBefore: (json.nextBefore as string | null) ?? null }
+              ? {
+                  kind: "games" as const,
+                  rows: json.games as OwnerGameHistoryRow[],
+                  nextBefore: (json.nextBefore as string | null) ?? null,
+                  firstGameDate: typeof json.firstGameDate === "string" ? json.firstGameDate : null,
+                }
               : undefined,
           )
         : getJson(historyUrl(venueId, "rewards", before), (json) =>
@@ -291,6 +349,7 @@ export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
       return before ? { ...prev, loadingMore: false, error: message } : { ...idleList<Row>(), status: "error", error: message };
     };
     const page = result.ok ? result.value : null;
+    if (page?.kind === "games" && !before) setFirstGameDate(page.firstGameDate ?? null);
     if (kind === "games") setGames((prev) => fold(prev, page?.kind === "games" ? page.rows : null, page?.nextBefore ?? null));
     else setRewards((prev) => fold(prev, page?.kind === "rewards" ? page.rows : null, page?.nextBefore ?? null));
   }, []);
@@ -351,6 +410,82 @@ export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
     setDetailAttempt((n) => n + 1);
   };
 
+  const toggleGroup = (key: string) =>
+    setToggledGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const renderGames = (): ReactNode => {
+    const oldestLoaded = games.rows[games.rows.length - 1]?.occurrenceDate ?? null;
+    // An unknown first date falls back to what is loaded: rows already spanning a year group by year.
+    const byYear = groupsByYear(firstGameDate ?? oldestLoaded, todayIso());
+    const years = groupGameHistory(games.rows, { byYear, moreToLoad: Boolean(games.nextBefore) });
+    const defaults = defaultOpenGroupKeys(years);
+    const isOpen = (key: string) => defaults.has(key) !== toggledGroups.has(key);
+
+    const renderWeek = (week: OwnerGameWeekGroup) => (
+      <li key={week.key}>
+        <GroupHeader
+          level="week"
+          label={week.label}
+          count={gameCountLabel(week.gameCount, week.complete)}
+          open={isOpen(week.key)}
+          onToggle={() => toggleGroup(week.key)}
+        />
+        {isOpen(week.key) ? (
+          <div className="space-y-3 pb-2 pl-2">
+            {week.days.map((day) => (
+              <div key={day.date} className="space-y-1.5">
+                <p className="px-1 text-caption font-black uppercase tracking-wider text-ht-muted">{day.label}</p>
+                <ul className="space-y-2">
+                  {day.games.map((game) => (
+                    <li key={`${game.scheduleId}:${game.occurrenceDate}`}>
+                      <GameRow game={game} onOpen={() => openDetail({ kind: "game", row: game })} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </li>
+    );
+
+    const renderMonth = (month: OwnerGameMonthGroup) => (
+      <li key={month.key} className="space-y-1">
+        <GroupHeader
+          level="month"
+          label={month.label}
+          count={gameCountLabel(month.gameCount, month.complete)}
+          open={isOpen(month.key)}
+          onToggle={() => toggleGroup(month.key)}
+        />
+        {isOpen(month.key) ? <ul className="pl-1">{month.weeks.map(renderWeek)}</ul> : null}
+      </li>
+    );
+
+    if (!byYear) return <ul className="space-y-2">{years.flatMap((year) => year.months).map(renderMonth)}</ul>;
+    return (
+      <ul className="space-y-2">
+        {years.map((year) => (
+          <li key={year.key} className="space-y-2">
+            <GroupHeader
+              level="year"
+              label={year.label}
+              count={gameCountLabel(year.gameCount, year.complete)}
+              open={isOpen(year.key)}
+              onToggle={() => toggleGroup(year.key)}
+            />
+            {isOpen(year.key) ? <ul className="space-y-2">{year.months.map(renderMonth)}</ul> : null}
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   const renderList = (): ReactNode => {
     if (!venue) {
       return <p className={EMPTY_CLASS}>Choose a venue to see its game results.</p>;
@@ -386,19 +521,17 @@ export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
           </p>
         ) : null}
         {list.status === "ready" && list.rows.length > 0 ? (
-          <ul className="space-y-2">
-            {tab === "games"
-              ? games.rows.map((game) => (
-                  <li key={`${game.scheduleId}:${game.occurrenceDate}`}>
-                    <GameRow game={game} onOpen={() => openDetail({ kind: "game", row: game })} />
-                  </li>
-                ))
-              : rewards.rows.map((reward) => (
-                  <li key={reward.rewardId}>
-                    <RewardHistoryRow reward={reward} onOpen={() => openDetail({ kind: "reward", row: reward })} />
-                  </li>
-                ))}
-          </ul>
+          tab === "games" ? (
+            renderGames()
+          ) : (
+            <ul className="space-y-2">
+              {rewards.rows.map((reward) => (
+                <li key={reward.rewardId}>
+                  <RewardHistoryRow reward={reward} onOpen={() => openDetail({ kind: "reward", row: reward })} />
+                </li>
+              ))}
+            </ul>
+          )
         ) : null}
         {list.status === "ready" && list.error ? <p className="text-center text-xs font-semibold text-ht-rose-300">{list.error}</p> : null}
         {list.status === "ready" && list.nextBefore ? (

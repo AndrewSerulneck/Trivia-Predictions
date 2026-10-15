@@ -1,6 +1,7 @@
 import { RewardRow } from "@/components/owner/rewards/RewardRow";
 import type { SectionLoad } from "@/components/owner/dashboard/LiveGamesSection";
 import { StepHeading } from "@/components/owner/sheet/StepHeading";
+import { rewardHowWonLabel } from "@/lib/ownerHistoryDisplay";
 import type { RedemptionCounts } from "@/lib/ownerRewardFlow";
 import {
   formatDateLabel,
@@ -102,7 +103,11 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-/** One reward: its terms, dates and top progress, and End reward. */
+/**
+ * One reward: everything a guest is told (what to do and win, when, the fine print), the
+ * terms the partner agreed to, dates and top progress, and End reward. The list rows only
+ * say "Tap to see reward details", so this screen is where the rules live.
+ */
 export const RewardDetailScreen = ({
   reward,
   onEnd,
@@ -111,6 +116,7 @@ export const RewardDetailScreen = ({
   onEnd: () => void;
 }) => {
   const terms = rewardTermsText(reward);
+  const description = reward.description ?? null;
   const timezone = "America/New_York"; // display-only fallback; the engine stores naive local strings
   const topEntries: ChallengeLeaderboardEntry[] = reward.leaderboard?.topEntries ?? [];
   const isEnded = !reward.isActive || Boolean(reward.winnerUserId);
@@ -120,12 +126,27 @@ export const RewardDetailScreen = ({
       <StepHeading>{reward.name}</StepHeading>
 
       <div className="divide-y divide-ht-hairline rounded-xl border border-ht-hairline bg-ht-elevated/40 px-3">
+        {description?.summary ? <DetailRow label="What guests see" value={description.summary} /> : null}
+        {description?.when ? <DetailRow label="When" value={description.when} /> : null}
         {terms ? <DetailRow label="Terms" value={terms} /> : null}
+        {description?.fineprint ? <DetailRow label="Fine print" value={description.fineprint} /> : null}
         <DetailRow
           label="Runs"
           value={`${formatDateLabel(reward.startDate, timezone)} ${formatTimeLabel(reward.startTime)} – ${formatDateLabel(reward.endDate, timezone)} ${formatTimeLabel(reward.endTime)}`}
         />
-        <DetailRow label="How it's won" value={reward.challengeMode === "progress" ? "Progress" : "Leaderboard"} />
+        <DetailRow
+          label="How it's won"
+          value={
+            reward.challengeMode === "progress"
+              ? rewardHowWonLabel({
+                  winCondition: reward.winCondition,
+                  rewardDefinitionId: reward.rewardDefinitionId,
+                  pointsRequiredToWin: reward.pointsRequiredToWin,
+                  placeCount: reward.placePrizes?.length ?? reward.winnerQuota,
+                })
+              : "Leaderboard"
+          }
+        />
       </div>
 
       {topEntries.length > 0 ? (

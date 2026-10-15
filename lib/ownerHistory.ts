@@ -88,6 +88,39 @@ type OccurrenceSummaryRpcRow = {
   top_user_ids: string[] | null;
 };
 
+/**
+ * The venue's first Live Trivia game date, for grouping the Games list by year once the venue has
+ * run for more than a year. One `order by occurrence_date limit 1` per schedule — an index probe on
+ * idx_lsa_occurrence (schedule_id, occurrence_date), never a scan — and only with the first page.
+ * Rows from before occurrence dates existed carry the 1970-01-01 backfill sentinel and are skipped.
+ * Best-effort: a failed probe means "unknown" (no year grouping), never a failed page.
+ */
+const OCCURRENCE_DATE_SENTINEL = "1970-01-01";
+
+const loadFirstGameDate = async (scheduleIds: string[]): Promise<string | null> => {
+  try {
+    const dates = await Promise.all(
+      scheduleIds.map(async (scheduleId) => {
+        const { data, error } = await client()
+          .from("live_showdown_answers")
+          .select("occurrence_date")
+          .eq("schedule_id", scheduleId)
+          .gt("occurrence_date", OCCURRENCE_DATE_SENTINEL)
+          .order("occurrence_date", { ascending: true })
+          .limit(1)
+          .returns<Array<{ occurrence_date: string | null }>>();
+        if (error) throw new Error(error.message ?? "first game date read failed");
+        const date = data?.[0]?.occurrence_date;
+        return date ? String(date).slice(0, 10) : null;
+      }),
+    );
+    return dates.reduce<string | null>((min, date) => (date && (min === null || date < min) ? date : min), null);
+  } catch (error) {
+    console.error("[OwnerHistory] first-game-date-failed", error instanceof Error ? error.message : error);
+    return null;
+  }
+};
+
 /** One page of the venue's past Live Trivia games, newest first (`before` = a date cursor). */
 export const listOwnerGameHistory = async (params: {
   venueId: string;
@@ -100,11 +133,14 @@ export const listOwnerGameHistory = async (params: {
   if (byId.size === 0) return { games: [], nextBefore: null };
 
   const before = parseGamesCursor(params.before);
-  const { data, error } = await client().rpc("live_trivia_occurrence_summaries", {
-    p_schedule_ids: [...byId.keys()],
-    p_before: before,
-    p_limit: OWNER_HISTORY_PAGE_SIZE,
-  });
+  const [{ data, error }, firstGameDate] = await Promise.all([
+    client().rpc("live_trivia_occurrence_summaries", {
+      p_schedule_ids: [...byId.keys()],
+      p_before: before,
+      p_limit: OWNER_HISTORY_PAGE_SIZE,
+    }),
+    before ? Promise.resolve(undefined) : loadFirstGameDate([...byId.keys()]),
+  ]);
   if (error) {
     if (isMissingFunction(error, "live_trivia_occurrence_summaries")) {
       console.error("[OwnerHistory] rpc-missing live_trivia_occurrence_summaries");
@@ -134,7 +170,7 @@ export const listOwnerGameHistory = async (params: {
   // The RPC returns OWNER_HISTORY_PAGE_SIZE games (a few more when several schedules share the
   // page's oldest date, which it never splits), so a short page is the last one.
   const nextBefore = games.length >= OWNER_HISTORY_PAGE_SIZE ? games[games.length - 1]?.occurrenceDate ?? null : null;
-  return { games, nextBefore };
+  return firstGameDate === undefined ? { games, nextBefore } : { games, nextBefore, firstGameDate };
 };
 
 /** One past game's final standings (top 10 + ties). Throws NotFound for another venue's schedule. */

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  defaultOpenGroupKeys,
   formatCycleLabel,
+  gameCountLabel,
+  groupGameHistory,
+  groupsByYear,
   formatOccurrenceDate,
   parseGamesCursor,
   parseRewardsCursor,
@@ -117,5 +121,69 @@ describe("rankedNightsForVenue (Andrew, 2026-10-14: offered even with a single g
     expect(rankedNightsForVenue({ gameSlots: [], scheduleDays: ["mon"] })).toEqual(["mon"]);
     expect(rankedNightsForVenue({ gameSlots: [], scheduleDays: [] })).toEqual([]);
     expect(rankedNightsForVenue({ gameSlots: [] })).toEqual([]);
+  });
+});
+
+describe("Games list grouping (Andrew, 2026-10-14)", () => {
+  const game = (occurrenceDate: string, scheduleId = "s1") => ({
+    scheduleId,
+    occurrenceDate,
+    scheduleName: "Trivia",
+    playerCount: 3,
+    inProgress: false,
+    topPoints: 10,
+    winners: ["a"],
+  });
+
+  it("nests month → Monday–Sunday week → day, newest first, cutting weeks at month edges", () => {
+    // Thu Oct 1 2026 and Wed Sep 30 share the week of Mon Sep 28, but sit in different months.
+    const years = groupGameHistory(
+      [game("2026-10-09"), game("2026-10-09", "s2"), game("2026-10-01"), game("2026-09-30"), game("2026-09-27")],
+      { byYear: false, moreToLoad: false },
+    );
+    expect(years).toHaveLength(1);
+    const [october, september] = years[0].months;
+    expect(october.label).toBe("October 2026");
+    expect(october.gameCount).toBe(3);
+    expect(october.weeks.map((week) => week.label)).toEqual(["Oct 5 – 11", "Oct 1 – 4"]);
+    expect(october.weeks[0].days).toHaveLength(1); // two games, one day
+    expect(october.weeks[0].days[0]).toMatchObject({ date: "2026-10-09", label: "Fri, Oct 9" });
+    expect(october.weeks[0].days[0].games).toHaveLength(2);
+    expect(september.weeks.map((week) => week.label)).toEqual(["Sep 28 – 30", "Sep 21 – 27"]); // Sun Sep 27 ends its week
+  });
+
+  it("labels months without the year under a year heading", () => {
+    const years = groupGameHistory([game("2027-01-04"), game("2026-12-28")], { byYear: true, moreToLoad: false });
+    expect(years.map((year) => year.label)).toEqual(["2027", "2026"]);
+    expect(years[0].months[0].label).toBe("January");
+    expect(years[1].months[0].weeks[0].label).toBe("Dec 28 – 31");
+  });
+
+  it("marks a group partial only when more pages exist and it starts before the oldest loaded date", () => {
+    const years = groupGameHistory([game("2026-10-09"), game("2026-09-24")], { byYear: false, moreToLoad: true });
+    const [october, september] = years[0].months;
+    expect(october.complete).toBe(true);
+    expect(september.complete).toBe(false); // Sep 1–23 may still be on the next page
+    expect(september.weeks[0].complete).toBe(false); // the week of Mon Sep 21
+    expect(groupGameHistory([game("2026-09-24")], { byYear: false, moreToLoad: false })[0].months[0].complete).toBe(true);
+  });
+
+  it("counts games, open-ended while partial", () => {
+    expect(gameCountLabel(1, true)).toBe("1 game");
+    expect(gameCountLabel(13, true)).toBe("13 games");
+    expect(gameCountLabel(1, false)).toBe("1+ games");
+  });
+
+  it("groups by year only once the first game is more than a year old", () => {
+    expect(groupsByYear("2026-08-05", "2027-08-05")).toBe(false); // exactly a year
+    expect(groupsByYear("2026-08-04", "2027-08-05")).toBe(true);
+    expect(groupsByYear(null, "2027-08-05")).toBe(false);
+    expect(groupsByYear("not-a-date", "2027-08-05")).toBe(false);
+  });
+
+  it("opens only the newest year, month and week", () => {
+    const years = groupGameHistory([game("2027-01-04"), game("2026-12-28"), game("2026-12-01")], { byYear: true, moreToLoad: false });
+    expect([...defaultOpenGroupKeys(years)]).toEqual(["y2027", "m2027-01", "w2027-01-04"]);
+    expect(defaultOpenGroupKeys([]).size).toBe(0);
   });
 });

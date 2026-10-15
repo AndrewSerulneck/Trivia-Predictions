@@ -27,7 +27,15 @@ export type OwnerGameHistoryRow = {
   winners: Array<string | null>;
 };
 
-export type OwnerGameHistoryPage = { games: OwnerGameHistoryRow[]; nextBefore: string | null };
+export type OwnerGameHistoryPage = {
+  games: OwnerGameHistoryRow[];
+  nextBefore: string | null;
+  /**
+   * The venue's first Live Trivia game (venue-local YYYY-MM-DD). Sent with the first page only;
+   * null when unknown. Decides whether the list is grouped by year (groupsByYear).
+   */
+  firstGameDate?: string | null;
+};
 
 /** One reward that has paid (or settled) at least once at this venue, as a row of the Rewards list. */
 export type OwnerRewardHistoryRow = {
@@ -233,3 +241,127 @@ export const rankGameStandings = (
 
 /** "12 players". */
 export const playerCountLabel = (count: number): string => `${count} player${count === 1 ? "" : "s"}`;
+
+// ── Grouping the Games list (Andrew, 2026-10-14) ──────────────────────────────────────────
+//
+// The Games list is grouped Month → Week → Day, plus Year on top once the venue has been running
+// Live Trivia for more than a year, so it never becomes one endless list. Weeks run Monday–Sunday
+// (a Fri/Sat/Sun weekend stays together) and are cut at month edges, so every week sits inside one
+// month ("Sep 29 – 30" under September, "Oct 1 – 5" under October). Dates are venue-local strings
+// and are never shifted by a timezone.
+//
+// PAGING. The list still loads 20 games a page. A page never splits a date, so every date on or
+// after the oldest loaded date is complete; a group that starts before it may still be missing
+// older games, and says so ("4+ games") until "Show more" fills it in.
+
+export type OwnerGameDayGroup = { date: string; label: string; games: OwnerGameHistoryRow[] };
+
+type GroupBase = { key: string; label: string; gameCount: number; complete: boolean };
+export type OwnerGameWeekGroup = GroupBase & { days: OwnerGameDayGroup[] };
+export type OwnerGameMonthGroup = GroupBase & { weeks: OwnerGameWeekGroup[] };
+export type OwnerGameYearGroup = GroupBase & { months: OwnerGameMonthGroup[] };
+
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+const dayMs = (date: string): number => {
+  const [year, month, day] = date.split("-").map(Number);
+  return Date.UTC(year, month - 1, day);
+};
+const isoOf = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
+const DAY = 24 * 60 * 60 * 1000;
+
+/** The Monday on or before `date`. */
+const mondayOf = (date: string): string => {
+  const ms = dayMs(date);
+  const weekday = new Date(ms).getUTCDay(); // 0 = Sunday
+  return isoOf(ms - ((weekday + 6) % 7) * DAY);
+};
+
+const lastDayOfMonth = (year: number, month: number): string => isoOf(Date.UTC(year, month, 0));
+
+/** "Oct 12 – 18", "Sep 29 – 30", or "Oct 1" for a one-day stretch. */
+const weekRangeLabel = (start: string, end: string): string => {
+  const [, startMonth, startDay] = start.split("-").map(Number);
+  const [, , endDay] = end.split("-").map(Number);
+  const month = MONTHS[startMonth - 1];
+  return start === end ? `${month} ${startDay}` : `${month} ${startDay} – ${endDay}`;
+};
+
+/**
+ * True when the venue's first game was more than a year before `today` (both YYYY-MM-DD). A null
+ * or malformed first date is never "over a year".
+ */
+export const groupsByYear = (firstGameDate: string | null | undefined, today: string): boolean => {
+  if (!firstGameDate || !DATE_PATTERN.test(firstGameDate) || !DATE_PATTERN.test(today)) return false;
+  const [year, month, day] = today.split("-").map(Number);
+  const yearAgo = `${year - 1}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  return firstGameDate < yearAgo;
+};
+
+/** "1 game", "13 games", or "13+ games" while older games of that group aren't loaded yet. */
+export const gameCountLabel = (count: number, complete: boolean): string =>
+  `${count}${complete ? "" : "+"} game${count === 1 && complete ? "" : "s"}`;
+
+/**
+ * The loaded games as Year → Month → Week → Day, newest first at every level (the rows arrive
+ * newest first). `byYear` only changes the month labels ("October" under a year heading, else
+ * "October 2026"); the year level is always built and the sheet skips it when `byYear` is off.
+ * `moreToLoad` = the list has another page, so groups older than the oldest loaded date are partial.
+ */
+export const groupGameHistory = (
+  games: ReadonlyArray<OwnerGameHistoryRow>,
+  options: { byYear: boolean; moreToLoad: boolean },
+): OwnerGameYearGroup[] => {
+  const rows = games.filter((game) => DATE_PATTERN.test(game.occurrenceDate));
+  const oldest = rows.reduce<string | null>((min, game) => (min === null || game.occurrenceDate < min ? game.occurrenceDate : min), null);
+  const complete = (groupStart: string): boolean => !options.moreToLoad || (oldest !== null && groupStart >= oldest);
+
+  const years: OwnerGameYearGroup[] = [];
+  for (const game of [...rows].sort((a, b) => (a.occurrenceDate < b.occurrenceDate ? 1 : a.occurrenceDate > b.occurrenceDate ? -1 : 0))) {
+    const date = game.occurrenceDate;
+    const [year, month] = date.split("-").map(Number);
+    const yearKey = `y${year}`;
+    const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+    const monthKey = `m${monthStart.slice(0, 7)}`;
+    const weekStart = mondayOf(date) < monthStart ? monthStart : mondayOf(date);
+    const sunday = isoOf(dayMs(mondayOf(date)) + 6 * DAY);
+    const monthEnd = lastDayOfMonth(year, month);
+    const weekEnd = sunday > monthEnd ? monthEnd : sunday;
+    const weekKey = `w${weekStart}`;
+
+    let yearGroup = years[years.length - 1];
+    if (yearGroup?.key !== yearKey) {
+      yearGroup = { key: yearKey, label: String(year), gameCount: 0, complete: complete(`${year}-01-01`), months: [] };
+      years.push(yearGroup);
+    }
+    let monthGroup = yearGroup.months[yearGroup.months.length - 1];
+    if (monthGroup?.key !== monthKey) {
+      const name = MONTH_NAMES[month - 1];
+      monthGroup = { key: monthKey, label: options.byYear ? name : `${name} ${year}`, gameCount: 0, complete: complete(monthStart), weeks: [] };
+      yearGroup.months.push(monthGroup);
+    }
+    let weekGroup = monthGroup.weeks[monthGroup.weeks.length - 1];
+    if (weekGroup?.key !== weekKey) {
+      weekGroup = { key: weekKey, label: weekRangeLabel(weekStart, weekEnd), gameCount: 0, complete: complete(weekStart), days: [] };
+      monthGroup.weeks.push(weekGroup);
+    }
+    let dayGroup = weekGroup.days[weekGroup.days.length - 1];
+    if (dayGroup?.date !== date) {
+      dayGroup = { date, label: formatOccurrenceDate(date, year), games: [] };
+      weekGroup.days.push(dayGroup);
+    }
+    dayGroup.games.push(game);
+    yearGroup.gameCount += 1;
+    monthGroup.gameCount += 1;
+    weekGroup.gameCount += 1;
+  }
+  return years;
+};
+
+/** The groups open when the list first shows: the newest year, its newest month and that month's newest week. */
+export const defaultOpenGroupKeys = (years: ReadonlyArray<OwnerGameYearGroup>): Set<string> => {
+  const year = years[0];
+  const month = year?.months[0];
+  const week = month?.weeks[0];
+  return new Set([year?.key, month?.key, week?.key].filter((key): key is string => Boolean(key)));
+};

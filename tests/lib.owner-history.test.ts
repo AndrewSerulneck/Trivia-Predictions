@@ -35,7 +35,7 @@ vi.mock("@/lib/timezone", () => ({ getVenueTimezone: async () => "America/New_Yo
 vi.mock("@/lib/supabaseAdmin", () => {
   const builder = (table: string) => {
     const self: Record<string, unknown> = {};
-    for (const method of ["select", "eq", "in", "gte", "or", "order", "limit", "returns"]) {
+    for (const method of ["select", "eq", "in", "gt", "gte", "or", "order", "limit", "returns"]) {
       self[method] = (...args: unknown[]) => {
         state.calls.push({ table, method, args });
         return self;
@@ -168,6 +168,22 @@ describe("listOwnerGameHistory", () => {
     };
     const page = await listOwnerGameHistory({ venueId: "venue-1", nowMs: NOW });
     expect(page.games[0]).toEqual(expect.objectContaining({ inProgress: true, winners: [], topPoints: 0 }));
+  });
+
+  it("sends the venue's first game date with the first page only, probing each schedule past the 1970 sentinel", async () => {
+    fns.loadLiveTriviaSchedulesForVenues.mockResolvedValue([schedule("sched-1", "venue-1")]);
+    state.tables.live_showdown_answers = [{ occurrence_date: "2026-08-05" }];
+    const first = await listOwnerGameHistory({ venueId: "venue-1", nowMs: NOW });
+    expect(first.firstGameDate).toBe("2026-08-05");
+    const probe = callsOn("live_showdown_answers");
+    expect(probe).toContainEqual({ table: "live_showdown_answers", method: "eq", args: ["schedule_id", "sched-1"] });
+    expect(probe).toContainEqual({ table: "live_showdown_answers", method: "gt", args: ["occurrence_date", "1970-01-01"] });
+    expect(probe).toContainEqual({ table: "live_showdown_answers", method: "limit", args: [1] });
+
+    state.calls = [];
+    const later = await listOwnerGameHistory({ venueId: "venue-1", before: "2026-10-01", nowMs: NOW });
+    expect(later).not.toHaveProperty("firstGameDate");
+    expect(callsOn("live_showdown_answers")).toEqual([]);
   });
 
   it("returns an empty page without calling the RPC when the venue has no games", async () => {

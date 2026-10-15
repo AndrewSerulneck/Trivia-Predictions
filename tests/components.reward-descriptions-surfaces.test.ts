@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { cleanup, render } from "@testing-library/react";
 import { RewardRow } from "@/components/owner/rewards/RewardRow";
+import { RewardDetailScreen } from "@/components/owner/rewards/RewardStepScreens";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
 
 // Phase 3 of docs/reward-descriptions-plan.md: the server's `description` is what
@@ -47,10 +48,56 @@ describe("RewardRow", () => {
     expect(text).toContain("Winner of your Friday Live Trivia game gets this reward — 1 per week.");
   });
 
+  it("a tappable row (dashboard, Rewards sheet) says only 'Tap to see reward details'", () => {
+    const onClick = vi.fn();
+    const { container } = render(
+      createElement(RewardRow, {
+        onClick,
+        competition: competition({
+          description: { summary: "Win Live Trivia on Friday night.", when: null, fineprint: null, isCustom: false },
+        }),
+      }),
+    );
+    const text = container.textContent ?? "";
+    expect(text).toContain("Live Trivia Challenge");
+    expect(text).toContain("Tap to see reward details");
+    expect(text).not.toContain("Win Live Trivia on Friday night.");
+    expect(text).not.toContain("1 per week");
+  });
+
   it("falls back to the terms sentence when the server sent no description", () => {
     const { container } = render(createElement(RewardRow, { competition: competition({}) }));
     expect(container.textContent).toContain("Live Trivia Challenge");
     expect((container.textContent ?? "").length).toBeGreaterThan("Live Trivia Challenge".length);
+  });
+});
+
+describe("RewardDetailScreen", () => {
+  it("carries every rule the row no longer shows: what guests see, when, terms and fine print", () => {
+    const { container } = render(
+      createElement(RewardDetailScreen, {
+        onEnd: () => {},
+        reward: competition({
+          winCondition: "ranked_places",
+          gameWinnerSlots: null,
+          winnerQuota: 3,
+          pointsRequiredToWin: 0,
+          placePrizes: null,
+          description: {
+            summary: "Finish top 3 in Live Trivia each week.",
+            when: "Wednesday, Thursday and Friday nights",
+            fineprint: "Ties go to whoever reached their score first.",
+            isCustom: false,
+          },
+        }),
+      }),
+    );
+    const text = container.textContent ?? "";
+    expect(text).toContain("Finish top 3 in Live Trivia each week.");
+    expect(text).toContain("Wednesday, Thursday and Friday nights");
+    expect(text).toContain("Ties go to whoever reached their score first.");
+    expect(text).toContain("Top 3 players each week");
+    expect(text).not.toContain("Progress");
   });
 });
 

@@ -1,8 +1,15 @@
 import { highlightRingClass, useScrollWhenHighlighted } from "@/components/owner/dashboard/useHighlightRing";
 import { glyphForCompetition, rewardTermsText, type OwnerCompetition } from "@/lib/ownerRewardDisplay";
 
-// One reward as a row: glyph, name, the terms sentence. Used by the dashboard's
-// Rewards card and by the Rewards sheet's lists, so they cannot drift apart.
+// One reward as a row: glyph and name. Used by the dashboard's Rewards card and by
+// the Rewards sheet's lists, so they cannot drift apart.
+//
+// A tappable row says only "Tap to see reward details" (Andrew, 2026-10-14: the
+// full wording made the dashboard too wordy). The rules and terms live on the
+// detail screen it opens (RewardDetailScreen). An ended row (History) opens
+// nothing, so it keeps the guest summary and terms sentence.
+
+export const REWARD_ROW_DETAILS_HINT = "Tap to see reward details";
 
 export const RewardRow = ({
   competition,
@@ -20,8 +27,8 @@ export const RewardRow = ({
   const ref = useScrollWhenHighlighted<HTMLButtonElement & HTMLDivElement>(highlighted);
   // The guest-facing summary says what to do and what it wins; the terms sentence
   // below it still states how many prizes per period, which the summary does not.
-  const summary = competition.description?.summary ?? null;
-  const terms = rewardTermsText(competition);
+  const summary = onClick ? null : (competition.description?.summary ?? null);
+  const terms = onClick ? null : rewardTermsText(competition);
   const body = (
     <>
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ht-game-pickem text-lg">
@@ -29,6 +36,7 @@ export const RewardRow = ({
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate font-black text-ht-primary">{competition.name}</div>
+        {onClick ? <div className="mt-0.5 text-xs font-semibold text-ht-muted">{REWARD_ROW_DETAILS_HINT}</div> : null}
         {summary ? <div className="mt-0.5 text-xs font-semibold leading-snug text-ht-muted">{summary}</div> : null}
         {terms ? <div className="mt-0.5 text-xs font-semibold text-ht-muted">{terms}</div> : null}
         {ended && competition.winnerUsername ? (
