@@ -76,10 +76,9 @@ describe("Results registry ↔ adapters", () => {
 
   it("an adapter offers a breakdown exactly when the registry says it has one", () => {
     for (const competition of RESULTS_COMPETITIONS) {
-      // Phase 3 adds Live Trivia's getBreakdown; until then the flag is the registry's promise.
       const adapter = getResultsAdapter(competition.id);
       expect(adapter).not.toBeNull();
-      if (!competition.hasBreakdown) expect(adapter?.getBreakdown).toBeUndefined();
+      expect(Boolean(adapter?.getBreakdown), competition.id).toBe(competition.hasBreakdown);
     }
   });
 
@@ -140,13 +139,21 @@ describe("a new competition needs no change to the shared code", () => {
   it("standings and breakdown use only the shared shapes", async () => {
     const detail = await testCupAdapter.getStandings({ venueId: "v", gameKey: "cup:2026-10-15", nowMs: 0 });
     expect(detail.standings[0]).toEqual({ rank: 1, username: "ace", score: 3, entry: "tok-ace" });
-    const breakdown = await testCupAdapter.getBreakdown?.({ venueId: "v", gameKey: "cup:2026-10-15", entry: "tok-ace" });
+    const breakdown = await testCupAdapter.getBreakdown?.({ venueId: "v", gameKey: "cup:2026-10-15", entry: "tok-ace", nowMs: 0 });
     expect(breakdown?.total).toBe(breakdown?.rows.reduce((sum, row) => sum + row.points, 0));
   });
 
   it("the generic core and the Results UI never name a competition id", () => {
     const ids = RESULTS_COMPETITIONS.map((competition) => competition.id);
-    const generic = ["lib/results/types.ts", "lib/results/timeline.ts", "lib/results/ownerResults.ts", ...filesUnder("components/owner/results")];
+    const generic = [
+      "lib/results/types.ts",
+      "lib/results/timeline.ts",
+      "lib/results/ownerResults.ts",
+      "lib/results/entryToken.ts",
+      "lib/results/pathParams.ts",
+      ...filesUnder("app/api/owner/results"),
+      ...filesUnder("components/owner/results"),
+    ];
     for (const file of generic) {
       const source = read(file);
       for (const id of ids) expect(source.includes(`"${id}"`), `${file} names "${id}"`).toBe(false);

@@ -221,20 +221,30 @@ export const rewardWinnerLabel = (winner: { place: number | null; username: stri
 export const rankGameStandings = (
   totals: ReadonlyArray<{ username: string | null; points: number; reachedAt: string | null }>,
   limit: number = OWNER_GAME_STANDINGS_LIMIT,
-): OwnerGameStanding[] => {
+): OwnerGameStanding[] =>
+  rankScorers(totals, limit).map(({ rank, row }) => ({ rank, username: row.username, points: row.points }));
+
+/**
+ * rankGameStandings' ordering and cut, keeping each input row whole (`row`) so a server caller can
+ * carry data that must never reach the client (a user id) next to its rank.
+ */
+export const rankScorers = <T extends { points: number; reachedAt: string | null }>(
+  totals: readonly T[],
+  limit: number = OWNER_GAME_STANDINGS_LIMIT,
+): Array<{ rank: number; row: T }> => {
   const scorers = totals
     .filter((row) => Number(row.points) > 0)
     .map((row) => {
       const reachedMs = row.reachedAt ? Date.parse(row.reachedAt) : Number.NaN;
-      return { ...row, reachedMs: Number.isFinite(reachedMs) ? reachedMs : Number.POSITIVE_INFINITY };
+      return { row, reachedMs: Number.isFinite(reachedMs) ? reachedMs : Number.POSITIVE_INFINITY };
     })
-    .sort((a, b) => b.points - a.points || (a.reachedMs === b.reachedMs ? 0 : a.reachedMs < b.reachedMs ? -1 : 1));
-  const ranked: OwnerGameStanding[] = [];
+    .sort((a, b) => b.row.points - a.row.points || (a.reachedMs === b.reachedMs ? 0 : a.reachedMs < b.reachedMs ? -1 : 1));
+  const ranked: Array<{ rank: number; row: T }> = [];
   for (let i = 0; i < scorers.length; i += 1) {
-    const row = scorers[i];
-    const rank = i > 0 && scorers[i - 1].points === row.points ? ranked[i - 1].rank : i + 1;
+    const { row } = scorers[i];
+    const rank = i > 0 && scorers[i - 1].row.points === row.points ? ranked[i - 1].rank : i + 1;
     if (i >= limit && rank !== ranked[limit - 1]?.rank) break;
-    ranked.push({ rank, username: row.username, points: row.points });
+    ranked.push({ rank, row });
   }
   return ranked;
 };

@@ -55,6 +55,8 @@
     "rewards:backfill-ranked": "node --env-file=.env.local --conditions react-server --import tsx scripts/backfill-ranked-reward.cjs",
     "results:check-timeline": "node --env-file=.env.local --conditions react-server --import tsx scripts/check-results-timeline.cjs",
     "results:inspect-rewards": "node --env-file=.env.local scripts/inspect-results-reward-placement.cjs",
+    "results:check-breakdown": "node --env-file=.env.local --conditions react-server --import tsx scripts/check-results-breakdown.cjs",
+    "results:explain-breakdown": "supabase db query --linked -o csv -f scripts/explain-results-breakdown.sql",
     "live-trivia:randomness:audit": "node --conditions react-server --import tsx scripts/audit-live-trivia-randomness.cjs",
     "live-trivia:future-reseed:dry-run": "node --env-file=.env.local --conditions react-server --import tsx scripts/reseed-live-trivia-future.cjs",
     "live-trivia:future-reseed:apply": "node --env-file=.env.local --conditions react-server --import tsx scripts/reseed-live-trivia-future.cjs --apply",

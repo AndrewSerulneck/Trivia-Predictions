@@ -2,7 +2,8 @@ import "server-only";
 
 import { enumerateScheduleOccurrences, loadLiveTriviaSchedulesForVenues, type TriviaScheduleRow } from "@/lib/liveShowdownEngine";
 import { LiveTriviaWeekTotalsMissingError, loadLiveTriviaWeekTotals } from "@/lib/liveTriviaWeekTotals";
-import { parseGamesCursor, rankGameStandings } from "@/lib/ownerHistoryDisplay";
+import { parseGamesCursor, rankScorers } from "@/lib/ownerHistoryDisplay";
+import { findResultsEntry, makeResultsEntryTokens, resultsEntryTokensEnabled } from "@/lib/results/entryToken";
 import { ResultsNotFoundError, ResultsUnavailableError } from "@/lib/results/errors";
 import { loadUsernames } from "@/lib/results/playerNames";
 import type { ResultsAdapter, ResultsGameDetail, ResultsGamePage, ResultsGameRow } from "@/lib/results/types";
@@ -19,7 +20,8 @@ import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 // COST: a page is one schedules read + the live_trivia_occurrence_summaries RPC (paged in SQL, never
 // splits a date) + one usernames read for the page's winners (+ one index probe per schedule for the
 // first game date, first page only). A game's standings are the schedules read + one totals RPC +
-// one usernames read over that game's scorers.
+// one usernames read over that game's scorers (chunked). A player's breakdown is the schedules
+// read + the totals RPC + one answers read (getBreakdown below).
 
 export const LIVE_TRIVIA_COMPETITION_ID = "live_trivia";
 
@@ -153,50 +155,141 @@ const listGames: ResultsAdapter["listGames"] = async ({ venueId, before, limit, 
   return firstGameDate === undefined ? page : { ...page, firstGameDate };
 };
 
-const getStandings: ResultsAdapter["getStandings"] = async ({ venueId, gameKey, nowMs, limit }): Promise<ResultsGameDetail> => {
+/** The venue's schedule a gameKey names, or a 404. Every game read starts here. */
+const venueGame = async (venueId: string, gameKey: string): Promise<{ schedule: TriviaScheduleRow; occurrenceDate: string }> => {
   const key = parseLiveTriviaGameKey(gameKey);
   if (!key) throw new ResultsNotFoundError("That game wasn't found.");
   const schedule = (await venueSchedules(venueId)).get(key.scheduleId);
   if (!schedule) throw new ResultsNotFoundError("That game wasn't found.");
+  return { schedule, occurrenceDate: key.occurrenceDate };
+};
 
-  let totals: Awaited<ReturnType<typeof loadLiveTriviaWeekTotals>>;
+/** Every player's total for one game (one RPC: the same aggregate the weekly reward ranks on). */
+const gameTotals = async (scheduleId: string, occurrenceDate: string) => {
   try {
-    totals = await loadLiveTriviaWeekTotals([{ scheduleId: schedule.id, occurrenceDate: key.occurrenceDate }]);
+    return await loadLiveTriviaWeekTotals([{ scheduleId, occurrenceDate }]);
   } catch (error) {
     if (error instanceof LiveTriviaWeekTotalsMissingError) throw new ResultsUnavailableError("Past games aren't available yet.");
     throw error;
   }
-  const inProgress = isInProgress(schedule, key.occurrenceDate, nowMs);
-  // Names for the scorers only; 0-point players are counted in the total, never listed.
-  const names = inProgress
-    ? new Map<string, string>()
-    : await loadUsernames(totals.filter((row) => row.totalPoints > 0).map((row) => row.userId));
+};
+
+const getStandings: ResultsAdapter["getStandings"] = async ({ venueId, gameKey, nowMs, limit }): Promise<ResultsGameDetail> => {
+  const { schedule, occurrenceDate } = await venueGame(venueId, gameKey);
+  const totals = await gameTotals(schedule.id, occurrenceDate);
+  const inProgress = isInProgress(schedule, occurrenceDate, nowMs);
   // A game still being played has no final standings yet.
   const ranked = inProgress
     ? []
-    : rankGameStandings(
-        totals.map((row) => ({ username: names.get(row.userId) ?? null, points: row.totalPoints, reachedAt: row.reachedAt })),
+    : rankScorers(
+        totals.map((row) => ({ userId: row.userId, points: row.totalPoints, reachedAt: row.reachedAt })),
         limit ?? Number.POSITIVE_INFINITY,
       );
-  const leaders = ranked.filter((row) => row.rank === 1);
+  // Names for the listed scorers only; 0-point players are counted in the total, never listed.
+  const names = await loadUsernames(ranked.map(({ row }) => row.userId));
+  const canonicalKey = liveTriviaGameKey(schedule.id, occurrenceDate);
+  // A deleted player (no username) gets no token: their row is not tappable.
+  const tokens = makeResultsEntryTokens(
+    { venueId, competitionId: LIVE_TRIVIA_COMPETITION_ID, gameKey: canonicalKey },
+    ranked.filter(({ row }) => names.has(row.userId)).map(({ row }) => row.userId),
+  );
+  const standings = ranked.map(({ rank, row }) => ({
+    rank,
+    username: names.get(row.userId) ?? null,
+    score: row.points,
+    entry: tokens.get(row.userId) ?? null,
+  }));
+  const leaders = standings.filter((row) => row.rank === 1);
   return {
     game: {
       competitionId: LIVE_TRIVIA_COMPETITION_ID,
-      gameKey: liveTriviaGameKey(schedule.id, key.occurrenceDate),
-      date: key.occurrenceDate,
-      startsAt: occurrenceStartIso(schedule, key.occurrenceDate),
+      gameKey: canonicalKey,
+      date: occurrenceDate,
+      startsAt: occurrenceStartIso(schedule, occurrenceDate),
       title: scheduleTitle(schedule),
       playerCount: totals.length,
       inProgress,
       winners: leaders.map((row) => row.username),
-      topScore: leaders[0]?.points ?? 0,
+      topScore: leaders[0]?.score ?? 0,
     },
-    standings: ranked.map((row) => ({ rank: row.rank, username: row.username, score: row.points, entry: null })),
+    standings,
   };
+};
+
+/** The longest question text sent; the screen shows one line of it. */
+const QUESTION_DETAIL_MAX = 160;
+/** A game is at most 24 rounds × 15 questions = 360 answers per player. */
+const BREAKDOWN_ROWS_CAP = 1000;
+
+type BreakdownAnswerRow = {
+  is_correct: boolean | null;
+  points_awarded: number | null;
+  round_number: number;
+  question_index: number;
+  question: { question: string | null } | null;
+};
+
+const questionDetail = (text: string | null | undefined): string => {
+  const clean = String(text ?? "").replace(/\s+/g, " ").trim();
+  return clean.length > QUESTION_DETAIL_MAX ? `${clean.slice(0, QUESTION_DETAIL_MAX - 1).trimEnd()}…` : clean;
+};
+
+/**
+ * PRIVACY (plan §5d, R1). The answers read selects is_correct, points_awarded, round_number,
+ * question_index and the question's text through its foreign key — NEVER the player's typed
+ * answer (neither the raw nor the normalized column) and never user_id. tests/results-privacy-contract
+ * .test.ts pins the select. The question text comes embedded (live_showdown_answers.question_id →
+ * trivia_questions.slug), so it is ONE read; an `in()` over slugs (up to 192 characters each) would
+ * pass the URL limit.
+ *
+ * COST: schedules read + the totals RPC (to resolve the token to a scorer of THIS game) + one
+ * answers read on live_showdown_answers_occurrence_unique (schedule_id, occurrence_date, …, user_id)
+ * — measured on production by `npm run results:explain-breakdown`.
+ */
+const getBreakdown: NonNullable<ResultsAdapter["getBreakdown"]> = async ({ venueId, gameKey, entry, nowMs }) => {
+  if (!resultsEntryTokensEnabled()) throw new ResultsUnavailableError("Player breakdowns aren't available.");
+  const { schedule, occurrenceDate } = await venueGame(venueId, gameKey);
+  // No breakdown while the game is still being played: the standings don't list anyone yet.
+  if (isInProgress(schedule, occurrenceDate, nowMs)) throw new ResultsNotFoundError("That player wasn't found.");
+
+  const totals = await gameTotals(schedule.id, occurrenceDate);
+  const scorers = totals.filter((row) => row.totalPoints > 0);
+  const userId = findResultsEntry(
+    { venueId, competitionId: LIVE_TRIVIA_COMPETITION_ID, gameKey: liveTriviaGameKey(schedule.id, occurrenceDate) },
+    scorers.map((row) => row.userId),
+    entry,
+  );
+  if (!userId) throw new ResultsNotFoundError("That player wasn't found.");
+
+  const { data, error } = await client()
+    .from("live_showdown_answers")
+    .select("is_correct, points_awarded, round_number, question_index, question:trivia_questions(question)")
+    .eq("schedule_id", schedule.id)
+    .eq("occurrence_date", occurrenceDate)
+    .eq("user_id", userId)
+    .order("round_number", { ascending: true })
+    .order("question_index", { ascending: true })
+    .limit(BREAKDOWN_ROWS_CAP)
+    .returns<BreakdownAnswerRow[]>();
+  if (error) throw new Error(error.message ?? "Failed to load the player's answers.");
+
+  const rows = (data ?? []).map((row) => ({
+    group: `Round ${row.round_number}`,
+    label: `Q${row.question_index}`,
+    detail: questionDetail(row.question?.question),
+    outcome: row.is_correct ? ("right" as const) : ("wrong" as const),
+    points: Number(row.points_awarded) || 0,
+  }));
+  const total = rows.reduce((sum, row) => sum + row.points, 0);
+  // The same rows the totals RPC sums, so these always agree; a mismatch means a read raced a write.
+  const expected = scorers.find((row) => row.userId === userId)?.totalPoints;
+  if (expected !== total) console.error("[Results] breakdown-total-mismatch", { gameKey, expected, total });
+  return { rows, total };
 };
 
 export const liveTriviaResultsAdapter: ResultsAdapter = {
   id: LIVE_TRIVIA_COMPETITION_ID,
   listGames,
   getStandings,
+  getBreakdown,
 };

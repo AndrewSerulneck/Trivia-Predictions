@@ -142,6 +142,17 @@ describe("Live Trivia adapter", () => {
     for (const id of ids) expect(JSON.stringify(all)).not.toContain(id);
   });
 
+  it("reads a long standings list's usernames in chunks (a single in() would pass the URL limit)", async () => {
+    fns.loadLiveTriviaSchedulesForVenues.mockResolvedValue([schedule(SCHED, "venue-1")]);
+    const ids = Array.from({ length: 250 }, (_, i) => `00000000-0000-0000-0000-${String(i).padStart(12, "0")}`);
+    fns.loadLiveTriviaWeekTotals.mockResolvedValue(ids.map((id, i) => ({ userId: id, totalPoints: 1000 - i, reachedAt: null })));
+    state.tables.users = ids.map((id, i) => ({ id, username: `p${i}` }));
+    const all = await liveTriviaResultsAdapter.getStandings({ venueId: "venue-1", gameKey: `${SCHED}:2026-10-09`, nowMs: NOW });
+    expect(all.standings).toHaveLength(250);
+    const userReads = callsOn("users").filter((call) => call.method === "in");
+    expect(userReads.map((call) => (call.args[1] as string[]).length)).toEqual([100, 100, 50]);
+  });
+
   it("refuses another venue's game (404) without reading scores", async () => {
     fns.loadLiveTriviaSchedulesForVenues.mockResolvedValue([schedule(SCHED, "venue-2")]);
     await expect(

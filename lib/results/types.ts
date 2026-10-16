@@ -34,7 +34,11 @@ export type ResultsStanding = {
   rank: number;
   username: string | null;
   score: number;
-  /** Opens this player's breakdown (Phase 3); null when there is none (or no SESSION_SECRET). */
+  /**
+   * Opens this player's breakdown: an opaque token valid for this venue's game only
+   * (lib/results/entryToken.ts). Null for a deleted player, a competition with no breakdown, or no
+   * SESSION_SECRET.
+   */
   entry: string | null;
 };
 
@@ -92,6 +96,12 @@ export type ResultsRewardItem = {
   note: string | null;
 };
 
+/** One game's screen: GET /api/owner/results/games/[competition]/[gameKey]. */
+export type ResultsGameScreen = ResultsGameDetail & {
+  /** Rewards won at this game (on its card on the timeline), newest first. */
+  rewards: ResultsRewardItem[];
+};
+
 /** One page of the Results timeline: GET /api/owner/results. */
 export type ResultsTimelinePage = {
   /** Newest first; whole dates only. */
@@ -132,5 +142,10 @@ export type ResultsAdapter = {
   }): Promise<ResultsGamePage>;
   /** `limit` = keep the top N plus ties (the old Game Results route); omitted = everyone. */
   getStandings(params: { venueId: string; gameKey: string; nowMs: number; limit?: number }): Promise<ResultsGameDetail>;
-  getBreakdown?(params: { venueId: string; gameKey: string; entry: string }): Promise<ResultsBreakdown>;
+  /**
+   * One player's answers in a finished game, found by their standings `entry` token. Throws
+   * ResultsNotFoundError for a token that matches no scorer of THIS venue's game (or a game still
+   * being played), and ResultsUnavailableError when tokens are off (no SESSION_SECRET).
+   */
+  getBreakdown?(params: { venueId: string; gameKey: string; entry: string; nowMs: number }): Promise<ResultsBreakdown>;
 };
