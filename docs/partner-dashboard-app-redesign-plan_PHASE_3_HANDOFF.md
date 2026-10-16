@@ -135,3 +135,10 @@ dashboard in a real browser once the flow exists (`verify` skill; needs an owner
 4. Replace `app/owner/schedule/page.tsx` with the redirect; update `tests/owner-dashboard-contract.test.ts`
    (its "helpers not in pages" assertion reads the schedule page — adjust it once the page is a redirect).
 5. Gates as in §6; then write `..._PHASE_4_HANDOFF.md` and update the plan's status line.
+
+---
+
+**Note, 2026-10-16 (Results plan Phase 7):** two details above are superseded. `GAME_PILL_STYLES` was deleted from
+`lib/ownerScheduleDisplay.ts` (a game row is now title + one muted line from `scheduleRowDetail(schedule, window)`,
+not pills). The Live Games "+ Schedule another game" row was briefly removed, then put back on Andrew's say-so, so the
+description at ~line 18 holds again. History above is left as written.

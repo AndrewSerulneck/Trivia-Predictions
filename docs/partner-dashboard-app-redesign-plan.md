@@ -133,8 +133,8 @@ Two stacked **section cards** (`rounded-2xl bg-ht-surface shadow-ht-card`), in t
   **+** in a cyan circle, **"Schedule a live game"** and the hint *"Pick a game and a time. Your
   whole room plays together."*
 - *Populated:* up to 3 rows with a date chip (reuse the `dateChip` style from
-  `app/owner/schedule/page.tsx`), the title, the time range, a "Repeats Fri, Sat" pill if it
-  repeats, and a chevron. Then "See all (N)" if there are more, then a dashed **"+ Schedule another
+  `app/owner/schedule/page.tsx`), the title, one muted line (time range · "Every Fri, Sat" if it
+  repeats · game name when the title lacks it; pills dropped 2026-10-16) and a chevron. Then "See all (N)" if there are more, then a dashed **"+ Schedule another
   game"** row.
 
 **Offer Rewards** (accent `bg-ht-game-pickem`)

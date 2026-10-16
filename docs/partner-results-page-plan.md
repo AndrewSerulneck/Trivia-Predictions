@@ -1,8 +1,9 @@
 # Partner Dashboard "Results" page — plan
 
-**Status (2026-10-16):** Phases 1–5 done and committed locally, not pushed (latest handoff:
-`docs/partner-results-page-plan_PHASE_5_HANDOFF.md`). Phase 5 (cleanup) is its own commit and must be pushed
-only AFTER Phase 4 is live. Next: Andrew's phone pass + deploy, then the usage comparison (§6).
+**Status (2026-10-16):** Phases 1–7 done, committed and pushed to `main` (latest handoff:
+`docs/partner-results-page-plan_PHASE_7_HANDOFF.md`). Next: Andrew's phone passes + confirm the deploy, then the usage
+comparison (§6). Phases 6–7 fix the 2026-10-16 code review of the tutorial-cards and schedule-row changes; they're not
+Results code.
 Each phase ends with a handoff note `docs/partner-results-page-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule); update this line to point at the latest one.
 
@@ -271,6 +272,95 @@ rows). Stage only your own files. **Commit only; pushing / deploying / `supabase
   AGENTS.md: the "Add a competition to Results" checklist (registry entry, adapter, placement rule, contract test).
 - Compare real Supabase/Vercel usage against §6 and report any material difference.
 
+### Review fixes (Phases 6–7, added 2026-10-16)
+
+A `/code-review` of the working tree on 2026-10-16 found 9 issues. None of them is in Results code. They are in
+two uncommitted pieces of work that sit beside it on `main`:
+- **"Tutorial cards once a day"**: `lib/gameOnboarding.ts`, `components/venue/GameLandingExperience.tsx`,
+  `components/venue/VenueHubClient.tsx`, `components/category-blitz/CategoryBlitzPlayShell.tsx` / `CategoryBlitzGame.tsx`,
+  `tests/game-tutorial-once-a-day.test.ts` (new) and `tests/category-blitz-mobile-shell-contract.test.ts`.
+  Andrew's rule (2026-10-16): a game's tutorial cards show at most once every 24 hours, per game, per browser, not
+  per venue, stored in localStorage only. Playing the game must never restart the clock.
+- **"Schedule rows: one muted line"**: `lib/ownerScheduleDisplay.ts` (`formatTimeRange`, `scheduleRowDetail`;
+  `GAME_PILL_STYLES` deleted), `components/owner/schedule/ScheduleGameRow.tsx`,
+  `components/owner/dashboard/LiveGamesSection.tsx` (the "+ Schedule another game" row removed) and their tests.
+
+Both phases edit those uncommitted files in place. **Before starting, run `git status` and `git diff` on them.** If
+they are already committed, build on that commit. If they are still uncommitted, ask Andrew whether to commit the
+original change and the fixes together, one commit per piece of work. Never `git checkout`/`restore` them (memory:
+that wiped uncommitted work once).
+
+### Phase 6 — Tutorial cards: follow Play's rules, no blank first paint, count a showing only when it's finished
+**Model: Claude Opus 5.5 · Effort: medium** (hydration and first-paint timing; navigation side effects)
+Fixes review findings 1, 2, 3, 6, 7 and 8.
+- **F1. The "seen recently" skip must enter the game the same way Play does.** Today the skip calls
+  `setIsPlaying(true)` directly (`GameLandingExperience.tsx` ~line 134). That ignores `playDisabled` and `playHref`.
+  Move both into one `enterGame(source: "tap" | "skip")` used by `handlePlayClick` and the skip:
+  - `playDisabled` → no skip. Show the cards with the locked button. Today no host passes `playDisabled`
+    without `initialPlaying` (`TriviaAppFrame` passes both), but the component must not rely on that.
+  - `playHref` → `router.replace(playHref)` for a skip (so Back doesn't land on `/bingo` and get pushed forward
+    again), and `router.push` for a tap, as now. **Carry the query string:** `/bingo` and `/bingo/home` both read
+    `?date=&cardId=` (`app/bingo/home/page.tsx`), so a deep link to a card must still open that card. Today Play drops
+    them too. Fix both paths with the same helper.
+  - The skip still never records a showing (see F3). If it did, a player who plays every day would never see the
+    cards again.
+- **F2. No empty box on first paint for `autoResume={false}` hosts** (`/pickem`, `/nfl-pickem`). Before this change
+  they server-rendered the cards. Now they render a blank `min-h-[60dvh]` area until a microtask runs after hydration.
+  Fix: server-render the cards again. Decide before the first paint, with no request: a tiny inline `<script>` placed
+  as the first child of the cards' wrapper reads `tp_tutorial_seen_<gameKey>` (same 24h test as
+  `hasSeenTutorialRecently`, wrapped in try/catch) and, when it is recent, sets `data-tutorial-skip` on
+  `document.currentScript.parentElement`. The wrapper hides itself with a Tailwind variant
+  (`data-[tutorial-skip]:invisible`) and carries `suppressHydrationWarning`. The effect then makes the real decision
+  (F1). Nothing in `app/layout.tsx` changes, and there is no CSP today (checked `next.config.ts` / `proxy.ts`).
+  `autoResume` hosts keep "Restoring your active game..." while the resume check runs, as before. Export the key
+  builder and the 24h constant from `lib/gameOnboarding.ts` so the script and the helper can't drift apart, and add a
+  test for that.
+- **F3. Count a showing only once the player has moved past the cards.** Right now it is recorded as soon as the
+  cards render. In `VenueHubClient` it is even recorded before the Category Blitz overlay opens. So a player who taps
+  Back on card 1 doesn't see the rules for a day. **Recommended (Q1 in §9):** record it when the player leaves the
+  cards *forward*: Play in `GameLandingExperience` (in `enterGame("tap")`, before navigating) and Join in
+  `VenueHubClient.joinCategoryBlitzFromOnboarding`. Back / Close / unmount don't count. Delete the
+  `isShowingTutorial` effect and the early `markTutorialSeen("category-blitz")`. Update the wording in the
+  `lib/gameOnboarding.ts` header and the test ("counted from when they were SHOWN" becomes "when the player finished
+  the cards").
+- **F6.** Rewrite `markTutorialSeen`, `hasSeenTutorialRecently` and `tutorialSeenStorageKey` as `const` arrow
+  functions (CLAUDE.md Code Style).
+- **F7. Remove the orphaned old keys.** The old key was per venue: `tp_onboarding_<game>_<venueId>`. Inside
+  `markTutorialSeen` (which runs at most once a day per game), delete every localStorage key that starts with
+  `tp_onboarding_`. Wrap it in try/catch. It runs in the browser only, with no request. Test it.
+- **F8. Turn the "only these hosts record a showing" test into a real tripwire.** Walk `app/` and `components/`
+  (`.ts`/`.tsx`) and fail on any `markTutorialSeen(` outside an allowlist of exactly `GameLandingExperience.tsx` and
+  `VenueHubClient.tsx`. Keep the existing `not.toContain` checks.
+- Tests (add a component test file, e.g. `tests/components.game-landing-tutorial.test.ts`): a skip with `playDisabled`
+  shows the cards; a skip with `playHref` calls `replace` with the query string; Back on card 1 records nothing; Play
+  records once; the skip records nothing; the server-rendered HTML of an `autoResume={false}` host contains the card
+  text. Run `npm run test` and `npm run test:pwa-contract` (Bingo's landscape chrome shares this component). You
+  don't need `test:god-mode-join`, because the join flow isn't touched.
+- Phone check for Andrew (add to `docs/partner-dashboard-app-redesign-device-checklist.md` or the player checklist
+  the handoff names): first open of the day shows the cards; a second open goes straight in with no flash of cards and
+  no blank box; a Bingo card link still opens that card.
+
+### Phase 7 — Schedule rows and the dashboard's "add another" row
+**Model: Claude Sonnet 5.5 · Effort: medium**
+Fixes review findings 4, 5 and 9.
+- **F4.** In `scheduleRowDetail`, leave out the game name when the title already **contains** it: a
+  case-insensitive whole-word match, so "Live Trivia Night" and "Friday Live Trivia" drop it and "Wing Night" keeps
+  it. Fix the comment to match. Add tests for both titles, a different case ("LIVE TRIVIA"), and a near-miss that must
+  keep the label ("Live Triviathon"). The labels today are "Live Trivia" and "Category Blitz" (`GAME_LABELS`).
+- **F5.** Work out the window once per row: `scheduleRowDetail(schedule, window)` takes the window `ScheduleGameRow`
+  already has (`ScheduleGameRow.tsx:28`). Don't add a default that recomputes it, and update the tests. `splitSchedules` already
+  computes the windows, but threading them into rows is optional. Do it only if it stays a one-line change at the
+  call sites.
+- **F9. Make the two dashboard cards match, then fix the docs.** Live Games lost its "+ Schedule another game" row.
+  Rewards still has "+ Offer another reward" (`RewardsSection.tsx:62`). **Ask Andrew (Q2 in §9)** before coding.
+  Either way, update `docs/partner-dashboard-app-redesign-plan.md` (lines ~30 and ~137–144) and add a dated note to
+  `docs/partner-dashboard-app-redesign-plan_PHASE_3_HANDOFF.md`. Its file table (~line 84) still lists
+  `GAME_PILL_STYLES`, and line ~18 still describes the add row. Don't rewrite history, just mark it superseded. If the
+  Live Games row stays gone, check that `SectionAddRow` still has a caller (Rewards). If neither card uses it, delete
+  it.
+- Run `npm run test` (`tests/lib.owner-schedule-display.test.ts`, `tests/components.owner-schedule-flow.test.ts`,
+  `tests/owner-dashboard-contract.test.ts`), then lint, typecheck and build.
+
 ## 8. Out of scope
 
 Adding NFL Pick 'Em, Category Blitz or any other competition (R2: later, via the seam). Showing a player's typed
@@ -280,3 +370,13 @@ answers. Editing scores, re-awarding or voiding prizes. CSV export. Live (in-pro
 
 None blocking. Phase 2 may surface reward rows that don't fit §5b. If so, the agent places them as a day row
 (never dropped) and lists them in the handoff for Andrew.
+
+- **Q1 — ANSWERED 2026-10-16: "Finishes."** Built in Phase 6.
+- **Q2 — ANSWERED 2026-10-16: (a) put the Live Games "+ Schedule another game" row back.**
+- **Q1 (Phase 6, F3): when does the 24-hour tutorial clock start?** Andrew's 2026-10-16 rule says "when the cards are
+  shown". Recommended: when the player finishes them (taps Play / Join). Backing out of card 1 then doesn't hide the
+  rules for a day. If Andrew isn't reachable, build the recommendation and say so in the handoff. It's a one-line
+  move back if he disagrees.
+- **Q2 (Phase 7, F9): should the dashboard's Live Games card keep a "+ Schedule another game" row?** (a) Put it back,
+  so both cards match the plan, or (b) also remove "+ Offer another reward" from Rewards (minimal-design rule,
+  2026-10-15; the card's header button already adds one). Blocks only F9. Do F4/F5 first.

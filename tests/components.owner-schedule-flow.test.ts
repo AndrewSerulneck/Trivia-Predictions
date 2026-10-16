@@ -309,7 +309,6 @@ describe("ScheduleGameFlow", () => {
     fireEvent.click(button("Past games"));
     await waitFor(() => expect(heading()).toBe("Past games"));
     expect(screen.getByText("Old Night")).toBeTruthy();
-    expect(screen.getByText("Ended")).toBeTruthy();
     // Read-only: no row buttons for an ended game.
     expect(screen.queryByRole("button", { name: /Old Night/ })).toBeNull();
 

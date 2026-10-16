@@ -1,15 +1,9 @@
 import { highlightRingClass, useScrollWhenHighlighted } from "@/components/owner/dashboard/useHighlightRing";
-import {
-  dateChip,
-  displayWindow,
-  formatScheduleTime,
-  GAME_LABELS,
-  GAME_PILL_STYLES,
-  recurrenceLabel,
-} from "@/lib/ownerScheduleDisplay";
+import { dateChip, displayWindow, scheduleRowDetail } from "@/lib/ownerScheduleDisplay";
 import type { OwnerSchedule } from "@/types";
 
-// One game as a list row: date chip, title, time range, game pill, repeat pill.
+// One game as a list row: date chip, title, and one muted line (time range ·
+// repeats · game name when the title doesn't say it).
 // Shared by the dashboard's Live Games card and the schedule sheet's upcoming /
 // past lists. A button when `onClick` is given (chevron shown), otherwise a
 // static row — past games are read-only.
@@ -25,7 +19,7 @@ export const ScheduleGameRow = ({
 }: {
   schedule: OwnerSchedule;
   onClick?: () => void;
-  /** Past game: dimmed, "Ended" instead of the game pill. */
+  /** Past game: dimmed (its list is already headed "Past games"). */
   ended?: boolean;
   /** Just saved: ringed and scrolled into view for a moment. */
   highlighted?: boolean;
@@ -33,7 +27,6 @@ export const ScheduleGameRow = ({
   const ref = useScrollWhenHighlighted<HTMLButtonElement & HTMLDivElement>(highlighted);
   const window = displayWindow(schedule);
   const chip = dateChip(window.startTime, schedule.timezone);
-  const recurrence = recurrenceLabel(schedule);
 
   const content = (
     <>
@@ -43,24 +36,7 @@ export const ScheduleGameRow = ({
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate font-black text-ht-primary">{schedule.title}</div>
-        <div className="mt-0.5 text-sm font-bold text-ht-primary">
-          {formatScheduleTime(window.startTime, schedule.timezone)} –{" "}
-          {formatScheduleTime(window.endTime, schedule.timezone)}
-        </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          <span
-            className={`inline-flex rounded-full px-2.5 py-1 text-caption font-black uppercase tracking-wider ${
-              ended ? "bg-ht-elevated text-ht-muted" : GAME_PILL_STYLES[schedule.gameType]
-            }`}
-          >
-            {ended ? "Ended" : GAME_LABELS[schedule.gameType]}
-          </span>
-          {recurrence ? (
-            <span className="inline-flex rounded-full bg-ht-elevated px-2.5 py-1 text-caption font-black uppercase tracking-wider text-ht-muted">
-              🔁 {recurrence}
-            </span>
-          ) : null}
-        </div>
+        <div className="mt-0.5 text-sm font-semibold text-ht-muted">{scheduleRowDetail(schedule, window)}</div>
       </div>
       {onClick ? (
         <span className="shrink-0 text-lg text-slate-500" aria-hidden>
