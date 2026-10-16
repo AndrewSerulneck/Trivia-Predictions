@@ -13,12 +13,12 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/requireOwnerAuth", () => ({ requireOwnerAuth: mocks.auth }));
-vi.mock("@/lib/ownerHistory", () => {
-  class OwnerHistoryUnavailableError extends Error {}
-  class OwnerHistoryNotFoundError extends Error {}
+// The error classes are the real ones (lib/results/errors.ts, pure): the gate checks them by class.
+vi.mock("@/lib/ownerHistory", async () => {
+  const errors = await import("@/lib/results/errors");
   return {
-    OwnerHistoryUnavailableError,
-    OwnerHistoryNotFoundError,
+    OwnerHistoryUnavailableError: errors.ResultsUnavailableError,
+    OwnerHistoryNotFoundError: errors.ResultsNotFoundError,
     listOwnerGameHistory: mocks.listOwnerGameHistory,
     listOwnerRewardHistory: mocks.listOwnerRewardHistory,
     getOwnerGameDetail: mocks.getOwnerGameDetail,

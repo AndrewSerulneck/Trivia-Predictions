@@ -1,11 +1,11 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
-import { OwnerHistoryNotFoundError, OwnerHistoryUnavailableError } from "@/lib/ownerHistory";
+import { ResultsNotFoundError, ResultsUnavailableError } from "@/lib/results/errors";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 
-// The one gate every Game Results route goes through (docs/live-trivia-weekly-places-reward-plan.md
-// §5f): a signed-in partner, and a `venueId` they control — checked BEFORE any history is read.
+// The one gate every Game Results and Results route goes through (docs/live-trivia-weekly-places-reward-plan.md
+// §5f, docs/partner-results-page-plan.md §5e): a signed-in partner, and a `venueId` they control — checked BEFORE any history is read.
 // Partners only ever read; nothing here writes.
 
 /** Run `read` for the partner's venue, or answer 401 / 400 / 403 / 404 / 503 / 500. */
@@ -30,10 +30,10 @@ export const withOwnerVenue = async (
     const body = await read(venueId);
     return NextResponse.json({ ok: true, ...body }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    if (error instanceof OwnerHistoryNotFoundError) {
+    if (error instanceof ResultsNotFoundError) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 404 });
     }
-    if (error instanceof OwnerHistoryUnavailableError) {
+    if (error instanceof ResultsUnavailableError) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 503 });
     }
     console.error("[OwnerHistory] read-failed", error instanceof Error ? error.message : error);

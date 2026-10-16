@@ -1,6 +1,7 @@
 # Partner Dashboard "Results" page — plan
 
-**Status (2026-10-16):** Phase 1 done and committed (`docs/partner-results-page-plan_PHASE_1_HANDOFF.md`). Next: Phase 2.
+**Status (2026-10-16):** Phases 1–2 done and committed locally, not pushed (latest handoff:
+`docs/partner-results-page-plan_PHASE_2_HANDOFF.md`). Next: Phase 3.
 Each phase ends with a handoff note `docs/partner-results-page-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule); update this line to point at the latest one.
 

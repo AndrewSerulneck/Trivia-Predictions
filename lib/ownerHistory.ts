@@ -1,15 +1,13 @@
 import "server-only";
 
 import { listChallengeCampaignsByIds } from "@/lib/challengeCampaigns";
-import { enumerateScheduleOccurrences, loadLiveTriviaSchedulesForVenues, type TriviaScheduleRow } from "@/lib/liveShowdownEngine";
-import { LiveTriviaWeekTotalsMissingError, loadLiveTriviaWeekTotals } from "@/lib/liveTriviaWeekTotals";
 import {
+  OWNER_GAME_STANDINGS_LIMIT,
   OWNER_HISTORY_PAGE_SIZE,
   OWNER_REWARD_DETAIL_CYCLE_LIMIT,
   formatCycleLabel,
   parseGamesCursor,
   parseRewardsCursor,
-  rankGameStandings,
   rewardHowWonLabel,
   rewardsCursor,
   type OwnerGameDetail,
@@ -21,6 +19,10 @@ import {
   type OwnerRewardHistoryRow,
 } from "@/lib/ownerHistoryDisplay";
 import { buildRankedWeekHistory } from "@/lib/rankedWeekHistory";
+import { liveTriviaGameKey, liveTriviaResultsAdapter, parseLiveTriviaGameKey } from "@/lib/results/adapters/liveTrivia";
+import { ResultsNotFoundError, ResultsUnavailableError } from "@/lib/results/errors";
+import { loadUsernames } from "@/lib/results/playerNames";
+import type { ResultsGameRow } from "@/lib/results/types";
 import { describeRewardPrize } from "@/lib/rewardDefinitions";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
@@ -33,6 +35,10 @@ import type { ChallengeCampaign } from "@/types";
 // ledger rows with venue_id = venueId), so a reward shared with another venue never leaks that
 // venue's winners.
 //
+// The Games half now lives in the Results page's Live Trivia adapter
+// (lib/results/adapters/liveTrivia.ts, docs/partner-results-page-plan.md Phase 2); the two game
+// functions below are thin wrappers that keep the old routes' shapes until Phase 5 deletes them.
+//
 // COST (plan §6): only on demand (a partner opening the sheet), no cron, no polling. A list page is
 // one schedules read + one RPC + one usernames read (games), or one RPC (paged in SQL) + one read of
 // that page's rewards by id + one usernames read (rewards). A detail is 3–5 bounded reads.
@@ -40,9 +46,9 @@ import type { ChallengeCampaign } from "@/types";
 // PRIVACY: usernames and points only, never a player id (lib/ownerHistoryDisplay.ts).
 
 /** The history RPCs aren't deployed yet (migration 20261014213000): the route answers 503. */
-export class OwnerHistoryUnavailableError extends Error {}
+export { ResultsUnavailableError as OwnerHistoryUnavailableError };
 /** The game / reward isn't this venue's: the route answers 404. */
-export class OwnerHistoryNotFoundError extends Error {}
+export { ResultsNotFoundError as OwnerHistoryNotFoundError };
 
 const client = () => {
   if (!supabaseAdmin) throw new Error("Supabase admin client is not configured.");
@@ -57,68 +63,19 @@ const currentYearIn = (timeZone: string, nowMs: number): number => {
   }
 };
 
-/** user id → username, for at most a page of ids. A deleted player simply has no entry. */
-const loadUsernames = async (userIds: Iterable<string | null>): Promise<Map<string, string>> => {
-  const ids = [...new Set([...userIds].filter((id): id is string => Boolean(id)))];
-  const names = new Map<string, string>();
-  if (ids.length === 0) return names;
-  const { data, error } = await client()
-    .from("users")
-    .select("id, username")
-    .in("id", ids)
-    .returns<Array<{ id: string; username: string | null }>>();
-  if (error) throw new Error(error.message ?? "Failed to load player names.");
-  for (const row of data ?? []) if (row.username) names.set(row.id, row.username);
-  return names;
-};
+// ── Games (wrappers over the Live Trivia Results adapter) ─────────────────────────────
 
-/** Has this occurrence of `schedule` started but not ended at `nowMs`? */
-const isInProgress = (schedule: TriviaScheduleRow, occurrenceDate: string, nowMs: number): boolean =>
-  enumerateScheduleOccurrences(schedule, nowMs).some(
-    (occurrence) => occurrence.occurrenceDate === occurrenceDate && occurrence.endMs > nowMs,
-  );
-
-// ── Games ──────────────────────────────────────────────────────────────────────────────
-
-type OccurrenceSummaryRpcRow = {
-  schedule_id: string;
-  occurrence_date: string;
-  player_count: number | string;
-  top_points: number | string | null;
-  top_user_ids: string[] | null;
-};
-
-/**
- * The venue's first Live Trivia game date, for grouping the Games list by year once the venue has
- * run for more than a year. One `order by occurrence_date limit 1` per schedule — an index probe on
- * idx_lsa_occurrence (schedule_id, occurrence_date), never a scan — and only with the first page.
- * Rows from before occurrence dates existed carry the 1970-01-01 backfill sentinel and are skipped.
- * Best-effort: a failed probe means "unknown" (no year grouping), never a failed page.
- */
-const OCCURRENCE_DATE_SENTINEL = "1970-01-01";
-
-const loadFirstGameDate = async (scheduleIds: string[]): Promise<string | null> => {
-  try {
-    const dates = await Promise.all(
-      scheduleIds.map(async (scheduleId) => {
-        const { data, error } = await client()
-          .from("live_showdown_answers")
-          .select("occurrence_date")
-          .eq("schedule_id", scheduleId)
-          .gt("occurrence_date", OCCURRENCE_DATE_SENTINEL)
-          .order("occurrence_date", { ascending: true })
-          .limit(1)
-          .returns<Array<{ occurrence_date: string | null }>>();
-        if (error) throw new Error(error.message ?? "first game date read failed");
-        const date = data?.[0]?.occurrence_date;
-        return date ? String(date).slice(0, 10) : null;
-      }),
-    );
-    return dates.reduce<string | null>((min, date) => (date && (min === null || date < min) ? date : min), null);
-  } catch (error) {
-    console.error("[OwnerHistory] first-game-date-failed", error instanceof Error ? error.message : error);
-    return null;
-  }
+const toOwnerGameRow = (game: ResultsGameRow): OwnerGameHistoryRow => {
+  const key = parseLiveTriviaGameKey(game.gameKey);
+  return {
+    scheduleId: key?.scheduleId ?? "",
+    occurrenceDate: game.date,
+    scheduleName: game.title,
+    playerCount: game.playerCount,
+    inProgress: game.inProgress,
+    topPoints: game.topScore,
+    winners: game.winners,
+  };
 };
 
 /** One page of the venue's past Live Trivia games, newest first (`before` = a date cursor). */
@@ -127,50 +84,17 @@ export const listOwnerGameHistory = async (params: {
   before?: string | null;
   nowMs?: number;
 }): Promise<OwnerGameHistoryPage> => {
-  const nowMs = params.nowMs ?? Date.now();
-  const schedules = await loadLiveTriviaSchedulesForVenues([params.venueId]);
-  const byId = new Map(schedules.filter((row) => row.venue_id === params.venueId).map((row) => [row.id, row]));
-  if (byId.size === 0) return { games: [], nextBefore: null };
-
   const before = parseGamesCursor(params.before);
-  const [{ data, error }, firstGameDate] = await Promise.all([
-    client().rpc("live_trivia_occurrence_summaries", {
-      p_schedule_ids: [...byId.keys()],
-      p_before: before,
-      p_limit: OWNER_HISTORY_PAGE_SIZE,
-    }),
-    before ? Promise.resolve(undefined) : loadFirstGameDate([...byId.keys()]),
-  ]);
-  if (error) {
-    if (isMissingFunction(error, "live_trivia_occurrence_summaries")) {
-      console.error("[OwnerHistory] rpc-missing live_trivia_occurrence_summaries");
-      throw new OwnerHistoryUnavailableError("Past games aren't available yet.");
-    }
-    throw new Error(`live_trivia_occurrence_summaries RPC failed: ${error.message}`);
-  }
-
-  const rows = ((data ?? []) as OccurrenceSummaryRpcRow[]).filter((row) => byId.has(row.schedule_id));
-  const names = await loadUsernames(rows.flatMap((row) => row.top_user_ids ?? []));
-  const games: OwnerGameHistoryRow[] = rows.map((row) => {
-    const schedule = byId.get(row.schedule_id) as TriviaScheduleRow;
-    const occurrenceDate = String(row.occurrence_date).slice(0, 10);
-    const inProgress = isInProgress(schedule, occurrenceDate, nowMs);
-    return {
-      scheduleId: row.schedule_id,
-      occurrenceDate,
-      scheduleName: String(schedule.title ?? "").trim() || "Live Trivia",
-      playerCount: Number(row.player_count) || 0,
-      inProgress,
-      topPoints: inProgress ? 0 : Number(row.top_points) || 0,
-      // A game still being played names nobody: its leader isn't its winner yet.
-      winners: inProgress ? [] : (row.top_user_ids ?? []).map((id) => names.get(id) ?? null),
-    };
+  const page = await liveTriviaResultsAdapter.listGames({
+    venueId: params.venueId,
+    before,
+    limit: OWNER_HISTORY_PAGE_SIZE,
+    nowMs: params.nowMs ?? Date.now(),
+    withFirstGameDate: !before,
   });
-
-  // The RPC returns OWNER_HISTORY_PAGE_SIZE games (a few more when several schedules share the
-  // page's oldest date, which it never splits), so a short page is the last one.
-  const nextBefore = games.length >= OWNER_HISTORY_PAGE_SIZE ? games[games.length - 1]?.occurrenceDate ?? null : null;
-  return firstGameDate === undefined ? { games, nextBefore } : { games, nextBefore, firstGameDate };
+  const games = page.games.map(toOwnerGameRow);
+  const nextBefore = page.exhausted ? null : games[games.length - 1]?.occurrenceDate ?? null;
+  return page.firstGameDate === undefined ? { games, nextBefore } : { games, nextBefore, firstGameDate: page.firstGameDate };
 };
 
 /** One past game's final standings (top 10 + ties). Throws NotFound for another venue's schedule. */
@@ -180,35 +104,20 @@ export const getOwnerGameDetail = async (params: {
   occurrenceDate: string;
   nowMs?: number;
 }): Promise<OwnerGameDetail> => {
-  const nowMs = params.nowMs ?? Date.now();
-  const occurrenceDate = parseGamesCursor(params.occurrenceDate);
-  if (!occurrenceDate) throw new OwnerHistoryNotFoundError("That game wasn't found.");
-  const schedules = await loadLiveTriviaSchedulesForVenues([params.venueId]);
-  const schedule = schedules.find((row) => row.id === params.scheduleId && row.venue_id === params.venueId);
-  if (!schedule) throw new OwnerHistoryNotFoundError("That game wasn't found.");
-
-  let totals: Awaited<ReturnType<typeof loadLiveTriviaWeekTotals>>;
-  try {
-    totals = await loadLiveTriviaWeekTotals([{ scheduleId: schedule.id, occurrenceDate }]);
-  } catch (error) {
-    if (error instanceof LiveTriviaWeekTotalsMissingError) throw new OwnerHistoryUnavailableError("Past games aren't available yet.");
-    throw error;
-  }
-  const inProgress = isInProgress(schedule, occurrenceDate, nowMs);
-  // Names for the scorers only (a game's players, so tens of ids); 0-point players are never listed.
-  const names = inProgress ? new Map<string, string>() : await loadUsernames(totals.filter((row) => row.totalPoints > 0).map((row) => row.userId));
+  const detail = await liveTriviaResultsAdapter.getStandings({
+    venueId: params.venueId,
+    gameKey: liveTriviaGameKey(params.scheduleId, params.occurrenceDate),
+    nowMs: params.nowMs ?? Date.now(),
+    limit: OWNER_GAME_STANDINGS_LIMIT,
+  });
+  const key = parseLiveTriviaGameKey(detail.game.gameKey);
   return {
-    scheduleId: schedule.id,
-    occurrenceDate,
-    scheduleName: String(schedule.title ?? "").trim() || "Live Trivia",
-    playerCount: totals.length,
-    inProgress,
-    // A game still being played has no final standings yet.
-    standings: inProgress
-      ? []
-      : rankGameStandings(
-          totals.map((row) => ({ username: names.get(row.userId) ?? null, points: row.totalPoints, reachedAt: row.reachedAt })),
-        ),
+    scheduleId: key?.scheduleId ?? params.scheduleId,
+    occurrenceDate: detail.game.date,
+    scheduleName: detail.game.title,
+    playerCount: detail.game.playerCount,
+    inProgress: detail.game.inProgress,
+    standings: detail.standings.map((row) => ({ rank: row.rank, username: row.username, points: row.score })),
   };
 };
 
@@ -254,7 +163,7 @@ export const listOwnerRewardHistory = async (params: {
   if (error) {
     if (isMissingFunction(error, "challenge_reward_history_summaries")) {
       console.error("[OwnerHistory] rpc-missing challenge_reward_history_summaries");
-      throw new OwnerHistoryUnavailableError("Past rewards aren't available yet.");
+      throw new ResultsUnavailableError("Past rewards aren't available yet.");
     }
     throw new Error(`challenge_reward_history_summaries RPC failed: ${error.message}`);
   }
@@ -332,7 +241,7 @@ export const getOwnerRewardDetail = async (params: {
 }): Promise<OwnerRewardDetail> => {
   const nowMs = params.nowMs ?? Date.now();
   const [campaign] = await listChallengeCampaignsByIds([params.rewardId]);
-  if (!campaign) throw new OwnerHistoryNotFoundError("That reward wasn't found.");
+  if (!campaign) throw new ResultsNotFoundError("That reward wasn't found.");
   // This venue's reward: offered here (or everywhere), or one that has paid here (a reward can stop
   // being offered at a venue after it paid there). Every read below is scoped to venue_id anyway.
   const offeredHere = campaign.venueIds.length === 0 || campaign.venueIds.includes(params.venueId);
@@ -368,7 +277,7 @@ export const getOwnerRewardDetail = async (params: {
   const ledgerRows = ledger.data ?? [];
   const settlementRows = settlements.data ?? [];
   if (!offeredHere && ledgerRows.length === 0 && settlementRows.length === 0) {
-    throw new OwnerHistoryNotFoundError("That reward wasn't found.");
+    throw new ResultsNotFoundError("That reward wasn't found.");
   }
   // When the ledger read hit its limit, its oldest cycle may be only partly read, and any older
   // cycle not read at all: keep only cycles strictly newer than the last ledger row read.
