@@ -71,8 +71,8 @@ describe("owner menu contract", () => {
     expect(history?.sheet).toBe("history");
     expect(history?.href).toBeUndefined();
     const page = read("app/owner/dashboard/page.tsx");
-    expect(page).toContain("<GameResultsSheet nav={sheet} venue={venue} />");
-    const sheet = read("components/owner/history/GameResultsSheet.tsx");
+    expect(page).toContain("<ResultsSheet nav={sheet} venue={venue} />");
+    const sheet = read("components/owner/results/ResultsSheet.tsx");
     expect(sheet).not.toMatch(/router\.(push|replace)/);
     expect(sheet).toContain('nav.displayStepFor("history")');
   });

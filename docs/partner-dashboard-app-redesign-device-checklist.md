@@ -117,4 +117,22 @@ Both are narrow, and both only matter on a real phone.
   give you the form back with "You're signed in, but the dashboard didn't open. Please try again."
   It must not leave you stuck on a hopping logo with a dead button.
 
+## J. Results page (new, 2026-10-16 — one timeline, replaces "Game Results")
+Open the menu → **Results**. Use a venue that has run Live Trivia (Garden State Bar).
+- [ ] **One title.** The sheet says "Results" once, with the venue name as a quiet line under it. No tabs.
+- [ ] **The timeline.** Newest game first, grouped Month → Week → Day. Each game shows "Live Trivia · <game name>",
+  the player count, and the winner with points. Only the newest month and week start open.
+- [ ] **Rewards.** A reward won at a game shows as a 🎁 line on that game's card. A weekly reward ("Top players this
+  week") is a row at the bottom of its week. A reward with no game that day is its own row, never missing.
+- [ ] **Show more** adds older results under the ones you already have.
+- [ ] **Tap a game.** Full standings, everyone who scored (not just 10). "Find a player" filters as you type,
+  upper or lower case. The search box is easy to tap and the keyboard doesn't hide the list.
+- [ ] **Tap a player.** One row per question they answered: ✓ or ✗, the points, the question on one line. The
+  Total at the bottom equals their score in the standings. You never see what they typed. A "Deleted player"
+  row does nothing when tapped.
+- [ ] **Back.** The phone's Back gesture goes player → game → list → closes. Coming back from a player keeps
+  your search text. Open a reward from a game's screen and Back returns to that game.
+- [ ] **Reload on a detail screen** (pull to refresh while on a player): it lands on the timeline, not a blank page.
+- [ ] Text is readable at arm's length; nothing is cut off at the edges on the smallest phone you own.
+
 When every box is ticked (or a problem is written next to it), send the list back.

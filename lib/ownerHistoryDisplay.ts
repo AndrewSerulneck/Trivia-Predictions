@@ -271,26 +271,26 @@ export type OwnerGameWeekGroup = GroupBase & { days: OwnerGameDayGroup[] };
 export type OwnerGameMonthGroup = GroupBase & { weeks: OwnerGameWeekGroup[] };
 export type OwnerGameYearGroup = GroupBase & { months: OwnerGameMonthGroup[] };
 
-const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+export const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-const dayMs = (date: string): number => {
+export const dayMs = (date: string): number => {
   const [year, month, day] = date.split("-").map(Number);
   return Date.UTC(year, month - 1, day);
 };
-const isoOf = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
-const DAY = 24 * 60 * 60 * 1000;
+export const isoOf = (ms: number): string => new Date(ms).toISOString().slice(0, 10);
+export const DAY = 24 * 60 * 60 * 1000;
 
 /** The Monday on or before `date`. */
-const mondayOf = (date: string): string => {
+export const mondayOf = (date: string): string => {
   const ms = dayMs(date);
   const weekday = new Date(ms).getUTCDay(); // 0 = Sunday
   return isoOf(ms - ((weekday + 6) % 7) * DAY);
 };
 
-const lastDayOfMonth = (year: number, month: number): string => isoOf(Date.UTC(year, month, 0));
+export const lastDayOfMonth = (year: number, month: number): string => isoOf(Date.UTC(year, month, 0));
 
 /** "Oct 12 – 18", "Sep 29 – 30", or "Oct 1" for a one-day stretch. */
-const weekRangeLabel = (start: string, end: string): string => {
+export const weekRangeLabel = (start: string, end: string): string => {
   const [, startMonth, startDay] = start.split("-").map(Number);
   const [, , endDay] = end.split("-").map(Number);
   const month = MONTHS[startMonth - 1];
