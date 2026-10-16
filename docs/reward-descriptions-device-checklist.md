@@ -111,21 +111,21 @@ and the live site share one database. Walk up to the last step and tap Close, or
 | ☐ | The Back gesture on the phone | Steps back one question at a time (Prize → Terms → Definition), like the other rewards. Closing mid-way asks "discard?" |
 | ☐ | Small phone (iPhone SE size) | The three tabs and the three-choice "How is this reward won?" fit; nothing runs off the screen. |
 
-## D. Game Results (Partner Dashboard) — added 2026-10-14
+## D. Results (Partner Dashboard, was "Game Results") — added 2026-10-14, renamed 2026-10-16
 
 **Plan:** `docs/live-trivia-weekly-places-reward-plan.md` (Phase 8). Looking only — nothing on this screen
 changes anything, so it is safe to try at a real venue (Garden State Bar has the most history).
 
 | | Where | What you should see |
 |---|---|---|
-| ☐ | **Menu** (logo, top left) | A row **Game Results** — "Games & rewards history", trophy icon — right **below Order Join Merch**. |
-| ☐ | Tap it | A dark sheet slides up: **Past winners**, the venue's name, two tabs **Live Trivia games / Rewards**. Games show first, newest first: date ("Fri, Oct 9"), game name · number of players, and "🏆 winner · points" (a tie lists both, "Nobody scored" when nobody did, "Playing now" during a game). |
+| ☐ | **Menu** (logo, top left) | A row **Results** — "Games, winners & rewards", trophy icon — right **below Order Join Merch**. |
+| ☐ | Tap it | A dark sheet slides up titled **Results** (once), the venue's name in grey under it, two tabs **Games / Rewards**. Games show first, newest first: date ("Fri, Oct 9"), game name · number of players, and "🏆 winner · points" (a tie lists both, "Nobody scored" when nobody did, "Playing now" during a game). |
 | ☐ | Tap a game | Its final standings: #1, #2… with usernames and points, ties share a number, top 10 (plus anyone tied with 10th). **Only usernames** — no emails or anything else. |
 | ☐ | Phone **Back** | From a game or reward → back to the list. From the list → the sheet closes. A Back button at the bottom does the same. |
 | ☐ | **Rewards** tab | Each reward that has ever paid here: its name, how it's won ("Top 3 players each week", "Winner of the game", "Reach 500 points"), "· Ended" if it's over, the latest week/date and its winners ("1st · Snooker, 2nd · Kuch"). Garden State Bar: **Weekly Trivia Champions** with 10+ weeks. |
 | ☐ | Tap a reward | Every week (newest first): who took each place, points, the prize, and **Redeemed / Not redeemed yet**. A week nobody won says why (e.g. "Only 2 players — the minimum was 4"). A player who deleted their account shows as "Deleted player" with no redeemed status. |
 | ☐ | **Show more** | Appears under a list of 20; loads the next 20 below without jumping to the top. |
-| ☐ | Switch venue (multi-venue account) | Reopening Game Results shows the other venue's games and rewards only. |
+| ☐ | Switch venue (multi-venue account) | Reopening Results shows the other venue's games and rewards only. |
 | ☐ | Small phone (iPhone SE size) | Rows and tabs fit; long names cut off with "…" rather than running off the screen. |
 
 ## Result

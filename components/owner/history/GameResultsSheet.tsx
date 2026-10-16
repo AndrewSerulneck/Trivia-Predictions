@@ -25,7 +25,7 @@ import {
 } from "@/lib/ownerHistoryDisplay";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 
-// The Partner Dashboard's "Game Results" sheet (docs/live-trivia-weekly-places-reward-plan.md §5f,
+// The Partner Dashboard's "Results" sheet (docs/live-trivia-weekly-places-reward-plan.md §5f,
 // Phase 8): past Live Trivia games and rewards at the selected venue, and who won each.
 //
 // URL-MIRRORED like the other dashboard sheets: `?sheet=history` is the list (two tabs: Games,
@@ -493,8 +493,10 @@ export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
     const list = tab === "games" ? games : rewards;
     return (
       <div className="space-y-3">
-        <StepHeading hint={venue.name}>Game results</StepHeading>
-        <div role="tablist" aria-label="Game results" className="grid grid-cols-2 gap-2">
+        <p data-step-heading tabIndex={-1} className="text-sm font-semibold text-ht-muted outline-none">
+          {venue.name}
+        </p>
+        <div role="tablist" aria-label="Results" className="grid grid-cols-2 gap-2">
           {(["games", "rewards"] as const).map((id) => (
             <button
               key={id}
@@ -506,7 +508,7 @@ export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
                 tab === id ? "border-ht-cyan-300 bg-ht-cyan-300/15 text-ht-cyan-300" : "border-ht-hairline bg-ht-elevated/40 text-ht-muted"
               }`}
             >
-              {id === "games" ? "Live Trivia games" : "Rewards"}
+              {id === "games" ? "Games" : "Rewards"}
             </button>
           ))}
         </div>
@@ -551,7 +553,7 @@ export const GameResultsSheet = ({ nav, venue }: GameResultsSheetProps) => {
     screen === "list" ? undefined : <WizardFooter variant="inline" tone="dark" onBack={() => nav.goBack(null)} />;
 
   return (
-    <OwnerSheet open={open} onRequestClose={nav.closeSheet} title="Game Results" footer={footer} scrollKey={screen}>
+    <OwnerSheet open={open} onRequestClose={nav.closeSheet} title="Results" footer={footer} scrollKey={screen}>
       <SlideSteps steps={SCREENS} current={screen} renderStep={renderScreen} />
     </OwnerSheet>
   );

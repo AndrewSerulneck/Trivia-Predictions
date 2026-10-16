@@ -21,7 +21,7 @@
 // "store" = the Join Merch store (docs/join-merch-store-plan.md §3c): Shop, then `step=review`.
 // "pos" = Point of Sale connections (docs/pos-rewards-integration-plan.md Phase 1), one screen.
 // "add-venue" = Add a venue to the bill (docs/multi-venue-volume-billing-plan.md Phase 4): address, map, review.
-// "history" = Game Results (docs/live-trivia-weekly-places-reward-plan.md §5f): the list, then `step=game|reward`.
+// "history" = Results, was Game Results (docs/live-trivia-weekly-places-reward-plan.md §5f): the list, then `step=game|reward`.
 export const OWNER_SHEET_IDS = ["schedule", "rewards", "store", "pos", "add-venue", "history"] as const;
 
 export type OwnerSheetId = (typeof OWNER_SHEET_IDS)[number];
