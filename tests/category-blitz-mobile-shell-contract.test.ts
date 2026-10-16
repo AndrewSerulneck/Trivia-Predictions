@@ -146,7 +146,9 @@ describe("Category Blitz mobile shell contract", () => {
     expect(playShellSource).toContain("VenuePresenceBoundary");
     expect(playShellSource).toContain("startGameSession(");
     expect(playShellSource).toContain("endCurrentGameSession(");
-    expect(playShellSource).toContain("markOnboardingComplete(");
+    // Playing must not restart the 24-hour tutorial clock — only showing the cards
+    // does (lib/gameOnboarding.ts, tests/game-tutorial-once-a-day.test.ts).
+    expect(playShellSource).not.toContain("markTutorialSeen(");
     expect(playShellSource).toContain("runVenueGameReturnTransition(");
     expect(playShellSource).toContain("navigateBackToVenue(");
     // runVenueGameReturnTransition animates `[data-venue-game-surface]` — without this

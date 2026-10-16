@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { CategoryBlitzGame } from "@/components/category-blitz/CategoryBlitzGame";
 import { VenuePresenceBoundary } from "@/components/venue/VenuePresenceBoundary";
 import { endCurrentGameSession, startGameSession } from "@/lib/analytics";
-import { markOnboardingComplete } from "@/lib/gameOnboarding";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
 import { getVenueId } from "@/lib/storage";
 import {
@@ -42,7 +41,6 @@ const GAME_KEY = "category-blitz" as const;
  * What this shell must keep doing (all of it was wired through GameLandingExperience
  * before, and the failure mode for each is silent rather than visual):
  *  - `startGameSession` / `endCurrentGameSession` analytics for the play session
- *  - `markOnboardingComplete` so the venue-home tutorial slides know this game was played
  *  - `VenuePresenceBoundary`, which is what gates answer submissions on venue presence
  *  - `onBack` → `runVenueGameReturnTransition` + `navigateBackToVenue`
  *  - `data-venue-game-surface`, which is the element `runVenueGameReturnTransition`
@@ -52,7 +50,6 @@ export function CategoryBlitzPlayShell() {
   const router = useRouter();
 
   useEffect(() => {
-    markOnboardingComplete(GAME_KEY);
     startGameSession("category-blitz");
     // Any lingering modal/popup scroll lock from the venue-home open transition
     // would otherwise leave the document unscrollable behind the game.

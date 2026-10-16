@@ -29,6 +29,7 @@ import {
 } from "@/lib/venueHomeBootstrap";
 import { VENUE_GAME_CARD_BY_KEY, VENUE_HOME_GAME_KEYS, type VenueGameKey } from "@/lib/venueGameCards";
 import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
+import { hasSeenTutorialRecently, markTutorialSeen } from "@/lib/gameOnboarding";
 import { minimizeNativeApp, useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { VenueHubHeaderBar } from "@/components/venue/VenueHubHeaderBar";
 import { VenueGamesPanel } from "@/components/venue/VenueGamesPanel";
@@ -1373,8 +1374,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       if (launchPendingRef.current) return;
       if (dest === "category-blitz") {
         // Tutorial cards must never render on the lobby route itself — show
-        // them as an overlay here on the home screen, every time the player
-        // opens the game, then land directly on the live game.
+        // them as an overlay here on the home screen, at most once every 24
+        // hours (lib/gameOnboarding.ts), then land directly on the live game.
+        if (hasSeenTutorialRecently("category-blitz")) {
+          void enterCategoryBlitzGame(sourceElement, options?.persistCardSnapshot ?? true);
+          return;
+        }
         categoryBlitzSourceElementRef.current = sourceElement;
         categoryBlitzPersistSnapshotRef.current = options?.persistCardSnapshot ?? true;
         setCategoryBlitzOnboardingOpen(true);
@@ -1401,7 +1406,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         setPendingDestination(null);
       }
     },
-  [router, venue.id]
+  [enterCategoryBlitzGame, router, venue.id]
   );
 
   const closeCategoryBlitzOnboarding = useCallback(() => {
@@ -1411,6 +1416,9 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   }, []);
 
   const joinCategoryBlitzFromOnboarding = useCallback(() => {
+    // The 24-hour clock starts when the player finishes the cards, not when
+    // they open — Close / Back don't count (lib/gameOnboarding.ts).
+    markTutorialSeen("category-blitz");
     setCategoryBlitzOnboardingOpen(false);
     const sourceElement = categoryBlitzSourceElementRef.current;
     const persistCardSnapshot = categoryBlitzPersistSnapshotRef.current;

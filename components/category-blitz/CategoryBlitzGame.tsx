@@ -638,8 +638,8 @@ function RulesList() {
 
 /**
  * Continuous mode has no lobby: the game is always running, players click
- * through the tutorial slides on the venue home screen (shown on every open —
- * that's where the rules live now) and land straight in the game. The only
+ * through the tutorial slides on the venue home screen (shown at most once
+ * every 24 hours — lib/gameOnboarding.ts) and land straight in the game. The only
  * pre-round moment a continuous session can surface is its brief "lobby"
  * status window before a round starts, so this renders as a minimal
  * intermission-style "Next round starts in" beat — no "Waiting for host"

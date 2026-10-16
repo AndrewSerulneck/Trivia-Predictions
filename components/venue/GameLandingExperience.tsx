@@ -8,6 +8,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactElement,
   type TouchEvent,
 } from "react";
@@ -19,7 +20,12 @@ import { type VenueGameKey, VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards"
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 import { hasResumableSession } from "@/lib/gameResume";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
-import { hasRecentOnboarding, markOnboardingComplete } from "@/lib/gameOnboarding";
+import {
+  hasSeenTutorialRecently,
+  markTutorialSeen,
+  TUTORIAL_SKIP_ATTRIBUTE,
+  tutorialSkipScript,
+} from "@/lib/gameOnboarding";
 import { GameOnboardingCard, GAME_CARD_BG_BY_KEY, GAME_STEP_DOT_ACTIVE } from "@/components/venue/GameIdentityPanel";
 import { VenuePresenceBoundary } from "@/components/venue/VenuePresenceBoundary";
 import { PageShell } from "@/components/ui/PageShell";
@@ -62,6 +68,18 @@ const ONBOARDING_CARD_VARIANTS: Variants = {
   }),
 };
 
+const subscribeNever = () => () => {};
+
+/**
+ * `playHref` plus the page's current query string, so a deep link keeps its
+ * parameters when Play (or a tutorial skip) moves on — `/bingo?date=&cardId=`
+ * must still open that card on `/bingo/home`.
+ */
+function withCurrentQuery(href: string): string {
+  if (typeof window === "undefined" || href.includes("?")) return href;
+  return `${href}${window.location.search}`;
+}
+
 function getOnboardingInitialStep(_gameKey: VenueGameKey): number {
   return 0;
 }
@@ -81,7 +99,6 @@ export function GameLandingExperience({
   playLabel = "Play",
   initialPlaying = false,
   autoResume = true,
-  skipOnboardingIfRecent = false,
   playHref,
   showPlayingBackButton = true,
   showShellUserStatus = true,
@@ -98,8 +115,6 @@ export function GameLandingExperience({
   playLabel?: string;
   initialPlaying?: boolean;
   autoResume?: boolean;
-  /** Skip straight past the tutorial slides if this browser played `gameKey` at this venue within the last 24 hours. */
-  skipOnboardingIfRecent?: boolean;
   playHref?: string;
   showPlayingBackButton?: boolean;
   showShellUserStatus?: boolean;
@@ -114,11 +129,23 @@ export function GameLandingExperience({
 }) {
   const reducedMotion = useReducedMotion();
   const router = useRouter();
-  const [isPlaying, setIsPlaying] = useState(initialPlaying);
-  const [rulesExiting, setRulesExiting] = useState(false);
-  const [isResumeCheckPending, setIsResumeCheckPending] = useState(
-    !initialPlaying && (autoResume || skipOnboardingIfRecent)
+  // False on the server and while hydrating, true for a client-side mount
+  // (venue home → game). Only a client-side mount can read localStorage in its
+  // first render; the server-rendered path relies on `tutorialSkipScript`.
+  const isClientMount = useSyncExternalStore(subscribeNever, () => true, () => false);
+  // Tutorial cards show at most once every 24 hours (lib/gameOnboarding.ts).
+  // Decided in the first render on a client-side mount, so the cards never flash.
+  const [skipOnMount] = useState(
+    () => isClientMount && !initialPlaying && !playDisabled && hasSeenTutorialRecently(gameKey)
   );
+  const [isPlaying, setIsPlaying] = useState(initialPlaying || (skipOnMount && !playHref));
+  const [rulesExiting, setRulesExiting] = useState(false);
+  // Pending while a game resume is being checked (or a skip is navigating to
+  // `playHref`). `autoResume={false}` hosts render the cards straight away.
+  const [isResumeCheckPending, setIsResumeCheckPending] = useState(
+    !initialPlaying && (autoResume || (skipOnMount && Boolean(playHref)))
+  );
+  const tutorialWrapperRef = useRef<HTMLDivElement | null>(null);
   const [currentStep, setCurrentStep] = useState(() => getOnboardingInitialStep(gameKey));
   const [slideDirection, setSlideDirection] = useState<1 | -1>(1);
   const steps = VENUE_GAME_CARD_BY_KEY[gameKey].steps;
@@ -127,19 +154,60 @@ export function GameLandingExperience({
   const playTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
+  // Play and the "seen recently" skip enter the game the same way: both obey
+  // `playDisabled` and `playHref`. Only a tap records a showing — a skip never
+  // does, or a player who plays every day would never see the cards again.
+  const enterGame = useCallback((source: "tap" | "skip") => {
+    if (playDisabled) {
+      return;
+    }
+    if (source === "tap") {
+      markTutorialSeen(gameKey);
+    }
+    if (playHref) {
+      const target = withCurrentQuery(playHref);
+      // A skip replaces, so Back doesn't land on this page and get pushed forward again.
+      if (source === "skip") router.replace(target);
+      else router.push(target);
+      return;
+    }
+    if (source === "skip") {
+      setIsPlaying(true);
+      setIsResumeCheckPending(false);
+      return;
+    }
+    forceRecoverDocumentScroll();
+    setRulesExiting(true);
+    playTimerRef.current = setTimeout(() => {
+      playTimerRef.current = null;
+      setRulesExiting(false);
+      setIsPlaying(true);
+    }, 300);
+  }, [gameKey, playDisabled, playHref, router]);
+
   useEffect(() => {
-    if (initialPlaying || (!autoResume && !skipOnboardingIfRecent)) {
+    if (initialPlaying) {
       // Defer to avoid calling setState synchronously inside an effect
+      Promise.resolve().then(() => setIsResumeCheckPending(false));
+      return;
+    }
+    if (!playDisabled && hasSeenTutorialRecently(gameKey)) {
+      Promise.resolve().then(() => enterGame("skip"));
+      return;
+    }
+    // Showing the cards after all (e.g. Play is locked): undo the pre-paint hide.
+    tutorialWrapperRef.current?.removeAttribute(TUTORIAL_SKIP_ATTRIBUTE);
+    if (!autoResume) {
       Promise.resolve().then(() => setIsResumeCheckPending(false));
       return;
     }
     let canceled = false;
     void (async () => {
-      const canResume = autoResume ? await hasResumableSession(gameKey) : false;
+      const canResume = await hasResumableSession(gameKey);
       if (canceled) {
         return;
       }
-      if (canResume || (skipOnboardingIfRecent && hasRecentOnboarding(gameKey))) {
+      if (canResume) {
         // Defer state updates to avoid cascading synchronous renders
         Promise.resolve().then(() => setIsPlaying(true));
       }
@@ -148,7 +216,7 @@ export function GameLandingExperience({
     return () => {
       canceled = true;
     };
-  }, [autoResume, gameKey, initialPlaying, skipOnboardingIfRecent]);
+  }, [autoResume, enterGame, gameKey, initialPlaying, playDisabled]);
 
   useEffect(() => {
     return () => {
@@ -191,7 +259,6 @@ export function GameLandingExperience({
 
   useEffect(() => {
     if (!isPlaying) return;
-    markOnboardingComplete(gameKey);
     startGameSession(analyticsGameType(gameKey));
     return () => {
       endCurrentGameSession("abandoned");
@@ -205,21 +272,8 @@ export function GameLandingExperience({
   }, [isPlaying]);
 
   const handlePlayClick = useCallback(() => {
-    if (playDisabled) {
-      return;
-    }
-    if (playHref) {
-      router.push(playHref);
-      return;
-    }
-    forceRecoverDocumentScroll();
-    setRulesExiting(true);
-    playTimerRef.current = setTimeout(() => {
-      playTimerRef.current = null;
-      setRulesExiting(false);
-      setIsPlaying(true);
-    }, 300);
-  }, [playDisabled, playHref, router]);
+    enterGame("tap");
+  }, [enterGame]);
 
   const transitionToStep = useCallback((targetStep: number) => {
     if (targetStep === currentStep) {
@@ -332,12 +386,22 @@ export function GameLandingExperience({
             </div>
           ) : isResumeCheckPending ? (
             <div className="flex h-full min-h-[60dvh] items-center justify-center px-4">
-              <div className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-4 py-3 text-sm font-semibold text-ht-fg-muted">
-                Restoring your active game...
-              </div>
+              {autoResume ? (
+                <div className="rounded-ht-lg border border-ht-border-soft bg-ht-elevated px-4 py-3 text-sm font-semibold text-ht-fg-muted">
+                  Restoring your active game...
+                </div>
+              ) : null}
             </div>
           ) : (
-            <div className={`mx-auto flex h-full min-h-0 w-full max-w-[28rem] flex-col px-1.5 pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1.5 sm:px-2 sm:pt-2 ${rulesExiting ? "animate-tp-surface-exit" : ""}`}>
+            <div
+              ref={tutorialWrapperRef}
+              suppressHydrationWarning
+              className={`mx-auto flex h-full min-h-0 w-full max-w-[28rem] flex-col px-1.5 pb-[max(env(safe-area-inset-bottom,0px),6px)] pt-1.5 data-[tutorial-skip]:invisible sm:px-2 sm:pt-2 ${rulesExiting ? "animate-tp-surface-exit" : ""}`}
+            >
+              {isClientMount ? null : (
+                // Server render only: hides these cards before the first paint when they'll be skipped.
+                <script dangerouslySetInnerHTML={{ __html: tutorialSkipScript(gameKey) }} />
+              )}
               <div className="flex min-h-0 flex-1 items-center justify-center">
                 <div
                   className={`relative overflow-hidden ${gameKey === "pickem" ? "aspect-[3/5.4]" : "aspect-[3/4.9]"}`}
