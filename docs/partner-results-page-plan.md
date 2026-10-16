@@ -1,7 +1,8 @@
 # Partner Dashboard "Results" page — plan
 
-**Status (2026-10-16):** Phases 1–4 done and committed locally, not pushed (latest handoff:
-`docs/partner-results-page-plan_PHASE_4_HANDOFF.md`). Next: Andrew's phone pass + deploy, then Phase 5.
+**Status (2026-10-16):** Phases 1–5 done and committed locally, not pushed (latest handoff:
+`docs/partner-results-page-plan_PHASE_5_HANDOFF.md`). Phase 5 (cleanup) is its own commit and must be pushed
+only AFTER Phase 4 is live. Next: Andrew's phone pass + deploy, then the usage comparison (§6).
 Each phase ends with a handoff note `docs/partner-results-page-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule); update this line to point at the latest one.
 

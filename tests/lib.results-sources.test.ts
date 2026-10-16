@@ -128,7 +128,7 @@ describe("Live Trivia adapter", () => {
     expect(JSON.stringify(page)).not.toContain(PLAYER_A);
   });
 
-  it("returns every scorer's standing when no limit is given (the old route keeps its top 10)", async () => {
+  it("returns every scorer's standing, not just the top 10", async () => {
     fns.loadLiveTriviaSchedulesForVenues.mockResolvedValue([schedule(SCHED, "venue-1")]);
     const ids = Array.from({ length: 14 }, (_, i) => `00000000-0000-0000-0000-${String(i).padStart(12, "0")}`);
     fns.loadLiveTriviaWeekTotals.mockResolvedValue(ids.map((id, i) => ({ userId: id, totalPoints: 200 - i * 10, reachedAt: null })));
@@ -137,8 +137,6 @@ describe("Live Trivia adapter", () => {
     expect(all.standings).toHaveLength(14);
     expect(all.standings[0]).toEqual({ rank: 1, username: "p0", score: 200, entry: null });
     expect(all.game).toEqual(expect.objectContaining({ winners: ["p0"], topScore: 200, playerCount: 14 }));
-    const top = await liveTriviaResultsAdapter.getStandings({ venueId: "venue-1", gameKey: `${SCHED}:2026-10-09`, nowMs: NOW, limit: 10 });
-    expect(top.standings).toHaveLength(10);
     for (const id of ids) expect(JSON.stringify(all)).not.toContain(id);
   });
 

@@ -140,8 +140,7 @@ export type ResultsAdapter = {
     nowMs: number;
     withFirstGameDate?: boolean;
   }): Promise<ResultsGamePage>;
-  /** `limit` = keep the top N plus ties (the old Game Results route); omitted = everyone. */
-  getStandings(params: { venueId: string; gameKey: string; nowMs: number; limit?: number }): Promise<ResultsGameDetail>;
+  getStandings(params: { venueId: string; gameKey: string; nowMs: number }): Promise<ResultsGameDetail>;
   /**
    * One player's answers in a finished game, found by their standings `entry` token. Throws
    * ResultsNotFoundError for a token that matches no scorer of THIS venue's game (or a game still

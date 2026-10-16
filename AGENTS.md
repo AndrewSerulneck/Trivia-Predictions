@@ -158,3 +158,26 @@ another:
 
 Full rationale, the prize/quota data model, and the multi-winner ledger design
 are in `docs/rewards-system-plan.md` (§3–§4).
+
+## Add a competition to Results
+
+The Partner Dashboard's Results page (`docs/partner-results-page-plan.md`) is competition-agnostic: the timeline,
+standings, search, player breakdown and reward matching are shared. Only Live Trivia is registered today. To add
+another (NFL Pick 'Em, Category Blitz, Bingo…) — only when Andrew asks:
+
+1. **Registry entry** in `lib/results/competitions.ts`: `id`, `label`, `scoreUnit`, `hasBreakdown`.
+2. **Adapter file** `lib/results/adapters/<competition>.ts` (`server-only`) implementing `ResultsAdapter`
+   (`lib/results/types.ts`): `listGames` (venue-scoped, newest first, never splits a date, `gameKey` is an opaque
+   string you can parse back), `getStandings` (full list, `entry` tokens from `makeResultsEntryTokens` — never a user
+   id; throw `ResultsNotFoundError` for another venue's game, `ResultsUnavailableError` for a missing DB function) and,
+   if `hasBreakdown`, `getBreakdown` (never select a typed answer). Model it on `adapters/liveTrivia.ts`.
+3. **One line** in `lib/results/adapters/index.ts` (`RESULTS_ADAPTERS`; a missing one is a type error).
+4. **Reward placement**, only if it has rewards: add its rule to `placeCycle` in `lib/results/rewardPlacement.ts`
+   (venue-local dates; an item is never dated after it happened) and its cases to `tests/lib.results-reward-placement.test.ts`.
+   Keep `lib/results/rewardSource.ts`'s date-window contract in mind.
+5. **Tests**: run `tests/results-registry-contract.test.ts` (registry ↔ adapters agree; a fixture competition renders with
+   no UI change) and `tests/results-privacy-contract.test.ts` (no ids, no typed answers, tokens scoped to venue + game);
+   add adapter tests beside `tests/lib.results-sources.test.ts`.
+6. **No UI change.** If you need one, the seam is wrong: fix the shared shape in `lib/results/types.ts` instead of
+   branching on a competition id in `components/owner/results/`.
+

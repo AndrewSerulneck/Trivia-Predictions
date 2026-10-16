@@ -90,6 +90,36 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep
   `ANTHROPIC_USERNAME_MODERATOR_API_KEY` unset in Vercel unless the policy changes first.
 
+## Partner Results page (Partner Dashboard menu → Results; built 2026-10-16)
+
+Plan + decisions: `docs/partner-results-page-plan.md` (phases 1–5, handoffs `…_PHASE_<N>_HANDOFF.md`).
+One timeline of a venue's games (Month → Week → Day, newest first): each game card shows its winner and the
+rewards won at it; a weekly reward is a row at the end of its week (Andrew, 2026-10-16: single-night weekly
+rewards too); tap a game for the FULL standings with a "Find a player" search; tap a player for each question
+(right/wrong, points, question text). Read-only, no tabs, no CSV, usernames and points only.
+- **A competition is a registry entry, not a screen.** `lib/results/competitions.ts` (labels, score unit,
+  `hasBreakdown`) + one adapter under `lib/results/adapters/` + one line in `adapters/index.ts` (+ a placement
+  rule in `lib/results/rewardPlacement.ts` if it has rewards). Nothing under `components/owner/results/` or
+  the generic `lib/results/*` core may name a competition id (`tests/results-registry-contract.test.ts`).
+  Checklist: `AGENTS.md` "Add a competition to Results". Only Live Trivia is registered; Category Blitz stays out
+  unless Andrew says otherwise.
+- **Routes** (all through `withOwnerVenue`, `lib/ownerHistoryRoute.ts`: owner auth + the venue is theirs BEFORE
+  any read; `no-store`): `GET /api/owner/results` (timeline page), `…/results/games/[competition]/[gameKey]`
+  (standings), `…/breakdown?entry=`. The reward detail keeps `GET /api/owner/history/rewards/[rewardId]`
+  (`getOwnerRewardDetail`, `lib/ownerHistory.ts`). The old `kind=games|rewards` and `/history/games/…` routes and
+  `GameResultsSheet` were deleted in Phase 5; the sheet id is still `history` (URL `?sheet=history`).
+- **No player id ever leaves the server.** A standings row carries `entry`, an HMAC token (`lib/results/entryToken.ts`,
+  `SESSION_SECRET`, bound to venue + competition + game); no secret → `entry: null` and the breakdown route 503s. The
+  breakdown never selects `submitted_answer`/`normalized_answer`. Pinned by `tests/results-privacy-contract.test.ts` —
+  do not weaken it.
+- **Reward placement is one pure function** (`lib/results/rewardPlacement.ts`): game_winner → its game card; daily →
+  the day's only game card, else a day row; weekly / ranked_places / NFL → a week row; anything else → a day row on the
+  day it was finalized. Nothing is ever dropped. Keep the paging contract in that file's header when adding a rule.
+- **Cost:** on demand only (no cron/polling). First page ≈ 6–7 bounded reads in one request; a game ≈ 3–5; a player ≈ 3.
+- UI: `components/owner/results/` (`ResultsSheet` owns steps `game`/`player`/`reward`, mirrored in the URL; the router
+  is never used for a step). A bare `<button>` inside a bordered card needs `BARE_BUTTON_CLASS` (`resultsUi.tsx`).
+  Phone pass: section J of `docs/partner-dashboard-app-redesign-device-checklist.md`.
+
 ## Bingo / Pick ’Em reliability work (complete, 2026-09-19)
 
 Current plan: `docs/bingo-pickem-reliability-plan.md`; complete and developer-accepted after

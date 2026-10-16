@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChallengeCampaign } from "@/types";
 
-// docs/live-trivia-weekly-places-reward-plan.md §5f (Phase 8): lib/ownerHistory.ts reads ONE venue's
-// history (its own schedules, ledger rows with venue_id = that venue), names players by username only,
-// and names no winner for a game still being played.
+// The Results page's per-venue reads (docs/partner-results-page-plan.md): the Live Trivia adapter and the
+// reward detail (lib/ownerHistory.ts) read ONE venue's history (its own schedules, ledger rows with
+// venue_id = that venue), name players by username only, and name no winner for a game still being played.
 
 type Call = { table: string; method: string; args: unknown[] };
 
@@ -55,14 +55,9 @@ vi.mock("@/lib/supabaseAdmin", () => {
   };
 });
 
-import {
-  OwnerHistoryNotFoundError,
-  OwnerHistoryUnavailableError,
-  getOwnerGameDetail,
-  getOwnerRewardDetail,
-  listOwnerGameHistory,
-  listOwnerRewardHistory,
-} from "@/lib/ownerHistory";
+import { getOwnerRewardDetail } from "@/lib/ownerHistory";
+import { liveTriviaGameKey, liveTriviaResultsAdapter } from "@/lib/results/adapters/liveTrivia";
+import { ResultsNotFoundError, ResultsUnavailableError } from "@/lib/results/errors";
 
 const PLAYER_A = "11111111-1111-1111-1111-111111111111";
 const PLAYER_B = "22222222-2222-2222-2222-222222222222";
@@ -127,7 +122,23 @@ beforeEach(() => {
   fns.loadLiveTriviaWeekTotals.mockResolvedValue([]);
 });
 
-describe("listOwnerGameHistory", () => {
+const listGames = (params: { before?: string | null; withFirstGameDate?: boolean; venueId?: string }) =>
+  liveTriviaResultsAdapter.listGames({
+    venueId: params.venueId ?? "venue-1",
+    before: params.before ?? null,
+    limit: 20,
+    nowMs: NOW,
+    withFirstGameDate: params.withFirstGameDate,
+  });
+
+const standingsOf = (params: { scheduleId: string; occurrenceDate: string; venueId?: string }) =>
+  liveTriviaResultsAdapter.getStandings({
+    venueId: params.venueId ?? "venue-1",
+    gameKey: liveTriviaGameKey(params.scheduleId, params.occurrenceDate),
+    nowMs: NOW,
+  });
+
+describe("Live Trivia adapter listGames", () => {
   it("asks only for this venue's schedules and names the top scorers by username", async () => {
     fns.loadLiveTriviaSchedulesForVenues.mockResolvedValue([schedule("sched-1", "venue-1"), schedule("sched-x", "venue-2")]);
     state.rpc.live_trivia_occurrence_summaries = {
@@ -138,23 +149,21 @@ describe("listOwnerGameHistory", () => {
       { id: PLAYER_A, username: "murph" },
       { id: PLAYER_B, username: "kellygurl" },
     ];
-    const page = await listOwnerGameHistory({ venueId: "venue-1", before: "2026-10-14", nowMs: NOW });
+    const page = await listGames({ before: "2026-10-14" });
     expect(state.rpcArgs[0]).toEqual({
       name: "live_trivia_occurrence_summaries",
       args: { p_schedule_ids: ["sched-1"], p_before: "2026-10-14", p_limit: 20 },
     });
-    expect(page.games).toEqual([
-      {
-        scheduleId: "sched-1",
-        occurrenceDate: "2026-10-09",
-        scheduleName: "Weekday Trivia",
-        playerCount: 5,
-        inProgress: false,
-        topPoints: 90,
-        winners: ["murph", "kellygurl"],
-      },
-    ]);
-    expect(page.nextBefore).toBeNull();
+    expect(page.games).toHaveLength(1);
+    expect(page.games[0]).toMatchObject({
+      date: "2026-10-09",
+      title: "Weekday Trivia",
+      playerCount: 5,
+      inProgress: false,
+      topScore: 90,
+      winners: ["murph", "kellygurl"],
+    });
+    expect(page.exhausted).toBe(true);
     // No player id ever reaches the browser.
     expect(JSON.stringify(page)).not.toContain(PLAYER_A);
   });
@@ -166,14 +175,14 @@ describe("listOwnerGameHistory", () => {
       data: [{ schedule_id: "sched-1", occurrence_date: "2026-10-14", player_count: 3, top_points: 40, top_user_ids: [PLAYER_A] }],
       error: null,
     };
-    const page = await listOwnerGameHistory({ venueId: "venue-1", nowMs: NOW });
-    expect(page.games[0]).toEqual(expect.objectContaining({ inProgress: true, winners: [], topPoints: 0 }));
+    const page = await listGames({});
+    expect(page.games[0]).toEqual(expect.objectContaining({ inProgress: true, winners: [], topScore: 0 }));
   });
 
-  it("sends the venue's first game date with the first page only, probing each schedule past the 1970 sentinel", async () => {
+  it("sends the venue's first game date when asked, probing each schedule past the 1970 sentinel", async () => {
     fns.loadLiveTriviaSchedulesForVenues.mockResolvedValue([schedule("sched-1", "venue-1")]);
     state.tables.live_showdown_answers = [{ occurrence_date: "2026-08-05" }];
-    const first = await listOwnerGameHistory({ venueId: "venue-1", nowMs: NOW });
+    const first = await listGames({ withFirstGameDate: true });
     expect(first.firstGameDate).toBe("2026-08-05");
     const probe = callsOn("live_showdown_answers");
     expect(probe).toContainEqual({ table: "live_showdown_answers", method: "eq", args: ["schedule_id", "sched-1"] });
@@ -181,14 +190,14 @@ describe("listOwnerGameHistory", () => {
     expect(probe).toContainEqual({ table: "live_showdown_answers", method: "limit", args: [1] });
 
     state.calls = [];
-    const later = await listOwnerGameHistory({ venueId: "venue-1", before: "2026-10-01", nowMs: NOW });
-    expect(later).not.toHaveProperty("firstGameDate");
+    const later = await listGames({ before: "2026-10-01" });
+    expect(later.firstGameDate).toBeUndefined();
     expect(callsOn("live_showdown_answers")).toEqual([]);
   });
 
   it("returns an empty page without calling the RPC when the venue has no games", async () => {
     fns.loadLiveTriviaSchedulesForVenues.mockResolvedValue([schedule("sched-x", "venue-2")]);
-    expect(await listOwnerGameHistory({ venueId: "venue-1", nowMs: NOW })).toEqual({ games: [], nextBefore: null });
+    expect((await listGames({})).games).toEqual([]);
     expect(state.rpcArgs).toEqual([]);
   });
 
@@ -199,17 +208,15 @@ describe("listOwnerGameHistory", () => {
       error: { code: "PGRST202", message: "Could not find the function public.live_trivia_occurrence_summaries" },
     };
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    await expect(listOwnerGameHistory({ venueId: "venue-1", nowMs: NOW })).rejects.toBeInstanceOf(OwnerHistoryUnavailableError);
+    await expect(listGames({})).rejects.toBeInstanceOf(ResultsUnavailableError);
     spy.mockRestore();
   });
 });
 
-describe("getOwnerGameDetail", () => {
+describe("Live Trivia adapter getStandings", () => {
   it("refuses a schedule that isn't this venue's (404), without reading scores", async () => {
     fns.loadLiveTriviaSchedulesForVenues.mockResolvedValue([schedule("sched-x", "venue-2")]);
-    await expect(
-      getOwnerGameDetail({ venueId: "venue-1", scheduleId: "sched-x", occurrenceDate: "2026-10-09", nowMs: NOW }),
-    ).rejects.toBeInstanceOf(OwnerHistoryNotFoundError);
+    await expect(standingsOf({ scheduleId: "sched-x", occurrenceDate: "2026-10-09" })).rejects.toBeInstanceOf(ResultsNotFoundError);
     expect(fns.loadLiveTriviaWeekTotals).not.toHaveBeenCalled();
   });
 
@@ -217,15 +224,11 @@ describe("getOwnerGameDetail", () => {
     const { LiveTriviaWeekTotalsMissingError } = await import("@/lib/liveTriviaWeekTotals");
     fns.loadLiveTriviaSchedulesForVenues.mockResolvedValue([schedule("sched-1", "venue-1")]);
     fns.loadLiveTriviaWeekTotals.mockRejectedValue(new LiveTriviaWeekTotalsMissingError("missing"));
-    await expect(
-      getOwnerGameDetail({ venueId: "venue-1", scheduleId: "sched-1", occurrenceDate: "2026-10-09", nowMs: NOW }),
-    ).rejects.toBeInstanceOf(OwnerHistoryUnavailableError);
+    await expect(standingsOf({ scheduleId: "sched-1", occurrenceDate: "2026-10-09" })).rejects.toBeInstanceOf(ResultsUnavailableError);
   });
 
   it("refuses a malformed date (404)", async () => {
-    await expect(
-      getOwnerGameDetail({ venueId: "venue-1", scheduleId: "sched-1", occurrenceDate: "yesterday", nowMs: NOW }),
-    ).rejects.toBeInstanceOf(OwnerHistoryNotFoundError);
+    await expect(standingsOf({ scheduleId: "sched-1", occurrenceDate: "yesterday" })).rejects.toBeInstanceOf(ResultsNotFoundError);
   });
 
   it("ranks scorers by username, counting 0-point players only in the total", async () => {
@@ -235,77 +238,13 @@ describe("getOwnerGameDetail", () => {
       { userId: PLAYER_B, totalPoints: 0, reachedAt: null },
     ]);
     state.tables.users = [{ id: PLAYER_A, username: "murph" }];
-    const detail = await getOwnerGameDetail({ venueId: "venue-1", scheduleId: "sched-1", occurrenceDate: "2026-10-09", nowMs: NOW });
+    const detail = await standingsOf({ scheduleId: "sched-1", occurrenceDate: "2026-10-09" });
     expect(fns.loadLiveTriviaWeekTotals).toHaveBeenCalledWith([{ scheduleId: "sched-1", occurrenceDate: "2026-10-09" }]);
-    expect(detail.playerCount).toBe(2);
-    expect(detail.standings).toEqual([{ rank: 1, username: "murph", points: 90 }]);
+    expect(detail.game.playerCount).toBe(2);
+    expect(detail.standings.map((row) => ({ rank: row.rank, username: row.username, score: row.score }))).toEqual([
+      { rank: 1, username: "murph", score: 90 },
+    ]);
     expect(JSON.stringify(detail)).not.toContain(PLAYER_A);
-  });
-});
-
-describe("listOwnerRewardHistory", () => {
-  const OLDER_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
-  const summary = (id: string, at: string, winners: unknown[] = []) => ({
-    challenge_id: id,
-    last_cycle_start: "2026-10-07T04:00:00+00:00",
-    last_activity_at: at,
-    cycle_count: 10,
-    last_winners: winners,
-  });
-
-  it("pages in SQL for this venue, reads only that page's rewards by id, and names winners by username", async () => {
-    fns.listChallengeCampaignsByIds.mockResolvedValue([rankedCampaign(), rankedCampaign({ id: OLDER_ID, name: "Older" })]);
-    state.rpc.challenge_reward_history_summaries = {
-      data: [
-        summary("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "2026-10-10 02:00:00.123456+00", [
-          { user_id: PLAYER_A, place: 1, points: 90 },
-          { user_id: null, place: 2, points: 10 },
-        ]),
-        summary(OLDER_ID, "2026-09-05 02:00:00+00"),
-      ],
-      error: null,
-    };
-    state.tables.users = [{ id: PLAYER_A, username: "murph" }];
-    const page = await listOwnerRewardHistory({ venueId: "venue-1", nowMs: NOW });
-    expect(state.rpcArgs[0]).toEqual({
-      name: "challenge_reward_history_summaries",
-      args: { p_venue_id: "venue-1", p_before_at: null, p_before_id: null, p_limit: 20 },
-    });
-    expect(fns.listChallengeCampaignsByIds).toHaveBeenCalledWith(["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", OLDER_ID]);
-    expect(page.rewards.map((row) => row.name)).toEqual(["Weekly Trivia Champions", "Older"]);
-    expect(page.rewards[0]).toEqual(
-      expect.objectContaining({
-        howWon: "Top 3 players each week",
-        cycleCount: 10,
-        lastCycleLabel: "Week of Wed, Oct 7",
-        lastWinners: [
-          { place: 1, username: "murph", points: 90 },
-          { place: 2, username: null, points: 10 },
-        ],
-      }),
-    );
-    expect(page.nextBefore).toBeNull();
-    expect(JSON.stringify(page)).not.toContain(PLAYER_A);
-  });
-
-  it("returns a cursor with the RPC's exact timestamp when an extra row says more exist, and passes it back", async () => {
-    const ids = Array.from({ length: 21 }, (_, i) => `aaaaaaaa-aaaa-aaaa-aaaa-${String(i).padStart(12, "0")}`);
-    fns.listChallengeCampaignsByIds.mockImplementation(async (wanted: readonly string[]) => wanted.map((id) => rankedCampaign({ id })));
-    state.rpc.challenge_reward_history_summaries = {
-      data: ids.map((id, i) => summary(id, `2026-10-${String(30 - i).padStart(2, "0")} 02:00:00.123456+00`)),
-      error: null,
-    };
-    const page = await listOwnerRewardHistory({ venueId: "venue-1", nowMs: NOW });
-    expect(page.rewards).toHaveLength(20);
-    expect(fns.listChallengeCampaignsByIds.mock.calls[0]?.[0]).toHaveLength(20);
-    expect(page.nextBefore).toBe(`2026-10-11 02:00:00.123456+00_${ids[19]}`);
-
-    state.rpcArgs = [];
-    state.rpc.challenge_reward_history_summaries = { data: [], error: null };
-    await listOwnerRewardHistory({ venueId: "venue-1", before: page.nextBefore, nowMs: NOW });
-    expect(state.rpcArgs[0]?.args).toEqual(
-      expect.objectContaining({ p_before_at: "2026-10-11 02:00:00.123456+00", p_before_id: ids[19] }),
-    );
   });
 });
 
@@ -313,7 +252,7 @@ describe("getOwnerRewardDetail", () => {
   it("refuses an unknown reward (404) without reading any history", async () => {
     await expect(
       getOwnerRewardDetail({ venueId: "venue-1", rewardId: "cccccccc-cccc-cccc-cccc-cccccccccccc", nowMs: NOW }),
-    ).rejects.toBeInstanceOf(OwnerHistoryNotFoundError);
+    ).rejects.toBeInstanceOf(ResultsNotFoundError);
     expect(state.calls).toEqual([]);
   });
 
@@ -321,7 +260,7 @@ describe("getOwnerRewardDetail", () => {
     fns.listChallengeCampaignsByIds.mockResolvedValue([rankedCampaign({ venueIds: ["venue-2"] } as Partial<ChallengeCampaign>)]);
     await expect(
       getOwnerRewardDetail({ venueId: "venue-1", rewardId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", nowMs: NOW }),
-    ).rejects.toBeInstanceOf(OwnerHistoryNotFoundError);
+    ).rejects.toBeInstanceOf(ResultsNotFoundError);
   });
 
   it("drops a ledger cycle that may be only partly read when the read hits its limit", async () => {

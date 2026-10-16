@@ -1,8 +1,8 @@
-// Game Results on the Partner Dashboard (docs/live-trivia-weekly-places-reward-plan.md §5f, Phase 8):
-// the wire shapes the sheet reads, plus the pure rules for wording and ordering them.
+// Shared wording, date and ordering rules for the Partner Dashboard's Results page
+// (docs/partner-results-page-plan.md) and the reward-detail shapes it reads.
 //
-// Pure and client-safe (no Supabase, no `server-only`): lib/ownerHistory.ts builds these shapes on
-// the server and components/owner/history/GameResultsSheet.tsx renders them.
+// Pure and client-safe (no Supabase, no `server-only`): lib/ownerHistory.ts builds the reward-detail
+// shapes on the server; components/owner/results/ renders them.
 //
 // PRIVACY. A partner sees USERNAMES and points only — what the TV leaderboard already shows. No
 // shape here has a player id, email or anything else about a player. A player who deleted their
@@ -10,61 +10,6 @@
 
 import { placeOrdinal } from "@/lib/rankedPlaceRewards";
 import type { ChallengeWinCondition, CampaignRecurringType } from "@/types";
-
-/** One past Live Trivia game, as a row of the Games list. */
-export type OwnerGameHistoryRow = {
-  scheduleId: string;
-  /** Venue-local date, YYYY-MM-DD. */
-  occurrenceDate: string;
-  scheduleName: string;
-  /** Everyone who answered at least one question, scored or not. */
-  playerCount: number;
-  /** The game hasn't finished yet: no winner is named. */
-  inProgress: boolean;
-  /** The top score; 0 when nobody scored. */
-  topPoints: number;
-  /** Everyone on the top score (a tie lists them all); empty when nobody scored. */
-  winners: Array<string | null>;
-};
-
-export type OwnerGameHistoryPage = {
-  games: OwnerGameHistoryRow[];
-  nextBefore: string | null;
-  /**
-   * The venue's first Live Trivia game (venue-local YYYY-MM-DD). Sent with the first page only;
-   * null when unknown. Decides whether the list is grouped by year (groupsByYear).
-   */
-  firstGameDate?: string | null;
-};
-
-/** One reward that has paid (or settled) at least once at this venue, as a row of the Rewards list. */
-export type OwnerRewardHistoryRow = {
-  rewardId: string;
-  name: string;
-  howWon: string;
-  isActive: boolean;
-  /** When anything last happened (a winner, or a week settled with nobody). ISO. */
-  lastActivityAt: string;
-  /** "Week of Oct 7", "Fri, Oct 9", … the latest cycle, in the venue's timezone. */
-  lastCycleLabel: string;
-  cycleCount: number;
-  /** The latest cycle's winners, place-ordered; empty when that cycle had nobody. */
-  lastWinners: Array<{ place: number | null; username: string | null; points: number }>;
-};
-
-export type OwnerRewardHistoryPage = { rewards: OwnerRewardHistoryRow[]; nextBefore: string | null };
-
-export type OwnerGameStanding = { rank: number; username: string | null; points: number };
-
-export type OwnerGameDetail = {
-  scheduleId: string;
-  occurrenceDate: string;
-  scheduleName: string;
-  playerCount: number;
-  inProgress: boolean;
-  /** Scorers only, best first; the top 10 plus anyone tied with 10th. */
-  standings: OwnerGameStanding[];
-};
 
 export type OwnerRewardCycleWinner = {
   place: number | null;
@@ -93,10 +38,6 @@ export type OwnerRewardDetail = {
   truncated: boolean;
 };
 
-/** Rows per page, both lists (plan §5f). */
-export const OWNER_HISTORY_PAGE_SIZE = 20;
-/** A game's standings: the top 10, plus anyone tied with 10th. */
-export const OWNER_GAME_STANDINGS_LIMIT = 10;
 /** A reward's detail shows its newest cycles only; a nightly reward would otherwise grow without bound. */
 export const OWNER_REWARD_DETAIL_CYCLE_LIMIT = 52;
 
@@ -106,26 +47,6 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const parseGamesCursor = (raw: string | null | undefined): string | null => {
   const value = String(raw ?? "").trim();
   return DATE_PATTERN.test(value) && Number.isFinite(Date.parse(`${value}T12:00:00Z`)) ? value : null;
-};
-
-/**
- * A rewards cursor: `<last activity timestamp>_<reward id>`, the last row of the previous page. The
- * timestamp is the database's own text (microseconds intact) and goes back to the RPC as-is.
- */
-export const rewardsCursor = (row: Pick<OwnerRewardHistoryRow, "lastActivityAt" | "rewardId">): string =>
-  `${row.lastActivityAt}_${row.rewardId}`;
-
-const CURSOR_TIMESTAMP = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}(:?\d{2})?)$/;
-
-export const parseRewardsCursor = (raw: string | null | undefined): { at: string; id: string } | null => {
-  const value = String(raw ?? "").trim();
-  const split = value.lastIndexOf("_");
-  if (split <= 0) return null;
-  const at = value.slice(0, split);
-  const id = value.slice(split + 1);
-  return CURSOR_TIMESTAMP.test(at) && Number.isFinite(Date.parse(at)) && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-    ? { at, id }
-    : null;
 };
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -216,21 +137,11 @@ export const rewardWinnerLabel = (winner: { place: number | null; username: stri
 /**
  * A finished game's standings: scorers only (a player on 0 is counted in the player total, not
  * listed), best first, competition-ranked ("1, 2, 2, 4"). Within a tie, whoever got there first is
- * listed first. Keeps the top `limit` plus anyone tied with the last kept row.
- */
-export const rankGameStandings = (
-  totals: ReadonlyArray<{ username: string | null; points: number; reachedAt: string | null }>,
-  limit: number = OWNER_GAME_STANDINGS_LIMIT,
-): OwnerGameStanding[] =>
-  rankScorers(totals, limit).map(({ rank, row }) => ({ rank, username: row.username, points: row.points }));
-
-/**
- * rankGameStandings' ordering and cut, keeping each input row whole (`row`) so a server caller can
- * carry data that must never reach the client (a user id) next to its rank.
+ * listed first. Each input row is kept whole (`row`) so a server caller can carry data that must
+ * never reach the client (a user id) next to its rank.
  */
 export const rankScorers = <T extends { points: number; reachedAt: string | null }>(
   totals: readonly T[],
-  limit: number = OWNER_GAME_STANDINGS_LIMIT,
 ): Array<{ rank: number; row: T }> => {
   const scorers = totals
     .filter((row) => Number(row.points) > 0)
@@ -243,7 +154,6 @@ export const rankScorers = <T extends { points: number; reachedAt: string | null
   for (let i = 0; i < scorers.length; i += 1) {
     const { row } = scorers[i];
     const rank = i > 0 && scorers[i - 1].row.points === row.points ? ranked[i - 1].rank : i + 1;
-    if (i >= limit && rank !== ranked[limit - 1]?.rank) break;
     ranked.push({ rank, row });
   }
   return ranked;
@@ -251,25 +161,6 @@ export const rankScorers = <T extends { points: number; reachedAt: string | null
 
 /** "12 players". */
 export const playerCountLabel = (count: number): string => `${count} player${count === 1 ? "" : "s"}`;
-
-// ── Grouping the Games list (Andrew, 2026-10-14) ──────────────────────────────────────────
-//
-// The Games list is grouped Month → Week → Day, plus Year on top once the venue has been running
-// Live Trivia for more than a year, so it never becomes one endless list. Weeks run Monday–Sunday
-// (a Fri/Sat/Sun weekend stays together) and are cut at month edges, so every week sits inside one
-// month ("Sep 29 – 30" under September, "Oct 1 – 5" under October). Dates are venue-local strings
-// and are never shifted by a timezone.
-//
-// PAGING. The list still loads 20 games a page. A page never splits a date, so every date on or
-// after the oldest loaded date is complete; a group that starts before it may still be missing
-// older games, and says so ("4+ games") until "Show more" fills it in.
-
-export type OwnerGameDayGroup = { date: string; label: string; games: OwnerGameHistoryRow[] };
-
-type GroupBase = { key: string; label: string; gameCount: number; complete: boolean };
-export type OwnerGameWeekGroup = GroupBase & { days: OwnerGameDayGroup[] };
-export type OwnerGameMonthGroup = GroupBase & { weeks: OwnerGameWeekGroup[] };
-export type OwnerGameYearGroup = GroupBase & { months: OwnerGameMonthGroup[] };
 
 export const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -306,72 +197,4 @@ export const groupsByYear = (firstGameDate: string | null | undefined, today: st
   const [year, month, day] = today.split("-").map(Number);
   const yearAgo = `${year - 1}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   return firstGameDate < yearAgo;
-};
-
-/** "1 game", "13 games", or "13+ games" while older games of that group aren't loaded yet. */
-export const gameCountLabel = (count: number, complete: boolean): string =>
-  `${count}${complete ? "" : "+"} game${count === 1 && complete ? "" : "s"}`;
-
-/**
- * The loaded games as Year → Month → Week → Day, newest first at every level (the rows arrive
- * newest first). `byYear` only changes the month labels ("October" under a year heading, else
- * "October 2026"); the year level is always built and the sheet skips it when `byYear` is off.
- * `moreToLoad` = the list has another page, so groups older than the oldest loaded date are partial.
- */
-export const groupGameHistory = (
-  games: ReadonlyArray<OwnerGameHistoryRow>,
-  options: { byYear: boolean; moreToLoad: boolean },
-): OwnerGameYearGroup[] => {
-  const rows = games.filter((game) => DATE_PATTERN.test(game.occurrenceDate));
-  const oldest = rows.reduce<string | null>((min, game) => (min === null || game.occurrenceDate < min ? game.occurrenceDate : min), null);
-  const complete = (groupStart: string): boolean => !options.moreToLoad || (oldest !== null && groupStart >= oldest);
-
-  const years: OwnerGameYearGroup[] = [];
-  for (const game of [...rows].sort((a, b) => (a.occurrenceDate < b.occurrenceDate ? 1 : a.occurrenceDate > b.occurrenceDate ? -1 : 0))) {
-    const date = game.occurrenceDate;
-    const [year, month] = date.split("-").map(Number);
-    const yearKey = `y${year}`;
-    const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
-    const monthKey = `m${monthStart.slice(0, 7)}`;
-    const weekStart = mondayOf(date) < monthStart ? monthStart : mondayOf(date);
-    const sunday = isoOf(dayMs(mondayOf(date)) + 6 * DAY);
-    const monthEnd = lastDayOfMonth(year, month);
-    const weekEnd = sunday > monthEnd ? monthEnd : sunday;
-    const weekKey = `w${weekStart}`;
-
-    let yearGroup = years[years.length - 1];
-    if (yearGroup?.key !== yearKey) {
-      yearGroup = { key: yearKey, label: String(year), gameCount: 0, complete: complete(`${year}-01-01`), months: [] };
-      years.push(yearGroup);
-    }
-    let monthGroup = yearGroup.months[yearGroup.months.length - 1];
-    if (monthGroup?.key !== monthKey) {
-      const name = MONTH_NAMES[month - 1];
-      monthGroup = { key: monthKey, label: options.byYear ? name : `${name} ${year}`, gameCount: 0, complete: complete(monthStart), weeks: [] };
-      yearGroup.months.push(monthGroup);
-    }
-    let weekGroup = monthGroup.weeks[monthGroup.weeks.length - 1];
-    if (weekGroup?.key !== weekKey) {
-      weekGroup = { key: weekKey, label: weekRangeLabel(weekStart, weekEnd), gameCount: 0, complete: complete(weekStart), days: [] };
-      monthGroup.weeks.push(weekGroup);
-    }
-    let dayGroup = weekGroup.days[weekGroup.days.length - 1];
-    if (dayGroup?.date !== date) {
-      dayGroup = { date, label: formatOccurrenceDate(date, year), games: [] };
-      weekGroup.days.push(dayGroup);
-    }
-    dayGroup.games.push(game);
-    yearGroup.gameCount += 1;
-    monthGroup.gameCount += 1;
-    weekGroup.gameCount += 1;
-  }
-  return years;
-};
-
-/** The groups open when the list first shows: the newest year, its newest month and that month's newest week. */
-export const defaultOpenGroupKeys = (years: ReadonlyArray<OwnerGameYearGroup>): Set<string> => {
-  const year = years[0];
-  const month = year?.months[0];
-  const week = month?.weeks[0];
-  return new Set([year?.key, month?.key, week?.key].filter((key): key is string => Boolean(key)));
 };

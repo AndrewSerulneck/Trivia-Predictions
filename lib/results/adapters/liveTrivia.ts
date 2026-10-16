@@ -174,17 +174,14 @@ const gameTotals = async (scheduleId: string, occurrenceDate: string) => {
   }
 };
 
-const getStandings: ResultsAdapter["getStandings"] = async ({ venueId, gameKey, nowMs, limit }): Promise<ResultsGameDetail> => {
+const getStandings: ResultsAdapter["getStandings"] = async ({ venueId, gameKey, nowMs }): Promise<ResultsGameDetail> => {
   const { schedule, occurrenceDate } = await venueGame(venueId, gameKey);
   const totals = await gameTotals(schedule.id, occurrenceDate);
   const inProgress = isInProgress(schedule, occurrenceDate, nowMs);
   // A game still being played has no final standings yet.
   const ranked = inProgress
     ? []
-    : rankScorers(
-        totals.map((row) => ({ userId: row.userId, points: row.totalPoints, reachedAt: row.reachedAt })),
-        limit ?? Number.POSITIVE_INFINITY,
-      );
+    : rankScorers(totals.map((row) => ({ userId: row.userId, points: row.totalPoints, reachedAt: row.reachedAt })));
   // Names for the listed scorers only; 0-point players are counted in the total, never listed.
   const names = await loadUsernames(ranked.map(({ row }) => row.userId));
   const canonicalKey = liveTriviaGameKey(schedule.id, occurrenceDate);
