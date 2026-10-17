@@ -1475,20 +1475,43 @@ describe("createReward — minimum players (D7)", () => {
     );
   });
 
-  it("refuses it on NFL Pick 'Em (it has its own fixed 3+ pickers rule)", async () => {
+  // docs/reward-minimum-players-plan.md A2: the partner chooses on NFL most picks right.
+  const createNFL = (overrides: Partial<Parameters<typeof createReward>[0]>) =>
+    createReward({
+      venueId: "venue-1",
+      definitionId: "nfl_pickem_challenge",
+      cadence: "weekly",
+      winCondition: "game_winner",
+      threshold: 1,
+      winnerQuota: 1,
+      nflWeekScope: { kind: "weekly", season: 2026 },
+      prize: APPETIZER_PRIZE,
+      ...overrides,
+    });
+
+  it("stores the partner's minimum on NFL most picks right, and null (no minimum) when not sent", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+    await createNFL({ minPlayers: 5 });
+    await createNFL({ minPlayers: null });
+    await createNFL({});
+    const calls = mocks.createChallengeCampaign.mock.calls.map((call) => call[0] as Record<string, unknown>);
+    expect(calls.map((call) => call.minPlayers)).toEqual([5, null, null]);
+    expect(String(calls[0].rules)).not.toContain("3 players");
+  });
+
+  it("range-checks the NFL minimum like Live Trivia's", async () => {
+    mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
+    for (const minPlayers of [1, 101, 2.5]) {
+      await expect(createNFL({ minPlayers })).rejects.toThrow(REWARD_MIN_PLAYERS_RANGE_MESSAGE);
+    }
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
+  });
+
+  it("refuses it on an NFL picks target", async () => {
     mocks.listNFLWeeks.mockResolvedValue(NFL_WEEKS);
     await expect(
-      createReward({
-        venueId: "venue-1",
-        definitionId: "nfl_pickem_challenge",
-        cadence: "weekly",
-        winCondition: "game_winner",
-        threshold: 1,
-        winnerQuota: 1,
-        nflWeekScope: { kind: "weekly", season: 2026 },
-        prize: APPETIZER_PRIZE,
-        minPlayers: 5,
-      }),
+      createNFL({ winCondition: "points_threshold", threshold: 10, minPlayers: 3 }),
     ).rejects.toThrow(REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE);
+    expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
   });
 });

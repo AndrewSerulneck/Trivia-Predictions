@@ -228,6 +228,47 @@ describe("CreateRewardWizard — controlled step", () => {
     expect(onStepChange).toHaveBeenLastCalledWith("definition", "back");
   });
 
+  it("asks the players question after the terms for a contest, and sends a points target past it", async () => {
+    stubReducedMotion();
+    const onStepChange = vi.fn();
+    const ownerProps = (step: "definition" | "terms" | "players") =>
+      createElement(CreateRewardWizard, {
+        variant: "owner",
+        venues: [{ id: "venue-1", name: "The Pub" }],
+        defaultVenueId: "venue-1",
+        scheduleLinkHref: "/x",
+        fetchContext,
+        onSubmit: async () => ({ ok: true as const }),
+        onCreated: () => {},
+        onCancel: () => {},
+        animateSteps: true,
+        step,
+        onStepChange,
+      });
+    const view = render(ownerProps("definition"));
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
+    await waitFor(() => expect(onStepChange).toHaveBeenCalledWith("terms", "forward"));
+    view.rerender(ownerProps("terms"));
+    await waitFor(() => expect(view.container.querySelector("[data-step='terms'][data-step-phase='idle']")).not.toBeNull());
+
+    fireEvent.click(screen.getByRole("button", { name: /Winner of the game/ }));
+    onStepChange.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: /Next: Minimum Players/ }));
+    expect(onStepChange).toHaveBeenLastCalledWith("players", "forward");
+    view.rerender(ownerProps("players"));
+    await waitFor(() => expect(view.container.querySelector("[data-step='players']")).not.toBeNull());
+    expect(view.container.querySelector("[data-step-heading]")?.textContent).toBe("How many players must play?");
+
+    // A points target has no such question: a `?step=players` for it lands on Prize.
+    view.rerender(ownerProps("terms"));
+    await waitFor(() => expect(view.container.querySelector("[data-step='terms'][data-step-phase='idle']")).not.toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Points target/ }));
+    onStepChange.mockClear();
+    view.rerender(ownerProps("players"));
+    await waitFor(() => expect(onStepChange).toHaveBeenCalledWith("prize", "replace"));
+  });
+
   it("an unscheduled pick drops the previous pick's context, so Forward to Terms can't mix them", async () => {
     stubReducedMotion();
     const onStepChange = vi.fn();
@@ -347,9 +388,23 @@ const renderForSubmit = (context: RewardCreationContextDTO) => {
   return { ...view, onSubmit };
 };
 
-const walkToConfirm = async () => {
+/** Terms → (Players, when the reward offers a minimum) → Prize. `minimum` answers the Players step. */
+const leaveTerms = async (minimum: "none" | number = "none") => {
+  fireEvent.click(screen.getByRole("button", { name: /Next: (Offer a Prize|Minimum Players)/ }));
+  const landed = await screen.findByText(/^(Prize|How many players must play\?)$/);
+  if (landed.textContent === "Prize") return;
+  if (minimum === "none") {
+    fireEvent.click(screen.getByRole("button", { name: "No minimum" }));
+  } else {
+    fireEvent.click(screen.getByRole("button", { name: "Set a minimum" }));
+    fireEvent.change(screen.getByLabelText("Minimum players"), { target: { value: String(minimum) } });
+  }
   fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
   await screen.findByText("Prize");
+};
+
+const walkToConfirm = async (minimum: "none" | number = "none") => {
+  await leaveTerms(minimum);
   fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
   await screen.findByText("Confirm");
 };
@@ -437,6 +492,47 @@ describe("CreateRewardWizard — submitted terms", () => {
         nflWeekScope: { kind: "weekly", season: 2026 },
       }),
     );
+    // "No minimum" on the Players step: even one player can win (plan A2), so nothing is sent.
+    expect((onSubmit.mock.calls[0] as unknown[])[0]).not.toHaveProperty("minPlayers");
+  });
+
+  it("NFL most picks: the Players step sends the partner's number, worded for the week", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-06T16:00:00.000Z"));
+    const { onSubmit } = renderForSubmit(NFL_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Most picks right/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Next: Minimum Players/ }));
+    await screen.findByText("How many players must play?");
+    expect(document.body.textContent).toContain("make picks that week");
+    expect(screen.getByRole("button", { name: /Next: Offer a Prize/ })).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: "Set a minimum" }));
+    expect(screen.getByLabelText("Minimum players")).toHaveProperty("value", "3");
+    fireEvent.change(screen.getByLabelText("Minimum players"), { target: { value: "6" } });
+    fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
+    await screen.findByText("Prize");
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    await screen.findByText("Confirm");
+    expect(screen.getByText("Minimum players").nextSibling?.textContent).toBe("At least 6");
+    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ winCondition: "game_winner", nflWeekScope: { kind: "weekly", season: 2026 }, minPlayers: 6 }),
+    );
+  });
+
+  it("NFL most picks for the whole season words the Players step for the season", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-06T16:00:00.000Z"));
+    renderForSubmit(NFL_CONTEXT);
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Most picks right/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Whole season/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Next: Minimum Players/ }));
+    await screen.findByText("How many players must play?");
+    expect(document.body.textContent).toContain("make picks that season");
   });
 
   it("NFL whole season: a one-off cadence from the server's fromWeek", async () => {
@@ -458,6 +554,8 @@ describe("CreateRewardWizard — submitted terms", () => {
         nflWeekScope: { kind: "season", season: 2026, fromWeek: 5 },
       }),
     );
+    // Never a minimum on a picks target (plan A1).
+    expect((onSubmit.mock.calls[0] as unknown[])[0]).not.toHaveProperty("minPlayers");
   });
 });
 
@@ -761,10 +859,7 @@ describe("CreateRewardWizard — weekly places", () => {
     fireEvent.change(screen.getByLabelText("Gift card amount ($)"), { target: { value: dollars } });
   };
 
-  const toPrizeStep = async () => {
-    fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
-    await screen.findByText("Prize");
-  };
+  const toPrizeStep = (minimum: "none" | number = "none") => leaveTerms(minimum);
 
   const submitted = (onSubmit: ReturnType<typeof vi.fn>) => (onSubmit.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
 
@@ -804,7 +899,6 @@ describe("CreateRewardWizard — weekly places", () => {
   it("is not offered when no game night can be resolved at all", async () => {
     await pickLiveTrivia({ ...LIVE_CONTEXT, scheduleDays: [], gameSlots: [] });
     expect(screen.queryByRole("button", { name: /Top players this week/ })).toBeNull();
-    expect(screen.queryByText("Minimum players?")).toBeNull();
   });
 
   it("is offered with the venue's real nights, and replaces the points target and the sentence", async () => {
@@ -888,6 +982,8 @@ describe("CreateRewardWizard — weekly places", () => {
     expect(screen.queryByRole("button", { name: /Same prize as 1st place/ })).toBeNull();
 
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    await screen.findByText("How many players must play?");
+    fireEvent.click(screen.getByRole("button", { name: /^Live Trivia Challenge$/ }));
     await screen.findByText("How many places?");
     fireEvent.click(screen.getByRole("button", { name: "Top 3" }));
     await toPrizeStep();
@@ -911,15 +1007,36 @@ describe("CreateRewardWizard — weekly places", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  describe("minimum players", () => {
-    it("is off by default, and a set minimum is sent and shown on Confirm", async () => {
+  describe("minimum players — its own step (plan Phase 2)", () => {
+    const toPlayersStep = () => {
+      fireEvent.click(screen.getByRole("button", { name: /Next: Minimum Players/ }));
+      return screen.findByText("How many players must play?");
+    };
+
+    it("comes after the terms and before the prize, with nothing pre-selected and Next held", async () => {
+      await pickLiveTrivia();
+      await chooseWeeklyPlaces();
+      expect(screen.queryByText("Minimum players?")).toBeNull();
+      expect(screen.queryByText("Prize")).toBeNull();
+      await toPlayersStep();
+      expect(screen.queryByText("Prize")).toBeNull();
+      expect(screen.getByRole("button", { name: "No minimum" }).getAttribute("aria-pressed")).toBe("false");
+      expect(screen.getByRole("button", { name: "Set a minimum" }).getAttribute("aria-pressed")).toBe("false");
+      expect(screen.queryByLabelText("Minimum players")).toBeNull();
+      expect(screen.getByRole("button", { name: /Next: Offer a Prize/ })).toHaveProperty("disabled", true);
+      fireEvent.click(screen.getByRole("button", { name: "No minimum" }));
+      expect(screen.getByRole("button", { name: /Next: Offer a Prize/ })).toHaveProperty("disabled", false);
+    });
+
+    it("pre-fills the number with 3 and sends a set minimum, shown on Confirm", async () => {
       const { onSubmit } = await pickLiveTrivia();
       await chooseWeeklyPlaces();
-      expect(screen.getByText("Minimum players?")).toBeTruthy();
-      expect(screen.queryByLabelText("Minimum players")).toBeNull();
+      await toPlayersStep();
       fireEvent.click(screen.getByRole("button", { name: "Set a minimum" }));
+      expect(screen.getByLabelText("Minimum players")).toHaveProperty("value", "3");
       fireEvent.change(screen.getByLabelText("Minimum players"), { target: { value: "5" } });
-      await toPrizeStep();
+      fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
+      await screen.findByText("Prize");
       fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
       await screen.findByText("Confirm");
       expect(document.body.textContent).toContain("At least 5");
@@ -932,6 +1049,7 @@ describe("CreateRewardWizard — weekly places", () => {
     it("holds Next while the number is out of range, and says why", async () => {
       await pickLiveTrivia();
       await chooseWeeklyPlaces();
+      await toPlayersStep();
       fireEvent.click(screen.getByRole("button", { name: "Set a minimum" }));
       for (const bad of ["1", "101", "", "2.5"]) {
         fireEvent.change(screen.getByLabelText("Minimum players"), { target: { value: bad } });
@@ -942,41 +1060,61 @@ describe("CreateRewardWizard — weekly places", () => {
       expect(screen.getByRole("button", { name: /Next: Offer a Prize/ })).toHaveProperty("disabled", false);
     });
 
-    it("turning it back off sends no minimum", async () => {
+    it("turning it back off sends no minimum, and Confirm says None", async () => {
       const { onSubmit } = await pickLiveTrivia();
       await chooseWeeklyPlaces();
+      await toPlayersStep();
       fireEvent.click(screen.getByRole("button", { name: "Set a minimum" }));
       fireEvent.change(screen.getByLabelText("Minimum players"), { target: { value: "9" } });
       fireEvent.click(screen.getByRole("button", { name: "No minimum" }));
-      await toPrizeStep();
+      fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
+      await screen.findByText("Prize");
       fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
       await screen.findByText("Confirm");
+      expect(screen.getByText("Minimum players").nextSibling?.textContent).toBe("None");
       fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(submitted(onSubmit)).not.toHaveProperty("minPlayers");
     });
 
-    it("is also offered for 'Winner of the game', never for a points target", async () => {
-      const { onSubmit } = await pickLiveTrivia();
-      expect(screen.queryByText("Minimum players?")).toBeNull();
-      fireEvent.click(screen.getByRole("button", { name: /Winner of the game/ }));
-      expect(screen.getByText("Minimum players?")).toBeTruthy();
+    it("going Back from Prize returns to the answered question, and the answer is kept", async () => {
+      await pickLiveTrivia();
+      await chooseWeeklyPlaces();
+      await toPlayersStep();
       fireEvent.click(screen.getByRole("button", { name: "Set a minimum" }));
-      fireEvent.change(screen.getByLabelText("Minimum players"), { target: { value: "3" } });
-      await walkToConfirm();
+      fireEvent.change(screen.getByLabelText("Minimum players"), { target: { value: "7" } });
+      fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
+      await screen.findByText("Prize");
+      fireEvent.click(screen.getByRole("button", { name: "Back" }));
+      await screen.findByText("How many players must play?");
+      expect(screen.getByLabelText("Minimum players")).toHaveProperty("value", "7");
+      fireEvent.click(screen.getByRole("button", { name: /^Live Trivia Challenge$/ }));
+      await screen.findByText("How many places?");
+      expect(screen.queryByText("How many players must play?")).toBeNull();
+    });
+
+    it("is also asked for 'Winner of the game', never for a points target", async () => {
+      const { onSubmit } = await pickLiveTrivia();
+      expect(screen.getByRole("button", { name: /Next: Offer a Prize/ })).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: /Winner of the game/ }));
+      await walkToConfirm(3);
       fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(submitted(onSubmit)).toMatchObject({ winCondition: "game_winner", minPlayers: 3 });
       expect(submitted(onSubmit)).not.toHaveProperty("placePrizes");
     });
 
-    it("a points target never sends one, even after a minimum was typed for another way to win", async () => {
+    it("a points target skips the step and never sends one, even after a minimum was typed for another way to win", async () => {
       const { onSubmit } = await pickLiveTrivia();
       fireEvent.click(screen.getByRole("button", { name: /Winner of the game/ }));
+      await toPlayersStep();
       fireEvent.click(screen.getByRole("button", { name: "Set a minimum" }));
+      fireEvent.click(screen.getByRole("button", { name: /^Live Trivia Challenge$/ }));
+      await screen.findByText("How many, how often?");
       fireEvent.click(screen.getByRole("button", { name: /Points target/ }));
-      expect(screen.queryByText("Minimum players?")).toBeNull();
+      expect(screen.getByRole("button", { name: /Next: Offer a Prize/ })).toBeTruthy();
       await walkToConfirm();
+      expect(screen.queryByText("Minimum players")).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(submitted(onSubmit)).toMatchObject({ winCondition: "points_threshold" });

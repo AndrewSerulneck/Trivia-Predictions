@@ -31,9 +31,15 @@ import "server-only";
 // user and flag `tiebreakerUnresolved` so the outcome is visible in the report
 // rather than silent.
 //
-// MINIMUM PARTICIPATION is a locked product decision (3+ guests with picks) that
-// is stated to both partners and players, so "no winner this week" is a REPORTED
-// outcome (`skippedBelowMinimum`), not a silent `continue`.
+// MINIMUM PARTICIPATION is the partner's choice, PER REWARD
+// (docs/reward-minimum-players-plan.md A2, 2026-10-17 — it replaces the old fixed
+// "3+ guests with picks" rule). `campaign.minPlayers` null = no minimum: even a
+// lone picker with a pick right wins. Otherwise the reward pays only when at least
+// that many guests have a leaderboard entry (one or more picks) in the contest's
+// span. Rewards created before 2026-10-17 were backfilled to 3 (migration
+// 20261017191219), so they behave as before. Two rewards at one venue can split:
+// one pays, the other is skipped. "No winner" is a REPORTED outcome
+// (`skippedBelowMinimum`, one entry per distinct minimum), not a silent `continue`.
 
 import {
   awardCycleWinner,
@@ -52,7 +58,6 @@ import {
   type NFLPickEmGame,
   type NFLWeek,
 } from "@/lib/nflPickEm";
-import { NFL_REWARD_MIN_PICKERS } from "@/lib/nflPickEmRewardWeeks";
 import {
   listTiebreakerGuesses,
   rankByTiebreakerProximity,
@@ -66,14 +71,6 @@ import type { ChallengeCampaign } from "@/types";
 
 /** Only rewards created from this definition are resolved here. */
 export const NFL_PICKEM_REWARD_DEFINITION_ID: RewardDefinitionId = "nfl_pickem_challenge";
-
-/**
- * Guests with at least one pick required for a contest to produce a winner.
- * Aliased to the Phase-3 constant rather than re-declared so the number the UI
- * copy promises and the number enforced here cannot drift. Exported under this
- * name because the resolver's own tests and Phase 8's copy both reference it.
- */
-export const NFL_WINNER_MIN_PARTICIPANTS = NFL_REWARD_MIN_PICKERS;
 
 /**
  * How far back the sweep looks for weeks to resolve. Deliberately much wider
@@ -146,9 +143,11 @@ export type NFLPickEmWinnerSkip = {
   weekId: string;
   weekNumber: number;
   venueId: string;
-  /** Distinct guests with at least one pick. Always < NFL_WINNER_MIN_PARTICIPANTS. */
+  /** Distinct guests with at least one pick. Always < minPlayers. */
   participants: number;
-  /** The rewards that would have paid out had the gate been met. */
+  /** The partner's minimum these rewards share. */
+  minPlayers: number;
+  /** The rewards that would have paid out had their minimum been met. */
   campaignIds: string[];
 };
 
@@ -320,14 +319,48 @@ export function nflRewardAppliesToWeek(
   return scope.season === week.season && scope.week === week.weekNumber;
 }
 
+/**
+ * Split a contest's rewards by their own minimum (docs/reward-minimum-players-plan.md
+ * A2). `met` keeps the input order; `unmet` groups the skipped rewards by minimum,
+ * smallest first, so the report has one line per distinct minimum.
+ */
+export function splitByMinimum<T extends Pick<ChallengeCampaign, "id" | "minPlayers">>(
+  campaigns: T[],
+  participants: number,
+): { met: T[]; unmet: Array<[minPlayers: number, campaignIds: string[]]> } {
+  const met: T[] = [];
+  const unmet = new Map<number, string[]>();
+  for (const campaign of campaigns) {
+    const minimum = campaign.minPlayers;
+    if (minimum === null || minimum === undefined || participants >= minimum) {
+      met.push(campaign);
+      continue;
+    }
+    unmet.set(minimum, [...(unmet.get(minimum) ?? []), campaign.id]);
+  }
+  return { met, unmet: [...unmet.entries()].sort((a, b) => a[0] - b[0]) };
+}
+
+/**
+ * The headcount the leaderboard's "No reward this week — fewer than N players made
+ * picks" note compares against, for the week's active most-picks rewards. Each has
+ * its own minimum (plan A2), so this is the SMALLEST; null when there are none, or
+ * when any of them has no minimum (then headcount can't explain a no-winner week).
+ */
+export function nflNoWinnerHeadcount(campaigns: Array<Pick<ChallengeCampaign, "minPlayers">>): number | null {
+  const minimums = campaigns.map((campaign) => campaign.minPlayers ?? null);
+  if (minimums.length === 0 || minimums.some((value) => value === null)) return null;
+  return Math.min(...(minimums as number[]));
+}
+
 /** Does this reward's scope cover this contest? */
 function campaignCoversContest(campaign: ChallengeCampaign, contest: NFLWinnerContest): boolean {
   const scope = campaign.nflWeekScope;
   if (!scope) return false;
   if (scope.season !== contest.season) return false;
   // A single-week reward is decided by exactly one contest: that week's weekly
-  // one — same standings, same tiebreaker, same 3-picker minimum as "every
-  // week". Never a season contest, never a neighbouring week.
+  // one — same standings, same tiebreaker as "every week" (its minimum is its
+  // own, like every reward's). Never a season contest, never a neighbouring week.
   if (scope.kind === "single_week") {
     return contest.kind === "weekly" && nflRewardAppliesToWeek(campaign, contest.week);
   }
@@ -595,13 +628,13 @@ export async function resolveNFLPickEmWinnerRewards(
     for (const venueId of venueIds) {
       const scope = `${contest.kind}:${contest.week.id}@${venueId}`;
       try {
-        const campaigns = (await loadVenueCampaigns(venueId)).filter(
+        const eligible = (await loadVenueCampaigns(venueId)).filter(
           (campaign) =>
             !spentCampaignIds.has(campaign.id) &&
             campaignCoversContest(campaign, contest) &&
             campaignWasLiveForContest(campaign, contest),
         );
-        if (campaigns.length === 0) continue;
+        if (eligible.length === 0) continue;
 
         const standings = await getNFLPickEmLeaderboard({
           venueId,
@@ -615,9 +648,10 @@ export async function resolveNFLPickEmWinnerRewards(
         });
         const entries = standings.entries;
 
-        // Locked product decision: below the minimum, nobody wins — and it is
-        // REPORTED, because this is the outcome partners are surprised by.
-        if (entries.length < NFL_WINNER_MIN_PARTICIPANTS) {
+        // Each reward's own minimum (null = none). Below it, that reward has no
+        // winner — REPORTED, because this is the outcome partners are surprised by.
+        const { met: campaigns, unmet } = splitByMinimum(eligible, entries.length);
+        for (const [minPlayers, campaignIds] of unmet) {
           report.skippedBelowMinimum.push({
             kind: contest.kind,
             season: contest.season,
@@ -625,10 +659,11 @@ export async function resolveNFLPickEmWinnerRewards(
             weekNumber: contest.week.weekNumber,
             venueId,
             participants: entries.length,
-            campaignIds: campaigns.map((campaign) => campaign.id),
+            minPlayers,
+            campaignIds,
           });
-          continue;
         }
+        if (campaigns.length === 0) continue;
 
         // correctPicks, not totalPoints: they are proportional (flat 10 per
         // correct pick) so either sorts the same, but picks is the unit the

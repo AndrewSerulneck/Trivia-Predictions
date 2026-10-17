@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronDown, Trophy } from "lucide-react";
 import { HightopLoader } from "@/components/ui/HightopLoader";
-import { NFL_REWARD_MIN_PICKERS } from "@/lib/nflPickEmRewardWeeks";
 import { describeRewardPrize } from "@/lib/rewardDefinitions";
 import type { RewardDiscountKind, RewardMenuItem, RewardPrizeKind } from "@/types";
 
@@ -226,6 +225,7 @@ export function NFLPickEmLeaderboard({
   const [rewardWinners, setRewardWinners] = useState<RewardWinner[]>([]);
   const [rewardParticipantCount, setRewardParticipantCount] = useState<number | null>(null);
   const [hasActiveGameWinnerReward, setHasActiveGameWinnerReward] = useState(false);
+  const [rewardMinPlayers, setRewardMinPlayers] = useState<number | null>(null);
 
   useEffect(() => {
     if (!venueId) return;
@@ -280,6 +280,7 @@ export function NFLPickEmLeaderboard({
       setRewardWinners([]);
       setRewardParticipantCount(null);
       setHasActiveGameWinnerReward(false);
+      setRewardMinPlayers(null);
       return;
     }
     let cancelled = false;
@@ -293,6 +294,7 @@ export function NFLPickEmLeaderboard({
         setRewardWinners(Array.isArray(data.winners) ? data.winners : []);
         setRewardParticipantCount(typeof data.participantCount === "number" ? data.participantCount : null);
         setHasActiveGameWinnerReward(Boolean(data.hasActiveGameWinnerReward));
+        setRewardMinPlayers(typeof data.rewardMinPlayers === "number" ? data.rewardMinPlayers : null);
       } catch {
         // Non-critical — the standings above already loaded independently.
       }
@@ -306,13 +308,15 @@ export function NFLPickEmLeaderboard({
 
   const winnerByUserId = new Map(rewardWinners.map((winner) => [winner.winnerUserId, winner]));
   // Only for a week that has passed — the live current week's low count isn't
-  // yet a decided outcome (the 3-picker rule is spelled out on the Rewards card).
+  // yet a decided outcome (the reward's minimum is spelled out on the Rewards card).
+  // No minimum (null) = headcount can't explain a no-winner week, so no note.
   const showNoRewardNote =
     mode === "week" &&
     hasActiveGameWinnerReward &&
     rewardWinners.length === 0 &&
+    rewardMinPlayers !== null &&
     rewardParticipantCount !== null &&
-    rewardParticipantCount < NFL_REWARD_MIN_PICKERS &&
+    rewardParticipantCount < rewardMinPlayers &&
     Boolean(currentWeekId) &&
     weekId !== currentWeekId;
 
@@ -359,7 +363,7 @@ export function NFLPickEmLeaderboard({
 
       {showNoRewardNote && (
         <p className="px-1 text-caption font-semibold text-slate-500">
-          No reward this week — fewer than {NFL_REWARD_MIN_PICKERS} players made picks.
+          No reward this week — fewer than {rewardMinPlayers} players made picks.
         </p>
       )}
 

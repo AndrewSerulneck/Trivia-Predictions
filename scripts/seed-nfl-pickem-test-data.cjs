@@ -369,8 +369,9 @@ async function main() {
       weekNumber: WEEK_NUMBERS.lowParticipation,
       displayLabel: "TEST Week (past, low participation)",
       weekStart: lowParticipationWeekStart,
-      // Only 2 sim users pick this week — Phase 7's minimum-participation
-      // (3+ pickers) negative case.
+      // Only 2 sim users pick this week — the minimum-participation negative
+      // case for a reward created with a minimum of 3 (the minimum is per
+      // reward since docs/reward-minimum-players-plan.md; no minimum = pays).
       participantUsernames: ["nflsim_ace", "nflsim_fox"],
     },
     { weekNumber: WEEK_NUMBERS.pastA, displayLabel: "TEST Week (past)", weekStart: pastAWeekStart },

@@ -34,7 +34,7 @@ import {
   type RewardGameSlot,
   type RewardWeekday,
 } from "@/lib/rewardGameSlots";
-import { NFL_REWARD_MIN_PICKERS, normalizeNFLWeekScope } from "@/lib/nflPickEmRewardWeeks";
+import { normalizeNFLWeekScope } from "@/lib/nflPickEmRewardWeeks";
 import { describePlacePrizeLadder, placeOrdinal, rankedWeekNights } from "@/lib/rankedPlaceRewards";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -534,7 +534,11 @@ const minPlayersOf = (input: Pick<RewardDescriptionInput, "minPlayers">): number
 
 type NFLTemplates = Extract<RewardDefinition["description"], { calendar: "nfl_season" }>;
 
-const NFL_MIN_PICKERS_LINE = `At least ${NFL_REWARD_MIN_PICKERS} players need to make picks for a winner to be named.`;
+/** The reward's own minimum (docs/reward-minimum-players-plan.md A2); no minimum, no line. */
+const nflMinPickersLine = (input: RewardDescriptionInput): string => {
+  const minimum = minPlayersOf(input);
+  return minimum ? ` At least ${minimum} players need to make picks for a winner to be named.` : "";
+};
 
 const describeNFLReward = (
   templates: NFLTemplates,
@@ -550,6 +554,7 @@ const describeNFLReward = (
   const mostPicks = input.winCondition === "game_winner";
   const fromWeek = scope.kind === "season" ? String(scope.fromWeek) : "";
   const week = scope.kind === "single_week" ? String(scope.week) : "";
+  const minPickersLine = mostPicks ? nflMinPickersLine(input) : "";
 
   let summary: string;
   let when: string;
@@ -557,15 +562,15 @@ const describeNFLReward = (
   if (mostPicks && scope.kind === "weekly") {
     summary = fill(templates.mostPicksWeekly, { prize });
     when = "A new contest starts every Thursday of the NFL season. Make your picks before each game kicks off.";
-    fineprint = `Ties are broken by this week's tiebreaker question. ${NFL_MIN_PICKERS_LINE}`;
+    fineprint = `Ties are broken by this week's tiebreaker question.${minPickersLine}`;
   } else if (mostPicks && scope.kind === "single_week") {
     summary = fill(templates.mostPicksSingleWeek, { prize, week });
     when = `One contest, Week ${week} only. Make your picks before each game kicks off.`;
-    fineprint = `Ties are broken by Week ${week}'s tiebreaker question. ${NFL_MIN_PICKERS_LINE}`;
+    fineprint = `Ties are broken by Week ${week}'s tiebreaker question.${minPickersLine}`;
   } else if (mostPicks) {
     summary = fill(templates.mostPicksSeason, { prize, fromWeek });
     when = "One contest, all season long. Make your picks every week before kickoff.";
-    fineprint = `Ties are broken by the final week's tiebreaker question. ${NFL_MIN_PICKERS_LINE}`;
+    fineprint = `Ties are broken by the final week's tiebreaker question.${minPickersLine}`;
   } else if (scope.kind === "weekly") {
     summary = fill(templates.picksTargetWeekly, { prize, threshold });
     when = "Resets every Thursday during the NFL season.";

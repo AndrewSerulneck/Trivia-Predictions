@@ -92,6 +92,8 @@ const nfl = (overrides: Partial<RewardDescriptionInput> = {}): RewardDescription
   pointsRequiredToWin: 1,
   nflWeekScope: { kind: "weekly", season: 2026 },
   nfl: { upcomingStartDate: null, seasonEndDate: "2027-01-12" },
+  // The backfilled minimum every pre-2026-10-17 NFL reward carries (migration 20261017191219).
+  minPlayers: 3,
   ...GIFT_CARD,
   ...overrides,
 });
@@ -141,6 +143,20 @@ describe("describeReward — NFL Pick 'Em (§3 rows 1–4)", () => {
         "Ties are broken by the final week's tiebreaker question. At least 3 players need to make picks for a winner to be named.",
       isCustom: false,
     });
+  });
+
+  it("most picks: states the reward's own minimum, and no line when it has none (plan A2)", () => {
+    expect(describeClean(nfl({ minPlayers: 6 })).fineprint).toBe(
+      "Ties are broken by this week's tiebreaker question. At least 6 players need to make picks for a winner to be named.",
+    );
+    expect(describeClean(nfl({ minPlayers: null })).fineprint).toBe(
+      "Ties are broken by this week's tiebreaker question.",
+    );
+    expect(
+      describeClean(
+        nfl({ minPlayers: null, recurringType: "none", nflWeekScope: { kind: "season", season: 2026, fromWeek: 5 } }),
+      ).fineprint,
+    ).toBe("Ties are broken by the final week's tiebreaker question.");
   });
 
   it("picks target, weekly — many winners", () => {

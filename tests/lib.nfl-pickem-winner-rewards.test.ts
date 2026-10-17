@@ -7,8 +7,9 @@ import type { ChallengeCampaign, NFLWeekScope } from "@/types";
  *
  * Every behavior pinned here spends real money if it regresses — a duplicate
  * cycle key mints a second coupon for the same week, an unbroken tie either
- * over-awards or awards the wrong guest, and the 3-picker minimum is a promise
- * made to both partners and players.
+ * over-awards or awards the wrong guest, and each reward's own minimum players
+ * (docs/reward-minimum-players-plan.md A2) is a promise made to both partners and
+ * players.
  */
 
 type LedgerRow = { challengeId: string; cycleStart: string; userId: string; quota: number };
@@ -246,10 +247,11 @@ vi.mock("@/lib/supabaseAdmin", () => {
 
 import { computeCycleStart } from "@/lib/challengeCampaigns";
 import {
-  NFL_WINNER_MIN_PARTICIPANTS,
   isOneOffNFLReward,
+  nflNoWinnerHeadcount,
   nflRewardAppliesToWeek,
   resolveNFLPickEmWinnerRewards,
+  splitByMinimum,
 } from "@/lib/nflPickEmWinnerRewards";
 import { getVenueTimezone } from "@/lib/timezone";
 
@@ -308,6 +310,8 @@ const makeCampaign = (overrides: Partial<ChallengeCampaign> = {}): ChallengeCamp
     prizeDiscountKind: "percent",
     prizeDiscountValue: 50,
     isActive: true,
+    // What every reward created before 2026-10-17 carries (migration 20261017191219).
+    minPlayers: 3,
     ...overrides,
   }) as ChallengeCampaign;
 
@@ -514,7 +518,7 @@ describe("resolveNFLPickEmWinnerRewards", () => {
 
   // ── Gates ─────────────────────────────────────────────────────────────────
 
-  it("awards nobody, and reports it, below the minimum participation gate", async () => {
+  it("awards nobody, and reports it, below the reward's own minimum", async () => {
     setStandings(`week:venue-1:${WEEK_A.id}`, [
       ["user-ace", 9],
       ["user-fox", 6],
@@ -529,10 +533,61 @@ describe("resolveNFLPickEmWinnerRewards", () => {
       venueId: "venue-1",
       weekId: WEEK_A.id,
       participants: 2,
+      minPlayers: 3,
       campaignIds: ["camp-nfl"],
     });
-    expect(NFL_WINNER_MIN_PARTICIPANTS).toBe(3);
   });
+
+  it("pays at exactly the minimum", async () => {
+    store.campaigns = [makeCampaign({ minPlayers: 3 })];
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.resolutions.map((resolution) => resolution.awardedUserIds)).toEqual([["user-ace"]]);
+    expect(report.skippedBelowMinimum).toEqual([]);
+  });
+
+  it("with no minimum, a lone picker with a pick right wins", async () => {
+    store.campaigns = [makeCampaign({ minPlayers: null })];
+    setStandings(`week:venue-1:${WEEK_A.id}`, [["user-solo", 2]]);
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.resolutions).toHaveLength(1);
+    expect(report.resolutions[0].awardedUserIds).toEqual(["user-solo"]);
+    expect(report.skippedBelowMinimum).toEqual([]);
+  });
+
+  it("with no minimum, a lone picker with nothing right still wins nothing", async () => {
+    store.campaigns = [makeCampaign({ minPlayers: null })];
+    setStandings(`week:venue-1:${WEEK_A.id}`, [["user-solo", 0]]);
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.resolutions).toHaveLength(0);
+    expect(store.ledger).toHaveLength(0);
+  });
+
+  it("gates each reward at a venue on its own minimum: one pays, one is skipped and reported", async () => {
+    store.campaigns = [
+      makeCampaign({ id: "camp-any", minPlayers: null }),
+      makeCampaign({ id: "camp-two", minPlayers: 2 }),
+      makeCampaign({ id: "camp-five", minPlayers: 5 }),
+      makeCampaign({ id: "camp-ten", minPlayers: 10 }),
+    ];
+    // Three pickers: meets none and 2, misses 5 and 10.
+
+    const report = await resolveNFLPickEmWinnerRewards(NOW);
+
+    expect(report.resolutions.map((resolution) => resolution.campaignId).sort()).toEqual(["camp-any", "camp-two"]);
+    expect(report.resolutions.every((resolution) => resolution.awardedUserIds[0] === "user-ace")).toBe(true);
+    expect(store.ledger.map((row) => row.challengeId).sort()).toEqual(["camp-any", "camp-two"]);
+    expect(report.skippedBelowMinimum).toEqual([
+      expect.objectContaining({ participants: 3, minPlayers: 5, campaignIds: ["camp-five"] }),
+      expect.objectContaining({ participants: 3, minPlayers: 10, campaignIds: ["camp-ten"] }),
+    ]);
+  });
+
 
   it("awards nobody when no guest got a single pick right", async () => {
     setStandings(`week:venue-1:${WEEK_A.id}`, [
@@ -815,6 +870,34 @@ describe("resolveNFLPickEmWinnerRewards", () => {
     // venue-2 still resolved.
     expect(report.resolutions).toHaveLength(1);
     expect(report.resolutions[0].venueId).toBe("venue-2");
+  });
+});
+
+describe("splitByMinimum", () => {
+  it("keeps rewards with no minimum or a met one, and groups the rest by minimum", () => {
+    const split = splitByMinimum(
+      [
+        { id: "a", minPlayers: null },
+        { id: "b", minPlayers: 4 },
+        { id: "c", minPlayers: undefined },
+        { id: "d", minPlayers: 3 },
+        { id: "e", minPlayers: 4 },
+        { id: "f", minPlayers: 2 },
+      ],
+      3,
+    );
+    expect(split.met.map((campaign) => campaign.id)).toEqual(["a", "c", "d", "f"]);
+    expect(split.unmet).toEqual([[4, ["b", "e"]]]);
+  });
+});
+
+describe("nflNoWinnerHeadcount", () => {
+  it("is the smallest minimum, or null when there is no reward or any has no minimum", () => {
+    expect(nflNoWinnerHeadcount([{ minPlayers: 5 }, { minPlayers: 3 }])).toBe(3);
+    expect(nflNoWinnerHeadcount([{ minPlayers: 4 }])).toBe(4);
+    expect(nflNoWinnerHeadcount([])).toBeNull();
+    expect(nflNoWinnerHeadcount([{ minPlayers: 3 }, { minPlayers: null }])).toBeNull();
+    expect(nflNoWinnerHeadcount([{ minPlayers: undefined }])).toBeNull();
   });
 });
 

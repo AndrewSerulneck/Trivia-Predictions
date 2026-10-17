@@ -135,4 +135,23 @@ Open the menu → **Results**. Use a venue that has run Live Trivia (Garden Stat
 - [ ] **Reload on a detail screen** (pull to refresh while on a player): it lands on the timeline, not a blank page.
 - [ ] Text is readable at arm's length; nothing is cut off at the edges on the smallest phone you own.
 
+## K. "How many players must play?" step (new, 2026-10-17 — Create Reward)
+Menu → **Offer Rewards** → create one reward of each kind below. Do it on a 350 px phone and again on the smallest
+phone you own (289 px, an iPhone SE).
+- [ ] **Live Trivia, Winner of the game.** After the rules, the next button says **Next: Minimum Players** and opens
+  its own screen titled "How many players must play?". Neither **No minimum** nor **Set a minimum** is selected and
+  the next button is greyed out until you tap one.
+- [ ] **Set a minimum** shows a number box already holding **3**. Clear it or type 1: a red line explains and the
+  next button stays greyed. Type 5: it turns on.
+- [ ] **Live Trivia, Top players this week.** Same screen, with the "that week" sentence under the buttons.
+- [ ] **NFL Pick 'Em, Most picks right** (weekly, then whole season). Same screen; the sentence says "make picks that
+  week" / "that season", and mentions that with no minimum even one player can win.
+- [ ] **A points target** (Live Trivia or NFL): there is no such screen. The rules go straight to **Prize**.
+- [ ] **Confirm** shows a "Minimum players" line (At least N / None) for all three contest kinds, and none for a
+  points target.
+- [ ] **Phone Back.** From Prize it returns to the players screen with your answer still there; from the players
+  screen it returns to the rules. Nothing gets stuck or skipped.
+- [ ] Close the sheet while on the players screen: it asks "Discard this reward?".
+- [ ] Text readable and buttons easy to tap at both widths; nothing cut off.
+
 When every box is ticked (or a problem is written next to it), send the list back.

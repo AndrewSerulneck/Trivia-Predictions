@@ -63,9 +63,12 @@ export const rewardTermsText = (competition: OwnerCompetition): string | null =>
   if (competition.winCondition === "ranked_places") {
     return describeRankedTerms(competition.placePrizes, competition.minPlayers);
   }
-  // The partner's optional "at least N players" minimum is part of a game-winner reward's terms too.
+  // The partner's optional "at least N players" minimum is part of a game-winner reward's terms too
+  // (NFL most picks included, docs/reward-minimum-players-plan.md A2 — there, playing = making picks).
+  const playVerb =
+    getRewardDefinition(competition.rewardDefinitionId)?.description.calendar === "nfl_season" ? "make picks" : "play";
   const minimum = competition.minPlayers
-    ? ` At least ${competition.minPlayers} players need to play for a winner to be named.`
+    ? ` At least ${competition.minPlayers} players need to ${playVerb} for a winner to be named.`
     : "";
   if (competition.winCondition === "game_winner" && competition.gameWinnerSlots) {
     return `${describeCampaignGameWinnerTerms(competition)}${minimum}`;

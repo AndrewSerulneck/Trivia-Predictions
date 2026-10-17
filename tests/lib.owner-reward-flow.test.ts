@@ -6,7 +6,7 @@ import {
   resolveRewardSheetStep,
   rewardScreenFor,
 } from "@/lib/ownerRewardFlow";
-import { guardRewardWizardStep, isRewardWizardStep } from "@/lib/rewardWizardSteps";
+import { guardRewardWizardStep, isRewardWizardStep, REWARD_WIZARD_STEPS } from "@/lib/rewardWizardSteps";
 import { stepDirection } from "@/lib/ownerSheetParams";
 
 describe("resolveRewardSheetStep", () => {
@@ -56,13 +56,25 @@ describe("reward screens", () => {
 });
 
 describe("guardRewardWizardStep", () => {
-  const none = { definition: false, context: false };
+  const none = { definition: false, context: false, offersMinimum: false };
   it("sends steps that need a picked reward back to Definition", () => {
-    for (const step of ["terms", "prize", "confirm"] as const) {
+    for (const step of ["terms", "players", "prize", "confirm"] as const) {
       expect(guardRewardWizardStep(step, none)).toBe("definition");
-      expect(guardRewardWizardStep(step, { definition: true, context: false })).toBe("definition");
-      expect(guardRewardWizardStep(step, { definition: true, context: true })).toBe(step);
+      expect(guardRewardWizardStep(step, { definition: true, context: false, offersMinimum: true })).toBe("definition");
+      expect(guardRewardWizardStep(step, { definition: true, context: true, offersMinimum: true })).toBe(step);
     }
+  });
+
+  it("puts the players step between terms and prize", () => {
+    expect(REWARD_WIZARD_STEPS.indexOf("players")).toBe(REWARD_WIZARD_STEPS.indexOf("terms") + 1);
+    expect(REWARD_WIZARD_STEPS.indexOf("prize")).toBe(REWARD_WIZARD_STEPS.indexOf("players") + 1);
+  });
+
+  it("lands a reward with no minimum (a points target) on Prize when Players is requested", () => {
+    const ready = { definition: true, context: true, offersMinimum: false };
+    expect(guardRewardWizardStep("players", ready)).toBe("prize");
+    expect(guardRewardWizardStep("terms", ready)).toBe("terms");
+    expect(guardRewardWizardStep("prize", ready)).toBe("prize");
   });
 
   it("leaves venue and definition alone", () => {

@@ -28,6 +28,11 @@ export const MAX_RANKED_PLACES = 3;
 /** The partner's optional "at least N players took part" (D7) — matches the database check. */
 export const REWARD_MIN_PLAYERS_MIN = 2;
 export const REWARD_MIN_PLAYERS_MAX = 100;
+/**
+ * What the wizard offers when a partner sets a minimum, for every reward type
+ * (docs/reward-minimum-players-plan.md D2). A pre-fill only: no reader treats it as a rule.
+ */
+export const REWARD_MIN_PLAYERS_DEFAULT = 3;
 
 /** One player's week, as the live_trivia_week_totals RPC returns it. */
 export type WeekPlayerTotal = {

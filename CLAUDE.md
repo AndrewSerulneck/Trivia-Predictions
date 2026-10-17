@@ -261,6 +261,10 @@ migrations are grandfathered — see `docs/supabase-data-api-grants-plan.md`).
 - **`NEXT_PUBLIC_REWARDS_ENABLED` / `lib/rewardsFlags.ts` no longer exist** (deleted in commit
   9abbb1b, 2026-07-22) — multi-winner Rewards is live unconditionally, not flag-gated. The only
   live Rewards flag today is `NEXT_PUBLIC_REWARD_GAME_PICKER_ENABLED`
+  **Minimum players has its own wizard step, `players` (2026-10-17, `docs/reward-minimum-players-plan.md`):** between
+  `terms` and `prize`, asked for every contest reward (Win the game, Weekly 1st/2nd/3rd, NFL most picks), never a
+  points target (`guardRewardWizardStep` sends a `?step=players` for one to `prize`). Nothing is pre-selected; Next
+  stays off until "No minimum" or a valid 2–100 number (pre-fill `REWARD_MIN_PLAYERS_DEFAULT` = 3).
   (`isGamePickerEnabled()` in `lib/rewardGameSlots.ts`), which gates ONLY the wizard's
   game-picker UI branch — not cadence support, not the archive/delete split, not the slot
   cascade. Don't describe other Rewards work as "inert until a flag flips."
@@ -302,7 +306,10 @@ migrations are grandfathered — see `docs/supabase-data-api-grants-plan.md`).
   `lib/nflPickEmRewardWeeks.ts` derives cadence, quota, `activeDays` (all seven days,
   **`"thu"` first**, or the cycle anchor and accrual gate both break) and date bounds from
   it. "Most picks right" is locked to **1 winner** (refused server-side, not clamped) and
-  needs **3+ pickers** at the venue or nobody wins; ties are broken by a per-week tiebreaker
+  needs **the partner's own minimum** of pickers at the venue or nobody wins — per reward,
+  `challenge_campaigns.min_players`, null = no minimum (even 1 picker can win), else 2–100;
+  every reward created before 2026-10-17 was backfilled to 3 (migration `20261017191219`,
+  `docs/reward-minimum-players-plan.md`); a minimum is refused on a picks target. Ties are broken by a per-week tiebreaker
   question (`lib/nflPickEmTiebreaker.ts`). Accrual is **1 point per correct pick, not 10**
   (`lib/nflPickEmRewardAccrual.ts`, a separate sweep — daily Pick 'Em's settlement path is
   untouched). Full as-built record, deviations and remaining work:

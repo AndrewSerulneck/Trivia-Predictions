@@ -42,13 +42,6 @@ export const isNFLRewardWeekScopeKind = (value: unknown): value is NFLRewardWeek
     String(value ?? "").trim().toLowerCase(),
   );
 
-/**
- * The minimum number of guests with picks at a venue for a week (or season) to
- * produce a winner. Stated to partners on the wizard and to players on the
- * Pick 'Em page; enforced by the resolver.
- */
-export const NFL_REWARD_MIN_PICKERS = 3;
-
 /** Weeks are 1-based and the NFL has never run past 18 + 4 playoff rounds. */
 const MAX_NFL_WEEK = 30;
 
@@ -498,12 +491,17 @@ export type NFLWeekScopeDescription = {
   quantity: number;
   /** Correct picks needed (points-target rewards only). */
   threshold: number;
+  /**
+   * The partner's minimum players (most-picks rewards only). Null or absent = no
+   * minimum, so no sentence (docs/reward-minimum-players-plan.md A2).
+   */
+  minPlayers?: number | null;
 };
 
 /**
- * Confirm-screen readback. Always states the minimum-participation rule for a
- * winner-takes-it reward, because "no winner this week" is the one outcome a
- * partner is surprised by (docs/nfl-pickem-reward-plan.md, locked decisions).
+ * Confirm-screen readback. States the reward's own minimum-participation rule for a
+ * winner-takes-it reward whenever it has one, because "no winner this week" is the
+ * one outcome a partner is surprised by.
  */
 export const describeNFLWeekScope = (
   scope: unknown,
@@ -517,13 +515,18 @@ export const describeNFLWeekScope = (
   const threshold = Math.max(1, Math.round(Number(terms.threshold) || 1));
 
   if (winCondition === "game_winner") {
+    const minimum = Number(terms.minPlayers);
+    const hasMinimum = Number.isInteger(minimum) && minimum >= 2;
     if (normalized.kind === "weekly") {
-      return `Each week, the guest with the most correct NFL picks at your venue wins this reward — 1 winner per week. Ties are broken by the weekly tiebreaker question. A week with fewer than ${NFL_REWARD_MIN_PICKERS} players making picks has no winner.`;
+      const rule = hasMinimum ? ` A week with fewer than ${minimum} players making picks has no winner.` : "";
+      return `Each week, the guest with the most correct NFL picks at your venue wins this reward — 1 winner per week. Ties are broken by the weekly tiebreaker question.${rule}`;
     }
     if (normalized.kind === "single_week") {
-      return `After Week ${normalized.week}, the guest with the most correct NFL picks that week at your venue wins this reward — 1 winner. Ties are broken by Week ${normalized.week}'s tiebreaker question. If fewer than ${NFL_REWARD_MIN_PICKERS} players make picks that week, there is no winner.`;
+      const rule = hasMinimum ? ` If fewer than ${minimum} players make picks that week, there is no winner.` : "";
+      return `After Week ${normalized.week}, the guest with the most correct NFL picks that week at your venue wins this reward — 1 winner. Ties are broken by Week ${normalized.week}'s tiebreaker question.${rule}`;
     }
-    return `At the end of the season, the guest with the most correct NFL picks at your venue wins this reward — 1 winner for the season. Ties are broken by the final week's tiebreaker question. A season with fewer than ${NFL_REWARD_MIN_PICKERS} players making picks has no winner.`;
+    const rule = hasMinimum ? ` A season with fewer than ${minimum} players making picks has no winner.` : "";
+    return `At the end of the season, the guest with the most correct NFL picks at your venue wins this reward — 1 winner for the season. Ties are broken by the final week's tiebreaker question.${rule}`;
   }
 
   // "the first guest … wins" reads better than "the first 1 guests … win", so a

@@ -14,7 +14,7 @@ target** or by having the **most correct picks at the venue that week**.
 | Week-winner quantity | **Locked to 1 per week** | One winner per venue per week, by definition. Enforced server-side, not just hidden in the wizard. |
 | Points-target quantity | Partner picks N (existing `REWARD_QUANTITY_OPTIONS`) | Same as every other reward. |
 | Ties on week-winner | **Tiebreaker question**: guess total points scored in the week's last game; closest wins | New feature — see Phases 1–2. Labeled as a tiebreaker in the UI so guests know what it's for. |
-| Minimum participation | **3+ users with picks at that venue that week**, or no award | Stated prominently to both partners (wizard + confirm screen) and players (Pick 'Em page + Rewards panel). |
+| Minimum participation | **3+ users with picks at that venue that week**, or no award. **Amended 2026-10-17 (Andrew): the partner chooses per reward — no minimum (even 1 picker can win) or at least N (2–100), stored in `challenge_campaigns.min_players`. Rewards created before then were backfilled to 3 (migration `20261017191219`) so they behave as before. See `docs/reward-minimum-players-plan.md`.** | Stated prominently to both partners (wizard + confirm screen) and players (Pick 'Em page + Rewards panel). |
 | Scoping | **Venue-scoped**, always | NFL games are national; standings never cross venues. Every query filters `venue_id`. |
 | Prizes | **Identical to Live Trivia Challenge** | Reuses `normalizeRewardPrize` / the wizard's prize step unchanged. |
 

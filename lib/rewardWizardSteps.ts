@@ -4,7 +4,7 @@
 // Back gesture steps back one question (docs/partner-dashboard-app-redesign-plan.md §4d).
 // Pure: no React, no DOM.
 
-export const REWARD_WIZARD_STEPS = ["venue", "definition", "terms", "prize", "confirm"] as const;
+export const REWARD_WIZARD_STEPS = ["venue", "definition", "terms", "players", "prize", "confirm"] as const;
 
 export type RewardWizardStep = (typeof REWARD_WIZARD_STEPS)[number];
 
@@ -15,14 +15,21 @@ export const isRewardWizardStep = (value: string | null | undefined): value is R
 export type RewardWizardStepChange = "forward" | "back" | "replace";
 
 /**
- * The step to actually show for a REQUESTED one. Terms, Prize and Confirm need
+ * The step to actually show for a REQUESTED one. Terms, Players, Prize and Confirm need
  * the reward the partner picked (and its schedule context); a reload or a
  * hand-edited `?step=` arrives without them, so those fall back to Definition.
+ * Players is the "how many players must play?" question, asked only where players
+ * compete (`offersMinimum`); a points target has none, so a request for it lands on Prize.
  */
 export const guardRewardWizardStep = (
   requested: RewardWizardStep,
-  have: { definition: boolean; context: boolean },
-): RewardWizardStep =>
-  (requested === "terms" || requested === "prize" || requested === "confirm") && !(have.definition && have.context)
-    ? "definition"
-    : requested;
+  have: { definition: boolean; context: boolean; offersMinimum: boolean },
+): RewardWizardStep => {
+  if (
+    (requested === "terms" || requested === "players" || requested === "prize" || requested === "confirm") &&
+    !(have.definition && have.context)
+  ) {
+    return "definition";
+  }
+  return requested === "players" && !have.offersMinimum ? "prize" : requested;
+};

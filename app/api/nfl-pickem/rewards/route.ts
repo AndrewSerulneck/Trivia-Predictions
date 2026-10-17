@@ -7,6 +7,7 @@ import {
 import { getNFLPickEmLeaderboard, getNFLWeekById } from "@/lib/nflPickEm";
 import {
   NFL_PICKEM_REWARD_DEFINITION_ID,
+  nflNoWinnerHeadcount,
   nflRewardAppliesToWeek,
   nflWinnerCycleStart,
 } from "@/lib/nflPickEmWinnerRewards";
@@ -58,6 +59,7 @@ export async function GET(request: Request) {
 
     let participantCount: number | null = null;
     let hasActiveGameWinnerReward = false;
+    let rewardMinPlayers: number | null = null;
     const winners: NFLRewardWinner[] = [];
 
     if (weekId) {
@@ -78,9 +80,11 @@ export async function GET(request: Request) {
         );
         // Drives the leaderboard's "no winner this week" note, so a single-week
         // reward only counts on its own week.
-        hasActiveGameWinnerReward = gameWinnerCampaigns.some(
+        const activeForWeek = gameWinnerCampaigns.filter(
           (campaign) => campaign.isActive && nflRewardAppliesToWeek(campaign, week)
         );
+        hasActiveGameWinnerReward = activeForWeek.length > 0;
+        rewardMinPlayers = nflNoWinnerHeadcount(activeForWeek);
 
         // This is a hot read path (both the reward banner and the leaderboard
         // re-poll it on every week switch), so fan the per-campaign winner reads
@@ -126,6 +130,7 @@ export async function GET(request: Request) {
       participantCount,
       winners,
       hasActiveGameWinnerReward,
+      rewardMinPlayers,
     });
   } catch (error) {
     console.error("[NFL Pick 'Em] Error fetching rewards:", error);

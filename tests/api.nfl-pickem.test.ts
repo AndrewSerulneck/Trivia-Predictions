@@ -292,8 +292,8 @@ describeIfEnv("NFL Pick 'Em API", () => {
 
       // pastTestWeek has no picks seeded by this file (see the tiebreaker
       // describe block's note on why opposing-user rows aren't created here),
-      // so the boundary this exercises is 0 pickers < NFL_REWARD_MIN_PICKERS
-      // (3) — the same comparison the banner and leaderboard apply to 2 vs 3.
+      // so the boundary this exercises is 0 pickers < 3, a reward's minimum
+      // (the leaderboard compares against `rewardMinPlayers`, null here: no reward).
       // A full 2-picker vs 3-picker fixture needs FK-valid users/venues rows
       // this file's convention doesn't create; deferred to Phase 9's seeded
       // browser verification.
@@ -306,6 +306,7 @@ describeIfEnv("NFL Pick 'Em API", () => {
       expect(data.participantCount).toBeLessThan(3);
       expect(Array.isArray(data.winners)).toBe(true);
       expect(data.winners).toHaveLength(0);
+      expect(data.rewardMinPlayers).toBeNull();
     });
   });
 });

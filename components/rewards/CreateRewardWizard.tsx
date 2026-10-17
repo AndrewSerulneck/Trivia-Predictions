@@ -84,6 +84,7 @@ import {
 } from "@/lib/rewardPrizeDraft";
 import {
   MAX_RANKED_PLACES,
+  REWARD_MIN_PLAYERS_DEFAULT,
   REWARD_MIN_PLAYERS_MAX,
   REWARD_MIN_PLAYERS_MIN,
   describeRankedTerms,
@@ -103,7 +104,6 @@ import {
   type RewardWizardStepChange,
 } from "@/lib/rewardWizardSteps";
 import {
-  NFL_REWARD_MIN_PICKERS,
   NFL_WEEK_SCOPE_INVALID_MESSAGE,
   REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
   deriveNFLWeekScopeTerms,
@@ -377,8 +377,10 @@ export function CreateRewardWizard({
   // which place's prize the prize step is editing. Only read when the reward is won by
   // weekly places (or, for the minimum, by "winner of the game").
   const [placeCount, setPlaceCount] = useState(MAX_RANKED_PLACES);
-  const [minPlayersOn, setMinPlayersOn] = useState(false);
-  const [minPlayersText, setMinPlayersText] = useState("4");
+  // null until the partner answers the "How many players must play?" step (plan D1): nothing is
+  // pre-selected, so the question can't be skipped past.
+  const [minPlayersOn, setMinPlayersOn] = useState<boolean | null>(null);
+  const [minPlayersText, setMinPlayersText] = useState(String(REWARD_MIN_PLAYERS_DEFAULT));
   const [activePlace, setActivePlace] = useState(0);
 
   // One prize draft per place. A reward that isn't won by places only ever uses index 0, which
@@ -399,10 +401,17 @@ export function CreateRewardWizard({
   // A controlled step is guarded against data a reload lost; uncontrolled, the
   // flow itself guarantees it, so the guard is only applied to a host's request.
   const requestedStep = controlledStep ?? internalStep;
+  // Minimum players (D7): asked where the reward is a contest between players — weekly places, Live
+  // Trivia's "winner of the game" and NFL "most picks right". Never a points target (a personal goal).
+  const offersMinPlayers = winCondition === "game_winner" || winCondition === "ranked_places";
   const step =
     controlledStep === undefined
       ? requestedStep
-      : guardRewardWizardStep(requestedStep, { definition: definition !== null, context: context !== null });
+      : guardRewardWizardStep(requestedStep, {
+          definition: definition !== null,
+          context: context !== null,
+          offersMinimum: offersMinPlayers,
+        });
 
   const goTo = (next: RewardWizardStep, change: RewardWizardStepChange) => {
     setInternalStep(next);
@@ -713,12 +722,15 @@ export function CreateRewardWizard({
       : -1;
 
   // ── Minimum players (D7) ─────────────────────────────────────────────────────
-  // Offered where the reward is a contest between players: weekly places and Live Trivia's
-  // "winner of the game". Never a points target (a personal goal) and never NFL (its own 3-pickers rule).
-  const offersMinPlayers = !isNFLDefinition && (isRanked || isGameWinner);
-  const minPlayersParsed = offersMinPlayers && minPlayersOn ? parseMinPlayersInput(minPlayersText) : null;
+  // `offersMinPlayers` is defined above the step guard. The partner's answer (docs/reward-minimum-players-plan.md
+  // A2) is sent for NFL most picks too: null = "No minimum", even one player can win.
+  const minPlayersParsed = offersMinPlayers && minPlayersOn === true ? parseMinPlayersInput(minPlayersText) : null;
   const minPlayersError = minPlayersParsed && !minPlayersParsed.ok ? minPlayersParsed.message : null;
   const minPlayers = minPlayersParsed?.ok ? minPlayersParsed.value : null;
+  // The minimum this reward is created with — and the one every preview line states.
+  const sentMinPlayers = offersMinPlayers ? minPlayers : null;
+  // The question has been answered with a usable value (a points target has nothing to answer).
+  const minPlayersAnswered = !offersMinPlayers || (minPlayersOn !== null && !minPlayersError);
 
   // cadence / activeDays / winnerQuota for the preview AND the submission — the
   // same deriveRewardTerms (lib/rewardTerms.ts) createReward runs, so what the
@@ -783,7 +795,7 @@ export function CreateRewardWizard({
         nflWeekScope: isNFLDefinition ? nflScope : null,
         // A weekly places reward keeps its prizes in the ladder; its own prize columns stay empty.
         placePrizes: isRanked ? placePrizes : null,
-        minPlayers: offersMinPlayers ? minPlayers : null,
+        minPlayers: sentMinPlayers,
         prizeKind: isRanked ? null : prize.prizeKind,
         prizeMenuItem: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItem : null,
         prizeMenuItemName: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItemName : null,
@@ -813,8 +825,7 @@ export function CreateRewardWizard({
     prize,
     isRanked,
     placePrizes,
-    offersMinPlayers,
-    minPlayers,
+    sentMinPlayers,
   ]);
 
   const handleSubmit = async () => {
@@ -836,6 +847,10 @@ export function CreateRewardWizard({
       }
     } else if (termsError) {
       setSubmitError(termsError);
+      return;
+    }
+    if (offersMinPlayers && minPlayersOn === null) {
+      setSubmitError("Say how many players must play.");
       return;
     }
     if (minPlayersError) {
@@ -875,7 +890,7 @@ export function CreateRewardWizard({
         nflWeekScope: isNFLDefinition ? nflScope : undefined,
         // Only when set, so every other reward submits exactly what it always did.
         ...(isRanked ? { placePrizes: placePrizeInputs } : {}),
-        ...(offersMinPlayers && minPlayers !== null ? { minPlayers } : {}),
+        ...(sentMinPlayers !== null ? { minPlayers: sentMinPlayers } : {}),
       });
       if (!result.ok) {
         setSubmitError(result.error);
@@ -1208,16 +1223,6 @@ export function CreateRewardWizard({
                 </>
               )}
 
-              {/* Style as a rule, not a disabled-state warning — see
-                  docs/nfl-pickem-reward-phase5.md. */}
-              {isGameWinner ? (
-                <div className={s.notice}>
-                  <strong>At least {NFL_REWARD_MIN_PICKERS} guests must make picks</strong> at your venue
-                  that {nflScopeKind === "season" ? "season" : "week"} for a winner to be crowned. If fewer
-                  than {NFL_REWARD_MIN_PICKERS} play, no reward is given out.
-                </div>
-              ) : null}
-
               {nflTermsResult && !nflTermsResult.ok ? (
                 <div className={s.error}>{nflTermsResult.message}</div>
               ) : null}
@@ -1411,59 +1416,20 @@ export function CreateRewardWizard({
             </div>
           )}
 
-          {/* D7: "only pay out if at least N players took part" — contests between players only. */}
-          {offersMinPlayers ? (
-            <div>
-              <p className={s.label}>Minimum players?</p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setMinPlayersOn(false)}
-                  className={`${s.chip} ${!minPlayersOn ? s.chipActive : ""}`}
-                >
-                  No minimum
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMinPlayersOn(true)}
-                  className={`${s.chip} ${minPlayersOn ? s.chipActive : ""}`}
-                >
-                  Set a minimum
-                </button>
-              </div>
-              {minPlayersOn ? (
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={REWARD_MIN_PLAYERS_MIN}
-                  max={REWARD_MIN_PLAYERS_MAX}
-                  aria-label="Minimum players"
-                  value={minPlayersText}
-                  onChange={(e) => setMinPlayersText(e.target.value)}
-                  className={`mt-2 ${s.input}`}
-                />
-              ) : null}
-              <p className={`mt-1.5 ${s.helpText}`}>
-                {isRanked
-                  ? "Pay out only if at least this many players answered a question that week. Below it, nobody wins and the week is recorded."
-                  : "Name a winner only if at least this many players answered a question in that game."}
-              </p>
-              {minPlayersError ? <div className={`mt-1.5 ${s.error}`}>{minPlayersError}</div> : null}
-            </div>
-          ) : null}
-
           <WizardFooter
             variant="inline"
             tone={footerTone}
             onBack={() => goTo("definition", "back")}
             backLabel={definition.name}
-            nextLabel="Next: Offer a Prize"
+            nextLabel={offersMinPlayers ? "Next: Minimum Players" : "Next: Offer a Prize"}
             nextDisabled={
               isRanked
-                ? Boolean(minPlayersError)
+                ? false
                 : isNFLDefinition
                   ? !(nflTermsResult?.ok ?? false)
-                  : (useGamePicker ? !gameWinnerTerms.ok : Boolean(termsError)) || Boolean(minPlayersError)
+                  : useGamePicker
+                    ? !gameWinnerTerms.ok
+                    : Boolean(termsError)
             }
             onNext={() => {
               if (!isGameWinner && !isRanked) {
@@ -1481,8 +1447,66 @@ export function CreateRewardWizard({
                 }
               }
               setThresholdError(null);
-              goTo("prize", "forward");
+              goTo(offersMinPlayers ? "players" : "prize", "forward");
             }}
+          />
+        </div>
+      ) : null}
+
+      {/* D1: nothing is pre-selected and Next stays off until the partner answers, so it can't be skipped. */}
+      {id === "players" && definition && context ? (
+        <div className="space-y-4">
+          <p className={s.heading} {...headingFocus}>
+            How many players must play?
+          </p>
+          <div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                aria-pressed={minPlayersOn === false}
+                onClick={() => setMinPlayersOn(false)}
+                className={`${s.chip} ${minPlayersOn === false ? s.chipActive : ""}`}
+              >
+                No minimum
+              </button>
+              <button
+                type="button"
+                aria-pressed={minPlayersOn === true}
+                onClick={() => setMinPlayersOn(true)}
+                className={`${s.chip} ${minPlayersOn === true ? s.chipActive : ""}`}
+              >
+                Set a minimum
+              </button>
+            </div>
+            {minPlayersOn === true ? (
+              <input
+                type="number"
+                inputMode="numeric"
+                min={REWARD_MIN_PLAYERS_MIN}
+                max={REWARD_MIN_PLAYERS_MAX}
+                aria-label="Minimum players"
+                value={minPlayersText}
+                onChange={(e) => setMinPlayersText(e.target.value)}
+                className={`mt-2 ${s.input}`}
+              />
+            ) : null}
+            <p className={`mt-1.5 ${s.helpText}`}>
+              {isRanked
+                ? "Pay out only if at least this many players answered a question that week. Below it, nobody wins and the week is recorded."
+                : isNFLDefinition
+                  ? `Name a winner only if at least this many players make picks that ${nflScopeKind === "season" ? "season" : "week"}. With no minimum, even one player can win.`
+                  : "Name a winner only if at least this many players answered a question in that game."}
+            </p>
+            {minPlayersError ? <div className={`mt-1.5 ${s.error}`}>{minPlayersError}</div> : null}
+          </div>
+          <WizardFooter
+            variant="inline"
+            tone={footerTone}
+            onBack={() => goTo("terms", "back")}
+            backLabel={definition.name}
+            nextLabel="Next: Offer a Prize"
+            nextDisabled={!minPlayersAnswered}
+            onNext={() => goTo("prize", "forward")}
           />
         </div>
       ) : null}
@@ -1667,7 +1691,7 @@ export function CreateRewardWizard({
           <WizardFooter
             variant="inline"
             tone={footerTone}
-            onBack={() => goTo("terms", "back")}
+            onBack={() => goTo(offersMinPlayers ? "players" : "terms", "back")}
             onNext={() => {
               if (firstInvalidPosPlace >= 0) {
                 setActivePlace(firstInvalidPosPlace);
@@ -1704,10 +1728,6 @@ export function CreateRewardWizard({
                     <span className="font-bold">{summarizePrize(input)}</span>
                   </div>
                 ))}
-                <div className={s.summaryRow}>
-                  <span>Minimum players</span>
-                  <span className="font-bold">{minPlayers !== null ? `At least ${minPlayers}` : "None"}</span>
-                </div>
               </>
             ) : (
               <div className={s.summaryRow}>
@@ -1719,6 +1739,12 @@ export function CreateRewardWizard({
               <div className={s.summaryRow}>
                 <span>Most off at the register</span>
                 <span className="font-bold">${(derivedPrizes[0].posValueCents / 100).toFixed(2)}</span>
+              </div>
+            ) : null}
+            {offersMinPlayers ? (
+              <div className={s.summaryRow}>
+                <span>Minimum players</span>
+                <span className="font-bold">{minPlayers !== null ? `At least ${minPlayers}` : "None"}</span>
               </div>
             ) : null}
           </div>
@@ -1738,21 +1764,15 @@ export function CreateRewardWizard({
             {isRanked
               ? describeRankedTerms(placePrizes, minPlayers)
               : isNFLDefinition
-              ? describeNFLWeekScope(nflScope, winCondition, { quantity, threshold: effectiveThreshold })
+              ? describeNFLWeekScope(nflScope, winCondition, {
+                  quantity,
+                  threshold: effectiveThreshold,
+                  minPlayers: sentMinPlayers,
+                })
               : useGamePicker && gameWinnerTerms.ok
                 ? describeGameWinnerSlots(selectedSlots)
                 : renderTermsSentence(effectiveQuantity, period, winCondition)}
           </p>
-
-          {/* The 3-player rule stays visible through to the moment of creation,
-              not just while shopping the terms step. */}
-          {isNFLDefinition && isGameWinner ? (
-            <div className={s.notice}>
-              <strong>At least {NFL_REWARD_MIN_PICKERS} guests must make picks</strong> at your venue that{" "}
-              {nflScopeKind === "season" ? "season" : "week"} for a winner to be crowned. If fewer than{" "}
-              {NFL_REWARD_MIN_PICKERS} play, no reward is given out.
-            </div>
-          ) : null}
 
           {submitError ? <div className={s.error}>{submitError}</div> : null}
 

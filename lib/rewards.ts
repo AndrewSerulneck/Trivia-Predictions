@@ -154,7 +154,7 @@ export const REWARD_PLACE_PRIZES_NOT_RANKED_MESSAGE =
   "A prize for each place is only for a top-players-this-week reward.";
 export const REWARD_MIN_PLAYERS_RANGE_MESSAGE = `Minimum players must be a whole number from ${REWARD_MIN_PLAYERS_MIN} to ${REWARD_MIN_PLAYERS_MAX}.`;
 export const REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE =
-  "A minimum number of players is only for a win-the-game or top-players-this-week Live Trivia reward.";
+  "A minimum number of players is only for a reward where players compete for the top spot.";
 
 /**
  * A terms-sentence violation ("you run 1 game a week, you can't promise 2
@@ -1064,14 +1064,17 @@ function normalizePlacePrizeInputs(input: RewardPrizeInput[] | null | undefined)
   });
 }
 
-/** D7: null = no minimum; anything else must be a whole 2-100 on a competitive Live Trivia reward. */
+/**
+ * D7: null = no minimum; anything else must be a whole 2-100 on a reward players compete for —
+ * Live Trivia win-the-game / weekly places, or NFL most picks right (an NFL reward is only ever
+ * game_winner or points_threshold, docs/reward-minimum-players-plan.md A2). Never on a points target (A1).
+ */
 function normalizeMinPlayersInput(
   raw: number | null | undefined,
   winCondition: ChallengeWinCondition,
-  isNFLReward: boolean,
 ): number | null {
   if (raw === null || raw === undefined) return null;
-  if (isNFLReward || winCondition === "points_threshold") {
+  if (winCondition === "points_threshold") {
     throw new RewardTermsError(REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE);
   }
   const value = Number(raw);
@@ -1130,7 +1133,7 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   if (isRanked && !definition.supportsRankedPlaces) {
     throw new RewardTermsError(REWARD_RANKED_PLACES_UNSUPPORTED_MESSAGE);
   }
-  const minPlayers = normalizeMinPlayersInput(params.minPlayers, winCondition, isNFLReward);
+  const minPlayers = normalizeMinPlayersInput(params.minPlayers, winCondition);
   // Present-but-wrong is refused, never silently dropped: a ladder on any other reward would
   // mean the partner was shown prizes nobody can win.
   if (!isRanked && Array.isArray(params.placePrizes) && params.placePrizes.length > 0) {

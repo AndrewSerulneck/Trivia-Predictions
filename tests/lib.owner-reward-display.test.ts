@@ -66,6 +66,19 @@ describe("rewardTermsText", () => {
       /3 of these rewards/,
     );
   });
+  it("states an NFL most-picks reward's own minimum as making picks, and nothing without one", () => {
+    const nfl = competition({
+      rewardDefinitionId: "nfl_pickem_challenge",
+      winCondition: "game_winner",
+      winnerQuota: 1,
+      recurringType: "weekly",
+    });
+    const without = rewardTermsText({ ...nfl, minPlayers: null });
+    expect(without).not.toMatch(/players need to/);
+    expect(rewardTermsText({ ...nfl, minPlayers: 3 })).toBe(
+      `${without} At least 3 players need to make picks for a winner to be named.`,
+    );
+  });
 });
 
 describe("splitCompetitions", () => {

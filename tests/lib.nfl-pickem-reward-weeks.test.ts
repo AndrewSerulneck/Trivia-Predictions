@@ -267,10 +267,13 @@ describe("single_week start date and copy", () => {
     expect(nflRewardUpcomingStartDate(SINGLE, dates, new Date("2026-11-05T15:00:00Z"))).toBeNull();
   });
 
-  it("reads back both win conditions and keeps the 3-picker line", () => {
-    const most = describeNFLWeekScope(SINGLE, "game_winner", { quantity: 1, threshold: 1 });
+  it("reads back both win conditions and states the reward's minimum", () => {
+    const most = describeNFLWeekScope(SINGLE, "game_winner", { quantity: 1, threshold: 1, minPlayers: 3 });
     expect(most).toContain("Week 9");
     expect(most).toContain("fewer than 3 players");
+    expect(describeNFLWeekScope(SINGLE, "game_winner", { quantity: 1, threshold: 1, minPlayers: null })).toBe(
+      "After Week 9, the guest with the most correct NFL picks that week at your venue wins this reward — 1 winner. Ties are broken by Week 9's tiebreaker question.",
+    );
     expect(describeNFLWeekScope(SINGLE, "points_threshold", { quantity: 2, threshold: 8 })).toBe(
       "In Week 9, the first 2 guests to get 8 NFL picks right win this reward.",
     );
@@ -278,15 +281,25 @@ describe("single_week start date and copy", () => {
 });
 
 describe("describeNFLWeekScope", () => {
-  it("states the 3-picker rule on both winner-takes-it shapes", () => {
-    const weekly = describeNFLWeekScope(WEEKLY, "game_winner", { quantity: 1, threshold: 1 });
+  it("states the reward's own minimum on both winner-takes-it shapes", () => {
+    const weekly = describeNFLWeekScope(WEEKLY, "game_winner", { quantity: 1, threshold: 1, minPlayers: 3 });
     expect(weekly).toContain("1 winner per week");
     expect(weekly).toContain("weekly tiebreaker question");
     expect(weekly).toContain("fewer than 3 players");
 
-    const season = describeNFLWeekScope(SEASON, "game_winner", { quantity: 1, threshold: 1 });
+    const season = describeNFLWeekScope(SEASON, "game_winner", { quantity: 1, threshold: 1, minPlayers: 8 });
     expect(season).toContain("1 winner for the season");
-    expect(season).toContain("fewer than 3 players");
+    expect(season).toContain("fewer than 8 players");
+  });
+
+  it("says nothing about headcount when the reward has no minimum", () => {
+    for (const minPlayers of [null, undefined]) {
+      const weekly = describeNFLWeekScope(WEEKLY, "game_winner", { quantity: 1, threshold: 1, minPlayers });
+      expect(weekly).toMatch(/tiebreaker question\.$/);
+      expect(weekly).not.toContain("fewer than");
+      const season = describeNFLWeekScope(SEASON, "game_winner", { quantity: 1, threshold: 1, minPlayers });
+      expect(season).not.toContain("fewer than");
+    }
   });
 
   it("reads back a picks target in the partner's own numbers", () => {
