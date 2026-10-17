@@ -154,4 +154,13 @@ phone you own (289 px, an iPhone SE).
 - [ ] Close the sheet while on the players screen: it asks "Discard this reward?".
 - [ ] Text readable and buttons easy to tap at both widths; nothing cut off.
 
+## L. Player game tutorials and account menu (new, 2026-10-17)
+Do this on an iPhone SE (or the smallest phone you own) and on a normal iPhone, signed in as a player.
+- [ ] Open each game's tutorial card (Category Blitz, Bingo, Pick 'Em, Predictions, Fantasy, Live and Speed Trivia):
+  statement on top, picture below, nothing clipped, no "…" in game names, text readable.
+- [ ] Venue home: open **Menu**. Scroll down to **Sign Out**. The page behind does not scroll.
+- [ ] Tapping the dark area or **Close** closes the menu.
+- [ ] Inside a game (e.g. Bingo): open the menu, same checks. **Change Username** pop-up shows and takes typing.
+- [ ] In the real app on Android: Back closes the menu first; on the venue home with no menu open, Back minimises.
+
 When every box is ticked (or a problem is written next to it), send the list back.
