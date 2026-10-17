@@ -3,7 +3,7 @@ export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" |
 import { CATEGORY_BLITZ_RULES, CATEGORY_BLITZ_TUTORIAL_CARDS } from "@/lib/categoryBlitzHowToPlay";
 
 export type GameOnboardingStep = {
-  /** Small eyebrow above the card. Category Blitz cards have none. */
+  /** Small eyebrow above the card. Only the trivia games have one; statement-layout cards (usesStatementTutorialLayout) have none. */
   stepLabel?: string;
   heading: string;
   body?: string | string[];
@@ -93,17 +93,14 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     ],
     steps: [
       {
-        stepLabel: "Your lineup",
         heading: "Build a roster. Earn points as they play.",
         body: "Draft real players from today's games and watch your score climb live.",
       },
       {
-        stepLabel: "Draft your players",
         heading: "Pick players before tip-off.",
         body: "Only players in games that haven't started are eligible. Lock in your picks before game time.",
       },
       {
-        stepLabel: "Scoring",
         heading: "Your total climbs with every stat.",
         body: "Points accumulate from real game stats in real time. Stay at the venue — points pause the moment you leave.",
       },
@@ -123,17 +120,14 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     ],
     steps: [
       {
-        stepLabel: "How to Play",
         heading: "Think you know sports? Prove it.",
         body: "This is a very simple game. Just pick who you think will win each of today's matchups. Tap a team to lock in your pick.",
       },
       {
-        stepLabel: "The Rules",
         heading: "Correct picks earn you points.",
         body: "But choose wisely — you only get 10 picks per day. Predictions are graded minutes after the final whistle. ",
       },
       {
-        stepLabel: "Scoring",
         heading: "10 points per correct pick.",
         body: [
           "Hit 7 correct → 2× bonus.",
@@ -167,17 +161,14 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     ],
     steps: [
       {
-        stepLabel: "Your board",
         heading: "Real sports. Real stats.",
         body: "Each square is a live player stat. Squares mark themselves as plays happen.",
       },
       {
-        stepLabel: "Pick your boards",
         heading: "Browse boards. Find the ones you like.",
         body: "Generate new boards until you spot a lineup worth activating. Hold up to 4 live at once.",
       },
       {
-        stepLabel: "Scoring",
         heading: "Five in a row hits Bingo.",
         body: "Line, column, or diagonal earns you 100 points.",
       },
@@ -197,18 +188,15 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     ],
     steps: [
       {
-        stepLabel: "Weekly Picks",
         heading: "Think you know ball? Prove it.",
         body: "This is a weekly contest to see who can pick the most winners each week of the NFL season.",
       },
       {
-        stepLabel: "Picks Lock at Game Time",
         heading: "Make your picks before kickoff.",
         body: "Once the game starts, everyone's picks are locked in.",
       },
       {
-        stepLabel: "Track Results",
-        heading: "Keep track of your picks (and everyone elses) on the venue leaderboard.",
+        heading: "Keep track of your picks (and everyone else's) on the venue leaderboard.",
         body: "Play for bragging rights, or check the rewards tab to see if your venue offers a prize for NFL Pick 'Em!",
       },
     ],

@@ -42,8 +42,9 @@ describe("Category Blitz how-to-play copy (docs/category-blitz-how-to-play-plan.
     expect(CATEGORY_BLITZ_RULES[6]).toContain("at least 3 players are in a round (2 in Majority Rules)");
   });
 
-  it("leaves the other games' cards on their step labels", () => {
-    for (const key of ["bingo", "pickem", "nfl-pickem", "fantasy"] as const) {
+  it("keeps the step labels on the trivia games", () => {
+    // The statement-layout games' no-label rule is owned by tests/tutorial-statement-layout-contract.test.ts.
+    for (const key of ["speed-trivia", "live_trivia"] as const) {
       expect(VENUE_GAME_CARD_BY_KEY[key].steps.every((step) => typeof step.stepLabel === "string")).toBe(true);
     }
   });

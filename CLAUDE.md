@@ -162,6 +162,16 @@ provider validator passes. Do not run typecheck concurrently with build because 
 is regenerated. Physical-device UI and real NFL plus webhook-driven live→final observation
 remain optional operational monitoring, not unfinished plan work.
 
+## Game tutorial cards (2026-10-17)
+- **Every game's tutorial follows the Category Blitz layout** (Andrew: "emulate those … for future ones when we make
+  new games"): no eyebrow label, the statement + detail on top at reading size (Category Blitz's clamps), the art
+  below in the height left. One component, `TutorialStatementPanel` in `components/venue/GameIdentityPanel.tsx`;
+  a new game goes in `STATEMENT_LAYOUT_GAMES` with its art in `GameStepIllustration`
+  (`tests/tutorial-statement-layout-contract.test.ts` fails until it does). Only Speed/Live Trivia keep the old layout.
+- **Text wins, art shrinks.** The art box is a size container (`[container-type:size]`): draw art that scales with
+  `cqw`/`cqh` (the bingo boards) or show fewer rows — never shrink a label below 14px or let it push text off the card.
+  Copy lives in `lib/venueGameCards.ts`. Check a change at a 350 px and a 289 px card (iPhone SE).
+
 ## Mental Model & Terminology
 - **Core Concept:** Users join a specific physical venue and earn points playing mini-games (Trivia, Pick'em, Bingo, Predictions, Fantasy) scoped strictly to that venue. 
 - **Data Scoping:** Authentication is global (passkeys/username), but points, leaderboards, and game states are entirely venue-specific. Users can belong to multiple venues with completely independent point totals.
@@ -251,6 +261,10 @@ migrations are grandfathered — see `docs/supabase-data-api-grants-plan.md`).
   both the admin Rewards section (`components/admin/sections/ChallengesSection.tsx`) and the
   Partner Dashboard (`app/owner/competitions/page.tsx`) via a `variant: "admin" | "owner"`
   prop. Do not fork this component per host.
+  **Minimum players has its own wizard step, `players` (2026-10-17, `docs/reward-minimum-players-plan.md`):** between
+  `terms` and `prize`, asked for every contest reward (Win the game, Weekly 1st/2nd/3rd, NFL most picks), never a
+  points target (`guardRewardWizardStep` sends a `?step=players` for one to `prize`). Nothing is pre-selected; Next
+  stays off until "No minimum" or a valid 2–100 number (pre-fill `REWARD_MIN_PLAYERS_DEFAULT` = 3).
 - **Rewards are threshold+quantity (progress) only.** Leaderboard mode is retired from
   creation; in-flight leaderboard campaigns finish their current cycle but no longer render
   standings on the venue panel.
@@ -261,10 +275,6 @@ migrations are grandfathered — see `docs/supabase-data-api-grants-plan.md`).
 - **`NEXT_PUBLIC_REWARDS_ENABLED` / `lib/rewardsFlags.ts` no longer exist** (deleted in commit
   9abbb1b, 2026-07-22) — multi-winner Rewards is live unconditionally, not flag-gated. The only
   live Rewards flag today is `NEXT_PUBLIC_REWARD_GAME_PICKER_ENABLED`
-  **Minimum players has its own wizard step, `players` (2026-10-17, `docs/reward-minimum-players-plan.md`):** between
-  `terms` and `prize`, asked for every contest reward (Win the game, Weekly 1st/2nd/3rd, NFL most picks), never a
-  points target (`guardRewardWizardStep` sends a `?step=players` for one to `prize`). Nothing is pre-selected; Next
-  stays off until "No minimum" or a valid 2–100 number (pre-fill `REWARD_MIN_PLAYERS_DEFAULT` = 3).
   (`isGamePickerEnabled()` in `lib/rewardGameSlots.ts`), which gates ONLY the wizard's
   game-picker UI branch — not cadence support, not the archive/delete split, not the slot
   cascade. Don't describe other Rewards work as "inert until a flag flips."

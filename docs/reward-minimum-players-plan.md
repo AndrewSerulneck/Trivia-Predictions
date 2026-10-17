@@ -3,6 +3,10 @@
 > **Status:** Phases 1–3 done 2026-10-17 (Phase 1 migration `20261017191219` applied to production; code committed
 > locally, NOT pushed/deployed). Remaining, Andrew's call: push, phone pass (section K), post-deploy count and the
 > next NFL Tuesday check. Latest handoff: `docs/reward-minimum-players-plan_PHASE_3_HANDOFF.md`.
+> **Phases 4–7 (added 2026-10-17):** fixes for the 10 `/code-review` findings on the uncommitted
+> game-tutorial-card + player-menu work. They don't touch rewards; they live here at Andrew's request.
+> **Phases 4–5 done 2026-10-17 (uncommitted); Phases 6–7 not started.** Latest handoff:
+> `docs/reward-minimum-players-plan_PHASE_5_HANDOFF.md`.
 > Each phase ends with `docs/reward-minimum-players-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew.
 
@@ -201,6 +205,135 @@ stop-gap.
 3. After the next NFL week settles (Tuesday): confirm the existing NFL reward still behaved as 3+ (it has
    `min_players = 3` stored).
 4. Write the final handoff and mark the plan complete.
+
+---
+
+### Phases 4–7 — Code-review fixes: game tutorial cards and the player menu (added 2026-10-17)
+
+**Summary for Andrew:** a code review of the new tutorial cards (Bingo, Pick 'Em, NFL Pick 'Em and Fantasy now
+use the Category Blitz layout) and the player menu scroll fix found 10 issues. None affects rewards or money.
+The ones players would see: on a small phone (iPhone SE) the top of some tutorial pictures is cut off, and team
+and player names are cut short ("Bu…", "T. Haliburt…"). The rest is tidy-up so the next change doesn't break
+something: dead leftover data, rule breaks the project's own checks should catch, and the player menu existing
+as two hand-copied versions. **Cost:** none (layout and code only; no reads, crons or API calls).
+
+**Starting state (for every phase below):** the tutorial-card work is **uncommitted on `main`**, on top of
+`dfb62f5`: `CLAUDE.md`, `components/ui/AccountMenu.tsx`, `components/venue/GameIdentityPanel.tsx`,
+`components/venue/VenueHubClient.tsx`, `lib/venueGameCards.ts`, `tests/lib.category-blitz-how-to-play.test.ts`,
+new `tests/tutorial-statement-layout-contract.test.ts`. **Never `git checkout -- <file>` / `git restore` to undo
+an edit here** — it wipes all of that uncommitted work. Ask Andrew whether to commit it first (recommended, as its
+own commit) before Phase 4 starts, so each phase's diff stays readable.
+
+**Rules that apply (CLAUDE.md "Game tutorial cards" + "Code Style"):** text wins, art shrinks — never a label under
+14 px inside tutorial art and never text pushed off the card; check every change at a **350 px and a 289 px card**;
+Tailwind only, no inline `style={{}}`; fonts via `[font-family:var(--ht-font-display)]` / `font-mono`, never a
+literal family name. Tailwind is **3.4.17 with no container-queries plugin**: the art box is already
+`[container-type:size]`, so use `cqw`/`cqh` units or arbitrary variants like `[@container(max-height:11rem)]:hidden`.
+
+#### Phase 4 — Tutorial art fits on small cards (findings 1, 2, 3, 5)
+
+**Model / effort:** Sonnet 5.5, **high** (visual; must be checked in a browser at two widths).
+
+1. **Art box clips its top (finding 1, `GameIdentityPanel.tsx` ~line 862, `TutorialStatementPanel`).** The
+   non-Category-Blitz art box is `flex … items-center justify-center … overflow-hidden`, so taller art overflows
+   both ends and its top disappears. Keep `items-center justify-center` and add `[align-items:safe_center]
+   [justify-content:safe_center]` after them (an older browser that doesn't know `safe` drops only the arbitrary
+   declaration and keeps today's centring). Then make tall art degrade instead of clipping, per "show fewer rows":
+   - Pick 'Em / NFL step 3 (`PickEmIllustration`, `stepIndex >= 2`): hide `PEPipBar` when the box is short
+     (`[@container(max-height:…)]:hidden` on its wrapper; pick the threshold by measuring at 289 px).
+   - Pick 'Em step 2: hide the second (waiting) ticket when the box can't hold two.
+   - Fantasy steps 1 and 3 (`FantasyIllustration`): show one row instead of two when short.
+   - Bingo already scales with `cqh`; leave it.
+2. **Pick 'Em team names truncate (finding 2, `PETeamCol` ~line 413).** Check + name + score on one row in a
+   half-width column leaves ~40 px for the name at 289 px. Put the score on its own line under the name (or the
+   check above the name), so the name gets the column's full width. The name must not truncate for "Dolphins",
+   "Packers" or "Bucks" at 289 px. Keep 16 px text.
+3. **Fantasy player names truncate (finding 3, `FanPlayerRow` ~line 590).** Name + "Live" badge + score on one
+   row leaves ~103 px. Move the "Live" badge onto the position line (`PG · ● Live`) so the top line is name +
+   score only. "T. Haliburton" must fit unclipped at 289 px.
+4. **13 px check mark (finding 5, `PETeamCol` ~line 421).** Raise to `text-[14px]` (and the circle to fit, e.g.
+   `h-6 w-6`). Grep the file for any other `text-[1[0-3]px]` and fix it the same way.
+5. **Tripwire:** extend `tests/tutorial-statement-layout-contract.test.ts` with a static check that
+   `GameIdentityPanel.tsx` contains no `text-[Npx]` with N < 14 (read the file as text, like the other contract
+   tests). The truncation fixes can't be unit-tested; verify them in a browser.
+6. **Verify:** browser-check every statement-layout game's cards (Bingo, Pick 'Em, NFL Pick 'Em, Fantasy, and
+   Category Blitz for regressions) at 350 px and 289 px card width. Andrew runs `next dev` on :3000 — **don't kill
+   it** (`pkill next-server` is banned); use a scratchpad clone or a second port, and screenshot each step. Run
+   `npx tsc --noEmit`, `npm run lint`, `npm run test`.
+
+**Out of scope:** copy changes in `lib/venueGameCards.ts`; the trivia games' older layout.
+
+#### Phase 5 — Tutorial code cleanup (findings 4, 6, 8, 9, 10)
+
+**Model / effort:** Sonnet 5.5, **medium.** No visible change intended.
+
+1. **Waiting-game sport (finding 4, `PickEmIllustration` ~line 561).** Add `sport` to `PickEmScene.waiting`
+   (`"MLB"` in `PICKEM_SCENE`, `"NFL"` in `NFL_PICKEM_SCENE`), use `scene.waiting.sport`, delete the
+   `scene.sport === "NFL" ? … : "MLB"` line and its comment.
+2. **Inline styles (finding 6).** In this file, replace every `style={{ fontFamily: "ui-monospace, monospace" }}`
+   with `font-mono` (lines ~435, ~510, ~602) and every `style={{ fontFamily: "var(--ht-font-display)" }}` with
+   `[font-family:var(--ht-font-display)]` (lines ~114, ~248, ~268, ~343, ~783, ~798, ~818, ~891). Leave the
+   remaining `style={{` blocks at ~95, ~177, ~467 only if they carry genuinely dynamic values; if static, convert
+   them too. Note in the handoff which ones remain and why.
+3. **One Category Blitz art lookup (finding 8).** Add one helper, e.g.
+   `const categoryBlitzArtOf = (stepIndex: number) => CATEGORY_BLITZ_TUTORIAL_CARDS[stepIndex]?.art ?? "intro"`;
+   compute `art` once in `TutorialStatementPanel`, derive `isIntro` from it and pass it to `GameStepIllustration`
+   (or have both call the helper). No second copy of the `?? "intro"` fallback.
+4. **Dead scoring data (finding 9).** `GameScoringArtwork` and `GameArtwork` are only reached for `speed-trivia`
+   and `live_trivia` now. Narrow `GAME_SCORING` to `Record<"speed-trivia" | "live_trivia", ScoringConfig>` and
+   delete the five other entries (the Bingo one says 50 points; the cards say 100). If the `ladder` variant is then
+   unused, delete it and its branch. Drop the redundant `&& !statementLayout` from `isHookStep`. **Check first:**
+   `GameIdentityPanel` (the exported component, which renders `GameArtwork` for any key) — find its callers
+   (`grep -rn "GameIdentityPanel" app components`); if nothing renders it, say so in the handoff and ask Andrew
+   before deleting it; if something does with a non-trivia key, keep `GameArtwork`'s fallback.
+5. **Duplicate test (finding 10, `tests/lib.category-blitz-how-to-play.test.ts:45`).** Keep only the "trivia games
+   keep their step labels" half there; the statement-layout half is owned by
+   `tests/tutorial-statement-layout-contract.test.ts` (driven by `usesStatementTutorialLayout`, not a literal list).
+6. Run `npx tsc --noEmit`, `npm run lint`, `npm run test` (includes `tests/text-size-floor-contract.test.ts` and
+   `tests/fonts-contract.test.ts`). A quick visual spot-check of one card per game confirms nothing moved.
+
+**Out of scope:** the trivia games' tutorial layout; any new art.
+
+#### Phase 6 — One shared player account drawer (finding 7)
+
+**Model / effort:** Sonnet 5.5, **high** (navigation; the venue hub is the native app's root screen).
+
+**Goal:** the drawer shell exists once, so a fix lands in both menus. The two menus' **contents differ** and stay
+different: `AccountMenu` (`components/ui/AccountMenu.tsx`) has Profile + Change Username + a username modal; the
+venue hub (`components/venue/VenueHubClient.tsx` ~line 1643) has the username/venue/points card + Passkey setup.
+
+1. New `components/navigation/AccountDrawer.tsx`: props `open`, `onClose`, `scrollLockId`, `children`. It owns the
+   `fixed inset-0 z-[1200]` wrapper with `data-tp-scroll-lock`, the scrim button ("Close navigation menu"), the
+   `aside` (current classes incl. `overflow-y-auto overscroll-contain … pb-[max(1.25rem,env(safe-area-inset-bottom))]`),
+   the "Menu" header + Close button, the `setScrollLock(id, open, "modal")` effect, and
+   `useNativeBackHandler("overlay", open ? onClose : null)`. Keep the hub's `tp-player-hit-target
+   tp-player-pressable` classes on the scrim and Close (decide once for both; they are harmless in `AccountMenu`).
+2. `AccountMenu` renders it inside its existing portal; the username modal stays in `AccountMenu` with its own
+   native Back handler. The hub renders it in place (no portal today — keep that unless there's a reason).
+3. Remove from the hub: its scroll-lock effect (~line 553), its menu `useNativeBackHandler` (~line 1570; **keep**
+   the challenge-detail overlay handler and `useNativeBackHandler("exit", minimizeNativeApp)` — the hub is the
+   native root and Back minimises), and the inline drawer markup.
+4. **Native Back order matters:** the drawer's overlay handler must still beat the hub's `exit` handler. Check
+   `tests/native-back-review-fixes.test.ts`, which pins every closable player popup by file — update its list to
+   name `AccountDrawer.tsx` instead of the two old sites, deliberately.
+5. Add `AccountDrawer.tsx` to the navigation tripwire's host allowlists only if `tests/navigation-controls-contract.test.ts`
+   requires it (it must not render `SignOutButton` itself; `AccountMenuList` stays the child that does).
+6. Run `npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run test:pwa-contract`. Browser-check both menus
+   at phone width: open, scroll to Sign Out, page behind doesn't scroll, scrim and Close both close it.
+
+**Out of scope:** changing what either menu contains; the owner `OwnerMenuDrawer`.
+
+#### Phase 7 — Check and commit
+
+**Model / effort:** Sonnet 5.5, **medium.**
+
+1. Run the full gate once more: `npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run test:pwa-contract`,
+   then `npm run build` (never typecheck and build at the same time).
+2. Commit (only with Andrew's go-ahead), one commit per phase if not already done. Push/deploy is Andrew's call.
+3. Add to `docs/partner-dashboard-app-redesign-device-checklist.md` — or a new short player checklist if Andrew
+   prefers — a phone pass: each game's tutorial on an iPhone SE and a normal iPhone (nothing clipped, no "…"
+   names), and the venue-hub menu plus an in-game menu scrolling to Sign Out, including Android Back in the app.
+4. Update this plan's status line and write `docs/reward-minimum-players-plan_PHASE_7_HANDOFF.md`.
 
 ---
 

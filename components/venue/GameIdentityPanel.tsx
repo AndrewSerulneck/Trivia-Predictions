@@ -110,8 +110,7 @@ export function GameRuleCardPanel({
             isLandingLayout
               ? "text-[clamp(2rem,6.2vw,3.35rem)] leading-[1.02]"
               : "text-[clamp(3.1rem,10.2vw,4.7rem)] leading-[0.98]"
-          } font-black uppercase tracking-[0.045em] ${titleColorClass}`}
-          style={{ fontFamily: "var(--ht-font-display)" }}
+          } font-black uppercase tracking-[0.045em] ${titleColorClass} [font-family:var(--ht-font-display)]`}
         >
           {card.title}
         </div>
@@ -189,83 +188,24 @@ function TriviaArtwork() {
   );
 }
 
-function GameArtwork({ gameKey }: { gameKey: VenueGameKey }) {
-  if (gameKey === "speed-trivia" || gameKey === "live_trivia") return <TriviaArtwork />;
-  return <div className="h-[8.6rem] w-full rounded-2xl border border-slate-200/50 bg-slate-950/35" />;
-}
+type TriviaGameKey = "speed-trivia" | "live_trivia";
+type ScoringConfig = { big: string; label: string; foot?: string };
 
-type ScoringConfig =
-  | { kind: "stat"; big: string; label: string; foot?: string }
-  | { kind: "ladder"; rows: { value: string; label: string }[]; foot: string };
+const isTriviaGameKey = (gameKey: VenueGameKey): gameKey is TriviaGameKey =>
+  gameKey === "speed-trivia" || gameKey === "live_trivia";
 
-const GAME_SCORING: Record<VenueGameKey, ScoringConfig> = {
-  "speed-trivia": { kind: "stat", big: "2", label: "points per correct answer", foot: "Up to 90 points per hour" },
-  live_trivia:    { kind: "stat", big: "2", label: "points per correct answer" },
-  bingo:          { kind: "stat", big: "50", label: "points per Bingo", foot: "Up to 4 boards live at once" },
-  fantasy:        { kind: "stat", big: "LIVE", label: "points climb as your players score" },
-  "category-blitz": {
-    kind: "ladder",
-    rows: [
-      { value: "2", label: "points per unique answer" },
-      { value: "0", label: "points if anyone else writes the same" },
-      { value: "24", label: "max points per round" },
-    ],
-    foot: "Unique answers only score",
-  },
-  pickem: {
-    kind: "ladder",
-    rows: [
-      { value: "10", label: "points per correct pick" },
-      { value: "2×", label: "bonus at 7 correct" },
-      { value: "3×", label: "bonus at a perfect 10" },
-    ],
-    foot: "Max 300 points",
-  },
-  "nfl-pickem": {
-    kind: "ladder",
-    rows: [
-      { value: "10", label: "points per correct pick" },
-      { value: "Weekly", label: "new games every week" },
-      { value: "Season", label: "track your record" },
-    ],
-    foot: "Picks lock at TNF kickoff",
-  },
+const GAME_SCORING: Record<TriviaGameKey, ScoringConfig> = {
+  "speed-trivia": { big: "2", label: "points per correct answer", foot: "Up to 90 points per hour" },
+  live_trivia:    { big: "2", label: "points per correct answer" },
 };
 
-function GameScoringArtwork({ gameKey, accentClass }: { gameKey: VenueGameKey; accentClass: string }) {
+function GameScoringArtwork({ gameKey, accentClass }: { gameKey: TriviaGameKey; accentClass: string }) {
   const scoring = GAME_SCORING[gameKey];
-
-  if (scoring.kind === "ladder") {
-    return (
-      <div className="w-full space-y-2">
-        {scoring.rows.map((row) => (
-          <div
-            key={row.label}
-            className="flex items-center gap-3 rounded-xl border border-white/25 bg-slate-950/40 px-3 py-2"
-          >
-            <span
-              className={`min-w-[2.6rem] text-center text-[1.6rem] font-black leading-none ${accentClass}`}
-              style={{ fontFamily: "var(--ht-font-display)" }}
-            >
-              {row.value}
-            </span>
-            <span className="text-[14px] font-semibold leading-tight text-white/85">{row.label}</span>
-          </div>
-        ))}
-        <div className="flex justify-center pt-1">
-          <span className={`rounded-full border border-white/30 bg-black/30 px-3 py-1 text-caption font-black uppercase tracking-[0.12em] ${accentClass}`}>
-            {scoring.foot}
-          </span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-white/25 bg-slate-950/40 px-4 py-5">
       <span
-        className={`text-[clamp(3rem,13vw,4.6rem)] font-black leading-none ${accentClass} [text-shadow:0_0_18px_rgba(255,255,255,0.3)]`}
-        style={{ fontFamily: "var(--ht-font-display)" }}
+        className={`text-[clamp(3rem,13vw,4.6rem)] font-black leading-none ${accentClass} [text-shadow:0_0_18px_rgba(255,255,255,0.3)] [font-family:var(--ht-font-display)]`}
       >
         {scoring.big}
       </span>
@@ -280,7 +220,12 @@ function GameScoringArtwork({ gameKey, accentClass }: { gameKey: VenueGameKey; a
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Bingo onboarding illustrations
+// Tutorial art for Bingo, Pick 'Em, NFL Pick 'Em and Fantasy.
+//
+// The card's words come first and the art takes whatever height is left
+// (TutorialStatementPanel). So the art is drawn to shrink: the bingo boards
+// size themselves to their box (container query units), and the ticket and
+// roster pictures show only a row or two, with every label at 14px or more.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BINGO_S1_BOARD_HITS: ReadonlyArray<ReadonlySet<number>> = [
@@ -326,44 +271,24 @@ function BingoCell({
   );
 }
 
-function BingoBoard({
-  hits,
-  showDiag = false,
-  compact = false,
-}: {
-  hits: ReadonlySet<number>;
-  showDiag?: boolean;
-  compact?: boolean;
-}) {
-  const gap = compact ? "gap-px" : "gap-1";
+/** Fills its box's width but never its height: the B-I-N-G-O row adds ~2.25rem above the square grid. */
+function BingoBoard({ hits, showDiag = false }: { hits: ReadonlySet<number>; showDiag?: boolean }) {
   return (
-    <div
-      className={`w-full rounded-xl border-2 border-[#7dd3fc] bg-[#0c3a2e] shadow-[0_0_14px_rgba(125,211,252,0.18)] ${
-        compact ? "p-1" : "p-2"
-      }`}
-    >
-      <div className={`grid grid-cols-5 ${gap} ${compact ? "mb-px" : "mb-1"}`}>
+    <div className="w-[min(100cqw,calc(100cqh-2.25rem),15rem)] rounded-xl border-2 border-[#7dd3fc] bg-[#0c3a2e] p-1.5 shadow-[0_0_14px_rgba(125,211,252,0.18)]">
+      <div className="mb-1 grid grid-cols-5 gap-1">
         {(["B", "I", "N", "G", "O"] as const).map((letter, i) => (
           <div
             key={letter}
-            className={`flex items-center justify-center font-black ${BINGO_HEADER_COLORS[i]} ${
-              compact ? "text-caption leading-[1.15rem]" : "text-caption leading-[1.5rem]"
-            }`}
-            style={{ fontFamily: "var(--ht-font-display)" }}
+            className={`flex items-center justify-center text-[15px] font-black leading-[1.4rem] ${BINGO_HEADER_COLORS[i]} [font-family:var(--ht-font-display)]`}
           >
             {letter}
           </div>
         ))}
       </div>
-      <div className={`border-b border-[#c89b3a]/40 ${compact ? "mb-px" : "mb-1"}`} />
-      <div className={`grid grid-cols-5 ${gap}`}>
+      <div className="mb-1 border-b border-[#c89b3a]/40" />
+      <div className="grid grid-cols-5 gap-1">
         {Array.from({ length: 25 }, (_, i) => (
-          <BingoCell
-            key={i}
-            index={i}
-            hits={hits}
-            showDiag={showDiag}
-          />
+          <BingoCell key={i} index={i} hits={hits} showDiag={showDiag} />
         ))}
       </div>
     </div>
@@ -395,29 +320,16 @@ const BINGO_S0_HITS: ReadonlySet<number> = new Set([2, 6, 16, 20]);
 const BINGO_S2_HITS: ReadonlySet<number> = new Set([1, 3, 7, 11, 17, 22]);
 
 function BingoIllustration({ stepIndex }: { stepIndex: number }) {
-  if (stepIndex === 0) {
-    return (
-      <div className="w-full">
-        <BingoBoard hits={BINGO_S0_HITS} />
-      </div>
-    );
-  }
-
   if (stepIndex === 1) {
     return (
-      <div className="mx-auto grid w-full max-w-[256px] grid-cols-2 gap-3">
+      <div className="grid w-[min(100cqw,100cqh,15rem)] grid-cols-2 gap-2">
         {BINGO_S1_BOARD_HITS.map((hits, i) => (
           <BingoBoardTiny key={i} hits={hits} />
         ))}
       </div>
     );
   }
-
-  return (
-    <div className="mx-auto w-full max-w-[178px]">
-      <BingoBoard hits={BINGO_S2_HITS} showDiag />
-    </div>
-  );
+  return <BingoBoard hits={stepIndex === 0 ? BINGO_S0_HITS : BINGO_S2_HITS} showDiag={stepIndex === 2} />;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -430,49 +342,40 @@ function PETeamCol({
   score,
   isWinner,
   settled,
-  small,
 }: {
   team: string;
   picked: boolean;
   score?: number;
   isWinner?: boolean;
   settled?: boolean;
-  small?: boolean;
 }) {
   const isCorrect = !!(settled && isWinner && picked);
   return (
     <div
-      className={`flex flex-1 flex-col items-center gap-1 ${small ? "px-1.5 py-1.5" : "px-2 py-2.5"} ${
+      className={`flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-2 ${
         isCorrect ? "bg-emerald-400/10" : picked ? "bg-[#fde68a]/[0.07]" : ""
       }`}
     >
-      <span
-        className={`text-center font-bold leading-tight text-caption ${
-          picked ? "text-white" : "text-white/55"
-        }`}
-      >
+      <span className={`w-full truncate text-center text-[16px] font-bold leading-tight ${picked ? "text-white" : "text-white/60"}`}>
         {team}
       </span>
-      {settled && score !== undefined && (
-        <span
-          className={`font-black text-white text-caption`}
-          style={{ fontFamily: "ui-monospace, monospace" }}
+      <div className="flex items-center gap-2">
+        <div
+          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[14px] font-black ${
+            isCorrect
+              ? "border-emerald-400 bg-emerald-400 text-slate-900"
+              : picked
+              ? "border-[#fde68a] bg-[#fde68a] text-slate-900"
+              : "border-white/25 bg-transparent text-transparent"
+          }`}
         >
-          {score}
-        </span>
-      )}
-      <div
-        className={`flex items-center justify-center rounded-full border text-caption font-black ${
-          small ? "h-3.5 w-3.5" : "h-4 w-4"
-        } ${
-          isCorrect
-            ? "border-emerald-400 bg-emerald-400 text-slate-900"
-            : picked
-            ? "border-[#fde68a] bg-[#fde68a] text-slate-900"
-            : "border-white/20 bg-transparent text-transparent"
-        }`}
-      >
-        ✓
+          ✓
+        </div>
+        {settled && score !== undefined && (
+          <span className="text-[16px] font-black text-white font-mono">
+            {score}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -488,7 +391,6 @@ function PETicket({
   awayScore,
   homeScore,
   winnerIsAway = false,
-  small = false,
 }: {
   sport: string;
   away: string;
@@ -499,59 +401,34 @@ function PETicket({
   awayScore?: number;
   homeScore?: number;
   winnerIsAway?: boolean;
-  small?: boolean;
 }) {
   return (
     <div
-      className={`w-full overflow-hidden rounded-2xl border-2 shadow-[0_4px_16px_rgba(0,0,0,0.4)] ${
-        awaiting
-          ? "border-[#fde68a]/40 shadow-[0_0_16px_rgba(253,230,138,0.18)]"
-          : "border-[#fde68a]/40"
-      }`}
-      style={{
-        background:
-          "linear-gradient(115deg, #1a2f72 0%, #1a2f72 46%, #6b1a4e 54%, #6b1a4e 100%)",
-      }}
+      className="w-full overflow-hidden rounded-2xl border-2 border-[#fde68a]/40 bg-[linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)] shadow-[0_4px_16px_rgba(0,0,0,0.4)]"
     >
-      <div className="flex items-center justify-between border-b border-dashed border-white/16 px-3 py-1.5">
-        <span className="text-caption font-black uppercase tracking-[0.12em] text-[#fde68a]">
+      <div className="flex items-center justify-between border-b border-dashed border-white/16 px-3 py-1">
+        <span className="text-[14px] font-black uppercase tracking-[0.12em] text-[#fde68a]">
           {sport}
         </span>
         {settled && (
-          <span className="text-caption font-semibold text-emerald-400">Final</span>
+          <span className="text-[14px] font-bold text-emerald-400">Final</span>
         )}
         {awaiting && (
-          <span className="animate-pulse text-caption font-semibold text-[#fde68a]/60">
-            Tap a team →
+          <span className="animate-pulse text-[14px] font-bold text-[#fde68a]/80">
+            Tap a team
           </span>
         )}
       </div>
       <div className="grid grid-cols-2 divide-x divide-white/10">
-        <PETeamCol
-          team={away}
-          picked={picked === "away"}
-          score={awayScore}
-          isWinner={winnerIsAway}
-          settled={settled}
-          small={small}
-        />
-        <PETeamCol
-          team={home}
-          picked={picked === "home"}
-          score={homeScore}
-          isWinner={!winnerIsAway}
-          settled={settled}
-          small={small}
-        />
+        <PETeamCol team={away} picked={picked === "away"} score={awayScore} isWinner={winnerIsAway} settled={settled} />
+        <PETeamCol team={home} picked={picked === "home"} score={homeScore} isWinner={!winnerIsAway} settled={settled} />
       </div>
       {settled && (
-        <div className="px-3 pb-2">
-          <div className="flex items-center justify-between rounded-lg border border-emerald-400/28 bg-emerald-400/[0.08] px-2 py-1">
-            <span className="text-caption font-black uppercase tracking-wider text-emerald-400">
-              Correct pick!
-            </span>
-            <span className="text-caption font-black text-emerald-400">+10 pts</span>
-          </div>
+        <div className="flex items-center justify-between border-t border-emerald-400/25 bg-emerald-400/[0.08] px-3 py-1">
+          <span className="text-[14px] font-black uppercase tracking-wider text-emerald-400">
+            Correct pick!
+          </span>
+          <span className="text-[14px] font-black text-emerald-400">+10 pts</span>
         </div>
       )}
     </div>
@@ -560,14 +437,13 @@ function PETicket({
 
 function PEPipBar({ count, total }: { count: number; total: number }) {
   return (
-    <div className="w-full">
+    <div className="w-full [@container(max-height:12.5rem)]:hidden">
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="text-caption font-black uppercase tracking-wider text-[#fde68a]/65">
+        <span className="text-[14px] font-black uppercase tracking-wider text-[#fde68a]/80">
           Your picks
         </span>
         <span
-          className="text-caption font-black text-white/55"
-          style={{ fontFamily: "ui-monospace, monospace" }}
+          className="text-[14px] font-black text-white/80 font-mono"
         >
           {count}/{total}
         </span>
@@ -584,88 +460,62 @@ function PEPipBar({ count, total }: { count: number; total: number }) {
   );
 }
 
-function PickEmIllustration({ stepIndex }: { stepIndex: number }) {
+type PickEmScene = {
+  sport: string;
+  /** Step 0: one picked game. */
+  first: { away: string; home: string };
+  /** Step 1: a second game, still waiting for a pick (daily Pick 'Em mixes sports). */
+  waiting: { sport: string; away: string; home: string };
+  /** Step 2: a settled correct pick and the picks bar. */
+  settled: { away: string; home: string; awayScore: number; homeScore: number };
+  picks: { count: number; total: number };
+};
+
+const PICKEM_SCENE: PickEmScene = {
+  sport: "NBA",
+  first: { away: "Celtics", home: "Heat" },
+  waiting: { sport: "MLB", away: "Dodgers", home: "Mets" },
+  settled: { away: "Bucks", home: "Nets", awayScore: 119, homeScore: 104 },
+  picks: { count: 8, total: 10 },
+};
+
+const NFL_PICKEM_SCENE: PickEmScene = {
+  sport: "NFL",
+  first: { away: "Chiefs", home: "Ravens" },
+  waiting: { sport: "NFL", away: "Eagles", home: "Packers" },
+  settled: { away: "Bills", home: "Dolphins", awayScore: 28, homeScore: 21 },
+  picks: { count: 8, total: 14 },
+};
+
+function PickEmIllustration({ scene, stepIndex }: { scene: PickEmScene; stepIndex: number }) {
   if (stepIndex === 0) {
-    return (
-      <div className="w-full">
-        <PETicket sport="NBA" away="Celtics" home="Heat" picked="away" />
-      </div>
-    );
+    return <PETicket sport={scene.sport} away={scene.first.away} home={scene.first.home} picked="away" />;
   }
 
   if (stepIndex === 1) {
     return (
-      <div className="w-full space-y-1.5">
-        <PETicket sport="NBA" away="Celtics" home="Heat" picked="away" small />
-        <PETicket sport="NBA" away="Lakers" home="Warriors" picked="home" small />
-        <PETicket sport="MLB" away="Dodgers" home="Mets" picked={null} awaiting small />
-        <div className="flex justify-center pt-0.5">
-          <span className="text-caption font-semibold text-white/30">
-            More games below ↓
-          </span>
+      <div className="w-full space-y-2">
+        <PETicket sport={scene.sport} away={scene.first.away} home={scene.first.home} picked="away" />
+        <div className="[@container(max-height:14rem)]:hidden">
+          <PETicket sport={scene.waiting.sport} away={scene.waiting.away} home={scene.waiting.home} picked={null} awaiting />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-3">
       <PETicket
-        sport="NBA"
-        away="Bucks"
-        home="Nets"
+        sport={scene.sport}
+        away={scene.settled.away}
+        home={scene.settled.home}
         picked="away"
         settled
-        awayScore={119}
-        homeScore={104}
+        awayScore={scene.settled.awayScore}
+        homeScore={scene.settled.homeScore}
         winnerIsAway
       />
-      <PEPipBar count={8} total={10} />
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// NFL Pick 'Em onboarding illustrations (NFL-specific team names)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function NFLPickEmIllustration({ stepIndex }: { stepIndex: number }) {
-  if (stepIndex === 0) {
-    return (
-      <div className="w-full">
-        <PETicket sport="NFL" away="Chiefs" home="Ravens" picked="away" />
-      </div>
-    );
-  }
-
-  if (stepIndex === 1) {
-    return (
-      <div className="w-full space-y-1.5">
-        <PETicket sport="NFL" away="Chiefs" home="Ravens" picked="away" small />
-        <PETicket sport="NFL" away="49ers" home="Cowboys" picked="home" small />
-        <PETicket sport="NFL" away="Eagles" home="Packers" picked={null} awaiting small />
-        <div className="flex justify-center pt-0.5">
-          <span className="text-caption font-semibold text-white/30">
-            More games below ↓
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full space-y-2">
-      <PETicket
-        sport="NFL"
-        away="Bills"
-        home="Dolphins"
-        picked="away"
-        settled
-        awayScore={28}
-        homeScore={21}
-        winnerIsAway
-      />
-      <PEPipBar count={8} total={14} />
+      <PEPipBar count={scene.picks.count} total={scene.picks.total} />
     </div>
   );
 }
@@ -674,60 +524,18 @@ function NFLPickEmIllustration({ stepIndex }: { stepIndex: number }) {
 // Fantasy onboarding illustrations
 // ─────────────────────────────────────────────────────────────────────────────
 
-function FanLiveBadge() {
+function FanPlayerRow({ name, pos, fp }: { name: string; pos: string; fp: number }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-emerald-400/45 bg-emerald-400/12 px-2 py-0.5 text-caption font-black uppercase tracking-wider text-emerald-400">
-      LIVE
-    </span>
-  );
-}
-
-function PositionAvatar({ initials }: { initials: string }) {
-  return (
-    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-700">
-      <span className="text-caption font-black text-white/50">{initials}</span>
-    </div>
-  );
-}
-
-function FanPlayerRow({
-  name,
-  pos,
-  fp,
-  live = false,
-  avatar = false,
-}: {
-  name: string;
-  pos: string;
-  fp: number;
-  live?: boolean;
-  avatar?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 rounded-xl border border-[rgba(254,243,199,0.09)] bg-black/20 px-3 py-2.5">
-      {avatar ? (
-        <PositionAvatar initials={pos} />
-      ) : (
-        <span
-          className="w-9 shrink-0 text-center text-caption font-black leading-none text-[#fde68a]"
-          style={{ fontFamily: "var(--ht-font-display)" }}
-        >
+    <div className="flex items-center gap-3 rounded-xl border border-[rgba(254,243,199,0.09)] bg-black/20 px-3 py-2">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-[16px] font-bold leading-snug text-white/90">{name}</span>
+        <span className="flex items-center gap-1.5 text-[14px] font-semibold uppercase tracking-wider text-[#fde68a]/70">
           {pos}
+          <span aria-hidden className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+          <span className="font-black text-emerald-400">Live</span>
         </span>
-      )}
-      {avatar ? (
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-[14px] font-bold text-white/85">{name}</span>
-          <span className="text-caption font-semibold uppercase tracking-wider text-[#fde68a]/60">{pos}</span>
-        </div>
-      ) : (
-        <span className="flex-1 text-[14px] font-bold text-white/85">{name}</span>
-      )}
-      {live && <FanLiveBadge />}
-      <span
-        className="text-[14px] font-black text-[#67e8f9]"
-        style={{ fontFamily: "ui-monospace, monospace" }}
-      >
+      </div>
+      <span className="text-[17px] font-black text-[#67e8f9] font-mono">
         +{fp}
       </span>
     </div>
@@ -736,51 +544,30 @@ function FanPlayerRow({
 
 function FanEmptySlot() {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-dashed border-[rgba(254,243,199,0.14)] px-3 py-3">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-dashed border-[rgba(254,243,199,0.22)] text-footnote text-[rgba(254,243,199,0.32)]">
+    <div className="flex items-center gap-3 rounded-xl border border-dashed border-[rgba(254,243,199,0.2)] px-3 py-2.5">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-dashed border-[rgba(254,243,199,0.3)] text-[16px] text-[rgba(254,243,199,0.55)]">
         +
       </span>
-      <span className="text-footnote font-semibold text-[rgba(254,243,199,0.38)]">
-        Add a player
-      </span>
+      <span className="text-[15px] font-semibold text-[rgba(254,243,199,0.6)]">Add a player</span>
     </div>
   );
 }
 
-function FanDraftRow({
-  name,
-  pos,
-  proj,
-  drafting = false,
-  avatar = false,
-}: {
-  name: string;
-  pos: string;
-  proj: number;
-  drafting?: boolean;
-  avatar?: boolean;
-}) {
+function FanDraftRow({ name, pos, drafting = false }: { name: string; pos: string; drafting?: boolean }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-[rgba(254,243,199,0.07)] bg-black/15 px-3 py-2.5">
-      {avatar && <PositionAvatar initials={pos} />}
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-[14px] font-bold text-white/85">{name}</span>
-        <span className="text-caption font-semibold text-white/40">{pos}</span>
+    <div className="flex items-center gap-3 rounded-xl border border-[rgba(254,243,199,0.07)] bg-black/15 px-3 py-2">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-[16px] font-bold leading-snug text-white/90">{name}</span>
+        <span className="text-[14px] font-semibold uppercase tracking-wider text-white/55">{pos}</span>
       </div>
-      <span
-        className="mr-1 text-caption font-black text-[#67e8f9]"
-        style={{ fontFamily: "ui-monospace, monospace" }}
-      >
-        {proj} proj
-      </span>
       <div
-        className={`rounded-full border px-2.5 py-1 text-caption font-black uppercase tracking-wide ${
+        className={`shrink-0 rounded-full border px-3 py-1 text-[14px] font-black uppercase tracking-wide ${
           drafting
-            ? "border-violet-400/50 bg-violet-500/25 text-violet-300"
-            : "border-[rgba(254,243,199,0.25)] text-[rgba(254,243,199,0.62)]"
+            ? "border-violet-400/50 bg-violet-500/25 text-violet-200"
+            : "border-[rgba(254,243,199,0.3)] text-[rgba(254,243,199,0.75)]"
         }`}
       >
-        {drafting ? "+ Drafting" : "Draft"}
+        {drafting ? "Drafted" : "Draft"}
       </div>
     </div>
   );
@@ -790,9 +577,10 @@ function FantasyIllustration({ stepIndex }: { stepIndex: number }) {
   if (stepIndex === 0) {
     return (
       <div className="w-full space-y-2">
-        <FanPlayerRow name="T. Haliburton" pos="PG" fp={14} live avatar />
-        <FanEmptySlot />
-        <FanEmptySlot />
+        <FanPlayerRow name="T. Haliburton" pos="PG" fp={14} />
+        <div className="[@container(max-height:10rem)]:hidden">
+          <FanEmptySlot />
+        </div>
       </div>
     );
   }
@@ -800,18 +588,20 @@ function FantasyIllustration({ stepIndex }: { stepIndex: number }) {
   if (stepIndex === 1) {
     return (
       <div className="w-full space-y-2">
-        <FanDraftRow name="Nikola Jokić" pos="C" proj={58.9} avatar />
-        <FanDraftRow name="Jayson Tatum" pos="SF" proj={51.4} drafting avatar />
-        <FanDraftRow name="A. Edwards" pos="SG" proj={46.7} avatar />
+        <FanDraftRow name="Nikola Jokić" pos="C" />
+        <div className="[@container(max-height:10rem)]:hidden">
+          <FanDraftRow name="Jayson Tatum" pos="SF" drafting />
+        </div>
       </div>
     );
   }
 
   return (
     <div className="w-full space-y-2">
-      <FanPlayerRow name="T. Haliburton" pos="PG" fp={28} live avatar />
-      <FanPlayerRow name="N. Jokić" pos="C" fp={31} live avatar />
-      <FanPlayerRow name="A. Edwards" pos="SG" fp={12} live avatar />
+      <FanPlayerRow name="T. Haliburton" pos="PG" fp={28} />
+      <div className="[@container(max-height:10rem)]:hidden">
+        <FanPlayerRow name="N. Jokić" pos="C" fp={31} />
+      </div>
     </div>
   );
 }
@@ -820,6 +610,8 @@ function FantasyIllustration({ stepIndex }: { stepIndex: number }) {
 // Dispatch: returns the right illustration for any game × step
 // ─────────────────────────────────────────────────────────────────────────────
 
+const categoryBlitzArtOf = (stepIndex: number) => CATEGORY_BLITZ_TUTORIAL_CARDS[stepIndex]?.art ?? "intro";
+
 function GameStepIllustration({
   gameKey,
   stepIndex,
@@ -827,9 +619,12 @@ function GameStepIllustration({
   gameKey: VenueGameKey;
   stepIndex: number;
 }) {
+  if (gameKey === "category-blitz") {
+    return <CategoryBlitzTutorialArt art={categoryBlitzArtOf(stepIndex)} />;
+  }
   if (gameKey === "bingo") return <BingoIllustration stepIndex={stepIndex} />;
-  if (gameKey === "pickem") return <PickEmIllustration stepIndex={stepIndex} />;
-  if (gameKey === "nfl-pickem") return <NFLPickEmIllustration stepIndex={stepIndex} />;
+  if (gameKey === "pickem") return <PickEmIllustration scene={PICKEM_SCENE} stepIndex={stepIndex} />;
+  if (gameKey === "nfl-pickem") return <PickEmIllustration scene={NFL_PICKEM_SCENE} stepIndex={stepIndex} />;
   if (gameKey === "fantasy") return <FantasyIllustration stepIndex={stepIndex} />;
   return null;
 }
@@ -870,6 +665,36 @@ function renderBody(body: string | string[] | undefined) {
   ));
 }
 
+/**
+ * Games whose tutorial cards use the statement-first layout that Category Blitz
+ * introduced (Andrew, 2026-10-17: emulate it "for these tutorials and for future
+ * ones when we make new games"): no eyebrow label, the card's statement and
+ * detail on top at reading size, the art below in whatever height is left. A
+ * new game's tutorial belongs in this set, with its art in GameStepIllustration.
+ */
+const STATEMENT_LAYOUT_GAMES: ReadonlySet<VenueGameKey> = new Set<VenueGameKey>([
+  "category-blitz",
+  "bingo",
+  "pickem",
+  "nfl-pickem",
+  "fantasy",
+]);
+
+export const usesStatementTutorialLayout = (gameKey: VenueGameKey): boolean => STATEMENT_LAYOUT_GAMES.has(gameKey);
+
+const STATEMENT_TONE = {
+  "category-blitz": {
+    panel: "border-pink-300/25 bg-pink-900/20",
+    heading: "text-amber-50 [text-shadow:0_1px_0_rgba(60,10,40,0.6)]",
+    body: "text-amber-100/90",
+  },
+  default: {
+    panel: "border-white/25 bg-black/15",
+    heading: "text-white [text-shadow:0_1px_0_rgba(12,18,28,0.6)]",
+    body: "text-white/90",
+  },
+} as const;
+
 export function GameOnboardingCard({
   gameKey,
   step,
@@ -883,8 +708,8 @@ export function GameOnboardingCard({
 }) {
   const card = VENUE_GAME_CARD_BY_KEY[gameKey];
   const accentClass = GAME_STEP_ACCENT[gameKey];
-  const hasCustomIllustration = gameKey === "bingo" || gameKey === "pickem" || gameKey === "nfl-pickem" || gameKey === "fantasy";
-  const isHookStep = stepIndex === 0 && !hasCustomIllustration;
+  const statementLayout = usesStatementTutorialLayout(gameKey);
+  const isHookStep = stepIndex === 0;
   const displayTitle = (gameKey === "bingo" || gameKey === "pickem" || gameKey === "nfl-pickem") ? card.title.replace(/^Hightop\s+/i, "") : card.title;
 
   const titleTextColor = gameKey === "category-blitz" ? "text-amber-50" : "text-white";
@@ -898,23 +723,21 @@ export function GameOnboardingCard({
     >
       <div className="relative flex min-h-0 flex-1 flex-col gap-4">
         <div
-          className={`text-[clamp(2rem,6.2vw,3.35rem)] leading-[1.02] font-black uppercase tracking-[0.045em] ${titleTextColor} ${titleTextShadow}`}
-          style={{ fontFamily: "var(--ht-font-display)" }}
+          className={`text-[clamp(2rem,6.2vw,3.35rem)] leading-[1.02] font-black uppercase tracking-[0.045em] ${titleTextColor} ${titleTextShadow} [font-family:var(--ht-font-display)]`}
         >
           {displayTitle}
         </div>
-        {gameKey === "category-blitz" ? (
-          <CategoryBlitzStatementPanel step={step} stepIndex={stepIndex} />
+        {statementLayout ? (
+          <TutorialStatementPanel gameKey={gameKey} step={step} stepIndex={stepIndex} />
         ) : (
-        <div className={`flex min-h-0 flex-1 flex-col rounded-2xl border px-4 py-4 sm:px-5 sm:py-5 border-white/40 ${gameKey === "bingo" ? "gap-1" : gameKey === "fantasy" && stepIndex === 1 ? "gap-5" : gameKey === "fantasy" ? "gap-4" : "gap-3"}`}>
+        <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-2xl border px-4 py-4 sm:px-5 sm:py-5 border-white/40">
           <div className={`shrink-0 text-[1.1rem] tracking-[0.16em] font-black uppercase ${accentClass}`}>
             {step.stepLabel}
           </div>
           {isHookStep ? (
             <div className="flex min-h-0 flex-1 flex-col justify-center gap-3">
               <div
-                className="text-[clamp(1.6rem,4.8vw,2.2rem)] leading-[1.08] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)]"
-                style={{ fontFamily: "var(--ht-font-display)" }}
+                className="text-[clamp(1.6rem,4.8vw,2.2rem)] leading-[1.08] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.7),0_0_14px_rgba(255,255,255,0.35)] [font-family:var(--ht-font-display)]"
               >
                 {step.heading}
               </div>
@@ -925,32 +748,19 @@ export function GameOnboardingCard({
             </div>
           ) : (
             <>
-              <div className={`flex shrink-0 items-center justify-center ${gameKey === "bingo" ? "py-0" : "py-1"}`}>
-                {hasCustomIllustration ? (
-                  <GameStepIllustration gameKey={gameKey} stepIndex={stepIndex} />
-                ) : stepIndex === 1 ? (
-                  <GameArtwork gameKey={gameKey} />
-                ) : (
+              <div className="flex shrink-0 items-center justify-center py-1">
+                {stepIndex === 1 ? (
+                  <TriviaArtwork />
+                ) : isTriviaGameKey(gameKey) ? (
                   <GameScoringArtwork gameKey={gameKey} accentClass={accentClass} />
-                )}
+                ) : null}
               </div>
               <div
-                className={`shrink-0 font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.6)] ${
-                  hasCustomIllustration
-                    ? "text-[clamp(1.2rem,3.8vw,1.7rem)] leading-[1.18]"
-                    : "text-[clamp(1rem,3vw,1.35rem)] leading-[1.2]"
-                }`}
-                style={{ fontFamily: "var(--ht-font-display)" }}
+                className="shrink-0 text-[clamp(1rem,3vw,1.35rem)] leading-[1.2] font-black text-white [text-shadow:0_1px_0_rgba(12,18,28,0.6)] [font-family:var(--ht-font-display)]"
               >
                 {step.heading}
               </div>
-              <div
-                className={`shrink-0 font-medium leading-[1.38] text-white/85 ${
-                  hasCustomIllustration
-                    ? "text-[clamp(0.95rem,2.8vw,1.2rem)]"
-                    : "text-[clamp(0.85rem,2.5vw,1.1rem)]"
-                }`}
-              >
+              <div className="shrink-0 text-[clamp(0.85rem,2.5vw,1.1rem)] font-medium leading-[1.38] text-white/85">
                 {renderBody(step.body)}
               </div>
             </>
@@ -963,64 +773,40 @@ export function GameOnboardingCard({
 }
 
 /**
- * Category Blitz's tutorial layout (plan §3): no step label; the card's
- * statement sits ABOVE the artwork, larger than other games' body text.
+ * The statement-first tutorial layout (Category Blitz plan §3): no step label;
+ * the card's statement and detail sit ABOVE the art, at reading size, and the
+ * art takes the height that is left. Outside Category Blitz the art box is a
+ * size container, so the drawings scale to it (see the tutorial art above).
  */
-function CategoryBlitzStatementPanel({ step, stepIndex }: { step: GameOnboardingStep; stepIndex: number }) {
-  const art = CATEGORY_BLITZ_TUTORIAL_CARDS[stepIndex]?.art ?? "intro";
-  const isIntro = art === "intro";
+function TutorialStatementPanel({ gameKey, step, stepIndex }: { gameKey: VenueGameKey; step: GameOnboardingStep; stepIndex: number }) {
+  const isCategoryBlitz = gameKey === "category-blitz";
+  const isIntro = isCategoryBlitz && categoryBlitzArtOf(stepIndex) === "intro";
+  const tone = STATEMENT_TONE[isCategoryBlitz ? "category-blitz" : "default"];
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 rounded-2xl border border-pink-300/25 bg-pink-900/20 px-3 py-3 sm:px-4 sm:py-4">
+    <div className={`flex min-h-0 flex-1 flex-col gap-3 rounded-2xl border px-3 py-3 sm:px-4 sm:py-4 ${tone.panel}`}>
       <div className={`shrink-0 ${isIntro ? "flex flex-1 flex-col justify-center" : ""}`}>
         <div
-          className={`font-black text-amber-50 [font-family:var(--ht-font-display)] [text-shadow:0_1px_0_rgba(60,10,40,0.6)] ${
+          className={`font-black [font-family:var(--ht-font-display)] ${tone.heading} ${
             isIntro ? "text-center text-[clamp(1.9rem,8vw,2.5rem)] leading-[1.08]" : "text-[clamp(1.3rem,5.4vw,1.75rem)] leading-[1.18]"
           }`}
         >
           {step.heading}
         </div>
         {step.body ? (
-          <div className="mt-2 text-[clamp(1.05rem,4.6vw,1.2rem)] font-semibold leading-[1.35] text-amber-100/90">
+          <div className={`mt-2 text-[clamp(1.05rem,4.6vw,1.2rem)] font-semibold leading-[1.35] ${tone.body}`}>
             {renderBody(step.body)}
           </div>
         ) : null}
       </div>
-      <div className={`flex min-h-0 items-center justify-center ${isIntro ? "shrink-0 pb-4" : "flex-1"}`}>
-        <CategoryBlitzTutorialArt art={art} />
+      <div
+        className={`flex min-h-0 items-center justify-center ${
+          isIntro ? "shrink-0 pb-4" : isCategoryBlitz ? "flex-1" : "flex-1 overflow-hidden p-0.5 [container-type:size] [align-items:safe_center] [justify-content:safe_center]"
+        }`}
+      >
+        <GameStepIllustration gameKey={gameKey} stepIndex={stepIndex} />
       </div>
     </div>
   );
 }
 
 export { GAME_STEP_DOT_ACTIVE };
-
-export function GameIdentityPanel({
-  gameKey,
-  title,
-  subtitle,
-  className = "",
-}: {
-  gameKey: VenueGameKey;
-  title: string;
-  subtitle: string;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`relative overflow-hidden rounded-[2rem] border-[3px] border-white/65 p-3 text-white shadow-[0_12px_26px_rgba(15,23,42,0.5)] ${GAME_CARD_BG_BY_KEY[gameKey]} ${className}`}
-    >
-      <div className="space-y-3">
-        <div
-          className="text-[1.28rem] leading-[1.02] font-black uppercase tracking-[0.045em] text-white [text-shadow:0_1px_0_rgba(12,18,28,0.8),0_3px_0_rgba(12,18,28,0.58),0_0_12px_rgba(255,255,255,0.5)]"
-          style={{ fontFamily: "var(--ht-font-display)" }}
-        >
-          {title}
-        </div>
-        <div className="max-h-10 overflow-hidden rounded-xl border border-white/40 bg-black/25 px-2 py-1.5 text-caption leading-snug text-white/95">
-          {subtitle}
-        </div>
-        <GameArtwork gameKey={gameKey} />
-      </div>
-    </div>
-  );
-}

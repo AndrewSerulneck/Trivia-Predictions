@@ -11,6 +11,7 @@ import type { Venue, LeaderboardEntry } from "@/types";
 import { AccountMenuList } from "@/components/navigation/AccountMenuList";
 import { getAccountId, getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
+import { setScrollLock } from "@/lib/scrollLock";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
@@ -548,6 +549,15 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const openMenu = useCallback(() => {
     setIsMenuOpen(true);
   }, []);
+
+  // While the menu is open the page behind it must not scroll, so a swipe on
+  // the drawer scrolls the drawer (down to Sign Out), not the game cards.
+  useEffect(() => {
+    setScrollLock("venue-hub-menu", isMenuOpen, "modal");
+    return () => {
+      setScrollLock("venue-hub-menu", false);
+    };
+  }, [isMenuOpen]);
 
   const settleScreenNavigation = useCallback(() => {
     if (carouselSettleTimerRef.current !== null) {
@@ -1645,7 +1655,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         />
 
         <aside
-          className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] border-r border-ht-border-soft bg-ht-surface px-5 py-5 shadow-ht-modal transition-transform duration-200 ${
+          className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] overflow-y-auto overscroll-contain border-r border-ht-border-soft bg-ht-surface px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-ht-modal transition-transform duration-200 ${
             isMenuOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
