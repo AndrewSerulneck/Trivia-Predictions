@@ -181,11 +181,10 @@ describe("R1 — the audited popups are wired", () => {
   const read = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
   const OVERLAYS: Array<[file: string, registration: string]> = [
-    ["components/venue/VenueHubClient.tsx", 'useNativeBackHandler("overlay", isMenuOpen ? () => setIsMenuOpen(false) : null)'],
+    ["components/navigation/AccountDrawer.tsx", 'useNativeBackHandler("overlay", open ? onClose : null)'],
     ["components/venue/VenueHubClient.tsx", 'useNativeBackHandler("overlay", selectedChallengeDetail ? () => setSelectedChallengeId(null) : null)'],
     ["components/venue/CategoryBlitzOnboardingOverlay.tsx", 'useNativeBackHandler("overlay", open ?'],
     ["components/owner/sheet/useModalOverlay.ts", 'useNativeBackHandler("overlay", open ? requestClose : null)'],
-    ["components/ui/AccountMenu.tsx", 'useNativeBackHandler("overlay", isMenuOpen ? () => setIsMenuOpen(false) : null)'],
     ["components/ui/AccountMenu.tsx", 'useNativeBackHandler("overlay", isUsernameModalOpen ?'],
     ["components/social-share/StoryCaptureModal.tsx", 'useNativeBackHandler("overlay", isOpen ? closeModal : null)'],
     ["components/social-share/ShareActionsSheet.tsx", 'useNativeBackHandler("overlay", onClose ?? null)'],

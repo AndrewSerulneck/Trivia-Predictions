@@ -5,8 +5,8 @@
 > next NFL Tuesday check. Latest handoff: `docs/reward-minimum-players-plan_PHASE_3_HANDOFF.md`.
 > **Phases 4–7 (added 2026-10-17):** fixes for the 10 `/code-review` findings on the uncommitted
 > game-tutorial-card + player-menu work. They don't touch rewards; they live here at Andrew's request.
-> **Phases 4–5 done 2026-10-17 (uncommitted); Phases 6–7 not started.** Latest handoff:
-> `docs/reward-minimum-players-plan_PHASE_5_HANDOFF.md`.
+> **Phases 4–6 done 2026-10-17 (4–5 committed as `274c26c`; 6 committed after it); Phase 7 not started.** Latest handoff:
+> `docs/reward-minimum-players-plan_PHASE_6_HANDOFF.md`.
 > Each phase ends with `docs/reward-minimum-players-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew.
 

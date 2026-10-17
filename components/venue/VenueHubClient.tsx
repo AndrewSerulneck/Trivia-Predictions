@@ -8,10 +8,10 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import type { Venue, LeaderboardEntry } from "@/types";
+import { AccountDrawer } from "@/components/navigation/AccountDrawer";
 import { AccountMenuList } from "@/components/navigation/AccountMenuList";
 import { getAccountId, getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
-import { setScrollLock } from "@/lib/scrollLock";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
@@ -549,15 +549,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const openMenu = useCallback(() => {
     setIsMenuOpen(true);
   }, []);
-
-  // While the menu is open the page behind it must not scroll, so a swipe on
-  // the drawer scrolls the drawer (down to Sign Out), not the game cards.
-  useEffect(() => {
-    setScrollLock("venue-hub-menu", isMenuOpen, "modal");
-    return () => {
-      setScrollLock("venue-hub-menu", false);
-    };
-  }, [isMenuOpen]);
 
   const settleScreenNavigation = useCallback(() => {
     if (carouselSettleTimerRef.current !== null) {
@@ -1567,7 +1558,6 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   // venue hub is the signed-in player's root screen, so Back puts the app in the
   // background (Android's convention) instead of walking history back into a
   // game the player just left. Website: inert.
-  useNativeBackHandler("overlay", isMenuOpen ? () => setIsMenuOpen(false) : null);
   useNativeBackHandler("overlay", selectedChallengeDetail ? () => setSelectedChallengeId(null) : null);
   useNativeBackHandler("exit", minimizeNativeApp);
 
@@ -1640,89 +1630,59 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         </div>
       </div>
 
-      <div
-        data-tp-scroll-lock={isMenuOpen ? "active" : undefined}
-        className={`fixed inset-0 z-[1200] ${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
-        aria-hidden={!isMenuOpen}
-      >
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen(false)}
-          className={"tp-player-hit-target tp-player-pressable " + (`absolute inset-0 h-full w-full bg-black/40 transition-opacity duration-200 ${
-            isMenuOpen ? "opacity-100" : "opacity-0"
-          }`)}
-          aria-label="Close navigation menu"
-        />
+      <AccountDrawer open={isMenuOpen} onClose={() => setIsMenuOpen(false)} scrollLockId="venue-hub-menu">
+        <div className="mb-5 rounded-ht-lg border border-cyan-400/45 bg-cyan-400/10 px-4 py-3.5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-[1.15rem] font-black leading-tight text-ht-fg-primary">
+                {menuUsername || "Guest"}
+              </p>
+              <p className="mt-0.5 truncate text-caption font-semibold uppercase tracking-[0.1em] text-cyan-400">
+                {venueDisplayName}
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-caption font-black uppercase tracking-[0.12em] text-amber-200/85">Points</p>
+              <p
+                className="text-[1.02rem] font-black leading-tight"
+                style={{ color: "var(--ht-accent-gold, #fbbf24)", fontVariantNumeric: "tabular-nums" }}
+              >
+                {(menuPoints ?? 0).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <aside
-          className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] overflow-y-auto overscroll-contain border-r border-ht-border-soft bg-ht-surface px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-ht-modal transition-transform duration-200 ${
-            isMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-xl font-black tracking-wide text-ht-fg-primary">Menu</h3>
+        {!hasPasskey && (
+          <div className="mb-5 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated/50 p-3">
+            <div className="text-sm font-black text-ht-fg-primary">Passkey Login</div>
+            <p className="mt-1 text-xs text-ht-fg-muted">
+              Enable one-tap Face ID, Touch ID, or device PIN login on this device.
+            </p>
             <button
               type="button"
-              onClick={() => setIsMenuOpen(false)}
-              className="tp-player-hit-target tp-player-pressable rounded-ht-sm border border-ht-border-soft bg-ht-elevated px-3 py-1.5 text-base font-semibold text-ht-fg-muted"
+              onClick={() => void handlePasskeySetup()}
+              disabled={isPasskeySetupLoading}
+              className="tp-player-hit-target tp-player-pressable mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200 disabled:opacity-50" aria-busy={isPasskeySetupLoading}
             >
-              Close
+            {(isPasskeySetupLoading) ? <ButtonSpinner /> : null}
+              {isPasskeySetupLoading ? "Setting up passkey..." : "Set Up Passkey"}
             </button>
-          </div>
-
-          <div className="mb-5 rounded-ht-lg border border-cyan-400/45 bg-cyan-400/10 px-4 py-3.5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-[1.15rem] font-black leading-tight text-ht-fg-primary">
-                  {menuUsername || "Guest"}
-                </p>
-                <p className="mt-0.5 truncate text-caption font-semibold uppercase tracking-[0.1em] text-cyan-400">
-                  {venueDisplayName}
-                </p>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-caption font-black uppercase tracking-[0.12em] text-amber-200/85">Points</p>
-                <p
-                  className="text-[1.02rem] font-black leading-tight"
-                  style={{ color: "var(--ht-accent-gold, #fbbf24)", fontVariantNumeric: "tabular-nums" }}
-                >
-                  {(menuPoints ?? 0).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {!hasPasskey && (
-            <div className="mb-5 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated/50 p-3">
-              <div className="text-sm font-black text-ht-fg-primary">Passkey Login</div>
-              <p className="mt-1 text-xs text-ht-fg-muted">
-                Enable one-tap Face ID, Touch ID, or device PIN login on this device.
+            {passkeySetupError ? (
+              <p className="mt-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200" role="alert">
+                {passkeySetupError}
               </p>
-              <button
-                type="button"
-                onClick={() => void handlePasskeySetup()}
-                disabled={isPasskeySetupLoading}
-                className="tp-player-hit-target tp-player-pressable mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200 disabled:opacity-50" aria-busy={isPasskeySetupLoading}
-              >
-              {(isPasskeySetupLoading) ? <ButtonSpinner /> : null}
-                {isPasskeySetupLoading ? "Setting up passkey..." : "Set Up Passkey"}
-              </button>
-              {passkeySetupError ? (
-                <p className="mt-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200" role="alert">
-                  {passkeySetupError}
-                </p>
-              ) : null}
-              {passkeySetupMessage ? (
-                <p className="mt-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200" role="status">
-                  {passkeySetupMessage}
-                </p>
-              ) : null}
-            </div>
-          )}
+            ) : null}
+            {passkeySetupMessage ? (
+              <p className="mt-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200" role="status">
+                {passkeySetupMessage}
+              </p>
+            ) : null}
+          </div>
+        )}
 
-          <AccountMenuList onNavigate={() => setIsMenuOpen(false)} />
-        </aside>
-      </div>
+        <AccountMenuList onNavigate={() => setIsMenuOpen(false)} />
+      </AccountDrawer>
 
       <AnimatePresence>
         {selectedChallenge && selectedChallengeDetail ? (

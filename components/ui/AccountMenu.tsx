@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { Menu } from "lucide-react";
+import { AccountDrawer } from "@/components/navigation/AccountDrawer";
 import { AccountMenuList } from "@/components/navigation/AccountMenuList";
 import { getUserId, getUsername, getVenueId, saveUsername } from "@/lib/storage";
-import { setScrollLock } from "@/lib/scrollLock";
 import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 
 type UsernameUpdatePayload = {
@@ -55,15 +55,8 @@ export function AccountMenu({
     }
   }, []);
 
-  useEffect(() => {
-    setScrollLock(`account-menu:${scrollLockOwnerId}`, isMenuOpen, "modal");
-    return () => {
-      setScrollLock(`account-menu:${scrollLockOwnerId}`, false);
-    };
-  }, [isMenuOpen, scrollLockOwnerId]);
-
-  // Android's Back inside the app closes the topmost of these, like its Close button.
-  useNativeBackHandler("overlay", isMenuOpen ? () => setIsMenuOpen(false) : null);
+  // Android's Back closes this modal like its Close button; the drawer itself
+  // (AccountDrawer) registers its own, and the most recently opened one wins.
   useNativeBackHandler("overlay", isUsernameModalOpen ? () => setIsUsernameModalOpen(false) : null);
 
   const openUsernameModal = useCallback(() => {
@@ -144,36 +137,8 @@ export function AccountMenu({
 
       {mounted
         ? createPortal(
-      <div
-        data-tp-scroll-lock={isMenuOpen ? "active" : undefined}
-        className={`fixed inset-0 z-[1200] ${isMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}
-        aria-hidden={!isMenuOpen}
-      >
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen(false)}
-          className={`absolute inset-0 h-full w-full bg-black/40 transition-opacity duration-200 ${
-            isMenuOpen ? "opacity-100" : "opacity-0"
-          }`}
-          aria-label="Close navigation menu"
-        />
-
-        <aside
-          className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] overflow-y-auto overscroll-contain border-r border-ht-border-soft bg-ht-surface px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-ht-modal transition-transform duration-200 ${
-            isMenuOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-xl font-black tracking-wide text-ht-fg-primary">Menu</h3>
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(false)}
-              className="rounded-ht-sm border border-ht-border-soft bg-ht-elevated px-3 py-1.5 text-base font-semibold text-ht-fg-muted"
-            >
-              Close
-            </button>
-          </div>
-
+      <>
+        <AccountDrawer open={isMenuOpen} onClose={() => setIsMenuOpen(false)} scrollLockId={`account-menu:${scrollLockOwnerId}`}>
           <div className="mb-4 rounded-ht-lg border border-ht-border-hairline bg-ht-elevated/50 p-3">
             <div className="text-sm font-black text-ht-fg-primary">Profile</div>
             <p className="mt-1 text-xs text-ht-fg-muted">
@@ -189,11 +154,10 @@ export function AccountMenu({
           </div>
 
           <AccountMenuList onNavigate={() => setIsMenuOpen(false)} hasUnclaimedPrize={hasUnclaimedPrize} />
-
-        </aside>
+        </AccountDrawer>
 
         {isUsernameModalOpen ? (
-          <div className="absolute inset-0 z-[1300] flex items-center justify-center bg-black/55 px-4">
+          <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/55 px-4">
             <div className="w-full max-w-sm rounded-2xl border border-ht-border-soft bg-ht-surface p-4 shadow-ht-modal">
               <div className="mb-3 flex items-center justify-between">
                 <h4 className="text-lg font-black text-ht-fg-primary">Change Username</h4>
@@ -249,7 +213,7 @@ export function AccountMenu({
             </div>
           </div>
         ) : null}
-      </div>,
+      </>,
             document.body
           )
         : null}

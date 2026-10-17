@@ -695,6 +695,10 @@ shipped; only a real-device visual pass remains, §13c).
   and nowhere else. Two allow-listed exceptions exist and are **not** sign-outs:
   `JoinFlow` dropping a stale Supabase session mid-login, and `VenueHubClient`'s
   arrival watchdog. Add teardown to the button, not to the call site.
+- **The player account drawer is ONE component: `components/navigation/AccountDrawer.tsx`** (scrim, "Menu" header +
+  Close, scroll lock, native Back). The venue hub and the in-game `AccountMenu` render it with their own contents as
+  children; never copy the shell back into a host (`tests/account-drawer.test.ts`). Its Back registration is the one
+  pinned in `tests/native-back-review-fixes.test.ts`.
 - **Host shells own the Back slot, not the pages.** Player content pages pass
   `PageShell backTo={…}`; dark `/owner/*` pages pass `OwnerShell backTo={…}` (the compact
   app bar; **no Sign Out there** — see the Partner Dashboard bullet below); the four `GameAppBar` games inherit it from
