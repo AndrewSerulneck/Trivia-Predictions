@@ -3,7 +3,8 @@ import { join } from "node:path";
 import ts from "typescript";
 
 // Finds the word "reward(s)" in ON-SCREEN text: string literals, template literals and JSX text in
-// app/, components/ and lib/ (identifiers, imports and comments are not text, so they never match).
+// app/, components/ and lib/ .ts/.tsx files, plus llms.txt (identifiers, imports and comments are not
+// text, so they never match). scripts/ and docs/ are deliberately not scanned.
 // Used by tests/prizes-wording-contract.test.ts. Plan: docs/rewards-to-prizes-rename-plan.md.
 
 export const REWARD_WORD = /\brewards?\b/i;
@@ -39,6 +40,8 @@ const textOf = (node: ts.Node): string | null => {
 
 /** Every literal in a source file whose text contains the word, whitespace-squashed. */
 export const scanSource = (file: string, source: string): WordingHit[] => {
+  // Most files never say the word: skip the TypeScript parse for them.
+  if (!REWARD_WORD.test(source)) return [];
   const kind = file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind);
   const hits: WordingHit[] = [];
