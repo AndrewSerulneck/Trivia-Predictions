@@ -333,7 +333,7 @@ export const PosConnectionsSheet = ({ nav, venue, posResult = null }: PosConnect
   }, [open, venueId, attempt]);
 
   return (
-    <OwnerSheet open={open} onRequestClose={nav.closeSheet} eyebrow="Rewards at the register" title="Point of Sale">
+    <OwnerSheet open={open} onRequestClose={nav.closeSheet} eyebrow="Prizes at the register" title="Point of Sale">
       <div className="space-y-4">
         <p className="text-sm font-semibold text-ht-muted">
           Connect your register so guests&apos; prizes come off the bill right in your point-of-sale system.

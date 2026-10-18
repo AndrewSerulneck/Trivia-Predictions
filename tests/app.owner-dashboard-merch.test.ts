@@ -105,7 +105,7 @@ const go = (search: string) =>
  */
 const awaitDashboardMounted = async () => {
   await screen.findByRole("button", { name: "Select venue" });
-  await screen.findByRole("heading", { name: "Offer Rewards" });
+  await screen.findByRole("heading", { name: "Offer Prizes" });
 };
 
 const store = () => screen.getByRole("dialog", { name: "Order Join Merch" });

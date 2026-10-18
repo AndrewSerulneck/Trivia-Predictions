@@ -85,11 +85,11 @@ export function cascadeReportHasChanges(report: GameSlotCascadeReport): boolean 
  *
  * Deliberately counts rather than names the rewards: the cascade works from
  * campaign ids, and a name would need another round trip for a message whose
- * job is to prompt the partner to go look at their Rewards list.
+ * job is to prompt the partner to go look at their Prizes list.
  */
 export function describeCascadeReport(report: GameSlotCascadeReport): string | null {
   const parts: string[] = [];
-  const plural = (count: number) => (count === 1 ? "reward" : "rewards");
+  const plural = (count: number) => (count === 1 ? "prize" : "prizes");
 
   const retired = report.deactivated.length;
   if (retired > 0) {

@@ -34,7 +34,7 @@ type Venue = {
   name: string;
 };
 
-/** The confirmation toast; `offerReward` adds "Now offer a reward for it →". `id` remounts it (fresh timer) per change. */
+/** The confirmation toast; `offerReward` adds "Now offer a prize for it →". `id` remounts it (fresh timer) per change. */
 type ToastState = { id: number; message: string; offerReward: boolean };
 
 /** A row to ring once its list refetches (see lib/ownerDashboardHighlight.ts). */
@@ -192,7 +192,7 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
     void fetchList<OwnerCompetition>(
       `/api/owner/competitions?venueId=${encodeURIComponent(venueId)}`,
       (json) => (json as { competitions?: OwnerCompetition[] }).competitions,
-      "Couldn't load your rewards.",
+      "Couldn't load your prizes.",
       onUnauthorized,
     ).then((result) => {
       if (cancelled || !result) return;
@@ -244,7 +244,7 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
   const openRewards = (target: OwnerCompetition | "all" | "new") => {
     setRewardsSession((n) => n + 1);
     setRewardsTarget(target === "all" || target === "new" ? null : target);
-    sheet.openSheet("rewards", target === "new" ? "definition" : target === "all" ? null : "detail");
+    sheet.openSheet("prizes", target === "new" ? "definition" : target === "all" ? null : "detail");
   };
 
   // A game was saved or cancelled: show the result and refetch. The list keeps its
@@ -274,7 +274,7 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
       {advisory ? (
         <DashboardNotice
           tone="advisory"
-          action={{ label: "View Rewards", onClick: () => openRewards("all") }}
+          action={{ label: "View Prizes", onClick: () => openRewards("all") }}
           onDismiss={() => setAdvisory(null)}
         >
           {advisory}
@@ -317,7 +317,7 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
           action={
             toast.offerReward
               ? {
-                  label: "Now offer a reward for it →",
+                  label: "Now offer a prize for it →",
                   onClick: () => {
                     setToast(null);
                     openRewards("new");
@@ -473,7 +473,7 @@ const OwnerDashboardPage = () => {
           setInitialLists({
             venueId,
             games: toSectionLoad(data.schedules, "Couldn't load your games."),
-            rewards: toSectionLoad(data.competitions, "Couldn't load your rewards."),
+            rewards: toSectionLoad(data.competitions, "Couldn't load your prizes."),
             asOfMs: Date.now(),
           });
         }

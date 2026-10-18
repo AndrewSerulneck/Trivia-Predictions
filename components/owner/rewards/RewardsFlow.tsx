@@ -48,7 +48,7 @@ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 // the in-sheet Back and the phone's Back gesture are the same thing.
 
 export type RewardsChange = {
-  /** What to tell the partner, e.g. "Live Trivia Challenge reward created". */
+  /** What to tell the partner, e.g. "Live Trivia Challenge prize created". */
   message: string;
   /** The reward was ended (archived or deleted): nothing to ring. */
   removed?: boolean;
@@ -92,8 +92,8 @@ export const RewardsFlow = ({
   // lives inside the sheet, which unmounts it after the exit.)
   const [finished, setFinished] = useState(false);
 
-  const open = nav.sheet === "rewards";
-  const rawStep = nav.displayStepFor("rewards");
+  const open = nav.sheet === "prizes";
+  const rawStep = nav.displayStepFor("prizes");
   const step = resolveRewardSheetStep({ rawStep, hasReward: selected !== null });
   const screen = rewardScreenFor(step);
 
@@ -117,7 +117,7 @@ export const RewardsFlow = ({
   const { closeGuard, dialog, closeWithoutAsking } = useDiscardGuard({
     open,
     dirty: open && screen === "wizard" && step !== "definition",
-    title: "Discard this reward?",
+    title: "Discard this prize?",
     message: "Nothing is saved until you create it.",
     onDiscard: nav.closeSheet,
   });
@@ -142,7 +142,7 @@ export const RewardsFlow = ({
         if (endingRewardId.current !== reward.id) return;
         setEnding((prev) => ({
           ...prev,
-          error: err instanceof Error ? err.message : "Couldn't check this reward's prizes.",
+          error: err instanceof Error ? err.message : "Couldn't check who has won this prize.",
         }));
       },
     );
@@ -160,7 +160,7 @@ export const RewardsFlow = ({
       setEnding((prev) => ({
         ...prev,
         busy: false,
-        error: err instanceof Error ? err.message : "Couldn't remove that reward.",
+        error: err instanceof Error ? err.message : "Couldn't remove that prize.",
       }));
     }
   };
@@ -215,7 +215,7 @@ export const RewardsFlow = ({
             onCreated={() => {
               const definitionId = submittedDefinitionId.current;
               const name = definitionId ? getRewardDefinition(definitionId)?.name : null;
-              onChanged({ message: name ? `${name} reward created` : "Reward created" });
+              onChanged({ message: name ? `${name} prize created` : "Prize created" });
               closeWithoutAsking();
             }}
             onCancel={() => (addedFromList ? nav.goBack("all") : closeWithoutAsking())}
@@ -252,7 +252,7 @@ export const RewardsFlow = ({
         onRequestClose={nav.closeSheet}
         closeGuard={closeGuard}
         onExited={resetIfFinished}
-        title={screen === "wizard" ? "Offer a reward" : "Rewards"}
+        title={screen === "wizard" ? "Offer a prize" : "Prizes"}
         footer={footer}
         // `step`, not `screen`: the wizard slides its own steps inside one pane, and each starts at the top too.
         scrollKey={step}

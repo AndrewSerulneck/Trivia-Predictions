@@ -4,12 +4,12 @@ import { glyphForCompetition, rewardTermsText, type OwnerCompetition } from "@/l
 // One reward as a row: glyph and name. Used by the dashboard's Rewards card and by
 // the Rewards sheet's lists, so they cannot drift apart.
 //
-// A tappable row says only "Tap to see reward details" (Andrew, 2026-10-14: the
+// A tappable row says only "Tap to see prize details" (Andrew, 2026-10-14: the
 // full wording made the dashboard too wordy). The rules and terms live on the
 // detail screen it opens (RewardDetailScreen). An ended row (History) opens
 // nothing, so it keeps the guest summary and terms sentence.
 
-export const REWARD_ROW_DETAILS_HINT = "Tap to see reward details";
+export const REWARD_ROW_DETAILS_HINT = "Tap to see prize details";
 
 export const RewardRow = ({
   competition,

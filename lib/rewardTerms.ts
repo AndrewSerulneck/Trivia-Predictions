@@ -208,7 +208,7 @@ export function lockedQuantityFor(
 const plural = (count: number, noun: string) => (count === 1 ? noun : `${noun}s`);
 
 /**
- * The sentence itself, for the confirm screen and any summary. "these rewards"
+ * The sentence itself, for the confirm screen and any summary. "these prizes"
  * stays plural at any count — it names the reward type being handed out, not the
  * individual coupons.
  *
@@ -226,14 +226,14 @@ export function renderTermsSentence(
   const count = Math.max(1, Math.round(quantity));
   if (winCondition === "game_winner") {
     if (period === null) {
-      return `I want to give out ${count} of these rewards at my next ${gameLabel} game.`;
+      return `I want to give out ${count} of these prizes at my next ${gameLabel} game.`;
     }
-    return `I want to give out ${count} of these rewards every ${REWARD_PERIOD_NOUN[period]}.`;
+    return `I want to give out ${count} of these prizes every ${REWARD_PERIOD_NOUN[period]}.`;
   }
   if (period === null) {
-    return `I want to make ${count} of these rewards available at my next ${gameLabel} game.`;
+    return `I want to make ${count} of these prizes available at my next ${gameLabel} game.`;
   }
-  return `I want to make ${count} of these rewards available every ${REWARD_PERIOD_NOUN[period]}.`;
+  return `I want to make ${count} of these prizes available every ${REWARD_PERIOD_NOUN[period]}.`;
 }
 
 // States the problem only — the wizard always appends its own "Schedule Live
@@ -245,7 +245,7 @@ export function notScheduledMessage(gameLabel: string = DEFAULT_REWARD_GAME_LABE
 }
 
 export function oneOffOnlyMessage(gameLabel: string = DEFAULT_REWARD_GAME_LABEL): string {
-  return `You only have a single ${gameLabel} game scheduled. Schedule recurring ${gameLabel} to offer a recurring reward.`;
+  return `You only have a single ${gameLabel} game scheduled. Schedule recurring ${gameLabel} to offer a recurring prize.`;
 }
 
 export const REWARD_TERMS_NOT_SCHEDULED_MESSAGE = notScheduledMessage();
@@ -266,9 +266,9 @@ export function tooManyWinnerRewardsMessage(
 ): string {
   const noun = REWARD_PERIOD_NOUN[period];
   if (available < 1) {
-    return `You don't run the same number of ${gameLabel} games every ${noun}, so you can't promise a fixed number of "winner of the game" rewards per ${noun}. Choose a different period.`;
+    return `You don't run the same number of ${gameLabel} games every ${noun}, so you can't promise a fixed number of "winner of the game" prizes per ${noun}. Choose a different period.`;
   }
-  return `You run ${available} ${gameLabel} ${plural(available, "game")} each ${noun}, and each game has one winner — so you can offer at most ${available} "winner of the game" ${plural(available, "reward")} per ${noun}. Schedule more ${gameLabel} games to offer more.`;
+  return `You run ${available} ${gameLabel} ${plural(available, "game")} each ${noun}, and each game has one winner — so you can offer at most ${available} "winner of the game" ${plural(available, "prize")} per ${noun}. Schedule more ${gameLabel} games to offer more.`;
 }
 
 export function fixedWinnerRewardsMessage(
@@ -277,17 +277,17 @@ export function fixedWinnerRewardsMessage(
   gameLabel: string = DEFAULT_REWARD_GAME_LABEL,
 ): string {
   const noun = REWARD_PERIOD_NOUN[period];
-  return `Every ${gameLabel} game has a winner, and you run ${available} ${plural(available, "game")} each ${noun} — so this reward gives out exactly ${available} per ${noun}. To hand out fewer, use a points target instead.`;
+  return `Every ${gameLabel} game has a winner, and you run ${available} ${plural(available, "game")} each ${noun} — so this prize goes to exactly ${available} ${plural(available, "winner")} per ${noun}. To hand out fewer, use a points target instead.`;
 }
 
 export function singleGameWinnerQuantityMessage(
   gameLabel: string = DEFAULT_REWARD_GAME_LABEL,
 ): string {
-  return `A single ${gameLabel} game has one winner, so a "winner of the game" reward for one game is worth exactly 1 prize.`;
+  return `A single ${gameLabel} game has one winner, so a "winner of the game" prize for one game goes to exactly 1 winner.`;
 }
 
 export function quantityOutOfRangeMessage(): string {
-  return `Choose between 1 and ${REWARD_MAX_QUANTITY} rewards.`;
+  return `Choose between 1 and ${REWARD_MAX_QUANTITY} prizes.`;
 }
 
 // ── Validation ──────────────────────────────────────────────────────────────

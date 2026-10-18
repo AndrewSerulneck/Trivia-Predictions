@@ -24,7 +24,7 @@ export type RewardsLoad = SectionLoad<OwnerCompetition>;
 
 const RewardsUnavailable = ({ load }: { load: RewardsLoad }) => (
   <p className={EMPTY_CLASS}>
-    {load.status === "error" ? load.message : "Loading your rewards…"}
+    {load.status === "error" ? load.message : "Loading your prizes…"}
   </p>
 );
 
@@ -43,11 +43,11 @@ export const RewardsListScreen = ({
   const active = rewards.status === "ready" ? splitCompetitions(rewards.items).active : [];
   return (
     <div className="space-y-3">
-      <StepHeading>Your rewards</StepHeading>
+      <StepHeading>Your prizes</StepHeading>
       {rewards.status !== "ready" ? (
         <RewardsUnavailable load={rewards} />
       ) : active.length === 0 ? (
-        <p className={EMPTY_CLASS}>No rewards running.</p>
+        <p className={EMPTY_CLASS}>No prizes running.</p>
       ) : (
         <ul className="space-y-2">
           {active.map((competition) => (
@@ -62,11 +62,11 @@ export const RewardsListScreen = ({
         onClick={onAdd}
         className="min-h-12 w-full rounded-[14px] border-2 border-dashed border-ht-soft px-4 py-3 text-sm font-black text-ht-cyan-300 transition active:translate-y-px"
       >
-        + Offer another reward
+        + Offer another prize
       </button>
       <div className="flex justify-center">
         <button type="button" onClick={onOpenHistory} className={TEXT_LINK_CLASS}>
-          Ended rewards
+          Ended prizes
         </button>
       </div>
     </div>
@@ -78,11 +78,11 @@ export const RewardHistoryScreen = ({ rewards }: { rewards: RewardsLoad }) => {
   const ended = rewards.status === "ready" ? splitCompetitions(rewards.items).ended : [];
   return (
     <div className="space-y-3">
-      <StepHeading>Ended rewards</StepHeading>
+      <StepHeading>Ended prizes</StepHeading>
       {rewards.status !== "ready" ? (
         <RewardsUnavailable load={rewards} />
       ) : ended.length === 0 ? (
-        <p className={EMPTY_CLASS}>No ended rewards yet.</p>
+        <p className={EMPTY_CLASS}>No ended prizes yet.</p>
       ) : (
         <ul className="space-y-2">
           {ended.map((competition) => (
@@ -106,7 +106,7 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
 /**
  * One reward: everything a guest is told (what to do and win, when, the fine print), the
  * terms the partner agreed to, dates and top progress, and End reward. The list rows only
- * say "Tap to see reward details", so this screen is where the rules live.
+ * say "Tap to see prize details", so this screen is where the rules live.
  */
 export const RewardDetailScreen = ({
   reward,
@@ -175,7 +175,7 @@ export const RewardDetailScreen = ({
           onClick={onEnd}
           className="min-h-11 w-full rounded-xl border border-ht-rose-500/30 bg-ht-rose-500/10 px-3 text-sm font-black text-ht-rose-300 transition active:translate-y-px"
         >
-          End reward
+          End prize
         </button>
       )}
     </div>
@@ -215,15 +215,15 @@ export const EndRewardScreen = ({
           Remove &ldquo;{name}&rdquo;?
         </h3>
         {loading ? (
-          <p className="mt-2 text-sm font-semibold text-ht-muted">Checking prizes…</p>
+          <p className="mt-2 text-sm font-semibold text-ht-muted">Checking who has won it…</p>
         ) : counts === null ? null : counts.awarded === 0 ? (
           <p className="mt-2 text-sm font-semibold text-ht-muted">
-            No prizes have been awarded from this reward yet, so nothing players hold is affected.
+            Nobody has won it yet, so no player loses anything.
           </p>
         ) : (
           <p className="mt-2 text-sm font-semibold text-ht-muted">
-            This reward has awarded <span className="font-black text-ht-primary">{counts.awarded}</span>{" "}
-            {counts.awarded === 1 ? "prize" : "prizes"}
+            It has been won <span className="font-black text-ht-primary">{counts.awarded}</span>{" "}
+            {counts.awarded === 1 ? "time" : "times"}
             {counts.unredeemed > 0 ? (
               <>
                 , and <span className="font-black text-ht-amber-300">{counts.unredeemed}</span>{" "}
@@ -232,7 +232,7 @@ export const EndRewardScreen = ({
                 {counts.unredeemed === 1 ? "" : "s"}.
               </>
             ) : (
-              ", all of which have already been redeemed."
+              ", and every one has already been redeemed."
             )}
           </p>
         )}
@@ -254,10 +254,10 @@ export const EndRewardScreen = ({
           disabled={disabled}
           className="min-h-11 w-full rounded-xl border border-ht-soft bg-ht-cyan-500 px-4 py-3 text-sm font-black text-slate-950 transition active:translate-y-px disabled:opacity-60"
         >
-          Archive — stop it, keep prizes
+          Archive — stop it, winners keep theirs
         </button>
         <p className="px-1 text-caption font-semibold text-ht-muted">
-          The reward stops running. Every prize already awarded still works.
+          The prize stops running. Every one already won still works.
         </p>
 
         <button
@@ -270,8 +270,8 @@ export const EndRewardScreen = ({
         </button>
         <p className="px-1 text-caption font-semibold text-ht-muted">
           {!counts || counts.unredeemed === 0
-            ? "Removes the reward for good. Prizes already redeemed stay in your records."
-            : `Removes the reward for good and voids ${counts.unredeemed} unredeemed ${counts.unredeemed === 1 ? "prize" : "prizes"}. Prizes already redeemed stay in your records.`}
+            ? "Removes the prize for good. Ones already redeemed stay in your records."
+            : `Removes the prize for good and voids the ${counts.unredeemed} not yet redeemed. Ones already redeemed stay in your records.`}
         </p>
       </div>
     </div>

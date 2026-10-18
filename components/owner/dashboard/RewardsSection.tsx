@@ -34,16 +34,16 @@ export const RewardsSection = ({
     <DashboardSectionCard
       glyph="🏆"
       accentClassName="bg-ht-game-pickem"
-      title="Offer Rewards"
-      addLabel={ready && active.length > 0 ? "Offer a reward" : undefined}
+      title="Offer Prizes"
+      addLabel={ready && active.length > 0 ? "Offer a prize" : undefined}
       onAdd={onAdd}
     >
-      {load.status === "loading" ? <SectionSkeleton label="Loading rewards" /> : null}
+      {load.status === "loading" ? <SectionSkeleton label="Loading prizes" /> : null}
       {load.status === "error" ? <SectionError message={load.message} onRetry={onRetry} /> : null}
       {ready && active.length === 0 ? (
         <SectionEmpty
-          title="Offer your guests a reward"
-          hint="Give a prize to top players, like a free appetizer for tonight's trivia winner."
+          title="Offer your guests a prize"
+          hint="Like a free appetizer for tonight's trivia winner."
           onAdd={onAdd}
         />
       ) : null}
@@ -59,7 +59,7 @@ export const RewardsSection = ({
           {active.length > DASHBOARD_LIST_LIMIT ? (
             <SectionSeeAll count={active.length} onClick={() => onOpen()} />
           ) : null}
-          <SectionAddRow label="+ Offer another reward" onAdd={onAdd} />
+          <SectionAddRow label="+ Offer another prize" onAdd={onAdd} />
         </>
       ) : null}
     </DashboardSectionCard>

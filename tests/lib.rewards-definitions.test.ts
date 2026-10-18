@@ -458,7 +458,7 @@ describe("createReward — expansion + validation", () => {
         winnerQuota: 2,
         prize: APPETIZER_PRIZE,
       }),
-    ).rejects.toThrow(/at most 1 "winner of the game" reward per week/);
+    ).rejects.toThrow(/at most 1 "winner of the game" prize per week/);
     expect(mocks.createChallengeCampaign).not.toHaveBeenCalled();
   });
 

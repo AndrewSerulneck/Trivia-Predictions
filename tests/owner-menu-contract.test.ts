@@ -67,7 +67,7 @@ describe("owner menu contract", () => {
   it("Results opens the URL-mirrored history sheet, hosted by the dashboard page", () => {
     const history = OWNER_MENU_ITEMS.find((item) => item.id === "history");
     expect(history?.label).toBe("Results");
-    expect(history?.hint).toBe("Games, winners & rewards");
+    expect(history?.hint).toBe("Games, winners & prizes");
     expect(history?.sheet).toBe("history");
     expect(history?.href).toBeUndefined();
     const page = read("app/owner/dashboard/page.tsx");

@@ -73,9 +73,9 @@ const Harness = ({
   const [stack, setStack] = useState<(string | null)[]>([]);
 
   const nav: UseOwnerSheetResult = {
-    sheet: open ? "rewards" : null,
+    sheet: open ? "prizes" : null,
     step,
-    displayStepFor: (id) => (id === "rewards" ? step : null),
+    displayStepFor: (id) => (id === "prizes" ? step : null),
     openSheet: () => {},
     goToStep: (next) => {
       log?.push(`go:${next}`);
@@ -150,25 +150,25 @@ describe("RewardsFlow", () => {
     document.body.className = "";
   });
 
-  it("opens on the list of active rewards, with 'offer another' and 'Ended rewards'", () => {
+  it("opens on the list of active rewards, with 'offer another' and 'Ended prizes'", () => {
     render(createElement(Harness));
-    expect(heading()).toBe("Your rewards");
+    expect(heading()).toBe("Your prizes");
     expect(screen.getByText("Trivia Night Appetizer")).toBeTruthy();
     expect(screen.queryByText("Last Month")).toBeNull();
-    expect(button("+ Offer another reward")).toBeTruthy();
-    expect(button("Ended rewards")).toBeTruthy();
+    expect(button("+ Offer another prize")).toBeTruthy();
+    expect(button("Ended prizes")).toBeTruthy();
   });
 
   it("shows ended rewards read-only, with the winner, and Back returns to the list", async () => {
     render(createElement(Harness));
-    fireEvent.click(button("Ended rewards"));
-    await waitFor(() => expect(heading()).toBe("Ended rewards"));
+    fireEvent.click(button("Ended prizes"));
+    await waitFor(() => expect(heading()).toBe("Ended prizes"));
     expect(screen.getByText("Last Month")).toBeTruthy();
     expect(screen.getByText(/Winner: champ/)).toBeTruthy();
     // Not a button: an ended reward can't be opened or ended again.
     expect(screen.queryByRole("button", { name: /Last Month/ })).toBeNull();
     fireEvent.click(button(/Back/));
-    await waitFor(() => expect(heading()).toBe("Your rewards"));
+    await waitFor(() => expect(heading()).toBe("Your prizes"));
   });
 
   it("opens a reward's detail with its terms, top players and End reward", async () => {
@@ -176,13 +176,13 @@ describe("RewardsFlow", () => {
     expect(heading()).toBe("Trivia Night Appetizer");
     expect(screen.getByText("Top players")).toBeTruthy();
     expect(screen.getByText(/ace/)).toBeTruthy();
-    expect(button("End reward")).toBeTruthy();
+    expect(button("End prize")).toBeTruthy();
   });
 
   it("a detail screen with no reward (a reload lost it) is corrected to the list", async () => {
     const log: string[] = [];
     render(createElement(Harness, { initialStep: "detail", initialReward: null, log }));
-    expect(heading()).toBe("Your rewards");
+    expect(heading()).toBe("Your prizes");
     await waitFor(() => expect(log).toContain("correct:all"));
   });
 
@@ -195,16 +195,16 @@ describe("RewardsFlow", () => {
     });
     render(createElement(Harness, { initialStep: "detail", initialReward: ACTIVE, onChanged, onClosed }));
 
-    fireEvent.click(button("End reward"));
+    fireEvent.click(button("End prize"));
     await waitFor(() => expect(heading()).toBe("Remove “Trivia Night Appetizer”?"));
     // Buttons stay disabled until the prize counts arrive, then the cost is spelled out.
     await screen.findByText(/still unredeemed/);
-    expect(screen.getByText(/voids 2 unredeemed prizes/)).toBeTruthy();
+    expect(screen.getByText(/voids the 2 not yet redeemed/)).toBeTruthy();
 
     fireEvent.click(button(/Archive/));
     await waitFor(() => expect(onClosed).toHaveBeenCalled());
     expect(onChanged).toHaveBeenCalledWith({
-      message: "Reward archived. Prizes already awarded still work.",
+      message: "Prize archived. Ones already won still work.",
       removed: true,
     });
     const deleteCall = fetchMock.mock.calls.find(([, init]) => (init as RequestInit | undefined)?.method === "DELETE");
@@ -218,12 +218,12 @@ describe("RewardsFlow", () => {
       "/api/owner/competitions/reward-1": () => ({ ok: true, counts: { awarded: 1, unredeemed: 0, redeemed: 1 } }),
     });
     render(createElement(Harness, { initialStep: "detail", initialReward: ACTIVE, onChanged }));
-    fireEvent.click(button("End reward"));
-    await screen.findByText(/all of which have already been redeemed/);
+    fireEvent.click(button("End prize"));
+    await screen.findByText(/every one has already been redeemed/);
     fireEvent.click(button("Delete anyway"));
     await waitFor(() =>
       expect(onChanged).toHaveBeenCalledWith({
-        message: "Reward deleted. 1 already-redeemed prize kept for your records.",
+        message: "Prize deleted. The 1 already redeemed stays in your records.",
         removed: true,
       }),
     );
@@ -236,8 +236,8 @@ describe("RewardsFlow", () => {
       "/api/owner/competitions/reward-1": () => ({ ok: true, counts: { awarded: 0, unredeemed: 0, redeemed: 0 } }),
     });
     render(createElement(Harness, { initialStep: "detail", initialReward: ACTIVE, onClosed }));
-    fireEvent.click(button("End reward"));
-    await screen.findByText(/nothing players hold is affected/);
+    fireEvent.click(button("End prize"));
+    await screen.findByText(/Nobody has won it yet/);
     fireEvent.click(button(/Archive/));
     await screen.findByText("Nope.");
     expect(onClosed).not.toHaveBeenCalled();
@@ -247,7 +247,7 @@ describe("RewardsFlow", () => {
   it("shows why it can't end when the prize counts fail to load", async () => {
     routeFetch({ "/api/owner/competitions/reward-1": () => ({ ok: false, error: "Counts unavailable." }) });
     render(createElement(Harness, { initialStep: "detail", initialReward: ACTIVE }));
-    fireEvent.click(button("End reward"));
+    fireEvent.click(button("End prize"));
     await screen.findByText("Counts unavailable.");
     expect(button(/Archive/)).toHaveProperty("disabled", true);
     expect(button("Delete anyway")).toHaveProperty("disabled", true);
@@ -270,25 +270,25 @@ describe("RewardsFlow", () => {
     render(createElement(Harness, { rewards: [ACTIVE, OTHER] }));
 
     fireEvent.click(screen.getByText("Trivia Night Appetizer"));
-    await waitFor(() => expect(button("End reward")).toBeTruthy());
-    fireEvent.click(button("End reward"));
+    await waitFor(() => expect(button("End prize")).toBeTruthy());
+    fireEvent.click(button("End prize"));
     await waitFor(() => expect(heading()).toBe("Remove “Trivia Night Appetizer”?"));
     fireEvent.click(button("Back"));
-    await waitFor(() => expect(button("End reward")).toBeTruthy());
+    await waitFor(() => expect(button("End prize")).toBeTruthy());
     fireEvent.click(button("Back"));
     await waitFor(() => expect(screen.getByText("Second Reward")).toBeTruthy());
 
     fireEvent.click(screen.getByText("Second Reward"));
-    await waitFor(() => expect(button("End reward")).toBeTruthy());
-    fireEvent.click(button("End reward"));
-    await screen.findByText(/nothing players hold is affected/);
+    await waitFor(() => expect(button("End prize")).toBeTruthy());
+    fireEvent.click(button("End prize"));
+    await screen.findByText(/Nobody has won it yet/);
 
     await act(async () => {
       resolveFirst(jsonReply({ ok: true, counts: { awarded: 3, unredeemed: 2, redeemed: 1 } }));
     });
     expect(heading()).toBe("Remove “Second Reward”?");
-    expect(screen.queryByText(/voids 2 unredeemed prizes/)).toBeNull();
-    expect(screen.getByText(/nothing players hold is affected/)).toBeTruthy();
+    expect(screen.queryByText(/voids the 2 not yet redeemed/)).toBeNull();
+    expect(screen.getByText(/Nobody has won it yet/)).toBeTruthy();
   });
 
   it("hosts the wizard: each move is a history step, Cancel from the list returns to it", async () => {
@@ -296,8 +296,8 @@ describe("RewardsFlow", () => {
     routeFetch({ "/api/owner/rewards/context": () => ({ ok: true, context: SCHEDULED_CONTEXT }) });
     render(createElement(Harness, { log }));
 
-    fireEvent.click(button("+ Offer another reward"));
-    await waitFor(() => expect(heading()).toBe("Which game should the reward be tied to?"));
+    fireEvent.click(button("+ Offer another prize"));
+    await waitFor(() => expect(heading()).toBe("Which game is this prize for?"));
     await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
 
     fireEvent.click(button(/Live Trivia$/));
@@ -306,11 +306,11 @@ describe("RewardsFlow", () => {
 
     // The wizard's Back (labelled with the reward) is the phone's Back.
     fireEvent.click(button(/Live Trivia Challenge/));
-    await waitFor(() => expect(heading()).toBe("Which game should the reward be tied to?"));
+    await waitFor(() => expect(heading()).toBe("Which game is this prize for?"));
     expect(log.at(-1)).toBe("back:definition");
 
     fireEvent.click(button("Cancel"));
-    await waitFor(() => expect(heading()).toBe("Your rewards"));
+    await waitFor(() => expect(heading()).toBe("Your prizes"));
     expect(log.at(-1)).toBe("back:all");
   });
 
@@ -339,10 +339,10 @@ describe("RewardsFlow", () => {
     await waitFor(() => expect(heading()).toBe("Prize"));
     fireEvent.click(button(/Next: Confirm/));
     await waitFor(() => expect(heading()).toBe("Confirm"));
-    fireEvent.click(button("Create Reward"));
+    fireEvent.click(button("Create Prize"));
 
     await waitFor(() => expect(onClosed).toHaveBeenCalled());
-    expect(onChanged).toHaveBeenCalledWith({ message: "Live Trivia Challenge reward created" });
+    expect(onChanged).toHaveBeenCalledWith({ message: "Live Trivia Challenge prize created" });
     const post = fetchMock.mock.calls.find(([url, init]) => url === "/api/owner/rewards" && (init as RequestInit)?.method === "POST");
     const body = JSON.parse((post?.[1] as RequestInit).body as string) as Record<string, unknown>;
     expect(body).toMatchObject({ venueId: "venue-1", definitionId: "live_trivia_challenge", winCondition: "points_threshold" });
@@ -365,10 +365,10 @@ describe("RewardsFlow", () => {
     routeFetch({ "/api/owner/rewards/context": () => ({ ok: true, context: SCHEDULED_CONTEXT }) });
     render(createElement(Harness, { initialStep: "confirm", log }));
     await waitFor(() => expect(log).toContain("correct:definition"));
-    await waitFor(() => expect(heading()).toBe("Which game should the reward be tied to?"));
+    await waitFor(() => expect(heading()).toBe("Which game is this prize for?"));
   });
 
-  describe("Discard this reward?", () => {
+  describe("Discard this prize?", () => {
     it("closes at once on the Definition step and on the lists", async () => {
       const onClosed = vi.fn();
       routeFetch({ "/api/owner/rewards/context": () => ({ ok: true, context: SCHEDULED_CONTEXT }) });
@@ -388,7 +388,7 @@ describe("RewardsFlow", () => {
       await waitFor(() => expect(heading()).toBe("Live Trivia Challenge"));
 
       fireEvent.click(button("Close"));
-      expect(screen.getByRole("alertdialog", { name: "Discard this reward?" })).toBeTruthy();
+      expect(screen.getByRole("alertdialog", { name: "Discard this prize?" })).toBeTruthy();
       expect(onClosed).not.toHaveBeenCalled();
 
       fireEvent.click(button("Keep editing"));

@@ -43,14 +43,14 @@ describe("useOwnerSheet().correctStep", () => {
 
   it("pops once, however often it is called before the pop lands; corrects again after", async () => {
     window.history.replaceState(null, "", "/owner/dashboard");
-    window.history.pushState({ ownerSheetDepth: 1 }, "", "/owner/dashboard?sheet=rewards&step=definition");
-    window.history.pushState({ ownerSheetDepth: 2 }, "", "/owner/dashboard?sheet=rewards&step=terms");
-    window.history.pushState({ ownerSheetDepth: 3 }, "", "/owner/dashboard?sheet=rewards&step=prize");
+    window.history.pushState({ ownerSheetDepth: 1 }, "", "/owner/dashboard?sheet=prizes&step=definition");
+    window.history.pushState({ ownerSheetDepth: 2 }, "", "/owner/dashboard?sheet=prizes&step=terms");
+    window.history.pushState({ ownerSheetDepth: 3 }, "", "/owner/dashboard?sheet=prizes&step=prize");
     const go = vi.spyOn(window.history, "go");
     const { result } = renderHook(() => useOwnerSheet());
     expect(result.current.step).toBe("prize");
 
-    const toTerms = landOn("?sheet=rewards&step=terms");
+    const toTerms = landOn("?sheet=prizes&step=terms");
     await act(async () => {
       result.current.correctStep("definition");
       result.current.correctStep("definition");
@@ -61,7 +61,7 @@ describe("useOwnerSheet().correctStep", () => {
     await waitFor(() => expect(result.current.step).toBe("terms"));
 
     // A new entry that also lost its data is corrected in turn.
-    const toDefinition = landOn("?sheet=rewards&step=definition");
+    const toDefinition = landOn("?sheet=prizes&step=definition");
     await act(async () => {
       result.current.correctStep("definition");
       await toDefinition;
@@ -72,7 +72,23 @@ describe("useOwnerSheet().correctStep", () => {
     // On the sheet's first entry it rewrites in place instead.
     act(() => result.current.correctStep(null));
     expect(go).toHaveBeenCalledTimes(2);
-    expect(window.location.search).toBe("?sheet=rewards");
+    expect(window.location.search).toBe("?sheet=prizes");
+    expect(window.history.state).toMatchObject({ ownerSheetDepth: 1 });
+  });
+});
+
+describe("useOwnerSheet() and the old ?sheet=rewards id (docs/rewards-to-prizes-rename-plan.md Phase 3)", () => {
+  afterEach(() => {
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("an old bookmark opens the Prizes sheet on its step and is rewritten to the new id", async () => {
+    window.history.replaceState(null, "", "/owner/dashboard?sheet=rewards&step=detail");
+    const { result } = renderHook(() => useOwnerSheet());
+    expect(result.current.sheet).toBe("prizes");
+    expect(result.current.step).toBe("detail");
+    expect(result.current.displayStepFor("prizes")).toBe("detail");
+    await waitFor(() => expect(window.location.search).toBe("?sheet=prizes&step=detail"));
     expect(window.history.state).toMatchObject({ ownerSheetDepth: 1 });
   });
 });

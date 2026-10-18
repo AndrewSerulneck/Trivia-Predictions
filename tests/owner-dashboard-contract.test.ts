@@ -43,7 +43,7 @@ describe("owner dashboard body", () => {
   it("/owner/competitions redirects to the open Rewards sheet (server component, no proxy change)", () => {
     const page = read("app/owner/competitions/page.tsx");
     expect(page).not.toContain('"use client"');
-    expect(page).toContain('redirect("/owner/dashboard?sheet=rewards")');
+    expect(page).toContain('redirect("/owner/dashboard?sheet=prizes")');
     expect(page).not.toContain("CreateRewardWizard");
   });
 
@@ -72,8 +72,8 @@ describe("owner dashboard body", () => {
     const rewards = read("components/owner/dashboard/RewardsSection.tsx");
     expect(live).toContain("Schedule a live game");
     expect(live).toContain("Pick a game and a time. Your whole room plays together.");
-    expect(rewards).toContain("Offer your guests a reward");
-    expect(rewards).toContain("+ Offer another reward");
+    expect(rewards).toContain("Offer your guests a prize");
+    expect(rewards).toContain("+ Offer another prize");
   });
 
   it("Phase 6: confirmations are a toast + ring; only the server advisory stays a banner", () => {

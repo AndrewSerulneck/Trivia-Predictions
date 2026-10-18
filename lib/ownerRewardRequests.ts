@@ -26,7 +26,7 @@ export const submitReward = async (
     body: JSON.stringify(submission),
   });
   const json = (await res.json()) as { ok: boolean; error?: string };
-  if (!json.ok) return { ok: false, error: json.error ?? "Couldn't create that reward." };
+  if (!json.ok) return { ok: false, error: json.error ?? "Couldn't create that prize." };
   return { ok: true };
 };
 
@@ -34,7 +34,7 @@ export const submitReward = async (
 export const fetchRewardPrizeCounts = async (id: string): Promise<RedemptionCounts> => {
   const res = await fetch(`/api/owner/competitions/${id}`, { cache: "no-store" });
   const json = (await res.json()) as { ok: boolean; counts?: RedemptionCounts; error?: string };
-  if (!json.ok || !json.counts) throw new Error(json.error ?? "Couldn't check this reward's prizes.");
+  if (!json.ok || !json.counts) throw new Error(json.error ?? "Couldn't check who has won this prize.");
   return json.counts;
 };
 
@@ -47,6 +47,6 @@ export const removeReward = async (id: string, mode: RemoveMode): Promise<string
     outcome?: "archived" | "deleted";
     redeemedKept?: number;
   };
-  if (!json.ok) throw new Error(json.error ?? "Couldn't remove that reward.");
+  if (!json.ok) throw new Error(json.error ?? "Couldn't remove that prize.");
   return removeOutcomeMessage(json.outcome, json.redeemedKept);
 };

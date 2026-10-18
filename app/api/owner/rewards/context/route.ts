@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     ]);
     return NextResponse.json({ ok: true, context: { ...resolved, posConnected } });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to resolve reward context.";
+    const message = error instanceof Error ? error.message : "Failed to load this prize's options.";
     const status = message === REWARD_UNKNOWN_DEFINITION_MESSAGE ? 400 : 500;
     return NextResponse.json({ ok: false, error: message }, { status });
   }

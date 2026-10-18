@@ -17,7 +17,7 @@ export const DashboardNotice = ({
 }: {
   tone: keyof typeof TONE_CLASS;
   children: ReactNode;
-  /** An underlined button after the text, e.g. "View Rewards". */
+  /** An underlined button after the text, e.g. "View Prizes". */
   action?: { label: string; onClick: () => void };
   onDismiss: () => void;
 }) => (

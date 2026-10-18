@@ -309,13 +309,13 @@ export type NFLWeekScopeTermsResult =
   | { ok: false; message: string };
 
 export const NFL_WEEK_SCOPE_INVALID_MESSAGE =
-  "Choose whether this reward runs every NFL week, once for the whole season, or for a single week.";
+  "Choose whether this prize runs every NFL week, once for the whole season, or for a single week.";
 export const NFL_SINGLE_WEEK_INVALID_MESSAGE =
   "That NFL week isn't available any more. Pick a week that hasn't started yet.";
 export const nflSingleWeekThresholdTooHighMessage = (week: number, gamesCount: number): string =>
   `Week ${week} has ${gamesCount} ${gamesCount === 1 ? "game" : "games"}, so pick a target of ${gamesCount} or fewer.`;
 export const NFL_WEEK_WINNER_QUANTITY_MESSAGE =
-  'Only one guest can have the most correct picks, so a "most correct picks" reward is worth exactly 1 prize. Use a picks target to hand out more.';
+  'Only one guest can have the most correct picks, so a "most correct picks" prize has exactly 1 winner. Use a picks target to have more winners.';
 export const NFL_SEASON_DATES_REQUIRED_MESSAGE =
   "The NFL season's dates couldn't be read. Refresh and try again.";
 // The NFL equivalent of REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE (lib/rewards.ts).
@@ -325,7 +325,7 @@ export const NFL_SEASON_DATES_REQUIRED_MESSAGE =
 // wizard's "not available" block and the server's 409 mapping read the same
 // copy — lib/rewards.ts re-exports it rather than declaring its own.
 export const REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE =
-  "The NFL season isn't set up yet, so there are no weeks left to run this reward.";
+  "The NFL season isn't set up yet, so there are no weeks left to run this prize.";
 
 const CALENDAR_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -519,14 +519,14 @@ export const describeNFLWeekScope = (
     const hasMinimum = Number.isInteger(minimum) && minimum >= 2;
     if (normalized.kind === "weekly") {
       const rule = hasMinimum ? ` A week with fewer than ${minimum} players making picks has no winner.` : "";
-      return `Each week, the guest with the most correct NFL picks at your venue wins this reward — 1 winner per week. Ties are broken by the weekly tiebreaker question.${rule}`;
+      return `Each week, the guest with the most correct NFL picks at your venue wins this prize — 1 winner per week. Ties are broken by the weekly tiebreaker question.${rule}`;
     }
     if (normalized.kind === "single_week") {
       const rule = hasMinimum ? ` If fewer than ${minimum} players make picks that week, there is no winner.` : "";
-      return `After Week ${normalized.week}, the guest with the most correct NFL picks that week at your venue wins this reward — 1 winner. Ties are broken by Week ${normalized.week}'s tiebreaker question.${rule}`;
+      return `After Week ${normalized.week}, the guest with the most correct NFL picks that week at your venue wins this prize — 1 winner. Ties are broken by Week ${normalized.week}'s tiebreaker question.${rule}`;
     }
     const rule = hasMinimum ? ` A season with fewer than ${minimum} players making picks has no winner.` : "";
-    return `At the end of the season, the guest with the most correct NFL picks at your venue wins this reward — 1 winner for the season. Ties are broken by the final week's tiebreaker question.${rule}`;
+    return `At the end of the season, the guest with the most correct NFL picks at your venue wins this prize — 1 winner for the season. Ties are broken by the final week's tiebreaker question.${rule}`;
   }
 
   // "the first guest … wins" reads better than "the first 1 guests … win", so a
@@ -534,10 +534,10 @@ export const describeNFLWeekScope = (
   const guests = quantity === 1 ? "guest" : `${quantity} guests`;
   const verb = quantity === 1 ? "wins" : "win";
   if (normalized.kind === "weekly") {
-    return `Each week, the first ${guests} to get ${threshold} NFL picks right ${verb} this reward.`;
+    return `Each week, the first ${guests} to get ${threshold} NFL picks right ${verb} this prize.`;
   }
   if (normalized.kind === "single_week") {
-    return `In Week ${normalized.week}, the first ${guests} to get ${threshold} NFL picks right ${verb} this reward.`;
+    return `In Week ${normalized.week}, the first ${guests} to get ${threshold} NFL picks right ${verb} this prize.`;
   }
-  return `The first ${guests} to get ${threshold} NFL picks right this season ${verb} this reward.`;
+  return `The first ${guests} to get ${threshold} NFL picks right this season ${verb} this prize.`;
 };

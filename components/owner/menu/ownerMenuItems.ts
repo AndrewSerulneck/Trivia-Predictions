@@ -38,7 +38,7 @@ export type OwnerMenuItem =
 export const OWNER_MENU_ITEMS: readonly OwnerMenuItem[] = [
   { id: "display", label: "Venue Display", hint: "Put games on your TVs", icon: Tv, href: "/owner/display" },
   { id: "store", label: "Order Join Merch", hint: "QR coasters, tents & table cards", icon: ShoppingBag, sheet: "store" },
-  { id: "history", label: "Results", hint: "Games, winners & rewards", icon: Trophy, sheet: "history" },
+  { id: "history", label: "Results", hint: "Games, winners & prizes", icon: Trophy, sheet: "history" },
   { id: "billing", label: "Billing", hint: "Plan, card & invoices", icon: CreditCard, href: "/owner/billing" },
   // docs/pos-rewards-integration-plan.md Phase 1. Hidden while the POS flag is off (see below).
   { id: "pos", label: "Point of Sale", hint: "Prizes off the bill in Square & Clover", icon: ReceiptText, sheet: "pos" },

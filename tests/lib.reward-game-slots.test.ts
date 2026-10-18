@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 // The slot model behind the game picker: which scheduled games a "winner of the
 // game" reward is pinned to, and what cadence/quota that selection implies. Two
 // things carry real money here — a null selection must keep meaning "award at
-// every game" (every reward created before this column existed), and a
+// every game" (every prize created before this column existed), and a
 // client-sent selection must never widen past the venue's real schedule. See
 // docs/rewards-game-winner-picker-plan.md Phase 2.
 
@@ -382,19 +382,19 @@ describe("selectAllRecurringSlots", () => {
 describe("describeGameWinnerSlots", () => {
   it("reads back a multi-day recurring selection", () => {
     expect(describeGameWinnerSlots(enumerateGameSlots([tueThu]))).toBe(
-      "Winners of your Tuesday and Thursday Live Trivia games get this reward — 2 per week.",
+      "Winners of your Tuesday and Thursday Live Trivia games get this prize — 2 per week.",
     );
   });
 
   it("reads back a single recurring game", () => {
     expect(describeGameWinnerSlots(enumerateGameSlots([tuesday6pm]))).toBe(
-      "Winner of your Tuesday Live Trivia game gets this reward — 1 per week.",
+      "Winner of your Tuesday Live Trivia game gets this prize — 1 per week.",
     );
   });
 
   it("reads back a one-off game by its date", () => {
     expect(describeGameWinnerSlots(enumerateGameSlots([oneOff]))).toBe(
-      "Winner of your Tue, Aug 4 6:00 PM — Trivia Fundraiser game gets this reward.",
+      "Winner of your Tue, Aug 4 6:00 PM — Trivia Fundraiser game gets this prize.",
     );
   });
 });
@@ -416,7 +416,7 @@ describe("describeCampaignGameWinnerTerms", () => {
           { scheduleId: "s2", weekday: "thu" },
         ],
       }),
-    ).toBe("Winners of your Tuesday and Thursday Live Trivia games get this reward — 2 per week.");
+    ).toBe("Winners of your Tuesday and Thursday Live Trivia games get this prize — 2 per week.");
   });
 
   it("reads back a single recurring day", () => {
@@ -427,7 +427,7 @@ describe("describeCampaignGameWinnerTerms", () => {
         winnerQuota: 1,
         gameWinnerSlots: [{ scheduleId: "s1", weekday: "tue" }],
       }),
-    ).toBe("Winner of your Tuesday Live Trivia game gets this reward — 1 per week.");
+    ).toBe("Winner of your Tuesday Live Trivia game gets this prize — 1 per week.");
   });
 
   // Regression: createReward stores activeDays: [] for every one-off
@@ -443,7 +443,7 @@ describe("describeCampaignGameWinnerTerms", () => {
         winnerQuota: 1,
         gameWinnerSlots: [{ scheduleId: "s1", weekday: "tue" }],
       }),
-    ).toBe("Winner of your Tuesday Live Trivia game gets this reward.");
+    ).toBe("Winner of your Tuesday Live Trivia game gets this prize.");
   });
 
   it("orders days by the calendar week, not by however the slots happen to be stored", () => {
@@ -457,7 +457,7 @@ describe("describeCampaignGameWinnerTerms", () => {
           { scheduleId: "s2", weekday: "tue" },
         ],
       }),
-    ).toBe("Winners of your Tuesday and Thursday Live Trivia games get this reward — 2 per week.");
+    ).toBe("Winners of your Tuesday and Thursday Live Trivia games get this prize — 2 per week.");
   });
 
   // Legacy "every game" reward: created before the picker existed, so
@@ -470,7 +470,7 @@ describe("describeCampaignGameWinnerTerms", () => {
         winnerQuota: 1,
         gameWinnerSlots: null,
       }),
-    ).toBe("Winner of your Tuesday Live Trivia game gets this reward — 1 per week.");
+    ).toBe("Winner of your Tuesday Live Trivia game gets this prize — 1 per week.");
   });
 
   it("returns empty for a campaign with no resolvable weekday in either field", () => {

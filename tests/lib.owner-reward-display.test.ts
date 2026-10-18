@@ -63,7 +63,7 @@ describe("rewardTermsText", () => {
   });
   it("restates the terms sentence for a stamped reward", () => {
     expect(rewardTermsText(competition({ rewardDefinitionId: "live_trivia_challenge" }))).toMatch(
-      /3 of these rewards/,
+      /3 of these prizes/,
     );
   });
   it("states an NFL most-picks reward's own minimum as making picks, and nothing without one", () => {

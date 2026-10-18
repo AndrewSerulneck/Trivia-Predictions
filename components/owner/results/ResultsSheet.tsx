@@ -43,9 +43,9 @@ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 //   list    the timeline
 //   game    one game: "Find a player" + the FULL standings + rewards won at it
 //   player  one player's questions: right/wrong and points (never their typed answer)
-//   reward  one reward's history
+//   prize   one prize's history (was `reward`; the old step is still read)
 //
-// URL-MIRRORED like the other dashboard sheets: `?sheet=history` is the list and `&step=game|player|reward`
+// URL-MIRRORED like the other dashboard sheets: `?sheet=history` is the list and `&step=game|player|prize`
 // a screen above it, so the phone's Back steps back or closes. Which game/player/reward is open lives in
 // memory, so a reload on a detail step corrects to the list (nav.correctStep). The router is never used for a step.
 // Hosted by the dashboard page (HistorySheetHost) and keyed by venue, so a venue switch starts clean.
@@ -54,8 +54,12 @@ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 // Usernames and scores only — never a player id. Labels and units come from the competition registry
 // (lib/results/competitions.ts); nothing here names a competition.
 
-type Screen = "list" | "game" | "player" | "reward";
-const SCREENS: readonly Screen[] = ["list", "game", "player", "reward"];
+type Screen = "list" | "game" | "player" | "prize";
+const SCREENS: readonly Screen[] = ["list", "game", "player", "prize"];
+
+/** The URL step to show. `reward` is the step's old name, still in bookmarks and open tabs: read it, never write it. */
+const screenOfStep = (step: string | null): Screen =>
+  step === "game" || step === "player" || step === "prize" ? step : step === "reward" ? "prize" : "list";
 
 type TimelineState = {
   status: "idle" | "ready" | "error";
@@ -127,12 +131,12 @@ export const ResultsSheet = ({ nav, venue }: ResultsSheetProps) => {
   }, [open]);
 
   const rawStep = nav.displayStepFor("history");
-  const wanted: Screen = rawStep === "game" || rawStep === "player" || rawStep === "reward" ? rawStep : "list";
+  const wanted: Screen = screenOfStep(rawStep);
   const available: Record<Screen, boolean> = {
     list: true,
     game: gameSel !== null,
     player: gameSel !== null && playerSel !== null,
-    reward: rewardSel !== null,
+    prize: rewardSel !== null,
   };
   // A detail step whose selection a reload forgot can't be shown: back to the list.
   const screen: Screen = available[wanted] ? wanted : "list";
@@ -211,7 +215,7 @@ export const ResultsSheet = ({ nav, venue }: ResultsSheetProps) => {
   const openReward = (reward: ResultsRewardItem, from: "list" | "game") => {
     taps.current += 1;
     setRewardSel({ reward, nonce: taps.current, from });
-    nav.goToStep("reward");
+    nav.goToStep("prize");
   };
 
   const toggleGroup = (key: string) =>
@@ -340,12 +344,12 @@ export const ResultsSheet = ({ nav, venue }: ResultsSheetProps) => {
     if (id === "player" && gameSel && playerSel) {
       return <PlayerBreakdownScreen game={gameSel.game} standing={playerSel.standing} loaded={playerLoaded} onRetry={retryPlayer} />;
     }
-    if (id === "reward" && rewardSel) return <RewardDetailScreen reward={rewardSel.reward} loaded={rewardLoaded} onRetry={retryReward} />;
+    if (id === "prize" && rewardSel) return <RewardDetailScreen reward={rewardSel.reward} loaded={rewardLoaded} onRetry={retryReward} />;
     return renderList();
   };
 
   // Where Back goes: a player's screen is under their game; a reward opened from a game's screen is too.
-  const previous: string | null = screen === "player" || (screen === "reward" && rewardSel?.from === "game") ? "game" : null;
+  const previous: string | null = screen === "player" || (screen === "prize" && rewardSel?.from === "game") ? "game" : null;
   const footer: ReactNode =
     screen === "list" ? undefined : <WizardFooter variant="inline" tone="dark" onBack={() => nav.goBack(previous)} />;
 

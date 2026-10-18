@@ -222,7 +222,14 @@ describe("ResultsSheet", () => {
     fireEvent.click(screen.getByRole("button", { name: /NFL Pick 'Em/ }));
     await screen.findByText(/Not redeemed yet/);
     expect(urls(fetchMock)[1]).toBe("/api/owner/history/rewards/rw-nfl?venueId=venue-1");
-    expect(screen.getByTestId("step").textContent).toBe("reward");
+    expect(screen.getByTestId("step").textContent).toBe("prize");
+  });
+
+  it("the old `reward` step (bookmark, open tab) is read as the prize step and corrects to the timeline like it", async () => {
+    vi.stubGlobal("fetch", makeFetch());
+    render(createElement(Host, { initiallyOpen: true, initialStep: "reward" }));
+    await waitFor(() => expect(screen.getByTestId("step").textContent).toBe("list"));
+    await screen.findByText(/Live Trivia · Friday Night Trivia/);
   });
 
   it("a reload on a detail step the page forgot corrects to the timeline", async () => {

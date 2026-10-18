@@ -1,7 +1,7 @@
 import { isRewardWizardStep, REWARD_WIZARD_STEPS, type RewardWizardStep } from "@/lib/rewardWizardSteps";
 import { parseStepParam } from "@/lib/ownerSheetParams";
 
-// The Offer Rewards sheet's screens and request bodies (docs/partner-dashboard-app-redesign-plan.md
+// The Offer Prizes sheet's screens and request bodies (docs/partner-dashboard-app-redesign-plan.md
 // §4f). Pure: no React, no DOM. The wizard's own steps (definition → terms → prize →
 // confirm) come from lib/rewardWizardSteps.ts; this adds the screens around it.
 
@@ -9,7 +9,7 @@ import { parseStepParam } from "@/lib/ownerSheetParams";
 export const REWARD_LIST_STEPS = ["all", "detail", "end", "history"] as const;
 export type RewardListStep = (typeof REWARD_LIST_STEPS)[number];
 
-/** Every `?step=` the Rewards sheet understands. */
+/** Every `?step=` the Prizes sheet understands. */
 export type RewardSheetStep = RewardListStep | RewardWizardStep;
 
 /** The four panes SlideSteps moves between; the whole wizard is one pane (it slides its own steps). */
@@ -29,7 +29,7 @@ export const isRewardListStep = (value: string | null | undefined): value is Rew
   value !== null && value !== undefined && (REWARD_LIST_STEPS as readonly string[]).includes(value);
 
 /**
- * The screen for the URL's `?step=`. No step (a bare `?sheet=rewards`, e.g. the
+ * The screen for the URL's `?step=`. No step (a bare `?sheet=prizes`, e.g. the
  * old /owner/competitions redirect) shows the list. A screen about one reward
  * with no reward to show (a reload lost it) falls back to the list; the venue
  * step (never used here) and anything unknown land on the list / Definition.
@@ -63,6 +63,6 @@ export type RemoveMode = "archive" | "delete";
 export const removeOutcomeMessage = (outcome: "archived" | "deleted" | undefined, redeemedKept: number | undefined): string =>
   outcome === "deleted"
     ? redeemedKept
-      ? `Reward deleted. ${redeemedKept} already-redeemed ${redeemedKept === 1 ? "prize" : "prizes"} kept for your records.`
-      : "Reward deleted."
-    : "Reward archived. Prizes already awarded still work.";
+      ? `Prize deleted. The ${redeemedKept} already redeemed ${redeemedKept === 1 ? "stays" : "stay"} in your records.`
+      : "Prize deleted."
+    : "Prize archived. Ones already won still work.";

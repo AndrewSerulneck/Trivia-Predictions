@@ -111,8 +111,8 @@ export const GameStandingsScreen = ({
         </>
       ) : null}
       {screen && screen.rewards.length > 0 ? (
-        <section aria-label="Rewards won at this game" className="space-y-1.5 pt-2">
-          <p className="px-1 text-caption font-black uppercase tracking-wider text-ht-muted">Rewards won at this game</p>
+        <section aria-label="Prizes won at this game" className="space-y-1.5 pt-2">
+          <p className="px-1 text-caption font-black uppercase tracking-wider text-ht-muted">Prizes won at this game</p>
           <ul className="space-y-2">
             {screen.rewards.map((reward) => (
               <li key={`${reward.rewardId}:${reward.cycleStart}`}>

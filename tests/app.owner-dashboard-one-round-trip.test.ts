@@ -106,7 +106,7 @@ const openDashboard = async () => {
   render(createElement(OwnerDashboardPage));
   await waitFor(() => {
     expect(screen.getByRole("region", { name: "Live Games" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Offer Rewards" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Offer Prizes" })).toBeTruthy();
   });
   // Let the loader's minimum-visible timer and any trailing effect settle.
   await act(async () => {
@@ -148,9 +148,9 @@ describe("Partner Dashboard first load (speed plan Phase 5)", () => {
     expect(calls).toEqual(["/api/owner/dashboard"]);
     // Both sections are READY (their empty states), not skeletons: the seed landed.
     expect(screen.getByText("Pick a game and a time. Your whole room plays together.")).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Offer your guests a reward/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Offer your guests a prize/ })).toBeTruthy();
     expect(screen.queryByRole("status", { name: "Loading live games" })).toBeNull();
-    expect(screen.queryByRole("status", { name: "Loading rewards" })).toBeNull();
+    expect(screen.queryByRole("status", { name: "Loading prizes" })).toBeNull();
   });
 
   it("P1: carries the rows through, so the seed is really what renders", async () => {
@@ -167,13 +167,13 @@ describe("Partner Dashboard first load (speed plan Phase 5)", () => {
 
     expect(screen.getByText("schedules are down")).toBeTruthy();
     // Rewards still rendered its own (empty) answer.
-    expect(screen.getByRole("button", { name: /Offer your guests a reward/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Offer your guests a prize/ })).toBeTruthy();
   });
 
   it("P2: a failed list with no message falls back to the section's own copy", async () => {
     stubApi({ competitions: { ok: false } });
     await openDashboard();
-    expect(screen.getByText("Couldn't load your rewards.")).toBeTruthy();
+    expect(screen.getByText("Couldn't load your prizes.")).toBeTruthy();
   });
 
   it("P3: Retry on a failed section goes back to that section's own endpoint", async () => {

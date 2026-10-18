@@ -320,11 +320,11 @@ export function occurrenceMatchesSlots(
 // ── Derivation ──────────────────────────────────────────────────────────────
 
 export const GAME_SLOTS_NONE_SELECTED_MESSAGE =
-  "Choose at least one Live Trivia game to offer this reward at.";
+  "Choose at least one Live Trivia game to offer this prize at.";
 export const GAME_SLOTS_MIXED_MESSAGE =
-  "A reward can cover your weekly games or a single one-off game, not both. Create a separate reward for the one-off game.";
+  "A prize can cover your weekly games or a single one-off game, not both. Create a separate prize for the one-off game.";
 export const GAME_SLOTS_MULTIPLE_ONE_OFF_MESSAGE =
-  "You can only offer this reward at one one-off game. Pick a single game, or choose your recurring games instead.";
+  "You can only offer this prize at one one-off game. Pick a single game, or choose your recurring games instead.";
 
 export function unknownGameSlotMessage(): string {
   return "One of the selected games is no longer on your schedule. Refresh and pick again.";
@@ -435,7 +435,7 @@ export function validateGameWinnerSlots(
   };
 }
 
-/** The "Offer this reward to the winner of any Live Trivia game" shorthand. */
+/** The "Offer this prize to the winner of any Live Trivia game" shorthand. */
 export function selectAllRecurringSlots(available: readonly RewardGameSlot[]): RewardGameSlot[] {
   const recurring = available.filter((slot) => slot.recurring);
   // A venue with nothing recurring still gets a usable "any game" — its single
@@ -453,7 +453,7 @@ function describeRecurringWinnerTerms(weekdays: readonly RewardWeekday[], quota:
   const list = days.length === 1 ? days[0] : `${days.slice(0, -1).join(", ")} and ${days[days.length - 1]}`;
   const subject = quota === 1 ? "Winner of your" : "Winners of your";
   const verb = quota === 1 ? "gets" : "get";
-  return `${subject} ${list} Live Trivia ${quota === 1 ? "game" : "games"} ${verb} this reward — ${quota} per week.`;
+  return `${subject} ${list} Live Trivia ${quota === 1 ? "game" : "games"} ${verb} this prize — ${quota} per week.`;
 }
 
 /** Readback for the confirm screen, driven by the live picker selection. */
@@ -462,7 +462,7 @@ export function describeGameWinnerSlots(slots: readonly RewardGameSlot[]): strin
   const recurring = slots.filter((slot) => slot.recurring);
   if (recurring.length === 0) {
     const only = slots[0];
-    return `Winner of your ${only.label} game gets this reward.`;
+    return `Winner of your ${only.label} game gets this prize.`;
   }
   return describeRecurringWinnerTerms(weekdaysForSlots(recurring), recurring.length);
 }
@@ -503,7 +503,7 @@ export function describeCampaignGameWinnerTerms(campaign: {
       );
   if (weekdays.length === 0) return "";
   if (campaign.recurringType === "none") {
-    return `Winner of your ${REWARD_WEEKDAY_LABEL[weekdays[0]]} Live Trivia game gets this reward.`;
+    return `Winner of your ${REWARD_WEEKDAY_LABEL[weekdays[0]]} Live Trivia game gets this prize.`;
   }
   return describeRecurringWinnerTerms(weekdays, campaign.winnerQuota);
 }

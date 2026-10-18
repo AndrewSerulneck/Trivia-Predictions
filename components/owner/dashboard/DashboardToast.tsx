@@ -17,7 +17,7 @@ export const DashboardToast = ({
   onDismiss,
 }: {
   children: ReactNode;
-  /** A tappable follow-up, e.g. "Now offer a reward for it →". */
+  /** A tappable follow-up, e.g. "Now offer a prize for it →". */
   action?: { label: string; onClick: () => void };
   onDismiss: () => void;
 }) => {

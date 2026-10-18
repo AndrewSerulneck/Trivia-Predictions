@@ -21,10 +21,18 @@
 // "store" = the Join Merch store (docs/join-merch-store-plan.md §3c): Shop, then `step=review`.
 // "pos" = Point of Sale connections (docs/pos-rewards-integration-plan.md Phase 1), one screen.
 // "add-venue" = Add a venue to the bill (docs/multi-venue-volume-billing-plan.md Phase 4): address, map, review.
-// "history" = Results, was Game Results (docs/live-trivia-weekly-places-reward-plan.md §5f): the list, then `step=game|reward`.
-export const OWNER_SHEET_IDS = ["schedule", "rewards", "store", "pos", "add-venue", "history"] as const;
+// "history" = Results, was Game Results (docs/live-trivia-weekly-places-reward-plan.md §5f): the list, then `step=game|player|prize`.
+// "prizes" = Offer Prizes, the sheet once called "rewards" (docs/rewards-to-prizes-rename-plan.md Phase 3).
+export const OWNER_SHEET_IDS = ["schedule", "prizes", "store", "pos", "add-venue", "history"] as const;
 
 export type OwnerSheetId = (typeof OWNER_SHEET_IDS)[number];
+
+/**
+ * Old sheet ids that still open their sheet. `?sheet=rewards` is in sent partner emails and
+ * bookmarks, so it is read FOREVER, but never written: every link and push uses the new id, and
+ * a page that lands on the old one rewrites its entry to the new one (normalizeLandedSheet).
+ */
+const SHEET_ID_ALIASES: Readonly<Record<string, OwnerSheetId>> = { rewards: "prizes" };
 
 export const SHEET_PARAM = "sheet";
 export const STEP_PARAM = "step";
@@ -35,7 +43,8 @@ const STEP_ID_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
 
 export const parseSheetParam = (raw: string | null | undefined): OwnerSheetId | null => {
   if (!raw) return null;
-  return (OWNER_SHEET_IDS as readonly string[]).includes(raw) ? (raw as OwnerSheetId) : null;
+  if ((OWNER_SHEET_IDS as readonly string[]).includes(raw)) return raw as OwnerSheetId;
+  return Object.hasOwn(SHEET_ID_ALIASES, raw) ? SHEET_ID_ALIASES[raw] : null;
 };
 
 export const parseStepParam = (raw: string | null | undefined): string | null => {
@@ -202,11 +211,11 @@ export const stepBack = (
  *
  * Why pop on depth alone rather than "only when `target` is the previous
  * screen": the driver can't read the previous entry's URL, and a flow can't
- * always know it either (Rewards' detail opens from the dashboard OR the list).
+ * always know it either (Prizes' detail opens from the dashboard OR the list).
  * Landing on a real earlier screen is never worse than a duplicate of `target`.
  *
  * Safe because only a sheet's FIRST entry can sit on another sheet's entry (the
- * Rewards → Schedule swap opens Schedule on top), and a first entry opened that
+ * Prizes → Schedule swap opens Schedule on top), and a first entry opened that
  * way has no `step`, which no flow ever corrects. Returns what it did.
  */
 export const correctStep = (

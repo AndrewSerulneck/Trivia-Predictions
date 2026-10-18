@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ ok: true, reward });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to create reward.";
+    const message = error instanceof Error ? error.message : "Failed to create prize.";
     // A terms violation is always the partner's input, never a server fault.
     if (error instanceof RewardTermsError) {
       return NextResponse.json({ ok: false, error: message }, { status: 400 });

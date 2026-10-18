@@ -272,10 +272,10 @@ describe("single_week start date and copy", () => {
     expect(most).toContain("Week 9");
     expect(most).toContain("fewer than 3 players");
     expect(describeNFLWeekScope(SINGLE, "game_winner", { quantity: 1, threshold: 1, minPlayers: null })).toBe(
-      "After Week 9, the guest with the most correct NFL picks that week at your venue wins this reward — 1 winner. Ties are broken by Week 9's tiebreaker question.",
+      "After Week 9, the guest with the most correct NFL picks that week at your venue wins this prize — 1 winner. Ties are broken by Week 9's tiebreaker question.",
     );
     expect(describeNFLWeekScope(SINGLE, "points_threshold", { quantity: 2, threshold: 8 })).toBe(
-      "In Week 9, the first 2 guests to get 8 NFL picks right win this reward.",
+      "In Week 9, the first 2 guests to get 8 NFL picks right win this prize.",
     );
   });
 });
@@ -304,10 +304,10 @@ describe("describeNFLWeekScope", () => {
 
   it("reads back a picks target in the partner's own numbers", () => {
     expect(describeNFLWeekScope(WEEKLY, "points_threshold", { quantity: 3, threshold: 10 })).toBe(
-      "Each week, the first 3 guests to get 10 NFL picks right win this reward.",
+      "Each week, the first 3 guests to get 10 NFL picks right win this prize.",
     );
     expect(describeNFLWeekScope(SEASON, "points_threshold", { quantity: 1, threshold: 25 })).toBe(
-      "The first guest to get 25 NFL picks right this season wins this reward.",
+      "The first guest to get 25 NFL picks right this season wins this prize.",
     );
   });
 
@@ -316,7 +316,7 @@ describe("describeNFLWeekScope", () => {
   });
 });
 
-// A reward created before kickoff has REAL weekly cycles running immediately
+// A prize created before kickoff has REAL weekly cycles running immediately
 // (deriveNFLWeekScopeTerms gives weekly scope cadence "weekly" + startDate
 // null), so the venue Rewards panel needs an explicit signal that nothing can
 // be earned yet — otherwise it renders "In Progress · 0 / N pts" for weeks.
@@ -444,7 +444,7 @@ describe("buildNFLSelectableWeeks", () => {
         gamesCount: 14,
       },
     ]);
-    // A "most picks" reward created after kickoff would silently never pay
+    // A "most picks" prize created after kickoff would silently never pay
     // (campaignWasLiveForContest), so the week must disappear exactly then.
     expect(buildNFLSelectableWeeks(weeks, AT_KICKOFF)).toEqual([]);
   });

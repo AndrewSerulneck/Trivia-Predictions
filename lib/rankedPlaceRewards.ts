@@ -344,7 +344,7 @@ export const describeRankedTerms = (
 ): string => {
   const count = prizes?.length ?? 0;
   const ladder = describePlacePrizeLadder(prizes);
-  const lead = count === 1 ? "Weekly winner." : count > 1 ? `Weekly top ${count}.` : "Weekly places reward.";
+  const lead = count === 1 ? "Weekly winner." : count > 1 ? `Weekly top ${count}.` : "Weekly places prize.";
   const min = minPlayers ? ` At least ${minPlayers} players need to play each week.` : "";
   return `${lead}${ladder ? ` ${ladder}` : ""}${min}`;
 };

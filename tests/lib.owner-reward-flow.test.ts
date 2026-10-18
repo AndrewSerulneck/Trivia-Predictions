@@ -91,11 +91,11 @@ describe("guardRewardWizardStep", () => {
 
 describe("removeOutcomeMessage — the old page's wording, unchanged", () => {
   it("reports what the server did", () => {
-    expect(removeOutcomeMessage("archived", undefined)).toBe("Reward archived. Prizes already awarded still work.");
-    expect(removeOutcomeMessage(undefined, undefined)).toBe("Reward archived. Prizes already awarded still work.");
-    expect(removeOutcomeMessage("deleted", 0)).toBe("Reward deleted.");
-    expect(removeOutcomeMessage("deleted", undefined)).toBe("Reward deleted.");
-    expect(removeOutcomeMessage("deleted", 1)).toBe("Reward deleted. 1 already-redeemed prize kept for your records.");
-    expect(removeOutcomeMessage("deleted", 3)).toBe("Reward deleted. 3 already-redeemed prizes kept for your records.");
+    expect(removeOutcomeMessage("archived", undefined)).toBe("Prize archived. Ones already won still work.");
+    expect(removeOutcomeMessage(undefined, undefined)).toBe("Prize archived. Ones already won still work.");
+    expect(removeOutcomeMessage("deleted", 0)).toBe("Prize deleted.");
+    expect(removeOutcomeMessage("deleted", undefined)).toBe("Prize deleted.");
+    expect(removeOutcomeMessage("deleted", 1)).toBe("Prize deleted. The 1 already redeemed stays in your records.");
+    expect(removeOutcomeMessage("deleted", 3)).toBe("Prize deleted. The 3 already redeemed stay in your records.");
   });
 });

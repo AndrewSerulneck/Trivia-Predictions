@@ -93,8 +93,8 @@ export const createVenueRewardSource = (params: {
         .limit(REWARD_ROWS_CAP)
         .returns<SettlementRow[]>(),
     ]);
-    if (ledger.error) throw new Error(ledger.error.message ?? "Failed to load the venue's reward winners.");
-    if (settlements.error) throw new Error(settlements.error.message ?? "Failed to load the venue's reward weeks.");
+    if (ledger.error) throw new Error(ledger.error.message ?? "Failed to load the venue's prize winners.");
+    if (settlements.error) throw new Error(settlements.error.message ?? "Failed to load the venue's prize weeks.");
     const ledgerRows = ledger.data ?? [];
     const settlementRows = settlements.data ?? [];
     if (ledgerRows.length >= REWARD_ROWS_CAP || settlementRows.length >= REWARD_ROWS_CAP) {

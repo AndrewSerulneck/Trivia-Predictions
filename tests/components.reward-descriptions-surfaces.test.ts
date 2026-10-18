@@ -45,10 +45,10 @@ describe("RewardRow", () => {
     );
     const text = container.textContent ?? "";
     expect(text).toContain("Win Live Trivia on Friday night and win a $50 gift card.");
-    expect(text).toContain("Winner of your Friday Live Trivia game gets this reward — 1 per week.");
+    expect(text).toContain("Winner of your Friday Live Trivia game gets this prize — 1 per week.");
   });
 
-  it("a tappable row (dashboard, Rewards sheet) says only 'Tap to see reward details'", () => {
+  it("a tappable row (dashboard, Rewards sheet) says only 'Tap to see prize details'", () => {
     const onClick = vi.fn();
     const { container } = render(
       createElement(RewardRow, {
@@ -60,7 +60,7 @@ describe("RewardRow", () => {
     );
     const text = container.textContent ?? "";
     expect(text).toContain("Live Trivia Challenge");
-    expect(text).toContain("Tap to see reward details");
+    expect(text).toContain("Tap to see prize details");
     expect(text).not.toContain("Win Live Trivia on Friday night.");
     expect(text).not.toContain("1 per week");
   });

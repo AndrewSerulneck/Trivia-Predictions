@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-// The terms sentence — "I want to make [N] of these rewards available every
+// The terms sentence — "I want to make [N] of these prizes available every
 // [period]" for points-target, "I want to give out [N] ... every [period]" for
 // game-winner — is the contract a partner signs, and N is a count of real
 // coupons. These tests
@@ -208,7 +208,7 @@ describe("validateRewardTerms", () => {
   it("blocks promising more game-winner rewards than there are games", () => {
     expect(
       validateRewardTerms(weekly, { winCondition: "game_winner", period: "weekly", quantity: 2 }),
-    ).toMatch(/at most 1 "winner of the game" reward per week/);
+    ).toMatch(/at most 1 "winner of the game" prize per week/);
   });
 
   it("accepts exactly as many game-winner rewards as there are games", () => {
@@ -231,7 +231,7 @@ describe("validateRewardTerms", () => {
         period: "weekly",
         quantity: 1,
       }),
-    ).toMatch(/gives out exactly 2 per week/);
+    ).toMatch(/goes to exactly 2 winners per week/);
   });
 
   it("blocks a game-winner period whose game count varies", () => {
@@ -284,19 +284,19 @@ describe("validateRewardTerms", () => {
 describe("sentence copy", () => {
   it("reads naturally for one and for many, defaulting to points-target wording", () => {
     expect(renderTermsSentence(1, "weekly")).toBe(
-      "I want to make 1 of these rewards available every week.",
+      "I want to make 1 of these prizes available every week.",
     );
     expect(renderTermsSentence(3, "monthly")).toBe(
-      "I want to make 3 of these rewards available every month.",
+      "I want to make 3 of these prizes available every month.",
     );
     expect(renderTermsSentence(2, "daily")).toBe(
-      "I want to make 2 of these rewards available every day.",
+      "I want to make 2 of these prizes available every day.",
     );
   });
 
   it("swaps in the one-off wording when there's no period", () => {
     expect(renderTermsSentence(5, null)).toBe(
-      "I want to make 5 of these rewards available at my next Live Trivia game.",
+      "I want to make 5 of these prizes available at my next Live Trivia game.",
     );
   });
 
@@ -305,16 +305,16 @@ describe("sentence copy", () => {
     // sentence is superseded by the game picker (docs/rewards-game-winner-picker-plan.md)
     // once that ships, so it stays "give out" rather than adopting the new copy.
     expect(renderTermsSentence(2, "weekly", "game_winner")).toBe(
-      "I want to give out 2 of these rewards every week.",
+      "I want to give out 2 of these prizes every week.",
     );
     expect(renderTermsSentence(1, null, "game_winner")).toBe(
-      "I want to give out 1 of these rewards at my next Live Trivia game.",
+      "I want to give out 1 of these prizes at my next Live Trivia game.",
     );
   });
 
   it("uses 'make ... available' wording when points_threshold is passed explicitly", () => {
     expect(renderTermsSentence(4, "yearly", "points_threshold")).toBe(
-      "I want to make 4 of these rewards available every year.",
+      "I want to make 4 of these prizes available every year.",
     );
   });
 });

@@ -119,31 +119,31 @@ const VALID_MENU_ITEMS: readonly RewardMenuItem[] = [
 
 // Sentinel messages the route layer maps to specific HTTP statuses (mirrors the
 // OWNER_COMPETITION_* pattern in lib/ownerCompetitions.ts).
-export const REWARD_UNKNOWN_DEFINITION_MESSAGE = "Unknown reward type.";
+export const REWARD_UNKNOWN_DEFINITION_MESSAGE = "Unknown prize type.";
 export const REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE =
-  "Schedule Live Trivia to create a Live Trivia reward.";
+  "Schedule Live Trivia to create a Live Trivia prize.";
 // REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE (the NFL equivalent, mapped to 409 by
 // the routes) now lives in lib/nflPickEmRewardWeeks.ts and is re-exported above
 // — that module is client-safe, so the wizard's "not available" block can use
 // the exact same string.
 export const REWARD_UNSUPPORTED_CADENCE_MESSAGE =
-  "That competition cadence isn't available for this reward.";
+  "That competition cadence isn't available for this prize.";
 export const REWARD_INVALID_THRESHOLD_MESSAGE = "Enter a valid points target.";
 // A threshold that misses the definition's step is no longer one fixed string —
 // the step is per-definition (10 for Live Trivia points, 1 for NFL correct
 // picks), so the message is composed by rewardThresholdStepMessage and raised as
 // a RewardTermsError, which every route already maps to 400 by TYPE.
 export const REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE =
-  "This reward can't be offered to the winner of the game.";
+  "This prize can't be offered to the winner of the game.";
 export const REWARD_INVALID_QUANTITY_MESSAGE =
   "Enter how many of this prize are available.";
-export const REWARD_INVALID_PRIZE_MESSAGE = "Choose a valid prize for this reward.";
+export const REWARD_INVALID_PRIZE_MESSAGE = "Choose what the winner gets.";
 
 // Weekly places ("ranked_places", docs/live-trivia-weekly-places-reward-plan.md) and the
 // partner's minimum players (D7). All raised as RewardTermsError, so every route maps them to
 // 400 by type with no route change.
 export const REWARD_RANKED_PLACES_UNSUPPORTED_MESSAGE =
-  "This reward can't be offered to the top players of the week.";
+  "This prize can't be offered to the top players of the week.";
 /** Pinned games for a top-players reward must repeat weekly (unpinned, any scheduled game will do). */
 export const REWARD_RANKED_PLACES_WEEKLY_ONLY_MESSAGE =
   "Top players this week needs a Live Trivia game that runs every week. Schedule a weekly game first.";
@@ -151,10 +151,10 @@ export const REWARD_RANKED_PLACES_NO_GAMES_MESSAGE =
   "Top players this week needs a scheduled Live Trivia game. Schedule a game first.";
 export const REWARD_RANKED_PLACES_LADDER_MESSAGE = `Choose a prize for each place, from 1 to ${MAX_RANKED_PLACES} places.`;
 export const REWARD_PLACE_PRIZES_NOT_RANKED_MESSAGE =
-  "A prize for each place is only for a top-players-this-week reward.";
+  "A prize for each place works only with Top players this week.";
 export const REWARD_MIN_PLAYERS_RANGE_MESSAGE = `Minimum players must be a whole number from ${REWARD_MIN_PLAYERS_MIN} to ${REWARD_MIN_PLAYERS_MAX}.`;
 export const REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE =
-  "A minimum number of players is only for a reward where players compete for the top spot.";
+  "A minimum number of players works only for a prize where players compete for the top spot.";
 
 /**
  * A terms-sentence violation ("you run 1 game a week, you can't promise 2
@@ -1263,7 +1263,7 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   }
 
   // ── The terms sentence is the contract ────────────────────────────────────
-  // "I want to make [N] of these rewards available every [period]." The period
+  // "I want to make [N] of these prizes available every [period]." The period
   // IS the campaign's recurrence and N IS the winner quota, so both are validated here
   // against the venue's real schedule — the wizard hides impossible combinations,
   // but it is never the only gate (docs/rewards-terms-sentence-plan.md §1d).

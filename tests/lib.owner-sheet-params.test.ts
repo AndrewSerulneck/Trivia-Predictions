@@ -28,10 +28,20 @@ import {
 const SCHEDULE_STEPS = ["game", "when", "repeat", "review"] as const;
 
 describe("parseSheetParam", () => {
-  it("accepts the three known sheets", () => {
+  it("accepts the known sheets", () => {
     expect(parseSheetParam("schedule")).toBe("schedule");
-    expect(parseSheetParam("rewards")).toBe("rewards");
+    expect(parseSheetParam("prizes")).toBe("prizes");
     expect(parseSheetParam("store")).toBe("store");
+  });
+
+  it("reads the old `rewards` id as the Prizes sheet, forever (sent emails, bookmarks)", () => {
+    expect(parseSheetParam("rewards")).toBe("prizes");
+  });
+
+  it("an alias lookup never matches inherited object keys", () => {
+    for (const raw of ["constructor", "toString", "hasOwnProperty", "Rewards"]) {
+      expect(parseSheetParam(raw)).toBeNull();
+    }
   });
 
   it("rejects anything else", () => {
@@ -127,7 +137,7 @@ describe("buildSheetSearch / hrefs", () => {
   });
 
   it("builds a step href", () => {
-    expect(nextStepHref("/owner/dashboard", "", "rewards", "prize")).toBe("/owner/dashboard?sheet=rewards&step=prize");
+    expect(nextStepHref("/owner/dashboard", "", "prizes", "prize")).toBe("/owner/dashboard?sheet=prizes&step=prize");
   });
 });
 
@@ -229,9 +239,9 @@ describe("history driver", () => {
 
   it("correctStep on the sheet's first entry rewrites in place, keeping depth", () => {
     const browser = fakeBrowser("/owner/dashboard");
-    pushSheet(browser.history, browser.location(), "rewards", "detail");
-    expect(correctStep(browser.history, browser.location(), "rewards", "all")).toBe("replaced");
-    expect(browser.entries()).toEqual(["/owner/dashboard", "/owner/dashboard?sheet=rewards&step=all"]);
+    pushSheet(browser.history, browser.location(), "prizes", "detail");
+    expect(correctStep(browser.history, browser.location(), "prizes", "all")).toBe("replaced");
+    expect(browser.entries()).toEqual(["/owner/dashboard", "/owner/dashboard?sheet=prizes&step=all"]);
     expect(readSheetDepth(browser.history.state)).toBe(1);
 
     const landed = fakeBrowser("/owner/dashboard?sheet=store&step=review"); // depth 0, before normalisation
@@ -312,14 +322,38 @@ describe("history driver", () => {
   });
 
   it("a deep link is normalised to a clean dashboard entry with the sheet on top", () => {
-    const browser = fakeBrowser("/owner/dashboard?x=1&sheet=rewards&step=prize#top");
+    const browser = fakeBrowser("/owner/dashboard?x=1&sheet=prizes&step=prize#top");
     expect(normalizeLandedSheet(browser.history, browser.location())).toBe(true);
     expect(browser.entries()).toEqual([
       "/owner/dashboard?x=1#top",
-      "/owner/dashboard?x=1&sheet=rewards&step=prize#top",
+      "/owner/dashboard?x=1&sheet=prizes&step=prize#top",
     ]);
     closeSheet(browser.history, browser.location());
     expect(browser.url()).toBe("/owner/dashboard?x=1#top");
+  });
+
+  it("an old ?sheet=rewards&step=detail bookmark opens the same screen under the new id; Back steps, then closes", () => {
+    const browser = fakeBrowser("/owner/dashboard?sheet=rewards&step=detail");
+    expect(normalizeLandedSheet(browser.history, browser.location())).toBe(true);
+    // The old id is read, never written back.
+    expect(browser.entries()).toEqual(["/owner/dashboard", "/owner/dashboard?sheet=prizes&step=detail"]);
+    expect(readSheetDepth(browser.history.state)).toBe(1);
+
+    pushStep(browser.history, browser.location(), "prizes", "end");
+    expect(browser.url()).toBe("/owner/dashboard?sheet=prizes&step=end");
+    browser.history.go(-1); // the phone's Back
+    expect(browser.url()).toBe("/owner/dashboard?sheet=prizes&step=detail");
+    closeSheet(browser.history, browser.location());
+    expect(browser.url()).toBe("/owner/dashboard");
+  });
+
+  it("a reload mid-flow on an old ?sheet=rewards entry still opens Prizes and Close pops every entry", () => {
+    const browser = fakeBrowser("/owner/dashboard");
+    browser.history.pushState({ [SHEET_DEPTH_KEY]: 1 }, "", "/owner/dashboard?sheet=rewards&step=detail");
+    expect(parseSheetParam(new URLSearchParams(browser.location().search).get("sheet"))).toBe("prizes");
+    expect(normalizeLandedSheet(browser.history, browser.location())).toBe(false);
+    closeSheet(browser.history, browser.location());
+    expect(browser.url()).toBe("/owner/dashboard");
   });
 
   it("normalisation is a no-op when closed, or on a reload mid-flow", () => {

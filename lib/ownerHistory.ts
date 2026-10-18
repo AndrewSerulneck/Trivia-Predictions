@@ -78,7 +78,7 @@ export const getOwnerRewardDetail = async (params: {
 }): Promise<OwnerRewardDetail> => {
   const nowMs = params.nowMs ?? Date.now();
   const [campaign] = await listChallengeCampaignsByIds([params.rewardId]);
-  if (!campaign) throw new ResultsNotFoundError("That reward wasn't found.");
+  if (!campaign) throw new ResultsNotFoundError("That prize wasn't found.");
   // This venue's reward: offered here (or everywhere), or one that has paid here (a reward can stop
   // being offered at a venue after it paid there). Every read below is scoped to venue_id anyway.
   const offeredHere = campaign.venueIds.length === 0 || campaign.venueIds.includes(params.venueId);
@@ -108,13 +108,13 @@ export const getOwnerRewardDetail = async (params: {
           .returns<SettlementRow[]>()
       : Promise.resolve({ data: [] as SettlementRow[], error: null }),
   ]);
-  if (ledger.error) throw new Error(ledger.error.message ?? "Failed to load the reward's winners.");
-  if (settlements.error) throw new Error(settlements.error.message ?? "Failed to load the reward's weeks.");
+  if (ledger.error) throw new Error(ledger.error.message ?? "Failed to load the prize's winners.");
+  if (settlements.error) throw new Error(settlements.error.message ?? "Failed to load the prize's weeks.");
 
   const ledgerRows = ledger.data ?? [];
   const settlementRows = settlements.data ?? [];
   if (!offeredHere && ledgerRows.length === 0 && settlementRows.length === 0) {
-    throw new ResultsNotFoundError("That reward wasn't found.");
+    throw new ResultsNotFoundError("That prize wasn't found.");
   }
   // When the ledger read hit its limit, its oldest cycle may be only partly read, and any older
   // cycle not read at all: keep only cycles strictly newer than the last ledger row read.
@@ -140,7 +140,7 @@ export const getOwnerRewardDetail = async (params: {
       .gte("cycle_start", oldest)
       .in("winner_user_id", [...new Set(winnerIds)])
       .returns<Array<{ winner_user_id: string; cycle_start: string; prize_redeemed_at: string | null }>>();
-    if (error) throw new Error(error.message ?? "Failed to load the reward's coupons.");
+    if (error) throw new Error(error.message ?? "Failed to load the prize's coupons.");
     for (const row of data ?? []) {
       if (row.prize_redeemed_at) redeemed.add(`${row.winner_user_id}|${Date.parse(row.cycle_start)}`);
     }

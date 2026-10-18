@@ -951,7 +951,7 @@ export function CreateRewardWizard({
       {id === "definition" ? (
         <div className="space-y-3">
           <p className={s.heading} {...headingFocus}>
-            {animateSteps ? "Which game should the reward be tied to?" : "Create Reward"}
+            {animateSteps ? "Which game is this prize for?" : "Create Prize"}
           </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {REWARD_DEFINITIONS.map((def) => (
@@ -998,7 +998,7 @@ export function CreateRewardWizard({
           {/* 1. The question that decides everything below it. */}
           {definition.supportsGameWinner ? (
             <div>
-              <p className={s.label}>How is this reward won?</p>
+              <p className={s.label}>How is this prize won?</p>
               <div className={rankedOffered ? "grid grid-cols-1 gap-2 sm:grid-cols-3" : "grid grid-cols-2 gap-2"}>
                 <button
                   type="button"
@@ -1268,13 +1268,13 @@ export function CreateRewardWizard({
                   onChange={toggleAnyGame}
                   className="h-4 w-4"
                 />
-                Offer this reward to the winner of any Live Trivia game
+                Offer this prize to the winner of any Live Trivia game
               </label>
 
               {recurringSlots.length === 0 && oneOffSlots.length === 0 ? (
                 <div className={`mt-2 ${s.block}`}>
                   You don&apos;t have any Live Trivia games scheduled. {scheduleLink} to pick
-                  games for this reward.
+                  games for this prize.
                 </div>
               ) : null}
 
@@ -1330,7 +1330,7 @@ export function CreateRewardWizard({
               <p className={s.label}>How many, how often?</p>
               {/* Explicit {" "} between the words and the controls: JSX strips the
                   whitespace around an expression that sits on its own line, so
-                  without them the sentence reads "give out1of these rewards".
+                  without them the sentence reads "give out1of these prizes".
                   Points-target rewards use "make ... available" — a promotion the
                   partner is offering, not something being given away — while
                   game-winner keeps "give out" here (this branch only renders when
@@ -1342,7 +1342,7 @@ export function CreateRewardWizard({
                   <span className={s.inlineLocked}>{lockedQuantity}</span>
                 ) : (
                   <select
-                    aria-label="Number of rewards"
+                    aria-label="Number of prizes"
                     value={String(quantity)}
                     onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
                     className={s.inlineSelect}
@@ -1357,12 +1357,12 @@ export function CreateRewardWizard({
                 {isOneOffOnly || allowedPeriods.length === 0 ? (
                   <span>
                     {isGameWinner
-                      ? "of these rewards at my next Live Trivia game."
-                      : "of these rewards available at my next Live Trivia game."}
+                      ? "of these prizes at my next Live Trivia game."
+                      : "of these prizes available at my next Live Trivia game."}
                   </span>
                 ) : (
                   <>
-                    {isGameWinner ? "of these rewards every" : "of these rewards available every"}{" "}
+                    {isGameWinner ? "of these prizes every" : "of these prizes available every"}{" "}
                     <select
                       aria-label="How often"
                       value={period ?? allowedPeriods[0]}
@@ -1383,7 +1383,7 @@ export function CreateRewardWizard({
               {isOneOffOnly ? (
                 <div className={`mt-2 ${s.block}`}>
                   You only have a single Live Trivia game scheduled. {scheduleLink} on a
-                  repeating schedule to offer a recurring reward.
+                  repeating schedule to offer a recurring prize.
                 </div>
               ) : allowedPeriods.length === 0 ? (
                 // Recurring games, but no period holds a FIXED number of them (e.g. a
@@ -1391,7 +1391,7 @@ export function CreateRewardWizard({
                 // locked to the game count, so there's nothing honest to offer here.
                 <div className={`mt-2 ${s.block}`}>
                   Your Live Trivia schedule doesn&apos;t run the same number of games in any
-                  fixed period, so a &quot;winner of the game&quot; reward can only be offered
+                  fixed period, so a &quot;winner of the game&quot; prize can only be offered
                   at your next game. Use a points target instead to offer it on a repeating
                   schedule.
                 </div>
@@ -1713,7 +1713,7 @@ export function CreateRewardWizard({
 
           <div>
             <div className={s.summaryRow}>
-              <span>Reward</span>
+              <span>Game</span>
               <span className="font-bold">{definition.name}</span>
             </div>
             {isRanked ? (
@@ -1781,7 +1781,7 @@ export function CreateRewardWizard({
             tone={footerTone}
             onBack={() => goTo("prize", "back")}
             onNext={() => void handleSubmit()}
-            nextLabel="Create Reward"
+            nextLabel="Create Prize"
             nextBusyLabel="Creating…"
             nextBusy={submitting}
             nextHideChevron

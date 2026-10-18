@@ -434,8 +434,8 @@ describe("describeCascadeReport", () => {
       deactivated: ["a", "b"],
       pruned: [{ campaignId: "c", remainingSlots: 1 }],
     });
-    expect(notice).toContain("2 rewards");
-    expect(notice).toContain("1 reward now covers fewer games");
+    expect(notice).toContain("2 prizes");
+    expect(notice).toContain("1 prize now covers fewer games");
   });
 
   it("stays silent about errors alone — the partner's change did succeed", () => {

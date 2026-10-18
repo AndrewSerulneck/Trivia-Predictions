@@ -155,7 +155,7 @@ describe("CreateRewardWizard — sheet mode (animateSteps)", () => {
     const { container } = renderOwner({ animateSteps: true });
     await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
     expect(container.querySelector("[data-step='definition']")).not.toBeNull();
-    expect(container.querySelector("[data-step-heading]")?.textContent).toBe("Which game should the reward be tied to?");
+    expect(container.querySelector("[data-step-heading]")?.textContent).toBe("Which game is this prize for?");
     expect(container.firstElementChild?.className).toBe("");
 
     fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
@@ -429,7 +429,7 @@ describe("CreateRewardWizard — submitted terms", () => {
     fireEvent.click(screen.getByRole("button", { name: /Live Trivia/ }));
     await screen.findByText("How many, how often?");
     await walkToConfirm();
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith({
       venueId: "venue-1",
@@ -456,7 +456,7 @@ describe("CreateRewardWizard — submitted terms", () => {
     fireEvent.click(tuesday);
     fireEvent.click(friday);
     await walkToConfirm();
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -480,7 +480,7 @@ describe("CreateRewardWizard — submitted terms", () => {
     fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
     fireEvent.click(await screen.findByRole("button", { name: /Most picks right/ }));
     await walkToConfirm();
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -515,7 +515,7 @@ describe("CreateRewardWizard — submitted terms", () => {
     fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
     await screen.findByText("Confirm");
     expect(screen.getByText("Minimum players").nextSibling?.textContent).toBe("At least 6");
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ winCondition: "game_winner", nflWeekScope: { kind: "weekly", season: 2026 }, minPlayers: 6 }),
@@ -543,7 +543,7 @@ describe("CreateRewardWizard — submitted terms", () => {
     fireEvent.click(screen.getByRole("button", { name: /NFL Pick/ }));
     fireEvent.click(await screen.findByRole("button", { name: /Whole season/ }));
     await walkToConfirm();
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -594,7 +594,7 @@ describe("CreateRewardWizard — NFL single week", () => {
     expect(select.value).toBe("9");
     fireEvent.change(select, { target: { value: "10" } });
     await walkToConfirm();
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -690,7 +690,7 @@ describe("CreateRewardWizard — guest preview at a one-off-only venue", () => {
     expect(container.textContent).toContain("What guests will see");
     expect(container.textContent).toContain("Earn 500 points at Live Trivia on Tue, Oct 13");
     expect(container.textContent).toContain("It starts at 8:00 PM.");
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ cadence: "none", winnerQuota: 1 }));
   });
@@ -726,7 +726,7 @@ describe("CreateRewardWizard — register limit (POS)", () => {
     await screen.findByText("Confirm");
     expect(screen.queryByText(/Most off at the register/)).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(((onSubmit.mock.calls[0] as unknown[])[0] as { prize: unknown }).prize).toEqual(PRIZE);
   });
@@ -746,7 +746,7 @@ describe("CreateRewardWizard — register limit (POS)", () => {
     await screen.findByText("Confirm");
     expect(screen.getByText("$12.50")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(((onSubmit.mock.calls[0] as unknown[])[0] as { prize: unknown }).prize).toEqual({ ...PRIZE, posValueCents: 1250 });
   });
@@ -799,7 +799,7 @@ describe("CreateRewardWizard — scannable gift card choice (POS)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Dollar amount off" }));
     fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
     await screen.findByText("Confirm");
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(first.onSubmit).toHaveBeenCalledTimes(1));
     const defaultPrize = (first.onSubmit.mock.calls[0] as unknown[])[0] as { prize: Record<string, unknown> };
     expect("posDelivery" in defaultPrize.prize).toBe(false);
@@ -811,7 +811,7 @@ describe("CreateRewardWizard — scannable gift card choice (POS)", () => {
     fireEvent.click(screen.getByRole("radio", { name: /Scannable gift card/ }));
     fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
     await screen.findByText("Confirm");
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(second.onSubmit).toHaveBeenCalledTimes(1));
     const chosen = (second.onSubmit.mock.calls[0] as unknown[])[0] as { prize: Record<string, unknown> };
     expect(chosen.prize.posDelivery).toBe("gift_card");
@@ -827,7 +827,7 @@ describe("CreateRewardWizard — scannable gift card choice (POS)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Percentage off" }));
     fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
     await screen.findByText("Confirm");
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect("posDelivery" in ((onSubmit.mock.calls[0] as unknown[])[0] as { prize: object }).prize).toBe(false);
   });
@@ -889,7 +889,7 @@ describe("CreateRewardWizard — weekly places", () => {
     await toPrizeStep();
     fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
     await screen.findByText("Confirm");
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(submitted(onSubmit)).toEqual(
       expect.objectContaining({ winCondition: "ranked_places", cadence: "weekly", winnerQuota: 3 }),
@@ -929,7 +929,7 @@ describe("CreateRewardWizard — weekly places", () => {
     expect(text).toContain("Top 3 each week");
     expect(text).toContain("$30.00 gift card");
 
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     const body = submitted(onSubmit);
     expect(body).toMatchObject({
@@ -960,7 +960,7 @@ describe("CreateRewardWizard — weekly places", () => {
     fireEvent.change(screen.getByDisplayValue("50"), { target: { value: "100" } });
     fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
     await screen.findByText("Confirm");
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     const body = submitted(onSubmit);
     expect(body).toMatchObject({ winnerQuota: 2 });
@@ -1002,7 +1002,7 @@ describe("CreateRewardWizard — weekly places", () => {
     fireEvent.click(screen.getByRole("button", { name: "Other" }));
     fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
     await screen.findByText("Confirm");
-    fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
     expect(await screen.findByText("2nd place: enter a name for the menu item.")).toBeTruthy();
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -1041,7 +1041,7 @@ describe("CreateRewardWizard — weekly places", () => {
       await screen.findByText("Confirm");
       expect(document.body.textContent).toContain("At least 5");
       expect(document.body.textContent).toContain("At least 5 players need to play that week for prizes to be awarded.");
-      fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+      fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(submitted(onSubmit)).toMatchObject({ winCondition: "ranked_places", minPlayers: 5 });
     });
@@ -1072,7 +1072,7 @@ describe("CreateRewardWizard — weekly places", () => {
       fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
       await screen.findByText("Confirm");
       expect(screen.getByText("Minimum players").nextSibling?.textContent).toBe("None");
-      fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+      fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(submitted(onSubmit)).not.toHaveProperty("minPlayers");
     });
@@ -1098,7 +1098,7 @@ describe("CreateRewardWizard — weekly places", () => {
       expect(screen.getByRole("button", { name: /Next: Offer a Prize/ })).toBeTruthy();
       fireEvent.click(screen.getByRole("button", { name: /Winner of the game/ }));
       await walkToConfirm(3);
-      fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+      fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(submitted(onSubmit)).toMatchObject({ winCondition: "game_winner", minPlayers: 3 });
       expect(submitted(onSubmit)).not.toHaveProperty("placePrizes");
@@ -1115,7 +1115,7 @@ describe("CreateRewardWizard — weekly places", () => {
       expect(screen.getByRole("button", { name: /Next: Offer a Prize/ })).toBeTruthy();
       await walkToConfirm();
       expect(screen.queryByText("Minimum players")).toBeNull();
-      fireEvent.click(screen.getByRole("button", { name: /Create Reward/ }));
+      fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(submitted(onSubmit)).toMatchObject({ winCondition: "points_threshold" });
       expect(submitted(onSubmit)).not.toHaveProperty("minPlayers");
