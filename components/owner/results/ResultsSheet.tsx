@@ -43,7 +43,7 @@ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 //   list    the timeline
 //   game    one game: "Find a player" + the FULL standings + rewards won at it
 //   player  one player's questions: right/wrong and points (never their typed answer)
-//   prize   one prize's history (was `reward`; the old step is still read)
+//   prize   one prize's history (was `reward`; an old `step=reward` link lands on the list like any unknown step)
 //
 // URL-MIRRORED like the other dashboard sheets: `?sheet=history` is the list and `&step=game|player|prize`
 // a screen above it, so the phone's Back steps back or closes. Which game/player/reward is open lives in
@@ -57,9 +57,9 @@ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 type Screen = "list" | "game" | "player" | "prize";
 const SCREENS: readonly Screen[] = ["list", "game", "player", "prize"];
 
-/** The URL step to show. `reward` is the step's old name, still in bookmarks and open tabs: read it, never write it. */
+/** The URL step to show. Anything else (including the old `reward`) is the list, and the step is cleared. */
 const screenOfStep = (step: string | null): Screen =>
-  step === "game" || step === "player" || step === "prize" ? step : step === "reward" ? "prize" : "list";
+  step === "game" || step === "player" || step === "prize" ? step : "list";
 
 type TimelineState = {
   status: "idle" | "ready" | "error";

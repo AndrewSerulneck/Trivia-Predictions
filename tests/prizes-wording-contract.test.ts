@@ -34,7 +34,6 @@ const ALLOWED: readonly Allowed[] = [
   {"file":"components/admin/sections/ChallengesSection.tsx","text":"rewards","phase":"keep","reason":"code identifier (route, resource name, JSON key or DOM id), not on screen"},
   {"file":"components/nfl-pickem/NFLPickEmLeaderboard.tsx","text":"/api/nfl-pickem/rewards?","phase":"keep","reason":"code identifier (route, resource name, JSON key or DOM id), not on screen"},
   {"file":"components/nfl-pickem/NFLPickEmRewardBanner.tsx","text":"/api/nfl-pickem/rewards?","phase":"keep","reason":"code identifier (route, resource name, JSON key or DOM id), not on screen"},
-  {"file": "components/owner/results/ResultsSheet.tsx", "text": "reward", "phase": "keep", "reason": "the Results step's old URL value, read as an alias forever and never written (plan section 2)"},
   {"file":"components/owner/results/resultsApi.ts","text":"/api/owner/history/rewards/","phase":"keep","reason":"code identifier (route, resource name, JSON key or DOM id), not on screen"},
   {"file":"components/owner/results/resultsApi.ts","text":"rewards","count": 2, "phase":"keep","reason":"code identifier (route, resource name, JSON key or DOM id), not on screen"},
   {"file":"components/rewards/CreateRewardWizard.tsx","text":"reward-pos-value","count": 2, "phase":"keep","reason":"code identifier (route, resource name, JSON key or DOM id), not on screen"},

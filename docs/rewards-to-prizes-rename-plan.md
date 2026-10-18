@@ -1,7 +1,7 @@
 # Rename "Rewards" → "Prizes" — Plan
 
-> **Status:** Phases 1–7 done 2026-10-18 (latest handoff: `docs/rewards-to-prizes-rename-plan_PHASE_7_HANDOFF.md`); committed locally, not pushed.
-> Code review 2026-10-18 found 8 issues → review-fix **Phases 8–9 not started (6–7 done)** (§4, "Review fixes"). Push after Phase 9. Each phase ends with
+> **Status:** Phases 1–8 done 2026-10-18 (latest handoff: `docs/rewards-to-prizes-rename-plan_PHASE_8_HANDOFF.md`); committed locally, not pushed.
+> Code review 2026-10-18 found 8 issues → review-fix **Phase 9 not started (6–8 done)** (§4, "Review fixes"). Push after Phase 9. Each phase ends with
 > `docs/rewards-to-prizes-rename-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew.
 

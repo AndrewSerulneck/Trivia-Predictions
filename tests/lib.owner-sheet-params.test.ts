@@ -347,13 +347,42 @@ describe("history driver", () => {
     expect(browser.url()).toBe("/owner/dashboard");
   });
 
-  it("a reload mid-flow on an old ?sheet=rewards entry still opens Prizes and Close pops every entry", () => {
+  it("a reload mid-flow on an old ?sheet=rewards entry is rewritten to ?sheet=prizes in place; Close pops every entry", () => {
     const browser = fakeBrowser("/owner/dashboard");
-    browser.history.pushState({ [SHEET_DEPTH_KEY]: 1 }, "", "/owner/dashboard?sheet=rewards&step=detail");
-    expect(parseSheetParam(new URLSearchParams(browser.location().search).get("sheet"))).toBe("prizes");
+    browser.history.pushState({ [SHEET_DEPTH_KEY]: 1 }, "", "/owner/dashboard?x=1&sheet=rewards");
+    browser.history.pushState({ [SHEET_DEPTH_KEY]: 2 }, "", "/owner/dashboard?x=1&sheet=rewards&step=detail#top");
     expect(normalizeLandedSheet(browser.history, browser.location())).toBe(false);
+    // Same entry, new id, depth and step kept, nothing pushed.
+    expect(browser.entries()).toEqual([
+      "/owner/dashboard",
+      "/owner/dashboard?x=1&sheet=rewards",
+      "/owner/dashboard?x=1&sheet=prizes&step=detail#top",
+    ]);
+    expect(readSheetDepth(browser.history.state)).toBe(2);
     closeSheet(browser.history, browser.location());
     expect(browser.url()).toBe("/owner/dashboard");
+  });
+
+  it("a reload mid-flow on a canonical ?sheet=prizes entry writes no history at all", () => {
+    const browser = fakeBrowser("/owner/dashboard?sheet=prizes&step=detail", { [SHEET_DEPTH_KEY]: 1 });
+    const writes: string[] = [];
+    const watched: SheetHistory = {
+      get state() {
+        return browser.history.state;
+      },
+      pushState: (data, unused, url) => {
+        writes.push(`push ${url}`);
+        browser.history.pushState(data, unused, url);
+      },
+      replaceState: (data, unused, url) => {
+        writes.push(`replace ${url}`);
+        browser.history.replaceState(data, unused, url);
+      },
+      go: (delta) => browser.history.go(delta),
+    };
+    expect(normalizeLandedSheet(watched, browser.location())).toBe(false);
+    expect(writes).toEqual([]);
+    expect(browser.entries()).toEqual(["/owner/dashboard?sheet=prizes&step=detail"]);
   });
 
   it("normalisation is a no-op when closed, or on a reload mid-flow", () => {

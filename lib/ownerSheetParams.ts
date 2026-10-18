@@ -257,13 +257,24 @@ export const restoreSheetEntry = (history: SheetHistory, href: string): void => 
  * dashboard entirely. Rewrite that entry to the plain dashboard and push the
  * sheet on top, so the history is exactly what tapping the section would have
  * made. No-op when the sheet is closed or this entry was pushed by a sheet
- * (a reload mid-flow keeps its depth).
+ * (a reload mid-flow keeps its depth) — except that a mid-flow entry still on
+ * an old id (`?sheet=rewards`, pushed by a build before the rename) is
+ * rewritten in place to the new id, keeping its depth and step. Returns true
+ * only when it pushed an entry.
  */
 export const normalizeLandedSheet = (history: SheetHistory, location: SheetLocation): boolean => {
   const params = new URLSearchParams(location.search);
-  const sheet = parseSheetParam(params.get(SHEET_PARAM));
-  if (!sheet || readSheetDepth(history.state) > 0) return false;
+  const raw = params.get(SHEET_PARAM);
+  const sheet = parseSheetParam(raw);
+  if (!sheet) return false;
   const step = parseStepParam(params.get(STEP_PARAM));
+  const depth = readSheetDepth(history.state);
+  if (depth > 0) {
+    if (raw !== sheet) {
+      history.replaceState(depthState(depth), "", sheetHref(location.pathname, location.search, { sheet, step }, location.hash));
+    }
+    return false;
+  }
   history.replaceState(depthState(0), "", sheetHref(location.pathname, location.search, null, location.hash));
   history.pushState(depthState(1), "", sheetHref(location.pathname, location.search, { sheet, step }, location.hash));
   return true;

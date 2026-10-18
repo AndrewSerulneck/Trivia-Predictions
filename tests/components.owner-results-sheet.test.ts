@@ -225,7 +225,7 @@ describe("ResultsSheet", () => {
     expect(screen.getByTestId("step").textContent).toBe("prize");
   });
 
-  it("the old `reward` step (bookmark, open tab) is read as the prize step and corrects to the timeline like it", async () => {
+  it("an old `?sheet=history&step=reward` link (bookmark, open tab) lands on the timeline with the step cleared", async () => {
     vi.stubGlobal("fetch", makeFetch());
     render(createElement(Host, { initiallyOpen: true, initialStep: "reward" }));
     await waitFor(() => expect(screen.getByTestId("step").textContent).toBe("list"));
