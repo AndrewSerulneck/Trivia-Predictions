@@ -1,7 +1,7 @@
 # Rename "Rewards" → "Prizes" — Plan
 
-> **Status:** Phases 1–8 done 2026-10-18 (latest handoff: `docs/rewards-to-prizes-rename-plan_PHASE_8_HANDOFF.md`); committed locally, not pushed.
-> Code review 2026-10-18 found 8 issues → review-fix **Phase 9 not started (6–8 done)** (§4, "Review fixes"). Push after Phase 9. Each phase ends with
+> **Status:** All phases (1–9) done 2026-10-18 (latest handoff: `docs/rewards-to-prizes-rename-plan_PHASE_9_HANDOFF.md`); committed locally, **ready to push** (Andrew's call).
+> Code review 2026-10-18 found 8 issues → review-fix Phases 6–9 done (§4, "Review fixes"). Push after Phase 9. Each phase ends with
 > `docs/rewards-to-prizes-rename-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew.
 
@@ -274,5 +274,5 @@ together.
 - **Q1 (answered 2026-10-18: No, nothing outside the repo says "Rewards").** Do the App Store / Google Play listing texts (or any printed merch, partner sales decks, social posts)
   say "Rewards"? Those are outside the repo; you'd change them by hand.
 - **Q2 (answered 2026-10-18: skip).** Should code names be renamed later? Not planned. It's optional cleanup with no visible effect (see §5).
-- **Q3 (open, blocks Phase 9 item 1).** Stop committing `next-env.d.ts` (a file Next.js writes itself; it keeps changing
+- **Q3 (answered 2026-10-18: yes, ignore it).** Stop committing `next-env.d.ts` (a file Next.js writes itself; it keeps changing
   between dev and build)? Recommended: yes, ignore it. No effect on the website or the app.

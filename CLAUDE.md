@@ -14,7 +14,7 @@
 ## Build and Test Commands
 - Dev server: `npm run dev`
 - Build: `npm run build`
-- Typecheck: `npx tsc --noEmit`
+- Typecheck: `npx tsc --noEmit` (on a fresh clone run `npx next typegen` first: `next-env.d.ts` is generated and git-ignored)
 - Lint: `npm run lint`
 - Tests: `npm run test` (Runs Vitest)
 

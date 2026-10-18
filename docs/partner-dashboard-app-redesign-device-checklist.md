@@ -173,5 +173,7 @@ Nothing on any screen should say "Reward" any more. Do this on a normal phone, t
 - [ ] Open an OLD bookmark, `/owner/dashboard?sheet=rewards`: it opens the Prizes sheet. Phone Back closes it.
 - [ ] Partner email preview (`npm run email:preview`): says "Offer Prizes" and "Redeem Prizes".
 - [ ] `/rules`: read it once, as the official contest rules (changed sentences are listed in `docs/rewards-to-prizes-rename-plan_PHASE_4_HANDOFF.md`).
+- [ ] `/rules` also shows the disclaimer wording "contest, prize, challenge".
+- [ ] Create Prize wizard: if it lets a $0 gift card through, the new invalid-prize message appears (skip if it can't be reached).
 
 When every box is ticked (or a problem is written next to it), send the list back.
