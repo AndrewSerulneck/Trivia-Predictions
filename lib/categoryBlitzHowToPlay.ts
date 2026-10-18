@@ -31,7 +31,7 @@ export const CATEGORY_BLITZ_TUTORIAL_CARDS: CategoryBlitzTutorialCard[] = [
   { art: "answering", statement: "Your job is to name something in each category that starts with that round's letter." },
   { art: "timer", statement: "Each round lasts 3 minutes! Your responses get graded when time runs out." },
   { art: "unique", statement: "Unique answers score points." },
-  { art: "duplicate", statement: "No points for same answers!" },
+  { art: "duplicate", statement: "No points if you give the same answer as someone else!" },
   { art: "alliteration", statement: "Bonus points are awarded for alliteration!" },
   {
     art: "majority",

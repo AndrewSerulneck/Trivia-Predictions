@@ -20,7 +20,7 @@ describe("Category Blitz how-to-play copy (docs/category-blitz-how-to-play-plan.
       "Your job is to name something in each category that starts with that round's letter.",
       "Each round lasts 3 minutes! Your responses get graded when time runs out.",
       "Unique answers score points.",
-      "No points for same answers!",
+      "No points if you give the same answer as someone else!",
       "Bonus points are awarded for alliteration!",
       "Be careful! Some rounds are \"Majority Rules\" mode, where the point is to give the answer you think will be most popular in each category. The point is to try and predict what other people in the room will answer. Hope you're good at reading minds!",
     ]);

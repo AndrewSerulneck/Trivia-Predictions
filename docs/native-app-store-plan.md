@@ -4,7 +4,8 @@
 **Phases 1a and 1b are DONE and deployed (2026-10-08)** — latest handoff
 `docs/native-app-store-plan_PHASE_1B_HANDOFF.md` (1a: `…_PHASE_1A_HANDOFF.md`). Migration
 `20261008044524_player_account_deletion.sql` is applied to production. Phase 0 is Andrew's, in
-progress (D-U-N-S requested, Xcode and Android Studio installed). **Phase 2 is split into Part A
+progress (D-U-N-S 14-998-5585 received 2026-10-17; next: Apple Developer + Google Play Organization
+enrolment; Xcode and Android Studio installed). **Phase 2 is split into Part A
 (now: Xcode free provisioning + Andrew's iPhone + the Android emulator) and Part B (after the paid
 Apple account is approved: passkeys and the 7-day login test)** — see Phase 2. **Part A: automated
 simulator/emulator checks done 2026-10-08; waiting on Andrew's device checklist**
@@ -997,7 +998,7 @@ dollar cap.
 ## 7. Account details (Andrew fills in during Phase 0; no secrets here)
 
 - Legal business name: Hightop Challenge LLC (New Jersey) — `LEGAL_ENTITY_NAME` in `lib/legalInfo.ts`
-- D-U-N-S number:
+- D-U-N-S number: 14-998-5585 (received 2026-10-17)
 - Apple Team ID:
 - Google Play developer account name:
 - Firebase project id:
