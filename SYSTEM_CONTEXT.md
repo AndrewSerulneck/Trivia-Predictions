@@ -312,6 +312,9 @@ original incident. Calibrate variety/win rates separately from grading correctne
 - Lib: `lib/notifications.ts`, API: `/api/notifications`.
 
 ## 8. Prizes (Rewards system — built)
+
+> **Naming:** on screen it is **Prize** everywhere (renamed 2026-10-18, `docs/rewards-to-prizes-rename-plan.md`). Code, routes, DB and
+> the older text below keep `reward`. Sheet URL is `?sheet=prizes` (old `?sheet=rewards` still accepted). Guard: `tests/prizes-wording-contract.test.ts`.
 - Central to the monetization loop: venues offer prizes (menu-item discounts, gift cards) to attract more players → more players → higher ad revenue.
 - Venues don't author prizes free-form — they run the **Create Reward wizard**
   (`components/rewards/CreateRewardWizard.tsx`, shared by admin and the Partner Dashboard)

@@ -118,6 +118,9 @@ uncommitted. What's left is Andrew's phone pass, `docs/prize-gift-card-redesign-
 
 ## Adding a new Reward definition
 
+> On screen the word is **Prize** ("Create Prize", "Prizes panel"); `reward` stays in code, routes and DB. Write definition
+> copy (`name`, `requirementTemplate`, `description`) with "prize", never "reward" — `tests/prizes-wording-contract.test.ts` fails on it.
+
 The Rewards system (`docs/rewards-system-plan.md`) lets a venue offer a
 pre-set challenge — complete a requirement within a time window, win a prize —
 by picking from a slate of **reward definitions** rather than authoring one

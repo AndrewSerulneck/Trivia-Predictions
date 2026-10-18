@@ -163,4 +163,15 @@ Do this on an iPhone SE (or the smallest phone you own) and on a normal iPhone, 
 - [ ] Inside a game (e.g. Bingo): open the menu, same checks. **Change Username** pop-up shows and takes typing.
 - [ ] In the real app on Android: Back closes the menu first; on the venue home with no menu open, Back minimises.
 
+## M. "Rewards" is now "Prizes" (new, 2026-10-18)
+Nothing on any screen should say "Reward" any more. Do this on a normal phone, then glance at the smallest one you own.
+- [ ] Player, venue home: the third panel is titled **Prizes**; cards read naturally (no "prize prize" sentences).
+- [ ] A won prize: the card says **PRIZE** (not REWARD) and the Redeem Prizes page still works.
+- [ ] NFL Pick 'Em: the banner says "Details in Prizes".
+- [ ] Partner Dashboard: the menu row and sheet say **Offer Prizes**; create one end to end (Create Prize wizard) and read every screen.
+- [ ] Results: a game card shows "Prizes won at this game"; tap a prize and the detail opens.
+- [ ] Open an OLD bookmark, `/owner/dashboard?sheet=rewards`: it opens the Prizes sheet. Phone Back closes it.
+- [ ] Partner email preview (`npm run email:preview`): says "Offer Prizes" and "Redeem Prizes".
+- [ ] `/rules`: read it once, as the official contest rules (changed sentences are listed in `docs/rewards-to-prizes-rename-plan_PHASE_4_HANDOFF.md`).
+
 When every box is ticked (or a problem is written next to it), send the list back.

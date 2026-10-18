@@ -4,15 +4,13 @@ import { scanAllWording, scanSource } from "@/tests/helpers/rewardWordingScan";
 // The rename "Rewards" -> "Prizes" (docs/rewards-to-prizes-rename-plan.md). On screen a partner or
 // player reads PRIZE; code, routes and the database keep the word `reward`. This test scans every
 // string literal, template literal and JSX text in app/, components/, lib/ and llms.txt for the
-// old word. Each current hit is listed below with the phase that will reword it, or `keep`.
+// old word. Every remaining hit is listed below as `keep` (not on screen, or the verb).
 //
 // Rules for this file:
 //  - A NEW hit fails the test. Reword it (say "prize"), do not add it here.
-//  - Each phase deletes its own entries when it rewords them (an entry that no longer matches
-//    anything also fails, so the list can only shrink).
-//  - Phase 5 removes the `phase` tags: only `keep` entries remain.
+//  - An entry that no longer matches anything also fails, so the list can only shrink.
 
-type Allowed = { file: string; text: string; phase: 2 | 3 | 4 | "keep"; reason?: string };
+type Allowed = { file: string; text: string; phase: "keep"; reason?: string };
 
 const ALLOWED: readonly Allowed[] = [
   {"file":"app/api/admin/route.ts","text":"reward-context","phase":"keep","reason":"code identifier (route, resource name, JSON key or DOM id), not on screen"},
