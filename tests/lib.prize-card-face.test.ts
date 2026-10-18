@@ -62,22 +62,22 @@ describe("prizeCardFace — the §2.2 vocabulary table", () => {
     expect(face({ prizeKind: "gift_card" })).toMatchObject({ headline: "Gift Card", headlineKind: "phrase", label: "GIFT CARD" });
   });
 
-  it("menu_item at 100% or more → Free {item}, REWARD", () => {
+  it("menu_item at 100% or more → Free {item}, PRIZE", () => {
     expect(
       face({ prizeKind: "menu_item", prizeMenuItem: "appetizer", prizeDiscountKind: "percent", prizeDiscountValue: 100 }),
-    ).toMatchObject({ headline: "Free Appetizer", headlineKind: "phrase", label: "REWARD" });
+    ).toMatchObject({ headline: "Free Appetizer", headlineKind: "phrase", label: "PRIZE" });
   });
 
-  it("menu_item percent → {n}% Off {item}, REWARD", () => {
+  it("menu_item percent → {n}% Off {item}, PRIZE", () => {
     expect(
       face({ prizeKind: "menu_item", prizeMenuItem: "entree", prizeDiscountKind: "percent", prizeDiscountValue: 50 }),
-    ).toMatchObject({ headline: "50% Off Entrée", label: "REWARD" });
+    ).toMatchObject({ headline: "50% Off Entrée", label: "PRIZE" });
   });
 
-  it("menu_item dollar → ${n} Off {item}, REWARD", () => {
+  it("menu_item dollar → ${n} Off {item}, PRIZE", () => {
     expect(
       face({ prizeKind: "menu_item", prizeMenuItem: "whole_order", prizeDiscountKind: "dollar", prizeDiscountValue: 10 }),
-    ).toMatchObject({ headline: "$10 Off Whole Order", label: "REWARD" });
+    ).toMatchObject({ headline: "$10 Off Whole Order", label: "PRIZE" });
     expect(
       face({ prizeKind: "menu_item", prizeMenuItem: "dessert", prizeDiscountKind: "dollar", prizeDiscountValue: 7.5 }).headline,
     ).toBe("$7.50 Off Dessert");
@@ -100,9 +100,9 @@ describe("prizeCardFace — the §2.2 vocabulary table", () => {
     expect(face({ prizeKind: "menu_item", prizeMenuItem: "wine_bottle" }).headline).toBe("Bottle of Wine");
   });
 
-  it("legacy wine_bottle and free_appetizer → title-case phrases, REWARD", () => {
-    expect(face({ prizeType: "wine_bottle" })).toMatchObject({ headline: "Bottle of Wine", label: "REWARD" });
-    expect(face({ prizeType: "free_appetizer" })).toMatchObject({ headline: "Free Appetizer", label: "REWARD" });
+  it("legacy wine_bottle and free_appetizer → title-case phrases, PRIZE", () => {
+    expect(face({ prizeType: "wine_bottle" })).toMatchObject({ headline: "Bottle of Wine", label: "PRIZE" });
+    expect(face({ prizeType: "free_appetizer" })).toMatchObject({ headline: "Free Appetizer", label: "PRIZE" });
   });
 
   it("prizeKind wins over a legacy prizeType (the wallet's precedence)", () => {
@@ -127,7 +127,7 @@ describe("prizeCardFace — the §2.2 vocabulary table", () => {
       prizePosDelivery: "gift_card" as const,
     };
     // Not yet a card: still the discount phrase.
-    expect(face({ ...scannable, squareGiftCard: "available" })).toMatchObject({ headline: "$15 Off Whole Order", label: "REWARD" });
+    expect(face({ ...scannable, squareGiftCard: "available" })).toMatchObject({ headline: "$15 Off Whole Order", label: "PRIZE" });
     expect(face({ ...scannable, squareGiftCard: "issued", prizeRedeemedAt: "2026-10-01T00:00:00Z" })).toMatchObject({
       headline: "$15",
       headlineKind: "amount",
@@ -178,7 +178,7 @@ describe("prizeCardFace — venue and aria label", () => {
   it("reads the face in one sentence", () => {
     expect(face({ prizeKind: "gift_card", prizeGiftCertificateAmount: 25 }).ariaLabel).toBe("$25 gift card, Pacific Street");
     expect(face({ prizeType: "free_appetizer", prizeRedeemedAt: "2026-10-01T00:00:00Z" }).ariaLabel).toBe(
-      "Free Appetizer reward, Pacific Street, redeemed",
+      "Free Appetizer prize, Pacific Street, redeemed",
     );
   });
 

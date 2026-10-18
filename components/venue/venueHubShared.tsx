@@ -326,7 +326,7 @@ export function rewardQuotaLine(winnerQuota?: number | null, quotaRemaining?: nu
   const remaining = Math.max(0, Math.min(quota, Math.floor(Number(remainingRaw))));
   if (!Number.isFinite(remaining)) return "";
   if (remaining <= 0) return `All ${quota} claimed`;
-  return `${remaining} of ${quota} reward${remaining === 1 ? "" : "s"} left`;
+  return `${remaining} of ${quota} prize${remaining === 1 ? "" : "s"} left`;
 }
 
 export const CHALLENGE_ICON_STYLE: Record<

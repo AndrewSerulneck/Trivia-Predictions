@@ -148,7 +148,7 @@ describe("weekly places card", () => {
       onRedeem,
     );
     expect(screen.getByText("You Won")).not.toBeNull();
-    expect(screen.getByText("Prize won! Tap to Claim Reward.")).not.toBeNull();
+    expect(screen.getByText("Prize won! Tap to claim it.")).not.toBeNull();
     expect(screen.getByText("You finished 2nd. Your prize is in Redeem Prizes.")).not.toBeNull();
     fireEvent.click(screen.getByRole("button"));
     expect(onRedeem).toHaveBeenCalledWith("camp-1", expect.anything());

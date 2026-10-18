@@ -172,7 +172,7 @@ describe("Redeem Prizes — every prize is the one gift card", () => {
   it("drops the old list heading and has a short empty state", async () => {
     installFetch([]);
     render(createElement(PrizeWalletPanel));
-    expect(await screen.findByText("No prizes yet. Win a Reward here and it will show up in this list.")).not.toBeNull();
+    expect(await screen.findByText("No prizes yet. Win one here and it will show up in this list.")).not.toBeNull();
     expect(screen.queryByText(/Click "Redeem"/)).toBeNull();
   });
 });

@@ -24,9 +24,9 @@ const FAQ_ITEMS: FaqItem[] = [
       "Hightop Challenge turns your favorite bar or venue into a competitive gaming arena. Compete against everyone else in the room across trivia, sports, and more — all from your phone. Earn points, climb the leaderboard, and win real prizes from the venue by winning challenges.",
   },
         {
-    question: "What are Rewards and why should I care?",
+    question: "What are Prizes and why should I care?",
     answer:
-      "Rewards are goals set by your venue. Each one has a target, like 'Earn 500 points in Live Trivia this week.' When you reach the target, you win the prize tied to that reward — a discounted menu item or a gift card."
+      "Prizes are offered by your venue. Each one has a goal, like 'Earn 500 points in Live Trivia this week.' Reach the goal and you win it — a discounted menu item or a gift card."
   },
   {
     question: "How do I earn points?",
@@ -36,7 +36,7 @@ const FAQ_ITEMS: FaqItem[] = [
         {
     question: "Prizes, you say?",
     answer:
-      "Yes, prizes! Each venue offers its own Rewards. Check your venue's home screen and go to the 'Rewards' panel to see what you can win.",
+      "Yes, prizes! Each venue offers its own. Check your venue's home screen and go to the 'Prizes' panel to see what you can win.",
   },
 
   {

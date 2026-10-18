@@ -357,7 +357,7 @@ export function ActiveGamesPanel() {
               error?: string;
             };
             if (!payload.ok || !payload.result) {
-              throw new Error(payload.error ?? "Failed to claim Bingo reward.");
+              throw new Error(payload.error ?? "Couldn't collect your Bingo points.");
             }
             return Math.max(0, Number(payload.result.rewardPoints ?? 0));
           })
@@ -381,11 +381,11 @@ export function ActiveGamesPanel() {
         if (claimedCount > 0) {
           setStatusMessage(
             failedCount > 0
-              ? `Claimed ${claimedCount} Bingo reward${claimedCount === 1 ? "" : "s"} for +${totalPoints} points (${failedCount} still pending).`
-              : `Claimed ${claimedCount} Bingo reward${claimedCount === 1 ? "" : "s"} for +${totalPoints} points.`
+              ? `Collected ${claimedCount} Bingo win${claimedCount === 1 ? "" : "s"} for +${totalPoints} points (${failedCount} still pending).`
+              : `Collected ${claimedCount} Bingo win${claimedCount === 1 ? "" : "s"} for +${totalPoints} points.`
           );
         } else if (failedCount > 0) {
-          setStatusMessage("No Bingo rewards were claimed. Please try again.");
+          setStatusMessage("No Bingo points were collected. Please try again.");
         }
         await load({ background: true });
       } finally {
@@ -422,7 +422,7 @@ export function ActiveGamesPanel() {
               error?: string;
             };
             if (!payload.ok || !payload.result) {
-              throw new Error(payload.error ?? "Failed to claim Pick 'Em reward.");
+              throw new Error(payload.error ?? "Couldn't collect your Pick 'Em points.");
             }
             if (!payload.result.claimed) {
               return 0;
@@ -451,13 +451,13 @@ export function ActiveGamesPanel() {
         if (claimedCount > 0) {
           setStatusMessage(
             failedCount > 0
-              ? `Claimed ${claimedCount} Pick 'Em reward${claimedCount === 1 ? "" : "s"} for +${totalPoints} points (${failedCount} still pending).`
-              : `Claimed ${claimedCount} Pick 'Em reward${claimedCount === 1 ? "" : "s"} for +${totalPoints} points.`
+              ? `Collected ${claimedCount} Pick 'Em win${claimedCount === 1 ? "" : "s"} for +${totalPoints} points (${failedCount} still pending).`
+              : `Collected ${claimedCount} Pick 'Em win${claimedCount === 1 ? "" : "s"} for +${totalPoints} points.`
           );
         } else if (failedCount > 0) {
-          setStatusMessage("No Pick 'Em rewards were claimed. Please try again.");
+          setStatusMessage("No Pick 'Em points were collected. Please try again.");
         } else {
-          setStatusMessage("Pick 'Em rewards were already claimed.");
+          setStatusMessage("Those Pick 'Em points were already collected.");
         }
         await load({ background: true });
       } finally {

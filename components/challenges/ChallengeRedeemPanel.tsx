@@ -369,7 +369,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
       {/* ── Active campaign progress gauges ── */}
       {!loading && activeCampaigns.length > 0 && (
         <section className="rounded-2xl border border-cyan-700/60 bg-gradient-to-br from-cyan-950 to-slate-900 p-4 shadow-lg shadow-cyan-950/50">
-          <h2 className="text-base font-bold tracking-tight text-cyan-100">Active Rewards</h2>
+          <h2 className="text-base font-bold tracking-tight text-cyan-100">Active Prizes</h2>
           <p className="mt-0.5 text-xs text-cyan-400/80">Points update every 15 s</p>
 
           <ul className="mt-3 space-y-5">
@@ -452,7 +452,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
       <section className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-4">
         <h2 className="text-lg font-semibold text-ht-fg-primary">Redeem Prize</h2>
         <p className="mt-1 text-sm text-ht-fg-muted">
-          Claim your reward wins. Each prize can only be redeemed once.
+          Claim the prizes you have won. Each one can be redeemed only once.
         </p>
 
         {loading ? (
@@ -462,7 +462,7 @@ export function ChallengeRedeemPanel({ venueId, onExitReady }: ChallengeRedeemPa
         ) : null}
 
         {!loading && wins.length === 0 ? (
-          <p className="mt-3 text-sm text-ht-fg-secondary">No redeemable reward wins found for this venue.</p>
+          <p className="mt-3 text-sm text-ht-fg-secondary">No prizes to redeem at this venue.</p>
         ) : null}
 
         {unclaimedWins.length > 0 ? (

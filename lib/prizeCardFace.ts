@@ -12,7 +12,7 @@ import type { ChallengeCampaignWin, RewardMenuItem } from "@/types";
  * won for and when it expires sit under the card, never on it.
  */
 
-export type PrizeCardLabel = "GIFT CARD" | "REWARD";
+export type PrizeCardLabel = "GIFT CARD" | "PRIZE";
 export type PrizeCardStatus = "ready" | "redeemed" | "used";
 
 export type PrizeCardFace = {
@@ -85,11 +85,11 @@ const headlineOf = (win: ChallengeCampaignWin): Pick<PrizeCardFace, "headline" |
   if (win.prizeKind === "menu_item") {
     const item = menuItemLabel(win);
     const discount = discountLabel(win);
-    return { headline: discount ? `${discount} ${item}` : item, headlineKind: "phrase", label: "REWARD" };
+    return { headline: discount ? `${discount} ${item}` : item, headlineKind: "phrase", label: "PRIZE" };
   }
-  if (win.prizeType === "wine_bottle") return { headline: "Bottle of Wine", headlineKind: "phrase", label: "REWARD" };
-  if (win.prizeType === "free_appetizer") return { headline: "Free Appetizer", headlineKind: "phrase", label: "REWARD" };
-  return { headline: "Reward", headlineKind: "phrase", label: "REWARD" };
+  if (win.prizeType === "wine_bottle") return { headline: "Bottle of Wine", headlineKind: "phrase", label: "PRIZE" };
+  if (win.prizeType === "free_appetizer") return { headline: "Free Appetizer", headlineKind: "phrase", label: "PRIZE" };
+  return { headline: "Prize", headlineKind: "phrase", label: "PRIZE" };
 };
 
 const statusOf = (win: ChallengeCampaignWin): PrizeCardStatus => {
@@ -101,8 +101,9 @@ const statusOf = (win: ChallengeCampaignWin): PrizeCardStatus => {
 };
 
 const ariaLabelOf = (face: Omit<PrizeCardFace, "ariaLabel">): string => {
-  const kind = face.label === "GIFT CARD" ? "gift card" : "reward";
-  const what = face.headline === "Gift Card" ? "Gift card" : `${face.headline} ${kind}`;
+  const kind = face.label === "GIFT CARD" ? "gift card" : "prize";
+  const what =
+    face.headline === "Gift Card" ? "Gift card" : face.headline === "Prize" ? "Prize" : `${face.headline} ${kind}`;
   return [what, face.venueName, face.status === "ready" ? null : face.status]
     .filter((part): part is string => Boolean(part))
     .join(", ");

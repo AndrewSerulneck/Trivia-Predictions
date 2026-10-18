@@ -103,7 +103,7 @@ function VenueHubHeaderBarInner({
                     activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
                   }`}
                 >
-                  Rewards
+                  Prizes
                   {challengeBadgeCount > 0 ? (
                     <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-caption font-black leading-none text-white">
                       {formatBadgeCount(challengeBadgeCount)}

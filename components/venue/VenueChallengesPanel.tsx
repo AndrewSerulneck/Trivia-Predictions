@@ -59,10 +59,10 @@ function VenueChallengesPanelInner({
           <div>
             <p className="mb-3 text-caption font-black uppercase tracking-[0.14em] text-cyan-400">
               {isChallengesLoading
-                ? "Rewards"
+                ? "Prizes"
                 : challengeCards.length > 0
-                ? `Active · ${challengeCards.length} Reward${challengeCards.length !== 1 ? "s" : ""}`
-                : "Rewards"}
+                ? `Active · ${challengeCards.length} Prize${challengeCards.length !== 1 ? "s" : ""}`
+                : "Prizes"}
             </p>
             <div className="space-y-2">
               {isChallengesLoading ? (
@@ -80,7 +80,7 @@ function VenueChallengesPanelInner({
 
               {!isChallengesLoading && challengeCards.length === 0 ? (
                 <div className="rounded-2xl border border-slate-700/60 bg-slate-800/40 p-4 text-center text-sm font-semibold text-slate-500">
-                  No active rewards for this venue yet.
+                  No prizes at this venue yet.
                 </div>
               ) : null}
 
@@ -213,7 +213,7 @@ function VenueChallengesPanelInner({
                       <div className="mt-3 space-y-2">
                         {isWinner ? (
                           <div className="inline-flex items-center rounded-full border border-amber-300/35 bg-amber-300/10 px-3 py-1.5 text-sm font-black uppercase tracking-[0.08em] text-amber-300">
-                            {isBusy ? "Opening…" : "Prize won! Tap to Claim Reward."}
+                            {isBusy ? "Opening…" : "Prize won! Tap to claim it."}
                           </div>
                         ) : null}
                         {rankedCard.lines.map((line) => (
@@ -228,7 +228,7 @@ function VenueChallengesPanelInner({
                         {/* prizeClaimedAt is the AWARD timestamp (challenge_campaign_redemptions.claimed_at
                             defaults to now() on insert), not a redemption flag — it's always set the
                             instant a winner is picked, so it can't distinguish claimed vs. unclaimed. */}
-                        {isBusy ? "Opening…" : "Prize won! Tap to Claim Reward."}
+                        {isBusy ? "Opening…" : "Prize won! Tap to claim it."}
                       </div>
                     ) : isWon ? (
                       <p className="mt-3 text-base text-slate-500">

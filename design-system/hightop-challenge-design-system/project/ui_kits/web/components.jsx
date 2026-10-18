@@ -459,7 +459,7 @@ const DRAWER_ITEMS = [
   { key: "active-games", title: "Career Stats",      desc: "Track your lifetime performance across every game." },
   { key: "faqs",         title: "FAQs",              desc: "Get quick answers about gameplay and prizes." },
   { key: "advertise",    title: "Advertise With Us", desc: "Submit the advertiser intake form." },
-  { key: "redeem-prizes",title: "Redeem Prizes",     desc: "See earned rewards and prize redemptions." },
+  { key: "redeem-prizes",title: "Redeem Prizes",     desc: "See the prizes you have won and redeem them." },
 ];
 
 function HamburgerDrawer({ open, onClose, current, points = 312, username = "you_are_here", venue = "The Local Tavern", onNavigate }) {

@@ -1,6 +1,6 @@
 # Rename "Rewards" → "Prizes" — Plan
 
-> **Status:** Phase 1 done 2026-10-18 (handoff: `docs/rewards-to-prizes-rename-plan_PHASE_1_HANDOFF.md`); Phase 2 next. Each phase ends with
+> **Status:** Phase 2 done 2026-10-18 (handoff: `docs/rewards-to-prizes-rename-plan_PHASE_2_HANDOFF.md`); Phase 3 next. Each phase ends with
 > `docs/rewards-to-prizes-rename-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew.
 

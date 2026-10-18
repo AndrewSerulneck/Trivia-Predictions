@@ -3993,7 +3993,7 @@ export async function claimFantasyReward(params: {
     throw new Error(error?.message ?? "Fantasy entry not found.");
   }
   if (entry.status !== "final") {
-    throw new Error("Fantasy rewards can only be claimed after the game is final.");
+    throw new Error("Fantasy points can be collected only after the game is final.");
   }
   if (entry.reward_claimed_at) {
     return { claimed: false, pointsAwarded: 0 };
@@ -4001,7 +4001,7 @@ export async function claimFantasyReward(params: {
 
   const basePointsAwarded = computeFantasyRewardPoints(Number(entry.points ?? 0));
   if (basePointsAwarded <= 0) {
-    throw new Error("This entry does not have a reward to claim.");
+    throw new Error("This entry has no points to collect.");
   }
   // Subtract any platform points already awarded via mid-game live collection.
   const alreadyCollected = Math.max(0, Number(entry.live_collected_points ?? 0));
@@ -4017,7 +4017,7 @@ export async function claimFantasyReward(params: {
     .maybeSingle<{ id: string }>();
 
   if (claimError) {
-    throw new Error(claimError.message ?? "Failed to claim fantasy reward.");
+    throw new Error(claimError.message ?? "Couldn't collect your fantasy points.");
   }
   if (!claimed) {
     return { claimed: false, pointsAwarded: 0 };

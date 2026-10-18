@@ -2059,7 +2059,7 @@ export async function listChallengeCampaignsByIds(ids: readonly string[]): Promi
     .select(CAMPAIGN_SELECT_COLUMNS)
     .in("id", wanted)
     .returns<ChallengeCampaignRow[]>();
-  if (error) throw new Error(error.message ?? "Failed to load rewards.");
+  if (error) throw new Error(error.message ?? "Failed to load prizes.");
   return (data ?? []).map((row) => mapCampaignRow(row));
 }
 

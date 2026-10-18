@@ -134,7 +134,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("[NFL Pick 'Em] Error fetching rewards:", error);
-    const message = error instanceof Error ? error.message : "Failed to load NFL Pick 'Em rewards";
+    const message = error instanceof Error ? error.message : "Failed to load NFL Pick 'Em prizes";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

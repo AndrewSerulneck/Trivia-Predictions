@@ -49,7 +49,7 @@ export const ACCOUNT_MENU_ITEMS: readonly AccountMenuItem[] = [
   },
   {
     label: "Redeem Prizes",
-    description: "See earned rewards and prize redemptions.",
+    description: "See the prizes you have won and redeem them.",
     href: "/redeem-prizes",
   },
 ] as const;

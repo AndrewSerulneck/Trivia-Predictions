@@ -172,11 +172,11 @@ describe("rewardQuotaLine", () => {
   });
 
   it("always includes the total quota, even when remaining is 1", () => {
-    expect(rewardQuotaLine(2, 1)).toBe("1 of 2 reward left");
+    expect(rewardQuotaLine(2, 1)).toBe("1 of 2 prize left");
   });
 
   it("pluralizes when remaining is not 1", () => {
-    expect(rewardQuotaLine(5, 2)).toBe("2 of 5 rewards left");
+    expect(rewardQuotaLine(5, 2)).toBe("2 of 5 prizes left");
     expect(rewardQuotaLine(5, 0)).toBe("All 5 claimed");
   });
 

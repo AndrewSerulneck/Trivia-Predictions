@@ -157,7 +157,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       "-Watch live as squares update in real-time.",
       "-Up to 4 active boards at a time",
       "-50 points for boards that hit Bingo",
-      "-Click \"Collect Points\" to claim your reward",
+      "-Click \"Collect Points\" to add them to your score",
     ],
     steps: [
       {
@@ -197,7 +197,7 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       },
       {
         heading: "Keep track of your picks (and everyone else's) on the venue leaderboard.",
-        body: "Play for bragging rights, or check the rewards tab to see if your venue offers a prize for NFL Pick 'Em!",
+        body: "Play for bragging rights, or check the Prizes tab to see if your venue offers one for NFL Pick 'Em!",
       },
     ],
   },

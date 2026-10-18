@@ -92,9 +92,9 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
           {entry.rank}
         </span>
         {winner && (
-          <span title={prize ? `Won this week's reward: ${prize}` : "Won this week's reward"} className="shrink-0">
+          <span title={prize ? `Won this week's prize: ${prize}` : "Won this week's prize"} className="shrink-0">
             <Trophy
-              aria-label={prize ? `Won this week's reward: ${prize}` : "Won this week's reward"}
+              aria-label={prize ? `Won this week's prize: ${prize}` : "Won this week's prize"}
               className="h-3.5 w-3.5 text-[#fde68a]"
             />
           </span>
@@ -140,7 +140,7 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
               {winner && (
                 <p className="flex items-center gap-1.5 text-caption font-bold text-[#fde68a]">
                   <Trophy aria-hidden="true" className="h-3 w-3 shrink-0" />
-                  Won this week&apos;s reward{prize ? `: ${prize}` : ""}
+                  Won this week&apos;s prize{prize ? `: ${prize}` : ""}
                 </p>
               )}
               {entry.tiebreaker && (
@@ -363,7 +363,7 @@ export function NFLPickEmLeaderboard({
 
       {showNoRewardNote && (
         <p className="px-1 text-caption font-semibold text-slate-500">
-          No reward this week — fewer than {rewardMinPlayers} players made picks.
+          No prize this week — fewer than {rewardMinPlayers} players made picks.
         </p>
       )}
 

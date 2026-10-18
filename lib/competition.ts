@@ -91,7 +91,7 @@ type ListPrizeWinsParams = {
 
 const DEFAULT_WEEKLY_PRIZE_TITLE = "Weekly Venue Champion Prize";
 const DEFAULT_WEEKLY_PRIZE_DESCRIPTION =
-  "Top the leaderboard by Sunday night to claim this week's venue champion reward.";
+  "Top the leaderboard by Sunday night to win this week's venue champion prize.";
 
 function isMissingCompetitionTablesError(error: SupabaseLikeError | null | undefined): boolean {
   if (!error) {

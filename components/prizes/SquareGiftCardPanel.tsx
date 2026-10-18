@@ -66,7 +66,7 @@ const asIssuedCard = (win: ChallengeCampaignWin): ChallengeCampaignWin => ({
  */
 const giftCardFace = (win: ChallengeCampaignWin, venueName: string | null, giftCard: GiftCard): PrizeCardFace => {
   // As the back does: a card this sheet just made still says "available" on the win, and a
-  // dollar-off menu prize would otherwise keep its "REWARD" label on a gift card.
+  // dollar-off menu prize would otherwise keep its "PRIZE" label on a gift card.
   const face = prizeCardFace(asIssuedCard(win), venueName);
   const active = giftCard.state === "ACTIVE";
   const headline = active ? formatPrizeDollars(giftCard.balanceCents / 100) : "Not active";

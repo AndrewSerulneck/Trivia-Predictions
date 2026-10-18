@@ -82,8 +82,8 @@ export function NFLPickEmRewardBanner() {
           : quotaRemaining <= 0
             ? "All prizes claimed this cycle."
             : showProgress
-              ? `${progress.toLocaleString()}/${target.toLocaleString()} picks right · Details in Rewards`
-              : "Details in Rewards";
+              ? `${progress.toLocaleString()}/${target.toLocaleString()} picks right · Details in Prizes`
+              : "Details in Prizes";
 
         return (
           <p

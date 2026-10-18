@@ -11892,7 +11892,7 @@ export async function refreshSportsBingoProgress(params: {
     const nextStatus = plan.maySettle ? signals.hasWinningLine ? "won" : "lost" : "active";
     const nearWin = signals.isNearWin && !cardRow.near_win_notified_at && nextStatus === "active";
     const notification = nextStatus === "won"
-      ? { type: "success", message: `Your ${cardRow.away_team} vs. ${cardRow.home_team} Bingo Board won! Claim your reward.`, link_url: buildBingoScorecardLink({ cardId: cardRow.id, startsAt: cardRow.starts_at }) }
+      ? { type: "success", message: `Your ${cardRow.away_team} vs. ${cardRow.home_team} Bingo Board won! Collect your points.`, link_url: buildBingoScorecardLink({ cardId: cardRow.id, startsAt: cardRow.starts_at }) }
       : nextStatus === "lost" ? { type: "info", message: `Final in ${cardRow.game_label}. This Bingo card did not win.`, link_url: null }
       : nearWin ? { type: "warning", message: `You're one square away from Bingo in ${cardRow.game_label}!`, link_url: null } : null;
     const { data: applied, error } = await supabaseAdmin!.rpc("apply_sports_bingo_grading", {
@@ -12320,7 +12320,7 @@ export async function claimSportsBingoReward(params: {
     throw new Error(claimError.message ?? "Failed to claim Bingo points.");
   }
   if (!claimedCard) {
-    throw new Error("This Bingo reward was already claimed or is not eligible yet.");
+    throw new Error("These Bingo points were already collected or are not ready yet.");
   }
 
   const baseRewardPoints = Math.max(0, Number(claimedCard.reward_points ?? 0));

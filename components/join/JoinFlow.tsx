@@ -2075,7 +2075,7 @@ export function JoinFlow({
           triviaQuota,
           homeBadgeCounts,
           weeklyPrizeTitle: "Weekly Venue Champion Prize",
-          weeklyPrizeDescription: "Top the leaderboard by week end to earn this venue's reward.",
+          weeklyPrizeDescription: "Top the leaderboard by week end to win this venue's prize.",
           weeklyPrizePoints: 0,
           leaderboardEntries: [],
         });

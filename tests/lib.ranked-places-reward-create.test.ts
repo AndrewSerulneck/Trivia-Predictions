@@ -140,7 +140,7 @@ describe("player panels — a weekly places reward never shows a points gauge", 
     expect(src).toMatch(/selectedChallenge\.winCondition === "ranked_places"\s*\?\s*""/);
   });
 
-  it("the Redeem Prizes 'Active Rewards' list has no gauge for it (standings live on the venue card)", () => {
+  it("the Redeem Prizes 'Active Prizes' list has no gauge for it (standings live on the venue card)", () => {
     const src = read("components/challenges/ChallengeRedeemPanel.tsx");
     expect(src).toContain('const isRankedPlaces = campaign.winCondition === "ranked_places";');
     expect(src).toContain(") : isRankedPlaces ? null : (");

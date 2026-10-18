@@ -122,7 +122,7 @@ describe("Prize wallet — Square gift card", () => {
     fireEvent.click(await findPrizeCardAction("Redeem"));
     // The offer sentence uses the card's own money style ("$5", not "$5.00").
     expect(await screen.findByText(/into a \$5 Square gift card/)).toBeTruthy();
-    // Once the sheet makes the card, its face is a GIFT CARD, not the menu prize's REWARD.
+    // Once the sheet makes the card, its face is a GIFT CARD, not the menu prize's PRIZE label.
     fireEvent.click(screen.getByRole("button", { name: "Get my Square gift card" }));
     const ready = await screen.findByText(/Started at/);
     const readyCard = ready.closest("[role=dialog]")?.querySelector("[data-prize-card]");

@@ -529,7 +529,7 @@ export function PrizeWalletPanel() {
         {isEmpty ? (
           <div className="rounded-ht-2xl border border-ht-border-hairline bg-ht-elevated p-8 text-center">
             <p className="text-sm text-ht-fg-muted">
-              No prizes yet. Win a Reward here and it will show up in this list.
+              No prizes yet. Win one here and it will show up in this list.
             </p>
           </div>
         ) : (

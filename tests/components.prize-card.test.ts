@@ -46,14 +46,14 @@ describe("PrizeCard — the face", () => {
 
   it("draws a menu prize as a phrase and steps a long one down a size", () => {
     const { container, rerender } = render(
-      card({ face: { ...SAMPLE_PRIZE_CARD_FACE, headline: "Free Appetizer", headlineKind: "phrase", label: "REWARD" } }),
+      card({ face: { ...SAMPLE_PRIZE_CARD_FACE, headline: "Free Appetizer", headlineKind: "phrase", label: "PRIZE" } }),
     );
     const headline = () => container.querySelector("[data-prize-card-headline]")?.className ?? "";
     expect(headline()).toContain("text-2xl");
     expect(headline()).toContain("line-clamp-2");
     rerender(
       card({
-        face: { ...SAMPLE_PRIZE_CARD_FACE, headline: "Free Chef's Tasting Platter", headlineKind: "phrase", label: "REWARD" },
+        face: { ...SAMPLE_PRIZE_CARD_FACE, headline: "Free Chef's Tasting Platter", headlineKind: "phrase", label: "PRIZE" },
       }),
     );
     expect(headline()).toContain("text-xl");
@@ -103,7 +103,7 @@ describe("PrizeCard — the face", () => {
       "Pacific Street",
     );
     render(card({ face }));
-    expect(screen.getByRole("group", { name: "Free Appetizer reward, Pacific Street" })).toBeTruthy();
+    expect(screen.getByRole("group", { name: "Free Appetizer prize, Pacific Street" })).toBeTruthy();
   });
 });
 

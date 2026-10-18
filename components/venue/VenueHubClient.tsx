@@ -1706,7 +1706,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                 style={{ border: "1px solid rgba(255,255,255,0.12)" }}
                 className="tp-player-hit-target tp-player-pressable tp-clean-button absolute right-3 top-3 inline-flex h-10 min-w-[4.5rem] items-center justify-center rounded-full bg-slate-800 px-4 text-sm font-semibold text-slate-300"
                 onClick={() => setSelectedChallengeId(null)}
-                aria-label="Close reward details"
+                aria-label="Close prize details"
               >
                 Close
               </button>

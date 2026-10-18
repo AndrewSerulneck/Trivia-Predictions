@@ -276,7 +276,7 @@ card) is drawn as the same **digital gift card**. Plan:
   drop shadow. Tokens: `--ht-prize-card-*` in `colors_and_type.css`, mirrored
   as `PRIZE_CARD` in `lib/themeTokens.ts`. No per-prize-type color themes.
 - **Face:** only three things: the prize ("$25", "Free Appetizer"), the venue
-  name, and a small "GIFT CARD" / "REWARD" label. Logo top-left. What it was
+  name, and a small "GIFT CARD" / "PRIZE" label. Logo top-left. What it was
   won for and the expiry go in one muted line under the card.
 - **Type:** Nunito only (no Bree Serif); title case for the prize, uppercase
   only for the small label.
