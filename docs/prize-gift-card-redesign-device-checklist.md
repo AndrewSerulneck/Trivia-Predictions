@@ -54,7 +54,7 @@ Square checks use a real Square venue on the live site (Square can't be tested f
 
 | # | Check | Phone | Desktop |
 |---|---|---|---|
-| 4.1 | Partner Manual → "Where Guests Find Their Prizes" (after "Offer Rewards"): the text reads well and the sample card ("$25", "YOUR VENUE") fits the sheet. Tapping its logo bounces it; the card itself does not flip. | | |
+| 4.1 | Partner Manual → "Where Guests Find Their Prizes" (after "Offer Prizes"): the text reads well and the sample card ("$25", "YOUR VENUE") fits the sheet. Tapping its logo bounces it; the card itself does not flip. | | |
 | 4.2 | Welcome Email ("Where guests find their prizes", after the feature list) in **Gmail iPhone app**: picture shows, not stretched, no wider than the text. | | |
 | 4.3 | Same in **Gmail on the web** (also try dark mode). | | |
 | 4.4 | Same in **Apple Mail** (iPhone and Mac). | | |

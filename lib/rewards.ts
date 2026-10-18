@@ -137,7 +137,7 @@ export const REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE =
   "This prize can't be offered to the winner of the game.";
 export const REWARD_INVALID_QUANTITY_MESSAGE =
   "Enter how many of this prize are available.";
-export const REWARD_INVALID_PRIZE_MESSAGE = "Choose what the winner gets.";
+export const REWARD_INVALID_PRIZE_MESSAGE = "Check what the winner gets: pick a prize and enter a valid amount.";
 
 // Weekly places ("ranked_places", docs/live-trivia-weekly-places-reward-plan.md) and the
 // partner's minimum players (D7). All raised as RewardTermsError, so every route maps them to

@@ -90,7 +90,7 @@ const measure = async (browser, path, signedIn, readySelectorText) => {
   const browser = await chromium.launch();
   for (const [label, path, signedIn, ready] of [
     ["/owner/login (signed out)", "/owner/login", false, null],
-    ["/owner/dashboard (signed in)", "/owner/dashboard", true, "Offer Rewards"],
+    ["/owner/dashboard (signed in)", "/owner/dashboard", true, "Offer Prizes"],
   ]) {
     const runs = [];
     for (let i = 0; i < RUNS; i++) runs.push(await measure(browser, path, signedIn, ready));

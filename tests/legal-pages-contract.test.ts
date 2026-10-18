@@ -46,6 +46,7 @@ describe("legal pages", () => {
     const rules = read("app/rules/page.tsx");
     expect(rules).toMatch(/Apple Inc\. and Google LLC are not sponsors of, and are not involved in/);
     expect(rules).toMatch(/NO PURCHASE NECESSARY/);
+    expect(rules).toMatch(/any contest, prize, challenge or\s+sweepstakes/);
   });
 
   it("links the legal pages from the home footer, the player drawer and the partner drawer", () => {

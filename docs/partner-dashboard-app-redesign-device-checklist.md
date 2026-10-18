@@ -21,7 +21,7 @@ game and one reward; for the "empty" checks use a venue with neither (or a fresh
 - [ ] Tap outside the menu, and the Back gesture: menu closes. The page behind doesn't scroll
   while the menu is open.
 - [ ] Partner Manual row: menu closes, the manual slides up. Its text says "tap the logo in the
-  top-left… then Venue Display" and "Tap Offer Rewards on your dashboard".
+  top-left… then Venue Display" and "Tap Offer Prizes on your dashboard".
 - [ ] Billing, Display, Game Settings, Account Settings each open a page with **Back** top-left
   (no logo menu, no Sign Out), and Back returns to the dashboard.
 - [ ] With 2+ venues: tapping the venue name switches venues and both lists reload.
@@ -85,7 +85,7 @@ game and one reward; for the "empty" checks use a venue with neither (or a fresh
 The logo drops in spinning, lands, then hops: one full turn clockwise, a beat on the ground,
 one full turn back. You should never see a grey placeholder box or a bouncing basketball again.
 - [ ] **Cold open.** Force-quit the browser, then open the Partner Dashboard. You see the logo
-  animation, then **Live Games and Offer Rewards appear together, in one step** — not the logo,
+  animation, then **Live Games and Offer Prizes appear together, in one step** — not the logo,
   then two grey boxes, then the real thing.
 - [ ] **Sign in.** From the partner login, tap Sign In. The animation covers the form the instant
   you tap, and stays until the dashboard is ready.
@@ -135,8 +135,8 @@ Open the menu → **Results**. Use a venue that has run Live Trivia (Garden Stat
 - [ ] **Reload on a detail screen** (pull to refresh while on a player): it lands on the timeline, not a blank page.
 - [ ] Text is readable at arm's length; nothing is cut off at the edges on the smallest phone you own.
 
-## K. "How many players must play?" step (new, 2026-10-17 — Create Reward)
-Menu → **Offer Rewards** → create one reward of each kind below. Do it on a 350 px phone and again on the smallest
+## K. "How many players must play?" step (new, 2026-10-17 — Create Prize)
+Menu → **Offer Prizes** → create one prize of each kind below. Do it on a 350 px phone and again on the smallest
 phone you own (289 px, an iPhone SE).
 - [ ] **Live Trivia, Winner of the game.** After the rules, the next button says **Next: Minimum Players** and opens
   its own screen titled "How many players must play?". Neither **No minimum** nor **Set a minimum** is selected and

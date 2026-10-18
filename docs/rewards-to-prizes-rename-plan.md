@@ -1,6 +1,7 @@
 # Rename "Rewards" → "Prizes" — Plan
 
-> **Status:** All phases done 2026-10-18 (latest handoff: `docs/rewards-to-prizes-rename-plan_PHASE_5_HANDOFF.md`); committed locally, not pushed. Each phase ends with
+> **Status:** Phases 1–6 done 2026-10-18 (latest handoff: `docs/rewards-to-prizes-rename-plan_PHASE_6_HANDOFF.md`); committed locally, not pushed.
+> Code review 2026-10-18 found 8 issues → review-fix **Phases 7–9 not started (6 done)** (§4, "Review fixes"). Push after Phase 9. Each phase ends with
 > `docs/rewards-to-prizes-rename-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest.
 > **Owner:** Andrew.
 
@@ -81,6 +82,10 @@ outside this repo. See open question Q1.)
 | 3 | Partner Dashboard copy + `?sheet=prizes` URL | Opus 5.5 | high |
 | 4 | Admin panel, partner emails, Partner Manual, marketing & legal | Sonnet 5.5 | medium |
 | 5 | Lock the tripwire, glossary in living docs, full gate, phone checklist | Sonnet 5.5 | medium |
+| 6 | Review fixes: wrong error message, `/rules` disclaimer, stale screen text in scripts/checklist | Sonnet 5.5 | medium |
+| 7 | Review fixes: make the wording tripwire count copies (+ cheap pre-filter) | Sonnet 5.5 | medium |
+| 8 | Review fixes: old `?sheet=rewards` address on a mid-flow reload; drop the dead Results `step=reward` alias | Opus 5.5 | medium |
+| 9 | Review fix: stop committing `next-env.d.ts` (needs Andrew's Q3), full gate, ready to push | Sonnet 5.5 | low |
 
 Opus does Phases 2–3 because the wording needs judgement: the wizard's rules sentences (`lib/rewardTerms.ts`,
 `lib/rewardGameSlots.ts`) are long, number-aware and full of "reward … prize" pairs. Phases 1, 4 and 5 are
@@ -169,6 +174,90 @@ Extra gate: `npm run test:god-mode-join` (JoinFlow touched).
    partner email preview, `/rules`.
 5. Handoff: commit list and "ready to push", which is Andrew's call.
 
+### Review fixes (Phases 6–9, added 2026-10-18)
+
+A code review of `d3130a6..072a5a6` (Phases 1–5) found 8 issues. The old-link aliases work; nothing is broken for
+players. Each finding below was checked against the code before it was planned. The same rules as above apply to
+every phase: same gates, commit locally, **do not push or deploy**, write `…_PHASE_<N>_HANDOFF.md`. Ship Phases 1–9
+together.
+
+### Phase 6 — Copy fixes (Sonnet 5.5, medium)
+1. **Wrong error message (review #1).** `REWARD_INVALID_PRIZE_MESSAGE` (`lib/rewards.ts:140`) became "Choose what
+   the winner gets." But `normalizeRewardPrize` (`lib/rewards.ts:921-989`) throws it for 12 cases, and most of them
+   mean the partner *did* choose: a menu item at >100% off, a $0 gift card, a $0 place on a weekly ladder, a missing
+   "other" item name, a forged `posDelivery`. **Fix: reword the one constant** so it covers both cases, e.g.
+   *"Check what the winner gets: pick a prize and enter a valid amount."* Keep **one** constant. Both routes map
+   400 by comparing `message === REWARD_INVALID_PRIZE_MESSAGE` (`app/api/owner/rewards/route.ts:101`,
+   `app/api/admin/route.ts:1076`), so a second constant would need both routes changed, and it isn't worth it: the
+   wizard checks amounts before submitting, so partners rarely see this message. Tests import the constant (no
+   literal is pinned; `grep -rn "Choose what the winner gets"` is empty apart from `lib/rewards.ts`), so no test
+   edits are expected. Keep the wording free of "reward" (the tripwire fails on it).
+2. **`/rules` disclaimer (review #3).** `app/rules/page.tsx:23` dropped "reward" without adding "prize": *"…not
+   involved in, any contest, challenge or sweepstakes…"*. **Fix:** *"…not involved in, any contest, prize, challenge
+   or sweepstakes on Hightop Challenge."* Extend `tests/legal-pages-contract.test.ts:47` to pin the word `prize` in
+   that sentence, so it can't be dropped again. **This is the official rules page: quote the before/after sentence in
+   the handoff for Andrew to read.**
+3. **Old screen text outside the scanned folders (review #2).** `scripts/measure-owner-load.cjs:93` waits for
+   "Offer Rewards" → change to **"Offer Prizes"** (the title in `components/owner/dashboard/RewardsSection.tsx`).
+   Then sweep for any other script or doc that *waits for or tells a person to tap* old on-screen words:
+   `grep -rnE "Offer Rewards|Create Reward|View Rewards|Rewards Manager|Rewards & Events|Active Rewards" scripts docs/*checklist*.md`.
+   Known 2026-10-18: `docs/partner-dashboard-app-redesign-device-checklist.md` lines 24, 88, 138, 139 (sections A,
+   H, K) still say "Offer Rewards" / "Create Reward". Andrew uses that checklist on a phone, so change the **label he
+   taps** to the new word; leave dated history docs and log text alone (`scripts/backfill-ranked-reward.cjs:54`
+   "Reward:" and `scripts/audit-legacy-recurring-cadences.cjs:76` are console output for developers: keep them).
+4. Run `node scripts/measure-owner-load.cjs` only if a local `next start` is already up. Don't start or kill
+   Andrew's dev server (CLAUDE.md). Otherwise note "not run" in the handoff.
+
+### Phase 7 — Harden the wording tripwire (Sonnet 5.5, medium)
+1. **Count copies (review #4).** `tests/prizes-wording-contract.test.ts:76-78` turns hits into a `Set` keyed by
+   `(file, text)`, so an allow-listed text (e.g. `"rewards"` in `app/owner/dashboard/page.tsx`, or "Failed to update
+   reward." in `lib/rewardGameSlotCascade.ts`) also lets **every later copy** in that file through. **Fix:** count hits
+   per key (a `Map<key, number>`), give `Allowed` an optional `count` (default 1), and fail when a file has **more** of a
+   text than allowed (new copy) or **fewer** (stale entry: lower the count or delete the entry). Seed each `count` from
+   today's real numbers (run the scanner once and print counts) so the test passes on day one. Add a unit case to
+   the scanner self-test: two copies of one allowed text with `count: 1` must fail.
+2. **Fix the header's promise.** Say exactly what is scanned (`app/`, `components/`, `lib/` `.ts/.tsx`, `llms.txt`)
+   and that `scripts/` and docs are **not** (they legitimately use `reward` everywhere). Do not widen the scan to
+   `scripts/`; Phase 6 item 3 was a one-time sweep.
+3. **Cheap pre-filter (review #5, optional).** Measured 2026-10-18: the whole test file runs in ~1.3 s, so speed is
+   not a real problem. Since the file is open anyway, skip the TypeScript parse when the raw file text doesn't match
+   `REWARD_WORD` (`tests/helpers/rewardWordingScan.ts` `scanAllWording`). Same results, two lines. Note the before/after time
+   in the handoff; if it isn't faster, drop it.
+
+### Phase 8 — URL alias tidy-up (Opus 5.5, medium)
+1. **Old id survives a mid-flow reload (review #6).** `normalizeLandedSheet` (`lib/ownerSheetParams.ts:262`) rewrites
+   only depth-0 landings. A partner whose tab was on `?sheet=rewards&step=detail` (pushed by the old build, depth ≥ 1)
+   reloads after the deploy and keeps the old id in the address bar. It still works, but the alias comment
+   (`lib/ownerSheetParams.ts:31-34`) promises it is "never written". **Fix:** in `normalizeLandedSheet`, when depth > 0 **and**
+   the raw `sheet` value is an alias, `replaceState` the same entry with the canonical id, **keeping its depth state**
+   (`depthState(readSheetDepth(history.state))`) and step. No push, so the depth counter and Close (pop every entry)
+   stay right. Return `false` from that branch (it didn't push), and check `useOwnerSheet` doesn't treat the
+   return value as "a sheet was pushed". Extend `tests/lib.owner-sheet-params.test.ts:350` ("a reload mid-flow on an old
+   ?sheet=rewards entry…") to assert the URL now reads `sheet=prizes` and Close still pops every entry, and add a
+   case that a canonical `?sheet=prizes` mid-flow entry is left untouched (no extra history writes).
+2. **Dead Results alias (review #7).** `screenOfStep` (`components/owner/results/ResultsSheet.tsx:61`) maps
+   `step=reward` → `prize`, but the prize screen needs `rewardSel`, which only exists in memory. After any load,
+   `available.prize` is false, the screen falls back to `"list"` and `correctStep(null)` runs: exactly what an unknown
+   step does. **Fix:** delete the `reward` branch and fix the comment at line 46 ("was `reward`; the old step is still
+   read") and line 60. Remove the `ResultsSheet.tsx` / `"reward"` `keep` entry from the tripwire allow-list (Phase 7's
+   count check will demand it). Add or keep a test showing that `?sheet=history&step=reward` lands on the list with
+   the step cleared. Plan §2 decision 1 ("old values accepted forever") still holds: the old link still opens Results;
+   it just never could open a single prize.
+
+### Phase 9 — `next-env.d.ts` + final gate (Sonnet 5.5, low)
+1. **Generated file in commits (review #8).** `next-env.d.ts` says "should not be edited". Its import flips between
+   `./.next/dev/types/routes.d.ts` (`next dev`) and `./.next/types/routes.d.ts` (`next build`), so it lands in unrelated
+   commits (`2f44182`, `6d314a0`, `b1395e0`). **Needs Andrew's answer to Q3 first.** Recommended (and what the Next.js
+   TypeScript docs advise): add `next-env.d.ts` to `.gitignore` and `git rm --cached next-env.d.ts` (the file stays on
+   disk). Vercel's `next build` regenerates it. A fresh clone that runs `npx tsc --noEmit` before any dev/build must run
+   `npx next typegen` first; add that line under "Build and Test Commands" in CLAUDE.md. If Andrew says keep tracking
+   it, do nothing except leave it unstaged in future commits.
+2. **Full gate:** `npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run test:pwa-contract`,
+   `npm run test:god-mode-join`, `npm run build` (typecheck not concurrently with build).
+3. Update this plan's status line and write the final handoff: commit list `d3130a6` … Phase 9, "ready to push"
+   (Andrew's call), and add to device checklist section M: the Create Prize wizard showing the new invalid-prize
+   message (e.g. a $0 gift card, if the wizard lets it through) and `/rules` showing "contest, prize, challenge".
+
 ---
 
 ## 5. Risks
@@ -185,3 +274,5 @@ Extra gate: `npm run test:god-mode-join` (JoinFlow touched).
 - **Q1 (answered 2026-10-18: No, nothing outside the repo says "Rewards").** Do the App Store / Google Play listing texts (or any printed merch, partner sales decks, social posts)
   say "Rewards"? Those are outside the repo; you'd change them by hand.
 - **Q2 (answered 2026-10-18: skip).** Should code names be renamed later? Not planned. It's optional cleanup with no visible effect (see §5).
+- **Q3 (open, blocks Phase 9 item 1).** Stop committing `next-env.d.ts` (a file Next.js writes itself; it keeps changing
+  between dev and build)? Recommended: yes, ignore it. No effect on the website or the app.

@@ -20,7 +20,7 @@ export default function RulesPage() {
       <LegalSection heading="Not sponsored by Apple or Google">
         <p>
           <strong>
-            Apple Inc. and Google LLC are not sponsors of, and are not involved in, any contest, challenge or
+            Apple Inc. and Google LLC are not sponsors of, and are not involved in, any contest, prize, challenge or
             sweepstakes on Hightop Challenge. Prizes are provided by the participating venue, not by Apple or Google.
           </strong>
         </p>
