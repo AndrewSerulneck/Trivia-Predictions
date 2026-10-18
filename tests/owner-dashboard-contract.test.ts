@@ -154,7 +154,7 @@ describe("owner dashboard body", () => {
   it("Phase 6: the Partner Manual describes the new navigation, not the old buttons", () => {
     const manual = read("lib/partnerManual.ts");
     expect(manual).toContain("tap the arrow in the top-left");
-    expect(manual).toContain("Tap Offer Rewards on your dashboard");
+    expect(manual).toContain("Tap Offer Prizes on your dashboard");
     expect(manual).not.toMatch(/[Cc]lick/);
   });
 });

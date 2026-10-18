@@ -48,7 +48,7 @@ export default function DeleteAccountInfoPage() {
             "Your username, hashed PIN and passkeys.",
             "Your profile at every venue, with your points, scores, picks, bingo cards, answers, lineups and leaderboard places.",
             "Your prize coupons, including any you have not used yet. Unused prizes cannot be recovered.",
-            "Your notifications, rewards progress, location-check results, sessions (including IP address and device type), ad and share activity.",
+            "Your notifications, prize progress, location-check results, sessions (including IP address and device type), ad and share activity.",
           ]}
         />
       </LegalSection>
@@ -56,7 +56,7 @@ export default function DeleteAccountInfoPage() {
       <LegalSection heading="What is kept">
         <LegalList
           items={[
-            "If you won a reward, the record that the venue gave out that prize is kept with your name removed, so the venue's prize count stays correct.",
+            "If you won a prize, the record that the venue gave it out is kept with your name removed, so the venue's prize count stays correct.",
             "If a prize became a Square gift card, the venue's record of that gift card (its amount and status) is kept for the venue's books, with no link to you.",
             "Totals that count many players together, which do not identify anyone.",
           ]}

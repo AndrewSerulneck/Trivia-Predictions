@@ -20,7 +20,7 @@ describe("/info Partner Login and Square badge (Phase 3B.2)", () => {
 
   it("tells partners the dashboard is browser-based, with the approved copy", () => {
     expect(page).toContain(
-      "Venue partners: schedule games, set rewards and manage billing from any web browser — no app needed.",
+      "Venue partners: schedule games, set prizes and manage billing from any web browser — no app needed.",
     );
   });
 

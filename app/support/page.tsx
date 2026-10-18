@@ -36,7 +36,7 @@ export default function SupportPage() {
             </>,
             <>
               <strong>My prize isn&apos;t showing.</strong> Open Redeem Prizes from the menu. If you won and don&apos;t
-              see it, email us the reward and date.
+              see it, email us the prize and date.
             </>,
             <>
               <strong>Venue partners.</strong> The Partner Dashboard is on our website, not in the app: sign in

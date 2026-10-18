@@ -6,9 +6,9 @@ import { PartnerManual } from "@/components/owner/PartnerManual";
 import { PARTNER_MANUAL } from "@/lib/partnerManual";
 
 describe("Partner Manual: where guests find their prizes", () => {
-  it("has the section, placed after Offer Rewards, with the live sample card figure", () => {
+  it("has the section, placed after Offer Prizes, with the live sample card figure", () => {
     const headings = PARTNER_MANUAL.sections.map((section) => section.heading);
-    expect(headings.indexOf("Where Guests Find Their Prizes")).toBe(headings.indexOf("Offer Rewards") + 1);
+    expect(headings.indexOf("Where Guests Find Their Prizes")).toBe(headings.indexOf("Offer Prizes") + 1);
     const section = PARTNER_MANUAL.sections.find((s) => s.heading === "Where Guests Find Their Prizes");
     expect(section?.figure).toBe("prize-card");
     expect(section?.body).toContain("tap the card to flip it over");

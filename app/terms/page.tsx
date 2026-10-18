@@ -47,7 +47,7 @@ export default function TermsPage() {
         <p>
           Prizes are offered and fulfilled by the participating venue, not by Apple, Google or any app store. How a
           prize is earned, how long it lasts and how it is redeemed are set out in the Official Rules and on the coupon.
-          We may change or end rewards, and a venue may stop honoring prizes if it stops participating, in which case
+          We may change or end prizes, and a venue may stop honoring prizes if it stops participating, in which case
           we will try to give notice.
         </p>
       </LegalSection>

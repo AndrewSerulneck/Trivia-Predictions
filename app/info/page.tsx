@@ -155,7 +155,7 @@ const SPORTS_SHOWCASES: GameShowcase[] = [
         callouts: [
           { x: 50, y: 30, label: "Draft a daily roster", description: "Guests pick a lineup from the games on TV that day and earn points based on how their roster performs." },
           { x: 50, y: 45, label: "Live play by play updates", description: "Users' scores are updated in real time — and users only earn points while they're at your bar." },
-          { x: 74, y: 57, label: "Bar-run prizes", description: "Tie a real reward or discount to whoever drafts the best roster that day and encourage guests to stay until the end of every game to win." },
+          { x: 74, y: 57, label: "Bar-run prizes", description: "Tie a real prize or discount to whoever drafts the best roster that day and encourage guests to stay until the end of every game to win." },
         ],
       },
     ],
@@ -164,7 +164,7 @@ const SPORTS_SHOWCASES: GameShowcase[] = [
 
 const FEATURES = [
   { icon: "📍", title: "Geofenced to your address", body: "Games only work in your bar! Players compete with the people around them." },
-  { icon: "🎯", title: "Use rewards to boost sales", body: "Offer up discounts to guests who score the most trivia points or make the best sports bracket to encourage repeat visits." },
+  { icon: "🎯", title: "Use prizes to boost sales", body: "Offer up discounts to guests who score the most trivia points or make the best sports bracket to encourage repeat visits." },
   { icon: "🍺", title: "Longer stays, higher tabs", body: "Games keep guests engaged longer, encouraging additional food and beverage purchases with every round." },
   { icon: "📱", title: "No hardware required", body: "Players use their own phones. No devices to buy or downloads required." },
   { icon: "📅", title: "Schedule around your business", body: "Schedule live community games (like pub trivia) whenever you need a boost. Target slow periods and turn them into your busiest nights." },
@@ -176,14 +176,14 @@ const HOW_IT_WORKS = [
   { step: "1", title: "Guests scan the QR code", body: "Post your venue's QR code anywhere — at the bar, on tables, on a screen. No app download needed." },
   { step: "2", title: "They play on their own phones", body: "Players join instantly from their browser. Live Trivia, Sports Bingo, Pick'Em — everything runs on whatever phone is already in their pocket." },
   { step: "3", title: "They compete with each other", body: "Real-time leaderboards show who's winning. The competition is between the people actually sitting in your bar." },
-  { step: "4", title: "Prizes keep them coming back", body: "Offer discounts, free rounds, or custom rewards. Winners have a reason to return — and bring friends next time." },
+  { step: "4", title: "Prizes keep them coming back", body: "Offer discounts, free rounds, or custom prizes. Winners have a reason to return — and bring friends next time." },
 ];
 
 const SEMANTIC_QA = [
     {
     question: "Why should I sign up?",
     answer:
-      "There's lots of online games out there. We're more than that. We're a digital rewards and advertising platform built to increase dwell time and repeat visits.",
+      "There's lots of online games out there. We're more than that. We're a digital prizes and advertising platform built to increase dwell time and repeat visits.",
   },
   {
     question: "How does it work?",
@@ -555,7 +555,7 @@ export default function InfoPage() {
                 </a>
               </div>
               <p className="mx-auto max-w-md text-footnote text-slate-400 leading-relaxed">
-                Venue partners: schedule games, set rewards and manage billing from any web browser — no app needed.
+                Venue partners: schedule games, set prizes and manage billing from any web browser — no app needed.
               </p>
             </div>
             <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
@@ -591,7 +591,7 @@ export default function InfoPage() {
           id="overview"
           eyebrow="Overview"
           title="What is Hightop Challenge?"
-          subtitle="Hightop Challenge is a digital gaming and rewards platform designed to drive repeat visits and increase business at our partner venues."
+          subtitle="Hightop Challenge is a digital gaming and prizes platform designed to drive repeat visits and increase business at our partner venues."
           className="bg-slate-900/40"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

@@ -20,7 +20,7 @@ Hightop Challenge is a mobile web application for venue-based guest engagement i
 
 ## FAQ
 ### What does Hightop Challenge do?
-It provides a browser-based gaming layer for hospitality venues. Guests play competitive games on their phones, and the venue can run location-specific leaderboards, challenges, and rewards.
+It provides a browser-based gaming layer for hospitality venues. Guests play competitive games on their phones, and the venue can run location-specific leaderboards, challenges, and prizes.
 
 ### Who is the product for?
 The primary buyer is a venue operator, bar owner, or hospitality manager. The end users are in-venue guests who want free, fast, phone-based games tied to the venue they are visiting.

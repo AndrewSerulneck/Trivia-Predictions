@@ -62,16 +62,16 @@ export const WELCOME_EMAIL = {
       body: "Put Category Blitz or Live Trivia on the calendar for game nights — pick a time, we handle the rest.",
     },
     {
-      title: "Offer Rewards",
+      title: "Offer Prizes",
       body: "If you want to boost engagement, offer a prize for winning games on HTC! Offer a gift card to the user who wins at Trivia night, or a discount coupon to the user who gets the most picks right on NFL Sunday. These are just a few of many ways a Hightop Challenge subscription helps you attract more foot traffic.",
     },
     {
-      title: "Apply Rewards with Square",
-      body: "Hightop Challenge is integrated with Square. If your business uses Square, the rewards you offer can be applied straight to the winner's check. Just head to the Partner Dashboard and click \"Point of Sale,\" then \"connect.\"",
+      title: "Apply Prizes with Square",
+      body: "Hightop Challenge is integrated with Square. If your business uses Square, the prizes you offer can be applied straight to the winner's check. Just head to the Partner Dashboard and click \"Point of Sale,\" then \"connect.\"",
     },
     {
-      title: "Promote games and rewards on social media",
-      body: "When you schedule Live Games or offer Rewards, you're prompted to generate social media content to advertise the promotions you're offering. Share it on your social channels so guests know about the promotion, come play, and spend more of their time and money at your venue.",
+      title: "Promote games and prizes on social media",
+      body: "When you schedule Live Games or offer Prizes, you're prompted to generate social media content to advertise the promotions you're offering. Share it on your social channels so guests know about the promotion, come play, and spend more of their time and money at your venue.",
     },
     {
       title: "Put it on your TVs",
@@ -91,10 +91,10 @@ export const WELCOME_EMAIL = {
     },
   ],
 
-  /** Where guests find a prize after winning a Reward (with a picture of the digital gift card). */
+  /** Where guests find a prize after winning a prize (with a picture of the digital gift card). */
   prizesSection: {
     title: "Where guests find their prizes",
-    body: "When a guest wins one of your Rewards, we let them know right away. Their prize appears as a digital gift card in Redeem Prizes, in the Hightop Challenge menu. To use it, they tap the card to flip it over, then tap Redeem on the back. Your staff tap the card (it sparkles and shows the live time, so a screenshot won't work), and the guest taps Confirm Redemption. If you use Square, gift cards can be rung up like any other Square gift card.",
+    body: "When a guest wins a prize from you, we let them know right away. It appears as a digital gift card in Redeem Prizes, in the Hightop Challenge menu. To use it, they tap the card to flip it over, then tap Redeem on the back. Your staff tap the card (it sparkles and shows the live time, so a screenshot won't work), and the guest taps Confirm Redemption. If you use Square, gift cards can be rung up like any other Square gift card.",
     imageAlt: "A Hightop Challenge digital gift card for $25",
     /** Versioned file in public/brand/email/. New artwork gets a new name (-v2), never an overwrite. */
     imageFile: "prize-card-v2.png",

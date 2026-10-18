@@ -30,11 +30,11 @@ export const PARTNER_MANUAL: {
   sections: readonly PartnerManualSection[];
 } = {
   intro:
-    "Hightop Challenge is a digital gaming and rewards platform designed to drive repeat visits and increase business for our partner venues.",
+    "Hightop Challenge is a digital gaming and prizes platform designed to drive repeat visits and increase business for our partner venues.",
   sections: [
     {
       heading: "Schedule Live Games",
-      body: "Schedule Live games like Live Trivia and Category Blitz using the Partner Dashboard. These are games that the whole room plays together at the same time. They are designed to foster a sense of community through friendly competion and shared experiences. Your users can just play to have fun, or you can offer rewards as an extra incentive to drive up dwell time and repeat visits (more on rewards below). ",
+      body: "Schedule Live games like Live Trivia and Category Blitz using the Partner Dashboard. These are games that the whole room plays together at the same time. They are designed to foster a sense of community through friendly competion and shared experiences. Your users can just play to have fun, or you can offer prizes as an extra incentive to drive up dwell time and repeat visits (more on prizes below). ",
       subsections: [
                 {
           heading: "Live Trivia",
@@ -73,12 +73,12 @@ export const PARTNER_MANUAL: {
       ],
     },
     {
-      heading: "Offer Rewards",
-      body: "Incentivize guests to visit by offering rewards for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. NFL Pick 'Em rewards can run every week, all season, or for a single NFL week you choose. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Offer Rewards on your dashboard to get started.",
+      heading: "Offer Prizes",
+      body: "Incentivize guests to visit by offering prizes for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. NFL Pick 'Em prizes can run every week, all season, or for a single NFL week you choose. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Offer Prizes on your dashboard to get started.",
     },
     {
       heading: "Where Guests Find Their Prizes",
-      body: "When a guest wins one of your Rewards, we let them know right away. Their prize appears as a digital gift card in Redeem Prizes, in the Hightop Challenge menu. To use it, they tap the card to flip it over (the back shows what it was won for, its terms and when it expires), then tap Redeem on the back. Your staff tap the card (it sparkles and shows the live time, so a screenshot won't work), and the guest taps Confirm Redemption. Once a prize is redeemed, the back of the card shows when, so you can always tell if it was used early. If you use Square, gift cards can be rung up like any other Square gift card.",
+      body: "When a guest wins a prize from you, we let them know right away. It appears as a digital gift card in Redeem Prizes, in the Hightop Challenge menu. To use it, they tap the card to flip it over (the back shows what it was won for, its terms and when it expires), then tap Redeem on the back. Your staff tap the card (it sparkles and shows the live time, so a screenshot won't work), and the guest taps Confirm Redemption. Once a prize is redeemed, the back of the card shows when, so you can always tell if it was used early. If you use Square, gift cards can be rung up like any other Square gift card.",
       figure: "prize-card",
     },
     {

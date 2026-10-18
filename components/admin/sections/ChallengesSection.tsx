@@ -624,7 +624,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
       body: JSON.stringify({ resource: "rewards", ...submission }),
     });
     const json = (await res.json()) as { ok: boolean; error?: string };
-    if (!json.ok) return { ok: false as const, error: json.error ?? "Couldn't create that reward." };
+    if (!json.ok) return { ok: false as const, error: json.error ?? "Couldn't create that prize." };
     return { ok: true as const };
   }, []);
 
@@ -729,7 +729,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
     return (
       <div className="max-w-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900">New Reward</h2>
+          <h2 className="text-base font-semibold text-slate-900">New Prize</h2>
         </div>
         <CreateRewardWizard
           variant="admin"
@@ -741,7 +741,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
           onCreated={() => {
             resetCreateForm();
             setMode("list");
-            setStatusMessage("Reward created.");
+            setStatusMessage("Prize created.");
             fetchCampaigns(1);
             setPage(1);
           }}
@@ -766,10 +766,10 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
           <ExitBackButton
             tone="light"
             onExit={() => { resetCreateForm(); setMode("list"); }}
-            label="Back to reward list"
+            label="Back to prize list"
           />
           <h2 className="text-base font-semibold text-slate-900">
-            {mode === "edit" ? "Edit Reward" : "New Reward"}
+            {mode === "edit" ? "Edit Prize" : "New Prize"}
           </h2>
         </div>
 
@@ -1067,7 +1067,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             </select>
             <p className="mt-1.5 text-xs text-slate-500">
               {formChallengeMode === "leaderboard"
-                ? "Legacy leaderboard reward — retired from creation. Users are ranked by eligible points earned during the window; switch to Progress Gauge to move this reward onto the current model."
+                ? "Legacy leaderboard prize — retired from creation. Users are ranked by eligible points earned during the window; switch to Progress Gauge to move this prize onto the current model."
                 : "Users fill a progress gauge by earning eligible points. The first user to reach the points target wins immediately."}
             </p>
           </div>
@@ -1087,7 +1087,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             <div>
               <label className={lbl}>Points Required to Win</label>
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800">
-                This reward is set to award the winner of the Live Trivia game, regardless of
+                This prize is set to award the winner of the Live Trivia game, regardless of
                 score — it has no points target to edit. It&apos;s resolved automatically once
                 each game ends.
               </p>
@@ -1096,7 +1096,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
             <div>
               <label className={lbl}>Points Required to Win</label>
               <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800">
-                This reward pays the top players of each week — it has no points target to edit.
+                This prize pays the top players of each week — it has no points target to edit.
                 Each week is settled automatically after that week&apos;s last Live Trivia game.
               </p>
             </div>
@@ -1262,7 +1262,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Rewards</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Prizes</h2>
             <p className="text-xs text-slate-500">
               {selectedVenueId === "all" ? `${total} total campaigns` : `${total} campaigns for selected venue`}
             </p>

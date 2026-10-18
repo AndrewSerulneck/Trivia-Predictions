@@ -58,7 +58,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "ads-create",            label: "Create Ad",             slug: "ads-create",            status: { label: "Ready", tone: "live" } },
   { id: "ad-placement",          label: "Placement Builder",     slug: "ad-placement" },
   { id: "ad-debug",              label: "Ad Analytics",          slug: "ad-debug" },
-  { id: "challenge-campaigns",   label: "Rewards Manager",       slug: "challenge-campaigns" },
+  { id: "challenge-campaigns",   label: "Prizes Manager",       slug: "challenge-campaigns" },
   { id: "live-trivia",           label: "Live Trivia Schedules", slug: "live-trivia" },
   { id: "live-trivia-inventory", label: "Question Inventory",    slug: "live-trivia-inventory", status: { label: "Ready", tone: "live" } },
   { id: "game-settings",         label: "Game Settings",         slug: "game-settings",         status: { label: "Ready", tone: "live" } },
@@ -81,7 +81,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: ADMIN_SECTION_OPTIONS.filter((opt) => ["ads-list", "ads-create", "ad-placement", "ad-debug"].includes(opt.id)),
   },
   {
-    label: "Rewards & Events",
+    label: "Prizes & Events",
     items: ADMIN_SECTION_OPTIONS.filter((opt) => ["challenge-campaigns", "live-trivia", "live-trivia-inventory", "category-blitz"].includes(opt.id)),
   },
   {

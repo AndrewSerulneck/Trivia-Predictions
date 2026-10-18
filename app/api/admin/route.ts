@@ -401,7 +401,7 @@ export async function GET(request: Request) {
         ]);
         return NextResponse.json({ ok: true, context: { ...resolved, posConnected } });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to resolve reward context.";
+        const message = error instanceof Error ? error.message : "Failed to resolve prize context.";
         const status = message === REWARD_UNKNOWN_DEFINITION_MESSAGE ? 400 : 500;
         return NextResponse.json({ ok: false, error: message }, { status });
       }
@@ -1059,7 +1059,7 @@ export async function POST(request: Request) {
         });
         return NextResponse.json({ ok: true, item });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to create reward.";
+        const message = error instanceof Error ? error.message : "Failed to create prize.";
         // A terms violation is always bad input, never a server fault.
         if (error instanceof RewardTermsError) {
           return NextResponse.json({ ok: false, error: message }, { status: 400 });

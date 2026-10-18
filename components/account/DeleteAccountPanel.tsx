@@ -20,7 +20,7 @@ const WHAT_IS_DELETED: readonly string[] = [
   "Your username, PIN and any passkeys (Face ID / Touch ID).",
   "Your account at every venue: points, scores, picks, bingo cards, answers and lineups.",
   "Your place on every leaderboard. Rankings shift as if you had not played.",
-  "Your notifications, rewards progress and usage history.",
+  "Your notifications, prize progress and usage history.",
 ];
 
 type Phase = "idle" | "deleting" | "done";
@@ -116,7 +116,7 @@ export function DeleteAccountPanel() {
       </section>
 
       <p className="text-sm leading-6 text-ht-fg-muted">
-        If you won a reward, the venue keeps a record that a prize was given out, without your name. You can create a
+        If you won a prize, the venue keeps a record that it was given out, without your name. You can create a
         new account later, but your history won&apos;t come back. Questions? Email{" "}
         <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">
           {SUPPORT_EMAIL}

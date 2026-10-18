@@ -28,7 +28,7 @@ export default function PrivacyPage() {
             </>,
             <>
               <strong>Venue membership and game activity.</strong> Which venues you have joined, your points,
-              leaderboard standing, answers, picks, bingo cards, fantasy lineups, rewards progress and prizes. Your
+              leaderboard standing, answers, picks, bingo cards, fantasy lineups, prize progress and prizes won. Your
               username and points are visible to other players at the same venue on leaderboards.
             </>,
             <>
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
           the menu in the game (&quot;Delete my account&quot;); it takes effect immediately and removes your account,
           your profile at every venue and the data tied to them, including your scores, which leave every
           leaderboard, and any prizes you have not used. We keep only records a venue needs that no longer identify
-          you: that a reward&apos;s prize was given out, and a venue&apos;s gift-card ledger entry. If you can&apos;t
+          you: that a prize was given out, and a venue&apos;s gift-card ledger entry. If you can&apos;t
           sign in, email {SUPPORT_EMAIL} with your username and we will delete it for you. Details are on the{" "}
           <a href="/delete-account" className="underline">
             Delete Your Account
