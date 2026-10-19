@@ -372,3 +372,8 @@ export const squaresCreditKey = (boardId: string, moment: SquaresMoment, gradeNo
   `${boardId}:${moment}:${gradeNo}`;
 
 export const squaresMomentPoints = (moment: SquaresMoment): number => SQUARES_MOMENT_POINTS[moment];
+
+/** "1 result needs a look" — results whose points can never be paid are counted apart from unpaid
+ * ones in the admin panel and the archive message (plan 6.3, §13 F8). */
+export const squaresBlockedLabel = (count: number): string =>
+  `${count} result${count === 1 ? "" : "s"} need${count === 1 ? "s" : ""} a look`;

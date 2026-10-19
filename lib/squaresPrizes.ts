@@ -70,7 +70,8 @@ export const isSquaresPrizeOffered = (now: Date): boolean =>
  * (1–4) in SECONDS, plus the grade number in MILLISECONDS. So:
  *   - every moment is its own cycle (quota 1 each; one player may win several moments);
  *   - a re-grade after an admin void (grade_no + 1) is a new cycle, so the corrected winner is paid
- *     too — a coupon already given is never taken back automatically;
+ *     too; the voided winner's coupon is taken back only if it is still unused
+ *     (withdrawVoidedSquaresPrizes in lib/squaresPrizeAwards.ts — a redeemed coupon is kept);
  *   - the moment can be read back from the key alone (squaresPrizeMomentOf) for the coupon's wording;
  *   - the key's date is the game's date, so Results files it with the game.
  * kickoff_at never changes after the draw (lib/squaresSettlement.ts refreshes it only before), and

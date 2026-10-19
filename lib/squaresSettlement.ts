@@ -1,7 +1,8 @@
 import "server-only";
 
 import { randomInt } from "node:crypto";
-import { creditSeasonalPoints } from "@/lib/seasonalPointsCredit";
+import { chunkIds } from "@/lib/postgrestIds";
+import { creditSeasonalPoints, type SeasonalCreditResult } from "@/lib/seasonalPointsCredit";
 import { SEASONAL_GAME_WINDOWS, isSquaresEnabled, isSquaresRehearsalEnabled, seasonalWindowState } from "@/lib/seasonalGames";
 import {
   SQUARES_DISCOVERY_EVERY_MINUTES,
@@ -49,8 +50,10 @@ import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 //   • after an admin void past the 12-hour no-final deadline: the same pace for
 //     SQUARES_POST_FINAL_WATCH_MS from the void (squares_events.reopened_at, plan 6.2).
 // Grading is one set-based RPC per moment for every board; paying is one batched credit call, then
-// each venue's Prizes for that moment (lib/squaresPrizeAwards.ts: one indexed read per run, normally
-// empty).
+// each venue's Prizes for that moment (lib/squaresPrizeAwards.ts: indexed reads, normally empty).
+// Those settlement reads (three) run only while the event is watched: once the post-final watch is
+// over, or the no-final deadline has passed with no late-void watch, a run is the one event read
+// and nothing else (plan 6.3, §13 F7).
 
 /**
  * Why the settlement runs now (plan 6.2), or null = it does nothing. A pure check: no I/O.
@@ -141,21 +144,20 @@ async function tick(options: { now?: Date; force?: boolean }): Promise<SquaresTi
       if (!drew) return report;
     }
 
+    // Once nothing is watched any more, the run ends here, before the settlement reads (plan 6.3,
+    // §13 F7): no idle reads for the rest of the window. An admin action (void, enter scores, Run
+    // now) still calls settleSquaresWinners directly, so a fix-up still pays.
+    const idle = idleReason(event, nowMs, force);
+    if (idle === "no_final_deadline" && now.getUTCMinutes() === 0) console.warn("[Squares] no-final-deadline", { eventId: event.id });
+    if (idle) return { ...report, skipped: idle };
+
     await settleSquaresWinners(event, report, now);
 
-    if (event.completedAt) {
-      const completedMs = Date.parse(event.completedAt);
-      if (!force && nowMs - completedMs > SQUARES_POST_FINAL_WATCH_MS) return { ...report, skipped: "watch_over" };
+    if (!force && (event.completedAt || nowMs - kickoffMs > SQUARES_NO_FINAL_DEADLINE_MS)) {
+      // The post-final watch, or a late admin void (§13 F3) past the deadline: the game is over, so
+      // read at the post-final pace.
       const lastMs = event.feedCheckedAt ? Date.parse(event.feedCheckedAt) : 0;
-      if (!force && nowMs - lastMs < SQUARES_POST_FINAL_POLL_MS) return report;
-    } else if (!force && nowMs - kickoffMs > SQUARES_NO_FINAL_DEADLINE_MS) {
-      if (!isSquaresReopenWatchOn(event.reopenedAt, nowMs)) {
-        if (now.getUTCMinutes() === 0) console.warn("[Squares] no-final-deadline", { eventId: event.id });
-        return { ...report, skipped: "no_final_deadline" };
-      }
-      // A late admin void (§13 F3): the game is long over, so read at the post-final pace.
-      const lastMs = event.feedCheckedAt ? Date.parse(event.feedCheckedAt) : 0;
-      if (nowMs - lastMs < SQUARES_POST_FINAL_POLL_MS) return { ...report, skipped: "reopened_wait" };
+      if (nowMs - lastMs < SQUARES_POST_FINAL_POLL_MS) return event.completedAt ? report : { ...report, skipped: "reopened_wait" };
     }
 
     report.feedRequests += 1;
@@ -181,6 +183,22 @@ async function tick(options: { now?: Date; force?: boolean }): Promise<SquaresTi
   }
   return report;
 }
+
+/**
+ * Why a drawn event needs nothing this run, or null while it is watched: `watch_over` once
+ * SQUARES_POST_FINAL_WATCH_MS has passed since completion; `no_final_deadline` once the 12-hour
+ * no-final deadline has passed with no late-void watch (isSquaresReopenWatchOn). `force` never idles.
+ */
+const idleReason = (
+  event: Pick<SquaresEventRecord, "completedAt" | "kickoffAt" | "reopenedAt">,
+  nowMs: number,
+  force: boolean,
+): "watch_over" | "no_final_deadline" | null => {
+  if (force) return null;
+  if (event.completedAt) return nowMs - Date.parse(event.completedAt) > SQUARES_POST_FINAL_WATCH_MS ? "watch_over" : null;
+  if (!(nowMs - Date.parse(event.kickoffAt) > SQUARES_NO_FINAL_DEADLINE_MS)) return null;
+  return isSquaresReopenWatchOn(event.reopenedAt, nowMs) ? null : "no_final_deadline";
+};
 
 async function discoverEvent(report: SquaresTickReport, now: Date, force: boolean): Promise<void> {
   if (!force && now.getUTCMinutes() % SQUARES_DISCOVERY_EVERY_MINUTES !== 0) {
@@ -390,9 +408,21 @@ type UnpaidRow = { id: string; user_id: string; credit_key: string; points: numb
 /** Most unpaid results paid per run (two credit batches); the rest wait for the next run. */
 const PAY_PER_RUN = 1000;
 
+/** Why a result's credit can never land, or null when it was paid (or should simply be retried). */
+export const squaresCreditBlockNote = (result: Pick<SeasonalCreditResult, "outcome" | "userId" | "existingUserId">): string | null => {
+  if (result.outcome === "user_not_found") return "The player's account no longer exists.";
+  if (result.outcome === "already_credited" && result.existingUserId && result.existingUserId !== result.userId) {
+    return "This win's points were already paid to a different player.";
+  }
+  return null;
+};
+
 /**
- * Pay every graded, unvoided, unpaid winning result through creditSeasonalPoints (once-only by
- * key), then mark it paid. Safe to repeat: a key already paid to the same player is just marked.
+ * Pay every graded, unvoided, unpaid, unblocked winning result through creditSeasonalPoints
+ * (once-only by key), then mark it paid. Safe to repeat: a key already paid to the same player is
+ * just marked. A result that can never be paid (squaresCreditBlockNote — only reachable through
+ * another bug, plan §13 F8) is stamped credit_blocked_at + a note and logged once, so it is not
+ * re-sent every run; the admin panel lists it. Every id-list write is chunked (§13 F2).
  */
 export async function payUnpaidSquaresResults(eventId: string, report: { actions: string[]; errors: string[] }): Promise<void> {
   const { data, error } = await supabaseAdmin!
@@ -402,6 +432,7 @@ export async function payUnpaidSquaresResults(eventId: string, report: { actions
     .not("user_id", "is", null)
     .is("credited_at", null)
     .is("voided_at", null)
+    .is("credit_blocked_at", null)
     .limit(PAY_PER_RUN);
   if (error) {
     report.errors.push(`unpaid read: ${error.message}`);
@@ -414,22 +445,48 @@ export async function payUnpaidSquaresResults(eventId: string, report: { actions
     "squares",
     unpaid.map((row) => ({ userId: row.user_id, sourceKey: row.credit_key, points: Number(row.points) })),
   );
-  const byKey = new Map(unpaid.map((row) => [row.credit_key, row]));
-  const paidIds = response.results
-    .filter((result) => result.outcome === "credited" || (result.outcome === "already_credited" && result.existingUserId === result.userId))
-    .flatMap((result) => {
-      const row = byKey.get(result.sourceKey);
-      return row ? [row.id] : [];
-    });
   if (!response.ok) report.errors.push(`credit: ${response.code} ${response.error}`);
-  if (paidIds.length === 0) return;
-  const { error: markError } = await supabaseAdmin!
-    .from("squares_results")
-    .update({ credited_at: new Date().toISOString() })
-    .in("id", paidIds)
-    .is("voided_at", null);
-  if (markError) report.errors.push(`mark paid: ${markError.message}`);
-  else report.actions.push(`paid_${paidIds.length}`);
+  const byKey = new Map(unpaid.map((row) => [row.credit_key, row]));
+  const paidIds: string[] = [];
+  const blocked = new Map<string, string[]>();
+  for (const result of response.results) {
+    const row = byKey.get(result.sourceKey);
+    if (!row) continue;
+    const note = squaresCreditBlockNote(result);
+    if (note) blocked.set(note, [...(blocked.get(note) ?? []), row.id]);
+    // already_credited with no visible owner (a concurrent run's insert) is retried, not marked.
+    else if (result.outcome === "credited" || result.existingUserId === result.userId) paidIds.push(row.id);
+  }
+
+  const stampedAt = new Date().toISOString();
+  let marked = 0;
+  for (const chunk of chunkIds(paidIds)) {
+    const { error: markError } = await supabaseAdmin!
+      .from("squares_results")
+      .update({ credited_at: stampedAt })
+      .in("id", chunk)
+      .is("voided_at", null);
+    if (markError) report.errors.push(`mark paid: ${markError.message}`);
+    else marked += chunk.length;
+  }
+  if (marked > 0) report.actions.push(`paid_${marked}`);
+
+  for (const [note, ids] of blocked) {
+    for (const chunk of chunkIds(ids)) {
+      const { error: blockError } = await supabaseAdmin!
+        .from("squares_results")
+        .update({ credit_blocked_at: stampedAt, credit_blocked_note: note })
+        .in("id", chunk)
+        .is("credited_at", null)
+        .is("credit_blocked_at", null);
+      if (blockError) {
+        report.errors.push(`credit block: ${blockError.message}`);
+        continue;
+      }
+      console.error("[Squares] credit-blocked", { eventId, resultIds: chunk, note });
+      report.actions.push(`credit_blocked_${chunk.length}`);
+    }
+  }
 }
 
 /** All four graded + final → completed; report any quarter the final record disagrees with. */

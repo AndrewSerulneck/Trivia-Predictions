@@ -10,6 +10,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 type Row = Record<string, unknown>;
 const tables: Record<string, Row[]> = {};
 let clockMs = 0;
+/** Every select by table, and the size of every `.in()` list (plan 6.3: idle runs read nothing; ≤ 150 ids per `.in()`). */
+const io = { selects: [] as string[], inSizes: [] as number[] };
 let uuid = 0;
 const nextId = () => `00000000-0000-0000-0000-${String(++uuid).padStart(12, "0")}`;
 
@@ -26,7 +28,7 @@ class FakeQuery {
   eq(col: string, value: unknown) { this.filters.push((row) => row[col] === value); return this; }
   is(col: string, value: null) { this.filters.push((row) => (row[col] ?? null) === value); return this; }
   not(col: string, _op: "is", value: null) { this.filters.push((row) => (row[col] ?? null) !== value); return this; }
-  in(col: string, values: unknown[]) { this.filters.push((row) => values.includes(row[col])); return this; }
+  in(col: string, values: unknown[]) { io.inSizes.push(values.length); this.filters.push((row) => values.includes(row[col])); return this; }
   limit(n: number) { this.max = n; return this; }
   returns() { return this; }
   maybeSingle() { this.mode = "maybe"; return this; }
@@ -45,6 +47,7 @@ class FakeQuery {
       rows.push(...inserted);
       data = this.mode === "many" ? inserted : inserted[0];
     } else {
+      if (this.op === "select") io.selects.push(this.table);
       const matched = rows.filter((row) => this.filters.every((filter) => filter(row))).slice(0, this.max);
       if (this.op === "update") matched.forEach((row) => Object.assign(row, this.payload));
       data = this.mode === "many" ? matched : matched[0] ?? null;
@@ -84,8 +87,9 @@ const rpc = async (name: string, args: Row) => {
     const out = (args.p_credits as Array<{ user_id: string; source_key: string; points: number }>).map((c) => {
       const existing = ledger.find((l) => l.source_key === c.source_key);
       if (existing) return { credit_user_id: c.user_id, credit_source_key: c.source_key, credit_points: c.points, outcome: "already_credited", existing_user_id: existing.user_id, existing_points: existing.points };
+      const user = tables.users.find((u) => u.id === c.user_id);
+      if (!user) return { credit_user_id: c.user_id, credit_source_key: c.source_key, credit_points: c.points, outcome: "user_not_found", existing_user_id: null, existing_points: null };
       ledger.push({ source_key: c.source_key, user_id: c.user_id, points: c.points });
-      const user = tables.users.find((u) => u.id === c.user_id) as Row;
       user.points = Number(user.points) + c.points;
       return { credit_user_id: c.user_id, credit_source_key: c.source_key, credit_points: c.points, outcome: "credited", existing_user_id: null, existing_points: null };
     });
@@ -107,7 +111,7 @@ vi.mock("@/lib/squaresFeed", () => ({
 
 import type { NflFeedGame } from "@/lib/squares";
 import { winningCell } from "@/lib/squares";
-import { runSquaresTick } from "@/lib/squaresSettlement";
+import { payUnpaidSquaresResults, runSquaresTick, squaresCreditBlockNote } from "@/lib/squaresSettlement";
 
 const postseason = JSON.parse(
   readFileSync(path.join(__dirname, "fixtures/squares/nfl-postseason-2025.json"), "utf8"),
@@ -142,6 +146,8 @@ beforeEach(() => {
     { id: BOB, venue_id: "v2", points: 0 },
   ];
   feed.requests = 0;
+  io.selects = [];
+  io.inSizes = [];
   feed.superBowl = finalRecord;
   feed.game = { ...finalRecord, status: "2/14 - 6:30 PM EST", status_state: "scheduled", home_team_score: null, visitor_team_score: null };
   vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "true");
@@ -360,5 +366,104 @@ describe("runSquaresTick — event lifecycle (plan 6.2)", () => {
     vi.stubEnv("SQUARES_REHEARSAL_ENABLED", "");
     const report = await tick(Date.parse("2026-12-06T18:00:00Z"));
     expect(report).toMatchObject({ ran: false, skipped: "inactive" });
+  });
+});
+
+// Plan 6.3: paying winners — chunked writes, results that can never be paid, no idle reads.
+describe("paying Squares winners (plan 6.3)", () => {
+  const unpaidResult = (n: number, userId: string, creditKey = `board-${n}:q1:1`): Row => ({
+    id: `result-${n}`, event_id: "event-1", board_id: `board-${n}`, moment: "q1", grade_no: 1, winning_cell: 0,
+    user_id: userId, points: 25, credit_key: creditKey, credited_at: null, voided_at: null, credit_blocked_at: null,
+  });
+
+  it("marks a big moment paid in chunks of at most 150 ids (§13 F2)", async () => {
+    const userId = (i: number) => `44444444-4444-4444-4444-${String(i).padStart(12, "0")}`;
+    tables.users = Array.from({ length: 400 }, (_, i) => ({ id: userId(i), points: 0 }));
+    tables.squares_results = Array.from({ length: 400 }, (_, i) => unpaidResult(i, userId(i)));
+    const report = { actions: [] as string[], errors: [] as string[] };
+    await payUnpaidSquaresResults("event-1", report);
+    expect(report.errors).toEqual([]);
+    expect(report.actions).toEqual(["paid_400"]);
+    expect(tables.squares_results.every((r) => r.credited_at)).toBe(true);
+    expect(io.inSizes.length).toBe(3);
+    expect(Math.max(...io.inSizes)).toBeLessThanOrEqual(150);
+  });
+
+  it("stamps a result that can never be paid once, and never re-sends it (§13 F8)", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    tables.seasonal_points_credits = [{ source_key: "board-2:q1:1", user_id: BOB, points: 25 }];
+    tables.squares_results = [
+      unpaidResult(1, ANN),
+      unpaidResult(2, ANN), // its key was paid to BOB: only another bug gets here
+      unpaidResult(3, "33333333-3333-3333-3333-333333333333"), // account gone
+    ];
+    const report = { actions: [] as string[], errors: [] as string[] };
+    await payUnpaidSquaresResults("event-1", report);
+    expect(report.errors).toEqual([]);
+    expect(report.actions).toEqual(["paid_1", "credit_blocked_1", "credit_blocked_1"]);
+    const [paid, otherUser, gone] = tables.squares_results;
+    expect(paid).toMatchObject({ credit_blocked_at: null });
+    expect(paid.credited_at).toBeTruthy();
+    expect(otherUser).toMatchObject({ credited_at: null, credit_blocked_note: "This win's points were already paid to a different player." });
+    expect(gone).toMatchObject({ credited_at: null, credit_blocked_note: "The player's account no longer exists." });
+    expect(error.mock.calls.filter(([tag]) => tag === "[Squares] credit-blocked")).toHaveLength(2);
+    expect(points(ANN)).toBe(25);
+
+    // The next run reads nothing left to pay and sends no credit.
+    const ledgerBefore = tables.seasonal_points_credits.length;
+    const again = { actions: [] as string[], errors: [] as string[] };
+    await payUnpaidSquaresResults("event-1", again);
+    expect(again.actions).toEqual([]);
+    expect(tables.seasonal_points_credits).toHaveLength(ledgerBefore);
+    expect(error.mock.calls.filter(([tag]) => tag === "[Squares] credit-blocked")).toHaveLength(2);
+    error.mockRestore();
+    warn.mockRestore();
+  });
+
+  it("squaresCreditBlockNote: only a gone player or a key paid to someone else blocks", () => {
+    expect(squaresCreditBlockNote({ outcome: "credited", userId: ANN, existingUserId: null })).toBeNull();
+    expect(squaresCreditBlockNote({ outcome: "already_credited", userId: ANN, existingUserId: ANN })).toBeNull();
+    expect(squaresCreditBlockNote({ outcome: "already_credited", userId: ANN, existingUserId: null })).toBeNull(); // retried
+    expect(squaresCreditBlockNote({ outcome: "already_credited", userId: ANN, existingUserId: BOB })).toMatch(/different player/);
+    expect(squaresCreditBlockNote({ outcome: "user_not_found", userId: ANN, existingUserId: null })).toMatch(/no longer exists/);
+  });
+
+  /** Discover, draw, then the final record grades all four moments and completes the event. */
+  const playToFinal = async () => {
+    await tick(Date.parse("2027-02-01T05:15:00Z"));
+    await tick(Date.parse("2027-02-14T23:00:00Z"));
+    feed.game = finalRecord;
+    await tick(Date.parse("2027-02-15T02:30:00Z"));
+    await tick(Date.parse("2027-02-15T02:31:00Z"));
+    expect(tables.squares_events[0].completed_at).toBe("2027-02-15T02:31:00.000Z");
+  };
+
+  it("reads only the event once the post-final watch is over (§13 F7)", async () => {
+    await playToFinal();
+    io.selects = [];
+    const report = await tick(Date.parse("2027-02-15T06:00:00Z"));
+    expect(report.skipped).toBe("watch_over");
+    expect(io.selects).toEqual(["squares_events"]);
+  });
+
+  it("reads only the event past the no-final deadline with no late-void watch", async () => {
+    await tick(Date.parse("2027-02-01T05:15:00Z"));
+    await tick(Date.parse("2027-02-14T23:00:00Z")); // drawn, never completed
+    io.selects = [];
+    const report = await tick(Date.parse("2027-02-15T12:00:00Z"));
+    expect(report.skipped).toBe("no_final_deadline");
+    expect(io.selects).toEqual(["squares_events"]);
+  });
+
+  it("still settles during the watch, and a forced admin run settles after it", async () => {
+    await playToFinal();
+    io.selects = [];
+    await tick(Date.parse("2027-02-15T02:33:00Z")); // inside the watch, between feed reads
+    expect(io.selects).toContain("squares_results");
+    io.selects = [];
+    clockMs = Date.parse("2027-02-15T06:00:00Z");
+    await runSquaresTick({ now: new Date(clockMs), force: true });
+    expect(io.selects).toContain("squares_results");
   });
 });

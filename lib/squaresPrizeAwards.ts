@@ -4,6 +4,7 @@ import { awardCycleWinner, getCampaignCloseTimestampMs, listActiveSquaresPrizeCa
 import { createNotification } from "@/lib/notifications";
 import { isSquaresMoment } from "@/lib/squares";
 import { SQUARES_PRIZE_DEFINITION_ID, SQUARES_PRIZE_MOMENT_PHRASES, squaresPrizeCycleStart } from "@/lib/squaresPrizes";
+import { chunkIds } from "@/lib/postgrestIds";
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 import type { SquaresEventRecord } from "@/lib/squaresStore";
@@ -34,15 +35,15 @@ import type { ChallengeCampaign } from "@/types";
 // it was already redeemed (squares_withdraw_prize_coupons, all-or-nothing per coupon; a redeemed
 // coupon is spent and kept), tells that guest, and stamps prize_withdrawn_at.
 //
-// COST: two indexed reads per settlement run (squares_results_prize_unchecked_idx and
-// squares_results_prize_withdraw_idx; normally both empty). When a moment is graded: + one prizes
-// read + one RPC per (venue with a prize for that moment and a winner) + one stamp write per
-// PRIZE_STAMP_CHUNK rows. A void: + one RPC per voided winning result that was checked for prizes.
+// COST: two indexed reads per settlement run while the event is watched (squares_results_prize_
+// unchecked_idx and squares_results_prize_withdraw_idx; normally both empty; none once the watch is
+// over, plan 6.3). When a moment is graded: + one prizes read per POSTGREST_ID_CHUNK winning venues
+// + one RPC per (venue with a prize for that moment and a winner) + one stamp write per
+// POSTGREST_ID_CHUNK rows (lib/postgrestIds.ts). A void: + one RPC per voided winning result that
+// was checked for prizes.
 
 /** Most winning results checked in one run; the rest wait for the next. */
 const PRIZE_RESULTS_PER_RUN = 500;
-/** Ids per stamp update: an `in()` over 500 UUIDs would pass PostgREST's URL limit. */
-const PRIZE_STAMP_CHUNK = 150;
 
 type UncheckedResultRow = {
   id: string;
@@ -111,13 +112,15 @@ export async function awardSquaresPrizes(
   // an unchecked winner. A failed read stops the run (retried next run), never pays.
   const hiddenVenues = new Set<string>();
   if (event.purpose === "rehearsal" && venueIds.length > 0) {
-    const { data: venueRows, error: venueError } = await supabaseAdmin.from("venues").select("id, hidden").in("id", venueIds);
-    if (venueError) {
-      report.errors.push(`prize venues read: ${venueError.message}`);
-      return;
-    }
-    for (const venue of (venueRows ?? []) as Array<{ id: string; hidden: boolean | null }>) {
-      if (venue.hidden === true) hiddenVenues.add(venue.id);
+    for (const chunk of chunkIds(venueIds)) {
+      const { data: venueRows, error: venueError } = await supabaseAdmin.from("venues").select("id, hidden").in("id", chunk);
+      if (venueError) {
+        report.errors.push(`prize venues read: ${venueError.message}`);
+        return;
+      }
+      for (const venue of (venueRows ?? []) as Array<{ id: string; hidden: boolean | null }>) {
+        if (venue.hidden === true) hiddenVenues.add(venue.id);
+      }
     }
   }
   let prizes: ChallengeCampaign[];
@@ -181,11 +184,11 @@ export async function awardSquaresPrizes(
   }
 
   if (awarded > 0) report.actions.push(`prizes_awarded_${awarded}`);
-  for (let i = 0; i < checked.length; i += PRIZE_STAMP_CHUNK) {
+  for (const chunk of chunkIds(checked)) {
     const { error: stampError } = await supabaseAdmin
       .from("squares_results")
       .update({ prize_checked_at: now.toISOString() })
-      .in("id", checked.slice(i, i + PRIZE_STAMP_CHUNK))
+      .in("id", chunk)
       .is("prize_checked_at", null);
     if (stampError) report.errors.push(`prize stamp: ${stampError.message}`);
   }
@@ -258,11 +261,11 @@ export async function withdrawVoidedSquaresPrizes(
   }
 
   if (withdrawn > 0) report.actions.push(`prizes_withdrawn_${withdrawn}`);
-  for (let i = 0; i < done.length; i += PRIZE_STAMP_CHUNK) {
+  for (const chunk of chunkIds(done)) {
     const { error: stampError } = await supabaseAdmin
       .from("squares_results")
       .update({ prize_withdrawn_at: now.toISOString() })
-      .in("id", done.slice(i, i + PRIZE_STAMP_CHUNK))
+      .in("id", chunk)
       .is("prize_withdrawn_at", null);
     if (stampError) report.errors.push(`prize withdraw stamp: ${stampError.message}`);
   }

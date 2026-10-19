@@ -9,6 +9,7 @@ import {
 } from "@/lib/seasonalGames";
 import {
   isSquaresMoment,
+  squaresBlockedLabel,
   squaresEventPurposeFor,
   squaresMomentPoints,
   type SquaresEventPurpose,
@@ -52,10 +53,17 @@ export type SquaresAdminOverview = {
   };
   event: SquaresEventRecord | null;
   moments: SquaresMomentRecord[];
-  counts: { boards: number; claims: number; unpaid: number };
+  /** `unpaid` excludes `blocked`: a result whose points can never be paid (plan 6.3, §13 F8). */
+  counts: { boards: number; claims: number; unpaid: number; blocked: number };
+  /** The first SQUARES_BLOCKED_SHOWN blocked results, oldest first, for an admin to look into. */
+  blocked: SquaresBlockedResult[];
   log: Array<{ id: string; action: string; actor: string; detail: Record<string, unknown>; createdAt: string }>;
   archived: Array<{ id: string; season: number; bdlGameId: number; kickoffAt: string; archivedAt: string }>;
 };
+
+export type SquaresBlockedResult = { id: string; moment: string; gradeNo: number; userId: string | null; note: string | null; blockedAt: string };
+
+const SQUARES_BLOCKED_SHOWN = 10;
 
 export type SquaresAdminAction =
   | { action: "discover" }
@@ -156,8 +164,19 @@ const purposeLabel = (purpose: SquaresEventPurpose): string =>
 
 async function countRows(table: "squares_boards" | "squares_results", eventId: string, unpaidOnly = false): Promise<number> {
   let query = supabaseAdmin!.from(table).select("id", { count: "exact", head: true }).eq("event_id", eventId);
-  if (unpaidOnly) query = query.not("user_id", "is", null).is("credited_at", null).is("voided_at", null);
+  if (unpaidOnly) query = query.not("user_id", "is", null).is("credited_at", null).is("voided_at", null).is("credit_blocked_at", null);
   const { count } = await query;
+  return count ?? 0;
+}
+
+async function countBlockedResults(eventId: string): Promise<number> {
+  const { count } = await supabaseAdmin!
+    .from("squares_results")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", eventId)
+    .not("credit_blocked_at", "is", null)
+    .is("credited_at", null)
+    .is("voided_at", null);
   return count ?? 0;
 }
 
@@ -168,9 +187,10 @@ export async function getSquaresAdminOverview(): Promise<{ ok: true; overview: S
   const event = current.value;
 
   let moments: SquaresMomentRecord[] = [];
-  let counts = { boards: 0, claims: 0, unpaid: 0 };
+  let counts = { boards: 0, claims: 0, unpaid: 0, blocked: 0 };
+  let blocked: SquaresBlockedResult[] = [];
   if (event) {
-    const [momentsRead, boards, unpaid, claimsRead] = await Promise.all([
+    const [momentsRead, boards, unpaid, claimsRead, blockedRead] = await Promise.all([
       getSquaresMoments(event.id),
       countRows("squares_boards", event.id),
       countRows("squares_results", event.id, true),
@@ -178,10 +198,23 @@ export async function getSquaresAdminOverview(): Promise<{ ok: true; overview: S
         .from("squares_claims")
         .select("cell, squares_boards!inner(event_id)", { count: "exact", head: true })
         .eq("squares_boards.event_id", event.id),
+      supabaseAdmin
+        .from("squares_results")
+        .select("id, moment, grade_no, user_id, credit_blocked_note, credit_blocked_at", { count: "exact" })
+        .eq("event_id", event.id)
+        .not("credit_blocked_at", "is", null)
+        .is("credited_at", null)
+        .is("voided_at", null)
+        .order("credit_blocked_at", { ascending: true })
+        .limit(SQUARES_BLOCKED_SHOWN),
     ]);
     if (!momentsRead.ok) return { ok: false, error: momentsRead.error };
+    if (blockedRead.error) return { ok: false, error: blockedRead.error.message };
     moments = momentsRead.value;
-    counts = { boards, claims: claimsRead.count ?? 0, unpaid };
+    blocked = (
+      (blockedRead.data ?? []) as Array<{ id: string; moment: string; grade_no: number; user_id: string | null; credit_blocked_note: string | null; credit_blocked_at: string }>
+    ).map((row) => ({ id: row.id, moment: row.moment, gradeNo: Number(row.grade_no), userId: row.user_id, note: row.credit_blocked_note, blockedAt: row.credit_blocked_at }));
+    counts = { boards, claims: claimsRead.count ?? 0, unpaid, blocked: blockedRead.count ?? blocked.length };
   }
 
   const [logRead, archivedRead] = await Promise.all([
@@ -210,6 +243,7 @@ export async function getSquaresAdminOverview(): Promise<{ ok: true; overview: S
       event,
       moments,
       counts,
+      blocked,
       log: ((logRead.data ?? []) as Array<{ id: string; action: string; actor: string; detail: Record<string, unknown>; created_at: string }>).map(
         (row) => ({ id: row.id, action: row.action, actor: row.actor, detail: row.detail, createdAt: row.created_at }),
       ),
@@ -338,10 +372,15 @@ export async function runSquaresAdminAction(action: SquaresAdminAction, actor: s
       if (archiveRefusal) return refuse(409, archiveRefusal);
       const unpaid = await countRows("squares_results", event.id, true);
       if (unpaid > 0) return refuse(409, `${unpaid} winning result(s) are still unpaid. Run settlement first.`);
+      // Blocked results never pay, so they don't hold up an archive (§13 F8); the message names them.
+      const blockedCount = await countBlockedResults(event.id);
       const { error } = await supabaseAdmin.from("squares_events").update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", event.id);
       if (error) return refuse(500, error.message);
       await logSquaresAdmin(event.id, "archive", actor, { reason: action.reason });
-      return { ok: true, message: "Event archived." };
+      return {
+        ok: true,
+        message: blockedCount > 0 ? `Event archived. ${squaresBlockedLabel(blockedCount)}: its points could not be paid (see the [Squares] credit-blocked log).` : "Event archived.",
+      };
     }
   }
 }

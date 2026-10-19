@@ -5,9 +5,10 @@ checklist written); the fixes, rehearsal and launch are sub-phases **6.1–6.9**
 committed locally** (each prize sweep pays only its own kind of prize); it fixes a live problem with the NFL Pick 'Em
 prize at Pacific Street (§13 F1) **once Andrew pushes and deploys**. Phases 1–5 + the Phase 6 docs (`0af6f13`) are
 committed locally; their migrations are APPLIED to production; flags off; nothing pushed or deployed.
-**6.2 is built and committed locally** (Squares event lifecycle); its migration `20261019142642` is NOT applied yet
-(Andrew: `supabase db push`, then push + deploy).
-Latest handoff: `docs/squares-and-brackets-plan_PHASE_6.2_HANDOFF.md`. **Next: 6.3.**
+**6.2 is built and committed locally** (Squares event lifecycle); its migration `20261019142642` is APPLIED (seen in
+`supabase migration list` on 2026-10-19). **6.3 is built and committed locally** (paying winners; no migration).
+Andrew: push + deploy (6.1–6.3 ride together).
+Latest handoff: `docs/squares-and-brackets-plan_PHASE_6.3_HANDOFF.md`. **Next: 6.4.**
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -347,6 +348,16 @@ migration); then 6.5–6.9.
   - Fix the `squaresPrizeCycleStart` comment in `lib/squaresPrizes.ts` (a void now takes back an unused coupon).
 - **Cost after:** zero Squares reads per cron minute once the event's watch has ended (today ≈ 3 × 1,440 per day
   until Feb 15).
+- **Built 2026-10-19 (committed locally, not deployed; no migration).** `lib/postgrestIds.ts` (`POSTGREST_ID_CHUNK`,
+  `chunkIds`) is used by the mark-paid and block writes, both prize stamps, the rehearsal venues read — and
+  `listActiveSquaresPrizeCampaigns`, whose `.overlaps("venue_ids", …)` sent every winning venue (up to 500) in one URL
+  (same bug class as F2, found here; now one read per 150 venues, deduped, oldest first). Blocked results:
+  `squaresCreditBlockNote` (already paid to a different player, or `user_not_found`; an `already_credited` with no
+  visible owner is retried, not blocked); the admin panel shows "N result(s) need a look" with the first 10 rows;
+  Archive refuses only on unpaid (blocked excluded) and names the blocked count. Idle: `idleReason` in the tick
+  (`watch_over` / `no_final_deadline`, not during a late-void watch, never with `force`). Honest cost note: the one
+  event read per cron minute remains (≈ 1,440/day until Feb 15); the three settlement reads are gone. Detail:
+  `docs/squares-and-brackets-plan_PHASE_6.3_HANDOFF.md`.
 
 #### 6.4 — Player screen after the final keeps up with a void (Sonnet 5.5 · medium)
 - **Problem (§13 F6):** at phase `complete`, `useSquaresData` stops reading; an admin void later changes the winners

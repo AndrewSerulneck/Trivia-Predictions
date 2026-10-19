@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import { SQUARES_MOMENT_POINTS, type SquaresMoment } from "@/lib/seasonalPoints";
 import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
+import { squaresBlockedLabel } from "@/lib/squares";
 import type { SquaresAdminOverview } from "@/lib/squaresAdmin";
 import type { SquaresMomentRecord } from "@/lib/squaresStore";
 
@@ -224,6 +225,20 @@ export function SquaresSection() {
             <p>
               Boards {overview?.counts.boards ?? 0} · claimed squares {overview?.counts.claims ?? 0} · unpaid wins {overview?.counts.unpaid ?? 0}
             </p>
+            {overview && overview.counts.blocked > 0 && (
+              <div className="rounded border border-amber-300 bg-amber-50 p-2">
+                <p className="font-semibold text-amber-900">
+                  {squaresBlockedLabel(overview.counts.blocked)}: the points can&apos;t be paid, so settlement stopped re-sending them.
+                </p>
+                <ul className="mt-1 flex flex-col gap-0.5">
+                  {overview.blocked.map((row) => (
+                    <li key={row.id} className="text-caption text-amber-900">
+                      {row.moment} (grade {row.gradeNo}) · result {row.id} · player {row.userId ?? "—"} · {row.note ?? ""} · {formatTime(row.blockedAt)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">

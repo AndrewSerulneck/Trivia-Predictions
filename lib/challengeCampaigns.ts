@@ -17,6 +17,7 @@ import {
   type RankedPlace,
 } from "@/lib/rankedPlaceRewards";
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
+import { chunkIds } from "@/lib/postgrestIds";
 import { SQUARES_PRIZE_DEFINITION_ID, normalizeSquaresMoments } from "@/lib/squaresPrizes";
 import type { SquaresMoment } from "@/lib/seasonalPoints";
 import type {
@@ -2048,16 +2049,24 @@ export async function listActiveSquaresPrizeCampaigns(venueIds: readonly string[
   assertConfigured();
   const wanted = [...new Set(venueIds.map((id) => String(id ?? "").trim()).filter(Boolean))];
   if (wanted.length === 0) return [];
-  const { data, error } = await supabaseAdmin!
-    .from("challenge_campaigns")
-    .select(`${CAMPAIGN_SELECT_COLUMNS}, squares_moments`)
-    .eq("reward_definition_id", SQUARES_PRIZE_DEFINITION_ID)
-    .eq("is_active", true)
-    .overlaps("venue_ids", wanted)
-    .order("created_at", { ascending: true })
-    .returns<SquaresPrizeCampaignRow[]>();
-  if (error) throw new Error(error.message ?? "Failed to load Squares prizes.");
-  return (data ?? []).map((row) => ({ ...mapCampaignRow(row), squaresMoments: normalizeSquaresMoments(row.squares_moments) }));
+  // One read per POSTGREST_ID_CHUNK venues (the venue list rides in the URL; a Super Bowl moment can
+  // name hundreds). A prize spanning two chunks comes back twice: kept once, in created_at order.
+  const rows = new Map<string, SquaresPrizeCampaignRow>();
+  for (const chunk of chunkIds(wanted)) {
+    const { data, error } = await supabaseAdmin!
+      .from("challenge_campaigns")
+      .select(`${CAMPAIGN_SELECT_COLUMNS}, squares_moments`)
+      .eq("reward_definition_id", SQUARES_PRIZE_DEFINITION_ID)
+      .eq("is_active", true)
+      .overlaps("venue_ids", chunk)
+      .order("created_at", { ascending: true })
+      .returns<SquaresPrizeCampaignRow[]>();
+    if (error) throw new Error(error.message ?? "Failed to load Squares prizes.");
+    for (const row of data ?? []) rows.set(row.id, row);
+  }
+  return [...rows.values()]
+    .sort((a, b) => (Date.parse(a.created_at) || 0) - (Date.parse(b.created_at) || 0))
+    .map((row) => ({ ...mapCampaignRow(row), squaresMoments: normalizeSquaresMoments(row.squares_moments) }));
 }
 
 /**

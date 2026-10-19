@@ -1086,8 +1086,7 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   Squares check); a new file that calls `awardCycleWinner`/`awardRankedCyclePlaces` fails
   `tests/prize-sweep-ownership-contract.test.ts` until it does too. Never turn `NEXT_PUBLIC_SQUARES_ENABLED` on in Production before 6.9 (rehearsals run
   on a Preview).
-- **Squares event lifecycle (6.2, 2026-10-19, migration `20261019142642`, NOT yet applied — Andrew runs `supabase db push`
-  before deploying the 6.2 code).** `squares_events.purpose`: `super_bowl` (discovery, or an admin game that is the
+- **Squares event lifecycle (6.2, 2026-10-19, migration `20261019142642`, applied 2026-10-19).** `squares_events.purpose`: `super_bowl` (discovery, or an admin game that is the
   season's Super Bowl, `squaresEventPurposeFor`) or `rehearsal` (any other game). `squares_claim` answers
   `rehearsal_only` for a rehearsal at any venue not `hidden = true` — the main guard; prizes check it again
   (`squaresPrizePaysAtVenue`). `set_game` never changes purpose. Discovery never re-creates an archived game; a drawn
@@ -1097,3 +1096,10 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   runs the settlement (`squaresSettlementMode` → `rehearsal`, never discovers) — that is what goes on Production for 6.7;
   with the public flag it also runs the TV read (`isSquaresServerLive`) — Preview only. Archive any rehearsal event
   before 6.9.
+- **Paying Squares winners (6.3, 2026-10-19, no migration).** A list of ids sent to PostgREST (`.in()`, `.overlaps()`)
+  goes through `chunkIds` (`lib/postgrestIds.ts`, `POSTGREST_ID_CHUNK` = 150) — never one request with more (the URL
+  limit; `tests/lib.postgrest-ids.test.ts` pins the Squares payers). A result whose points can never be paid (key paid
+  to another player, or player gone: `squaresCreditBlockNote`) is stamped `credit_blocked_at` + note, logged once
+  (`[Squares] credit-blocked`), never re-sent, shown in the admin panel and does NOT block Archive. Once the watch is
+  over (or past the no-final deadline with no late-void watch), the tick returns before `settleSquaresWinners`: one
+  event read per minute, nothing else; admin actions still settle.
