@@ -1,15 +1,27 @@
 import "server-only";
 
-import { SEASONAL_GAME_WINDOWS, isSquaresEnabled, type SeasonalWindow } from "@/lib/seasonalGames";
-import { isSquaresMoment, squaresMomentPoints, type SquaresMoment } from "@/lib/squares";
+import {
+  SEASONAL_GAME_WINDOWS,
+  isSquaresEnabled,
+  isSquaresRehearsalEnabled,
+  isSquaresWindowClosed,
+  type SeasonalWindow,
+} from "@/lib/seasonalGames";
+import {
+  isSquaresMoment,
+  squaresEventPurposeFor,
+  squaresMomentPoints,
+  type SquaresEventPurpose,
+  type SquaresMoment,
+} from "@/lib/squares";
 import { fetchSquaresGame, fetchSuperBowlGame } from "@/lib/squaresFeed";
 import {
   gradeMoment,
-  isSquaresRehearsalEnabled,
-  isSquaresSettlementActive,
   settleSquaresWinners,
   runSquaresTick,
   squaresSeason,
+  squaresSettlementMode,
+  type SquaresSettlementMode,
   type SquaresTickReport,
 } from "@/lib/squaresSettlement";
 import {
@@ -29,7 +41,15 @@ import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 // for when the feed or the schedule needs a human.
 
 export type SquaresAdminOverview = {
-  flags: { enabled: boolean; rehearsal: boolean; settlementActiveNow: boolean; season: number; window: SeasonalWindow };
+  flags: {
+    enabled: boolean;
+    rehearsal: boolean;
+    settlementActiveNow: boolean;
+    /** Why the settlement runs now (`rehearsal` never discovers), or null. */
+    settlementMode: SquaresSettlementMode | null;
+    season: number;
+    window: SeasonalWindow;
+  };
   event: SquaresEventRecord | null;
   moments: SquaresMomentRecord[];
   counts: { boards: number; claims: number; unpaid: number };
@@ -106,6 +126,34 @@ export type SquaresAdminResult =
 
 const refuse = (status: number, error: string): SquaresAdminResult => ({ ok: false, status, error });
 
+/**
+ * Why an event can't be archived yet, or null (plan 6.2, §13 F4). Players' screens read the current
+ * event, so archiving a drawn Super Bowl blanks every board — refused until the card window has
+ * closed (after Feb 15, Eastern). Before the draw it stays allowed (a wrong-game fix-up; set_game
+ * usually suffices), and a rehearsal can be archived any time.
+ */
+export const squaresArchiveRefusal = (
+  event: Pick<SquaresEventRecord, "purpose" | "drawnAt">,
+  now: Date,
+): string | null => {
+  if (event.purpose !== "super_bowl" || !event.drawnAt || isSquaresWindowClosed(now)) return null;
+  return `The numbers are drawn and players' boards show this event, so it can't be archived until the card window closes (after ${SEASONAL_GAME_WINDOWS.squares.closesAfter}, Eastern). To fix a moment, void it instead.`;
+};
+
+/**
+ * set_game keeps an event's purpose: a Super Bowl event must follow the season's Super Bowl, and a
+ * rehearsal must not become one (its boards, if any, are at hidden venues only). Null = allowed.
+ */
+export const squaresSetGameRefusal = (current: SquaresEventPurpose, next: SquaresEventPurpose): string | null => {
+  if (current === next) return null;
+  return current === "super_bowl"
+    ? "That game isn't this season's Super Bowl. To rehearse on it, archive this event and create a new one."
+    : "That game is this season's Super Bowl. Archive this rehearsal and create the Super Bowl event instead.";
+};
+
+const purposeLabel = (purpose: SquaresEventPurpose): string =>
+  purpose === "rehearsal" ? " It is a REHEARSAL: only hidden venues can play it." : "";
+
 async function countRows(table: "squares_boards" | "squares_results", eventId: string, unpaidOnly = false): Promise<number> {
   let query = supabaseAdmin!.from(table).select("id", { count: "exact", head: true }).eq("event_id", eventId);
   if (unpaidOnly) query = query.not("user_id", "is", null).is("credited_at", null).is("voided_at", null);
@@ -154,7 +202,8 @@ export async function getSquaresAdminOverview(): Promise<{ ok: true; overview: S
       flags: {
         enabled: isSquaresEnabled(),
         rehearsal: isSquaresRehearsalEnabled(),
-        settlementActiveNow: isSquaresSettlementActive(new Date()),
+        settlementActiveNow: squaresSettlementMode(new Date()) !== null,
+        settlementMode: squaresSettlementMode(new Date()),
         season: squaresSeason(),
         window: SEASONAL_GAME_WINDOWS.squares,
       },
@@ -188,10 +237,18 @@ export async function runSquaresAdminAction(action: SquaresAdminAction, actor: s
     const feed = action.action === "discover" ? await fetchSuperBowlGame(squaresSeason()) : await fetchSquaresGame(action.gameId);
     if (!feed.ok) return refuse(502, `The NFL feed answered: ${feed.reason}.`);
     if (!feed.value) return refuse(404, "The Super Bowl is not in the feed yet.");
-    const created = await createSquaresEvent(feed.value, { season: feed.value.season ?? squaresSeason(), createdBy: actor });
+    // "discover" asks the feed for this season's Super Bowl; any other game id is a rehearsal unless
+    // it is that Super Bowl (squaresEventPurposeFor; a record without a season fails safe).
+    const purpose: SquaresEventPurpose =
+      action.action === "discover" ? "super_bowl" : squaresEventPurposeFor(feed.value, squaresSeason());
+    const created = await createSquaresEvent(feed.value, {
+      season: feed.value.season ?? squaresSeason(),
+      createdBy: actor,
+      purpose,
+    });
     if (!created.ok) return refuse("code" in created && created.code === "exists" ? 409 : 500, created.error);
-    await logSquaresAdmin(created.value.id, "event_created", actor, { bdlGameId: created.value.bdlGameId, via: action.action });
-    return { ok: true, message: `Event created for game ${created.value.bdlGameId}.` };
+    await logSquaresAdmin(created.value.id, "event_created", actor, { bdlGameId: created.value.bdlGameId, via: action.action, purpose });
+    return { ok: true, message: `Event created for game ${created.value.bdlGameId}.${purposeLabel(purpose)}` };
   }
 
   if (!event) return refuse(404, "There is no current event.");
@@ -201,6 +258,8 @@ export async function runSquaresAdminAction(action: SquaresAdminAction, actor: s
       if (event.drawnAt) return refuse(409, "The numbers are drawn; the game can't change now.");
       const feed = await fetchSquaresGame(action.gameId);
       if (!feed.ok) return refuse(502, `The NFL feed answered: ${feed.reason}.`);
+      const purposeRefusal = squaresSetGameRefusal(event.purpose, squaresEventPurposeFor(feed.value, squaresSeason()));
+      if (purposeRefusal) return refuse(409, purposeRefusal);
       const fields = eventFieldsFromGame(feed.value, event.lockAtSetBy === "admin" ? Date.parse(event.lockAt) : null);
       if (!fields) return refuse(422, "That game has no usable teams or kickoff.");
       const { error } = await supabaseAdmin.from("squares_events").update({ ...fields, updated_at: new Date().toISOString() }).eq("id", event.id).is("drawn_at", null);
@@ -263,15 +322,20 @@ export async function runSquaresAdminAction(action: SquaresAdminAction, actor: s
       // Always: a re-grade pays the corrected winner, and either way the voided winner's unused
       // prize coupon is taken back now rather than on the next settlement run.
       await settleSquaresWinners(event, report);
+      const autoRegrade = squaresSettlementMode(new Date())
+        ? " It will re-grade from the feed within about 10 minutes; if the feed no longer shows this game, enter the scores instead."
+        : " The automatic settlement is off right now: press Run settlement now, or enter the scores.";
       const withdrawn = report.actions.find((entry) => entry.startsWith("prizes_withdrawn_"))?.slice("prizes_withdrawn_".length) ?? "0";
       return {
         ok: true,
         message: `Voided ${action.moment}: ${row.void_reversed ?? 0} paid credit(s) taken back, ${row.void_burned ?? 0} unpaid cancelled, ${withdrawn} unused prize coupon(s) taken back.${
-          regrade ? " Re-graded with your scores." : " It will re-grade from the feed."
+          regrade ? " Re-graded with your scores." : autoRegrade
         }${report.errors.length > 0 ? ` Settlement reported: ${report.errors[0]}` : ""}`,
       };
     }
     case "archive": {
+      const archiveRefusal = squaresArchiveRefusal(event, new Date());
+      if (archiveRefusal) return refuse(409, archiveRefusal);
       const unpaid = await countRows("squares_results", event.id, true);
       if (unpaid > 0) return refuse(409, `${unpaid} winning result(s) are still unpaid. Run settlement first.`);
       const { error } = await supabaseAdmin.from("squares_events").update({ archived_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", event.id);

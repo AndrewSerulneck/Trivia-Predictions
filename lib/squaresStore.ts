@@ -8,6 +8,7 @@ import {
   squaresAxes,
   type MomentObservation,
   type NflFeedGame,
+  type SquaresEventPurpose,
   type SquaresMoment,
   type SquaresSide,
   type SquaresTeam,
@@ -18,7 +19,7 @@ import {
 // and are called only from lib/squaresSettlement.ts, lib/squaresBoard.ts and lib/squaresAdmin.ts.
 
 export const EVENT_COLUMNS =
-  "id, season, bdl_game_id, col_side, col_team, row_team, kickoff_at, lock_at, lock_at_set_by, col_digits, row_digits, drawn_at, live_score, feed_checked_at, completed_at, archived_at, created_by, created_at";
+  "id, season, bdl_game_id, col_side, col_team, row_team, kickoff_at, lock_at, lock_at_set_by, col_digits, row_digits, drawn_at, live_score, feed_checked_at, completed_at, archived_at, created_by, created_at, purpose, reopened_at";
 
 export const MOMENT_COLUMNS =
   "event_id, moment, grade_no, observed_col_score, observed_row_score, observed_at, col_score, row_score, winning_cell, score_source, graded_at, mismatch_note";
@@ -51,6 +52,10 @@ export type SquaresEventRecord = {
   archivedAt: string | null;
   createdBy: string;
   createdAt: string;
+  /** `rehearsal` = playable only at hidden venues (plan 6.2; enforced by squares_claim). */
+  purpose: SquaresEventPurpose;
+  /** Last admin void that re-opened the event: the settlement watches the feed for a while after it. */
+  reopenedAt: string | null;
 };
 
 export type SquaresMomentRecord = {
@@ -80,6 +85,8 @@ type EventRow = {
   archived_at: string | null;
   created_by: string;
   created_at: string;
+  purpose: SquaresEventPurpose | null;
+  reopened_at: string | null;
 };
 
 export type MomentRow = {
@@ -116,6 +123,9 @@ export const toEventRecord = (row: EventRow): SquaresEventRecord => ({
   archivedAt: row.archived_at,
   createdBy: row.created_by,
   createdAt: row.created_at,
+  // Anything but an explicit rehearsal is the real game (the column's default).
+  purpose: row.purpose === "rehearsal" ? "rehearsal" : "super_bowl",
+  reopenedAt: row.reopened_at ?? null,
 });
 
 export const toMomentRecord = (row: MomentRow): SquaresMomentRecord | null => {
@@ -212,17 +222,34 @@ export const eventFieldsFromGame = (
   };
 };
 
+/**
+ * An archived event for this game, if any (plan 6.2: discovery never re-creates an archived Super
+ * Bowl; an admin still can). One small read, made only on a discovery run that found the game.
+ */
+export async function findArchivedSquaresEventForGame(bdlGameId: number): Promise<StoreResult<{ id: string } | null>> {
+  if (!supabaseAdmin) return unavailable();
+  const { data, error } = await supabaseAdmin
+    .from("squares_events")
+    .select("id")
+    .eq("bdl_game_id", bdlGameId)
+    .not("archived_at", "is", null)
+    .limit(1)
+    .maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, value: (data as { id: string } | null) ?? null };
+}
+
 /** Create the current event from a feed record. `exists` when another current event won the race. */
 export async function createSquaresEvent(
   game: NflFeedGame,
-  options: { season: number; createdBy: string },
+  options: { season: number; createdBy: string; purpose: SquaresEventPurpose },
 ): Promise<StoreResult<SquaresEventRecord> | { ok: false; error: string; code: "exists" | "matchup_unknown" }> {
   if (!supabaseAdmin) return unavailable();
   const fields = eventFieldsFromGame(game, null);
   if (!fields) return { ok: false, code: "matchup_unknown", error: "The feed record has no usable teams or kickoff." };
   const { data, error } = await supabaseAdmin
     .from("squares_events")
-    .insert({ ...fields, season: options.season, created_by: options.createdBy })
+    .insert({ ...fields, season: options.season, created_by: options.createdBy, purpose: options.purpose })
     .select(EVENT_COLUMNS)
     .single();
   if (error) {

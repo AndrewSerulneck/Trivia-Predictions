@@ -26,6 +26,18 @@ const truthy = (value: string | undefined): boolean => {
 /** Super Bowl Squares master flag. The single reader of NEXT_PUBLIC_SQUARES_ENABLED. */
 export const isSquaresEnabled = (): boolean => truthy(process.env.NEXT_PUBLIC_SQUARES_ENABLED);
 
+/**
+ * Squares rehearsal switch (plan 6.2). The single reader of SQUARES_REHEARSAL_ENABLED — server-side
+ * (no NEXT_PUBLIC_), so it flips without a redeploy and is always off in the browser. On, the
+ * Squares engine runs outside the Feb 1–15 window for an admin-created event (never auto-discovered):
+ *   - the settlement cron runs on the switch ALONE, so Production's cron can drive a rehearsal while
+ *     the public flag stays off there (Vercel runs crons only on Production);
+ *   - the TV read runs when this AND the public flag are on (a Preview with both set).
+ * The player routes and /squares are gated on the public flag only, so they already work on such a
+ * Preview. A rehearsal event plays only at hidden venues (squares_claim's 'rehearsal_only').
+ */
+export const isSquaresRehearsalEnabled = (): boolean => truthy(process.env.SQUARES_REHEARSAL_ENABLED);
+
 /** March Madness brackets master flag. The single reader of NEXT_PUBLIC_BRACKETS_ENABLED. */
 export const isBracketsEnabled = (): boolean => truthy(process.env.NEXT_PUBLIC_BRACKETS_ENABLED);
 
@@ -77,6 +89,17 @@ export const seasonalWindowState = (window: SeasonalWindow, now: Date): Seasonal
   if (window.teaserFrom && today >= window.teaserFrom) return "teaser";
   return "hidden";
 };
+
+/** Has the Squares card window closed (US Eastern)? Before the window counts as not closed. */
+export const isSquaresWindowClosed = (now: Date): boolean =>
+  seasonalCalendarDate(now) > SEASONAL_GAME_WINDOWS.squares.closesAfter;
+
+/**
+ * Server reads that show the Squares game (the TV): the public flag, and either the card window or
+ * the rehearsal switch. Pure, no I/O.
+ */
+export const isSquaresServerLive = (now: Date): boolean =>
+  isSquaresEnabled() && (seasonalWindowState(SEASONAL_GAME_WINDOWS.squares, now) === "open" || isSquaresRehearsalEnabled());
 
 /** A seasonal game's card: hidden while its flag is off, else by its window. */
 export const seasonalCardState = (key: SeasonalGameKey, now: Date): SeasonalCardState =>

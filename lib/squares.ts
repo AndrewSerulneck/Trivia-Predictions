@@ -156,6 +156,28 @@ export const findSuperBowl = (games: readonly NflFeedGame[]): NflFeedGame | null
   return candidates[0] ?? null;
 };
 
+/**
+ * What an event is for (squares_events.purpose, plan 6.2). Only the season's own Super Bowl is a
+ * `super_bowl` event (playable at every venue). Any other game — a regular-season game, or an old
+ * season's Super Bowl replayed — is a `rehearsal`: squares_claim refuses it at every venue that is
+ * not hidden, so a rehearsal can never put a board, points or a Prize at a real venue.
+ */
+export type SquaresEventPurpose = "super_bowl" | "rehearsal";
+
+export const squaresEventPurposeFor = (game: NflFeedGame, season: number): SquaresEventPurpose =>
+  isSuperBowlRecord(game) && Number(game.season) === season ? "super_bowl" : "rehearsal";
+
+/**
+ * After an admin void re-opens an event (squares_events.reopened_at), the settlement keeps reading
+ * the feed for SQUARES_POST_FINAL_WATCH_MS — even past the 12-hour no-final deadline — so a late void
+ * re-grades from the feed as the admin message promises (plan 6.2, §13 F3).
+ */
+export const isSquaresReopenWatchOn = (reopenedAt: string | null, nowMs: number): boolean => {
+  const reopenedMs = reopenedAt ? Date.parse(reopenedAt) : Number.NaN;
+  // A database clock a moment ahead of this server still counts as on.
+  return Number.isFinite(reopenedMs) && nowMs - reopenedMs < SQUARES_POST_FINAL_WATCH_MS;
+};
+
 /** Lock time for a kickoff: kickoff − 30 min, or an admin's earlier time (never after kickoff). */
 export const lockAtFor = (kickoffMs: number, adminLockMs?: number | null): number => {
   const auto = kickoffMs - SQUARES_LOCK_BEFORE_KICKOFF_MS;

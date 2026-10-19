@@ -164,7 +164,7 @@ export function SquaresSection() {
         {flags && (
           <p className="text-caption text-slate-600">
             Player switch {flags.enabled ? "on" : "off"} · Rehearsal {flags.rehearsal ? "on" : "off"} · Settlement running now:{" "}
-            {flags.settlementActiveNow ? "yes" : "no"} · Card window {flags.window.opensOn} to {flags.window.closesAfter} · NFL season {flags.season}
+            {flags.settlementMode === "season" ? "yes" : flags.settlementMode === "rehearsal" ? "yes (rehearsal, no auto-discovery)" : "no"} · Card window {flags.window.opensOn} to {flags.window.closesAfter} · NFL season {flags.season}
           </p>
         )}
       </div>
@@ -183,7 +183,7 @@ export function SquaresSection() {
           </div>
           <div className="flex flex-wrap items-end gap-2">
             <label className="block">
-              <span className={adminLabel}>Or any NFL game id (rehearsal)</span>
+              <span className={adminLabel}>Or any NFL game id (a REHEARSAL unless it is this season&apos;s Super Bowl)</span>
               <input className={adminField} inputMode="numeric" value={gameId} onChange={(e) => setGameId(e.target.value)} />
             </label>
             <button
@@ -201,6 +201,12 @@ export function SquaresSection() {
       {event && (
         <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-4">
           <div className="grid gap-1 text-sm text-slate-800">
+            {event.purpose === "rehearsal" && (
+              <p>
+                <span className="rounded bg-amber-100 px-2 py-0.5 text-caption font-bold text-amber-800">REHEARSAL</span>{" "}
+                Only hidden venues can claim squares, and only they get points or Prizes.
+              </p>
+            )}
             <p>
               <span className="font-semibold">Columns:</span> {event.colTeam.fullName} ({event.colTeam.conference ?? "?"}) ·{" "}
               <span className="font-semibold">Rows:</span> {event.rowTeam.fullName} ({event.rowTeam.conference ?? "?"})

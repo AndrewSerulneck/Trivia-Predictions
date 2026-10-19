@@ -2,7 +2,7 @@ import "server-only";
 
 import { randomInt } from "node:crypto";
 import { creditSeasonalPoints } from "@/lib/seasonalPointsCredit";
-import { SEASONAL_GAME_WINDOWS, isSquaresEnabled, seasonalWindowState } from "@/lib/seasonalGames";
+import { SEASONAL_GAME_WINDOWS, isSquaresEnabled, isSquaresRehearsalEnabled, seasonalWindowState } from "@/lib/seasonalGames";
 import {
   SQUARES_DISCOVERY_EVERY_MINUTES,
   SQUARES_NO_FINAL_DEADLINE_MS,
@@ -11,6 +11,7 @@ import {
   SQUARES_PRE_LOCK_REFRESH_MS,
   gradedMomentMismatches,
   isFinalRecord,
+  isSquaresReopenWatchOn,
   liveScoreOf,
   planMomentStep,
   squaresMomentEvidence,
@@ -23,6 +24,7 @@ import { awardSquaresPrizes, withdrawVoidedSquaresPrizes } from "@/lib/squaresPr
 import {
   createSquaresEvent,
   eventFieldsFromGame,
+  findArchivedSquaresEventForGame,
   getCurrentSquaresEvent,
   getSquaresMoments,
   logSquaresAdmin,
@@ -36,26 +38,36 @@ import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 // Super Bowl Squares settlement (docs/squares-and-brackets-plan.md, Phase 2). Runs from the existing
 // every-minute cron (/api/cron/pickem-settle) — no new vercel.json entry.
 //
-// Cost (plan §6): outside the card window (Feb 1–15) or with the flag off, a run returns before
-// touching the database or the provider. Inside it: one small read of the current event per run;
-// at most one provider request per run, and only:
-//   • no event yet: every SQUARES_DISCOVERY_EVERY_MINUTES (looking for the Super Bowl matchup);
+// Cost (plan §6): unless squaresSettlementMode() says so (flag on + card window Feb 1–15, or the
+// server-side rehearsal switch), a run returns before touching the database or the provider. Then:
+// one small read of the current event per run; at most one provider request per run, and only:
+//   • no event yet: every SQUARES_DISCOVERY_EVERY_MINUTES (looking for the Super Bowl matchup), in
+//     season only — the rehearsal switch never discovers, so it costs one event read per run;
 //   • before lock: once an hour (kickoff moves, flexed times);
 //   • lock → final: every run (≈ 300 for a Super Bowl);
-//   • complete: every SQUARES_POST_FINAL_POLL_MS for SQUARES_POST_FINAL_WATCH_MS (corrections).
+//   • complete: every SQUARES_POST_FINAL_POLL_MS for SQUARES_POST_FINAL_WATCH_MS (corrections);
+//   • after an admin void past the 12-hour no-final deadline: the same pace for
+//     SQUARES_POST_FINAL_WATCH_MS from the void (squares_events.reopened_at, plan 6.2).
 // Grading is one set-based RPC per moment for every board; paying is one batched credit call, then
 // each venue's Prizes for that moment (lib/squaresPrizeAwards.ts: one indexed read per run, normally
 // empty).
 
-/** Server-only rehearsal switch (plan Phase 6): run the settlement outside the card window too. */
-export const isSquaresRehearsalEnabled = (): boolean => {
-  const v = (process.env.SQUARES_REHEARSAL_ENABLED ?? "").trim().toLowerCase();
-  return v === "1" || v === "true" || v === "yes" || v === "on";
+/**
+ * Why the settlement runs now (plan 6.2), or null = it does nothing. A pure check: no I/O.
+ *   - `season`: the public flag is on and today is inside the card window. Discovery runs.
+ *   - `rehearsal`: the server-side rehearsal switch (isSquaresRehearsalEnabled) — on its own, so
+ *     Production's cron can drive an admin-created rehearsal event while the public flag stays off
+ *     there. Never discovers: with no current event it reads nothing from the feed.
+ */
+export type SquaresSettlementMode = "season" | "rehearsal";
+
+export const squaresSettlementMode = (now: Date): SquaresSettlementMode | null => {
+  if (isSquaresEnabled() && seasonalWindowState(SEASONAL_GAME_WINDOWS.squares, now) === "open") return "season";
+  return isSquaresRehearsalEnabled() ? "rehearsal" : null;
 };
 
 /** Whether the cron should do anything at all. A pure check: no database, no provider. */
-export const isSquaresSettlementActive = (now: Date): boolean =>
-  isSquaresEnabled() && (seasonalWindowState(SEASONAL_GAME_WINDOWS.squares, now) === "open" || isSquaresRehearsalEnabled());
+export const isSquaresSettlementActive = (now: Date): boolean => squaresSettlementMode(now) !== null;
 
 /** The NFL season (the year it started) whose Super Bowl the card window covers. */
 export const squaresSeason = (): number => Number(SEASONAL_GAME_WINDOWS.squares.opensOn.slice(0, 4)) - 1;
@@ -97,7 +109,8 @@ async function tick(options: { now?: Date; force?: boolean }): Promise<SquaresTi
   const force = options.force === true;
   const report: SquaresTickReport = { ran: false, feedRequests: 0, actions: [], errors: [] };
 
-  if (!force && !isSquaresSettlementActive(now)) return { ...report, skipped: "inactive" };
+  const mode = squaresSettlementMode(now);
+  if (!force && !mode) return { ...report, skipped: "inactive" };
   if (!supabaseAdmin) return { ...report, skipped: "no_database" };
   report.ran = true;
 
@@ -108,6 +121,8 @@ async function tick(options: { now?: Date; force?: boolean }): Promise<SquaresTi
       return report;
     }
     if (!current.value) {
+      // A rehearsal is created by an admin, never discovered (no Super Bowl in the feed yet).
+      if (!force && mode !== "season") return { ...report, skipped: "no_event" };
       await discoverEvent(report, now, force);
       return report;
     }
@@ -134,8 +149,13 @@ async function tick(options: { now?: Date; force?: boolean }): Promise<SquaresTi
       const lastMs = event.feedCheckedAt ? Date.parse(event.feedCheckedAt) : 0;
       if (!force && nowMs - lastMs < SQUARES_POST_FINAL_POLL_MS) return report;
     } else if (!force && nowMs - kickoffMs > SQUARES_NO_FINAL_DEADLINE_MS) {
-      if (now.getUTCMinutes() === 0) console.warn("[Squares] no-final-deadline", { eventId: event.id });
-      return { ...report, skipped: "no_final_deadline" };
+      if (!isSquaresReopenWatchOn(event.reopenedAt, nowMs)) {
+        if (now.getUTCMinutes() === 0) console.warn("[Squares] no-final-deadline", { eventId: event.id });
+        return { ...report, skipped: "no_final_deadline" };
+      }
+      // A late admin void (§13 F3): the game is long over, so read at the post-final pace.
+      const lastMs = event.feedCheckedAt ? Date.parse(event.feedCheckedAt) : 0;
+      if (nowMs - lastMs < SQUARES_POST_FINAL_POLL_MS) return { ...report, skipped: "reopened_wait" };
     }
 
     report.feedRequests += 1;
@@ -177,7 +197,19 @@ async function discoverEvent(report: SquaresTickReport, now: Date, force: boolea
     report.actions.push("super_bowl_not_in_feed_yet");
     return;
   }
-  const created = await createSquaresEvent(found.value, { season: squaresSeason(), createdBy: "auto" });
+  // Never re-create a game whose event was archived (§13 F4): an empty copy would draw and grade at
+  // once and blank every board. An admin can still create it explicitly. One read, only here.
+  const archived = await findArchivedSquaresEventForGame(found.value.id);
+  if (!archived.ok) {
+    report.errors.push(`archived read: ${archived.error}`);
+    return;
+  }
+  if (archived.value) {
+    report.actions.push("super_bowl_archived");
+    return;
+  }
+  // The season's Super Bowl, by construction of the query: the real game at every venue.
+  const created = await createSquaresEvent(found.value, { season: squaresSeason(), createdBy: "auto", purpose: "super_bowl" });
   if (!created.ok) {
     if ("code" in created && created.code === "exists") return;
     report.errors.push(`create: ${created.error}`);
@@ -344,7 +376,7 @@ export async function gradeMoment(
  * (withdrawVoidedSquaresPrizes). Shared with lib/squaresAdmin.ts.
  */
 export async function settleSquaresWinners(
-  event: Pick<SquaresEventRecord, "id" | "kickoffAt" | "lockAt">,
+  event: Pick<SquaresEventRecord, "id" | "kickoffAt" | "lockAt" | "purpose">,
   report: { actions: string[]; errors: string[] },
   now: Date = new Date(),
 ): Promise<void> {

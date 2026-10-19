@@ -25,6 +25,8 @@ import type { ChallengeCampaign } from "@/types";
 // WHICH PRIZES: active (archiving stops a prize), at the board's venue, paying that moment, created
 // BEFORE the lock (a prize set up after claims closed was never on offer to the players holding
 // squares), and not closed before kickoff (an old season's prize never pays a new season's game).
+// A REHEARSAL event (squares_events.purpose, plan 6.2) pays prizes only at hidden venues — the second
+// guard behind squares_claim, which already refuses rehearsal claims anywhere else.
 //
 // A VOID (Andrew, 2026-10-19: "take back if unused"): an admin void marks the moment's results void
 // and re-grades under grade_no + 1 — new rows, a new cycle key — so the corrected winner is paid by
@@ -51,6 +53,15 @@ type UncheckedResultRow = {
   board: { venue_id: string } | null;
 };
 
+/**
+ * May a prize pay at this venue for this event? A Super Bowl event: any venue. A rehearsal: only a
+ * venue known to be hidden (null = unread or missing, which fails closed).
+ */
+export const squaresPrizePaysAtVenue = (
+  purpose: SquaresEventRecord["purpose"],
+  venueHidden: boolean | null | undefined,
+): boolean => purpose !== "rehearsal" || venueHidden === true;
+
 /** Was this prize on offer for this game? See WHICH PRIZES above. Unparseable dates fail closed. */
 export const squaresPrizeCoversEvent = (
   campaign: ChallengeCampaign,
@@ -72,7 +83,7 @@ export type SquaresPrizeReport = { actions: string[]; errors: string[] };
  * land in `report.errors` and the affected rows are retried next run.
  */
 export async function awardSquaresPrizes(
-  event: Pick<SquaresEventRecord, "id" | "kickoffAt" | "lockAt">,
+  event: Pick<SquaresEventRecord, "id" | "kickoffAt" | "lockAt" | "purpose">,
   report: SquaresPrizeReport,
   now: Date = new Date(),
 ): Promise<void> {
@@ -95,6 +106,20 @@ export async function awardSquaresPrizes(
   if (rows.length === 0) return;
 
   const venueIds = [...new Set(rows.flatMap((row) => (row.board?.venue_id ? [row.board.venue_id] : [])))];
+
+  // Rehearsal only: which of these venues are hidden. One read, made only for a rehearsal event with
+  // an unchecked winner. A failed read stops the run (retried next run), never pays.
+  const hiddenVenues = new Set<string>();
+  if (event.purpose === "rehearsal" && venueIds.length > 0) {
+    const { data: venueRows, error: venueError } = await supabaseAdmin.from("venues").select("id, hidden").in("id", venueIds);
+    if (venueError) {
+      report.errors.push(`prize venues read: ${venueError.message}`);
+      return;
+    }
+    for (const venue of (venueRows ?? []) as Array<{ id: string; hidden: boolean | null }>) {
+      if (venue.hidden === true) hiddenVenues.add(venue.id);
+    }
+  }
   let prizes: ChallengeCampaign[];
   try {
     // The read already filters on the definition; checked again here so this sweep pays only its
@@ -114,6 +139,13 @@ export async function awardSquaresPrizes(
     const userId = row.user_id;
     if (!venueId || !userId || !isSquaresMoment(row.moment)) {
       // Nothing any prize could pay (a malformed row): stamp it so it isn't read every minute.
+      checked.push(row.id);
+      continue;
+    }
+    if (!squaresPrizePaysAtVenue(event.purpose, hiddenVenues.has(venueId))) {
+      // A rehearsal winner at a real venue (only possible if that venue was un-hidden mid-rehearsal):
+      // no prize ever pays it, so stamp it once.
+      console.warn("[SquaresPrize] rehearsal-visible-venue", { eventId: event.id, venueId });
       checked.push(row.id);
       continue;
     }

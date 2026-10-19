@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Squares + Brackets plan Phase 2: replays a Super Bowl through runSquaresTick() a minute at a time
 // against an in-memory stand-in for the squares_* tables and RPCs (the real SQL is proven by
@@ -257,10 +257,108 @@ describe("runSquaresTick — a Super Bowl, minute by minute", () => {
     expect(tables.squares_admin_log.some((entry) => entry.action === "moment_mismatch")).toBe(true);
   });
 
+  it("creates the discovered Super Bowl as a super_bowl event (plan 6.2)", async () => {
+    await tick(Date.parse("2027-02-01T05:15:00Z"));
+    expect(tables.squares_events[0]).toMatchObject({ purpose: "super_bowl", created_by: "auto" });
+  });
+
   it("stays off the database outside the card window", async () => {
     const report = await tick(Date.parse("2026-11-01T12:00:00Z"));
     expect(report).toMatchObject({ ran: false, skipped: "inactive" });
     expect(tables.squares_events).toBeUndefined();
     expect(feed.requests).toBe(0);
+  });
+});
+
+// Plan 6.2: the event lifecycle — rehearsal mode, archived games, late voids.
+describe("runSquaresTick — event lifecycle (plan 6.2)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  /** Discover, draw, then the final record grades all four moments and completes the event. */
+  const playToFinal = async () => {
+    await tick(Date.parse("2027-02-01T05:15:00Z"));
+    await tick(Date.parse("2027-02-14T23:00:00Z"));
+    feed.game = finalRecord;
+    await tick(Date.parse("2027-02-15T02:30:00Z"));
+    await tick(Date.parse("2027-02-15T02:31:00Z"));
+    expect(tables.squares_events[0].completed_at).toBe("2027-02-15T02:31:00.000Z");
+  };
+
+  /** What squares_void_moment leaves behind for q1 (the SQL itself is proven on PGlite). */
+  const voidQ1 = (atMs: number, stampReopened: boolean) => {
+    const q1 = moment("q1");
+    for (const result of (tables.squares_results ?? []).filter((r) => r.moment === "q1")) result.voided_at = new Date(atMs).toISOString();
+    Object.assign(q1, {
+      grade_no: Number(q1.grade_no) + 1, col_score: null, row_score: null, winning_cell: null, score_source: null,
+      graded_at: null, observed_col_score: null, observed_row_score: null, observed_at: null,
+    });
+    Object.assign(tables.squares_events[0], { completed_at: null, reopened_at: stampReopened ? new Date(atMs).toISOString() : null });
+  };
+
+  it("re-grades a void made after the 12-hour no-final deadline from the feed, at the post-final pace (§13 F3)", async () => {
+    await playToFinal();
+    const voidAt = Date.parse("2027-02-15T12:30:00Z"); // kickoff + 13 h
+    voidQ1(voidAt, true);
+    const before = feed.requests;
+    await tick(voidAt + 60_000);
+    expect(feed.requests - before).toBe(1);
+    expect(moment("q1").observed_at).toBe(new Date(voidAt + 60_000).toISOString());
+    const waiting = await tick(voidAt + 2 * 60_000);
+    expect(waiting.skipped).toBe("reopened_wait");
+    expect(feed.requests - before).toBe(1);
+    await tick(voidAt + 6 * 60_000);
+    expect(moment("q1")).toMatchObject({ col_score: 0, row_score: 3, grade_no: 2, score_source: "feed" });
+    expect(tables.squares_events[0].completed_at).toBe(new Date(voidAt + 6 * 60_000).toISOString());
+  });
+
+  it("stops watching 3 hours after the void, and never watches without reopened_at", async () => {
+    await playToFinal();
+    const voidAt = Date.parse("2027-02-15T12:30:00Z");
+    voidQ1(voidAt, true);
+    const before = feed.requests;
+    const late = await tick(voidAt + 3 * 60 * 60_000 + 60_000);
+    expect(late.skipped).toBe("no_final_deadline");
+    voidQ1(voidAt, false);
+    const unstamped = await tick(voidAt + 60_000);
+    expect(unstamped.skipped).toBe("no_final_deadline");
+    expect(feed.requests).toBe(before);
+  });
+
+  it("never re-creates a Super Bowl whose event was archived (§13 F4)", async () => {
+    tables.squares_events = [
+      { id: "old-event", bdl_game_id: finalRecord.id, archived_at: "2027-02-03T12:00:00Z", purpose: "super_bowl" },
+    ];
+    const report = await tick(Date.parse("2027-02-03T12:15:00Z"));
+    expect(report.actions).toEqual(["super_bowl_archived"]);
+    expect(tables.squares_events).toHaveLength(1);
+  });
+
+  it("rehearsal switch alone runs the settlement outside the window, without the public flag, and never discovers", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "");
+    vi.stubEnv("SQUARES_REHEARSAL_ENABLED", "true");
+    const idle = await tick(Date.parse("2026-12-06T18:00:00Z"));
+    expect(idle).toMatchObject({ ran: true, skipped: "no_event", feedRequests: 0 });
+    expect(tables.squares_events ?? []).toHaveLength(0);
+
+    // An admin-created rehearsal event is drawn at its lock by the same cron.
+    tables.squares_events = [
+      {
+        id: "rehearsal-1", season: 2026, bdl_game_id: 999, col_side: "visitor", col_team: {}, row_team: {}, purpose: "rehearsal",
+        kickoff_at: "2026-12-06T18:00:00Z", lock_at: "2026-12-06T17:30:00Z", lock_at_set_by: "auto",
+        drawn_at: null, completed_at: null, archived_at: null, reopened_at: null, feed_checked_at: null, live_score: null,
+      },
+    ];
+    tables.squares_event_moments = ["q1", "half", "q3", "final"].map((name) => ({ event_id: "rehearsal-1", moment: name, grade_no: 1 }));
+    feed.game = { ...finalRecord, id: 999, status: "scheduled", status_state: "scheduled", home_team_score: null, visitor_team_score: null };
+    await tick(Date.parse("2026-12-06T17:30:00Z"));
+    expect(tables.squares_events[0].drawn_at).toBe("2026-12-06T17:30:00.000Z");
+  });
+
+  it("does nothing in December with the public flag but no rehearsal switch", async () => {
+    vi.stubEnv("SQUARES_REHEARSAL_ENABLED", "");
+    const report = await tick(Date.parse("2026-12-06T18:00:00Z"));
+    expect(report).toMatchObject({ ran: false, skipped: "inactive" });
   });
 });

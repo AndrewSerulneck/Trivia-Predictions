@@ -6,7 +6,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // stubbed; the squares_results reads/writes run against a small in-memory table.
 
 type Row = Record<string, unknown>;
-const db = vi.hoisted(() => ({ results: [] as Row[], updates: [] as Row[], readError: null as string | null }));
+const db = vi.hoisted(() => ({
+  results: [] as Row[],
+  updates: [] as Row[],
+  readError: null as string | null,
+  // venues: read only for a rehearsal event (plan 6.2).
+  venues: [] as Row[],
+  venueReads: 0,
+  venueReadError: null as string | null,
+}));
 
 class FakeQuery {
   private filters: Array<(row: Row) => boolean> = [];
@@ -24,6 +32,11 @@ class FakeQuery {
   in(col: string, values: unknown[]) { this.filters.push((row) => values.includes(row[col])); return this; }
   update(payload: Row) { this.op = "update"; this.payload = payload; return this; }
   then<T>(resolve: (value: { data: unknown; error: { message: string } | null }) => T): Promise<T> {
+    if (this.table === "venues") {
+      db.venueReads += 1;
+      if (db.venueReadError) return Promise.resolve(resolve({ data: null, error: { message: db.venueReadError } }));
+      return Promise.resolve(resolve({ data: db.venues.filter((row) => this.filters.every((filter) => filter(row))), error: null }));
+    }
     expect(this.table).toBe("squares_results");
     if (this.op === "select" && db.readError) return Promise.resolve(resolve({ data: null, error: { message: db.readError } }));
     const matched = db.results.filter((row) => this.filters.every((filter) => filter(row))).slice(0, this.max);
@@ -88,13 +101,19 @@ vi.mock("@/lib/challengeCampaigns", async (importOriginal) => {
 import {
   awardSquaresPrizes,
   squaresPrizeCoversEvent,
+  squaresPrizePaysAtVenue,
   squaresPrizeWithdrawnMessage,
   withdrawVoidedSquaresPrizes,
 } from "@/lib/squaresPrizeAwards";
 import { squaresPrizeCycleStart } from "@/lib/squaresPrizes";
 import type { ChallengeCampaign } from "@/types";
 
-const EVENT = { id: "event-1", kickoffAt: "2027-02-14T23:30:00+00:00", lockAt: "2027-02-14T23:00:00+00:00" };
+const EVENT = {
+  id: "event-1",
+  kickoffAt: "2027-02-14T23:30:00+00:00",
+  lockAt: "2027-02-14T23:00:00+00:00",
+  purpose: "super_bowl" as const,
+};
 const NOW = new Date("2027-02-15T00:05:00Z");
 
 const prize = (overrides: Partial<ChallengeCampaign> = {}): Row =>
@@ -124,16 +143,20 @@ const result = (overrides: Row = {}): Row => ({
   ...overrides,
 });
 
-const run = async () => {
+const run = async (event: typeof EVENT | (Omit<typeof EVENT, "purpose"> & { purpose: "rehearsal" }) = EVENT) => {
   const report = { actions: [] as string[], errors: [] as string[] };
-  await awardSquaresPrizes(EVENT, report, NOW);
+  await awardSquaresPrizes(event, report, NOW);
   return report;
 };
+const REHEARSAL = { ...EVENT, purpose: "rehearsal" as const };
 
 beforeEach(() => {
   db.results = [];
   db.updates = [];
   db.readError = null;
+  db.venues = [];
+  db.venueReads = 0;
+  db.venueReadError = null;
   engine.prizes = [prize()];
   engine.ledger = new Set();
   engine.awards = [];
@@ -244,6 +267,52 @@ describe("awardSquaresPrizes", () => {
     const report = await run();
     expect(report.errors).toEqual(["prize read: column squares_results.prize_checked_at does not exist"]);
     expect(engine.awards).toEqual([]);
+  });
+});
+
+describe("a rehearsal event pays prizes only at hidden venues (plan 6.2, §13 F5)", () => {
+  it("decides by purpose and the venue's hidden flag; unknown fails closed", () => {
+    expect(squaresPrizePaysAtVenue("super_bowl", false)).toBe(true);
+    expect(squaresPrizePaysAtVenue("super_bowl", null)).toBe(true);
+    expect(squaresPrizePaysAtVenue("rehearsal", true)).toBe(true);
+    expect(squaresPrizePaysAtVenue("rehearsal", false)).toBe(false);
+    expect(squaresPrizePaysAtVenue("rehearsal", null)).toBe(false);
+    expect(squaresPrizePaysAtVenue("rehearsal", undefined)).toBe(false);
+  });
+
+  it("a Super Bowl event never reads venues", async () => {
+    db.results.push(result());
+    await run();
+    expect(db.venueReads).toBe(0);
+    expect(engine.awards).toHaveLength(1);
+  });
+
+  it("pays a rehearsal winner at a hidden venue", async () => {
+    db.venues = [{ id: "v1", hidden: true }];
+    db.results.push(result());
+    const report = await run(REHEARSAL);
+    expect(db.venueReads).toBe(1);
+    expect(engine.awards).toMatchObject([{ venueId: "v1", userId: "ann" }]);
+    expect(report.actions).toEqual(["prizes_awarded_1"]);
+  });
+
+  it("never pays a rehearsal winner at a visible venue (or one it can't find), and stamps it once", async () => {
+    db.venues = [{ id: "v1", hidden: false }];
+    engine.prizes = [prize(), prize({ id: "prize-v9", venueIds: ["v9"] })];
+    db.results.push(result(), result({ board: { venue_id: "v9" } }));
+    const report = await run(REHEARSAL);
+    expect(engine.awards).toEqual([]);
+    expect(report).toEqual({ actions: [], errors: [] });
+    expect(db.results.every((row) => row.prize_checked_at === NOW.toISOString())).toBe(true);
+  });
+
+  it("pays and stamps nothing when the venues can't be read", async () => {
+    db.venueReadError = "timeout";
+    db.results.push(result());
+    const report = await run(REHEARSAL);
+    expect(engine.awards).toEqual([]);
+    expect(report.errors).toEqual(["prize venues read: timeout"]);
+    expect(db.results[0].prize_checked_at).toBeNull();
   });
 });
 

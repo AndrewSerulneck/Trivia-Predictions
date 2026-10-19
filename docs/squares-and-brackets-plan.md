@@ -5,7 +5,9 @@ checklist written); the fixes, rehearsal and launch are sub-phases **6.1–6.9**
 committed locally** (each prize sweep pays only its own kind of prize); it fixes a live problem with the NFL Pick 'Em
 prize at Pacific Street (§13 F1) **once Andrew pushes and deploys**. Phases 1–5 + the Phase 6 docs (`0af6f13`) are
 committed locally; their migrations are APPLIED to production; flags off; nothing pushed or deployed.
-Latest handoff: `docs/squares-and-brackets-plan_PHASE_6.1_HANDOFF.md`. **Next: 6.2.**
+**6.2 is built and committed locally** (Squares event lifecycle); its migration `20261019142642` is NOT applied yet
+(Andrew: `supabase db push`, then push + deploy).
+Latest handoff: `docs/squares-and-brackets-plan_PHASE_6.2_HANDOFF.md`. **Next: 6.3.**
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -320,6 +322,14 @@ migration); then 6.5–6.9.
     before 6.9, or the Squares prize appears in every partner's wizard (`isSquaresPrizeOffered` has no start date).
 - **Tests:** SQL (rehearsal claim refused at a visible venue, accepted at a hidden one; void sets `reopened_at`);
   unit (purpose decision, discovery skip, archive refusal, late-void tick reads the feed, prize guard).
+- **Built 2026-10-19 (committed locally; migration not applied, not deployed).** Gate decided: the settlement runs on
+  `SQUARES_REHEARSAL_ENABLED` ALONE (`squaresSettlementMode` = `rehearsal`: no discovery, so one event read per cron
+  minute with no event), so Production's cron drives a rehearsal with the public flag off. The TV read needs the public
+  flag AND (window or switch) (`isSquaresServerLive`). The player routes and `/squares` were already gated on the public
+  flag only, so they work on a Preview with it on — unchanged. Also: `set_game` refuses a change of purpose (a Super
+  Bowl event re-pointed at a regular-season game would have kept playing at every venue); a late void past the
+  deadline is read at the post-final pace (every 5 min), not every minute; the void message says "press Run settlement
+  now" when the settlement is off. Detail: `docs/squares-and-brackets-plan_PHASE_6.2_HANDOFF.md`.
 
 #### 6.3 — Paying winners: chunked writes, stuck results, no idle reads (Opus 5.5 · medium)
 - **Problems (§13 F2, F7, F8, F9):** `payUnpaidSquaresResults` marks up to 1,000 ids in one `.in()` (PostgREST URL
@@ -369,7 +379,8 @@ migration); then 6.5–6.9.
 
 #### 6.9 — Launch (Opus 5.5 · medium)
 - Turn on `NEXT_PUBLIC_SQUARES_ENABLED` in Production and redeploy by **Mon Jan 25, 2027**; bump
-  `LEGAL_LAST_UPDATED`; turn the rehearsal switch off. On Jan 31 confirm the event is discovered with the right AFC/NFC
+  `LEGAL_LAST_UPDATED`; turn the rehearsal switch off; **archive the rehearsal event first** (discovery only runs with
+  no current event, and players' screens would show the rehearsal board — 6.2). On Jan 31 confirm the event is discovered with the right AFC/NFC
   axes. Watch logs on Feb 14 and record actual request counts against §6.
 
 ### Phase 7 — Bracket engine (Opus 5.5 · high)

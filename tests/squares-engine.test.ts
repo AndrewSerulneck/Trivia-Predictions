@@ -5,18 +5,20 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: null }));
 
-import { SQUARES_PER_PLAYER_CAP } from "@/lib/seasonalGames";
+import { SQUARES_PER_PLAYER_CAP, isSquaresServerLive } from "@/lib/seasonalGames";
 import {
   SQUARES_CONFIRMATION_MS,
   SQUARES_MOMENTS,
   findSuperBowl,
   gradedMomentMismatches,
   isDigitPermutation,
+  isSquaresReopenWatchOn,
   lockAtFor,
   planMomentStep,
   quartersFinishedFromStatus,
   squaresAxes,
   squaresCreditKey,
+  squaresEventPurposeFor,
   squaresMomentEvidence,
   winningCell,
   type MomentObservation,
@@ -24,8 +26,15 @@ import {
   type SquaresMoment,
   type SquaresSide,
 } from "@/lib/squares";
-import { parseSquaresAdminAction } from "@/lib/squaresAdmin";
-import { drawDigitPermutation, isSquaresSettlementActive, runSquaresTick, squaresSeason } from "@/lib/squaresSettlement";
+import { parseSquaresAdminAction, squaresArchiveRefusal, squaresSetGameRefusal } from "@/lib/squaresAdmin";
+import {
+  drawDigitPermutation,
+  isSquaresSettlementActive,
+  runSquaresTick,
+  squaresSeason,
+  squaresSettlementMode,
+} from "@/lib/squaresSettlement";
+import { squaresClaimMessage } from "@/lib/squaresView";
 
 // Squares + Brackets plan (docs/squares-and-brackets-plan.md) Phase 2: the Super Bowl Squares engine.
 // SQL behaviour is proven on PGlite by `npm run test:squares-sql`; this file pins the pure rules,
@@ -353,6 +362,29 @@ describe("cost gate", () => {
     expect(isSquaresSettlementActive(new Date("2027-01-03T12:00:00Z"))).toBe(true);
   });
 
+  it("runs on the rehearsal switch alone (Production's cron, public flag off) but discovers only in season (plan 6.2)", () => {
+    vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "");
+    vi.stubEnv("SQUARES_REHEARSAL_ENABLED", "true");
+    expect(squaresSettlementMode(new Date("2026-12-06T18:00:00Z"))).toBe("rehearsal");
+    expect(squaresSettlementMode(new Date("2027-02-14T23:30:00Z"))).toBe("rehearsal");
+    vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "true");
+    expect(squaresSettlementMode(new Date("2027-02-14T23:30:00Z"))).toBe("season");
+    vi.stubEnv("SQUARES_REHEARSAL_ENABLED", "");
+    expect(squaresSettlementMode(new Date("2026-12-06T18:00:00Z"))).toBeNull();
+  });
+
+  it("the TV read needs the public flag, and the window or the rehearsal switch", () => {
+    vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "");
+    vi.stubEnv("SQUARES_REHEARSAL_ENABLED", "true");
+    expect(isSquaresServerLive(new Date("2026-12-06T18:00:00Z"))).toBe(false);
+    vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "true");
+    expect(isSquaresServerLive(new Date("2026-12-06T18:00:00Z"))).toBe(true);
+    vi.stubEnv("SQUARES_REHEARSAL_ENABLED", "");
+    expect(isSquaresServerLive(new Date("2026-12-06T18:00:00Z"))).toBe(false);
+    expect(isSquaresServerLive(new Date("2027-02-14T23:30:00Z"))).toBe(true);
+    expect(read("lib/squaresTvRead.ts")).toContain("if (!isSquaresServerLive(new Date(nowMs))) return null;");
+  });
+
   it("is checked before anything else in the cron", () => {
     const cron = read("app/api/cron/pickem-settle/route.ts");
     expect(cron).toContain("isSquaresSettlementActive(new Date()) ? await runSquaresTick() : null");
@@ -374,6 +406,68 @@ describe("admin actions", () => {
       action: "move_lock", lockAt: "2027-02-14T23:00:00.000Z",
     });
     expect(parseSquaresAdminAction({ action: "drop_table" })).toHaveProperty("error");
+  });
+});
+
+describe("event lifecycle (plan 6.2)", () => {
+  it("only this season's Super Bowl is a super_bowl event; anything else is a rehearsal", () => {
+    expect(squaresEventPurposeFor({ ...superBowl, season: 2025 }, 2025)).toBe("super_bowl");
+    expect(squaresEventPurposeFor({ ...superBowl, season: 2025 }, 2026)).toBe("rehearsal");
+    expect(squaresEventPurposeFor({ ...superBowl, season: null }, 2025)).toBe("rehearsal");
+    expect(squaresEventPurposeFor({ ...superBowl, postseason: false }, Number(superBowl.season))).toBe("rehearsal");
+    const sameConference = { ...superBowl, visitor_team: { ...superBowl.visitor_team!, conference: superBowl.home_team?.conference } };
+    expect(squaresEventPurposeFor(sameConference as NflFeedGame, Number(superBowl.season))).toBe("rehearsal");
+  });
+
+  it("refuses archiving a drawn Super Bowl until the card window closes (Eastern); rehearsals and undrawn events any time", () => {
+    const drawn = { purpose: "super_bowl" as const, drawnAt: "2027-02-14T23:00:00Z" };
+    expect(squaresArchiveRefusal(drawn, new Date("2027-02-15T12:00:00Z"))).toMatch(/can't be archived until/);
+    // Feb 16 00:30 UTC is still Feb 15 in New York.
+    expect(squaresArchiveRefusal(drawn, new Date("2027-02-16T00:30:00Z"))).not.toBeNull();
+    expect(squaresArchiveRefusal(drawn, new Date("2027-02-16T05:30:00Z"))).toBeNull();
+    expect(squaresArchiveRefusal({ purpose: "super_bowl", drawnAt: null }, new Date("2027-02-10T12:00:00Z"))).toBeNull();
+    expect(squaresArchiveRefusal({ purpose: "rehearsal", drawnAt: "2026-12-06T17:30:00Z" }, new Date("2026-12-06T20:00:00Z"))).toBeNull();
+  });
+
+  it("set_game never changes an event's purpose", () => {
+    expect(squaresSetGameRefusal("super_bowl", "super_bowl")).toBeNull();
+    expect(squaresSetGameRefusal("rehearsal", "rehearsal")).toBeNull();
+    expect(squaresSetGameRefusal("super_bowl", "rehearsal")).toMatch(/isn't this season's Super Bowl/);
+    expect(squaresSetGameRefusal("rehearsal", "super_bowl")).toMatch(/Archive this rehearsal/);
+  });
+
+  it("watches the feed for 3 hours after a void, and only after one", () => {
+    const at = Date.parse("2027-02-15T12:30:00Z");
+    expect(isSquaresReopenWatchOn(null, at)).toBe(false);
+    expect(isSquaresReopenWatchOn("not a date", at)).toBe(false);
+    expect(isSquaresReopenWatchOn("2027-02-15T12:30:00+00:00", at + 60_000)).toBe(true);
+    expect(isSquaresReopenWatchOn("2027-02-15T12:30:00+00:00", at - 500)).toBe(true); // clocks a moment apart
+    expect(isSquaresReopenWatchOn("2027-02-15T12:30:00+00:00", at + 3 * 60 * 60_000)).toBe(false);
+  });
+
+  it("the claim route answers rehearsal_only with 403 and plain copy", () => {
+    expect(read("app/api/squares/claim/route.ts")).toContain("rehearsal_only: 403");
+    expect(squaresClaimMessage("rehearsal_only")).toBe("This board is a test game and isn't open at this venue.");
+  });
+
+  it("the lifecycle migration replaces squares_claim and squares_void_moment and keeps them service-role only", () => {
+    const name = readdirSync(path.join(ROOT, "supabase/migrations")).find((file) => file.endsWith("_squares_event_lifecycle.sql"));
+    expect(name).toBeDefined();
+    const sql = read(`supabase/migrations/${name}`);
+    for (const signature of [
+      "squares_claim(uuid, uuid, text, integer, text)",
+      "squares_void_moment(uuid, text, text, text, integer, integer, integer)",
+    ]) {
+      expect(sql).toContain(`revoke all on function public.${signature} from public, anon, authenticated;`);
+      expect(sql).toContain(`grant execute on function public.${signature} to service_role;`);
+    }
+    expect(sql).toContain("claim_outcome := 'rehearsal_only'");
+    expect(sql).toMatch(/set completed_at = null, reopened_at = now\(\)/);
+  });
+
+  it("every event insert names its purpose", () => {
+    expect(read("lib/squaresStore.ts")).toContain("purpose: options.purpose");
+    expect(read("lib/squaresSettlement.ts")).toContain('purpose: "super_bowl"');
   });
 });
 

@@ -1086,3 +1086,14 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   Squares check); a new file that calls `awardCycleWinner`/`awardRankedCyclePlaces` fails
   `tests/prize-sweep-ownership-contract.test.ts` until it does too. Never turn `NEXT_PUBLIC_SQUARES_ENABLED` on in Production before 6.9 (rehearsals run
   on a Preview).
+- **Squares event lifecycle (6.2, 2026-10-19, migration `20261019142642`, NOT yet applied — Andrew runs `supabase db push`
+  before deploying the 6.2 code).** `squares_events.purpose`: `super_bowl` (discovery, or an admin game that is the
+  season's Super Bowl, `squaresEventPurposeFor`) or `rehearsal` (any other game). `squares_claim` answers
+  `rehearsal_only` for a rehearsal at any venue not `hidden = true` — the main guard; prizes check it again
+  (`squaresPrizePaysAtVenue`). `set_game` never changes purpose. Discovery never re-creates an archived game; a drawn
+  Super Bowl can't be archived before the window closes (`squaresArchiveRefusal`). A void stamps `reopened_at`; the tick
+  watches the feed 3 h after it even past the 12 h deadline (`isSquaresReopenWatchOn`). **Rehearsal switch
+  `SQUARES_REHEARSAL_ENABLED`** (server-side, one reader `isSquaresRehearsalEnabled()` in `lib/seasonalGames.ts`): ALONE it
+  runs the settlement (`squaresSettlementMode` → `rehearsal`, never discovers) — that is what goes on Production for 6.7;
+  with the public flag it also runs the TV read (`isSquaresServerLive`) — Preview only. Archive any rehearsal event
+  before 6.9.

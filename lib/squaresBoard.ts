@@ -170,7 +170,9 @@ export type SquaresClaimOutcome =
   | "locked"
   | "no_event"
   | "user_not_found"
-  | "wrong_venue";
+  | "wrong_venue"
+  /** A rehearsal event (plan 6.2) at a venue that is not hidden: nothing was written. */
+  | "rehearsal_only";
 
 export type SquaresClaimResult =
   | { ok: true; outcome: SquaresClaimOutcome; myCells: number[] }

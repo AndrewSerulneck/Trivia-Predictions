@@ -21,6 +21,7 @@ const STATUS: Record<SquaresClaimOutcome, number> = {
   no_event: 404,
   user_not_found: 403,
   wrong_venue: 403,
+  rehearsal_only: 403,
 };
 
 export async function POST(request: Request) {

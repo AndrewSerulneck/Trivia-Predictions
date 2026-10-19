@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Isolated PostgreSQL check for supabase/migrations/20261019051458_squares_engine.sql
 // (docs/squares-and-brackets-plan.md Phase 2), applied on top of Phase 1's
-// 20261019045030_seasonal_points_credits.sql, and Phase 4's 20261019131139_squares_prizes.sql. No network, no application imports, never touches
+// 20261019045030_seasonal_points_credits.sql, plus Phase 4's 20261019131139_squares_prizes.sql and
+// Phase 6.2's 20261019142642_squares_event_lifecycle.sql. No network, no application imports, never touches
 // Supabase. Runs on PGlite (devDependency):
 //   npm run test:squares-sql
 // or point at another copy: SQUARES_PGLITE_MODULE=/path/to/node_modules/@electric-sql/pglite node scripts/test-squares-sql.cjs
@@ -18,11 +19,12 @@ const MIGRATIONS = [
   "supabase/migrations/20261019045030_seasonal_points_credits.sql",
   "supabase/migrations/20261019051458_squares_engine.sql",
   "supabase/migrations/20261019131139_squares_prizes.sql",
+  "supabase/migrations/20261019142642_squares_event_lifecycle.sql",
 ];
 
 const SCHEMA = `
   create role anon; create role authenticated; create role service_role;
-  create table venues(id text primary key, name text);
+  create table venues(id text primary key, name text, hidden boolean not null default false);
   create table users(id uuid primary key, venue_id text not null references venues(id), username text not null,
     points integer not null default 0, constraint users_points_non_negative check (points >= 0));
   create table game_sessions(session_id uuid primary key default gen_random_uuid(), game_type text not null,
@@ -187,10 +189,15 @@ async function run() {
     const moment = await one(`select * from squares_event_moments where event_id = $1 and moment = 'q1'`, [eventId]);
     assert.equal(moment.grade_no, 2);
     assert.equal(moment.score_source, "admin");
+    const reopened = await one(`select purpose, reopened_at, completed_at from squares_events where id = $1`, [eventId]);
+    assert.equal(reopened.purpose, "super_bowl", "an event is a real Super Bowl unless created as a rehearsal");
+    assert.notEqual(reopened.reopened_at, null, "a void stamps reopened_at (6.2)");
+    assert.equal(reopened.completed_at, null);
     const log = await one(`select * from squares_admin_log where action = 'void_moment'`);
     assert.equal(log.actor, "andrew");
     assert.equal(log.detail.voidedWinningCell, 79);
     assert.equal(log.detail.regrade.winningCell, 43);
+    assert.equal(log.detail.reopened, true);
 
     // ── Void half while UNPAID: the key is burned, so a late credit pays nothing ──────────
     out = await one(`select * from squares_void_moment($1, 'half', 'wrong digits', 'andrew')`, [eventId]);
@@ -229,6 +236,53 @@ async function run() {
     assert.equal(await points(D), 0);
     await assert.rejects(rows(`select * from reverse_seasonal_points('squares', '[]'::jsonb, '')`), /reason/);
     await assert.rejects(rows(`select * from reverse_seasonal_points('nope', '[]'::jsonb, 'r')`), /unknown source/);
+
+
+    // ── Phase 6.2: a rehearsal event plays only at hidden venues ──────────────────────────
+    await assert.rejects(
+      db.query(`update squares_events set purpose = 'practice' where id = $1`, [eventId]),
+      /squares_events_purpose_valid/,
+    );
+    await db.query(`update squares_events set archived_at = now() where id = $1`, [eventId]);
+    await db.exec(`insert into venues values ('vh', 'Hidden test venue', true)`);
+    const H = id(5);
+    const V = id(6);
+    await db.query(`insert into users(id, venue_id, username) values ($1, 'vh', 'tess'), ($2, 'v2', 'vic')`, [H, V]);
+    const rehearsalId = (
+      await one(`insert into squares_events (season, bdl_game_id, col_side, col_team, row_team, kickoff_at, lock_at, purpose)
+        values (2026, 77, 'visitor', '{"id":3}', '{"id":4}', now() + interval '2 hours', now() + interval '90 minutes', 'rehearsal') returning id`)
+    ).id;
+    const rClaim = (userId, venueId, cell, action = "claim") =>
+      one(`select * from squares_claim($1, $2, $3, $4, $5)`, [rehearsalId, userId, venueId, cell, action]);
+    const boardsBefore = Number((await one(`select count(*)::int n from squares_boards where event_id = $1`, [rehearsalId])).n);
+    out = await rClaim(V, "v2", 10);
+    assert.equal(out.claim_outcome, "rehearsal_only", "a rehearsal refuses a visible venue");
+    assert.deepEqual(out.claim_cells, []);
+    assert.equal((await rClaim(V, "v2", 10, "release")).claim_outcome, "rehearsal_only", "release too");
+    assert.equal(
+      Number((await one(`select count(*)::int n from squares_boards where event_id = $1`, [rehearsalId])).n),
+      boardsBefore,
+      "no board is created at a visible venue",
+    );
+    out = await rClaim(H, "vh", 10);
+    assert.equal(out.claim_outcome, "claimed", "a hidden venue plays a rehearsal");
+    assert.deepEqual(out.claim_cells, [10]);
+    assert.equal((await rClaim(H, "v2", 11)).claim_outcome, "wrong_venue", "venue binding still comes first");
+    // A venue that is later un-hidden stops accepting rehearsal claims.
+    await db.query(`update venues set hidden = false where id = 'vh'`);
+    assert.equal((await rClaim(H, "vh", 11)).claim_outcome, "rehearsal_only");
+    await db.query(`update venues set hidden = true where id = 'vh'`);
+    // A Super Bowl event plays at a hidden venue too (the test venue joins the real game).
+    await db.query(`update squares_events set purpose = 'super_bowl' where id = $1`, [rehearsalId]);
+    assert.equal((await rClaim(V, "v2", 10)).claim_outcome, "claimed", "a Super Bowl event plays everywhere");
+    const blockedCols = await one(`select count(*)::int n from information_schema.columns
+      where table_name = 'squares_results' and column_name in ('credit_blocked_at', 'credit_blocked_note')`);
+    assert.equal(Number(blockedCols.n), 2, "6.3's columns exist");
+    await assert.rejects(
+      db.query(`update squares_results set credit_blocked_note = 'x' where id = (select id from squares_results limit 1)`),
+      /squares_results_credit_blocked_note_valid/,
+      "a note needs credit_blocked_at",
+    );
 
     // ── Player deletion cascades their claims and results ─────────────────────────────────
     await db.query(`delete from users where id = $1`, [B]);
