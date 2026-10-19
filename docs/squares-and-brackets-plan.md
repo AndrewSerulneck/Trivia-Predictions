@@ -1,9 +1,10 @@
 # Super Bowl Squares + March Madness Brackets — phased plan
 
-**Status (2026-10-19):** Phase 5 done (Squares TV view), committed locally after the Phase 4 commit `8783a7c`;
-Phases 1–5 are committed locally, their migrations are APPLIED to production, flags off, nothing pushed or
-deployed. Latest handoff: `docs/squares-and-brackets-plan_PHASE_5_HANDOFF.md`. Phase 0's live NFL capture (MNF Oct 19,
-Thu Oct 22) still has to be checked against the quarter rule. Next: Phase 6 (review, rehearsal, launch).
+**Status (2026-10-19):** Phase 6's review step done (code review of Phases 0–5, findings checked, device
+checklist written); the fixes, rehearsal and launch are sub-phases **6.1–6.9** (§4 Phase 6). Phases 1–5 are committed
+locally (Phase 5 = `01b87ad`); their migrations are APPLIED to production; flags off; nothing pushed or deployed.
+Latest handoff: `docs/squares-and-brackets-plan_PHASE_6_HANDOFF.md`. **Next: 6.1, urgently** — it fixes a live
+problem with the NFL Pick 'Em prize at Pacific Street (§13 F1).
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -48,7 +49,9 @@ Dates confirmed in Phase 0 (NCAA.com 2027 schedules, Super Bowl LXI = Feb 14, 20
 bracket feeds (the paid "GOAT" tier, $39.99/mo per sport) and NFL quarter-by-quarter scores. Each bracket feed is one
 request. Running costs are estimated in §6.
 
-**Needs you:** nothing right now. Your §7 answers are recorded in §1 (items 9–15).
+**Needs you:** soon, a push + deploy of fix 6.1 (it protects the NFL Pick 'Em prize at Pacific Street from going to a
+trivia winner). Later: one `supabase db push` (6.2), the rehearsal phone pass (6.8), and the launch (6.9). Your §7
+answers are recorded in §1 (items 9–15).
 
 ---
 
@@ -150,7 +153,7 @@ Implied by existing rules (CLAUDE.md), also not up for debate:
 | 3 | Squares player screens | Sonnet 5.5 | high | 2 sessions |
 | 4 | Squares Prizes + Results page | Opus 5.5 | high | 1–2 sessions |
 | 5 | Squares TV view | Sonnet 5.5 | medium | 1 session |
-| 6 | Squares review, rehearsal, launch (by Jan 25) | Opus 5.5 | high | 1–2 sessions + Andrew |
+| 6 | Squares review, rehearsal, launch (by Jan 25): review done; fixes and launch are 6.1–6.9 below | Opus 5.5 | high | 1–2 sessions + Andrew |
 | 7 | Bracket engine: 4 tournaments, sync, grading, admin fix-ups | Opus 5.5 | high | 2–3 sessions |
 | 8 | Bracket player screens: fill out, copy, view, standings | Sonnet 5.5 | high | 2–3 sessions |
 | 9 | Bracket Prizes + Results + TV | Opus 5.5 (9a) / Sonnet 5.5 (9b) | high / medium | 2 sessions |
@@ -231,12 +234,137 @@ Implied by existing rules (CLAUDE.md), also not up for debate:
   Add no new per-TV request loop.
 
 ### Phase 6 — Squares review, rehearsal, launch (Opus 5.5 · high)
-- Run `/code-review high` on Phases 1–5 and fix the findings.
-- **Rehearsal:** point a test event at a late-season or playoff NFL game on hidden venue `venue-hightop-test` and
-  run claim → draw → live → settle → points → Prize → Results → TV for real.
-- Andrew does the phone pass (new device checklist `docs/squares-and-brackets-device-checklist.md`, section A).
-- Turn on `NEXT_PUBLIC_SQUARES_ENABLED` and redeploy by **Mon Jan 25, 2027**. Watch the logs on Feb 14 and record
-  actual request counts.
+**Phase 6 itself (done 2026-10-19):** `/code-review high` over Phases 0–5 (`863a9b6~1..01b87ad`), each finding checked
+against the code and production data, and the device checklist written
+(`docs/squares-and-brackets-device-checklist.md`, section A). Findings are in §13. Per Andrew (2026-10-19), they are
+**not** patched in place: each problem gets a designed fix, as one of the sub-phases below. Order matters: **6.1 first
+and on its own**, because it is a production problem today; 6.2 → 6.3 → 6.4 in any order after it (6.3 uses 6.2's
+migration); then 6.5–6.9.
+
+| Sub-phase | What | Model | Effort | Needs Andrew |
+|---|---|---|---|---|
+| 6.1 | Each prize sweep pays only its own kind of prize (**live problem**) | Opus 5.5 | medium | push + deploy |
+| 6.2 | Squares event lifecycle: rehearsal events, archive, late voids (one migration) | Opus 5.5 | high | `supabase db push` |
+| 6.3 | Paying winners: chunked writes, stuck results, no idle reads | Opus 5.5 | medium | — |
+| 6.4 | Player screen after the final keeps up with a void | Sonnet 5.5 | medium | — |
+| 6.5 | Quarter rule checked against the live captures | Opus 5.5 | medium | Mac awake Oct 19 + 22 |
+| 6.6 | Re-review of 6.1–6.5 (`/code-review high`) | Opus 5.5 | high | — |
+| 6.7 | Rehearsal on `venue-hightop-test` with a real NFL game | Opus 5.5 | high | Preview env vars, phone pass |
+| 6.8 | Andrew's phone + TV pass (checklist section A) | — | — | yes |
+| 6.9 | Launch: flag on + redeploy by **Mon Jan 25, 2027**; watch Feb 14 | Opus 5.5 | medium | yes |
+
+#### 6.1 — Each prize sweep pays only its own kind of prize (Opus 5.5 · medium) — do first
+- **Problem (§13 F1):** the Live Trivia "winner of the game" sweep (`resolveGameWinnerRewards`,
+  `lib/liveTriviaWinnerRewards.ts`) keeps every active `game_winner` prize at the venue and never checks
+  `rewardDefinitionId`. A Squares prize is `game_winner` with `gameWinnerSlots: null` (= every game), so the next Live
+  Trivia game at that venue would win it, and the sweep would then deactivate it before the Super Bowl. **The same gap
+  exists today for the NFL "most picks" weekly prize at Pacific Street** (`ceceade0-…`, active since 2026-10-02,
+  slots null, recurring weekly). Only its 3-player minimum has kept trivia winners from receiving it; the first
+  trivia game there with 3+ players would award it, every week.
+- **Solution:** one predicate `isLiveTriviaGameWinnerCampaign(campaign)` in `lib/liveTriviaWinnerRewards.ts`, the
+  mirror of `isNFLWeekWinnerCampaign`: active, no winner, `game_winner`, `rewardDefinitionId ===
+  "live_trivia_challenge"` (a named constant, like `NFL_PICKEM_REWARD_DEFINITION_ID`), non-empty `venueIds`. The sweep
+  filters with it. Production on 2026-10-19 has no `game_winner` prize with a null definition, so the strict check
+  drops nothing real. Audit the other `awardCycleWinner` callers (`lib/nflPickEmWinnerRewards.ts`,
+  `lib/squaresPrizeAwards.ts`, any ranked-places sweep in `lib/challengeCampaigns.ts`) and give each the same
+  own-definition guard.
+- **Tests:** behaviour: a finished trivia game with 3+ players does not award a Squares prize or an NFL prize at the
+  same venue, and still awards the Live Trivia one. Contract test `tests/prize-sweep-ownership-contract.test.ts`:
+  every file that calls `awardCycleWinner` filters on its own definition id.
+- **Ship it alone:** no migration. Commit, then ask Andrew to push and deploy before the next Pacific Street trivia
+  night with 3+ players (weekly Friday game; next is **Fri Oct 23**). Afterwards check that the NFL prize's
+  `challenge_cycle_winners` stays empty across a trivia night.
+
+#### 6.2 — Squares event lifecycle: rehearsal events, archive, late voids (Opus 5.5 · high)
+- **Problems (§13 F3, F4, F5):** a rehearsal on any regular-season game pays real partner Squares prizes (and the
+  Super Bowl pays them again); archiving the event during Feb 1–15 lets discovery re-create the same Super Bowl as a
+  fresh, empty event that draws and grades at once, blanking every board; a void more than 12 h after kickoff is never
+  re-graded although the admin message says it will be. Also, the TV read and settlement can't run outside Feb 1–15
+  without the public flag, so a December/January rehearsal can't exercise them as built.
+- **Migration (one new file; PGlite proof in `npm run test:squares-sql`; Andrew runs `supabase db push`):**
+  - `squares_events.purpose text not null default 'super_bowl' check (purpose in ('super_bowl', 'rehearsal'))`.
+    Production has 0 events (checked 2026-10-19), so no backfill.
+  - `squares_events.reopened_at timestamptz`: set by `squares_void_moment` in the same write that clears
+    `completed_at` (replace the function in the new file; never edit the old migration).
+  - `squares_results.credit_blocked_at timestamptz` + `credit_blocked_note text` (used by 6.3; kept in this one
+    migration so Andrew pushes once).
+  - Replace `squares_claim`: on a `rehearsal` event, a claim at a venue that is not `hidden = true` returns a new
+    outcome `rehearsal_only`. **This is the main guard**: a rehearsal can never create a board, points, a Prize or a
+    Results row at a real venue.
+- **Code:**
+  - Who decides `purpose`: automatic discovery (the season's Super Bowl) → `super_bowl`; admin "create from game" →
+    `super_bowl` only when that game is the season's Super Bowl (postseason, week 5), otherwise `rehearsal`. The admin
+    panel shows a REHEARSAL badge. The claim route maps `rehearsal_only` to plain copy.
+  - Prizes, as a second guard: `squaresPrizeCoversEvent` pays on a `rehearsal` event only at a hidden venue (one
+    extra read of `venues.hidden`, only for a rehearsal event with a winner).
+  - Discovery never re-creates a game that already has an archived event (one read by `bdl_game_id`, only on the
+    15-minute discovery runs). An admin can still create it explicitly.
+  - Archive of a drawn `super_bowl` event is refused until the card window has closed (after Feb 15, Eastern), with
+    the reason in the panel: players' screens read the current event, so archiving early blanks them. Before the draw,
+    archive stays allowed (wrong-game fix-up; `set_game` usually suffices).
+  - Late voids: the tick keeps reading the feed while `completed_at` is null and `now − reopened_at <
+    SQUARES_POST_FINAL_WATCH_MS` (3 h), even past the 12 h no-final deadline. Admin message: "It will re-grade from
+    the feed within the next few minutes; if the feed no longer shows this game, enter the scores instead."
+  - Rehearsal switch, one reader `isSquaresRehearsalEnabled()`: settlement, the board/score/claim routes, `/squares`
+    and the TV read (`lib/squaresTvRead.ts`) run outside the window when the public flag AND the rehearsal switch are
+    both on. Rehearsal never auto-discovers (no Super Bowl in the feed yet); the event is created by an admin.
+    Recommended setup for 6.7: both vars on **Preview only** for the UI, and on **Production** only the server-side
+    `SQUARES_REHEARSAL_ENABLED` plus a settlement gate that accepts the switch alone, because Vercel crons run only on
+    Production. Decide the exact gate in this phase and record it; the public flag must never be on in Production
+    before 6.9, or the Squares prize appears in every partner's wizard (`isSquaresPrizeOffered` has no start date).
+- **Tests:** SQL (rehearsal claim refused at a visible venue, accepted at a hidden one; void sets `reopened_at`);
+  unit (purpose decision, discovery skip, archive refusal, late-void tick reads the feed, prize guard).
+
+#### 6.3 — Paying winners: chunked writes, stuck results, no idle reads (Opus 5.5 · medium)
+- **Problems (§13 F2, F7, F8, F9):** `payUnpaidSquaresResults` marks up to 1,000 ids in one `.in()` (PostgREST URL
+  limit ≈ 150 UUIDs), so a big moment can never be marked paid and is re-sent every minute; a result whose credit key
+  is already paid to someone else (only possible through a bug) is re-sent forever and blocks archive; settlement runs
+  three empty reads every minute for days after the game; a stale comment says coupons are never taken back.
+- **Solution:**
+  - Mark paid in chunks of 150 (share one constant with `PRIZE_STAMP_CHUNK` in `lib/squaresPrizeAwards.ts`, e.g.
+    `POSTGREST_ID_CHUNK` in a small shared module); keep `PAY_PER_RUN` but never send an id list over the chunk size.
+  - A result answered `already_credited` to another user, or `user_not_found`, is stamped `credit_blocked_at` + a
+    note (6.2's columns), logged once (`[Squares] credit-blocked`), and excluded from the unpaid read. The admin panel
+    shows blocked results; Archive counts them separately ("1 result needs a look", not "unpaid").
+  - In `tick`, return before `settleSquaresWinners` once the watch is over or past the no-final deadline (and no
+    `reopened_at` watch is running). Admin actions keep calling it directly, so an admin fix still pays.
+  - Fix the `squaresPrizeCycleStart` comment in `lib/squaresPrizes.ts` (a void now takes back an unused coupon).
+- **Cost after:** zero Squares reads per cron minute once the event's watch has ended (today ≈ 3 × 1,440 per day
+  until Feb 15).
+
+#### 6.4 — Player screen after the final keeps up with a void (Sonnet 5.5 · medium)
+- **Problem (§13 F6):** at phase `complete`, `useSquaresData` stops reading; an admin void later changes the winners
+  but open screens keep the old ones until reloaded.
+- **Solution:** while `complete`, read the shared CDN-cached score (`/api/squares/score`) every 5 min while the page
+  is visible and once on returning to the tab; if the revision differs, re-read the board (the existing path). Add
+  `gradeNo` to `squaresRevision` so a re-grade is always a new revision. Cost: CDN hits (one origin read per 15 s
+  nationwide at most), no per-player function calls. Pin the cadence in `tests/squares-screen.test.ts`.
+
+#### 6.5 — Quarter rule checked against the live captures (Opus 5.5 · medium)
+- Phase 2 §8.1, still open. Pollers PID 71943 (WSH @ SF, `1392308`, Oct 19 8:15 PM ET) and 71944 (NE @ CHI,
+  `1392309`, Oct 22) write `tests/fixtures/squares/nfl-live-capture-<id>.json`; the Mac must stay awake. Run
+  `npx vitest run tests/squares-engine.test.ts` (it replays any capture), adjust `quartersFinishedFromStatus` in
+  `lib/squares.ts` if the live `status` strings differ, and record the real strings in §8. If a capture failed,
+  re-run `node --env-file=.env.local scripts/capture-nfl-live-game.cjs <id>` on a later game.
+
+#### 6.6 — Re-review (Opus 5.5 · high)
+- `/code-review high` over the 6.1–6.5 commits. New findings become 6.6.1, 6.6.2, … in the same style (designed fix,
+  not an in-place patch).
+
+#### 6.7 — Rehearsal (Opus 5.5 · high)
+- Needs 6.2's migration applied and its rehearsal gate deployed. Pick a December 2026 game (regular season ends
+  Jan 10, 2027; leave slack before Jan 25). Admin creates a `rehearsal` event from that game at hidden venue
+  `venue-hightop-test`, with a test Squares prize there. Run claim → lock → draw → live → each moment graded →
+  points → prize coupon → Results → TV, plus one void + re-grade. Record actual BDL requests, cron actions and DB
+  reads against §6. Andrew does checklist section A on the Preview during it.
+
+#### 6.8 — Phone + TV pass (Andrew)
+- `docs/squares-and-brackets-device-checklist.md` section A, during 6.7. Any failure becomes 6.8.x.
+
+#### 6.9 — Launch (Opus 5.5 · medium)
+- Turn on `NEXT_PUBLIC_SQUARES_ENABLED` in Production and redeploy by **Mon Jan 25, 2027**; bump
+  `LEGAL_LAST_UPDATED`; turn the rehearsal switch off. On Jan 31 confirm the event is discovered with the right AFC/NFC
+  axes. Watch logs on Feb 14 and record actual request counts against §6.
 
 ### Phase 7 — Bracket engine (Opus 5.5 · high)
 - Tables (proposal):
@@ -397,3 +525,24 @@ Full detail: `docs/squares-and-brackets-plan_PHASE_4_HANDOFF.md`.
   off), placement rule (prize → the Squares game card, labelled with the moment; a prize repeated on one game shows its
   moment, `rewardTitleAt`).
 
+
+## 13. Phase 6 code review (2026-10-19) — the findings behind 6.1–6.4
+
+`/code-review high` over `863a9b6~1..01b87ad` (Phases 0–5). Every finding was then checked against the code; F1 also
+against production. Full detail: `docs/squares-and-brackets-plan_PHASE_6_HANDOFF.md`.
+
+| # | Finding | Checked | Severity | Fix |
+|---|---|---|---|---|
+| F1 | Live Trivia winner sweep awards any active `game_winner` prize, so a Squares prize (and today's live NFL "most picks" prize) goes to a trivia winner (`lib/liveTriviaWinnerRewards.ts:213`) | Confirmed in code + production: NFL prize `ceceade0-…` at Pacific Street is exposed, held back only by its 3-player minimum; ledger empty so far | **High, live now** | 6.1 |
+| F2 | `payUnpaidSquaresResults` marks ≤ 1,000 ids in one `.in()`, past the ≈ 150-UUID URL limit; such rows are re-sent forever | Confirmed; needs > ~150 winners in one run (≈ 150+ venues, or a backlog) | Medium (at scale) | 6.3 |
+| F3 | A void more than 12 h after kickoff is never re-graded (`no_final_deadline`), though the admin message promises it | Confirmed | Medium | 6.2 |
+| F4 | Archiving the event in Feb 1–15 lets discovery re-create the same Super Bowl as an empty event that draws and grades at once | Confirmed (unique index covers non-archived rows only) | Medium | 6.2 |
+| F5 | A rehearsal event pays real partner Squares prizes; the Super Bowl pays them again | Confirmed (`squaresPrizeCoversEvent` checks only dates) | Medium | 6.2 |
+| F6 | `/squares` stops reading at `complete`, so a later void never reaches open screens | Confirmed | Low | 6.4 |
+| F7 | `settleSquaresWinners` (3 reads) runs every cron minute for the rest of Feb 1–15 after the watch ends | Confirmed (≈ 35k empty reads) | Low (cost rule) | 6.3 |
+| F8 | A result whose key is already paid to another user, or whose user is gone, is re-sent forever and blocks Archive | Reachable only through another bug (results cascade on user delete; keys are unique per board/moment/grade) | Low (hardening) | 6.3 |
+| F9 | `squaresPrizeCycleStart` comment says a coupon is never taken back; a void now does | Confirmed | Low (docs) | 6.3 |
+
+Found while checking, not raised by the review: the TV read (`lib/squaresTvRead.ts`), `/squares` and settlement are
+all gated on Feb 1–15 + the public flag, so the planned December/January rehearsal could not exercise them; 6.2 adds
+the rehearsal gate.
