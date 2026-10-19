@@ -44,7 +44,7 @@ const board = (patch: Partial<NonNullable<SquaresBoardView["event"]>> = {}, over
   moments: ["q1", "half", "q3", "final"].map((moment, i) => ({
     moment: moment as "q1",
     points: i === 3 ? 50 : 25,
-    result: moment === "q1" ? { col: 7, row: 3, winningCell: 3, winner: { username: "ann", mine: false } } : null,
+    result: moment === "q1" ? { col: 7, row: 3, winningCell: 3, gradeNo: 1, winner: { username: "ann", mine: false } } : null,
   })),
   ...over,
 });

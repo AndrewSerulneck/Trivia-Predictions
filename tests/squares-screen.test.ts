@@ -313,16 +313,48 @@ describe("what it costs (plan §6)", () => {
     expect(calls.board).toBe(2);
   });
 
-  it("stops reading once the game is complete", async () => {
+  it("after the final: the shared score every 5 min (never the board), and once on returning to the tab", async () => {
     const board = makeBoard({ phase: "complete", digits: true });
     board.event!.kickoffAt = "2020-01-01T00:00:00.000Z";
-    const score = makeScore("complete");
-    const calls = installFetch({ board, score });
+    const state = { board, score: makeScore("complete") };
+    const calls = installFetch(state);
     await mountScreen();
     const before = { board: calls.board, score: calls.score };
+    await advance(290_000);
+    expect(calls.score).toBe(before.score); // not before 5 min
+    await advance(15_000);
+    expect(calls.score).toBe(before.score + 1);
     await advance(300_000);
+    expect(calls.score).toBe(before.score + 2);
+    expect(calls.board).toBe(before.board); // unchanged revision: no per-venue read
+
+    Object.defineProperty(document, "hidden", { configurable: true, value: true });
+    await advance(900_000);
+    expect(calls.score).toBe(before.score + 2); // a hidden tab reads nothing
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+    await act(async () => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await flush();
+    expect(calls.score).toBe(before.score + 3);
     expect(calls.board).toBe(before.board);
-    expect(calls.score).toBe(before.score);
+  });
+
+  it("after the final: a void + re-grade (same cell, new grade number) re-reads the board once", async () => {
+    const board = makeBoard({ phase: "complete", digits: true });
+    board.event!.kickoffAt = "2020-01-01T00:00:00.000Z";
+    board.moments[3].result = { col: 7, row: 3, winningCell: 41, gradeNo: 1, winner: null };
+    const score = makeScore("complete");
+    score.moments[3].result = { col: 7, row: 3, winningCell: 41, gradeNo: 1 };
+    const state = { board, score };
+    const calls = installFetch(state);
+    await mountScreen();
+    const before = calls.board;
+    score.moments[3].result = { col: 7, row: 3, winningCell: 41, gradeNo: 2 };
+    board.moments[3].result = { col: 7, row: 3, winningCell: 41, gradeNo: 2, winner: null }; // what the server now holds
+    await advance(305_000);
+    await flush();
+    expect(calls.board).toBe(before + 1);
   });
 
   it("switches from the board to the score at the lock without a reload", async () => {

@@ -22,7 +22,7 @@ import {
 export type SquaresScoreMoment = {
   moment: SquaresMoment;
   points: number;
-  result: null | { col: number; row: number; winningCell: number };
+  result: null | { col: number; row: number; winningCell: number; gradeNo: number };
 };
 
 /** The shared, not-user-specific read (GET /api/squares/score). */
@@ -51,21 +51,23 @@ export const SQUARES_MOMENT_LABELS: Record<SquaresMoment, string> = {
 /** How often an open screen re-reads (ms). The board is per venue and uncached, so it is the slow one. */
 export const SQUARES_BOARD_POLL_MS = 30_000;
 export const SQUARES_SCORE_POLL_MS = 15_000;
+/** After the final: a void can still change the winners, so look at the CDN-cached score this rarely. */
+export const SQUARES_COMPLETE_POLL_MS = 300_000;
 
 // ── What changed? ───────────────────────────────────────────────────────────────────────────────
 
 /**
  * A short fingerprint of everything on the shared score that the BOARD payload must agree with: the
- * draw, and each graded moment's cell. When the score's fingerprint differs from the board's, the
+ * draw, and each graded moment's cell and grade number (a re-grade is always a new revision). When the score's fingerprint differs from the board's, the
  * screen refetches the board once (for the winners' names). Cumulative live score is NOT in it — that
  * changes every minute and needs no board read.
  */
 export const squaresRevision = (parts: {
   drawn: boolean;
-  moments: ReadonlyArray<{ moment: SquaresMoment; result: null | { winningCell: number } }>;
+  moments: ReadonlyArray<{ moment: SquaresMoment; result: null | { winningCell: number; gradeNo: number } }>;
 }): string =>
   `${parts.drawn ? "d" : "u"}|${parts.moments
-    .map((m) => `${m.moment}:${m.result ? m.result.winningCell : "-"}`)
+    .map((m) => `${m.moment}:${m.result ? `${m.result.winningCell}#${m.result.gradeNo}` : "-"}`)
     .join(",")}`;
 
 export const boardRevision = (board: SquaresBoardView): string =>

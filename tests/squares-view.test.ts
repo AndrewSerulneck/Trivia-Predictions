@@ -11,6 +11,7 @@ import {
   squaresClaimMessage,
   squaresHeadline,
   squaresMomentRows,
+  squaresRevision,
   squaresScreenState,
   type SquaresScoreView,
 } from "@/lib/squaresView";
@@ -87,7 +88,7 @@ describe("cell models", () => {
     const score = baseScore(
       { phase: "drawn", colDigits: COL, rowDigits: ROW, liveScore: { col: 17, row: 13, status: "Q2" } },
       [
-        { moment: "q1", points: 25, result: { col: 7, row: 3, winningCell: row * 10 + col } },
+        { moment: "q1", points: 25, result: { col: 7, row: 3, winningCell: row * 10 + col, gradeNo: 1 } },
         { moment: "half", points: 25, result: null },
         { moment: "q3", points: 25, result: null },
         { moment: "final", points: 50, result: null },
@@ -140,7 +141,7 @@ describe("what changed", () => {
     const live = baseScore({ phase: "drawn", colDigits: COL, rowDigits: ROW, liveScore: { col: 3, row: 0, status: "Q1" } });
     expect(scoreRevision(live)).toBe(scoreRevision(drawn));
     const graded = baseScore({ phase: "drawn", colDigits: COL, rowDigits: ROW }, [
-      { moment: "q1", points: 25, result: { col: 3, row: 0, winningCell: 33 } },
+      { moment: "q1", points: 25, result: { col: 3, row: 0, winningCell: 33, gradeNo: 1 } },
       { moment: "half", points: 25, result: null },
       { moment: "q3", points: 25, result: null },
       { moment: "final", points: 50, result: null },
@@ -197,7 +198,7 @@ describe("what a player can do", () => {
 
 describe("moment rows", () => {
   const graded = (winningCell: number): SquaresScoreView["moments"] => [
-    { moment: "q1", points: 25, result: { col: 7, row: 3, winningCell } },
+    { moment: "q1", points: 25, result: { col: 7, row: 3, winningCell, gradeNo: 1 } },
     { moment: "half", points: 25, result: null },
     { moment: "q3", points: 25, result: null },
     { moment: "final", points: 50, result: null },
@@ -205,7 +206,7 @@ describe("moment rows", () => {
 
   it("shows the winner's name from the board once the board agrees with the score", () => {
     const board = baseBoard({ phase: "drawn", colDigits: COL, rowDigits: ROW });
-    board.moments[0].result = { col: 7, row: 3, winningCell: 41, winner: { username: "sam", mine: false } };
+    board.moments[0].result = { col: 7, row: 3, winningCell: 41, gradeNo: 1, winner: { username: "sam", mine: false } };
     const rows = squaresMomentRows(board, baseScore({ phase: "drawn" }, graded(41)));
     expect(rows[0]).toMatchObject({ moment: "q1", label: "End of Q1", points: 25, state: "won", winner: { username: "sam" } });
     expect(rows[1]).toMatchObject({ state: "pending", winner: null });
@@ -213,19 +214,19 @@ describe("moment rows", () => {
 
   it("says nobody won when the cell is empty at this venue", () => {
     const board = baseBoard({ phase: "drawn", colDigits: COL, rowDigits: ROW });
-    board.moments[0].result = { col: 7, row: 3, winningCell: 41, winner: null };
+    board.moments[0].result = { col: 7, row: 3, winningCell: 41, gradeNo: 1, winner: null };
     expect(squaresMomentRows(board, baseScore({ phase: "drawn" }, graded(41)))[0].state).toBe("nobody");
   });
 
   it("waits (pending) while the score is ahead of the board, rather than showing a stale name", () => {
     const board = baseBoard({ phase: "drawn", colDigits: COL, rowDigits: ROW });
-    board.moments[0].result = { col: 1, row: 1, winningCell: 11, winner: { username: "old", mine: false } };
+    board.moments[0].result = { col: 1, row: 1, winningCell: 11, gradeNo: 1, winner: { username: "old", mine: false } };
     expect(squaresMomentRows(board, baseScore({ phase: "drawn" }, graded(41)))[0]).toMatchObject({ state: "pending", winner: null });
   });
 
   it("falls back to the board alone before a score has loaded", () => {
     const board = baseBoard({ phase: "drawn", colDigits: COL, rowDigits: ROW });
-    board.moments[3].result = { col: 1, row: 7, winningCell: 70, winner: { username: "me", mine: true } };
+    board.moments[3].result = { col: 1, row: 7, winningCell: 70, gradeNo: 1, winner: { username: "me", mine: true } };
     expect(squaresMomentRows(board, null)[3]).toMatchObject({ state: "won", winner: { mine: true } });
   });
 });
@@ -264,5 +265,13 @@ describe("headline", () => {
     expect(squaresHeadline({ board, state: squaresScreenState(board, null)!, nowMs: at("2027-02-15T04:00:00Z") }).title).toBe("Final · KC 31, PHI 27");
     const none = baseBoard({}, { event: null });
     expect(squaresHeadline({ board: none, state: { phase: "open", colDigits: null, rowDigits: null, liveScore: null, winningCells: new Map(), leadingCell: null }, nowMs: 0 }).title).toBe("The board opens soon");
+  });
+});
+
+describe("squaresRevision (plan 6.4)", () => {
+  it("a re-grade with the same winning cell is a new revision", () => {
+    const moments = (gradeNo: number) => [{ moment: "final" as const, result: { winningCell: 41, gradeNo } }];
+    expect(squaresRevision({ drawn: true, moments: moments(1) })).not.toBe(squaresRevision({ drawn: true, moments: moments(2) }));
+    expect(squaresRevision({ drawn: true, moments: moments(1) })).toBe(squaresRevision({ drawn: true, moments: moments(1) }));
   });
 });

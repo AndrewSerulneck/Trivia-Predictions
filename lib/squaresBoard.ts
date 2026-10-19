@@ -42,6 +42,8 @@ export type SquaresBoardView = {
       col: number;
       row: number;
       winningCell: number;
+      /** Which grading of this moment (a void + re-grade is a new number). */
+      gradeNo: number;
       /** Null = nobody held the winning square at this venue. */
       winner: { username: string; mine: boolean } | null;
     };
@@ -151,6 +153,7 @@ export async function getSquaresBoardView(params: {
                 col: graded.col,
                 row: graded.row,
                 winningCell: graded.winningCell,
+                gradeNo: record?.gradeNo ?? 0,
                 winner: winners.get(`${moment}:${record?.gradeNo}`) ?? null,
               }
             : null,

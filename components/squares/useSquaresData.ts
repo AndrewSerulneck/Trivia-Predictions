@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { SquaresBoardView } from "@/lib/squaresBoard";
 import {
   SQUARES_BOARD_POLL_MS,
+  SQUARES_COMPLETE_POLL_MS,
   SQUARES_SCORE_POLL_MS,
   boardRevision,
   scoreRevision,
@@ -16,7 +17,9 @@ import {
 //   after the lock    the shared SCORE (CDN-cached 15 s) every 15 s — the claims can no longer change,
 //                     so the board is re-read ONLY when the score says the draw happened or a moment was
 //                     graded (that is when winners' names appear), a handful of times a game;
-//   when it's over    nothing. A hidden tab polls nothing and catches up the moment it is shown again.
+//   when it's over    the shared score only, every 5 min and once on returning to the tab (a later void can change
+//                     the winners); the board is re-read only if its revision differs (plan 6.4).
+//                     A hidden tab polls nothing and catches up the moment it is shown again.
 //
 // One page open = at most ~2 requests a minute, and only while it is on screen.
 
@@ -150,9 +153,11 @@ export function useSquaresData(identity: { userId: string; venueId: string } | n
         return;
       }
       if (phase === "complete") {
-        // Done. One last catch-up if the board is behind what the score already said.
+        // Done, but an admin void can still change the winners: catch up if the board is behind the score
+        // we hold, and look at the shared (CDN-cached) score rarely and on returning to the tab.
         const latest = scoreRef.current;
         if (latest?.event && boardRevision(current) !== scoreRevision(latest) && !inFlightRef.current.board) void fetchBoard();
+        else if (force || now - lastScoreAtRef.current >= SQUARES_COMPLETE_POLL_MS) void fetchScore();
         return;
       }
       const beforeLock = phase === "open" && lockMs !== null && now < lockMs;

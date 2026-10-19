@@ -7,8 +7,9 @@ prize at Pacific Street (§13 F1) **once Andrew pushes and deploys**. Phases 1�
 committed locally; their migrations are APPLIED to production; flags off; nothing pushed or deployed.
 **6.2 is built and committed locally** (Squares event lifecycle); its migration `20261019142642` is APPLIED (seen in
 `supabase migration list` on 2026-10-19). **6.3 is built and committed locally** (paying winners; no migration).
-Andrew: push + deploy (6.1–6.3 ride together).
-Latest handoff: `docs/squares-and-brackets-plan_PHASE_6.3_HANDOFF.md`. **Next: 6.4.**
+**6.4 is built and committed locally** (player screen keeps up with a void; no migration).
+Andrew: push + deploy (6.1–6.4 ride together).
+Latest handoff: `docs/squares-and-brackets-plan_PHASE_6.4_HANDOFF.md`. **Next: 6.5.**
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -366,6 +367,12 @@ migration); then 6.5–6.9.
   is visible and once on returning to the tab; if the revision differs, re-read the board (the existing path). Add
   `gradeNo` to `squaresRevision` so a re-grade is always a new revision. Cost: CDN hits (one origin read per 15 s
   nationwide at most), no per-player function calls. Pin the cadence in `tests/squares-screen.test.ts`.
+- **Built 2026-10-19 (committed locally, not deployed; no migration).** `SQUARES_COMPLETE_POLL_MS` (300 s, `lib/squaresView.ts`);
+  at `complete`, `useSquaresData` calls `fetchScore` when 5 min have passed or the tab returns (the existing
+  revision check then re-reads the board); hidden tab reads nothing. `gradeNo` is now in both payloads' moment `result`
+  (`lib/squaresBoard.ts`, `lib/squaresScore.ts`) and in `squaresRevision` (`winningCell#gradeNo`). Tests: screen cadence +
+  re-grade re-read in `tests/squares-screen.test.ts`, revision in `tests/squares-view.test.ts`. Detail:
+  `docs/squares-and-brackets-plan_PHASE_6.4_HANDOFF.md`.
 
 #### 6.5 — Quarter rule checked against the live captures (Opus 5.5 · medium)
 - Phase 2 §8.1, still open. Pollers PID 71943 (WSH @ SF, `1392308`, Oct 19 8:15 PM ET) and 71944 (NE @ CHI,

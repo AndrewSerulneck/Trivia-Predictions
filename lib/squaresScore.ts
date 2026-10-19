@@ -62,11 +62,12 @@ export async function getSquaresScoreView(nowMs: number = Date.now()): Promise<S
           : null,
       },
       moments: SQUARES_MOMENTS.map((moment) => {
-        const graded = records.find((record) => record.moment === moment)?.graded ?? null;
+        const record = records.find((item) => item.moment === moment);
+        const graded = record?.graded ?? null;
         return {
           moment,
           points: squaresMomentPoints(moment),
-          result: graded ? { col: graded.col, row: graded.row, winningCell: graded.winningCell } : null,
+          result: graded ? { col: graded.col, row: graded.row, winningCell: graded.winningCell, gradeNo: record?.gradeNo ?? 0 } : null,
         };
       }),
     },
