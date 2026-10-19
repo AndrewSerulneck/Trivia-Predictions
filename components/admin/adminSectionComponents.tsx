@@ -101,6 +101,10 @@ export const SquaresSection = dynamic(
   () => import("@/components/admin/sections/SquaresSection").then((m) => m.SquaresSection),
   { loading: SectionLoading }
 );
+export const BracketsSection = dynamic(
+  () => import("@/components/admin/sections/BracketsSection").then((m) => m.BracketsSection),
+  { loading: SectionLoading }
+);
 export const LlmCostSection = dynamic(
   () => import("@/components/admin/sections/LlmCostSection").then((m) => m.LlmCostSection),
   { loading: SectionLoading }
@@ -159,4 +163,5 @@ export const ADMIN_CONSOLE_SECTION_RENDERERS: Record<
   "llm-cost": () => <LlmCostSection />,
   "partner-billing": () => <BillingSection />,
   squares: () => <SquaresSection />,
+  brackets: () => <BracketsSection />,
 };

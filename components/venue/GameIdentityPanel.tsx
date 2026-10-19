@@ -671,6 +671,75 @@ function SquaresIllustration({ stepIndex }: { stepIndex: number }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// March Madness tutorial art. Step 0: a small bracket narrowing to one champion (bars only, no
+// text). Step 1: which brackets lock when (labels stay 14px; the third row drops first on a short
+// card). Step 2: points doubling every round (the numbers are the picture and stay 14px).
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BRACKET_ART_POINTS = [10, 20, 40, 80, 160, 320] as const;
+const BRACKET_ART_BAR_HEIGHTS = ["h-[6cqh]", "h-[10cqh]", "h-[15cqh]", "h-[21cqh]", "h-[28cqh]", "h-[36cqh]"] as const;
+
+function BracketTreeArt() {
+  const column = (count: number, accent = false) => (
+    <div className="flex h-full flex-col justify-around">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className={`h-[7cqh] w-[16cqw] rounded-[4px] ${accent ? "bg-amber-300" : "bg-white/20"}`} />
+      ))}
+    </div>
+  );
+  return (
+    <div className="flex h-[min(100cqh,14rem)] w-[min(100cqw,16rem)] items-center justify-between rounded-xl bg-black/25 px-[6cqw] py-[3cqh]">
+      {column(8)}
+      {column(4)}
+      {column(2)}
+      {column(1, true)}
+    </div>
+  );
+}
+
+function BracketLockArt() {
+  const rows = [
+    { label: "Men\u2019s", locked: true },
+    { label: "Women\u2019s", locked: true },
+    { label: "Second chance", locked: false },
+  ];
+  return (
+    <div className="w-full max-w-[15rem] space-y-1.5">
+      {rows.map((row, index) => (
+        <div
+          key={row.label}
+          className={`flex items-center justify-between rounded-xl bg-black/25 px-3 py-2 text-[14px] font-black text-white ${
+            index === 2 ? "[@container(max-height:9rem)]:hidden" : ""
+          }`}
+        >
+          <span>{row.label}</span>
+          <span className={row.locked ? "text-orange-200" : "text-amber-300"}>{row.locked ? "Locks at tip-off" : "Opens later"}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BracketPointsArt() {
+  return (
+    <div className="grid h-[min(100cqh,12rem)] w-full max-w-[16rem] grid-cols-6 items-end gap-1.5">
+      {BRACKET_ART_POINTS.map((points, index) => (
+        <div key={points} className="flex flex-col items-center justify-end gap-1">
+          <div className={`w-full rounded-t-[4px] ${index === 5 ? "bg-amber-300" : "bg-white/25"} ${BRACKET_ART_BAR_HEIGHTS[index]}`} />
+          <span className="text-[14px] font-black tabular-nums text-white">{points}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BracketIllustration({ stepIndex }: { stepIndex: number }) {
+  if (stepIndex === 1) return <BracketLockArt />;
+  if (stepIndex >= 2) return <BracketPointsArt />;
+  return <BracketTreeArt />;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Dispatch: returns the right illustration for any game × step
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -691,6 +760,7 @@ function GameStepIllustration({
   if (gameKey === "nfl-pickem") return <PickEmIllustration scene={NFL_PICKEM_SCENE} stepIndex={stepIndex} />;
   if (gameKey === "fantasy") return <FantasyIllustration stepIndex={stepIndex} />;
   if (gameKey === "squares") return <SquaresIllustration stepIndex={stepIndex} />;
+  if (gameKey === "bracket") return <BracketIllustration stepIndex={stepIndex} />;
   return null;
 }
 

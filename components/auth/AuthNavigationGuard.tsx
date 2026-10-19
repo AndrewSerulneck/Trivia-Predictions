@@ -37,6 +37,7 @@ function isInSessionGameRoute(pathname: string): boolean {
     pathname.startsWith("/info") ||
     pathname.startsWith("/category-blitz") ||
     pathname.startsWith("/squares") ||
+    pathname.startsWith("/bracket") ||
     pathname.startsWith(PLAYER_DELETE_ACCOUNT_PATH) ||
     // Legal/support pages (native app store plan Phase 1a/1b): linked from the player drawer,
     // so a signed-in player must not be bounced to their venue home when they open one.

@@ -1103,3 +1103,24 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   (`[Squares] credit-blocked`), never re-sent, shown in the admin panel and does NOT block Archive. Once the watch is
   over (or past the no-final deadline with no late-void watch), the tick returns before `settleSquaresWinners`: one
   event read per minute, nothing else; admin actions still settle.
+- **Bracket engine (Phase 7, 2026-10-19, migration `20261019203858`, NOT applied; flag off).** Picks are SEATS
+  (`lib/brackets/tree.ts`, the one slot/seat definition; an entry = `smallint[63]`). Pure rules only in `lib/brackets/`
+  (`picks.ts` validity + clearing, `scoring.ts`, `games.ts` feed merge/winner seats/locks/replay mask). Entries are
+  written ONLY by `bracket_save_entry` (`lib/bracketsEntries.ts`), winner seats + scores ONLY by
+  `bracket_record_results` (`recordBracketResults`, `lib/bracketsStore.ts`); the sync never changes a decided result
+  (admin `override_result` only). Venue points per entry per round, key `entry:r<round>:<grade_no>`, paid only in
+  `lib/bracketsSync.ts`. Rehearsals: `purpose = 'rehearsal'` (hidden venues only) + `clock_offset_seconds`; switch
+  `BRACKETS_REHEARSAL_ENABLED` (one reader, `lib/seasonalGames.ts`). Tests: `tests/brackets-*.test.ts`,
+  `npm run test:brackets-sql`.
+- **Bracket player screens (Phase 8, 2026-10-19, flag off, nothing new in the database).** `/bracket`
+  (`app/bracket/page.tsx`, `notFound()` with the flag off) → `components/bracket/` (`BracketGame` switcher + modes,
+  `BracketEditor`, `BracketMatchups`, `BracketReview`, `BracketStandings`, `BracketStepChips`, `useBracketData`); every
+  decision is pure in `lib/bracketsView.ts` (steps, seat labels, pick states, headline, save messages). Screens call only
+  the Phase 7 routes and `lib/brackets/*` — `setBracketPick` for every tap, never a rule of their own
+  (`tests/bracket-screen-contract.test.ts`). **No polling:** one `GET /api/bracket/state` when the page opens, one more on
+  returning to a tab away > 5 min (only while a bracket can still change), one at a live bracket's lock time, one after a
+  copy; a save patches the held state (`withSavedEntry`) instead of re-reading. Drafts save on each step change, when the tab
+  hides and before leaving (`BracketEditor` `flushRef`, `EXIT_SAVE_WAIT_MS`). Step buttons are the shared `WizardFooter` (its
+  `-mx-2 !max-w-none` matches the app bar). Teams are in seats: an opening-round game with no linked seat shows "TBD" until an
+  admin links it; linked + undecided shows "A / B". The seasonal app-bar label is `BRACKET_SHORT_NAME` ("Bracket") in
+  `lib/venueGameCards.ts`.

@@ -9,7 +9,13 @@ committed locally; their migrations are APPLIED to production; flags off; nothin
 `supabase migration list` on 2026-10-19). **6.3 is built and committed locally** (paying winners; no migration).
 **6.4 is built and committed locally** (player screen keeps up with a void; no migration).
 Andrew: push + deploy (6.1–6.4 ride together).
-Latest handoff: `docs/squares-and-brackets-plan_PHASE_6.4_HANDOFF.md`. **Next: 6.5.**
+**6.5 in progress, parked** (live-game recorders restarted 2026-10-19; WSH @ SF Oct 19, NE @ CHI Oct 22) — finish it
+after those games: `docs/squares-and-brackets-plan_PHASE_6.5_HANDOFF.md` (interim).
+**Phase 7 (bracket engine) built 2026-10-19, not committed**; its migration `20261019203858` is NOT applied (Andrew:
+`supabase db push`). Flag off. Handoff: `docs/squares-and-brackets-plan_PHASE_7_HANDOFF.md`.
+**Phase 8 (bracket player screens) built 2026-10-19, not committed**, on top of Phase 7: `/bracket` + `components/bracket/`,
+no new migration, flag still off. Latest handoff: `docs/squares-and-brackets-plan_PHASE_8_HANDOFF.md`. §15 below.
+**Next:** finish 6.5 after the games; 6.6 (re-review, should now cover Phases 7 + 8); Phase 9 (bracket Prizes, Results, TV).
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -418,6 +424,8 @@ migration); then 6.5–6.9.
 - Admin panel: tournament status, region names, and fix-ups (set a slot's team, override a result and re-grade, all
   logged), plus a "replay fixture" dry run.
 - Tests replay the full 2025 men's and women's fixtures game by game and check the final standings.
+- **Built 2026-10-19 (not committed; migration `20261019203858` not applied).** As built and deviations: §14.
+  Detail: `docs/squares-and-brackets-plan_PHASE_7_HANDOFF.md`.
 
 ### Phase 8 — Bracket player screens (Sonnet 5.5 · high)
 - Route `/bracket` with a tournament switcher (Men's / Women's, Main / Second chance) that shows only the open or
@@ -428,6 +436,8 @@ migration); then 6.5–6.9.
 - Read-only bracket view after lock, with right/wrong marks and "still alive" counts. Venue standings with "Find a
   player". "Copy my picks from <Venue>" when the player has an entry elsewhere.
 - Same native, back-handler, text-floor and statement-layout rules as Phase 3.
+- **Built 2026-10-19 (not committed; no migration).** As built and deviations: §15.
+  Detail: `docs/squares-and-brackets-plan_PHASE_8_HANDOFF.md`.
 
 ### Phase 9 — Bracket Prizes, Results, TV
 - **9a (Opus 5.5 · high):** a reward definition with ranked places 1st/2nd/3rd per tournament at the venue, using the
@@ -581,3 +591,53 @@ against production. Full detail: `docs/squares-and-brackets-plan_PHASE_6_HANDOFF
 Found while checking, not raised by the review: the TV read (`lib/squaresTvRead.ts`), `/squares` and settlement are
 all gated on Feb 1–15 + the public flag, so the planned December/January rehearsal could not exercise them; 6.2 adds
 the rehearsal gate.
+
+## 14. Phase 7 as built (2026-10-19) — read before Phases 8–10
+
+Full detail: `docs/squares-and-brackets-plan_PHASE_7_HANDOFF.md`.
+- **Picks are SEATS.** `lib/brackets/tree.ts` is the one definition: slots 0–62 round by round, seats 0–63 = the
+  Round-of-64 positions. A pick = the seat whose team wins that slot, so an entry is one `smallint[63]`, grading is
+  `pick = winning seat`, and an opening-round seat means "whoever wins that opener" with no special case.
+- **Tables (deviation from the §4 proposal):** `bracket_tournaments` is one row per REAL tournament (gender + season
+  + purpose), holding `winner_seats[63]`, locks, region names; the plan's four brackets are 2 tournaments × entry
+  `kind` (`main` | `second`). Also `bracket_games` (the feed's 67–79 records), `bracket_rounds` (per-round
+  `grade_no` / paid), `bracket_entries`, `bracket_admin_log`.
+- **RPCs:** `bracket_save_entry` (only entry writer: open / lock on the DB clock, own venue, rehearsal = hidden
+  venues, picks re-checked in SQL) and `bracket_record_results` (only writer of winner seats + scores; set-based
+  re-grade of every entry; a changed decided result needs an admin and spends that round's old keys first).
+- **Venue points per entry per ROUND,** once the round is complete: key `entry:r<round>:<grade_no>` (≤ 6 rows per
+  entry). An admin correction in a complete round spends the old key for EVERY entry scoring that round (reversed if
+  paid, burned if not), so a payment racing the correction can't pay twice.
+- **Rehearsal + replay clock built in:** `purpose = 'rehearsal'` (hidden venues only) and `clock_offset_seconds`
+  (the tournament's clock = now − offset; the sync masks the feed to that moment). Switch `BRACKETS_REHEARSAL_ENABLED`
+  (server-only, one reader) drives rehearsals without the public flag. This is what Phase 10's replay uses.
+- **Sync** rides on `/api/cron/pickem-settle` (`lib/bracketsSync.ts`): zero I/O outside Mar 14 – Apr 6 (flag on) or
+  the switch; one tournaments read per minute inside; feed only when `next_sync_at` is due (2 min live, else next tip
+  or hourly). Replay of both 2026 tournaments: **6,411 feed requests** (plan §6 estimate 6–8k).
+- **Player API built now** (Phase 8 only builds screens): `GET /api/bracket/state`, `POST /api/bracket/entry`,
+  `POST /api/bracket/copy`, `GET /api/bracket/standings`; all 404 with the flag off, no player id in any response.
+
+## 15. Phase 8 as built (2026-10-19) — read before Phases 9–10
+
+Full detail: `docs/squares-and-brackets-plan_PHASE_8_HANDOFF.md`.
+- Page `/bracket` (`app/bracket/page.tsx`, `notFound()` with the flag off; `GameLandingExperience gameKey="bracket"`,
+  background `bg-[#431407]`; statement-layout tutorial with art `BracketIllustration` in `GameIdentityPanel.tsx`) →
+  `components/bracket/`: `BracketGame` (switcher, modes), `BracketEditor`, `BracketMatchups`, `BracketReview`,
+  `BracketStandings`, `BracketStepChips`, `useBracketData`. All decisions are pure in `lib/bracketsView.ts`.
+- **Switcher** shows only brackets that are open, locked or complete (`selectableBrackets`): Men's / Women's chips and
+  Bracket / Second chance chips, each row only when there is a choice. Opens on a bracket the player has not finished.
+- **Fill-out** (`bracketSteps`): main = East… one region per step (15 picks), Final Four (3), Finish; second chance = one
+  "Sweet 16 & Elite Eight" step grouped by region (12 picks), Final Four, Finish. A game is two side-by-side tap
+  targets; a later game offers the teams you picked before it (`bracketMatchupSides` → the Phase 7 `setBracketPick`
+  clears dependants). Partial brackets save and count (Phase 7 decision). While filling out, the switcher and headline are
+  hidden so the games start near the top.
+- **Drafts:** sent when the step changes, when the tab hides (`keepalive`), and before leaving via the app bar's Back
+  (wait ≤ 3 s). A tap sends nothing. A save patches the state held in the page (`withSavedEntry`): no re-read.
+- **After the lock:** tabs My bracket (score, best possible, right / wrong / still alive, each pick with its result in
+  words) and Standings (`GET /api/bracket/standings`, 50 rows + "Show more", "Find a player" filters the loaded list,
+  Refresh). No pick of anyone else is ever shown.
+- **Cost:** no polling. State read: on open, on return to a tab away > 5 min (only while something can change), once at a
+  live bracket's lock time, once after a copy. Standings: on opening the tab and on Refresh.
+- **Not changed:** every rule (lib/brackets/*, SQL), the Phase 7 routes, the engine. Tests: `tests/brackets-view.test.ts`
+  (25), `tests/bracket-screen.test.ts` (20, jsdom), `tests/bracket-screen-contract.test.ts` (10), fixture helper
+  `tests/fixtures/brackets/view.ts`.

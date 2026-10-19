@@ -90,4 +90,24 @@ Phase 10.
 
 ## B. March Madness Brackets
 
-Written in Phase 10.
+Finalised in Phase 10. **Phase 8's screens, for a rehearsal on `venue-hightop-test` (admin → Brackets → Create a
+rehearsal; `NEXT_PUBLIC_BRACKETS_ENABLED` on a Preview, `BRACKETS_REHEARSAL_ENABLED` where the cron runs):**
+
+### B1. Fill out
+- [ ] The Venue Home card opens `/bracket`; the three tutorial cards show their art (bracket, lock rows, doubling bars) and
+  nothing is cut off on the smallest phone.
+- [ ] The summary says "Fill out your bracket" with the lock time in your own time zone.
+- [ ] Each region (15 games) fits a thumb: two big buttons per game, the picked team turns amber with a check.
+- [ ] Choosing a team for a later round only offers the two teams you picked before it. Changing an early pick clears the
+  later ones that depended on it; the count ("41 of 63") goes down.
+- [ ] Next / Back stay at the bottom while scrolling; Android Back inside the app steps back, then leaves.
+- [ ] Leave half-way, reopen: the picks are still there (a draft saves on each step and when you leave).
+- [ ] Finish: tiebreaker accepts 0–400 only; Save bracket returns to "Your bracket is in".
+- [ ] A venue where you already filled one out offers "Copy my picks from <venue>", and asks before replacing picks.
+- [ ] Rotating the phone / the keyboard opening on the tiebreaker doesn't hide the Save button.
+
+### B2. After the lock
+- [ ] "My bracket" shows your score, best possible, right / wrong / still alive, and each pick with Right / Wrong /
+  Still alive in words.
+- [ ] "Standings" lists the venue, your row is highlighted, "Find a player" filters, Refresh works.
+- [ ] Men's / Women's and Bracket / Second chance switch without losing your place.

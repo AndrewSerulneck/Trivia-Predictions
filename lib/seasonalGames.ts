@@ -41,6 +41,16 @@ export const isSquaresRehearsalEnabled = (): boolean => truthy(process.env.SQUAR
 /** March Madness brackets master flag. The single reader of NEXT_PUBLIC_BRACKETS_ENABLED. */
 export const isBracketsEnabled = (): boolean => truthy(process.env.NEXT_PUBLIC_BRACKETS_ENABLED);
 
+/**
+ * Brackets rehearsal switch (plan Phase 7, same convention as Squares 6.2). The single reader of
+ * BRACKETS_REHEARSAL_ENABLED — server-side, flips without a redeploy. On, the bracket sync
+ * (lib/bracketsSync.ts) also drives admin-created `rehearsal` tournaments, on the switch ALONE, so
+ * Production's cron can replay a past tournament while the public flag stays off. It never
+ * discovers a tournament. A rehearsal tournament takes entries only at hidden venues
+ * (bracket_save_entry's 'rehearsal_only').
+ */
+export const isBracketsRehearsalEnabled = (): boolean => truthy(process.env.BRACKETS_REHEARSAL_ENABLED);
+
 export const isSeasonalGameEnabled = (key: SeasonalGameKey): boolean =>
   key === "squares" ? isSquaresEnabled() : isBracketsEnabled();
 

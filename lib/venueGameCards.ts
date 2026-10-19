@@ -24,6 +24,8 @@ export const SQUARES_TITLE_LINES: [string, string] = ["Super Bowl", "Squares"];
 /** The event itself, inside a sentence: "…at halftime of the Super Bowl" (the Squares Prize copy). */
 export const SQUARES_EVENT_NAME = "Super Bowl";
 export const BRACKET_GAME_NAME = "March Madness";
+/** The in-game app bar's label: the full name truncates beside the points pill on a 350px phone. */
+export const BRACKET_SHORT_NAME = "Bracket";
 export const BRACKET_TITLE_LINES: [string, string] = ["March", "Madness"];
 /** The bracket card from Mar 1 until Selection Sunday (decision 12). */
 export const BRACKET_TEASER_SUBTITLE = "Brackets open Selection Sunday, March 14.";

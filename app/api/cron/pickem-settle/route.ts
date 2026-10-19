@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isCronAuthorized } from "@/lib/cronAuth";
 import { accrueNFLPickEmChallengePoints, type NFLPickEmAccrualReport } from "@/lib/nflPickEmRewardAccrual";
 import { settlePendingPickEmPicks } from "@/lib/pickem";
+import { isBracketsSyncActive, runBracketsTick, type BracketsTickReport } from "@/lib/bracketsSync";
 import { isSquaresSettlementActive, runSquaresTick, type SquaresTickReport } from "@/lib/squaresSettlement";
 
 export async function POST(request: Request) {
@@ -14,6 +15,9 @@ export async function POST(request: Request) {
   // database read, no provider request. It runs before Pick 'Em so a Pick 'Em failure can't stall
   // a live Super Bowl, and runSquaresTick never throws, so it can't fail the Pick 'Em run either.
   const squares: SquaresTickReport | null = isSquaresSettlementActive(new Date()) ? await runSquaresTick() : null;
+  // March Madness brackets ride here the same way (Phase 7): a pure date/flag check first, zero
+  // I/O outside Mar 14 – Apr 6 (or the rehearsal switch); runBracketsTick never throws.
+  const brackets: BracketsTickReport | null = isBracketsSyncActive(new Date()) ? await runBracketsTick() : null;
 
   try {
     const result = await settlePendingPickEmPicks();
@@ -30,13 +34,14 @@ export async function POST(request: Request) {
       nflRewardAccrualError =
         error instanceof Error ? error.message : "NFL Pick 'Em reward accrual failed.";
     }
-    return NextResponse.json({ ok: true, result, nflRewardAccrual, nflRewardAccrualError, squares });
+    return NextResponse.json({ ok: true, result, nflRewardAccrual, nflRewardAccrualError, squares, brackets });
   } catch (error) {
     return NextResponse.json(
       {
         ok: false,
         error: error instanceof Error ? error.message : "Pick 'Em cron settlement failed.",
         squares,
+        brackets,
       },
       { status: 500 }
     );

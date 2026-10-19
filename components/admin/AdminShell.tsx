@@ -37,6 +37,7 @@ import {
   UsernameModerationSection,
   LlmCostSection,
   SquaresSection,
+  BracketsSection,
 } from "@/components/admin/adminSectionComponents";
 
 const ADMIN_MODE_STORAGE_KEY = "hightop_admin_mode";
@@ -687,6 +688,8 @@ export function AdminShell({ venues, initialSection = "venue-users", deepLinked 
         return <LlmCostSection />;
       case "squares":
         return <SquaresSection />;
+      case "brackets":
+        return <BracketsSection />;
       default:
         return currentSectionOption ? <LegacyPanel section={currentSectionOption} /> : null;
     }

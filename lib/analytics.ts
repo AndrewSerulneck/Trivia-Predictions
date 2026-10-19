@@ -563,6 +563,7 @@ export function gameTypeForPath(pathname: string | null): GameAnalyticsType | nu
   if (pathname.startsWith("/nfl-pickem") || pathname.startsWith("/pickem") || pathname.startsWith("/predictions")) return "pickem";
   if (pathname.startsWith("/category-blitz")) return "category-blitz";
   if (pathname.startsWith("/squares")) return "squares";
+  if (pathname.startsWith("/bracket")) return "bracket";
   return null;
 }
 
