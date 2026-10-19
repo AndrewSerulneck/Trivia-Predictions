@@ -5265,5 +5265,4775 @@
     "S",
     "T",
     "W"
+  ],
+  "Something that is green": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "Something that is red": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "Something that is yellow": [
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "P",
+    "S"
+  ],
+  "Something that is blue": [
+    "B",
+    "S"
+  ],
+  "Something that is pink": [
+    "F",
+    "L",
+    "P",
+    "R",
+    "S"
+  ],
+  "Something that is white": [
+    "C",
+    "M",
+    "P",
+    "S"
+  ],
+  "Something that is orange": [
+    "C",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "Something that is black": [
+    "C",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "Something that is purple": [
+    "A",
+    "B",
+    "E",
+    "G",
+    "L",
+    "P",
+    "S"
+  ],
+  "Something made of wood": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something that is brown": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something made of metal": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something made of paper": [
+    "B",
+    "C",
+    "P",
+    "T"
+  ],
+  "Something made of glass": [
+    "B",
+    "C",
+    "F",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something made of plastic": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something made of leather": [
+    "B",
+    "C",
+    "H",
+    "P",
+    "S",
+    "W"
+  ],
+  "Something made of rubber": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "G",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something that is sharp": [
+    "B",
+    "C",
+    "D",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "Something that is shiny": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "Something that is sticky": [
+    "C",
+    "G",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "Something made of cloth or fabric": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "Something that is fragile": [
+    "C",
+    "E",
+    "G",
+    "P",
+    "S"
+  ],
+  "Something with a lid": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "Something with a zipper": [
+    "B",
+    "C",
+    "D",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something with legs": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something with strings": [
+    "B",
+    "C",
+    "G",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "Something that uses batteries": [
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something with a plug or cord": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something with teeth": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "P",
+    "S",
+    "W"
+  ],
+  "Something with a lock": [
+    "D",
+    "S"
+  ],
+  "Something that melts": [
+    "B",
+    "C",
+    "I",
+    "S",
+    "W"
+  ],
+  "Something that rolls": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "Something that floats": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "L",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "Something that bounces": [
+    "B",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "Something that holds water": [
+    "B",
+    "C",
+    "D",
+    "G",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An animal with fur": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An animal with four legs": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An animal with a shell": [
+    "C",
+    "S",
+    "T"
+  ],
+  "An animal with stripes or spots": [
+    "C",
+    "L",
+    "P",
+    "T"
+  ],
+  "An animal with claws": [
+    "C",
+    "L",
+    "P",
+    "T"
+  ],
+  "An animal that hibernates": [
+    "B",
+    "C",
+    "H",
+    "S"
+  ],
+  "An animal that eats insects": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "H",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An animal that hops or jumps": [
+    "C",
+    "F",
+    "G",
+    "H",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An animal that lives in trees": [
+    "C",
+    "L",
+    "M",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "An animal that swims": [
+    "C",
+    "D",
+    "E",
+    "F",
+    "M",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A swamp or wetland animal": [
+    "A",
+    "C",
+    "F",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A predator": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A pest or vermin": [
+    "A",
+    "C",
+    "F",
+    "L",
+    "M",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A working animal": [
+    "C",
+    "D",
+    "H",
+    "M",
+    "O"
+  ],
+  "A scavenger": [
+    "C",
+    "H",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A songbird": [
+    "B",
+    "C",
+    "F",
+    "M",
+    "R",
+    "S",
+    "W"
+  ],
+  "A natural material": [
+    "C",
+    "L",
+    "S",
+    "W"
+  ],
+  "A shrub or bush": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S"
+  ],
+  "A weed": [
+    "C",
+    "D",
+    "P",
+    "T"
+  ],
+  "A natural resource": [
+    "C",
+    "I",
+    "O",
+    "S",
+    "W"
+  ],
+  "An appetizer": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "N",
+    "P",
+    "S"
+  ],
+  "A side dish": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "R",
+    "S"
+  ],
+  "A street food": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "A party food": [
+    "C",
+    "D",
+    "P",
+    "S"
+  ],
+  "A food sold at a fair or carnival": [
+    "C",
+    "F",
+    "P",
+    "S"
+  ],
+  "A food served at a barbecue": [
+    "B",
+    "C",
+    "H",
+    "P",
+    "R",
+    "S"
+  ],
+  "A food sold at a ballpark": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "L",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A sweet food": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A salty food": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "S"
+  ],
+  "A spicy food": [
+    "C",
+    "H",
+    "P",
+    "S"
+  ],
+  "A crunchy food": [
+    "A",
+    "C",
+    "P",
+    "T"
+  ],
+  "A frozen food": [
+    "B",
+    "C",
+    "F",
+    "I",
+    "P",
+    "S"
+  ],
+  "A canned food": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "A finger food": [
+    "C",
+    "F",
+    "P",
+    "S"
+  ],
+  "An American dish": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "M",
+    "P",
+    "S"
+  ],
+  "A Greek dish": [
+    "S",
+    "T"
+  ],
+  "A Spanish dish": [
+    "C",
+    "P",
+    "T"
+  ],
+  "A Middle Eastern dish": [
+    "B",
+    "F",
+    "H",
+    "S",
+    "T"
+  ],
+  "A Southern US dish": [
+    "B",
+    "C",
+    "F",
+    "G",
+    "H",
+    "P",
+    "S"
+  ],
+  "A food made with flour": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A food that grows on trees": [
+    "A",
+    "C",
+    "L",
+    "M",
+    "O",
+    "P"
+  ],
+  "A food made with eggs": [
+    "F",
+    "O",
+    "P",
+    "S"
+  ],
+  "A salad ingredient": [
+    "A",
+    "C",
+    "L",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A soup ingredient": [
+    "B",
+    "C",
+    "L",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "A flavor": [
+    "A",
+    "B",
+    "C",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A cooking ingredient": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A hot drink": [
+    "C",
+    "H",
+    "L",
+    "M",
+    "T"
+  ],
+  "A grilled food": [
+    "B",
+    "C",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "A holiday food": [
+    "C",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "A casserole or baked dish": [
+    "C",
+    "L",
+    "M",
+    "S"
+  ],
+  "An item found in a pantry": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An item found in a wallet": [
+    "C",
+    "P"
+  ],
+  "An item found in a lunchbox": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "P",
+    "S"
+  ],
+  "An item found in a purse or handbag": [
+    "C",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a refrigerator": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in an attic or basement": [
+    "B",
+    "C",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found in a car": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a closet": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found at a playground": [
+    "S"
+  ],
+  "An item found in a backyard": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found at the beach": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a suitcase": [
+    "B",
+    "C",
+    "D",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found in a nursery": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An item found in a school locker": [
+    "B",
+    "C",
+    "P",
+    "S"
+  ],
+  "An item found in a post office": [
+    "P",
+    "S"
+  ],
+  "An item found in a museum": [
+    "A",
+    "C",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found in a dorm room": [
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found in a bank": [
+    "C",
+    "D",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found in a church": [
+    "A",
+    "C",
+    "P",
+    "S"
+  ],
+  "An item found in a salon or barbershop": [
+    "B",
+    "C",
+    "S",
+    "T"
+  ],
+  "An item found in a police station": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An item found in a shed or workshop": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a recording studio": [
+    "A",
+    "C",
+    "H",
+    "M",
+    "P",
+    "S"
+  ],
+  "An item found on a boat": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found at a campsite": [
+    "B",
+    "C",
+    "F",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found at a wedding": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "R",
+    "T"
+  ],
+  "An item found in a sewing kit": [
+    "B",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found on a desk": [
+    "B",
+    "C",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item found in a tackle box": [
+    "B",
+    "F",
+    "H",
+    "L",
+    "P",
+    "S",
+    "W"
+  ],
+  "An item found in a makeup bag": [
+    "B",
+    "C",
+    "E",
+    "F",
+    "L",
+    "M",
+    "P",
+    "S"
+  ],
+  "An item sold in a candy store": [
+    "C",
+    "L",
+    "M",
+    "P",
+    "T"
+  ],
+  "An item sold in an antique store": [
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a gift shop": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item sold in a health food store": [
+    "A",
+    "C",
+    "F",
+    "H",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a thrift store": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a hobby or game store": [
+    "C",
+    "D",
+    "M",
+    "P"
+  ],
+  "An item sold in a coffee shop": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "An item sold in a vending machine": [
+    "C",
+    "P",
+    "S",
+    "W"
+  ],
+  "A part of an animal's body": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A part of a bird": [
+    "B",
+    "C",
+    "F",
+    "L",
+    "T",
+    "W"
+  ],
+  "A part of a fish": [
+    "F",
+    "S",
+    "T"
+  ],
+  "A part of the face": [
+    "C",
+    "L"
+  ],
+  "A part of a kitchen": [
+    "C",
+    "D",
+    "F",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "A part of a bathroom": [
+    "B",
+    "D",
+    "F",
+    "M",
+    "S",
+    "T",
+    "W"
+  ],
+  "A part of a city": [
+    "D",
+    "S"
+  ],
+  "A part of a hotel": [
+    "L",
+    "R",
+    "S"
+  ],
+  "A part of an airport": [
+    "B",
+    "C",
+    "D",
+    "G",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A part of a hospital": [
+    "A",
+    "C",
+    "E",
+    "I",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A part of a restaurant": [
+    "B",
+    "C",
+    "D",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A part of a website": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S"
+  ],
+  "A part of a story": [
+    "C",
+    "P",
+    "S"
+  ],
+  "A part of a movie": [
+    "C",
+    "S",
+    "T"
+  ],
+  "A part of a song": [
+    "B",
+    "C",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A part of a letter or email": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "S"
+  ],
+  "A part of a meal": [
+    "A",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S"
+  ],
+  "A part of a road or highway": [
+    "L",
+    "M",
+    "S"
+  ],
+  "A part of a rocket or spacecraft": [
+    "B",
+    "C",
+    "F",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A part of a playground": [
+    "S"
+  ],
+  "A part of a shopping mall": [
+    "F",
+    "S"
+  ],
+  "A part of a neighborhood": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A part of a wedding": [
+    "B",
+    "C",
+    "F",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A part of a park": [
+    "B",
+    "F",
+    "G",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A room in a house": [
+    "B",
+    "L"
+  ],
+  "A type of road or street": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A type of bed": [
+    "B",
+    "C",
+    "D",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of light or lamp": [
+    "C",
+    "F",
+    "H",
+    "L",
+    "S",
+    "T"
+  ],
+  "A type of school": [
+    "P",
+    "S"
+  ],
+  "A type of party": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "S"
+  ],
+  "A type of table": [
+    "C",
+    "D",
+    "P",
+    "S",
+    "T"
+  ],
+  "A type of restaurant": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "I",
+    "P",
+    "S",
+    "T"
+  ],
+  "A medical tool or instrument": [
+    "S",
+    "T"
+  ],
+  "A type of document": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A computer program or app": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "G",
+    "I",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A computer accessory": [
+    "M",
+    "S",
+    "W"
+  ],
+  "A household chore": [
+    "D",
+    "L",
+    "M",
+    "S",
+    "W"
+  ],
+  "A road sign": [
+    "S"
+  ],
+  "A holiday decoration": [
+    "B",
+    "C",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of race": [
+    "B",
+    "D",
+    "F",
+    "H",
+    "M",
+    "R",
+    "S"
+  ],
+  "An outdoor activity": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "R",
+    "S",
+    "W"
+  ],
+  "An indoor activity": [
+    "B",
+    "C",
+    "D",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A summer activity": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An individual sport": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A team sport": [
+    "B",
+    "F",
+    "H",
+    "P",
+    "S",
+    "W"
+  ],
+  "A water sport": [
+    "S",
+    "W"
+  ],
+  "A piece of farm equipment": [
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "A sport played with a ball": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A household item": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A combat sport or martial art": [
+    "B",
+    "C",
+    "M",
+    "S",
+    "T",
+    "W"
+  ],
+  "A holiday tradition": [
+    "C",
+    "D",
+    "F",
+    "P",
+    "S",
+    "T"
+  ],
+  "A traffic or driving term": [
+    "B",
+    "C",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A powder": [
+    "B",
+    "C",
+    "F",
+    "S",
+    "T"
+  ],
+  "A liquid": [
+    "A",
+    "B",
+    "C",
+    "L",
+    "M",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A sports term": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A golf term": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "A soccer term": [
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "A basketball term": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A hockey term": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "I",
+    "P",
+    "S"
+  ],
+  "A music term": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A tennis term": [
+    "A",
+    "B",
+    "D",
+    "F",
+    "L",
+    "S",
+    "T"
+  ],
+  "A medical term": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "I",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A computer term": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "I",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A money or finance term": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An internet term": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A business term": [
+    "A",
+    "C",
+    "D",
+    "E",
+    "I",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A legal term": [
+    "A",
+    "C",
+    "D",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A science term": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A theater term": [
+    "A",
+    "C",
+    "D",
+    "P",
+    "S"
+  ],
+  "A movie or film term": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A sailing or nautical term": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A fashion term": [
+    "B",
+    "C",
+    "D",
+    "P",
+    "S",
+    "T"
+  ],
+  "A literary term": [
+    "A",
+    "C",
+    "M",
+    "P",
+    "S"
+  ],
+  "A military term": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "I",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A grammar term": [
+    "A",
+    "C",
+    "P",
+    "S"
+  ],
+  "An adjective": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An art term": [
+    "C",
+    "P",
+    "S"
+  ],
+  "A greeting or farewell": [
+    "H",
+    "S"
+  ],
+  "An exclamation or interjection": [
+    "A",
+    "B",
+    "D",
+    "H",
+    "O",
+    "P",
+    "S",
+    "W"
+  ],
+  "An adverb": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A title or honorific": [
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "P",
+    "S"
+  ],
+  "A word for a sound": [
+    "B",
+    "C",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A family member or relative": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "M",
+    "N",
+    "P",
+    "S"
+  ],
+  "A term of endearment": [
+    "B",
+    "D",
+    "H",
+    "L",
+    "P",
+    "S"
+  ],
+  "A smell or scent": [
+    "C",
+    "F",
+    "L",
+    "M",
+    "P",
+    "S"
+  ],
+  "A body movement or gesture": [
+    "B",
+    "C",
+    "H",
+    "N",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A texture": [
+    "B",
+    "C",
+    "F",
+    "G",
+    "R",
+    "S"
+  ],
+  "A sound": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A job that requires a uniform": [
+    "C",
+    "D",
+    "F",
+    "N",
+    "P",
+    "S",
+    "W"
+  ],
+  "A job done outdoors": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A job in a school": [
+    "C",
+    "D",
+    "L",
+    "P",
+    "S",
+    "T"
+  ],
+  "A skill or ability": [
+    "C",
+    "D",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A job in sports": [
+    "C",
+    "P",
+    "R",
+    "T"
+  ],
+  "A job at an airport": [
+    "B",
+    "C",
+    "P",
+    "S"
+  ],
+  "A job in an office": [
+    "A",
+    "C",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A job in a hotel": [
+    "C",
+    "D",
+    "M",
+    "P",
+    "R",
+    "W"
+  ],
+  "A job in retail": [
+    "C",
+    "S"
+  ],
+  "A job working with animals": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "P",
+    "T",
+    "W"
+  ],
+  "A job working with children": [
+    "B",
+    "C",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A job in TV or film": [
+    "A",
+    "C",
+    "D",
+    "P",
+    "S"
+  ],
+  "A job in a factory": [
+    "A",
+    "C",
+    "F",
+    "I",
+    "L",
+    "M",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A character in a fairy tale": [
+    "B",
+    "C",
+    "F",
+    "G",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of athlete": [
+    "B",
+    "C",
+    "F",
+    "G",
+    "H",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A position on a sports team": [
+    "C",
+    "D",
+    "F",
+    "G",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A Canadian city": [
+    "B",
+    "C",
+    "E",
+    "H",
+    "L",
+    "M",
+    "O",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of musician": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "An African city": [
+    "A",
+    "C",
+    "D",
+    "L",
+    "M",
+    "N",
+    "P",
+    "T"
+  ],
+  "A US city with a pro sports team": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A city in California": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A city in Texas": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A city in Florida": [
+    "A",
+    "C",
+    "F",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A TV series": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A tourist attraction": [
+    "A",
+    "C",
+    "E",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A movie": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A band or music group": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A book title": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A song title": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A cartoon character": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A children's TV show": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "P",
+    "S",
+    "T"
+  ],
+  "A video game character": [
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A singer or musician": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An actor or actress": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A theme park ride or attraction": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A professional athlete": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold in a furniture store": [
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item sold at a gas station": [
+    "B",
+    "C",
+    "D",
+    "G",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A type of dress or skirt": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A garden plant": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A craft or handicraft": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A piece of safety gear": [
+    "G",
+    "H",
+    "S"
+  ],
+  "An art form": [
+    "C",
+    "D",
+    "M",
+    "P",
+    "S"
+  ],
+  "A type of puzzle or game": [
+    "C",
+    "D",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "An item found in a junk drawer": [
+    "B",
+    "C",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A type of home decoration": [
+    "C",
+    "L",
+    "P",
+    "R",
+    "T"
+  ],
+  "A recyclable item": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular fruit": [
+    "A",
+    "B",
+    "C",
+    "L",
+    "M",
+    "O",
+    "P"
+  ],
+  "An item sold at a yard sale": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular vegetable": [
+    "A",
+    "B",
+    "C",
+    "L",
+    "O",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular pizza topping": [
+    "B",
+    "C",
+    "M",
+    "O",
+    "P",
+    "S"
+  ],
+  "A popular ice cream flavor": [
+    "C",
+    "M",
+    "P",
+    "S"
+  ],
+  "A popular dessert": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular cocktail": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S"
+  ],
+  "A popular breakfast food": [
+    "B",
+    "C",
+    "E",
+    "F",
+    "H",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular sandwich": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular snack food": [
+    "C",
+    "P",
+    "S"
+  ],
+  "An item found in a backpack": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "W"
+  ],
+  "A popular pasta dish": [
+    "C",
+    "L",
+    "P",
+    "S"
+  ],
+  "A popular soup": [
+    "C",
+    "M",
+    "P",
+    "T"
+  ],
+  "A popular cake": [
+    "C",
+    "P",
+    "S"
+  ],
+  "A popular cheese": [
+    "B",
+    "C",
+    "F",
+    "G",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A popular pie": [
+    "A",
+    "B",
+    "C",
+    "P",
+    "S"
+  ],
+  "A popular cookie": [
+    "O",
+    "S"
+  ],
+  "A popular sauce or condiment": [
+    "B",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular bread": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A popular seafood dish": [
+    "C",
+    "F",
+    "L",
+    "P",
+    "S"
+  ],
+  "A popular Mexican dish": [
+    "B",
+    "C",
+    "E",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular spice or seasoning": [
+    "A",
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular Italian dish": [
+    "C",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular Indian dish": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular French food": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A popular Chinese dish": [
+    "C",
+    "D",
+    "F",
+    "M",
+    "P",
+    "S"
+  ],
+  "A popular coffee drink": [
+    "A",
+    "C",
+    "F",
+    "L",
+    "M"
+  ],
+  "A popular party food": [
+    "C",
+    "D",
+    "P",
+    "S"
+  ],
+  "A popular wine": [
+    "C",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A popular street food": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular side dish": [
+    "B",
+    "C",
+    "F",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A popular fried food": [
+    "C",
+    "F",
+    "P",
+    "S"
+  ],
+  "A popular appetizer": [
+    "B",
+    "C",
+    "F",
+    "M",
+    "P",
+    "S",
+    "W"
+  ],
+  "A popular junk food": [
+    "C",
+    "D",
+    "F",
+    "P",
+    "S"
+  ],
+  "A popular game day food": [
+    "C",
+    "P",
+    "S"
+  ],
+  "A popular fair or carnival food": [
+    "C",
+    "F",
+    "P",
+    "S"
+  ],
+  "A popular drink": [
+    "C",
+    "L",
+    "M",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular baked good": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S"
+  ],
+  "A popular sweet treat": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular type of meat": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular Southern food": [
+    "B",
+    "C",
+    "F",
+    "G",
+    "P",
+    "S"
+  ],
+  "A popular food to grill": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular brunch food": [
+    "B",
+    "C",
+    "E",
+    "F",
+    "H",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular holiday food": [
+    "C",
+    "H",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular late-night food": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular dog breed": [
+    "B",
+    "C",
+    "D",
+    "G",
+    "L",
+    "P",
+    "R",
+    "S"
+  ],
+  "A popular pet": [
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular zoo animal": [
+    "A",
+    "C",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular flavor": [
+    "A",
+    "B",
+    "C",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular farm animal": [
+    "C",
+    "D",
+    "H",
+    "P",
+    "S"
+  ],
+  "A popular sea creature": [
+    "C",
+    "D",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular insect or bug": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "L",
+    "M",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular bird": [
+    "C",
+    "D",
+    "F",
+    "H",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular flower": [
+    "A",
+    "C",
+    "D",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular dinosaur": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular houseplant": [
+    "P",
+    "S"
+  ],
+  "A popular wild animal": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular tree": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "O",
+    "P",
+    "S",
+    "W"
+  ],
+  "A famous mythical creature": [
+    "B",
+    "C",
+    "D",
+    "G",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular musical instrument": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "O",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular kitchen appliance": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular gadget or electronic device": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous tech product": [
+    "A",
+    "I",
+    "M",
+    "P",
+    "S",
+    "W"
+  ],
+  "A popular hobby": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular style of dance": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular holiday": [
+    "C",
+    "H",
+    "N"
+  ],
+  "A popular music genre": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular art form": [
+    "D",
+    "P",
+    "S"
+  ],
+  "A popular book genre": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "M",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular movie genre": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "H",
+    "M",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular college major": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "H",
+    "M",
+    "P",
+    "S"
+  ],
+  "A popular school subject": [
+    "B",
+    "C",
+    "E",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S"
+  ],
+  "A popular first job": [
+    "B",
+    "C",
+    "D",
+    "L",
+    "P",
+    "S",
+    "W"
+  ],
+  "A popular job or career": [
+    "A",
+    "C",
+    "D",
+    "E",
+    "F",
+    "L",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular Olympic sport": [
+    "B",
+    "D",
+    "F",
+    "H",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular sport to play": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular outdoor activity": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "R",
+    "S",
+    "W"
+  ],
+  "A popular weekend activity": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular summer activity": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "P",
+    "S",
+    "W"
+  ],
+  "A popular amusement park ride": [
+    "B",
+    "C",
+    "F",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular car model": [
+    "A",
+    "C",
+    "F",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular date night activity": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "S"
+  ],
+  "A popular exercise or workout": [
+    "B",
+    "C",
+    "L",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A popular type of vehicle": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular shoe style": [
+    "B",
+    "C",
+    "F",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular fashion accessory": [
+    "B",
+    "C",
+    "H",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular clothing item": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular piece of furniture": [
+    "B",
+    "C",
+    "D",
+    "S",
+    "T"
+  ],
+  "A popular piece of sports equipment": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular piece of jewelry": [
+    "B",
+    "C",
+    "P",
+    "R"
+  ],
+  "A popular tool": [
+    "A",
+    "C",
+    "D",
+    "H",
+    "P",
+    "S",
+    "W"
+  ],
+  "A common last name": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular piece of exercise equipment": [
+    "B",
+    "D",
+    "E",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular nickname": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular holiday tradition": [
+    "C",
+    "D",
+    "F",
+    "S",
+    "T"
+  ],
+  "A popular bar game": [
+    "D",
+    "P"
+  ],
+  "A popular Christmas decoration": [
+    "B",
+    "C",
+    "L",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular birthday gift": [
+    "B",
+    "C",
+    "F",
+    "G",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous game": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular superpower": [
+    "F",
+    "I",
+    "S",
+    "T"
+  ],
+  "A popular electronics brand": [
+    "A",
+    "C",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular makeup or beauty brand": [
+    "A",
+    "C",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S"
+  ],
+  "A famous tech company": [
+    "A",
+    "C",
+    "D",
+    "I",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular phone or computer brand": [
+    "A",
+    "H",
+    "L",
+    "M",
+    "S"
+  ],
+  "A popular department store": [
+    "M",
+    "N",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular cleaning product brand": [
+    "C",
+    "D",
+    "F",
+    "L",
+    "P",
+    "S"
+  ],
+  "A popular clothing store": [
+    "A",
+    "C",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "T"
+  ],
+  "A popular store or shop": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular household product brand": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular frozen food brand": [
+    "B",
+    "H",
+    "S"
+  ],
+  "A popular airline": [
+    "A",
+    "D",
+    "S"
+  ],
+  "A popular toy brand": [
+    "F",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P"
+  ],
+  "A popular TV channel": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A famous 70s movie": [
+    "A",
+    "C",
+    "D",
+    "G",
+    "R",
+    "S"
+  ],
+  "A famous 2010s movie": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "I",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous 2000s movie": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous romantic comedy": [
+    "B",
+    "C",
+    "P",
+    "S",
+    "W"
+  ],
+  "A famous sports movie": [
+    "B",
+    "C",
+    "M",
+    "R",
+    "S"
+  ],
+  "A famous superhero movie": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "I",
+    "L",
+    "M",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous Broadway musical": [
+    "A",
+    "C",
+    "H",
+    "P",
+    "S",
+    "W"
+  ],
+  "A famous teen movie": [
+    "C",
+    "M",
+    "P",
+    "S"
+  ],
+  "A famous movie sequel": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A famous family movie": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A famous cult classic movie": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "P",
+    "T"
+  ],
+  "A classic kids' movie": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A famous 70s TV show": [
+    "C",
+    "H",
+    "M",
+    "S",
+    "W"
+  ],
+  "A popular cartoon or animated show": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A famous 80s TV show": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "H",
+    "M",
+    "S",
+    "T"
+  ],
+  "A famous 2020s TV show": [
+    "B",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous Pixar character": [
+    "B",
+    "D",
+    "M",
+    "S",
+    "W"
+  ],
+  "A famous Disney character": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous TV family": [
+    "B",
+    "C",
+    "S"
+  ],
+  "A famous book character": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous movie hero": [
+    "B",
+    "H",
+    "I",
+    "L",
+    "M",
+    "R",
+    "S",
+    "T"
+  ],
+  "A famous 60s song": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "I",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous fictional place": [
+    "A",
+    "C",
+    "G",
+    "H",
+    "M",
+    "N",
+    "O",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous 70s song": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "I",
+    "L",
+    "M",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous 2010s song": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous dance song": [
+    "M",
+    "S",
+    "T"
+  ],
+  "A famous party song": [
+    "C",
+    "D",
+    "I",
+    "P",
+    "S",
+    "W"
+  ],
+  "A famous hip-hop song": [
+    "C",
+    "H",
+    "I",
+    "L",
+    "P",
+    "S"
+  ],
+  "A famous book series": [
+    "H",
+    "T"
+  ],
+  "A famous Disney song": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "I",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous country song": [
+    "C",
+    "F",
+    "I",
+    "S",
+    "T"
+  ],
+  "A famous female singer": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous song from a movie": [
+    "C",
+    "F",
+    "I",
+    "L",
+    "M",
+    "S",
+    "T"
+  ],
+  "A famous R&B singer": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous guitarist": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "P",
+    "S"
+  ],
+  "A famous 60s band or singer": [
+    "B",
+    "C",
+    "D",
+    "M",
+    "R",
+    "S",
+    "T"
+  ],
+  "An NHL team": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "N",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous 2000s singer or band": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A famous soccer team": [
+    "A",
+    "B",
+    "C",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous 70s band or singer": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous sports team": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous sporting event": [
+    "S",
+    "W"
+  ],
+  "A famous 90s athlete": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A famous female athlete": [
+    "B",
+    "L",
+    "M",
+    "N",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous celebrity": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous model": [
+    "C",
+    "H",
+    "L",
+    "N"
+  ],
+  "A famous dancer": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "G",
+    "M",
+    "P",
+    "S"
+  ],
+  "A famous astronaut": [
+    "A",
+    "C",
+    "G",
+    "S"
+  ],
+  "A famous magician": [
+    "C",
+    "D",
+    "H",
+    "P"
+  ],
+  "A famous fashion designer": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous TV star": [
+    "B",
+    "C",
+    "D",
+    "E",
+    "L",
+    "M",
+    "O",
+    "R",
+    "S",
+    "T"
+  ],
+  "A famous movie star": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous action star": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous children's author": [
+    "B",
+    "C",
+    "D",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S"
+  ],
+  "A famous YouTuber or influencer": [
+    "M",
+    "P",
+    "S"
+  ],
+  "A famous child star": [
+    "D",
+    "M",
+    "S"
+  ],
+  "A famous European city": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous capital city": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous landmark": [
+    "B",
+    "C",
+    "E",
+    "G",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A famous US landmark": [
+    "A",
+    "C",
+    "G",
+    "H",
+    "L",
+    "M",
+    "S",
+    "W"
+  ],
+  "A famous island": [
+    "B",
+    "C",
+    "H",
+    "M",
+    "S",
+    "T"
+  ],
+  "A famous European country": [
+    "F",
+    "I",
+    "P",
+    "S"
+  ],
+  "A famous Asian city": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "M",
+    "S",
+    "T"
+  ],
+  "A famous university": [
+    "B",
+    "C",
+    "D",
+    "H",
+    "M",
+    "O",
+    "P",
+    "S"
+  ],
+  "A famous country": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "G",
+    "I",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A famous theme or amusement park": [
+    "D",
+    "S"
+  ],
+  "A popular US state": [
+    "A",
+    "C",
+    "F",
+    "I",
+    "M",
+    "N",
+    "O",
+    "T",
+    "W"
+  ],
+  "A famous 80s or 90s cartoon": [
+    "D",
+    "G",
+    "S",
+    "T"
+  ],
+  "A popular fast food restaurant": [
+    "B",
+    "C",
+    "D",
+    "P",
+    "S",
+    "W"
+  ],
+  "A popular boy's name": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A common first name": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular girl's name": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "H",
+    "I",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular restaurant chain": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular grocery store": [
+    "A",
+    "C",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular snack brand": [
+    "C",
+    "D",
+    "F",
+    "L",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular clothing brand": [
+    "A",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular soda brand": [
+    "C",
+    "D",
+    "F",
+    "M",
+    "P",
+    "S"
+  ],
+  "A popular cereal": [
+    "C",
+    "F",
+    "S"
+  ],
+  "A popular shoe brand": [
+    "A",
+    "C",
+    "N",
+    "P",
+    "R",
+    "S"
+  ],
+  "A popular sports brand": [
+    "A",
+    "N",
+    "P",
+    "R"
+  ],
+  "A popular social media app": [
+    "F",
+    "I",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular card game": [
+    "B",
+    "C",
+    "H",
+    "P",
+    "S",
+    "W"
+  ],
+  "A popular mobile app": [
+    "C",
+    "D",
+    "F",
+    "I",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular animal": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular national park": [
+    "A",
+    "C",
+    "D",
+    "G",
+    "S"
+  ],
+  "A popular streaming service": [
+    "H",
+    "P"
+  ],
+  "A popular beach": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S",
+    "W"
+  ],
+  "A popular US city": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "S"
+  ],
+  "A popular Caribbean island": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular profession": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "L",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular sport": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular tourist attraction": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "G",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular baby animal": [
+    "C",
+    "F",
+    "P"
+  ],
+  "A popular fish": [
+    "B",
+    "C",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular herb": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A popular alcoholic drink": [
+    "B",
+    "C",
+    "M",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular beer": [
+    "B",
+    "C",
+    "H",
+    "M",
+    "P",
+    "S"
+  ],
+  "A popular tea": [
+    "B",
+    "C",
+    "G",
+    "O",
+    "P"
+  ],
+  "A popular actor": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous superhero": [
+    "B",
+    "C",
+    "F",
+    "H",
+    "I",
+    "S",
+    "T",
+    "W"
+  ],
+  "A popular actress": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S"
+  ],
+  "A famous sidekick": [
+    "R",
+    "S",
+    "T"
+  ],
+  "A famous detective": [
+    "H",
+    "M",
+    "P"
+  ],
+  "A famous robot": [
+    "B",
+    "C",
+    "R",
+    "T"
+  ],
+  "A famous rapper": [
+    "C",
+    "D",
+    "E",
+    "L",
+    "M",
+    "N",
+    "P",
+    "S",
+    "T"
+  ],
+  "A famous cat": [
+    "F",
+    "G",
+    "S",
+    "T"
+  ],
+  "A famous dog": [
+    "B",
+    "L",
+    "S"
+  ],
+  "A famous author": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "F",
+    "H",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous football player": [
+    "B",
+    "C",
+    "D",
+    "F",
+    "G",
+    "H",
+    "L",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A famous painter": [
+    "C",
+    "D",
+    "M",
+    "P",
+    "R",
+    "T"
+  ],
+  "A famous cartoon duo": [],
+  "A famous basketball player": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "I",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A famous couple": [
+    "B",
+    "R",
+    "S"
+  ],
+  "A popular chip brand": [
+    "C",
+    "D",
+    "F",
+    "L",
+    "P",
+    "T"
+  ],
+  "A popular ice cream brand": [
+    "B",
+    "H",
+    "M"
+  ],
+  "A popular grocery item": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "L",
+    "M",
+    "O",
+    "P",
+    "R",
+    "S",
+    "T"
+  ],
+  "A popular school supply": [
+    "B",
+    "C",
+    "P",
+    "R",
+    "S"
+  ],
+  "A famous witch or wizard": [
+    "D",
+    "G",
+    "H",
+    "M",
+    "S",
+    "W"
+  ],
+  "A popular toy": [
+    "B",
+    "D",
+    "L",
+    "M",
+    "P",
+    "S",
+    "T"
+  ],
+  "A famous pirate": [
+    "B"
+  ],
+  "A famous cowboy": [],
+  "A famous clown": [
+    "B",
+    "C",
+    "P"
+  ],
+  "A famous bear": [
+    "B",
+    "P",
+    "S",
+    "W"
+  ],
+  "A famous pig": [
+    "P"
+  ],
+  "A famous mouse": [],
+  "A famous horse": [
+    "S"
+  ],
+  "A famous duck": [
+    "D"
+  ],
+  "A famous building": [
+    "B",
+    "C",
+    "E",
+    "L",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous bridge": [
+    "B",
+    "G",
+    "L",
+    "M",
+    "R",
+    "T",
+    "W"
+  ],
+  "A famous mountain": [
+    "E",
+    "F",
+    "M",
+    "R",
+    "S",
+    "W"
+  ],
+  "A famous street or road": [
+    "A",
+    "B",
+    "C",
+    "F",
+    "L",
+    "M",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A famous river": [
+    "A",
+    "C",
+    "M",
+    "N",
+    "P",
+    "R",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous restaurant": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "H",
+    "M",
+    "P",
+    "S",
+    "T",
+    "W"
+  ],
+  "A famous car": [
+    "B",
+    "C",
+    "F",
+    "M",
+    "P",
+    "T"
+  ],
+  "A famous hotel": [
+    "B",
+    "H",
+    "P",
+    "R",
+    "S",
+    "W"
+  ],
+  "A famous doll or action figure": [
+    "B"
   ]
 }
