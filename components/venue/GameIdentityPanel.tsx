@@ -617,6 +617,60 @@ function FantasyIllustration({ stepIndex }: { stepIndex: number }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Super Bowl Squares tutorial art (colour only, like the real board). Step 0: a board with a few
+// squares claimed. Step 1: the two shuffled digit rows, drawn as one strip each so every digit stays
+// 12px+ at any card size. Step 2: the same board with one winning square.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SQUARES_ART_TAKEN: ReadonlySet<number> = new Set([4, 13, 22, 27, 35, 41, 48, 56, 63, 69, 72, 85, 91, 97]);
+const SQUARES_ART_MINE: ReadonlySet<number> = new Set([18, 64]);
+const SQUARES_ART_WINNER = 64;
+const SQUARES_ART_ACROSS = [3, 7, 0, 9, 1, 5, 8, 2, 6, 4] as const;
+const SQUARES_ART_DOWN = [6, 2, 9, 0, 4, 8, 1, 7, 3, 5] as const;
+
+function SquaresBoardArt({ highlight }: { highlight: boolean }) {
+  return (
+    <div className="grid w-[min(100cqw,100cqh,15rem)] grid-cols-10 gap-px rounded-xl bg-black/25 p-1.5">
+      {Array.from({ length: 100 }, (_, cell) => (
+        <div
+          key={cell}
+          className={`aspect-square rounded-[2px] ${
+            SQUARES_ART_MINE.has(cell) ? "bg-amber-300" : SQUARES_ART_TAKEN.has(cell) ? "bg-sky-400/80" : "bg-white/10"
+          } ${highlight && cell === SQUARES_ART_WINNER ? "ring-2 ring-inset ring-white" : ""}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SquaresDigitStrip({ label, digits }: { label: string; digits: readonly number[] }) {
+  return (
+    <div className="w-full max-w-[15rem]">
+      <div className="mb-0.5 text-[14px] font-black uppercase tracking-wide text-emerald-200">{label}</div>
+      <div className="grid grid-cols-10 gap-px rounded-lg bg-black/25 p-1">
+        {digits.map((digit, index) => (
+          <div key={index} className="flex aspect-square items-center justify-center text-caption font-black tabular-nums text-white">
+            {digit}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SquaresIllustration({ stepIndex }: { stepIndex: number }) {
+  if (stepIndex === 1) {
+    return (
+      <div className="flex w-full flex-col items-center gap-2">
+        <SquaresDigitStrip label="Across" digits={SQUARES_ART_ACROSS} />
+        <SquaresDigitStrip label="Down" digits={SQUARES_ART_DOWN} />
+      </div>
+    );
+  }
+  return <SquaresBoardArt highlight={stepIndex >= 2} />;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Dispatch: returns the right illustration for any game × step
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -636,6 +690,7 @@ function GameStepIllustration({
   if (gameKey === "pickem") return <PickEmIllustration scene={PICKEM_SCENE} stepIndex={stepIndex} />;
   if (gameKey === "nfl-pickem") return <PickEmIllustration scene={NFL_PICKEM_SCENE} stepIndex={stepIndex} />;
   if (gameKey === "fantasy") return <FantasyIllustration stepIndex={stepIndex} />;
+  if (gameKey === "squares") return <SquaresIllustration stepIndex={stepIndex} />;
   return null;
 }
 

@@ -1,8 +1,9 @@
 # Super Bowl Squares + March Madness Brackets — phased plan
 
-**Status (2026-10-19):** Phase 2 done (not committed; migrations `20261019045030` + `20261019051458` written, NOT
-applied; both flags off) — see `docs/squares-and-brackets-plan_PHASE_2_HANDOFF.md`. Phase 0's live NFL capture runs
-tonight (MNF) and Thu Oct 22; Phase 3 starts by checking it against the quarter rule. Next: Phase 3.
+**Status (2026-10-19):** Phase 3 done and committed with Phases 0–2 up to `863a9b6` (Phase 3 itself is committed right
+after it); both migrations (`20261019045030`, `20261019051458`) are APPLIED to production; both flags off, nothing pushed
+or deployed. Latest handoff: `docs/squares-and-brackets-plan_PHASE_3_HANDOFF.md`. Phase 0's live NFL capture runs tonight
+(MNF, 8:15 PM ET) and Thu Oct 22; checking it against the quarter rule is still open. Next: Phase 4.
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -360,3 +361,17 @@ Full detail: `docs/squares-and-brackets-plan_PHASE_2_HANDOFF.md`.
   flag is on and today is in Feb 1–15 (or `SQUARES_REHEARSAL_ENABLED`). ≈ 600 BDL requests per Super Bowl.
 - Player API (flag-gated): `GET /api/squares/board`, `POST /api/squares/claim`. Admin: `/api/admin/squares` + the
   "Squares" admin section.
+
+## 11. Phase 3 as built (2026-10-19) — read before Phases 4–6
+
+Full detail: `docs/squares-and-brackets-plan_PHASE_3_HANDOFF.md`.
+- Page `/squares` (`app/squares/page.tsx`, `notFound()` with the flag off; statement-layout tutorial with art
+  `SquaresIllustration` in `GameIdentityPanel.tsx`) → `components/squares/` (`SquaresGame`, `SquaresGrid`,
+  `SquaresCellSheet`, `useSquaresData`). Every decision is a pure function in `lib/squaresView.ts`.
+- **Two reads.** Per-venue BOARD (`/api/squares/board`, uncached, every 30 s, only before the lock) and the shared
+  SCORE (`GET /api/squares/score`, `lib/squaresScore.ts`: `s-maxage=15`, one DB request per cache miss, no player,
+  no sports-feed call) every 15 s after the lock. The board is re-read after the lock only when the draw or a graded
+  moment changes (`squaresRevision`). Hidden tab = no requests; game complete = no requests.
+- Squares are colour-only `role="gridcell"` divs (NOT buttons: the phone button rules would swell them); a tap opens
+  `SquaresCellSheet` (Claim / Release, owner name). Measured: 27.5 px cells at 350 px, 21.4 px at 289 px.
+- App-bar label is `SQUARES_SHORT_NAME` ("Squares") — the full name truncated beside the points pill.

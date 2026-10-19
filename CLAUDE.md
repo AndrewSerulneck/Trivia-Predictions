@@ -1054,9 +1054,14 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   `credit_seasonal_points` (≤ 500 per call; ledger `seasonal_points_credits`, unique `(source, source_key)` = pays once).
   Never `update users set points` for these games; never delete a ledger row to "re-grade" (it frees the key). Scale in
   `lib/seasonalPoints.ts`. SQL proof: `npm run test:seasonal-points-sql`.
-- **Squares engine (Phase 2, 2026-10-19, migration `20261019051458`, not applied):** claims only via `squares_claim`
+- **Squares engine (Phase 2, 2026-10-19, migrations `20261019045030` + `20261019051458`, applied 2026-10-19):** claims only via `squares_claim`
   (`lib/squaresBoard.ts`), grading/draw only in `lib/squaresSettlement.ts` (rides on `/api/cron/pickem-settle`, zero I/O
   outside Feb 1–15 or with the flag off), voids only via `squares_void_moment` (`lib/squaresAdmin.ts`: reverses paid /
   burns unpaid credits, re-grade pays under `board:moment:grade_no`). A quarter counts only on positive evidence + a 60 s
   hold (`lib/squares.ts`); corrections are never automatic. Compare PostgREST timestamps with `Date.parse`, not strings.
   SQL proof: `npm run test:squares-sql`.
+- **Squares player screens (Phase 3, 2026-10-19):** `/squares` → `components/squares/`; all rules in `lib/squaresView.ts`.
+  The shared score `GET /api/squares/score` (`lib/squaresScore.ts`) is CDN-cached 15 s and carries no player or venue —
+  keep it that way, and never poll the board per player after the lock (`useSquaresData`, `tests/squares-screen.test.ts`
+  pins the cadence). Squares are `div role="gridcell"`, never `<button>`s. The sheet is pinned in
+  `tests/native-back-review-fixes.test.ts`.

@@ -6,7 +6,7 @@ import { NotificationBell } from "@/components/ui/NotificationBell";
 import { PointsPill } from "@/components/ui/PointsPill";
 import { usePointsSummary } from "@/components/ui/usePointsSummary";
 import { GameMark, type GameChromeKey } from "@/components/venue/GameChrome";
-import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
+import { BRACKET_GAME_NAME, SQUARES_SHORT_NAME } from "@/lib/venueGameCards";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AppBar — the single, always-visible top navigation surface shared across the
@@ -27,7 +27,7 @@ const GAME_LABEL: Record<GameChromeKey, string> = {
   fantasy: "Fantasy",
   pickem: "Pick 'Em",
   "nfl-pickem": "NFL Pick 'Em",
-  squares: SQUARES_GAME_NAME,
+  squares: SQUARES_SHORT_NAME,
   bracket: BRACKET_GAME_NAME,
 };
 

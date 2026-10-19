@@ -64,8 +64,8 @@ const FALLBACK_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
   fantasy: "#0a3128", // /fantasy — GAME_CARD_BG_BY_KEY
   "category-blitz": "linear-gradient(132deg,#a10d63 0%,#7c0a4a 50%,#4a052c 100%)", // /category-blitz/play
   "nfl-pickem": "#020617", // /nfl-pickem — playingBackgroundClassName bg-[#020617]
-  // Pages arrive in Phases 3 and 8; match these to their backgrounds then.
-  squares: "#052e16", // /squares — GAME_CARD_BG_BY_KEY end stop
+  // The bracket page arrives in Phase 8; match it to its background then.
+  squares: "#052e16", // /squares — playingBackgroundClassName bg-[#052e16]
   bracket: "#431407", // /bracket — GAME_CARD_BG_BY_KEY end stop
 };
 

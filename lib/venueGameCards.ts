@@ -17,6 +17,8 @@ import { BRACKET_ROUND_POINTS, SQUARES_MOMENT_POINTS } from "@/lib/seasonalPoint
 // Andrew, 2026-10-19: use the real names for now; a rename must be ONE edit, here. Every screen,
 // title map and the Official Rules read these — tests/seasonal-games.test.ts fails on a copy.
 export const SQUARES_GAME_NAME = "Super Bowl Squares";
+/** The in-game app bar's label: the full name truncates beside the points pill on a 350px phone. */
+export const SQUARES_SHORT_NAME = "Squares";
 /** The two lines the Venue Home tile breaks the name into. */
 export const SQUARES_TITLE_LINES: [string, string] = ["Super Bowl", "Squares"];
 export const BRACKET_GAME_NAME = "March Madness";

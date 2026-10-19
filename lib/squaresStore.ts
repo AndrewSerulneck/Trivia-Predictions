@@ -82,7 +82,7 @@ type EventRow = {
   created_at: string;
 };
 
-type MomentRow = {
+export type MomentRow = {
   event_id: string;
   moment: string;
   grade_no: number;
@@ -118,7 +118,7 @@ export const toEventRecord = (row: EventRow): SquaresEventRecord => ({
   createdAt: row.created_at,
 });
 
-const toMomentRecord = (row: MomentRow): SquaresMomentRecord | null => {
+export const toMomentRecord = (row: MomentRow): SquaresMomentRecord | null => {
   if (!isSquaresMoment(row.moment)) return null;
   return {
     moment: row.moment,
