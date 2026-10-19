@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import type { ChallengeGameType, ChallengeInvite } from "@/types";
 import { getUserId, getVenueId } from "@/lib/storage";
+import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 
 const MAX_RECEIVED = 5;
 
@@ -25,6 +26,8 @@ function gameTypeLabel(gameType: ChallengeGameType): string {
   if (gameType === "live-trivia") return "Live Trivia";
   if (gameType === "speed-trivia") return "Speed Trivia";
   if (gameType === "trivia") return "Speed Trivia";
+  if (gameType === "squares") return SQUARES_GAME_NAME;
+  if (gameType === "bracket") return BRACKET_GAME_NAME;
   return "Prop Bingo";
 }
 

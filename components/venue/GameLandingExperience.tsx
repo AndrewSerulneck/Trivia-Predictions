@@ -91,6 +91,8 @@ function analyticsGameType(gameKey: VenueGameKey): GameAnalyticsType {
   if (gameKey === "pickem") return "pickem";
   if (gameKey === "nfl-pickem") return "pickem";
   if (gameKey === "category-blitz") return "category-blitz";
+  if (gameKey === "squares") return "squares";
+  if (gameKey === "bracket") return "bracket";
   return "speed-trivia";
 }
 

@@ -12,7 +12,17 @@ import type {
 } from "@/lib/socialShare/contracts";
 
 export type AnalyticsConsent = "granted" | "denied";
-export type GameAnalyticsType = "trivia" | "bingo" | "pickem" | "fantasy" | "speed-trivia" | "live-trivia" | "category-blitz";
+// Must stay inside game_sessions_type_valid (latest: 20261019045030_seasonal_points_credits.sql).
+export type GameAnalyticsType =
+  | "trivia"
+  | "bingo"
+  | "pickem"
+  | "fantasy"
+  | "speed-trivia"
+  | "live-trivia"
+  | "category-blitz"
+  | "squares"
+  | "bracket";
 export type GameOutcome = "won" | "lost" | "abandoned";
 export type StoryShareAnalyticsEventName =
   | "story_share_opened"

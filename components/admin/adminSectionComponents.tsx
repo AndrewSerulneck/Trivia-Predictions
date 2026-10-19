@@ -97,6 +97,10 @@ export const UsernameModerationSection = dynamic(
   () => import("@/components/admin/sections/UsernameModerationSection").then((m) => m.UsernameModerationSection),
   { loading: SectionLoading }
 );
+export const SquaresSection = dynamic(
+  () => import("@/components/admin/sections/SquaresSection").then((m) => m.SquaresSection),
+  { loading: SectionLoading }
+);
 export const LlmCostSection = dynamic(
   () => import("@/components/admin/sections/LlmCostSection").then((m) => m.LlmCostSection),
   { loading: SectionLoading }
@@ -154,4 +158,5 @@ export const ADMIN_CONSOLE_SECTION_RENDERERS: Record<
   "category-blitz": ({ venues }) => <CategoryBlitzSection venues={venues} />,
   "llm-cost": () => <LlmCostSection />,
   "partner-billing": () => <BillingSection />,
+  squares: () => <SquaresSection />,
 };

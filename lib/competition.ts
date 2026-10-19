@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 import type {
   ChallengeGameType,
   ChallengeInvite,
@@ -126,6 +127,8 @@ function getGameTypeLabel(gameType: ChallengeGameType): string {
   if (gameType === "live-trivia") return "Live Trivia";
   if (gameType === "speed-trivia") return "Speed Trivia";
   if (gameType === "trivia") return "Speed Trivia";
+  if (gameType === "squares") return SQUARES_GAME_NAME;
+  if (gameType === "bracket") return BRACKET_GAME_NAME;
   return "Prop Bingo";
 }
 

@@ -12,7 +12,7 @@ import { ChevronDown } from "lucide-react";
 //   fantasy → amber-200 (#fde68a)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type GameChromeKey = "bingo" | "fantasy" | "pickem" | "nfl-pickem";
+export type GameChromeKey = "bingo" | "fantasy" | "pickem" | "nfl-pickem" | "squares" | "bracket";
 
 // Small animated "live" dot — mirrors the design's pulsing status indicator.
 export const LiveDot = ({ className = "bg-emerald-400" }: { className?: string }) => (
@@ -21,6 +21,28 @@ export const LiveDot = ({ className = "bg-emerald-400" }: { className?: string }
 
 // GameMark — the compact game-identity tile that stands in for the dead 44px title.
 export const GameMark = ({ game }: { game: GameChromeKey }) => {
+  if (game === "squares") {
+    return (
+      <span
+        aria-hidden="true"
+        className="grid h-[26px] w-[26px] shrink-0 grid-cols-3 gap-px rounded-[6px] border border-emerald-300 bg-emerald-900 p-[3px]"
+      >
+        {Array.from({ length: 9 }).map((_, i) => (
+          <span key={i} className={`rounded-[1px] ${i === 4 ? "bg-amber-300" : "bg-emerald-200/80"}`} />
+        ))}
+      </span>
+    );
+  }
+  if (game === "bracket") {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[6px] border border-orange-300 bg-orange-700 text-[14px] font-black leading-none text-white"
+      >
+        🏀
+      </span>
+    );
+  }
   if (game === "nfl-pickem") {
     return (
       <span

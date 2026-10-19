@@ -161,7 +161,9 @@ export type ChallengeGameType =
   | "live-trivia"
   | "trivia"
   | "bingo"
-  | "nfl-pickem";
+  | "nfl-pickem"
+  | "squares"
+  | "bracket";
 export type ChallengeStatus =
   | "pending"
   | "accepted"

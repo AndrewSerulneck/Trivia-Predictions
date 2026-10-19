@@ -1042,3 +1042,21 @@ Partner Dashboard **2,056 KB → 352 KB** and **10.4 s → 2.1 s** to the load e
   - **Session cookies** (`lib/serverSession.ts`): When `SESSION_SECRET` is set (production, or enforced locally), the `tp_sess` cookie must be a valid HMAC-signed payload. Unsigned payloads will be rejected. Use `createSessionCookie(userId)` to generate a valid value, or see [Phase 2 optional tooling](#phase-2--ship-a-reusable-print-test-auth-script) for a helper script.
 - **For test harnesses:** Always set cookies before navigating. Populate localStorage only if you need to test client-side fallback behavior (rare). Setting cookies via `page.context().addCookies([...])` (Playwright), `-b` (curl), or equivalent for your tool is required for direct navigation to succeed.
 - **Source of truth:** `proxy.ts` (server-side route gate), `lib/storage.ts` (read/write contract), `lib/serverSession.ts` (signature validation).
+
+## Super Bowl Squares + March Madness (seasonal games; Phase 1 built 2026-10-19, flags off)
+Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest handoff on its status line).
+- **Cards are date-windowed, zero requests:** `lib/seasonalGames.ts` (Eastern dates; Squares Feb 1–15 2027, Brackets
+  Mar 14–Apr 6 with a teaser from Mar 1) and the ONLY readers of `NEXT_PUBLIC_SQUARES_ENABLED` /
+  `NEXT_PUBLIC_BRACKETS_ENABLED`. Off = no card, routes 404. Never turn a flag on before its route exists.
+- **On-screen names live only in `lib/venueGameCards.ts`** (`SQUARES_GAME_NAME`, `BRACKET_GAME_NAME`; Andrew: a rename
+  must be one edit). `tests/seasonal-games.test.ts` fails on a copied literal.
+- **Venue points are paid only through `creditSeasonalPoints`** (`lib/seasonalPointsCredit.ts`) → batched RPC
+  `credit_seasonal_points` (≤ 500 per call; ledger `seasonal_points_credits`, unique `(source, source_key)` = pays once).
+  Never `update users set points` for these games; never delete a ledger row to "re-grade" (it frees the key). Scale in
+  `lib/seasonalPoints.ts`. SQL proof: `npm run test:seasonal-points-sql`.
+- **Squares engine (Phase 2, 2026-10-19, migration `20261019051458`, not applied):** claims only via `squares_claim`
+  (`lib/squaresBoard.ts`), grading/draw only in `lib/squaresSettlement.ts` (rides on `/api/cron/pickem-settle`, zero I/O
+  outside Feb 1–15 or with the flag off), voids only via `squares_void_moment` (`lib/squaresAdmin.ts`: reverses paid /
+  burns unpaid credits, re-grade pays under `board:moment:grade_no`). A quarter counts only on positive evidence + a 60 s
+  hold (`lib/squares.ts`); corrections are never automatic. Compare PostgREST timestamps with `Date.parse`, not strings.
+  SQL proof: `npm run test:squares-sql`.

@@ -275,6 +275,22 @@ async function getSourceLeaderboardForVenue(
       }).catch(() => null)
     : null;
 
+  // Super Bowl Squares + March Madness venue points (lib/seasonalPointsCredit.ts). They have no
+  // per-game filter yet, so they count toward "all" only. An empty table off-season: one indexed read.
+  const seasonalPromise = game === "all"
+    ? withTimedLeaderboardQuery(async (signal) => {
+        const query = adminClient
+          .from("seasonal_points_credits")
+          .select("user_id, points")
+          .abortSignal(signal)
+          .in("user_id", userIds)
+          // A reversed or burned credit (a voided Squares moment) never counts.
+          .is("reversed_at", null)
+          .limit(MAX_POINT_ROWS_PER_SOURCE);
+        return await applyTimeRange(query, "created_at");
+      }).catch(() => null)
+    : null;
+
   const [
     speedTriviaResult,
     liveTriviaResult,
@@ -283,6 +299,7 @@ async function getSourceLeaderboardForVenue(
     pickemResult,
     fantasyResult,
     predictionsResult,
+    seasonalResult,
   ] = await Promise.all([
     speedTriviaPromise,
     liveTriviaPromise,
@@ -291,6 +308,7 @@ async function getSourceLeaderboardForVenue(
     pickemPromise,
     fantasyPromise,
     predictionsPromise,
+    seasonalPromise,
   ]);
 
   if (speedTriviaResult?.data) {
@@ -325,6 +343,11 @@ async function getSourceLeaderboardForVenue(
   }
   if (predictionsResult?.data) {
     for (const row of predictionsResult.data as Array<{ user_id: string; points: number }>) {
+      addPoints(pointsByUserId, row.user_id, row.points);
+    }
+  }
+  if (seasonalResult?.data) {
+    for (const row of seasonalResult.data as Array<{ user_id: string; points: number }>) {
       addPoints(pointsByUserId, row.user_id, row.points);
     }
   }

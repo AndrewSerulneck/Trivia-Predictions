@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import type { VenueGameKey } from "@/lib/venueGameCards";
+import { BRACKET_TEASER_SUBTITLE, BRACKET_TITLE_LINES, SQUARES_TITLE_LINES, type VenueGameKey } from "@/lib/venueGameCards";
 import type { LiveTriviaPayloadFailureReason } from "@/lib/liveTriviaClientState";
 import type {
   RewardPrizeKind,
@@ -101,6 +101,8 @@ export const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
   fantasy: ["Fantasy Sports", ""],
   "category-blitz": ["Category Blitz", ""],
   "nfl-pickem": ["NFL", "Pick 'Em"],
+  squares: SQUARES_TITLE_LINES,
+  bracket: BRACKET_TITLE_LINES,
 };
 
 export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
@@ -111,6 +113,8 @@ export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
   fantasy: "#7c3aed",
   "category-blitz": "#701a75",
   "nfl-pickem": "#1a2f72",
+  squares: "#15803d",
+  bracket: "#c2410c",
 };
 
 // Plain sentences, not pre-split lines — the tile lets these wrap naturally so
@@ -123,6 +127,13 @@ export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {
   fantasy: "Draft the ultimate roster. The better they perform, the more points you earn.",
   "category-blitz": "Our twist on a classic word game.",
   "nfl-pickem": "Pick the most winners each week.",
+  squares: "Claim your squares for the big game. Match the score to win.",
+  bracket: "Fill out your bracket and take on the whole bar.",
+};
+
+// A seasonal tile's subtitle while it is a teaser (lib/seasonalGames.ts: before its game opens).
+export const VENUE_HUB_TILE_TEASER_BY_KEY: Partial<Record<VenueGameKey, string>> = {
+  bracket: BRACKET_TEASER_SUBTITLE,
 };
 
 // Shared with the venue-home game buttons (VenueGamesPanel) so a reward's icon
@@ -165,7 +176,16 @@ function TrophyGlyph({ className = "h-10 w-10" }: { className?: string }) {
   );
 }
 
-export type ChallengeGameType = "live_trivia" | "speed-trivia" | "bingo" | "pickem" | "fantasy" | "nfl-pickem" | "unknown";
+export type ChallengeGameType =
+  | "live_trivia"
+  | "speed-trivia"
+  | "bingo"
+  | "pickem"
+  | "fantasy"
+  | "nfl-pickem"
+  | "squares"
+  | "bracket"
+  | "unknown";
 
 /**
  * The Reward registry's own game-type enum (`@/types`) into this module's —
@@ -182,6 +202,8 @@ const REWARD_DEFINITION_GAME_TYPE: Record<RewardDefinitionGameType, ChallengeGam
   pickem: "pickem",
   fantasy: "fantasy",
   "nfl-pickem": "nfl-pickem",
+  squares: "squares",
+  bracket: "bracket",
 };
 
 /**
@@ -384,6 +406,22 @@ export const CHALLENGE_ICON_STYLE: Record<
     cardAccent: "rgba(253,230,138,0.2)",
     ctaTextColor: "#1a2f72",
   },
+  // Football-field green, matching the Super Bowl Squares tile.
+  squares: {
+    badgeBg: "linear-gradient(145deg, #052e16, #166534, #15803d)",
+    borderColor: "rgba(134,239,172,0.45)",
+    barGradient: "linear-gradient(90deg, #16a34a, #86efac)",
+    cardAccent: "rgba(134,239,172,0.2)",
+    ctaTextColor: "#052e16",
+  },
+  // Basketball orange, matching the March Madness tile.
+  bracket: {
+    badgeBg: "linear-gradient(145deg, #431407, #9a3412, #c2410c)",
+    borderColor: "rgba(253,186,116,0.5)",
+    barGradient: "linear-gradient(90deg, #ea580c, #fdba74)",
+    cardAccent: "rgba(253,186,116,0.2)",
+    ctaTextColor: "#431407",
+  },
   unknown: {
     badgeBg: "linear-gradient(145deg, #0f766e, #0891b2, #22d3ee)",
     borderColor: "rgba(34,211,238,0.45)",
@@ -404,6 +442,8 @@ const CHALLENGE_GAME_TYPE_TO_VENUE_GAME_KEY: Record<ChallengeGameType, VenueGame
   pickem: "pickem",
   fantasy: "fantasy",
   "nfl-pickem": "nfl-pickem",
+  squares: "squares",
+  bracket: "bracket",
   unknown: null,
 };
 

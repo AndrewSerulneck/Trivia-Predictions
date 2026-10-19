@@ -28,7 +28,8 @@ export type AdminSection =
   | "username-moderation"
   | "category-blitz"
   | "llm-cost"
-  | "partner-billing";
+  | "partner-billing"
+  | "squares";
 
 export type AdminSectionOption = {
   id: AdminSection;
@@ -63,6 +64,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "live-trivia-inventory", label: "Question Inventory",    slug: "live-trivia-inventory", status: { label: "Ready", tone: "live" } },
   { id: "game-settings",         label: "Game Settings",         slug: "game-settings",         status: { label: "Ready", tone: "live" } },
   { id: "category-blitz",        label: "Category Blitz",        slug: "category-blitz",        status: { label: "Ready", tone: "live" } },
+  { id: "squares",               label: "Squares",               slug: "squares",               status: { label: "Ready", tone: "live" } },
   { id: "llm-cost",              label: "LLM Cost",              slug: "llm-cost",              status: { label: "Ready", tone: "live" } },
   { id: "partner-billing",       label: "Partner Billing",       slug: "partner-billing",       status: { label: "Ready", tone: "live" } },
 ];
@@ -82,7 +84,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Prizes & Events",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["challenge-campaigns", "live-trivia", "live-trivia-inventory", "category-blitz"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["challenge-campaigns", "live-trivia", "live-trivia-inventory", "category-blitz", "squares"].includes(opt.id)),
   },
   {
     label: "Operations",
@@ -120,6 +122,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "category-blitz",
   "llm-cost",
   "partner-billing",
+  "squares",
 ]);
 
 export function getAdminSectionBySlug(slug: string): AdminSectionOption | null {

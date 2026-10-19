@@ -29,6 +29,7 @@ import {
   type VenueHomeBootstrapSnapshot,
 } from "@/lib/venueHomeBootstrap";
 import { VENUE_GAME_CARD_BY_KEY, VENUE_HOME_GAME_KEYS, type VenueGameKey } from "@/lib/venueGameCards";
+import { venueHomeCardState } from "@/lib/seasonalGames";
 import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
 import { hasSeenTutorialRecently, markTutorialSeen } from "@/lib/gameOnboarding";
 import { minimizeNativeApp, useNativeBackHandler } from "@/components/navigation/nativeBackButton";
@@ -103,7 +104,18 @@ type ChallengeCampaignPayload = {
   campaigns?: ChallengeCampaignCard[];
 };
 
-const VENUE_HUB_GAME_ORDER: VenueGameKey[] = ["category-blitz", "speed-trivia", "nfl-pickem", "live_trivia", "bingo", "fantasy", "pickem"];
+// The seasonal games lead while their cards show (only inside their windows — lib/seasonalGames.ts).
+const VENUE_HUB_GAME_ORDER: VenueGameKey[] = [
+  "squares",
+  "bracket",
+  "category-blitz",
+  "speed-trivia",
+  "nfl-pickem",
+  "live_trivia",
+  "bingo",
+  "fantasy",
+  "pickem",
+];
 const SWIPE_SCREEN_COUNT = 3;
 const FETCH_TIMEOUT_MS = 4500;
 const BADGE_FETCH_TIMEOUT_MS = 3500;
@@ -1428,7 +1440,16 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     void enterCategoryBlitzGame(sourceElement, persistCardSnapshot);
   }, [enterCategoryBlitzGame]);
 
-  const homeCards = useMemo(() => VENUE_HOME_GAME_KEYS.map((key) => VENUE_GAME_CARD_BY_KEY[key]), []);
+  // Seasonal cards show only inside their window with their flag on. Decided once per visit from
+  // the date — no request (lib/seasonalGames.ts).
+  const { homeCards, teaserGames } = useMemo(() => {
+    const now = new Date();
+    const states = VENUE_HOME_GAME_KEYS.map((key) => [key, venueHomeCardState(key, now)] as const);
+    return {
+      homeCards: states.filter(([, state]) => state !== "hidden").map(([key]) => VENUE_GAME_CARD_BY_KEY[key]),
+      teaserGames: new Set<VenueGameKey>(states.filter(([, state]) => state === "teaser").map(([key]) => key)),
+    };
+  }, []);
   const currentUserId = useMemo(() => (getUserId() ?? "").trim(), []);
   const goToChallengeRedeem = useCallback(
     async (challengeId: string, sourceElement: HTMLElement | null) => {
@@ -1601,6 +1622,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           lobbyButtonShouldPulse={lobbyButtonShouldPulse}
           pendingDestination={pendingDestination}
           orderedHomeCards={orderedHomeCards}
+          teaserGames={teaserGames}
           visibleBadgeByGame={visibleBadgeByGame}
           badgeError={badgeError}
           categoryBlitzSessionActive={categoryBlitzSessionActive}

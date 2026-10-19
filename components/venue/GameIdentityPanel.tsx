@@ -20,6 +20,10 @@ export const GAME_CARD_BG_BY_KEY: Record<VenueGameKey, string> = {
     "bg-[linear-gradient(132deg,#a10d63_0%,#7c0a4a_50%,#4a052c_100%)]",
   "nfl-pickem":
     "[background:linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)]",
+  squares:
+    "bg-[linear-gradient(132deg,#15803d_0%,#166534_50%,#052e16_100%)]",
+  bracket:
+    "bg-[linear-gradient(132deg,#ea580c_0%,#c2410c_50%,#431407_100%)]",
 };
 
 export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
@@ -37,6 +41,10 @@ export const GAME_PAGE_THEME_BY_KEY: Record<VenueGameKey, string> = {
     "bg-[linear-gradient(132deg,rgba(161,13,99,0.18)_0%,rgba(124,10,74,0.2)_50%,rgba(74,5,44,0.18)_100%)] border-pink-400/30",
   "nfl-pickem":
     "bg-[linear-gradient(134deg,rgba(37,99,235,0.22)_0%,rgba(124,58,237,0.22)_56%,rgba(236,72,153,0.2)_100%)] border-indigo-200/65",
+  squares:
+    "bg-[linear-gradient(132deg,rgba(21,128,61,0.22)_0%,rgba(22,101,52,0.24)_50%,rgba(5,46,22,0.3)_100%)] border-emerald-300/40",
+  bracket:
+    "bg-[linear-gradient(132deg,rgba(234,88,12,0.2)_0%,rgba(194,65,12,0.22)_50%,rgba(67,20,7,0.3)_100%)] border-orange-300/40",
 };
 
 export const GAME_IDENTITY_SUBTITLE: Record<VenueGameKey, string> = {
@@ -47,6 +55,8 @@ export const GAME_IDENTITY_SUBTITLE: Record<VenueGameKey, string> = {
   fantasy: "Build and challenge lineups head to head.",
   "category-blitz": "Live word game — one letter, 12 categories, 3 minutes.",
   "nfl-pickem": "Pick the most NFL winners each week. That's it.",
+  squares: "One board per venue. Match the score to win.",
+  bracket: "Pick every game. Beat everyone at your venue.",
 };
 
 function normalizeRule(rule: string): string {
@@ -641,6 +651,8 @@ const GAME_STEP_ACCENT: Record<VenueGameKey, string> = {
   fantasy:        "text-violet-300",
   "category-blitz": "text-amber-300",
   "nfl-pickem": "text-amber-200",
+  squares: "text-emerald-200",
+  bracket: "text-orange-200",
 };
 
 const GAME_STEP_DOT_ACTIVE: Record<VenueGameKey, string> = {
@@ -651,6 +663,8 @@ const GAME_STEP_DOT_ACTIVE: Record<VenueGameKey, string> = {
   fantasy:        "bg-violet-300",
   "category-blitz": "bg-amber-300",
   "nfl-pickem": "bg-amber-200",
+  squares: "bg-emerald-200",
+  bracket: "bg-orange-200",
 };
 
 function renderBody(body: string | string[] | undefined) {
@@ -678,6 +692,8 @@ const STATEMENT_LAYOUT_GAMES: ReadonlySet<VenueGameKey> = new Set<VenueGameKey>(
   "pickem",
   "nfl-pickem",
   "fantasy",
+  "squares",
+  "bracket",
 ]);
 
 export const usesStatementTutorialLayout = (gameKey: VenueGameKey): boolean => STATEMENT_LAYOUT_GAMES.has(gameKey);

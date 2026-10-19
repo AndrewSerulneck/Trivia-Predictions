@@ -1,6 +1,30 @@
-export type VenueGameKey = "speed-trivia" | "live_trivia" | "pickem" | "bingo" | "fantasy" | "category-blitz" | "nfl-pickem";
+export type VenueGameKey =
+  | "speed-trivia"
+  | "live_trivia"
+  | "pickem"
+  | "bingo"
+  | "fantasy"
+  | "category-blitz"
+  | "nfl-pickem"
+  | "squares"
+  | "bracket";
 
 import { CATEGORY_BLITZ_RULES, CATEGORY_BLITZ_TUTORIAL_CARDS } from "@/lib/categoryBlitzHowToPlay";
+import { SQUARES_PER_PLAYER_CAP } from "@/lib/seasonalGames";
+import { BRACKET_ROUND_POINTS, SQUARES_MOMENT_POINTS } from "@/lib/seasonalPoints";
+
+// ── Seasonal games' on-screen names (docs/squares-and-brackets-plan.md §1 decision 9) ──
+// Andrew, 2026-10-19: use the real names for now; a rename must be ONE edit, here. Every screen,
+// title map and the Official Rules read these — tests/seasonal-games.test.ts fails on a copy.
+export const SQUARES_GAME_NAME = "Super Bowl Squares";
+/** The two lines the Venue Home tile breaks the name into. */
+export const SQUARES_TITLE_LINES: [string, string] = ["Super Bowl", "Squares"];
+export const BRACKET_GAME_NAME = "March Madness";
+export const BRACKET_TITLE_LINES: [string, string] = ["March", "Madness"];
+/** The bracket card from Mar 1 until Selection Sunday (decision 12). */
+export const BRACKET_TEASER_SUBTITLE = "Brackets open Selection Sunday, March 14.";
+
+const bracketRoundPointsLine = BRACKET_ROUND_POINTS.join(", ");
 
 export type GameOnboardingStep = {
   /** Small eyebrow above the card. Only the trivia games have one; statement-layout cards (usesStatementTutorialLayout) have none. */
@@ -201,6 +225,67 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
       },
     ],
   },
+  {
+    key: "squares",
+    title: SQUARES_GAME_NAME,
+    path: "/squares",
+    cardClassName: "bg-emerald-800 text-white",
+    visibleOnVenueHome: true,
+    rules: [
+      `-Claim up to ${SQUARES_PER_PLAYER_CAP} squares on your venue's board`,
+      "-Numbers are drawn at random 30 minutes before kickoff",
+      `-${SQUARES_MOMENT_POINTS.q1} points at the end of Q1, halftime and Q3`,
+      `-${SQUARES_MOMENT_POINTS.final} points for the final score`,
+    ],
+    steps: [
+      {
+        heading: "One board. 100 squares. The whole bar plays.",
+        body: `Claim up to ${SQUARES_PER_PLAYER_CAP} squares on your venue's Super Bowl board. Everyone can see who holds each one.`,
+      },
+      {
+        heading: "The numbers are drawn just before kickoff.",
+        body: "Every row and column gets a random number from 0 to 9. Your square wins when they match the last digit of each team's score.",
+      },
+      {
+        heading: "Match the score. Win points.",
+        body: [
+          `End of Q1, halftime and end of Q3: ${SQUARES_MOMENT_POINTS.q1} points.`,
+          `Final score: ${SQUARES_MOMENT_POINTS.final} points.`,
+          "Check the Prizes tab to see if your venue offers one.",
+        ],
+      },
+    ],
+  },
+  {
+    key: "bracket",
+    title: BRACKET_GAME_NAME,
+    path: "/bracket",
+    cardClassName: "bg-orange-700 text-white",
+    visibleOnVenueHome: true,
+    rules: [
+      "-One bracket per tournament at each venue: men's and women's",
+      "-Picks lock at the first tip-off of the Round of 64",
+      "-Missed it? A second-chance bracket opens at the Sweet 16",
+      `-${bracketRoundPointsLine} points per correct pick by round`,
+    ],
+    steps: [
+      {
+        heading: "Fill out your bracket. Beat the bar.",
+        body: "Pick every game of the tournament. Your bracket goes up against everyone at this venue.",
+      },
+      {
+        heading: "Picks lock at the first tip-off.",
+        body: "Men's and women's brackets lock separately. Missed it? A second-chance bracket opens at the Sweet 16.",
+      },
+      {
+        heading: "Points double every round.",
+        body: [
+          `${bracketRoundPointsLine} points per correct pick, round by round.`,
+          "Check the Prizes tab to see if your venue offers one.",
+        ],
+      },
+    ],
+  },
 ];
 
 export const VENUE_GAME_CARD_BY_KEY: Record<VenueGameKey, VenueGameCardConfig> = VENUE_GAME_CARDS.reduce(
@@ -211,7 +296,19 @@ export const VENUE_GAME_CARD_BY_KEY: Record<VenueGameKey, VenueGameCardConfig> =
   {} as Record<VenueGameKey, VenueGameCardConfig>
 );
 
-export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = ["category-blitz", "speed-trivia", "live_trivia", "bingo", "fantasy", "pickem", "nfl-pickem"];
+// The seasonal cards (squares, bracket) show only inside their window with their flag on:
+// venueHomeCardState in lib/seasonalGames.ts.
+export const VENUE_HOME_GAME_KEYS: VenueGameKey[] = [
+  "category-blitz",
+  "speed-trivia",
+  "live_trivia",
+  "bingo",
+  "fantasy",
+  "pickem",
+  "nfl-pickem",
+  "squares",
+  "bracket",
+];
 
 export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null {
   if (pathname.startsWith("/trivia/live")) return "live_trivia";
@@ -222,5 +319,7 @@ export function inferVenueGameKeyFromPath(pathname: string): VenueGameKey | null
   if (pathname.startsWith("/fantasy")) return "fantasy";
   if (pathname.startsWith("/pending-challenges")) return "fantasy";
   if (pathname.startsWith("/category-blitz")) return "category-blitz";
+  if (pathname.startsWith("/squares")) return "squares";
+  if (pathname.startsWith("/bracket")) return "bracket";
   return null;
 }

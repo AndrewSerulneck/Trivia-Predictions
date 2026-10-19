@@ -6,6 +6,7 @@ import { NotificationBell } from "@/components/ui/NotificationBell";
 import { PointsPill } from "@/components/ui/PointsPill";
 import { usePointsSummary } from "@/components/ui/usePointsSummary";
 import { GameMark, type GameChromeKey } from "@/components/venue/GameChrome";
+import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AppBar — the single, always-visible top navigation surface shared across the
@@ -26,6 +27,8 @@ const GAME_LABEL: Record<GameChromeKey, string> = {
   fantasy: "Fantasy",
   pickem: "Pick 'Em",
   "nfl-pickem": "NFL Pick 'Em",
+  squares: SQUARES_GAME_NAME,
+  bracket: BRACKET_GAME_NAME,
 };
 
 // `leading` defaults to the canonical ExitBackButton so any bar that doesn't
@@ -63,6 +66,8 @@ export function GameAppBar({
   const accentText =
     game === "bingo" ? "text-sky-300" :
     game === "nfl-pickem" ? "text-amber-200" :
+    game === "squares" ? "text-emerald-200" :
+    game === "bracket" ? "text-orange-200" :
     "text-amber-200";
 
   // The exit itself lives in ExitBackButton: `onExit` (the parent-injected exit

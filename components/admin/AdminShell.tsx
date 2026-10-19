@@ -36,6 +36,7 @@ import {
   LiveTriviaInventorySection,
   UsernameModerationSection,
   LlmCostSection,
+  SquaresSection,
 } from "@/components/admin/adminSectionComponents";
 
 const ADMIN_MODE_STORAGE_KEY = "hightop_admin_mode";
@@ -684,6 +685,8 @@ export function AdminShell({ venues, initialSection = "venue-users", deepLinked 
         return <UsernameModerationSection />;
       case "llm-cost":
         return <LlmCostSection />;
+      case "squares":
+        return <SquaresSection />;
       default:
         return currentSectionOption ? <LegacyPanel section={currentSectionOption} /> : null;
     }

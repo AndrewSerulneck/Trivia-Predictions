@@ -11,6 +11,7 @@ import {
   GAME_TITLE_LINES_BY_KEY,
   VENUE_HUB_TILE_GRADIENT_BY_KEY,
   VENUE_HUB_TILE_SUBTITLE_BY_KEY,
+  VENUE_HUB_TILE_TEASER_BY_KEY,
   type LiveTriviaStatus,
   type VenueArrivalStage,
 } from "@/components/venue/venueHubShared";
@@ -68,6 +69,8 @@ type VenueGamesPanelProps = {
   lobbyButtonShouldPulse: boolean;
   pendingDestination: VenueGameKey | null;
   orderedHomeCards: VenueGameCardConfig[];
+  /** Seasonal cards shown before their game opens (lib/seasonalGames.ts): their tile says when it opens. */
+  teaserGames: ReadonlySet<VenueGameKey>;
   visibleBadgeByGame: Map<VenueGameKey, string>;
   badgeError: string;
   categoryBlitzSessionActive?: boolean;
@@ -87,6 +90,7 @@ function VenueGamesPanelInner({
   lobbyButtonShouldPulse,
   pendingDestination,
   orderedHomeCards,
+  teaserGames,
   visibleBadgeByGame,
   badgeError,
   categoryBlitzSessionActive = false,
@@ -172,6 +176,7 @@ function VenueGamesPanelInner({
               const isLiveTriviaCard = card.key === "live_trivia";
               const isCategoryBlitzLive = card.key === "category-blitz" && categoryBlitzSessionActive;
               const statusLabel = (isLiveTriviaCard && liveTriviaStatus.live) || isCategoryBlitzLive ? "LIVE" : null;
+              const subtitle = (teaserGames.has(card.key) && VENUE_HUB_TILE_TEASER_BY_KEY[card.key]) || VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key];
               return (
                 <button
                   key={card.key}
@@ -217,7 +222,7 @@ function VenueGamesPanelInner({
                         {/* Floated spacer covering the corner icon's footprint: only the lines
                             that would run under the icon wrap early, the rest use full width. */}
                         <span aria-hidden="true" className="float-right h-10 w-[5.5rem]" />
-                        {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+                        {subtitle}
                       </div>
                     )}
 
