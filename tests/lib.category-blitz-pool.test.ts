@@ -155,7 +155,9 @@ describe("assembleContinuousBoard", () => {
     const letter = letterIndexData.bUsableLetters[0];
     const pool = B_LETTERS[letter].slice(0, letterIndexData.setSize);
     const board = assembleContinuousBoard("reverse", pool);
-    expect(board?.letter).toBe(letter);
+    // The pool may fill more than one letter; any letter that can fill it is valid.
+    expect(board).not.toBeNull();
+    for (const c of pool) expect(B_LETTERS[board!.letter]).toContain(c);
     expect([...board!.categories].sort()).toEqual([...pool].sort());
   });
 

@@ -46,6 +46,24 @@ Practical proxy: the category should be an **open class with roughly 40+ real-wo
 - Small closed sets: parts of a flower, branches of the military, cabinet departments, planets, oceans, days/months.
 - Anything so specialized it clusters on a few letters: a type of igneous rock, a spider family, a pastry-kitchen rank.
 
+## Majority Rules categories (`"modes": ["B"]`)
+
+Every 5th round is Majority Rules: points = how many players typed the same answer, and answers are NOT
+checked for fit — only a safety moderator runs. So these categories follow different rules (added
+2026-10-18, `docs/category-blitz-200-categories-plan.md`). A Majority Rules category must:
+
+1. **Converge.** A room of adults would mostly give the *same* handful of answers per letter. Name a real
+   class with famous members ("A fast food chain", "A famous 90s movie"), not an opinion ("An overrated
+   movie"). Opinion-only categories fail the letter build (0–1 letters) and never appear.
+2. **Have one obvious way to write each answer** where possible (brands, titles, teams, one-name stars).
+   Matching is exact after normalising, so "Tom Brady" and "Brady" split the crowd. People categories are
+   fine, but don't make them the majority.
+3. **Stay out of politics.** No category whose common answers are politicians, officials or hot-button
+   topics (US presidents, world leaders, historical figures): the moderator scores those 0. Nothing that
+   invites explicit answers either.
+4. **Clear the same letter bar** (≥3 common answers per letter; the build decides), be ≤ 40 characters,
+   and be tagged `"modes": ["B"]` (Majority Rules only, never also standard).
+
 ## Workflow: pool → build → letter index
 
 The canonical library is **`data/category-blitz/category-pool.json`** — a flat list of categories. To add categories, append them there (the optional `theme` tag is a legacy field, unused by the letter-first build). Only add; keep existing good categories.
