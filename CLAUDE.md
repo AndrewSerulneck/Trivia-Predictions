@@ -1075,3 +1075,8 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   the corrected winner and takes back the old coupon only if unused (Andrew: "take back if unused") — ONLY via the
   `squares_withdraw_prize_coupons` RPC (`withdrawVoidedSquaresPrizes`); never delete a coupon or ledger row by hand.
   Results: `lib/results/adapters/squares.ts` + a placement rule.
+- **Squares TV view (Phase 5, 2026-10-19):** `mode: "squares"` on the venue screen REPLACES THE IDLE SCREEN only (live
+  Trivia / Category Blitz still win). Built inside the existing `/api/venue-screen/state` poll — no new request loop.
+  `lib/squaresTvRead.ts` (flag + Eastern-date gate = zero I/O otherwise; one board read per venue per 15 s cached) →
+  `lib/squaresTv.ts` (`buildSquaresTvPayload`: shows only once drawn, a claim exists, and until kickoff + 7 h; no user ids)
+  → `components/venue-screen/SquaresTvScreen.tsx`. Poll 15 s; the route CDN-caches this mode like idle.

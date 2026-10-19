@@ -5,6 +5,8 @@ import { getNextScheduleOccurrence, listSchedules } from "@/lib/categoryBlitzSch
 import { lobbyDwellSeconds, nextRoundStartAtMs } from "@/lib/categoryBlitzShared";
 import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
 import { getLiveShowdownState, type LiveShowdownState } from "@/lib/liveShowdownEngine";
+import type { SquaresTvPayload } from "@/lib/squaresTv";
+import { getSquaresTvPayload } from "@/lib/squaresTvRead";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getVenueScreenPollIntervalMs } from "@/lib/venueScreenTiming";
 import { getVenueById } from "@/lib/venues";
@@ -79,6 +81,17 @@ export type VenueScreenState =
       updatedAt: number;
     }
   | {
+      // Super Bowl Squares (Phase 5): replaces the idle attract screen only — a live game still wins.
+      ok: true;
+      mode: "squares";
+      venue: VenueScreenVenue;
+      liveTrivia: null;
+      categoryBlitz: null;
+      idle: null;
+      squares: SquaresTvPayload;
+      updatedAt: number;
+    }
+  | {
       ok: true;
       mode: "idle";
       venue: VenueScreenVenue;
@@ -126,6 +139,8 @@ export type VenueScreenSelectionInput = {
   idle?: {
     sponsorSlots?: VenueScreenSponsorSlot[];
   };
+  /** Present only when Squares should replace the idle screen (see getSquaresTvPayload). */
+  squares?: SquaresTvPayload | null;
   updatedAt: number;
 };
 
@@ -519,6 +534,19 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
     };
   }
 
+  if (input.squares) {
+    return {
+      ok: true,
+      mode: "squares",
+      venue,
+      liveTrivia: null,
+      categoryBlitz: null,
+      idle: null,
+      squares: input.squares,
+      updatedAt,
+    };
+  }
+
   return {
     ok: true,
     mode: "idle",
@@ -568,15 +596,21 @@ export async function getVenueScreenState(
     return null;
   }
 
-  const sponsorSlots = screenConfig.screenSponsorRotationEnabled
-    ? await getActiveVenueScreenSponsors(safeVenueId, nowMs)
-    : [];
+  // Squares replaces only the idle screen, so it is read only when nothing else is live.
+  const wouldBeIdle = !liveTrivia.isGameActive && !categoryBlitz.session;
+  const [sponsorSlots, squares] = await Promise.all([
+    screenConfig.screenSponsorRotationEnabled
+      ? getActiveVenueScreenSponsors(safeVenueId, nowMs)
+      : Promise.resolve<VenueScreenSponsorSlot[]>([]),
+    wouldBeIdle ? getSquaresTvPayload(safeVenueId, nowMs) : Promise.resolve(null),
+  ]);
 
   return selectVenueScreenState({
     venue: toScreenVenue(venue, screenConfig.branding),
     liveTrivia,
     categoryBlitz,
     idle: { sponsorSlots },
+    squares,
     updatedAt: nowMs,
   });
 }

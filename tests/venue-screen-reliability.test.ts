@@ -13,7 +13,7 @@ import type { VenueScreenState } from "@/lib/venueScreen";
 
 const nowMs = Date.parse("2026-07-02T20:00:00.000Z");
 
-function makeState(mode: VenueScreenState["mode"]): VenueScreenState {
+function makeState(mode: Exclude<VenueScreenState["mode"], "squares">): VenueScreenState {
   const venue = {
     id: "venue-1",
     name: "Hightop Pub",

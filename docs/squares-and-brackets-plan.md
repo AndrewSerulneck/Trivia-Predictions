@@ -1,10 +1,9 @@
 # Super Bowl Squares + March Madness Brackets — phased plan
 
-**Status (2026-10-19):** Phase 4 done (Squares Prizes + Results), committed locally after `0565068`; its migration
-`20261019131139_squares_prizes.sql` is APPLIED to production (Andrew's OK), like Phases 1–2's. Flags off, nothing pushed
-or deployed. Latest handoff: `docs/squares-and-brackets-plan_PHASE_4_HANDOFF.md`. Phase 0's live NFL capture runs
-tonight (MNF, 8:15 PM ET) and Thu Oct 22; checking it against the quarter rule is still open. Next: Phase 5 (Squares
-TV view).
+**Status (2026-10-19):** Phase 5 done (Squares TV view), committed locally after the Phase 4 commit `8783a7c`;
+Phases 1–5 are committed locally, their migrations are APPLIED to production, flags off, nothing pushed or
+deployed. Latest handoff: `docs/squares-and-brackets-plan_PHASE_5_HANDOFF.md`. Phase 0's live NFL capture (MNF Oct 19,
+Thu Oct 22) still has to be checked against the quarter rule. Next: Phase 6 (review, rehearsal, launch).
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 

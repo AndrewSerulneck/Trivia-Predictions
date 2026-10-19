@@ -13,7 +13,7 @@
 // (The screen previously used emerald for Category Blitz, which did not match
 // the brand's Blitz identity — these tokens are the source of truth now.)
 
-export type VenueScreenMode = "live-trivia" | "category-blitz" | "idle";
+export type VenueScreenMode = "live-trivia" | "category-blitz" | "squares" | "idle";
 
 /**
  * Shared framer-motion easing curve for the venue TV's Tv*.tsx panels — a
@@ -105,9 +105,22 @@ const IDLE_THEME: VenueScreenTheme = {
   accentBorder: "rgba(103,232,249,0.22)",
 };
 
+const SQUARES_THEME: VenueScreenTheme = {
+  stageGradient:
+    "radial-gradient(120% 90% at 8% 0%, rgba(16,185,129,0.24), transparent 46%), radial-gradient(120% 90% at 100% 100%, rgba(245,158,11,0.22), transparent 44%), linear-gradient(135deg, #020617 0%, #07182a 48%, #040b18 100%)",
+  ambientA: "rgba(16,185,129,0.24)",
+  ambientB: "rgba(245,158,11,0.22)",
+  accent: SCREEN_COLORS.amber300,
+  accentSoft: SCREEN_COLORS.cyan300,
+  glow: SCREEN_COLORS.amber400,
+  accentTint: "rgba(251,191,36,0.12)",
+  accentBorder: "rgba(252,211,77,0.30)",
+};
+
 const THEMES: Record<VenueScreenMode, VenueScreenTheme> = {
   "live-trivia": LIVE_TRIVIA_THEME,
   "category-blitz": CATEGORY_BLITZ_THEME,
+  squares: SQUARES_THEME,
   idle: IDLE_THEME,
 };
 

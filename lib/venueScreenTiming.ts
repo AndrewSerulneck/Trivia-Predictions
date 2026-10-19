@@ -25,6 +25,8 @@ export function getVenueScreenPollIntervalMs(state: VenueScreenState): number {
   if (state.mode === "category-blitz") {
     return state.categoryBlitz.phase === "round" ? 1_000 : 4_000;
   }
+  // Squares re-reads the board server-side at most every 15 s, so polling faster only repeats it.
+  if (state.mode === "squares") return 15_000;
   return 20_000;
 }
 

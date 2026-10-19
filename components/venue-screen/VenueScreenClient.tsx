@@ -7,9 +7,11 @@ import { IdleVenueScreen } from "@/components/venue-screen/IdleVenueScreen";
 import { LiveTriviaIntermissionScreen } from "@/components/venue-screen/LiveTriviaIntermissionScreen";
 import { LiveTriviaRevealScreen } from "@/components/venue-screen/LiveTriviaRevealScreen";
 import { LiveTriviaScreen } from "@/components/venue-screen/LiveTriviaScreen";
+import { SquaresTvScreen } from "@/components/venue-screen/SquaresTvScreen";
 import { ScreenTransition } from "@/components/venue-screen/ScreenTransition";
 import { TvGoLiveTakeover, type GameLabel } from "@/components/venue-screen/TvGoLiveTakeover";
 import { VenueScreenStatus } from "@/components/venue-screen/VenueScreenStatus";
+import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 import { getVenueScreenTheme, type VenueScreenMode } from "@/lib/venueScreenBrand";
 import type { VenueScreenState } from "@/lib/venueScreen";
 import {
@@ -96,7 +98,14 @@ function ViewportFitCanvas({ children }: { children: ReactNode }) {
 }
 
 function VenueTitle({ state, accent }: { state: VenueScreenState; accent: string }) {
-  const modeLabel = state.mode === "live-trivia" ? "Live Trivia" : state.mode === "category-blitz" ? "Category Blitz" : state.mode;
+  const modeLabel =
+    state.mode === "live-trivia"
+      ? "Live Trivia"
+      : state.mode === "category-blitz"
+        ? "Category Blitz"
+        : state.mode === "squares"
+          ? SQUARES_GAME_NAME
+          : state.mode;
   return (
     <header className="flex w-full items-center justify-between gap-8 px-8 py-6 lg:px-10">
       <div className="min-w-0">
@@ -164,6 +173,7 @@ function getScreenTransitionKey(state: VenueScreenState): string {
   if (state.mode === "category-blitz") {
     return `cb:${state.categoryBlitz.phase}:${state.categoryBlitz.roundId ?? "x"}`;
   }
+  if (state.mode === "squares") return `sq:${state.squares.phase}`;
   return "idle";
 }
 
@@ -292,7 +302,8 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
   });
   const transitionKey = getScreenTransitionKey(state);
   const screenTransform =
-    state.mode === "idle" ? getVenueScreenBurnInTransform(nowMs) : "translate3d(0, 0, 0)";
+    state.mode === "idle" || state.mode === "squares"
+      ? getVenueScreenBurnInTransform(nowMs) : "translate3d(0, 0, 0)";
 
   return (
     <ViewportFitCanvas>
@@ -313,6 +324,11 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
               <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
                 {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} nowMs={nowMs} /> : null}
                 {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} nowMs={nowMs} /> : null}
+              </ScreenTransition>
+            ) : null}
+            {state.mode === "squares" ? (
+              <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
+                <SquaresTvScreen state={state} accent={theme.accent} />
               </ScreenTransition>
             ) : null}
             {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} /> : null}
