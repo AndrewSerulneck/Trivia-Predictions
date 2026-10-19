@@ -28,6 +28,7 @@ class FakeQuery {
   not(col: string, _op: "is", value: null) { this.filters.push((row) => (row[col] ?? null) !== value); return this; }
   in(col: string, values: unknown[]) { this.filters.push((row) => values.includes(row[col])); return this; }
   limit(n: number) { this.max = n; return this; }
+  returns() { return this; }
   maybeSingle() { this.mode = "maybe"; return this; }
   single() { this.mode = "single"; return this; }
   update(payload: Row) { this.op = "update"; this.payload = payload; return this; }

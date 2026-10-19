@@ -1,6 +1,17 @@
 import "server-only";
 
-import { computeUpcomingCycleStart, createChallengeCampaign } from "@/lib/challengeCampaigns";
+import { computeUpcomingCycleStart, createChallengeCampaign, loadSquaresPrizeMoments } from "@/lib/challengeCampaigns";
+import { SEASONAL_GAME_WINDOWS } from "@/lib/seasonalGames";
+import {
+  SQUARES_PRIZE_DEFINITION_ID,
+  SQUARES_PRIZE_MOMENTS_MESSAGE,
+  SQUARES_PRIZE_UNAVAILABLE_MESSAGE,
+  isSquaresPrizeOffered,
+  normalizeSquaresMoments,
+} from "@/lib/squaresPrizes";
+import { getCurrentSquaresEvent } from "@/lib/squaresStore";
+import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
+import type { SquaresMoment } from "@/lib/seasonalPoints";
 import {
   listScheduleTimezones,
   listVenueLiveShowdownSchedules,
@@ -105,6 +116,10 @@ export {
 } from "@/lib/rewardDefinitions";
 
 export { REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE };
+// Squares' equivalent (a state conflict → 409 in both create routes). Lives in the client-safe
+// lib/squaresPrizes.ts so the wizard's block shows the same words.
+export const REWARD_SQUARES_UNAVAILABLE_MESSAGE = SQUARES_PRIZE_UNAVAILABLE_MESSAGE;
+export const REWARD_SQUARES_WIN_CONDITION_MESSAGE = `A ${SQUARES_GAME_NAME} prize goes to whoever holds the winning square, so it has no points target.`;
 
 const WINNER_QUOTA_CAP = 100;
 
@@ -279,6 +294,17 @@ export type RewardCreationContext = {
    * for an NFL reward when the season has no current-or-future weeks loaded.
    */
   nflSeason: NFLRewardSeasonContext | null;
+  /**
+   * Present only for the Super Bowl Squares prize (and only while it can be created): when the
+   * numbers are drawn, if the game is known yet. null for every other definition.
+   */
+  squares?: RewardSquaresContext | null;
+};
+
+/** What the wizard may say about the Squares game a prize is being set up for. */
+export type RewardSquaresContext = {
+  /** ISO instant claims close and the numbers are drawn; null until the matchup is known. */
+  lockAt: string | null;
 };
 
 /** The reward definition whose gate is the NFL season calendar, not a venue schedule. */
@@ -364,11 +390,15 @@ type ReadCacheEntry<V> = { value: Promise<V>; expiresAtMs: number };
 
 const venueScheduleCache = new Map<string, ReadCacheEntry<AdminLiveShowdownSchedule[]>>();
 const nflSeasonWeeksCache = new Map<number, ReadCacheEntry<NFLWeekDates[]>>();
+// Squares prizes' moments, keyed by the sorted campaign ids. A prize's moments never change after
+// it is created, so the guest route reuses them like the NFL weeks.
+const squaresMomentsCache = new Map<string, ReadCacheEntry<Map<string, SquaresMoment[]>>>();
 
 /** Test hook: forget every cached schedule and NFL season read. */
 export function clearRewardDescriptionCaches(): void {
   venueScheduleCache.clear();
   nflSeasonWeeksCache.clear();
+  squaresMomentsCache.clear();
 }
 
 /**
@@ -429,6 +459,32 @@ async function loadNFLSeasonWeekDates(
     }),
   );
   return spansBySeason;
+}
+
+/**
+ * The moments of every Squares prize in `campaigns` that doesn't already carry them (the shared
+ * campaign select leaves squares_moments out). One read for all of them, none when there are none.
+ */
+async function loadSquaresMoments(
+  campaigns: ReadonlyArray<Pick<ChallengeCampaign, "id" | "rewardDefinitionId" | "squaresMoments">>,
+  cachedReads: boolean,
+): Promise<Map<string, SquaresMoment[]>> {
+  const ids = [
+    ...new Set(
+      campaigns
+        .filter((campaign) => campaign.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID && !campaign.squaresMoments)
+        .map((campaign) => campaign.id),
+    ),
+  ].sort();
+  if (ids.length === 0) return new Map();
+  return readThroughCache(
+    squaresMomentsCache,
+    ids.join(","),
+    REWARD_NFL_WEEKS_CACHE_TTL_MS,
+    cachedReads,
+    () => loadSquaresPrizeMoments(ids),
+    (moments) => moments.size > 0,
+  );
 }
 
 /** YYYY-MM-DD of a season's earliest week_start_date, or null when none are synced. */
@@ -535,6 +591,8 @@ async function loadVenueGameSlots(
  *    is present.
  *  - nfl_pickem_weeks: ONE read per distinct season (in practice one), only when
  *    an NFL reward is present — the same read the upcoming state needs.
+ *  - challenge_campaigns.squares_moments: ONE read, only when a Super Bowl Squares
+ *    prize is present (the shared select leaves that column out), cached 10 minutes.
  *  - With `cachedReads` (the guest route, polled every 30 s per player), both of
  *    the above are reused per server instance for 5 / 10 minutes — see the
  *    description read cache above. Admin and partner lists leave it off.
@@ -584,7 +642,7 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
     ),
   ];
 
-  const [spansBySeason, slotsByVenue, timezoneByVenue] = await Promise.all([
+  const [spansBySeason, slotsByVenue, timezoneByVenue, squaresMomentsById] = await Promise.all([
     hasNFL ? loadNFLSeasonWeekDates(campaigns, cachedReads) : Promise.resolve(new Map<number, NFLWeekDates[]>()),
     scheduleVenueIds.length > 0 ? loadVenueGameSlots(scheduleVenueIds, now, cachedReads) : Promise.resolve(null),
     Promise.all(
@@ -597,6 +655,7 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
         }
       }),
     ).then((entries) => new Map<string, string | null>(entries)),
+    loadSquaresMoments(campaigns, cachedReads),
   ]);
 
   const withUpcoming: Array<T & { upcomingStartDate?: string }> = hasNFL
@@ -612,6 +671,7 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
     const description = describeReward(
       {
         ...campaign,
+        squaresMoments: campaign.squaresMoments ?? squaresMomentsById.get(campaign.id) ?? null,
         schedule: slots ? { slots } : null,
         nfl: scope
           ? {
@@ -624,7 +684,8 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
       },
       now,
     );
-    return { ...campaign, description };
+    const squaresMoments = campaign.squaresMoments ?? squaresMomentsById.get(campaign.id);
+    return { ...campaign, ...(squaresMoments ? { squaresMoments } : {}), description };
   });
 }
 
@@ -831,6 +892,25 @@ export async function resolveRewardCreationContext(
     };
   }
 
+  // ── Super Bowl Squares branch ─────────────────────────────────────────────
+  // Gated on the Squares flag + season and on the numbers not being drawn yet (a prize must be on
+  // offer before claims close), never on a venue schedule. One read: the current event, if any.
+  if (definition.id === SQUARES_PRIZE_DEFINITION_ID) {
+    const squares = await resolveSquaresPrizeContext(new Date());
+    return {
+      definitionId: definition.id,
+      scheduled: squares !== null,
+      hasRecurringSchedule: false,
+      scheduleDays: [],
+      timezone: null,
+      allowedCadences: squares ? ["none"] : [],
+      scheduleShapes: [],
+      gameSlots: [],
+      nflSeason: null,
+      squares,
+    };
+  }
+
   const schedules =
     definition.requiresScheduledGame === "live_trivia"
       ? await getVenueLiveTriviaSchedules(venueId)
@@ -876,6 +956,25 @@ export async function resolveRewardCreationContext(
     gameSlots: enumerateGameSlots(toGameScheduleShapes(schedules)),
     nflSeason: null,
   };
+}
+
+/**
+ * Can a Squares prize be created right now, and what do we know about the game? Null = no: the
+ * flag is off, the season is over, the numbers are drawn (or the lock has passed), or the event
+ * couldn't be read (fail closed: never offer a prize on a game that may already be under way).
+ */
+async function resolveSquaresPrizeContext(now: Date): Promise<RewardSquaresContext | null> {
+  if (!isSquaresPrizeOffered(now)) return null;
+  const current = await getCurrentSquaresEvent();
+  if (!current.ok) {
+    console.error("[SquaresPrize] event-read-failed", { message: current.error });
+    return null;
+  }
+  const event = current.value;
+  if (!event) return { lockAt: null };
+  const lockMs = Date.parse(event.lockAt);
+  if (event.drawnAt || !Number.isFinite(lockMs) || now.getTime() >= lockMs) return null;
+  return { lockAt: new Date(lockMs).toISOString() };
 }
 
 // Discriminated prize input — the wizard sends one of these shapes.
@@ -1039,6 +1138,11 @@ export type CreateRewardParams = {
    * "ranked_places" and Live Trivia "game_winner" only. Null/absent = no minimum.
    */
   minPlayers?: number | null;
+  /**
+   * Super Bowl Squares prizes only: the moments that pay (q1 / half / q3 / final), one coupon each.
+   * Required for that definition, ignored by every other.
+   */
+  squaresMoments?: SquaresMoment[] | null;
   /** Stamp the creating owner (null/absent = admin-created). */
   createdByOwnerId?: string | null;
 };
@@ -1112,15 +1216,20 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // Which "you can't create this yet" message applies — see
   // REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE for why they must stay distinct.
   const isNFLReward = definition.id === NFL_REWARD_DEFINITION_ID;
+  const isSquaresReward = definition.id === SQUARES_PRIZE_DEFINITION_ID;
   const unavailableMessage = isNFLReward
     ? REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE
-    : REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE;
+    : isSquaresReward
+      ? REWARD_SQUARES_UNAVAILABLE_MESSAGE
+      : REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE;
 
   const venueId = String(params.venueId ?? "").trim();
   if (!venueId) throw new Error(unavailableMessage);
 
   const context = await resolveRewardCreationContext(venueId, definition.id);
   if (!context.scheduled) throw new Error(unavailableMessage);
+
+  if (isSquaresReward) return createSquaresReward(definition, params, venueId);
 
   const winCondition: ChallengeWinCondition =
     params.winCondition === "game_winner" || params.winCondition === "ranked_places"
@@ -1365,6 +1474,78 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
     prizePosDelivery: prize?.prizePosDelivery ?? null,
     placePrizes,
     minPlayers,
+    createdByOwnerId: params.createdByOwnerId ?? null,
+  });
+}
+
+/**
+ * A Super Bowl Squares prize (docs/squares-and-brackets-plan.md Phase 4). The partner picks only the
+ * moments and the prize; everything else is fixed here:
+ *   - won by "game_winner": whoever holds the venue's winning square at a chosen moment
+ *     (lib/squaresPrizeAwards.ts, through award_cycle_winner with a quota of 1 per moment);
+ *   - one-off ("none"), winner_quota = the number of moments (one coupon each), no active days,
+ *     no points target (the NOT NULL sentinel 1, never read), no minimum players;
+ *   - end_date = the Squares card window's last day, so the prize has a real close.
+ * Anything else the client sends for those is refused, never silently changed.
+ */
+async function createSquaresReward(
+  definition: NonNullable<ReturnType<typeof getRewardDefinition>>,
+  params: CreateRewardParams,
+  venueId: string,
+): Promise<ChallengeCampaign> {
+  if (params.winCondition !== "game_winner") throw new RewardTermsError(REWARD_SQUARES_WIN_CONDITION_MESSAGE);
+  if (params.minPlayers !== null && params.minPlayers !== undefined) {
+    throw new RewardTermsError(REWARD_MIN_PLAYERS_UNSUPPORTED_MESSAGE);
+  }
+  if (Array.isArray(params.placePrizes) && params.placePrizes.length > 0) {
+    throw new RewardTermsError(REWARD_PLACE_PRIZES_NOT_RANKED_MESSAGE);
+  }
+  const squaresMoments = normalizeSquaresMoments(params.squaresMoments ?? null);
+  if (!squaresMoments) throw new RewardTermsError(SQUARES_PRIZE_MOMENTS_MESSAGE);
+  const prize = normalizeRewardPrize(params.prize);
+  const endDate = SEASONAL_GAME_WINDOWS.squares.closesAfter;
+
+  return createChallengeCampaign({
+    name: definition.name,
+    // The frozen fallback wording (every reader composes it fresh — attachRewardDescriptions).
+    rules: describeReward(
+      {
+        rules: "",
+        recurringType: "none",
+        activeDays: [],
+        winnerQuota: squaresMoments.length,
+        pointsRequiredToWin: 1,
+        winCondition: "game_winner",
+        rewardDefinitionId: definition.id,
+        squaresMoments,
+        ...prize,
+      },
+      new Date(),
+    ).summary,
+    winCondition: "game_winner",
+    venueIds: [venueId],
+    gameTypes: [definition.gameType],
+    challengeMode: definition.challengeMode,
+    pointsRequiredToWin: 1,
+    scheduleType: "single_day",
+    recurringType: "none",
+    activeDays: [],
+    winnerQuota: squaresMoments.length,
+    endDate,
+    gameWinnerSlots: null,
+    nflWeekScope: null,
+    rewardDefinitionId: definition.id,
+    prizeKind: prize.prizeKind,
+    prizeMenuItem: prize.prizeMenuItem,
+    prizeMenuItemName: prize.prizeMenuItemName,
+    prizeDiscountKind: prize.prizeDiscountKind,
+    prizeDiscountValue: prize.prizeDiscountValue,
+    prizeGiftCertificateAmount: prize.prizeGiftCertificateAmount,
+    prizePosValueCents: prize.prizePosValueCents,
+    prizePosDelivery: prize.prizePosDelivery,
+    placePrizes: null,
+    minPlayers: null,
+    squaresMoments,
     createdByOwnerId: params.createdByOwnerId ?? null,
   });
 }

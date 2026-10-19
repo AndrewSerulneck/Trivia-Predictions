@@ -7,6 +7,8 @@
 // lib/results/rewardPlacement.ts if it has rewards). tests/results-registry-contract.test.ts fails
 // when the list and the adapter map disagree.
 
+import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
+
 export type ResultsCompetition = {
   /** Stable id, carried on every game row and in the game URLs. */
   id: string;
@@ -20,6 +22,9 @@ export type ResultsCompetition = {
 
 export const RESULTS_COMPETITIONS = [
   { id: "live_trivia", label: "Live Trivia", scoreUnit: "pts", hasBreakdown: true },
+  // Super Bowl Squares (docs/squares-and-brackets-plan.md Phase 4): one game per season, scored in
+  // the venue points its winning squares paid. No per-player breakdown.
+  { id: "squares", label: SQUARES_GAME_NAME, scoreUnit: "pts", hasBreakdown: false },
 ] as const satisfies readonly ResultsCompetition[];
 
 export type ResultsCompetitionId = (typeof RESULTS_COMPETITIONS)[number]["id"];

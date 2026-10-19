@@ -7,6 +7,7 @@ import {
   REWARD_INVALID_THRESHOLD_MESSAGE,
   REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
   REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE,
+  REWARD_SQUARES_UNAVAILABLE_MESSAGE,
   REWARD_UNKNOWN_DEFINITION_MESSAGE,
   REWARD_UNSUPPORTED_CADENCE_MESSAGE,
   RewardTermsError,
@@ -53,6 +54,8 @@ export async function POST(request: Request) {
     placePrizes?: RewardPrizeInput[] | null;
     /** Optional "at least N players took part" (2-100) on game-winner / weekly places rewards. */
     minPlayers?: number | null;
+    /** Super Bowl Squares prizes: the moments that pay (q1 / half / q3 / final). */
+    squaresMoments?: unknown;
   };
 
   const venueId = String(body.venueId ?? "").trim();
@@ -79,6 +82,7 @@ export async function POST(request: Request) {
       prize: body.prize as RewardPrizeInput,
       placePrizes: Array.isArray(body.placePrizes) ? body.placePrizes : null,
       minPlayers: body.minPlayers ?? null,
+      squaresMoments: Array.isArray(body.squaresMoments) ? body.squaresMoments : null,
       createdByOwnerId: auth.ownerId,
     });
     return NextResponse.json({ ok: true, reward });
@@ -88,9 +92,9 @@ export async function POST(request: Request) {
     if (error instanceof RewardTermsError) {
       return NextResponse.json({ ok: false, error: message }, { status: 400 });
     }
-    // The NFL season not being loaded is a state conflict, not bad input — there
-    // is nothing the partner could have sent that would have worked.
-    if (message === REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE) {
+    // The NFL season not being loaded (or Squares numbers already drawn) is a state conflict,
+    // not bad input — there is nothing the partner could have sent that would have worked.
+    if (message === REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE || message === REWARD_SQUARES_UNAVAILABLE_MESSAGE) {
       return NextResponse.json({ ok: false, error: message }, { status: 409 });
     }
     const status =

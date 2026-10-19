@@ -36,6 +36,15 @@ import {
 } from "@/lib/rewardGameSlots";
 import { normalizeNFLWeekScope } from "@/lib/nflPickEmRewardWeeks";
 import { describePlacePrizeLadder, placeOrdinal, rankedWeekNights } from "@/lib/rankedPlaceRewards";
+import { SQUARES_LOCK_BEFORE_KICKOFF_MS } from "@/lib/squares";
+import {
+  SQUARES_PRIZE_MOMENT_PHRASES,
+  describeSquaresPrizeMoments,
+  normalizeSquaresMoments,
+  squaresPrizeMomentOf,
+} from "@/lib/squaresPrizes";
+import { SQUARES_PER_PLAYER_CAP } from "@/lib/seasonalGames";
+import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -94,6 +103,7 @@ export type RewardDescriptionInput = Pick<
       | "endDate"
       | "placePrizes"
       | "minPlayers"
+      | "squaresMoments"
     >
   > &
   RewardPrizeSummaryInput & {
@@ -607,6 +617,33 @@ const describeNFLReward = (
   return { summary, when, fineprint, isCustom: false };
 };
 
+// ── Super Bowl Squares rewards ──────────────────────────────────────────────
+
+type SquaresTemplates = Extract<RewardDefinition["description"], { calendar: "super_bowl_squares" }>;
+
+/**
+ * One prize per chosen moment (lib/squaresPrizes.ts). Null when the moments aren't known — a
+ * caller that couldn't read them (attachRewardDescriptions) — and the stored `rules` stand in.
+ */
+const describeSquaresReward = (
+  templates: SquaresTemplates,
+  input: RewardDescriptionInput,
+  prize: string,
+): RewardDescription | null => {
+  const moments = normalizeSquaresMoments(input.squaresMoments ?? null);
+  if (!moments) return null;
+  const lockMinutes = Math.round(SQUARES_LOCK_BEFORE_KICKOFF_MS / 60_000);
+  return {
+    summary: fill(templates.moments, { prize, moments: describeSquaresPrizeMoments(moments) }),
+    when: `Claim up to ${SQUARES_PER_PLAYER_CAP} squares in ${SQUARES_GAME_NAME}. The numbers are drawn ${lockMinutes} minutes before kickoff.`,
+    fineprint:
+      moments.length === 1
+        ? "One winner. If nobody holds the winning square, nobody wins."
+        : `One winner at each of those ${moments.length} moments. If nobody holds a winning square, nobody wins that one.`,
+    isCustom: false,
+  };
+};
+
 /**
  * "Next contest starts Thu, Oct 9." — only when this cycle's quota is filled on a
  * recurring reward that will actually run again: never for a paused reward
@@ -654,6 +691,9 @@ export function describeReward(input: RewardDescriptionInput, now: Date): Reward
 
   if (templates.calendar === "nfl_season") {
     return describeNFLReward(templates, input, prize, now) ?? legacyDescription(input);
+  }
+  if (templates.calendar === "super_bowl_squares") {
+    return describeSquaresReward(templates, input, prize) ?? legacyDescription(input);
   }
 
   const scheduled = describeScheduleReward(definition, templates, input, prize);
@@ -706,6 +746,12 @@ export function describeRewardWin(input: RewardDescriptionInput, win: RewardWinF
     if (!when) return null;
     const template = input.winCondition === "game_winner" ? templates.wonMostPicks : templates.wonPicksTarget;
     return fill(template, { threshold, when });
+  }
+
+  if (templates.calendar === "super_bowl_squares") {
+    // The moment is in the coupon's own cycle key (squaresPrizeCycleStart).
+    const moment = squaresPrizeMomentOf(cycleStart);
+    return moment ? fill(templates.wonMoment, { moment: SQUARES_PRIZE_MOMENT_PHRASES[moment] }) : null;
   }
 
   const zone = win.timezone || DEFAULT_VENUE_TIMEZONE;

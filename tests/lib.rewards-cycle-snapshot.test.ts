@@ -901,3 +901,57 @@ describe("listChallengeCampaignWinsForUser — weekly places coupons", () => {
     expect(win.place).toBeNull();
   });
 });
+
+describe("getChallengeCampaignSnapshotForUser — Super Bowl Squares prizes (squares plan Phase 4)", () => {
+  // One prize, one cycle per moment (lib/squaresPrizes.ts): every row counts toward the quota (its
+  // moment count), and a guest who won ANY moment — not just the latest — sees their coupon.
+  const Q1 = "2027-02-14T23:30:01.001Z";
+  const FINAL = "2027-02-14T23:30:04.001Z";
+  const squaresRow = () =>
+    campaignRow({
+      reward_definition_id: "squares_challenge",
+      game_types: ["squares"],
+      win_condition: "game_winner",
+      points_required_to_win: 1,
+      winner_quota: 2,
+      end_date: "2027-02-15",
+    });
+  const won = (id: string, cycleStart: string, userId: string) => ({
+    id,
+    challenge_id: "camp-1",
+    cycle_start: cycleStart,
+    winner_user_id: userId,
+    venue_id: VENUE_ID,
+    points_earned: 25,
+    finalized_at: "2027-02-15T00:00:00.000Z",
+    prize_type: null,
+  });
+
+  it("counts every moment's winner and recognizes the winner of an earlier moment", async () => {
+    store.challenge_campaigns = [squaresRow()];
+    store.challenge_cycle_winners.push(won("w-q1", Q1, "u1"), won("w-final", FINAL, "u2"));
+    store.challenge_campaign_redemptions.push({
+      challenge_id: "camp-1",
+      winner_user_id: "u1",
+      venue_id: VENUE_ID,
+      cycle_start: Q1,
+      claimed_at: "2027-02-15T00:01:00.000Z",
+      prize_expires_at: "2027-02-22T00:00:00.000Z",
+      prize_redeemed_at: null,
+    });
+
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u1", venueId: VENUE_ID });
+    expect(card.viewerWon).toBe(true);
+    expect(card.prizeClaimedAt).toBe("2027-02-15T00:01:00.000Z");
+    expect(card.quotaRemaining).toBe(0);
+    expect(card.gameTypes).toEqual(["squares"]);
+  });
+
+  it("still shows a prize left while a moment is undecided", async () => {
+    store.challenge_campaigns = [squaresRow()];
+    store.challenge_cycle_winners.push(won("w-q1", Q1, "u1"));
+    const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u2", venueId: VENUE_ID });
+    expect(card.viewerWon).toBe(false);
+    expect(card.quotaRemaining).toBe(1);
+  });
+});

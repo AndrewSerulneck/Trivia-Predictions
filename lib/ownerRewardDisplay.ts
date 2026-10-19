@@ -1,6 +1,7 @@
 import { OWNER_COMPETITION_TEMPLATES } from "@/lib/ownerCompetitionTemplates";
 import { getRewardDefinition } from "@/lib/rewardDefinitions";
 import { describeRankedTerms } from "@/lib/rankedPlaceRewards";
+import { SQUARES_PRIZE_DEFINITION_ID, describeSquaresPrizeTerms } from "@/lib/squaresPrizes";
 import { describeCampaignGameWinnerTerms } from "@/lib/rewardGameSlots";
 import { periodForCadence, renderTermsSentence } from "@/lib/rewardTerms";
 import type { ChallengeCampaign } from "@/types";
@@ -62,6 +63,10 @@ export const rewardTermsText = (competition: OwnerCompetition): string | null =>
   // A weekly places reward has no "N rewards a week" quota sentence: its terms ARE the prize ladder.
   if (competition.winCondition === "ranked_places") {
     return describeRankedTerms(competition.placePrizes, competition.minPlayers);
+  }
+  // Super Bowl Squares: one prize per chosen moment, never a period or a minimum.
+  if (competition.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID) {
+    return describeSquaresPrizeTerms(competition.squaresMoments, competition.winnerQuota);
   }
   // The partner's optional "at least N players" minimum is part of a game-winner reward's terms too
   // (NFL most picks included, docs/reward-minimum-players-plan.md A2 — there, playing = making picks).

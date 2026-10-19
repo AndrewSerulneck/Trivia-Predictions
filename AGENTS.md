@@ -139,7 +139,10 @@ another:
    `"nfl_season"` for the NFL calendar, then fill that shape's templates with
    `{prize}`/`{threshold}`/… placeholders). `describeReward()` /
    `describeRewardWin()` in `lib/rewardDescription.ts` compose them at read
-   time; never write "this venue" (docs/reward-descriptions-plan.md §3).
+   time; never write "this venue" (docs/reward-descriptions-plan.md §3). A
+   third shape, `calendar: "super_bowl_squares"`, is the Squares prize's (one
+   prize per chosen moment — docs/squares-and-brackets-plan.md Phase 4); a
+   seasonal definition is hidden out of season by `offeredRewardDefinitions`.
 2. **Only if `requiresScheduledGame` points at a game with no existing lookup
    yet**, add a schedule lookup in `lib/rewards.ts` (mirror
    `getVenueLiveTriviaSchedules`) and wire it into
@@ -165,7 +168,8 @@ are in `docs/rewards-system-plan.md` (§3–§4).
 ## Add a competition to Results
 
 The Partner Dashboard's Results page (`docs/partner-results-page-plan.md`) is competition-agnostic: the timeline,
-standings, search, player breakdown and reward matching are shared. Only Live Trivia is registered today. To add
+standings, search, player breakdown and reward matching are shared. Registered today: Live Trivia and Super Bowl
+Squares (`lib/results/adapters/squares.ts`, no breakdown — the model for a competition without one). To add
 another (NFL Pick 'Em, Category Blitz, Bingo…) — only when Andrew asks:
 
 1. **Registry entry** in `lib/results/competitions.ts`: `id`, `label`, `scoreUnit`, `hasBreakdown`.

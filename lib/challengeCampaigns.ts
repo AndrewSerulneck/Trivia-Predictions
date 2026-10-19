@@ -17,6 +17,8 @@ import {
   type RankedPlace,
 } from "@/lib/rankedPlaceRewards";
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
+import { SQUARES_PRIZE_DEFINITION_ID, normalizeSquaresMoments } from "@/lib/squaresPrizes";
+import type { SquaresMoment } from "@/lib/seasonalPoints";
 import type {
   ChallengeCampaign,
   ChallengeCampaignProgress,
@@ -308,6 +310,9 @@ export function resolveRewardPrize(row: RewardPrizeSourceRow): {
   return { prizeKind: null, prizeMenuItem: null, prizeMenuItemName: null, prizeDiscountKind: null, prizeDiscountValue: null };
 }
 
+// The game types a campaign may name. "squares" is only ever a Super Bowl Squares prize's own
+// game (squares_prizes migration 20261019131139); Squares venue points are seasonal credits that
+// never accrue to a campaign, so it is NOT part of the "every game" default below.
 const VALID_GAME_TYPES: Array<Exclude<ChallengeGameType, "trivia">> = [
   "pickem",
   "fantasy",
@@ -315,7 +320,10 @@ const VALID_GAME_TYPES: Array<Exclude<ChallengeGameType, "trivia">> = [
   "live-trivia",
   "bingo",
   "nfl-pickem",
+  "squares",
 ];
+/** What an empty / unrecognised game_types means: every year-round game (as before Squares). */
+const ALL_GAMES_DEFAULT: Array<Exclude<ChallengeGameType, "trivia">> = VALID_GAME_TYPES.filter((type) => type !== "squares");
 const VALID_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const VALID_IMAGE_FITS: ChallengeImageFitMode[] = ["cover", "contain"];
 const VALID_CHALLENGE_MODES: ChallengeMode[] = ["progress", "leaderboard"];
@@ -508,7 +516,7 @@ function mapCampaignRow(
     endDay: row.end_day ?? undefined,
     endTime: row.end_time ?? undefined,
     endDate: row.end_date ?? undefined,
-    gameTypes: gameTypes.length > 0 ? gameTypes : [...VALID_GAME_TYPES],
+    gameTypes: gameTypes.length > 0 ? gameTypes : [...ALL_GAMES_DEFAULT],
     challengeMode: normalizeChallengeMode(row.challenge_mode),
     leaderboardDisplayLimit: normalizeLeaderboardDisplayLimit(row.leaderboard_display_limit),
     leaderboardTiebreaker: normalizeLeaderboardTiebreaker(row.leaderboard_tiebreaker),
@@ -564,7 +572,7 @@ function normalizeGameTypes(input: string[] | undefined): Array<Exclude<Challeng
       normalized.add(key as Exclude<ChallengeGameType, "trivia">);
     }
   }
-  return normalized.size > 0 ? [...normalized] : [...VALID_GAME_TYPES];
+  return normalized.size > 0 ? [...normalized] : [...ALL_GAMES_DEFAULT];
 }
 
 function toLocalParts(date: Date, timezone: string): { dow: number; hour: number; minute: number } {
@@ -1498,6 +1506,11 @@ export async function createChallengeCampaign(input: {
   placePrizes?: RewardPlacePrize[] | null;
   /** Competitive rewards' optional minimum players (2-100). Written only when set. */
   minPlayers?: number | null;
+  /**
+   * Super Bowl Squares prizes only: the moments that pay (validated by createReward). Written only
+   * when set, so every other reward's insert is unchanged even before 20261019131139 is applied.
+   */
+  squaresMoments?: SquaresMoment[] | null;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
   const name = String(input.name ?? "").trim();
@@ -1513,6 +1526,7 @@ export async function createChallengeCampaign(input: {
       ? Math.max(0.01, Number(input.prizeGiftCertificateAmount))
       : null;
   const prizePosDelivery = normalizePrizePosDelivery(input.prizePosDelivery);
+  const squaresMoments = normalizeSquaresMoments(input.squaresMoments ?? null);
   if (
     prizePosDelivery === "gift_card" &&
     !prizeCanBeScannableGiftCard(prizeKind, prizeKind === "menu_item" ? normalizeDiscountKind(input.prizeDiscountKind) : null)
@@ -1585,6 +1599,7 @@ export async function createChallengeCampaign(input: {
       ? { place_prizes: serializePlacePrizes(input.placePrizes) }
       : {}),
     ...(Number.isInteger(input.minPlayers) ? { min_players: input.minPlayers } : {}),
+    ...(squaresMoments ? { squares_moments: squaresMoments } : {}),
   };
 
   const { data, error } = await supabaseAdmin!
@@ -1595,7 +1610,8 @@ export async function createChallengeCampaign(input: {
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to create challenge campaign.");
   }
-  return mapCampaignRow(data);
+  const created = mapCampaignRow(data);
+  return squaresMoments ? { ...created, squaresMoments } : created;
 }
 
 export async function updateChallengeCampaign(input: {
@@ -2016,6 +2032,60 @@ export async function listRankedCycleWinners(params: {
     winnerUserId: row.winnerUserId,
     username: row.winnerUserId ? usernameById.get(row.winnerUserId) ?? null : null,
   }));
+}
+
+type SquaresPrizeCampaignRow = ChallengeCampaignRow & { squares_moments: string[] | null };
+
+/**
+ * Every active Super Bowl Squares prize at any of these venues, each with its moments — the award
+ * step's input (lib/squaresPrizeAwards.ts). One read. `squares_moments` is selected here by name
+ * because it is deliberately NOT in CAMPAIGN_SELECT_COLUMNS (only Squares code needs it, so every
+ * other read is unaffected by migration 20261019131139). Archived prizes (is_active = false) are
+ * left out: archiving stops a prize. Throws on any read error — including that column missing —
+ * so the award step never mistakes a failed read for "no prizes" (it retries next run).
+ */
+export async function listActiveSquaresPrizeCampaigns(venueIds: readonly string[]): Promise<ChallengeCampaign[]> {
+  assertConfigured();
+  const wanted = [...new Set(venueIds.map((id) => String(id ?? "").trim()).filter(Boolean))];
+  if (wanted.length === 0) return [];
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select(`${CAMPAIGN_SELECT_COLUMNS}, squares_moments`)
+    .eq("reward_definition_id", SQUARES_PRIZE_DEFINITION_ID)
+    .eq("is_active", true)
+    .overlaps("venue_ids", wanted)
+    .order("created_at", { ascending: true })
+    .returns<SquaresPrizeCampaignRow[]>();
+  if (error) throw new Error(error.message ?? "Failed to load Squares prizes.");
+  return (data ?? []).map((row) => ({ ...mapCampaignRow(row), squaresMoments: normalizeSquaresMoments(row.squares_moments) }));
+}
+
+/**
+ * campaign id → the moments it pays, for describing Squares prizes (attachRewardDescriptions).
+ * Never throws: a failed read (or migration 20261019131139 not applied yet) is logged and answers
+ * an empty map, and those prizes fall back to their stored wording.
+ */
+export async function loadSquaresPrizeMoments(campaignIds: readonly string[]): Promise<Map<string, SquaresMoment[]>> {
+  const moments = new Map<string, SquaresMoment[]>();
+  const wanted = [...new Set(campaignIds.map((id) => String(id ?? "").trim()))].filter((id) => CAMPAIGN_ID_PATTERN.test(id));
+  if (wanted.length === 0 || !supabaseAdmin) return moments;
+  const { data, error } = await supabaseAdmin
+    .from("challenge_campaigns")
+    .select("id, squares_moments")
+    .in("id", wanted)
+    .returns<Array<{ id: string; squares_moments: string[] | null }>>();
+  if (error) {
+    console.error(
+      isMissingColumn(error, "squares_moments") ? "[SquaresPrize] moments-column-missing" : "[SquaresPrize] moments-read-failed",
+      { message: error.message },
+    );
+    return moments;
+  }
+  for (const row of data ?? []) {
+    const parsed = normalizeSquaresMoments(row.squares_moments);
+    if (parsed) moments.set(row.id, parsed);
+  }
+  return moments;
 }
 
 /**
@@ -2687,6 +2757,17 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
           campaignId: campaign.id,
           cycleStartIso: new Date(0).toISOString(),
           rows: [],
+        });
+        continue;
+      }
+      if (campaign.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID) {
+        // A Super Bowl Squares prize is ONE contest whose moments are separate cycles
+        // (lib/squaresPrizes.ts), and winner_quota is its moment count — so every row counts,
+        // and a guest who won any moment (not just the latest) sees their coupon.
+        gameWinnerResolved.push({
+          campaignId: campaign.id,
+          cycleStartIso: campaignRows[0].cycle_start,
+          rows: campaignRows,
         });
         continue;
       }

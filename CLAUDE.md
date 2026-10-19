@@ -101,8 +101,8 @@ rewards too); tap a game for the FULL standings with a "Find a player" search; t
   `hasBreakdown`) + one adapter under `lib/results/adapters/` + one line in `adapters/index.ts` (+ a placement
   rule in `lib/results/rewardPlacement.ts` if it has rewards). Nothing under `components/owner/results/` or
   the generic `lib/results/*` core may name a competition id (`tests/results-registry-contract.test.ts`).
-  Checklist: `AGENTS.md` "Add a competition to Results". Only Live Trivia is registered; Category Blitz stays out
-  unless Andrew says otherwise.
+  Checklist: `AGENTS.md` "Add a competition to Results". Registered: Live Trivia and Super Bowl Squares (`squares`,
+  2026-10-19, no breakdown, inert while its flag is off); Category Blitz stays out unless Andrew says otherwise.
 - **Routes** (all through `withOwnerVenue`, `lib/ownerHistoryRoute.ts`: owner auth + the venue is theirs BEFORE
   any read; `no-store`): `GET /api/owner/results` (timeline page), `…/results/games/[competition]/[gameKey]`
   (standings), `…/breakdown?entry=`. The reward detail keeps `GET /api/owner/history/rewards/[rewardId]`
@@ -1065,3 +1065,13 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   keep it that way, and never poll the board per player after the lock (`useSquaresData`, `tests/squares-screen.test.ts`
   pins the cadence). Squares are `div role="gridcell"`, never `<button>`s. The sheet is pinned in
   `tests/native-back-review-fixes.test.ts`.
+- **Squares Prizes + Results (Phase 4, 2026-10-19, migration `20261019131139`, applied 2026-10-19):** definition `squares_challenge`
+  (`lib/rewardDefinitions.ts`; offered only while `isSquaresPrizeOffered`, and the server refuses once the numbers are
+  drawn). The partner picks the moments that pay (`challenge_campaigns.squares_moments`, deliberately NOT in
+  `CAMPAIGN_SELECT_COLUMNS`: read only by `listActiveSquaresPrizeCampaigns` / `loadSquaresPrizeMoments`). Each moment is
+  its own cycle — `squaresPrizeCycleStart` in `lib/squaresPrizes.ts` (kickoff minute + moment in seconds + grade_no in
+  ms) is the ONE key; never key a Squares award any other way. Awards only in `lib/squaresPrizeAwards.ts` (via
+  `settleSquaresWinners`): `award_cycle_winner` quota 1, then `squares_results.prize_checked_at`. A void + re-grade pays
+  the corrected winner and takes back the old coupon only if unused (Andrew: "take back if unused") — ONLY via the
+  `squares_withdraw_prize_coupons` RPC (`withdrawVoidedSquaresPrizes`); never delete a coupon or ledger row by hand.
+  Results: `lib/results/adapters/squares.ts` + a placement rule.

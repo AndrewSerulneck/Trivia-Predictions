@@ -1,7 +1,7 @@
 import { BARE_BUTTON_CLASS, Chevron } from "@/components/owner/results/resultsUi";
 import { playerCountLabel, winnersLabel } from "@/lib/ownerHistoryDisplay";
 import { getResultsCompetition } from "@/lib/results/competitions";
-import { rewardWinnerInline, scoreLabel } from "@/lib/results/resultsDisplay";
+import { rewardTitleAt, rewardWinnerInline, scoreLabel } from "@/lib/results/resultsDisplay";
 import type { ResultsGameRow, ResultsRewardItem } from "@/lib/results/types";
 
 // One game on the timeline: "<competition> · <game>", the player count, the winner, and any reward won
@@ -16,8 +16,8 @@ const resultLine = (game: ResultsGameRow, unit: string): string => {
   return `🏆 ${winnersLabel(game.winners)} · ${scoreLabel(game.topScore, unit)}`;
 };
 
-const rewardLine = (reward: ResultsRewardItem): string =>
-  `🎁 ${reward.name} → ${reward.winners.length > 0 ? reward.winners.map(rewardWinnerInline).join(", ") : "No winner"}`;
+const rewardLine = (reward: ResultsRewardItem, all: ReadonlyArray<ResultsRewardItem>): string =>
+  `🎁 ${rewardTitleAt(reward, all, { compact: true })} → ${reward.winners.length > 0 ? reward.winners.map(rewardWinnerInline).join(", ") : "No winner"}`;
 
 export const ResultsGameCard = ({
   game,
@@ -49,7 +49,7 @@ export const ResultsGameCard = ({
         <div key={`${reward.rewardId}:${reward.cycleStart}`} className="border-t border-ht-hairline">
           <button type="button" onClick={() => onOpenReward(reward)} className={BARE_BUTTON_CLASS}>
             <div className="flex min-h-11 items-center gap-3 px-3 py-2">
-              <span className="min-w-0 flex-1 truncate text-footnote font-bold text-ht-emerald-300">{rewardLine(reward)}</span>
+              <span className="min-w-0 flex-1 truncate text-footnote font-bold text-ht-emerald-300">{rewardLine(reward, rewards)}</span>
               <Chevron />
             </div>
           </button>

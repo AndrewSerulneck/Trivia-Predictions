@@ -10,6 +10,10 @@
 //
 //   definition → how it's won → points target → TERMS SENTENCE → prize → confirm
 //
+// Super Bowl Squares (docs/squares-and-brackets-plan.md Phase 4) skips "how it's won" (it is only
+// ever won by holding the winning square) and asks "Which moments pay a prize?" as its terms step.
+// Its tile shows only in season (offeredRewardDefinitions). Every Squares branch is gated on its id.
+//
 // "How is this reward won?" is asked FIRST because it decides whether the rest of
 // the questions even make sense, and the old Single Game / Recurring chips plus
 // the trailing Quantity step are replaced by one plain-English contract:
@@ -44,7 +48,7 @@ import { WizardFooter } from "@/components/navigation/WizardFooter";
 import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
 import { describeReward } from "@/lib/rewardDescription";
 import {
-  REWARD_DEFINITIONS,
+  offeredRewardDefinitions,
   isValidRewardThreshold,
   renderRewardRequirement,
   rewardThresholdStepMessage,
@@ -96,7 +100,15 @@ import {
   SCANNABLE_CHOICE_GIFT_CARD,
   SCANNABLE_CHOICE_QUESTION,
 } from "@/lib/posStaffInstructions";
-import type { RewardPrizeInput } from "@/lib/rewards";
+import type { RewardPrizeInput, RewardSquaresContext } from "@/lib/rewards";
+import { SQUARES_MOMENTS, type SquaresMoment } from "@/lib/seasonalPoints";
+import {
+  SQUARES_PRIZE_DEFINITION_ID,
+  SQUARES_PRIZE_MOMENTS_MESSAGE,
+  SQUARES_PRIZE_UNAVAILABLE_MESSAGE,
+  describeSquaresPrizeTerms,
+} from "@/lib/squaresPrizes";
+import { SQUARES_MOMENT_LABELS } from "@/lib/squaresView";
 import {
   REWARD_WIZARD_STEPS,
   guardRewardWizardStep,
@@ -138,6 +150,8 @@ export type RewardCreationContextDTO = {
    * cached context response still type-checks.
    */
   nflSeason?: NFLRewardSeasonContext | null;
+  /** Super Bowl Squares prizes only: when the numbers are drawn, once the game is known. */
+  squares?: RewardSquaresContext | null;
   /**
    * POS plan Phase 1: the venue has a live POS connection, so a percent-off prize also
    * needs its value at the register (lib/pos/prizeValue.ts). Optional: absent = false.
@@ -161,6 +175,8 @@ export type CreateRewardSubmission = {
   placePrizes?: RewardPrizeInput[];
   /** "Only pay out if at least N players took part" (2-100). Sent only when the partner set one. */
   minPlayers?: number;
+  /** Super Bowl Squares prizes: the moments that each pay one prize, in game order. */
+  squaresMoments?: SquaresMoment[];
 };
 
 export type CreateRewardWizardVenue = { id: string; name: string };
@@ -331,9 +347,9 @@ export function CreateRewardWizard({
   const [contextError, setContextError] = useState<string | null>(null);
   /** Shown under the definition tiles when the picked reward's game isn't scheduled. */
   const [notScheduledError, setNotScheduledError] = useState<string | null>(null);
-  /** True when notScheduledError is the NFL season message — that block has no
+  /** True when notScheduledError is the NFL season or Squares message — that block has no
    *  "schedule it" link, since there's nothing the partner can schedule. */
-  const [notScheduledIsNFL, setNotScheduledIsNFL] = useState(false);
+  const [notScheduledHasNoLink, setNotScheduledHasNoLink] = useState(false);
 
   // ── Definition-step prefetch ────────────────────────────────────────────────
   // Resolved once the venue is known so picking a definition is instant. It no
@@ -364,6 +380,10 @@ export function CreateRewardWizard({
   const [nflScopeKind, setNflScopeKind] = useState<NFLRewardWeekScopeKind>("weekly");
   // Which week a "Single week" reward runs. null = the first selectable week.
   const [nflWeekNumber, setNflWeekNumber] = useState<number | null>(null);
+
+  // ── Super Bowl Squares: which moments pay a prize ──────────────────────────
+  // Nothing pre-selected: Next stays off until the partner picks at least one.
+  const [squaresMoments, setSquaresMoments] = useState<SquaresMoment[]>([]);
 
   // ── The game picker (Phase 5, flag-gated) ───────────────────────────────────
   // Replaces the period-based sentence for game-winner rewards: the partner
@@ -403,7 +423,10 @@ export function CreateRewardWizard({
   const requestedStep = controlledStep ?? internalStep;
   // Minimum players (D7): asked where the reward is a contest between players — weekly places, Live
   // Trivia's "winner of the game" and NFL "most picks right". Never a points target (a personal goal).
-  const offersMinPlayers = winCondition === "game_winner" || winCondition === "ranked_places";
+  // A Squares prize is "game_winner" in the engine, but its winner holds a square, not a top score:
+  // there is nothing for a minimum to protect.
+  const isSquaresDefinition = definition?.id === SQUARES_PRIZE_DEFINITION_ID;
+  const offersMinPlayers = !isSquaresDefinition && (winCondition === "game_winner" || winCondition === "ranked_places");
   const step =
     controlledStep === undefined
       ? requestedStep
@@ -428,7 +451,7 @@ export function CreateRewardWizard({
     let cancelled = false;
     setDefinitionContextsLoading(true);
     Promise.all(
-      REWARD_DEFINITIONS.map(async (def) => {
+      offeredRewardDefinitions().map(async (def) => {
         try {
           return [def.id, await fetchContext(venueId, def.id)] as const;
         } catch {
@@ -499,6 +522,17 @@ export function CreateRewardWizard({
     const custom = parseInt(customThreshold, 10);
     return Number.isFinite(custom) && custom > 0 ? custom : threshold;
   }, [customThreshold, threshold]);
+
+  // "Sun, Feb 14, 6:00 PM" in the partner's own clock: the moment Squares prizes close.
+  const squaresLockAt = context?.squares?.lockAt ?? null;
+  const squaresDrawLabel = useMemo(() => {
+    const ms = squaresLockAt ? Date.parse(squaresLockAt) : Number.NaN;
+    return Number.isFinite(ms)
+      ? new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(
+          new Date(ms),
+        )
+      : null;
+  }, [squaresLockAt]);
 
   // Weeks the server offers for a "Single week" reward (never a started week).
   const selectableWeeks = nflSeason?.selectableWeeks ?? EMPTY_SELECTABLE_WEEKS;
@@ -640,22 +674,27 @@ export function CreateRewardWizard({
   // ── Step: definition pick → resolve schedule context ────────────────────────
   const handlePickDefinition = async (picked: RewardDefinition) => {
     const isNFLPick = picked.id === NFL_PICKEM_DEFINITION_ID;
-    // requiresScheduledGame is null for the NFL definition (it gates on the NFL
-    // season calendar, not anything a venue schedules), so the "not available"
-    // copy — and whether a "schedule it" link even makes sense — differs.
+    const isSquaresPick = picked.id === SQUARES_PRIZE_DEFINITION_ID;
+    // requiresScheduledGame is null for the NFL and Squares definitions (they gate on a
+    // season, not anything a venue schedules), so the "not available" copy — and whether a
+    // "schedule it" link even makes sense — differs.
     const unavailableMessage = isNFLPick
       ? REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE
-      : REWARD_TERMS_NOT_SCHEDULED_MESSAGE;
+      : isSquaresPick
+        ? SQUARES_PRIZE_UNAVAILABLE_MESSAGE
+        : REWARD_TERMS_NOT_SCHEDULED_MESSAGE;
 
     setDefinition(picked);
     setThreshold(picked.defaultThreshold);
     setCustomThreshold("");
-    setWinCondition("points_threshold");
+    // Squares is only ever won by holding the winning square.
+    setWinCondition(isSquaresPick ? "game_winner" : "points_threshold");
     setNflScopeKind("weekly");
     setNflWeekNumber(null);
+    setSquaresMoments([]);
     setContextError(null);
     setNotScheduledError(null);
-    setNotScheduledIsNFL(isNFLPick);
+    setNotScheduledHasNoLink(isNFLPick || isSquaresPick);
 
     const cached = definitionContexts[picked.id];
     if (cached) {
@@ -740,7 +779,12 @@ export function CreateRewardWizard({
   const pickedSlotTerms = useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms : null;
   const derivedTerms = useMemo(
     () =>
-      isRanked
+      isSquaresDefinition
+        ? // One-off, one prize per chosen moment — the facts createReward fixes for Squares.
+          squaresMoments.length > 0
+          ? { cadence: "none" as const, activeDays: [] as string[], winnerQuota: squaresMoments.length }
+          : null
+        : isRanked
         ? // Weekly by definition; its quota is its place count; its nights are the counted games
           // (the same three facts createReward derives for a ranked reward).
           { cadence: "weekly" as const, activeDays: rankedNights as string[], winnerQuota: placeCount }
@@ -753,7 +797,19 @@ export function CreateRewardWizard({
               sentenceQuantity: effectiveQuantity,
               scheduleDays: context?.scheduleDays ?? EMPTY_SCHEDULE_DAYS,
             }),
-    [isRanked, rankedNights, placeCount, isNFLDefinition, nflTerms, pickedSlotTerms, period, effectiveQuantity, context],
+    [
+      isSquaresDefinition,
+      squaresMoments,
+      isRanked,
+      rankedNights,
+      placeCount,
+      isNFLDefinition,
+      nflTerms,
+      pickedSlotTerms,
+      period,
+      effectiveQuantity,
+      context,
+    ],
   );
 
   // "What guests will see" — the same composer the server runs for the venue
@@ -763,7 +819,7 @@ export function CreateRewardWizard({
     if (!definition || !context || !derivedTerms) return null;
     // A one-off-only venue has no period, but its reward still submits (cadence
     // "none") and describeReward words it, so the preview shows there too.
-    if (!isRanked && !isNFLDefinition && !pickedSlotTerms && !period && !isOneOffOnly) return null;
+    if (!isSquaresDefinition && !isRanked && !isNFLDefinition && !pickedSlotTerms && !period && !isOneOffOnly) return null;
     const now = new Date();
     // "Starts Thu, Sep 10" until the reward's first covered NFL week begins — the
     // exact rule the venue page uses (nflRewardUpcomingStartDate), fed the dates
@@ -796,6 +852,7 @@ export function CreateRewardWizard({
         // A weekly places reward keeps its prizes in the ladder; its own prize columns stay empty.
         placePrizes: isRanked ? placePrizes : null,
         minPlayers: sentMinPlayers,
+        squaresMoments: isSquaresDefinition ? squaresMoments : null,
         prizeKind: isRanked ? null : prize.prizeKind,
         prizeMenuItem: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItem : null,
         prizeMenuItemName: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItemName : null,
@@ -826,11 +883,18 @@ export function CreateRewardWizard({
     isRanked,
     placePrizes,
     sentMinPlayers,
+    isSquaresDefinition,
+    squaresMoments,
   ]);
 
   const handleSubmit = async () => {
     if (!definition) return;
-    if (isRanked) {
+    if (isSquaresDefinition) {
+      if (squaresMoments.length === 0) {
+        setSubmitError(SQUARES_PRIZE_MOMENTS_MESSAGE);
+        return;
+      }
+    } else if (isRanked) {
       if (!rankedOffered) {
         setSubmitError("Top players this week needs a scheduled Live Trivia game.");
         return;
@@ -891,6 +955,7 @@ export function CreateRewardWizard({
         // Only when set, so every other reward submits exactly what it always did.
         ...(isRanked ? { placePrizes: placePrizeInputs } : {}),
         ...(sentMinPlayers !== null ? { minPlayers: sentMinPlayers } : {}),
+        ...(isSquaresDefinition ? { squaresMoments } : {}),
       });
       if (!result.ok) {
         setSubmitError(result.error);
@@ -954,7 +1019,7 @@ export function CreateRewardWizard({
             {animateSteps ? "Which game is this prize for?" : "Create Prize"}
           </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {REWARD_DEFINITIONS.map((def) => (
+            {offeredRewardDefinitions().map((def) => (
               <button
                 key={def.id}
                 type="button"
@@ -974,12 +1039,12 @@ export function CreateRewardWizard({
           ) : null}
           {contextError ? <div className={s.error}>{contextError}</div> : null}
           {/* Only after the partner picks a reward whose game isn't scheduled.
-              The NFL message has nowhere to send a link — there's nothing the
-              partner can schedule to fix it. */}
+              The NFL and Squares messages have nowhere to send a link — there's
+              nothing the partner can schedule to fix them. */}
           {notScheduledError ? (
             <div className={s.block}>
               {notScheduledError}
-              {notScheduledIsNFL ? null : <> {scheduleLink}.</>}
+              {notScheduledHasNoLink ? null : <> {scheduleLink}.</>}
             </div>
           ) : null}
           <button type="button" onClick={onCancel} className={s.secondaryButton}>
@@ -995,8 +1060,8 @@ export function CreateRewardWizard({
               {definition.name}
             </p>
           ) : null}
-          {/* 1. The question that decides everything below it. */}
-          {definition.supportsGameWinner ? (
+          {/* 1. The question that decides everything below it. Squares has only one answer. */}
+          {definition.supportsGameWinner && !isSquaresDefinition ? (
             <div>
               <p className={s.label}>How is this prize won?</p>
               <div className={rankedOffered ? "grid grid-cols-1 gap-2 sm:grid-cols-3" : "grid grid-cols-2 gap-2"}>
@@ -1041,7 +1106,7 @@ export function CreateRewardWizard({
           {/* 2. Points target — only meaningful when that's how it's won. NFL
               renders its own copy of this below the week-scope picker (§3),
               matching the phase doc's win-condition → scope → target order. */}
-          {isGameWinner || isRanked || isNFLDefinition ? null : (
+          {isGameWinner || isRanked || isNFLDefinition || isSquaresDefinition ? null : (
             <div>
               <p className={s.label}>Points target</p>
               <div className="grid grid-cols-4 gap-2">
@@ -1078,7 +1143,36 @@ export function CreateRewardWizard({
           {/* 3. The contract — the NFL week-scope picker, the game picker
               (Phase 5, flag-gated), or the period-based sentence the game
               picker replaces for game-winner rewards. */}
-          {isNFLDefinition ? (
+          {isSquaresDefinition ? (
+            <div>
+              <p className={s.label}>Which moments pay a prize?</p>
+              <div className="grid grid-cols-2 gap-2">
+                {SQUARES_MOMENTS.map((moment) => {
+                  const picked = squaresMoments.includes(moment);
+                  return (
+                    <button
+                      key={moment}
+                      type="button"
+                      aria-pressed={picked}
+                      onClick={() =>
+                        setSquaresMoments((prev) =>
+                          SQUARES_MOMENTS.filter((m) => (m === moment ? !picked : prev.includes(m))),
+                        )
+                      }
+                      className={`${s.chip} ${picked ? s.chipActive : ""}`}
+                    >
+                      {SQUARES_MOMENT_LABELS[moment]}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className={`mt-1.5 ${s.helpText}`}>
+                At each moment you pick, whoever holds your venue&apos;s winning square wins this prize. If nobody holds
+                it, nobody wins that one.
+                {squaresDrawLabel ? ` Set it up before the numbers are drawn, ${squaresDrawLabel}.` : ""}
+              </p>
+            </div>
+          ) : isNFLDefinition ? (
             <div className="space-y-4">
               {nflSeason ? (
                 <div>
@@ -1423,7 +1517,9 @@ export function CreateRewardWizard({
             backLabel={definition.name}
             nextLabel={offersMinPlayers ? "Next: Minimum Players" : "Next: Offer a Prize"}
             nextDisabled={
-              isRanked
+              isSquaresDefinition
+                ? squaresMoments.length === 0
+                : isRanked
                 ? false
                 : isNFLDefinition
                   ? !(nflTermsResult?.ok ?? false)
@@ -1432,7 +1528,7 @@ export function CreateRewardWizard({
                     : Boolean(termsError)
             }
             onNext={() => {
-              if (!isGameWinner && !isRanked) {
+              if (!isGameWinner && !isRanked && !isSquaresDefinition) {
                 // The step is the definition's, not a fixed 10: Live Trivia
                 // targets are points (step 10), NFL targets are correct picks
                 // (step 1). Same rule the server re-checks in createReward.
@@ -1741,6 +1837,12 @@ export function CreateRewardWizard({
                 <span className="font-bold">${(derivedPrizes[0].posValueCents / 100).toFixed(2)}</span>
               </div>
             ) : null}
+            {isSquaresDefinition ? (
+              <div className={s.summaryRow}>
+                <span>Pays at</span>
+                <span className="font-bold">{squaresMoments.map((moment) => SQUARES_MOMENT_LABELS[moment]).join(", ")}</span>
+              </div>
+            ) : null}
             {offersMinPlayers ? (
               <div className={s.summaryRow}>
                 <span>Minimum players</span>
@@ -1761,7 +1863,9 @@ export function CreateRewardWizard({
 
           {/* The terms the partner just agreed to, restated verbatim. */}
           <p className={s.sentence}>
-            {isRanked
+            {isSquaresDefinition
+              ? describeSquaresPrizeTerms(squaresMoments, squaresMoments.length)
+              : isRanked
               ? describeRankedTerms(placePrizes, minPlayers)
               : isNFLDefinition
               ? describeNFLWeekScope(nflScope, winCondition, {

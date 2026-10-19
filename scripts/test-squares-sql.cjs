@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Isolated PostgreSQL check for supabase/migrations/20261019051458_squares_engine.sql
 // (docs/squares-and-brackets-plan.md Phase 2), applied on top of Phase 1's
-// 20261019045030_seasonal_points_credits.sql. No network, no application imports, never touches
+// 20261019045030_seasonal_points_credits.sql, and Phase 4's 20261019131139_squares_prizes.sql. No network, no application imports, never touches
 // Supabase. Runs on PGlite (devDependency):
 //   npm run test:squares-sql
 // or point at another copy: SQUARES_PGLITE_MODULE=/path/to/node_modules/@electric-sql/pglite node scripts/test-squares-sql.cjs
@@ -17,6 +17,7 @@ const { PGlite } = require(process.env.SQUARES_PGLITE_MODULE || "@electric-sql/p
 const MIGRATIONS = [
   "supabase/migrations/20261019045030_seasonal_points_credits.sql",
   "supabase/migrations/20261019051458_squares_engine.sql",
+  "supabase/migrations/20261019131139_squares_prizes.sql",
 ];
 
 const SCHEMA = `
@@ -26,6 +27,16 @@ const SCHEMA = `
     points integer not null default 0, constraint users_points_non_negative check (points >= 0));
   create table game_sessions(session_id uuid primary key default gen_random_uuid(), game_type text not null,
     constraint game_sessions_type_valid check (game_type in ('trivia')));
+  -- Only the challenge_campaigns columns Phase 4 touches, with the game-types check as 20260715000200 left it.
+  create table challenge_campaigns(id uuid primary key default gen_random_uuid(), game_types text[] not null default '{}',
+    reward_definition_id text, venue_ids text[] not null default '{}',
+    constraint challenge_campaigns_game_types_valid check (array_length(game_types, 1) is null
+      or game_types <@ array['pickem','fantasy','trivia','bingo','speed-trivia','live-trivia','nfl-pickem']::text[]));
+  create table challenge_cycle_winners(id uuid primary key default gen_random_uuid(), challenge_id uuid not null,
+    cycle_start timestamptz not null, winner_user_id uuid, venue_id text not null,
+    unique (challenge_id, cycle_start, winner_user_id));
+  create table challenge_campaign_redemptions(id uuid primary key default gen_random_uuid(), challenge_id uuid,
+    winner_user_id uuid not null, venue_id text not null, cycle_start timestamptz not null, prize_redeemed_at timestamptz);
 `;
 
 const id = (n) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
@@ -223,6 +234,62 @@ async function run() {
     await db.query(`delete from users where id = $1`, [B]);
     assert.equal(Number((await one(`select count(*)::int n from squares_claims where user_id = $1`, [B])).n), 0);
     assert.equal(Number((await one(`select count(*)::int n from squares_results where user_id = $1`, [B])).n), 0);
+
+    // ── Phase 4: Squares prizes ───────────────────────────────────────────────────────────
+    await db.query(`insert into challenge_campaigns (game_types) values ('{live-trivia}'), ('{nfl-pickem}')`);
+    const prize = (gameTypes, moments) =>
+      db.query(`insert into challenge_campaigns (game_types, squares_moments) values ($1::text[], $2::text[])`, [gameTypes, moments]);
+    await prize(["squares"], ["q1", "final"]);
+    await prize(["squares"], ["q1", "half", "q3", "final"]);
+    await prize(["live-trivia"], null);
+    await assert.rejects(prize(["bracket"], null), /game_types_valid/, "only squares is new");
+    await assert.rejects(prize(["squares"], []), /squares_moments_valid/, "at least one moment");
+    await assert.rejects(prize(["squares"], ["q1", "q1"]), /squares_moments_valid/, "no moment twice");
+    await assert.rejects(prize(["squares"], ["q5"]), /squares_moments_valid/, "known moments only");
+    await assert.rejects(prize(["squares"], ["q1", "half", "q3", "final", "q1"]), /squares_moments_valid/);
+    const checked = await one(`select count(*)::int total, count(prize_checked_at)::int checked from squares_results`);
+    assert.ok(Number(checked.total) > 0);
+    assert.equal(Number(checked.checked), 0, "every existing result starts unchecked for prizes");
+    assert.ok(await one(`select 1 as ok from pg_indexes where indexname = 'squares_results_prize_unchecked_idx'`));
+    const fnGrant = await one(`select has_function_privilege('service_role', 'public.squares_moments_valid(text[])', 'execute') as ok`);
+    assert.equal(fnGrant.ok, true);
+
+    // A voided grade's coupons: unused ones are withdrawn (coupon + ledger row), redeemed ones kept.
+    const sqPrize = (await one(
+      `insert into challenge_campaigns (game_types, reward_definition_id, venue_ids, squares_moments)
+       values ('{squares}', 'squares_challenge', '{v1}', '{q1,final}') returning id`,
+    )).id;
+    const otherPrize = (await one(
+      `insert into challenge_campaigns (game_types, reward_definition_id, venue_ids) values ('{live-trivia}', 'live_trivia_challenge', '{v1}') returning id`,
+    )).id;
+    const KEY = "2027-02-14T23:30:01.001Z";
+    const coupon = async (challengeId, userId, venueId, redeemed) => {
+      await db.query(`insert into challenge_cycle_winners (challenge_id, cycle_start, winner_user_id, venue_id) values ($1, $2, $3, $4)`, [challengeId, KEY, userId, venueId]);
+      await db.query(
+        `insert into challenge_campaign_redemptions (challenge_id, winner_user_id, venue_id, cycle_start, prize_redeemed_at) values ($1, $2, $3, $4, $5)`,
+        [challengeId, userId, venueId, KEY, redeemed ? "2027-02-14T23:55:00Z" : null],
+      );
+    };
+    await coupon(sqPrize, A, "v1", false);
+    await coupon(sqPrize, C, "v1", true);
+    await coupon(otherPrize, A, "v1", false); // same key, not a Squares prize: never touched
+    const withdraw = (venueId, userId) =>
+      one(`select * from squares_withdraw_prize_coupons($1, $2, $3)`, [venueId, KEY, userId]);
+    assert.deepEqual(await withdraw("v1", A), { withdrawn_count: 1, kept_count: 0 });
+    assert.deepEqual(await withdraw("v1", A), { withdrawn_count: 0, kept_count: 0 }, "safe to repeat");
+    assert.deepEqual(await withdraw("v1", C), { withdrawn_count: 0, kept_count: 1 }, "a redeemed coupon is spent and kept");
+    assert.deepEqual(await withdraw("v2", C), { withdrawn_count: 0, kept_count: 0 }, "another venue's key matches nothing");
+    const left = await rows(`select challenge_id, winner_user_id from challenge_campaign_redemptions order by winner_user_id`);
+    assert.deepEqual(left.map((r) => [r.challenge_id === sqPrize ? "squares" : "other", r.winner_user_id]), [["other", A], ["squares", C]]);
+    const ledgerLeft = await rows(`select challenge_id, winner_user_id from challenge_cycle_winners order by winner_user_id`);
+    assert.deepEqual(ledgerLeft.map((r) => [r.challenge_id === sqPrize ? "squares" : "other", r.winner_user_id]), [["other", A], ["squares", C]]);
+    await assert.rejects(withdraw("v1", null), /required/);
+    for (const role of ["anon", "authenticated"]) {
+      const can = await one(`select has_function_privilege($1, 'public.squares_withdraw_prize_coupons(text, timestamptz, uuid)', 'execute') as ok`, [role]);
+      assert.equal(can.ok, false, `${role} cannot withdraw coupons`);
+    }
+    assert.equal((await one(`select has_function_privilege('service_role', 'public.squares_withdraw_prize_coupons(text, timestamptz, uuid)', 'execute') as ok`)).ok, true);
+    assert.ok(await one(`select 1 as ok from pg_indexes where indexname = 'squares_results_prize_withdraw_idx'`));
 
     // ── Grants and RLS ────────────────────────────────────────────────────────────────────
     for (const table of ["squares_events", "squares_event_moments", "squares_boards", "squares_claims", "squares_results", "squares_admin_log"]) {

@@ -361,6 +361,12 @@ export interface ChallengeCampaign {
    * `NFLWeekScope` for shape; only ever set on `nfl_pickem_challenge` campaigns.
    */
   nflWeekScope?: NFLWeekScope | null;
+  /**
+   * Super Bowl Squares prizes: the scoring moments that each pay one coupon. Null/absent for every
+   * other reward. NOT in the shared campaign select (challenge_campaigns.squares_moments is read
+   * only by the Squares paths — lib/squaresPrizeAwards.ts and attachRewardDescriptions).
+   */
+  squaresMoments?: Array<"q1" | "half" | "q3" | "final"> | null;
   /** Which pre-set reward definition created this (e.g. "live_trivia_challenge"), or null. */
   rewardDefinitionId?: string | null;
   /** New prize model. Null on pre-Rewards campaigns unless derived from legacy prizeType. */

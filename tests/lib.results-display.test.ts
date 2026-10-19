@@ -123,3 +123,16 @@ describe("labels", () => {
     expect(matchesPlayerSearch("anyone", "")).toBe(true);
   });
 });
+
+describe("rewardTitleAt — the same prize more than once on one game", () => {
+  it("adds the cycle label only when the prize repeats (Squares: one line per moment)", async () => {
+    const { rewardTitleAt } = await import("@/lib/results/resultsDisplay");
+    const half = { rewardId: "sq", name: "Super Bowl Squares Challenge", cycleLabel: "Halftime" };
+    const final = { rewardId: "sq", name: "Super Bowl Squares Challenge", cycleLabel: "Final" };
+    const trivia = { rewardId: "lt", name: "Live Trivia Challenge", cycleLabel: "Fri, Oct 9" };
+    expect(rewardTitleAt(half, [half, final, trivia])).toBe("Halftime · Super Bowl Squares Challenge");
+    expect(rewardTitleAt(half, [half, final, trivia], { compact: true })).toBe("Halftime");
+    expect(rewardTitleAt(trivia, [half, final, trivia], { compact: true })).toBe("Live Trivia Challenge");
+    expect(rewardTitleAt(half, [half])).toBe("Super Bowl Squares Challenge");
+  });
+});

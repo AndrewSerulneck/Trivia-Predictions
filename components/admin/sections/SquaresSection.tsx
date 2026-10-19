@@ -83,7 +83,7 @@ function MomentRow({ moment, drawn, post, busy }: { moment: SquaresMomentRecord;
                     ? { action: "void_moment", moment: moment.moment, reason, ...scores }
                     : { action: "grade_moment", moment: moment.moment, reason, ...scores },
                   graded
-                    ? `Void ${MOMENT_LABEL[moment.moment]}? Points already paid for it are taken back.${
+                    ? `Void ${MOMENT_LABEL[moment.moment]}? Points already paid for it are taken back. An unused Prize coupon for it is taken back (a used one is kept), and the corrected winner gets one.${
                         "colScore" in scores ? " It is re-graded with your scores." : " It re-grades from the feed (leave scores empty)."
                       }`
                     : `Grade ${MOMENT_LABEL[moment.moment]} by hand at ${col}–${row}?`,

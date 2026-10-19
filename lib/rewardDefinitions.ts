@@ -19,8 +19,10 @@ import type {
   RewardMenuItem,
   RewardPrizeKind,
 } from "@/types";
+import { SQUARES_PRIZE_DEFINITION_ID, isSquaresPrizeOffered } from "@/lib/squaresPrizes";
+import { SQUARES_EVENT_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 
-export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge";
+export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge" | typeof SQUARES_PRIZE_DEFINITION_ID;
 
 /**
  * Guest-facing description templates, composed at READ time by describeReward /
@@ -43,6 +45,8 @@ export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge
  *   {across}    — weekly places: "across Wednesday, Thursday and Friday nights", "on Tuesday night"
  *   {ladder}    — weekly places: "1st place wins a $30 gift card, 2nd place wins a $20 gift card and 3rd place wins a $10 gift card."
  *   {place}     — weekly places win line: "1st"
+ *   {moments}   — Squares: the moments that pay, "halftime or the end of the game"
+ *   {moment}    — Squares win line: "halftime"
  *
  * Never write "this venue" — the guest is standing in it.
  */
@@ -80,6 +84,14 @@ export type RewardDescriptionTemplates =
       picksTargetSeason: string;
       wonMostPicks: string;
       wonPicksTarget: string;
+    }
+  | {
+      /** Super Bowl Squares: one prize per chosen scoring moment (lib/squaresPrizes.ts). */
+      calendar: "super_bowl_squares";
+      /** "Hold the winning … square at {moments} and win {prize}." */
+      moments: string;
+      /** Prize-wallet coupon: "You held the winning … square at {moment}". */
+      wonMoment: string;
     };
 
 export type RewardDefinition = {
@@ -201,7 +213,43 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
       wonPicksTarget: "You got {threshold} NFL picks right {when}",
     },
   },
+  {
+    // Super Bowl Squares (docs/squares-and-brackets-plan.md Phase 4). Won only by holding a moment's
+    // winning square — no points target, no minimum players. The partner picks which moments pay
+    // (challenge_campaigns.squares_moments); gated on the Squares flag + season, not a schedule.
+    // Offered only while isSquaresPrizeOffered (offeredRewardDefinitions below).
+    id: SQUARES_PRIZE_DEFINITION_ID,
+    name: `${SQUARES_GAME_NAME} Challenge`,
+    gameName: SQUARES_GAME_NAME,
+    gameType: "squares",
+    challengeMode: "progress",
+    requiresScheduledGame: null,
+    requirementTemplate: "Hold the winning square",
+    supportsGameWinner: true,
+    gameWinnerRequirement: "Hold the winning square",
+    supportsRankedPlaces: false,
+    rankedPlacesRequirement: null,
+    thresholdOptions: [],
+    defaultThreshold: 1,
+    thresholdStep: 1,
+    accent: "squares",
+    glyph: "🔢",
+    description: {
+      calendar: "super_bowl_squares",
+      moments: `Hold the winning ${SQUARES_EVENT_NAME} square at {moments} and win {prize}.`,
+      wonMoment: `You held the winning ${SQUARES_EVENT_NAME} square at {moment}`,
+    },
+  },
 ] as const;
+
+/**
+ * The definitions the Create Prize wizard offers today. Every definition is always readable
+ * (getRewardDefinition — old prizes must still describe themselves); this only hides a seasonal
+ * one out of season: Squares while its flag is off or after its card window.
+ */
+export function offeredRewardDefinitions(now: Date = new Date()): RewardDefinition[] {
+  return REWARD_DEFINITIONS.filter((definition) => definition.id !== SQUARES_PRIZE_DEFINITION_ID || isSquaresPrizeOffered(now));
+}
 
 export function getRewardDefinition(id: string): RewardDefinition | null {
   return REWARD_DEFINITIONS.find((definition) => definition.id === id) ?? null;

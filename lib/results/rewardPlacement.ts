@@ -13,6 +13,9 @@
 // | ranked_places / weekly cadence (incl. weeks that    | a week row, dated on the cycle's last game  |
 // | paid nobody)                                        | day (its last active day)                   |
 // | NFL Pick 'Em (weekly / single week / season)        | a week row in the week it was finalized     |
+// | Super Bowl Squares (one cycle per moment)           | that season's Squares game card (the game's |
+// |                                                     | date), labelled with the moment; else a day |
+// |                                                     | row on that date                            |
 // | monthly / yearly / one-off, or no cycle date        | a day row on the day it was finalized       |
 //
 // DATES. Every date is venue-local; a pinned game-winner reward is dated in its games' own zone
@@ -34,12 +37,16 @@ import {
   rewardHowWonLabel,
 } from "@/lib/ownerHistoryDisplay";
 import { buildRankedWeekHistory } from "@/lib/rankedWeekHistory";
+import { SQUARES_PRIZE_DEFINITION_ID, squaresPrizeMomentOf } from "@/lib/squaresPrizes";
+import { SQUARES_MOMENT_LABELS } from "@/lib/squaresView";
 import type { ResultsGameRow, ResultsRewardAttach, ResultsRewardItem, ResultsRewardWinner } from "@/lib/results/types";
 import type { ChallengeCampaign } from "@/types";
 
 /** The Live Trivia competition id, as lib/results/competitions.ts registers it. */
 const LIVE_TRIVIA = "live_trivia";
 const NFL_DEFINITION_ID = "nfl_pickem_challenge";
+/** The Super Bowl Squares competition id, as lib/results/competitions.ts registers it. */
+const SQUARES = "squares";
 
 export type PlacementLedgerRow = {
   challengeId: string;
@@ -201,6 +208,17 @@ const placeCycle = (
 
   // NFL Pick 'Em follows the NFL week, not a venue game: the week it was finalized.
   if (isNFL(campaign)) return happenedDate ? weekPlacement(happenedDate) : null;
+
+  // Super Bowl Squares: each moment is its own cycle, keyed on the kickoff minute
+  // (lib/squaresPrizes.ts), so its date IS the game's date — on the Squares game card.
+  if (campaign.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID) {
+    const gameDate = isEpoch(cycleStart) ? null : localDateOf(cycleStart, venueTimeZone);
+    if (!gameDate) return finalizedFallback();
+    const moment = squaresPrizeMomentOf(cycleStart);
+    const label = moment ? SQUARES_MOMENT_LABELS[moment] : formatOccurrenceDate(gameDate, context.currentYear);
+    const game = (gamesByDate.get(gameDate) ?? []).find((candidate) => candidate.competitionId === SQUARES);
+    return game ? { date: gameDate, attach: gameAttach(game), label } : { ...dayPlacement(gameDate), label };
+  }
 
   if (campaign.winCondition === "game_winner") {
     if (isEpoch(cycleStart)) return finalizedFallback();

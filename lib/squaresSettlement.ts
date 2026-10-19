@@ -19,6 +19,7 @@ import {
   type SquaresMoment,
 } from "@/lib/squares";
 import { fetchSquaresGame, fetchSuperBowlGame } from "@/lib/squaresFeed";
+import { awardSquaresPrizes, withdrawVoidedSquaresPrizes } from "@/lib/squaresPrizeAwards";
 import {
   createSquaresEvent,
   eventFieldsFromGame,
@@ -42,7 +43,9 @@ import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 //   • before lock: once an hour (kickoff moves, flexed times);
 //   • lock → final: every run (≈ 300 for a Super Bowl);
 //   • complete: every SQUARES_POST_FINAL_POLL_MS for SQUARES_POST_FINAL_WATCH_MS (corrections).
-// Grading is one set-based RPC per moment for every board; paying is one batched credit call.
+// Grading is one set-based RPC per moment for every board; paying is one batched credit call, then
+// each venue's Prizes for that moment (lib/squaresPrizeAwards.ts: one indexed read per run, normally
+// empty).
 
 /** Server-only rehearsal switch (plan Phase 6): run the settlement outside the card window too. */
 export const isSquaresRehearsalEnabled = (): boolean => {
@@ -123,7 +126,7 @@ async function tick(options: { now?: Date; force?: boolean }): Promise<SquaresTi
       if (!drew) return report;
     }
 
-    await payUnpaidSquaresResults(event.id, report);
+    await settleSquaresWinners(event, report, now);
 
     if (event.completedAt) {
       const completedMs = Date.parse(event.completedAt);
@@ -150,7 +153,7 @@ async function tick(options: { now?: Date; force?: boolean }): Promise<SquaresTi
       return report;
     }
     const graded = await advanceMoments(report, event, game, moments.value, nowMs);
-    if (graded) await payUnpaidSquaresResults(event.id, report);
+    if (graded) await settleSquaresWinners(event, report, now);
 
     await completeIfDone(report, event, game, nowMs);
   } catch (error) {
@@ -333,6 +336,21 @@ export async function gradeMoment(
     winners: row.grade_winners,
   });
   return true;
+}
+
+/**
+ * Everything a graded winner is owed, safe to repeat: venue points (payUnpaidSquaresResults), then
+ * the venue's Squares Prizes (awardSquaresPrizes), then taking back a voided grade's unused coupons
+ * (withdrawVoidedSquaresPrizes). Shared with lib/squaresAdmin.ts.
+ */
+export async function settleSquaresWinners(
+  event: Pick<SquaresEventRecord, "id" | "kickoffAt" | "lockAt">,
+  report: { actions: string[]; errors: string[] },
+  now: Date = new Date(),
+): Promise<void> {
+  await payUnpaidSquaresResults(event.id, report);
+  await awardSquaresPrizes(event, report, now);
+  await withdrawVoidedSquaresPrizes(event, report, now);
 }
 
 type UnpaidRow = { id: string; user_id: string; credit_key: string; points: number };

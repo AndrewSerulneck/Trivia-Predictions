@@ -1122,3 +1122,101 @@ describe("CreateRewardWizard — weekly places", () => {
     });
   });
 });
+
+describe("CreateRewardWizard — Super Bowl Squares (squares plan Phase 4)", () => {
+  const SQUARES_CONTEXT: RewardCreationContextDTO = {
+    scheduled: true,
+    hasRecurringSchedule: false,
+    scheduleDays: [],
+    timezone: null,
+    allowedCadences: ["none"],
+    scheduleShapes: [],
+    gameSlots: [],
+    nflSeason: null,
+    squares: { lockAt: null },
+  };
+  const renderSquares = (context: RewardCreationContextDTO = SQUARES_CONTEXT) => {
+    const onSubmit = vi.fn(async () => ({ ok: true as const }));
+    render(
+      createElement(CreateRewardWizard, {
+        variant: "admin",
+        venues: [{ id: "venue-1", name: "The Pub" }],
+        defaultVenueId: "venue-1",
+        scheduleLinkHref: "/admin/schedule",
+        fetchContext: async (_venueId: string, definitionId: string) =>
+          definitionId === "squares_challenge" ? context : { ...LIVE_CONTEXT, scheduled: false },
+        onSubmit,
+        onCreated: () => {},
+        onCancel: () => {},
+      }),
+    );
+    return { onSubmit };
+  };
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+
+  it("isn't offered while the Squares flag is off", async () => {
+    renderSquares();
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    expect(screen.queryByRole("button", { name: /Super Bowl/ })).toBeNull();
+  });
+
+  it("asks only which moments pay, skips minimum players, and submits one prize per moment", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "true");
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-12-01T16:00:00.000Z"));
+    const { onSubmit } = renderSquares();
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Super Bowl/ }));
+    await screen.findByText("Which moments pay a prize?");
+    expect(screen.queryByText("How is this prize won?")).toBeNull();
+    expect(screen.queryByText("Points target")).toBeNull();
+    const next = () => screen.getByRole("button", { name: /Next: Offer a Prize/ });
+    expect(next()).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: "Final" }));
+    fireEvent.click(screen.getByRole("button", { name: "Halftime" }));
+    expect(screen.getByRole("button", { name: "Halftime" }).getAttribute("aria-pressed")).toBe("true");
+    expect(next()).toHaveProperty("disabled", false);
+    fireEvent.click(next());
+    await screen.findByText("Prize");
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    await screen.findByText("Confirm");
+    expect(screen.getByText("Pays at").nextSibling?.textContent).toBe("Halftime, Final");
+    expect(screen.queryByText("Minimum players")).toBeNull();
+    expect(document.body.textContent).toContain("Hold the winning Super Bowl square at halftime or the end of the game and win 50% off an appetizer.");
+    expect(document.body.textContent).toContain("One prize at halftime and the end of the game, up to 2 in all.");
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    const submission = (onSubmit.mock.calls[0] as unknown[])[0];
+    expect(submission).toMatchObject({
+      definitionId: "squares_challenge",
+      cadence: "none",
+      winCondition: "game_winner",
+      winnerQuota: 2,
+      squaresMoments: ["half", "final"],
+      prize: PRIZE,
+    });
+    expect(submission).not.toHaveProperty("minPlayers");
+  });
+
+  it("says when the numbers are drawn once the game is known, and blocks without a schedule link once they are", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "true");
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2027-02-10T16:00:00.000Z"));
+    renderSquares({ ...SQUARES_CONTEXT, squares: { lockAt: "2027-02-14T23:00:00.000Z" } });
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Super Bowl/ }));
+    await screen.findByText("Which moments pay a prize?");
+    expect(document.body.textContent).toMatch(/Set it up before the numbers are drawn, Sun, Feb 14, \d{1,2}:00 [AP]M\./);
+    cleanup();
+
+    renderSquares({ ...SQUARES_CONTEXT, scheduled: false, allowedCadences: [], squares: null });
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /Super Bowl/ }));
+    await screen.findByText(/prizes can only be set up before the numbers are drawn/);
+    expect(screen.queryByText("Schedule Live Trivia")).toBeNull();
+  });
+});

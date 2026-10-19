@@ -4,7 +4,7 @@ import { HightopLoader } from "@/components/ui/HightopLoader";
 import type { Loaded } from "@/components/owner/results/resultsApi";
 import { formatOccurrenceDate, playerCountLabel } from "@/lib/ownerHistoryDisplay";
 import { getResultsCompetition } from "@/lib/results/competitions";
-import { matchesPlayerSearch, rewardWinnersLine, scoreLabel } from "@/lib/results/resultsDisplay";
+import { matchesPlayerSearch, rewardTitleAt, rewardWinnersLine, scoreLabel } from "@/lib/results/resultsDisplay";
 import type { ResultsGameRow, ResultsGameScreen, ResultsRewardItem, ResultsStanding } from "@/lib/results/types";
 
 // One game's screen: its date and name, a "Find a player" box, the FULL standings (everyone who
@@ -122,7 +122,7 @@ export const GameStandingsScreen = ({
                   className="flex min-h-11 w-full items-center gap-3 rounded-[14px] border border-ht-hairline bg-ht-elevated/40 p-3 text-left transition active:translate-y-px"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-black text-ht-primary">🎁 {reward.name}</div>
+                    <div className="truncate font-black text-ht-primary">🎁 {rewardTitleAt(reward, screen.rewards)}</div>
                     <div className="mt-0.5 truncate text-footnote font-bold text-ht-emerald-300">{rewardWinnersLine(reward)}</div>
                   </div>
                   <Chevron />

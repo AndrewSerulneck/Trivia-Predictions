@@ -187,6 +187,22 @@ export const groupCountLabel = (group: Pick<GroupBase, "gameCount" | "rewardCoun
 };
 
 /** "1,240 pts": a score with the competition's unit. */
+/**
+ * A prize's title on a game: its name — or, when the same prize appears more than once among `items`
+ * (a prize paid at several moments of one game), its cycle label first so it stays visible on a phone:
+ * "Halftime · Super Bowl Squares Challenge". `compact` (a line on the game's own card, where the game is
+ * already the heading and the winner shares the line) drops the name: "Halftime". Generic: it never
+ * asks which competition it is.
+ */
+export const rewardTitleAt = (
+  reward: Pick<ResultsRewardItem, "rewardId" | "name" | "cycleLabel">,
+  items: ReadonlyArray<Pick<ResultsRewardItem, "rewardId">>,
+  options: { compact?: boolean } = {},
+): string => {
+  if (items.filter((item) => item.rewardId === reward.rewardId).length <= 1) return reward.name;
+  return options.compact ? reward.cycleLabel : `${reward.cycleLabel} · ${reward.name}`;
+};
+
 export const scoreLabel = (score: number, unit: string): string => `${score.toLocaleString("en-US")} ${unit}`.trim();
 
 /** "bobby_t", "Deleted player"; a place first for a places reward: "1st bobby_t". */

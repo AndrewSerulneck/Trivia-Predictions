@@ -7,7 +7,7 @@ import {
   gradeMoment,
   isSquaresRehearsalEnabled,
   isSquaresSettlementActive,
-  payUnpaidSquaresResults,
+  settleSquaresWinners,
   runSquaresTick,
   squaresSeason,
   type SquaresTickReport,
@@ -236,7 +236,7 @@ export async function runSquaresAdminAction(action: SquaresAdminAction, actor: s
         scores: { col: action.colScore, row: action.rowScore },
         reason: action.reason,
       });
-      await payUnpaidSquaresResults(event.id, report);
+      await settleSquaresWinners(event, report);
       return { ok: true, message: `Graded ${action.moment}.` };
     }
     case "void_moment": {
@@ -260,12 +260,15 @@ export async function runSquaresAdminAction(action: SquaresAdminAction, actor: s
       if (row?.void_outcome === "not_graded") return refuse(409, "That moment isn't graded.");
       if (row?.void_outcome !== "voided" && row?.void_outcome !== "voided_and_regraded") return refuse(500, `Void answered ${row?.void_outcome ?? "nothing"}.`);
       const report = { actions: [] as string[], errors: [] as string[] };
-      if (regrade) await payUnpaidSquaresResults(event.id, report);
+      // Always: a re-grade pays the corrected winner, and either way the voided winner's unused
+      // prize coupon is taken back now rather than on the next settlement run.
+      await settleSquaresWinners(event, report);
+      const withdrawn = report.actions.find((entry) => entry.startsWith("prizes_withdrawn_"))?.slice("prizes_withdrawn_".length) ?? "0";
       return {
         ok: true,
-        message: `Voided ${action.moment}: ${row.void_reversed ?? 0} paid credit(s) taken back, ${row.void_burned ?? 0} unpaid cancelled.${
+        message: `Voided ${action.moment}: ${row.void_reversed ?? 0} paid credit(s) taken back, ${row.void_burned ?? 0} unpaid cancelled, ${withdrawn} unused prize coupon(s) taken back.${
           regrade ? " Re-graded with your scores." : " It will re-grade from the feed."
-        }`,
+        }${report.errors.length > 0 ? ` Settlement reported: ${report.errors[0]}` : ""}`,
       };
     }
     case "archive": {

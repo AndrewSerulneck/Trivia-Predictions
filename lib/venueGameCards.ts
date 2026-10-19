@@ -21,6 +21,8 @@ export const SQUARES_GAME_NAME = "Super Bowl Squares";
 export const SQUARES_SHORT_NAME = "Squares";
 /** The two lines the Venue Home tile breaks the name into. */
 export const SQUARES_TITLE_LINES: [string, string] = ["Super Bowl", "Squares"];
+/** The event itself, inside a sentence: "…at halftime of the Super Bowl" (the Squares Prize copy). */
+export const SQUARES_EVENT_NAME = "Super Bowl";
 export const BRACKET_GAME_NAME = "March Madness";
 export const BRACKET_TITLE_LINES: [string, string] = ["March", "Madness"];
 /** The bracket card from Mar 1 until Selection Sunday (decision 12). */

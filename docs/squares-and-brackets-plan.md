@@ -1,9 +1,10 @@
 # Super Bowl Squares + March Madness Brackets — phased plan
 
-**Status (2026-10-19):** Phase 3 done and committed with Phases 0–2 up to `863a9b6` (Phase 3 itself is committed right
-after it); both migrations (`20261019045030`, `20261019051458`) are APPLIED to production; both flags off, nothing pushed
-or deployed. Latest handoff: `docs/squares-and-brackets-plan_PHASE_3_HANDOFF.md`. Phase 0's live NFL capture runs tonight
-(MNF, 8:15 PM ET) and Thu Oct 22; checking it against the quarter rule is still open. Next: Phase 4.
+**Status (2026-10-19):** Phase 4 done (Squares Prizes + Results), committed locally after `0565068`; its migration
+`20261019131139_squares_prizes.sql` is APPLIED to production (Andrew's OK), like Phases 1–2's. Flags off, nothing pushed
+or deployed. Latest handoff: `docs/squares-and-brackets-plan_PHASE_4_HANDOFF.md`. Phase 0's live NFL capture runs
+tonight (MNF, 8:15 PM ET) and Thu Oct 22; checking it against the quarter rule is still open. Next: Phase 5 (Squares
+TV view).
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -375,3 +376,25 @@ Full detail: `docs/squares-and-brackets-plan_PHASE_3_HANDOFF.md`.
 - Squares are colour-only `role="gridcell"` divs (NOT buttons: the phone button rules would swell them); a tap opens
   `SquaresCellSheet` (Claim / Release, owner name). Measured: 27.5 px cells at 350 px, 21.4 px at 289 px.
 - App-bar label is `SQUARES_SHORT_NAME` ("Squares") — the full name truncated beside the points pill.
+
+## 12. Phase 4 as built (2026-10-19) — read before Phases 5–6, 9
+
+Full detail: `docs/squares-and-brackets-plan_PHASE_4_HANDOFF.md`.
+- Migration `20261019131139_squares_prizes.sql` (PGlite-proven, applied 2026-10-19): `'squares'` in `challenge_campaigns_game_types_valid`;
+  `challenge_campaigns.squares_moments text[]` (checked by `squares_moments_valid`); `squares_results.prize_checked_at`
+  and `prize_withdrawn_at` + partial indexes; RPC `squares_withdraw_prize_coupons`. No new table, no users FK.
+- Prize definition `squares_challenge` (`lib/rewardDefinitions.ts`, description `calendar: "super_bowl_squares"`). Pure
+  rules in `lib/squaresPrizes.ts`. Offered in the wizard while the flag is on and until Feb 15 (Eastern); the server
+  also refuses once the numbers are drawn (`resolveRewardCreationContext`, 409). Partner picks the moments (nothing
+  pre-selected); no points target, no minimum players (the Players step never shows). One-off, `winner_quota` = moments,
+  `end_date` = Feb 15.
+- Each moment is its own prize cycle: `squaresPrizeCycleStart` = kickoff minute + moment (1–4) in seconds + grade_no in
+  ms; quota 1 via `award_cycle_winner`. Awarded by `awardSquaresPrizes` (`lib/squaresPrizeAwards.ts`), called through
+  `settleSquaresWinners` after points are paid (settlement and admin grade/void). A prize counts only if active, at that
+  venue, covering that moment, created before the lock, and not closed before kickoff. **A void + re-grade pays the
+  corrected winner and takes back the old coupon if it is unused** (Andrew, 2026-10-19): `withdrawVoidedSquaresPrizes`
+  → RPC `squares_withdraw_prize_coupons` (a redeemed coupon is kept), with a notice to that guest.
+- Results: `squares` registered (`hasBreakdown: false`), adapter `lib/results/adapters/squares.ts` (inert with the flag
+  off), placement rule (prize → the Squares game card, labelled with the moment; a prize repeated on one game shows its
+  moment, `rewardTitleAt`).
+
