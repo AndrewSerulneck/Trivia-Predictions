@@ -197,6 +197,11 @@ describe("planRankedRewardBackfill", () => {
     await expect(planNow()).rejects.toThrow(/No active, unresolved weekly places reward/);
   });
 
+  it("refuses another game's ranked_places reward (plan 6.1)", async () => {
+    store.campaigns = [campaign({ rewardDefinitionId: "nfl_pickem_challenge" })];
+    await expect(planNow()).rejects.toThrow(/No active, unresolved weekly places reward/);
+  });
+
   it("refuses a reward the resolver couldn't sweep either", async () => {
     store.campaigns = [campaign({ venueIds: ["venue-1", "venue-2"] })];
     await expect(planNow()).rejects.toThrow(/one venue/);

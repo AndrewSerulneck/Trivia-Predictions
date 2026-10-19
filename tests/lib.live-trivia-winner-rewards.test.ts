@@ -238,6 +238,36 @@ describe("resolveGameWinnerRewards", () => {
     expect(awardCycleWinner).not.toHaveBeenCalled();
   });
 
+  // docs/squares-and-brackets-plan.md §13 F1 / 6.1: a Squares prize and the NFL "most picks"
+  // prize are game_winner with null slots too; a trivia game with 3+ players must not win them.
+  it("pays only the Live Trivia prize when a Squares and an NFL prize share the venue", async () => {
+    store.campaigns = [
+      makeCampaign({ id: "camp-squares", rewardDefinitionId: "squares_challenge", minPlayers: 3 }),
+      makeCampaign({
+        id: "camp-nfl",
+        rewardDefinitionId: "nfl_pickem_challenge",
+        recurringType: "weekly",
+        minPlayers: 3,
+      }),
+      makeCampaign({ id: "camp-trivia", minPlayers: 3 }),
+    ];
+
+    const report = await resolveGameWinnerRewards(NOW);
+
+    expect(report.campaignsExamined).toBe(1);
+    expect(report.resolutions.map((resolution) => resolution.campaignId)).toEqual(["camp-trivia"]);
+    expect(store.ledger.map((row) => row.challengeId)).toEqual(["camp-trivia"]);
+    expect(awardCycleWinner.mock.calls.every((call) => call[0].campaign.id === "camp-trivia")).toBe(true);
+    expect(store.deactivated).toEqual(["camp-trivia"]);
+  });
+
+  it("never pays a game_winner prize with no definition id", async () => {
+    store.campaigns = [makeCampaign({ rewardDefinitionId: null })];
+    const report = await resolveGameWinnerRewards(NOW);
+    expect(report.campaignsExamined).toBe(0);
+    expect(awardCycleWinner).not.toHaveBeenCalled();
+  });
+
   it("ignores rewards belonging to a different venue", async () => {
     store.campaigns = [makeCampaign({ venueIds: ["venue-999"] })];
     const report = await resolveGameWinnerRewards(NOW);

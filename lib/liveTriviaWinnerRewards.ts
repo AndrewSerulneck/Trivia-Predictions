@@ -30,6 +30,11 @@ import "server-only";
 // it. A null selection means "every game", so every reward created before the
 // picker existed sweeps exactly as it always did.
 //
+// OWNERSHIP: only Live Trivia Challenge prizes (isLiveTriviaGameWinnerCampaign).
+// A Super Bowl Squares prize and the NFL "most picks" prize are game_winner too,
+// with null slots (= "every game"); without the definition check the first trivia
+// game at their venue would win them (docs/squares-and-brackets-plan.md §13 F1).
+//
 // TIE CAP: "widen the quota to the tie count" is unbounded on its own — an easy
 // game where a dozen players answer everything correctly would mint a dozen real
 // gift cards from a reward the partner configured as one prize. The tie count is
@@ -64,6 +69,7 @@ import {
   occurrenceMatchesSlots,
   weekdayForOccurrenceDate,
 } from "@/lib/rewardGameSlots";
+import { LIVE_TRIVIA_REWARD_DEFINITION_ID } from "@/lib/rewardDefinitions";
 import type { ChallengeCampaign } from "@/types";
 
 /**
@@ -108,6 +114,22 @@ export type ResolveGameWinnerRewardsReport = {
   belowMinimum: GameWinnerBelowMinimum[];
   errors: Array<{ scope: string; message: string }>;
 };
+
+/**
+ * A Live Trivia "winner of the game" prize — the only kind this sweep pays. The mirror of
+ * isNFLWeekWinnerCampaign (lib/nflPickEmWinnerRewards.ts): another game's game_winner prize
+ * (Squares, NFL most picks) is never this sweep's, and neither is one with no definition id.
+ * `venueIds` must be non-empty (see campaignCoversVenue).
+ */
+export function isLiveTriviaGameWinnerCampaign(campaign: ChallengeCampaign): boolean {
+  return (
+    campaign.isActive &&
+    !campaign.winnerUserId &&
+    campaign.winCondition === "game_winner" &&
+    campaign.rewardDefinitionId === LIVE_TRIVIA_REWARD_DEFINITION_ID &&
+    campaign.venueIds.length > 0
+  );
+}
 
 /** Does this campaign apply to the given venue? Mirrors campaignMatchesVenue's intent. */
 function campaignCoversVenue(campaign: ChallengeCampaign, venueId: string): boolean {
@@ -210,7 +232,7 @@ export async function resolveGameWinnerRewards(
   const gameWinnerCampaignById = new Map<string, ChallengeCampaign>();
   for (const campaigns of campaignsByVenue) {
     for (const campaign of campaigns) {
-      if (campaign.isActive && campaign.winCondition === "game_winner") {
+      if (isLiveTriviaGameWinnerCampaign(campaign)) {
         gameWinnerCampaignById.set(campaign.id, campaign);
       }
     }

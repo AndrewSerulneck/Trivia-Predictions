@@ -102,6 +102,7 @@ const prize = (overrides: Partial<ChallengeCampaign> = {}): Row =>
     id: "prize-v1",
     createdAt: "2027-02-01T12:00:00Z",
     venueIds: ["v1"],
+    rewardDefinitionId: "squares_challenge",
     squaresMoments: ["q1", "final"],
     recurringType: "none",
     scheduleType: "single_day",
@@ -180,6 +181,13 @@ describe("awardSquaresPrizes", () => {
     await run();
     expect(engine.awards).toEqual([]);
     expect(db.results.map((row) => row.prize_checked_at)).toEqual([NOW.toISOString(), NOW.toISOString(), null]);
+  });
+
+  it("never pays another game's prize, even if the read returned one (plan 6.1)", async () => {
+    engine.prizes = [prize({ id: "prize-trivia", rewardDefinitionId: "live_trivia_challenge" }), prize()];
+    db.results.push(result({ moment: "q1" }));
+    await run();
+    expect(engine.awards.map((award) => award.campaignId)).toEqual(["prize-v1"]);
   });
 
   it("pays every covering prize at the venue, and one player may win several moments", async () => {

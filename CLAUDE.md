@@ -1080,8 +1080,9 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   `lib/squaresTvRead.ts` (flag + Eastern-date gate = zero I/O otherwise; one board read per venue per 15 s cached) →
   `lib/squaresTv.ts` (`buildSquaresTvPayload`: shows only once drawn, a claim exists, and until kickoff + 7 h; no user ids)
   → `components/venue-screen/SquaresTvScreen.tsx`. Poll 15 s; the route CDN-caches this mode like idle.
-- **Phase 6 review (2026-10-19): fixes are planned, not yet built — sub-phases 6.1–6.9, findings in plan §13.**
-  Before turning the flag on, 6.1–6.4 must be done. 6.1 is LIVE today: the Live Trivia winner sweep pays any active
-  `game_winner` prize (Squares, and the NFL "most picks" prize at Pacific Street) — every prize sweep must filter on
-  its own `rewardDefinitionId`. Never turn `NEXT_PUBLIC_SQUARES_ENABLED` on in Production before 6.9 (rehearsals run
+- **Phase 6 review (2026-10-19): fixes are sub-phases 6.1–6.9, findings in plan §13.** Before turning the flag on,
+  6.1–6.4 must be done. **6.1 built 2026-10-19 (committed, deploy pending):** every prize sweep pays only its own
+  `rewardDefinitionId` (`isLiveTriviaGameWinnerCampaign`, `isLiveTriviaRankedCampaign`, `isNFLWeekWinnerCampaign`, the
+  Squares check); a new file that calls `awardCycleWinner`/`awardRankedCyclePlaces` fails
+  `tests/prize-sweep-ownership-contract.test.ts` until it does too. Never turn `NEXT_PUBLIC_SQUARES_ENABLED` on in Production before 6.9 (rehearsals run
   on a Preview).

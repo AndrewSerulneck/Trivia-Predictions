@@ -25,6 +25,13 @@ import { SQUARES_EVENT_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge" | typeof SQUARES_PRIZE_DEFINITION_ID;
 
 /**
+ * The Live Trivia Challenge's definition id. Its two sweeps (game winner, weekly places) pay ONLY
+ * prizes with this id: a Squares or NFL prize is also `game_winner`, and must never go to a trivia
+ * winner (docs/squares-and-brackets-plan.md §13 F1; tests/prize-sweep-ownership-contract.test.ts).
+ */
+export const LIVE_TRIVIA_REWARD_DEFINITION_ID = "live_trivia_challenge" satisfies RewardDefinitionId;
+
+/**
  * Guest-facing description templates, composed at READ time by describeReward /
  * describeRewardWin (lib/rewardDescription.ts) — see
  * docs/reward-descriptions-plan.md §3 for the approved copy. `calendar` picks the
@@ -150,7 +157,7 @@ export type RewardDefinition = {
 
 export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
   {
-    id: "live_trivia_challenge",
+    id: LIVE_TRIVIA_REWARD_DEFINITION_ID,
     name: "Live Trivia Challenge",
     gameName: "Live Trivia",
     gameType: "live-trivia",

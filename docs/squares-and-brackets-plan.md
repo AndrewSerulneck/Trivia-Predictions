@@ -1,10 +1,11 @@
 # Super Bowl Squares + March Madness Brackets — phased plan
 
 **Status (2026-10-19):** Phase 6's review step done (code review of Phases 0–5, findings checked, device
-checklist written); the fixes, rehearsal and launch are sub-phases **6.1–6.9** (§4 Phase 6). Phases 1–5 are committed
-locally (Phase 5 = `01b87ad`); their migrations are APPLIED to production; flags off; nothing pushed or deployed.
-Latest handoff: `docs/squares-and-brackets-plan_PHASE_6_HANDOFF.md`. **Next: 6.1, urgently** — it fixes a live
-problem with the NFL Pick 'Em prize at Pacific Street (§13 F1).
+checklist written); the fixes, rehearsal and launch are sub-phases **6.1–6.9** (§4 Phase 6). **6.1 is built and
+committed locally** (each prize sweep pays only its own kind of prize); it fixes a live problem with the NFL Pick 'Em
+prize at Pacific Street (§13 F1) **once Andrew pushes and deploys**. Phases 1–5 + the Phase 6 docs (`0af6f13`) are
+committed locally; their migrations are APPLIED to production; flags off; nothing pushed or deployed.
+Latest handoff: `docs/squares-and-brackets-plan_PHASE_6.1_HANDOFF.md`. **Next: 6.2.**
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -49,7 +50,7 @@ Dates confirmed in Phase 0 (NCAA.com 2027 schedules, Super Bowl LXI = Feb 14, 20
 bracket feeds (the paid "GOAT" tier, $39.99/mo per sport) and NFL quarter-by-quarter scores. Each bracket feed is one
 request. Running costs are estimated in §6.
 
-**Needs you:** soon, a push + deploy of fix 6.1 (it protects the NFL Pick 'Em prize at Pacific Street from going to a
+**Needs you:** now, a push + deploy of fix 6.1 (built 2026-10-19) (it protects the NFL Pick 'Em prize at Pacific Street from going to a
 trivia winner). Later: one `supabase db push` (6.2), the rehearsal phone pass (6.8), and the launch (6.9). Your §7
 answers are recorded in §1 (items 9–15).
 
@@ -274,6 +275,11 @@ migration); then 6.5–6.9.
 - **Ship it alone:** no migration. Commit, then ask Andrew to push and deploy before the next Pacific Street trivia
   night with 3+ players (weekly Friday game; next is **Fri Oct 23**). Afterwards check that the NFL prize's
   `challenge_cycle_winners` stays empty across a trivia night.
+- **Built 2026-10-19 (committed locally, not deployed):** `isLiveTriviaGameWinnerCampaign` +
+  `LIVE_TRIVIA_REWARD_DEFINITION_ID` (`lib/rewardDefinitions.ts`); the weekly-places sweep and its backfill got the
+  same check (`isLiveTriviaRankedCampaign`); Squares got an in-memory check beside its filtered read; NFL was already
+  guarded. The points-target path stays routed by game type (legacy points targets have no definition). Contract test
+  `tests/prize-sweep-ownership-contract.test.ts`. Detail: `docs/squares-and-brackets-plan_PHASE_6.1_HANDOFF.md`.
 
 #### 6.2 — Squares event lifecycle: rehearsal events, archive, late voids (Opus 5.5 · high)
 - **Problems (§13 F3, F4, F5):** a rehearsal on any regular-season game pays real partner Squares prizes (and the

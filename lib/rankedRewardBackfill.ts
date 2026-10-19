@@ -27,6 +27,7 @@ import {
 import { loadLiveTriviaSchedulesForVenues } from "@/lib/liveShowdownEngine";
 import {
   isWeekSettled,
+  isLiveTriviaRankedCampaign,
   planBackfillRankedWeeks,
   rankedRewardConfigError,
   SETTLED_WEEK_MATCH_TOLERANCE_MS,
@@ -108,7 +109,9 @@ export async function planRankedRewardBackfill(params: {
   nowMs?: number;
 }): Promise<RankedRewardBackfillPlan> {
   const nowMs = params.nowMs ?? Date.now();
-  const campaign = (await listActiveRankedPlaceCampaigns()).find((row) => row.id === params.campaignId);
+  const campaign = (await listActiveRankedPlaceCampaigns()).find(
+    (row) => row.id === params.campaignId && isLiveTriviaRankedCampaign(row),
+  );
   if (!campaign) {
     throw new Error(`No active, unresolved weekly places reward with id ${params.campaignId}.`);
   }

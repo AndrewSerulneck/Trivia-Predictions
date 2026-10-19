@@ -402,6 +402,20 @@ describe("resolveRankedPlaceRewards", () => {
     expect(report.errors).toEqual([]);
   });
 
+  // docs/squares-and-brackets-plan.md §13 F1 / 6.1: this sweep pays only Live Trivia's own prizes.
+  it("never settles a ranked_places prize of another game, or one with no definition id", async () => {
+    store.campaigns = [
+      makeCampaign({ id: "camp-nfl", rewardDefinitionId: "nfl_pickem_challenge" }),
+      makeCampaign({ id: "camp-none", rewardDefinitionId: null }),
+    ];
+
+    const report = await resolveRankedPlaceRewards(AFTER_FRIDAY);
+
+    expect(report.campaignsExamined).toBe(0);
+    expect(report.settlements).toEqual([]);
+    expect(awardRankedCyclePlaces).not.toHaveBeenCalled();
+  });
+
   it("is idempotent: a re-sweep reads settlements, never scores, and pays nobody again", async () => {
     const first = await resolveRankedPlaceRewards(AFTER_FRIDAY);
     expect(first.weeksSettled).toBe(2); // Sep 30 (same fixture totals) and Oct 7

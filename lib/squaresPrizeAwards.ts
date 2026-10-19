@@ -3,7 +3,7 @@ import "server-only";
 import { awardCycleWinner, getCampaignCloseTimestampMs, listActiveSquaresPrizeCampaigns } from "@/lib/challengeCampaigns";
 import { createNotification } from "@/lib/notifications";
 import { isSquaresMoment } from "@/lib/squares";
-import { SQUARES_PRIZE_MOMENT_PHRASES, squaresPrizeCycleStart } from "@/lib/squaresPrizes";
+import { SQUARES_PRIZE_DEFINITION_ID, SQUARES_PRIZE_MOMENT_PHRASES, squaresPrizeCycleStart } from "@/lib/squaresPrizes";
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 import type { SquaresEventRecord } from "@/lib/squaresStore";
@@ -97,7 +97,11 @@ export async function awardSquaresPrizes(
   const venueIds = [...new Set(rows.flatMap((row) => (row.board?.venue_id ? [row.board.venue_id] : [])))];
   let prizes: ChallengeCampaign[];
   try {
-    prizes = (await listActiveSquaresPrizeCampaigns(venueIds)).filter((campaign) => squaresPrizeCoversEvent(campaign, event));
+    // The read already filters on the definition; checked again here so this sweep pays only its
+    // own prizes even if that read changes (tests/prize-sweep-ownership-contract.test.ts).
+    prizes = (await listActiveSquaresPrizeCampaigns(venueIds)).filter(
+      (campaign) => campaign.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID && squaresPrizeCoversEvent(campaign, event),
+    );
   } catch (readError) {
     report.errors.push(`prize campaigns read: ${readError instanceof Error ? readError.message : "failed"}`);
     return;
