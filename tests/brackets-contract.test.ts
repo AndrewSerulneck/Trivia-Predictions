@@ -116,6 +116,19 @@ describe("one home for shared rules (plan 10.4, §17 B9)", () => {
     expect(filesContaining(/\b(picksOf|seatList)\s*=/)).toEqual([]);
   });
 
+  it("the recorded championship total: recordedChampionshipTotal, asked by both writers (plan 10.5.2, §22 R2)", () => {
+    expect(filesContaining(/export const recordedChampionshipTotal\b/)).toEqual(["lib/bracketsStore.ts"]);
+    expect(filesContaining(/recordedChampionshipTotal\(/)).toEqual(["lib/bracketsAdmin.ts", "lib/bracketsSync.ts"]);
+    // Nobody records the games' own total without the stored fallback.
+    expect(filesContaining(/championshipTotal:\s*championshipTotal\(/)).toEqual([]);
+  });
+
+  it("the panel won't send a half-entered final score (plan 10.5.2, §22 R7)", () => {
+    const panel = readFileSync(path.join(ROOT, "components/admin/sections/BracketsSection.tsx"), "utf8");
+    expect(panel).toContain("Enter both scores, or neither.");
+    expect(panel).toMatch(/disabled=\{[^}]*\|\| scoresHalf\}/);
+  });
+
   it("a rehearsal shows only at hidden venues: one rule for the bracket screen and the TV", () => {
     expect(filesContaining(/export async function bracketTournamentsShownAt\b/)).toEqual(["lib/bracketsEntries.ts"]);
     expect(filesContaining(/bracketTournamentsShownAt\(/)).toEqual(["lib/bracketsEntries.ts", "lib/bracketsTvRead.ts"]);

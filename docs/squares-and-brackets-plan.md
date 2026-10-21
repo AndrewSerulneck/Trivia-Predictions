@@ -8,7 +8,7 @@ committed locally; their migrations are APPLIED to production; flags off; nothin
 **6.2 is built and committed locally** (Squares event lifecycle); its migration `20261019142642` is APPLIED (seen in
 `supabase migration list` on 2026-10-19). **6.3 is built and committed locally** (paying winners; no migration).
 **6.4 is built and committed locally** (player screen keeps up with a void; no migration).
-Andrew: push + deploy (6.1–6.4 ride together).
+6.1–6.4 were pushed and deployed to Production on 2026-10-21 (with the `a9488db` push), so the §13 F1 fix is live.
 **6.5 in progress, parked** (live-game recorders restarted 2026-10-19; WSH @ SF Oct 19, NE @ CHI Oct 22) — finish it
 after those games: `docs/squares-and-brackets-plan_PHASE_6.5_HANDOFF.md` (interim).
 **Phases 7 + 8 (bracket engine + player screens) committed `baeb6e4`**; migration `20261019203858` APPLIED. Flag off.
@@ -23,24 +23,31 @@ rehearsal, Andrew's phone pass, launch by Mar 8, 2027 and the live watch (10.5�
 **10.1 built and committed 2026-10-21 (`9f9de25`; migration `20261021035254` APPLIED — in `supabase migration
 list` and the RPC answers, checked 2026-10-21)**: admin corrections are paid again at the next cron minute (also after the final), "No result"
 holds a game, the sync never overwrites an admin's game columns, the TV refreshes on a flipped winner. §18 below.
-**10.2 built 2026-10-21 (not committed; no migration)**: a lock can't be moved past its first tip; the championship
+**10.2 built 2026-10-21 (no migration)**: a lock can't be moved past its first tip; the championship
 override takes the final score, and a final decided without one is read hourly with "Enter the final score". §19
 below. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.2_HANDOFF.md`.
-**10.3 built 2026-10-21 (not committed; no migration)**: a bracket draft is never dropped — Back, Next, Save and the
+**10.3 built 2026-10-21 (no migration)**: a bracket draft is never dropped — Back, Next, Save and the
 tab going to the background all wait for a save already in flight, then send anything newer. §20 below. Latest handoff:
 `docs/squares-and-brackets-plan_PHASE_10.3_HANDOFF.md`.
-**10.4 built 2026-10-21 (not committed; no migration)**: the TV lists only the shown bracket's tournament's games (a
+**10.4 built 2026-10-21 (no migration)**: the TV lists only the shown bracket's tournament's games (a
 rehearsal only at a hidden venue); one home each for the real-time lock and the 63-seat normalizer; due rounds are paid
 in one pass over the entries. §21 below. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.4_HANDOFF.md`.
-**10.5 re-review done 2026-10-21 (docs only, nothing committed)**: `/code-review high` over 10.1–10.4; 9 findings
+**10.5 re-review done 2026-10-21 (docs only)**: `/code-review high` over 10.1–10.4; 9 findings
 confirmed, 1 rejected. Fixes are sub-phases **10.5.1–10.5.4** (one needs `supabase db push`). §22 below. Latest
 handoff: `docs/squares-and-brackets-plan_PHASE_10.5_HANDOFF.md`.
-**10.5.1 built 2026-10-21 (not committed; no migration)**: after the first tip an admin lock can still be pulled
+**10.5.1 built 2026-10-21 (no migration)**: after the first tip an admin lock can still be pulled
 EARLIER (never later); Follow feed writes the feed's lock at once; the late-lock warning is logged once. §23 below.
 Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.1_HANDOFF.md`.
-**Next:** 10.5.2 (the championship score stays put and agrees with the winner). 10.5.2–10.5.4 must be done before
-the 10.6 rehearsal. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews 6.1–6.5 only (Phases 7–9 were reviewed
-here).
+**10.2–10.5.1 committed `a9488db`, pushed and deployed to Production 2026-10-21** (Vercel `hightop-challenge-bgmf8863g`,
+Ready; this push also shipped the earlier local commits 6.1–6.4, 7–9 and 10.1). Flags still off.
+**10.5.2 built 2026-10-21 (not committed; migration `20261021134157_bracket_feed_scores_keep.sql` NOT applied — Andrew:
+`supabase db push`)**: a stale sync never clears an entered final score; the sync and the admin override record the same
+total; a championship winner the stored score contradicts needs the corrected score; the panel says "Enter both scores,
+or neither". §24 below. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.2_HANDOFF.md`.
+**Next:** 10.5.3 (the TV follows a rehearsal clock change) and 10.5.4 (a refused draft isn't sent twice), in any
+order; both must be done before the 10.6 rehearsal. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews 6.1–6.5
+only (Phases 7–9 were reviewed here).
+
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -490,7 +497,7 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
 | 10.4 | TV shows only this venue's games; one home for shared helpers; pay due rounds in one pass (§17 B7, B9, B10) | Opus 5.5 | medium | — |
 | 10.5 | Re-review of 10.1–10.4 (`/code-review high`) — **done 2026-10-21** (§22) | Opus 5.5 | high | — |
 | 10.5.1 | A late admin lock can still be pulled earlier after the first tip; warn once (§22 R1, R9, R10) — **built 2026-10-21** (§23) | Opus 5.5 | medium | — |
-| 10.5.2 | The championship score stays put and agrees with the winner (§22 R2, R4, R5, R7) | Opus 5.5 | medium | `supabase db push` (one small migration) |
+| 10.5.2 | The championship score stays put and agrees with the winner (§22 R2, R4, R5, R7) — **built 2026-10-21** (§24) | Opus 5.5 | medium | `supabase db push` (one small migration) |
 | 10.5.3 | The TV follows a rehearsal clock change at once (§22 R3) | Sonnet 5.5 | low | — |
 | 10.5.4 | A refused draft isn't sent twice (§22 R8) | Sonnet 5.5 | low | — |
 | 10.6 | Replay rehearsal of the March 2026 tournaments on `venue-hightop-test` | Opus 5.5 | high | Preview env vars, phone pass |
@@ -613,7 +620,7 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
   with auto ≤ current → allowed, auto > current → refused; passed lock never moves later (real and rehearsal clocks).
   Sync: two runs with the same tips warn once.
 
-#### 10.5.2 — The championship score stays put and agrees with the winner (Opus 5.5 · medium)
+#### 10.5.2 — The championship score stays put and agrees with the winner (Opus 5.5 · medium) — **built 2026-10-21** (§24)
 - **Problems (§22 R2, R4, R5, R7):**
   - `bracket_save_feed_games` writes `home_score`/`away_score` from the run's merged rows unconditionally. A sync that
     read the final before an admin entered its score writes the scores back to null (10.2 noted this as cosmetic). It
@@ -1072,3 +1079,28 @@ Handoff: `docs/squares-and-brackets-plan_PHASE_10.5.1_HANDOFF.md`. No migration.
   ("a late admin lock found after the first tip can be pulled in, and is logged once"; the 10.2 test's last step now
   expects an earlier move allowed and a later one refused). Full suite 5,218 passed / 13 skipped; replay unchanged
   (6,411 feed requests).
+
+## 24. 10.5.2 as built (2026-10-21) — read before 10.5.3–10.6
+
+Handoff: `docs/squares-and-brackets-plan_PHASE_10.5.2_HANDOFF.md`. Migration
+`20261021134157_bracket_feed_scores_keep.sql` (NOT applied yet — `supabase db push`). Not committed.
+- **Scores stay put (R4):** the migration re-creates `bracket_save_feed_games` with ONE change,
+  `home_score = coalesce(v_g.home_score, g.home_score)` (same for away). A feed score still overwrites; a stale run's
+  null no longer clears an admin's score. Revoke/grant lines unchanged. `20261021035254` not edited.
+- **One total rule (R2):** `recordedChampionshipTotal(games, tournament)` in `lib/bracketsStore.ts` = the games' own
+  total, else (final decided) the stored `championship_total`. The sync and the admin override both record it; the
+  override's "Prizes need the final score" hint now reads the same value. Contract test: defined only in the store,
+  called only by `lib/bracketsAdmin.ts` and `lib/bracketsSync.ts`, and no `championshipTotal: championshipTotal(`.
+- **Winner agrees with the score (R5):** `override_result` on the championship with a winner and no new scores answers
+  409 "The stored score says the other team won: enter the corrected score too." when both stored scores are known and
+  the chosen side's isn't strictly higher. With new scores the parser's check applies (10.2). "No result" stays allowed.
+- **Panel (R7):** one score field filled → "Enter both scores, or neither." under the fields and Override stays off
+  (`scoresHalf` in `GameRow`, `components/admin/sections/BracketsSection.tsx`). No "clear the score" control.
+- **Order doesn't matter:** the app code works with or without the migration (the TS fallback keeps the total either
+  way); the migration only stops the stored game scores being blanked.
+- Tests: `npm run test:brackets-sql` (null feed score keeps the stored one; a feed score overwrites — fails without the
+  migration); `tests/brackets-sync.test.ts` "the championship score stays put…" (stale run mid-write keeps the score;
+  a round-5 override with the final's scores gone keeps total 134; contradicting winner refused, confirming accepted,
+  corrected score accepted, No result clears); the 10.1 B1 test now flips the champion with the swapped score. Full
+  suite 5,223 passed / 13 skipped; replay unchanged (6,411 feed requests).
+

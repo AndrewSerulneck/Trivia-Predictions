@@ -1148,6 +1148,10 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   the current lock (10.5.1), never reopened. The championship `override_result`
   takes `homeScore`/`awayScore` (both, winner higher); prizes never settle without the total, a decided final with
   none is read hourly with needsAdmin, and the sync never clears a known total. Plan §19.
+- **Championship total (10.5.2, 2026-10-21, migration `20261021134157`, NOT applied).** Both writers of
+  `championship_total` (sync + admin override) record ONLY `recordedChampionshipTotal` (`lib/bracketsStore.ts`); the
+  feed writer keeps a stored score when the feed has none. A championship winner the stored score contradicts needs the
+  corrected score (409). Plan §24.
 - **Bracket shared helpers (10.4, 2026-10-21, no migration).** Stored 63-seat arrays are read ONLY through
   `bracketSeatList` (`lib/brackets/tree.ts`); a lock in real time ONLY through `bracketRealLockMs`
   (`lib/bracketsStore.ts`); "rehearsals only at hidden venues" ONLY through `bracketTournamentsShownAt`

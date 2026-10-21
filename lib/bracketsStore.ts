@@ -2,8 +2,8 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
-import type { BracketGameState, BracketTeam } from "@/lib/brackets/games";
-import { bracketSeatList, type BracketGender, type BracketKind, type BracketRound } from "@/lib/brackets/tree";
+import { bracketWinnerSeats, championshipTotal, type BracketGameState, type BracketTeam } from "@/lib/brackets/games";
+import { BRACKET_SLOT_COUNT, bracketSeatList, type BracketGender, type BracketKind, type BracketRound } from "@/lib/brackets/tree";
 
 // March Madness brackets: shared reads/writes of the bracket_* tables (migration 20261019203858)
 // for the sync, the player API and the admin panel. Entries are written only by the
@@ -180,6 +180,20 @@ export const bracketRealLockMs = (
 ): number | null => {
   const lockMs = Date.parse(String((kind === "main" ? tournament.mainLockAt : tournament.secondLockAt) ?? ""));
   return Number.isFinite(lockMs) ? lockMs + tournament.clockOffsetSeconds * 1000 : null;
+};
+
+/**
+ * The championship total to record with a set of results: the games' own total, else (once the final
+ * is decided) the total already stored — an admin's entered score stays when a stale run cleared the
+ * game's scores. The ONE home of this rule: both writers of `championship_total`, the sync and the
+ * admin override, ask it (plan 10.5.2, §22 R2). A final with no result has no total.
+ */
+export const recordedChampionshipTotal = (
+  games: readonly BracketGameState[],
+  tournament: Pick<BracketTournamentRecord, "championshipTotal">,
+): number | null => {
+  const finalDecided = bracketWinnerSeats(games)[BRACKET_SLOT_COUNT - 1] !== null;
+  return championshipTotal(games) ?? (finalDecided ? tournament.championshipTotal : null);
 };
 
 /** Every tournament that is not archived (at most a handful). */

@@ -57,6 +57,8 @@ function GameRow({ tournamentId, game, post, busy }: { tournamentId: string; gam
   const [awayScore, setAwayScore] = useState(game.awayScore === null ? "" : String(game.awayScore));
   // Scores go with the override only when both are filled and differ from what is stored.
   const scoresGiven = isFinal && homeScore !== "" && awayScore !== "";
+  // One field filled would silently send no scores (plan 10.5.2, §22 R7).
+  const scoresHalf = isFinal && (homeScore === "") !== (awayScore === "");
   const scoresChanged = scoresGiven && (Number(homeScore) !== game.homeScore || Number(awayScore) !== game.awayScore);
   const status = game.winnerSide
     ? `${game.winnerSide === "home" ? teamLabel(game.homeTeam) : teamLabel(game.awayTeam)} won${game.resultSource === "admin" ? " (admin)" : ""}`
@@ -107,13 +109,14 @@ function GameRow({ tournamentId, game, post, busy }: { tournamentId: string; gam
             value={awayScore}
             onChange={(e) => setAwayScore(e.target.value)}
           />
+          {scoresHalf && <p className="w-full text-caption font-semibold text-amber-700">Enter both scores, or neither.</p>}
         </>
       )}
       <input className={adminField} placeholder="Reason (logged)" value={reason} onChange={(e) => setReason(e.target.value)} />
       <button
         type="button"
         className={buttonClass}
-        disabled={busy || reason.trim().length < 3 || unchanged}
+        disabled={busy || reason.trim().length < 3 || unchanged || scoresHalf}
         onClick={() =>
           void post(
             {

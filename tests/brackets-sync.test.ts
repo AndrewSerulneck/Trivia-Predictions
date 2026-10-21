@@ -94,8 +94,8 @@ class FakeQuery {
 
 const rpc = async (name: string, args: Row) => {
   if (name === "bracket_save_feed_games") {
-    // Mirrors 20261021035254 (proven on PGlite): feed columns always; what an admin took over in
-    // the CURRENT row is kept.
+    // Mirrors 20261021035254 + 20261021134157 (proven on PGlite): feed columns always (a null score
+    // keeps the stored one); what an admin took over in the CURRENT row is kept.
     if (hooks.beforeFeedWrite) {
       const hook = hooks.beforeFeedWrite;
       hooks.beforeFeedWrite = null;
@@ -108,7 +108,7 @@ const rpc = async (name: string, args: Row) => {
       const autoLink = g.feeds_seat_set_by === "auto" && g.feeds_seat !== null;
       const feedCols = {
         feed_game_id: g.feed_game_id, tip_at: g.tip_at, status_state: g.status_state, status_detail: g.status_detail,
-        home_score: g.home_score, away_score: g.away_score,
+        home_score: g.home_score ?? current?.home_score ?? null, away_score: g.away_score ?? current?.away_score ?? null,
       };
       if (!current) {
         rows.push({
@@ -427,8 +427,11 @@ describe("admin corrections reach players and stick (plan 10.1)", () => {
     await finish();
     const champion = game(6, 1).winner_side;
     const other = champion === "home" ? "away" : "home";
+    // The other champion needs the corrected score too (plan 10.5.2): the feed's, swapped.
+    const feedScores = { home: Number(game(6, 1).home_score), away: Number(game(6, 1).away_score) };
+    const swapped = { home: feedScores.away, away: feedScores.home };
     const at = AFTER_FINALS + 60 * MINUTE;
-    const result = await admin({ action: "override_result", round: 6, location: 1, winner: other, reason: "Feed had the wrong champion" }, at);
+    const result = await admin({ action: "override_result", round: 6, location: 1, winner: other, scores: swapped, reason: "Feed had the wrong champion" }, at);
     expect(result).toMatchObject({ ok: true });
     expect(result.ok && result.message).toMatch(/paid again at the next sync.*within a minute/);
     expect(men().next_sync_at).toBe(new Date(at).toISOString());
@@ -448,7 +451,7 @@ describe("admin corrections reach players and stick (plan 10.1)", () => {
 
     // After the window the cron no longer drives it: the message says so, and Sync now pays.
     const late = Date.parse("2027-04-08T15:00:00Z");
-    const back = await admin({ action: "override_result", round: 6, location: 1, winner: champion, reason: "Back to the feed's champion" }, late);
+    const back = await admin({ action: "override_result", round: 6, location: 1, winner: champion, scores: feedScores, reason: "Back to the feed's champion" }, late);
     expect(back.ok && back.message).toMatch(/press Sync now/);
     expect((await tick(late + MINUTE)).skipped).toBe("inactive");
     const synced2 = await admin({ action: "sync" }, late + 2 * MINUTE);
@@ -671,5 +674,85 @@ describe("lock and final-score guards (plan 10.2)", () => {
     } finally {
       FEEDS.men = original;
     }
+  }, 60_000);
+});
+
+describe("the championship score stays put and agrees with the winner (plan 10.5.2)", () => {
+  const SELECTION_SUNDAY = Date.parse("2027-03-14T23:00:00Z");
+  const AFTER_FINALS = Date.parse("2027-04-06T15:00:00Z");
+  const men = () => tables.bracket_tournaments.find((t) => t.gender === "men" && t.purpose === "live") as Row;
+  const admin = (action: Record<string, unknown>, atMs: number) => {
+    clockMs = atMs;
+    return runBracketsAdminAction({ tournamentId: men().id, ...action } as Parameters<typeof runBracketsAdminAction>[0], "tester", atMs);
+  };
+  const final = () => tables.bracket_games.find((g) => g.tournament_id === men().id && g.round === 6) as Row;
+  const championOf = (games: BracketFeedGame[]) => (games.find((g) => g.round === 6)?.home_team?.winner === true ? "home" : "away");
+
+  it("a stale run never clears the admin's final score, and a later override keeps the total (§22 R2, R4)", async () => {
+    const original = FEEDS.men;
+    const stalled = (team: BracketFeedGame["home_team"]) => (team ? { ...team, score: null, winner: null } : team);
+    FEEDS.men = (original as BracketFeedGame[]).map((g) =>
+      g.round === 6
+        ? { ...g, status: "in", status_state: "in", status_detail: "2nd Half", home_team: stalled(g.home_team), away_team: stalled(g.away_team) }
+        : g,
+    );
+    try {
+      await tick(SELECTION_SUNDAY);
+      await tick(AFTER_FINALS);
+      const winner = championOf(original as BracketFeedGame[]);
+      const [home, away] = winner === "home" ? [70, 64] : [64, 70];
+      const at = AFTER_FINALS + 10 * MINUTE;
+      // The sync reads the final (no score) and the admin's score lands before its write.
+      hooks.beforeFeedWrite = async () => {
+        const saved = await admin({ action: "override_result", round: 6, location: 1, winner, scores: { home, away }, reason: "Box score" }, at);
+        expect(saved).toMatchObject({ ok: true });
+      };
+      // Force the run to write the final row (the stalled feed's status detail moves on).
+      FEEDS.men = (FEEDS.men as BracketFeedGame[]).map((g) => (g.round === 6 ? { ...g, status_detail: "Final" } : g));
+      await tick(Math.max(at, Date.parse(String(men().next_sync_at))));
+      expect(hooks.beforeFeedWrite).toBeNull();
+      expect(final()).toMatchObject({ home_score: home, away_score: away });
+      expect(men().championship_total).toBe(134);
+
+      // Defence: even with the final's scores gone, an override of another game keeps the total.
+      Object.assign(final(), { home_score: null, away_score: null });
+      const semi = tables.bracket_games.find((g) => g.tournament_id === men().id && g.round === 5 && g.location === 1) as Row;
+      const again = await admin(
+        { action: "override_result", round: 5, location: 1, winner: semi.winner_side, reason: "Re-apply the semifinal" },
+        at + 5 * MINUTE,
+      );
+      expect(again).toMatchObject({ ok: true });
+      expect(again.ok && again.message).not.toMatch(/Prizes need the final score/);
+      expect(men().championship_total).toBe(134);
+    } finally {
+      FEEDS.men = original;
+    }
+  }, 60_000);
+
+  it("refuses a championship winner the stored score contradicts, unless the corrected score comes too (§22 R5)", async () => {
+    await tick(SELECTION_SUNDAY);
+    await tick(AFTER_FINALS);
+    const champion = String(final().winner_side);
+    const other = champion === "home" ? "away" : "home";
+    const total = men().championship_total;
+    expect(typeof total).toBe("number");
+    const at = AFTER_FINALS + 10 * MINUTE;
+
+    expect(await admin({ action: "override_result", round: 6, location: 1, winner: other, reason: "Wrong champion?" }, at)).toMatchObject({
+      ok: false,
+      status: 409,
+      error: "The stored score says the other team won: enter the corrected score too.",
+    });
+    expect(final().winner_side).toBe(champion);
+    expect(await admin({ action: "override_result", round: 6, location: 1, winner: champion, reason: "Confirm champion" }, at)).toMatchObject({ ok: true });
+    expect(men().championship_total).toBe(total);
+
+    const scores = other === "home" ? { home: 80, away: 60 } : { home: 60, away: 80 };
+    expect(await admin({ action: "override_result", round: 6, location: 1, winner: other, scores, reason: "Scorer error" }, at)).toMatchObject({ ok: true });
+    expect(final()).toMatchObject({ winner_side: other, home_score: scores.home, away_score: scores.away });
+    expect(men().championship_total).toBe(140);
+    // "No result" stays allowed whatever the score says.
+    expect(await admin({ action: "override_result", round: 6, location: 1, winner: null, reason: "Hold: disputed" }, at)).toMatchObject({ ok: true });
+    expect(men().championship_total).toBeNull();
   }, 60_000);
 });

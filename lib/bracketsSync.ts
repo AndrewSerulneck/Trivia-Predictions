@@ -13,7 +13,6 @@ import { fetchBracketFeed } from "@/lib/bracketsFeed";
 import {
   autoBracketLocks,
   bracketWinnerSeats,
-  championshipTotal,
   maskBracketFeedAt,
   mergeBracketFeed,
   nextBracketSyncAt,
@@ -38,6 +37,7 @@ import {
   listCurrentBracketTournaments,
   logBracketsAdmin,
   recordBracketResults,
+  recordedChampionshipTotal,
   saveFeedBracketGames,
   tournamentNowMs,
   updateBracketTournament,
@@ -309,9 +309,8 @@ export async function syncBracketTournament(
   const computed = bracketWinnerSeats(merged.games);
   const conflict = computed.findIndex((seat, slot) => tournament.winnerSeats[slot] !== null && seat !== tournament.winnerSeats[slot]);
   const finalDecided = computed[BRACKET_SLOT_COUNT - 1] !== null;
-  // A total an admin entered stays when the feed has none (a stale run may even have written the
-  // game's scores back to null). Only a decided final has one.
-  const total = championshipTotal(merged.games) ?? (finalDecided ? tournament.championshipTotal : null);
+  // A total an admin entered stays when the feed has none. Only a decided final has one.
+  const total = recordedChampionshipTotal(merged.games, tournament);
   const newSlots = computed.filter((seat, slot) => seat !== null && tournament.winnerSeats[slot] === null).length;
   report.newResults = conflict >= 0 ? 0 : newSlots;
   if (conflict >= 0) {

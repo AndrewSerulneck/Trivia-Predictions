@@ -12,6 +12,7 @@
 // consistency checks on results, cascades on player deletion, grants and RLS. 10.1
 // (20261021035254): result_held, bracket_save_feed_games never overwriting what an admin took over,
 // and bracket_record_results answering `stale` when the seats changed since the caller read them.
+// 10.5.2 (20261021134157): a feed row with no score keeps the stored score; a feed score still overwrites.
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { PGlite } = require(process.env.BRACKETS_PGLITE_MODULE || "@electric-sql/pglite");
@@ -22,6 +23,7 @@ const MIGRATIONS = [
   "supabase/migrations/20261019203858_brackets_engine.sql",
   "supabase/migrations/20261019213121_bracket_prizes.sql",
   "supabase/migrations/20261021035254_bracket_admin_corrections.sql",
+  "supabase/migrations/20261021134157_bracket_feed_scores_keep.sql",
 ];
 
 const SCHEMA = `
@@ -348,6 +350,14 @@ async function run() {
     await feedWrite([game({ location: 3, slot: 2, mismatch_note: "Held; feed says home", seen_result_held: true })]);
     assert.deepEqual([(await g(1, 3)).winner_side, (await g(1, 3)).mismatch_note], [null, "Held; feed says home"]);
     await assert.rejects(db.query(`select bracket_save_feed_games($1, '{}'::jsonb)`, [W]), /JSON array/);
+
+    // 10.5.2: a stale run (read before an admin entered the final score) never clears it.
+    await feedWrite([game({ round: 6, location: 1, slot: 62, home_score: null, away_score: null, status_state: "in" })]);
+    await db.query(`update bracket_games set home_score = 72, away_score = 65 where tournament_id = $1 and round = 6`, [W]);
+    await feedWrite([game({ round: 6, location: 1, slot: 62, home_score: null, away_score: null })]);
+    assert.deepEqual([(await g(6, 1)).home_score, (await g(6, 1)).away_score], [72, 65], "a feed row with no score keeps the stored score");
+    await feedWrite([game({ round: 6, location: 1, slot: 62, home_score: 74, away_score: 65 })]);
+    assert.deepEqual([(await g(6, 1)).home_score, (await g(6, 1)).away_score], [74, 65], "a feed score still overwrites");
 
     // Stale results: the sync passes the seats it read; anything recorded since → nothing changes.
     const empty = Array.from({ length: 63 }, () => null);

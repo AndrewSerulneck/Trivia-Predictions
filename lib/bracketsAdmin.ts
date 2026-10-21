@@ -12,7 +12,6 @@ import {
   autoBracketLocks,
   bracketKindPhase,
   bracketWinnerSeats,
-  championshipTotal,
   hasFullField,
   type BracketGameState,
   type BracketKindPhase,
@@ -48,6 +47,7 @@ import {
   listCurrentBracketTournaments,
   logBracketsAdmin,
   recordBracketResults,
+  recordedChampionshipTotal,
   tournamentFromRow,
   tournamentNowMs,
   updateBracketGameColumns,
@@ -565,6 +565,12 @@ export async function runBracketsAdminAction(
       return refuse(409, "That side has no team yet.");
     }
     if (action.scores && game.slot !== BRACKET_SLOT_COUNT - 1) return refuse(409, "A score can be entered only for the championship.");
+    // A championship winner the stored score contradicts would settle prizes on that score's total
+    // (plan 10.5.2, §22 R5). With new scores the parser already checked the winner is higher.
+    if (!action.scores && action.winner && game.slot === BRACKET_SLOT_COUNT - 1 && game.homeScore !== null && game.awayScore !== null) {
+      const [chosen, other] = action.winner === "home" ? [game.homeScore, game.awayScore] : [game.awayScore, game.homeScore];
+      if (chosen <= other) return refuse(409, "The stored score says the other team won: enter the corrected score too.");
+    }
     // "No result" HOLDS the game (result_held): the sync never fills it from the feed until an admin
     // overrides it again or lets the feed decide. A winner clears any hold.
     // The game row first: if the results RPC then fails, the sync reports the disagreement
@@ -585,10 +591,12 @@ export async function runBracketsAdminAction(
     // in between, and recording without it would clear (and re-grade) that result.
     const fresh = await getBracketGames(tournament.id);
     if (!fresh.ok) return refuse(500, `The game was saved but the games couldn't be re-read (${fresh.error}). Apply the override again.`);
+    // The same total the sync records: a stored one stays when the final's scores are missing.
+    const total = recordedChampionshipTotal(fresh.value, tournament);
     const recorded = await recordBracketResults({
       tournamentId: tournament.id,
       winnerSeats: bracketWinnerSeats(fresh.value),
-      championshipTotal: championshipTotal(fresh.value),
+      championshipTotal: total,
       allowChange: true,
       reason: action.reason,
       actor,
@@ -615,7 +623,7 @@ export async function runBracketsAdminAction(
           ? tournament.prizesSettledAt
             ? " Final score saved; prizes were already settled and don't change."
             : ` Final score saved (total ${action.scores.home + action.scores.away}): prizes settle at the next sync.`
-          : game.slot === BRACKET_SLOT_COUNT - 1 && action.winner && championshipTotal(fresh.value) === null
+          : game.slot === BRACKET_SLOT_COUNT - 1 && action.winner && total === null
             ? " Prizes need the final score: enter both scores and override again."
             : "") +
         (regraded.length
