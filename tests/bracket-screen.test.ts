@@ -36,6 +36,8 @@ const installFetch = (server: {
   standings?: Standing[];
   entryStatus?: number;
   entryOutcome?: string;
+  /** The entry save never reaches the server (a dead connection). */
+  entryNetworkFails?: boolean;
   stateStatus?: number;
   /** Called before each entry save is answered: return a promise to make the save slow. */
   holdEntry?: (index: number) => Promise<void> | undefined;
@@ -58,6 +60,7 @@ const installFetch = (server: {
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
         calls.entries.push(body);
         await server.holdEntry?.(calls.entries.length);
+        if (server.entryNetworkFails) throw new TypeError("Failed to fetch");
         if (server.entryStatus && server.entryStatus !== 200) return json({ ok: false, outcome: server.entryOutcome }, server.entryStatus);
         return json({ ok: true, outcome: "saved", savedAt: "2027-03-15T10:00:00.000Z" });
       }
@@ -268,6 +271,40 @@ describe("filling out a bracket", () => {
     expect(calls.entries).toHaveLength(2);
     expect((calls.entries[1].picks as Array<number | null>).filter((seat) => seat !== null)).toHaveLength(2);
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not send a refused draft twice when a second caller was waiting", async () => {
+    let release: () => void = () => {};
+    const slow = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const calls = installFetch({ tournaments: [openMen()], entryStatus: 409, entryOutcome: "locked", holdEntry: (index) => (index === 1 ? slow : undefined) });
+    await mountScreen(vi.fn());
+    await click(button("Fill out my bracket"));
+    await click(within(screen.getAllByRole("group")[0]).getAllByRole("button")[0]);
+    await click(button("Next")); // save 1 starts and stays open
+    await click(button("Exit game")); // waits for save 1, nothing newer
+    await act(async () => release());
+    await advance(0);
+    await flush();
+    expect(calls.entries).toHaveLength(1);
+  });
+
+  it("still retries after a network failure when a second caller was waiting", async () => {
+    let release: () => void = () => {};
+    const slow = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const calls = installFetch({ tournaments: [openMen()], entryNetworkFails: true, holdEntry: (index) => (index === 1 ? slow : undefined) });
+    await mountScreen(vi.fn());
+    await click(button("Fill out my bracket"));
+    await click(within(screen.getAllByRole("group")[0]).getAllByRole("button")[0]);
+    await click(button("Next"));
+    await click(button("Exit game"));
+    await act(async () => release());
+    await advance(0);
+    await flush();
+    expect(calls.entries).toHaveLength(2);
   });
 
   it("saves the bracket when Save is tapped during a background save", async () => {

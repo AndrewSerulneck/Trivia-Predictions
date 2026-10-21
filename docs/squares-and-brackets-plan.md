@@ -45,7 +45,8 @@ Ready; this push also shipped the earlier local commits 6.1–6.4, 7–9 and 10.
 total; a championship winner the stored score contradicts needs the corrected score; the panel says "Enter both scores,
 or neither". §24 below. **10.5.3 built 2026-10-21 (not committed):** the TV's per-venue cache keeps only which tournaments show, so a rehearsal
 `set_clock` reaches the TV on the next 15 s shared read. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.3_HANDOFF.md`.
-**Next:** 10.5.4 (a refused draft isn't sent twice); it must be done before the 10.6 rehearsal. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews 6.1–6.5
+**10.5.4 built 2026-10-21 (not committed; migration `20261021134157` applied):** a refused draft isn't sent twice by a waiting save. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.4_HANDOFF.md`.
+**Next:** commit/deploy 10.5.4, then 10.6 rehearsal. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews 6.1–6.5
 only (Phases 7–9 were reviewed here).
 
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md

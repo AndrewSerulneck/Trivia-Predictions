@@ -67,6 +67,8 @@ export function BracketEditor({
   const sentVersionRef = useRef(0);
   // The send in flight, if any. A caller that arrives meanwhile waits for it, then sends what is newer.
   const inflightRef = useRef<Promise<boolean> | null>(null);
+  // The version a definite refusal (locked, not open, invalid picks) answered: a waiter doesn't send it again.
+  const refusedVersionRef = useRef<number | null>(null);
   const markChanged = useCallback(() => {
     versionRef.current += 1;
   }, []);
@@ -79,8 +81,13 @@ export function BracketEditor({
   const persist = useCallback(
     async (keepalive = false): Promise<boolean> => {
       // A while, not an if: another caller may start the next send while this one waits.
-      while (inflightRef.current) await inflightRef.current.catch(() => false);
+      let waited = false;
+      while (inflightRef.current) {
+        waited = true;
+        await inflightRef.current.catch(() => false);
+      }
       if (versionRef.current === sentVersionRef.current) return true;
+      if (waited && versionRef.current === refusedVersionRef.current) return false;
       const parsed = parseTiebreakerText(tiebreakerRef.current);
       // A half-typed tiebreaker never blocks the picks: they go with the last good guess.
       const guess = parsed === undefined ? (mine?.tiebreaker ?? null) : parsed;
@@ -91,6 +98,7 @@ export function BracketEditor({
           sentVersionRef.current = version;
           return true;
         }
+        refusedVersionRef.current = result.network ? null : version;
         setMessage(result.network ? "No connection. Your picks will save when you're back online." : bracketSaveMessage(result.outcome));
         return false;
       })();
