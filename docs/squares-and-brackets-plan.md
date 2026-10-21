@@ -45,9 +45,15 @@ Ready; this push also shipped the earlier local commits 6.1–6.4, 7–9 and 10.
 total; a championship winner the stored score contradicts needs the corrected score; the panel says "Enter both scores,
 or neither". §24 below. **10.5.3 built 2026-10-21 (not committed):** the TV's per-venue cache keeps only which tournaments show, so a rehearsal
 `set_clock` reaches the TV on the next 15 s shared read. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.3_HANDOFF.md`.
-**10.5.4 built 2026-10-21 (not committed; migration `20261021134157` applied):** a refused draft isn't sent twice by a waiting save. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.4_HANDOFF.md`.
-**Next:** commit/deploy 10.5.4, then 10.6 rehearsal. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews 6.1–6.5
-only (Phases 7–9 were reviewed here).
+**10.5.3 + 10.5.4 committed (`caf9dcd`, `0b5c1e7`), pushed and deployed to Production 2026-10-21** (Vercel
+`hightop-challenge-ju5inusc5`, Ready); all bracket migrations through `20261021134157` applied.
+**10.6 replay rehearsal RUN 2026-10-21** (both March 2026 tournaments, clock walked Selection Sunday → final, on a
+Preview + the hidden test venues; both rehearsals archived after). Everything held except ONE failure: in a walked
+replay no prize pays and Results dates the brackets weeks early (§25 F1) → fix is sub-phase **10.7.1** (needs `supabase
+db push`), then a short re-run of the prize step. §25 below. Latest handoff:
+`docs/squares-and-brackets-plan_PHASE_10.6_HANDOFF.md`.
+**Next:** 10.7.1, then Andrew's phone pass (10.7) on the same Preview. 6.5 still waits on the Oct 19/22 captures; 6.6
+re-reviews 6.1–6.5 only (Phases 7–9 were reviewed here).
 
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
@@ -499,9 +505,10 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
 | 10.5 | Re-review of 10.1–10.4 (`/code-review high`) — **done 2026-10-21** (§22) | Opus 5.5 | high | — |
 | 10.5.1 | A late admin lock can still be pulled earlier after the first tip; warn once (§22 R1, R9, R10) — **built 2026-10-21** (§23) | Opus 5.5 | medium | — |
 | 10.5.2 | The championship score stays put and agrees with the winner (§22 R2, R4, R5, R7) — **built 2026-10-21** (§24) | Opus 5.5 | medium | `supabase db push` (one small migration) |
-| 10.5.3 | The TV follows a rehearsal clock change at once (§22 R3) | Sonnet 5.5 | low | — |
-| 10.5.4 | A refused draft isn't sent twice (§22 R8) | Sonnet 5.5 | low | — |
-| 10.6 | Replay rehearsal of the March 2026 tournaments on `venue-hightop-test` | Opus 5.5 | high | Preview env vars, phone pass |
+| 10.5.3 | The TV follows a rehearsal clock change at once (§22 R3) — **deployed 2026-10-21** | Sonnet 5.5 | low | — |
+| 10.5.4 | A refused draft isn't sent twice (§22 R8) — **deployed 2026-10-21** | Sonnet 5.5 | low | — |
+| 10.6 | Replay rehearsal of the March 2026 tournaments on `venue-hightop-test` — **run 2026-10-21** (§25) | Opus 5.5 | high | Preview env vars, phone pass |
+| 10.7.1 | A rehearsal remembers when its lock really passed: prizes pay and Results dates right in a walked replay (§25 F1); then re-run the prize step | Opus 5.5 | medium | `supabase db push` (one small migration) |
 | 10.7 | Andrew's phone + TV pass (checklist section B) | — | — | yes |
 | 10.8 | Launch: flag on + redeploy by **Mon Mar 8, 2027** | Opus 5.5 | medium | yes |
 | 10.9 | Selection Sunday check (Mar 14) and live watch to the finals (Apr 5) | Opus 5.5 | medium | — |
@@ -685,6 +692,28 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
   (10.1: points come back) → "No result" holds → championship → prizes → Results → TV. Record feed requests, cron
   actions and DB reads against §6.
 - **Archive both rehearsal tournaments at the end** (10.8 depends on it).
+
+- **Run 2026-10-21** — results, numbers and the one failure: §25 and `docs/squares-and-brackets-plan_PHASE_10.6_HANDOFF.md`.
+
+#### 10.7.1 — A rehearsal remembers when its lock really passed (Opus 5.5 · medium)
+- **Problem (§25 F1, found in the 10.6 replay):** `bracketRealLockMs` (`lib/bracketsStore.ts`) = lock + the CURRENT
+  `clock_offset_seconds`. Every forward `set_clock` shrinks the offset by the jump, so once the replay has walked past the
+  lock the "real" lock lands up to the whole walk earlier (10.6: ≈ 17–18 days before it actually passed). Two callers
+  share it: prizes (`bracketPrizeCoversBracket`: a prize created before the lock is treated as created after it → **no
+  prize pays in a walked rehearsal**; 10.6 settled both tournaments with 0 cycles) and Results (brackets dated Oct 3–12
+  instead of Oct 21). Live tournaments are not affected (offset 0, `set_clock` refuses a live one).
+- **Design (recommended):** two nullable columns `bracket_tournaments.main_lock_passed_at` / `second_lock_passed_at`
+  (real time), each written once: by `set_clock` when its jump moves the tournament clock from before a lock to at/after
+  it (= the call's real time: when the lock passed for players), else by the sync run that first sees the lock passed
+  (= lock + the offset at that moment, exact when no jump happened). `bracketRealLockMs` returns the stamp when set, else
+  today's rule. A live tournament never needs it (offset 0) but may carry it harmlessly. `move_lock` before the lock
+  passes doesn't touch it. Migration = two columns, no new table (no grant needed); `supabase db push` is Andrew's.
+- **Tests:** walked replay in `tests/brackets-sync.test.ts` (create → prize → `set_clock` across the lock → … → final)
+  pays the prize; Results adapter dates the bracket on the stamp's day; a live tournament's real lock unchanged; the
+  contract test keeps `bracketRealLockMs` the one home.
+- **Re-run (same session):** on the 10.6 Preview (update branch `brackets-rehearsal` to the fix), create a fresh men's
+  rehearsal, a fresh prize (all four brackets), two quick entries, cross the lock, jump past the final, and check coupons
+  on Redeem Prizes + the prize rows in Results. Archive after.
 
 #### 10.7 — Phone + TV pass (Andrew)
 - `docs/squares-and-brackets-device-checklist.md` section B, during 10.6. Any failure becomes 10.7.x.
@@ -1104,4 +1133,35 @@ Handoff: `docs/squares-and-brackets-plan_PHASE_10.5.2_HANDOFF.md`. Migration
   a round-5 override with the final's scores gone keeps total 134; contradicting winner refused, confirming accepted,
   corrected score accepted, No result clears); the 10.1 B1 test now flips the champion with the swapped score. Full
   suite 5,223 passed / 13 skipped; replay unchanged (6,411 feed requests).
+
+## 25. 10.6 replay rehearsal as run (2026-10-21) — read before 10.7.1 and 10.7
+
+Handoff (full numbers, ids, commands): `docs/squares-and-brackets-plan_PHASE_10.6_HANDOFF.md`.
+- **Setup:** Preview `hightop-challenge-h9mnbgqbj` from branch `brackets-rehearsal` with `NEXT_PUBLIC_BRACKETS_ENABLED`
+  + `BRACKETS_REHEARSAL_ENABLED` scoped to that branch. `BRACKETS_REHEARSAL_ENABLED=true` was ADDED to Production but a
+  production redeploy was not allowed from the session, so it is NOT active yet; the sync ticks were run from the
+  session with the same code (`runBracketsTick`, rehearsal mode) instead of the Production cron. Rehearsals of men's
+  and women's `season` 2025 on `venue-hightop-test`, replay clock 2026-03-15 23:00Z. Second hidden venue
+  `venue-hightop-test-2` (for "copy my picks"); test accounts `bktrehearsal1` (both venues) and `bktrehearsal2`, PIN 1066.
+- **Held (all checked against the database):** brackets open; four main + four second-chance brackets filled through the
+  real Preview UI in a phone-sized headless browser (draft survives a reload half-way; "Copy my picks from Hightop Test
+  Bar 2" copies 63 picks and asks before replacing); lock guard (a minute after the first tip refused, earlier saved,
+  Follow feed restores); after the lock a save is refused (409 `locked`); rounds 1–6 graded and paid each step; second
+  chance opens after the Round of 32 and locks at the Sweet 16; a correction mid-tournament and one AFTER the final
+  take back and re-pay exactly (and revert cleanly); "No result" holds a Final Four game against the feed and Let the
+  feed decide releases it; the championship entered by hand (half score, wrong-winner score and a winner the stored
+  score contradicts all refused); TV idle before the lock → bracket mode (top 10 + today's games on the replay clock)
+  → idle after archive, and idle at a visible venue throughout; Results lists all four brackets with standings and a
+  per-pick breakdown, no player id in any payload. Final reconciliation: every player's venue points = live ledger
+  credits = bracket scores ÷ 10; no duplicate ledger keys.
+- **F1 (failure → 10.7.1):** no prize paid (0 cycles in both tournaments) and Results dated the brackets 2–3 weeks
+  early, both from `bracketRealLockMs` using the current offset after a walked clock. Not patched in place.
+- **Expected, worth knowing:** under the replay mask the First Four teams are hidden, so the four opening-round games
+  can't be auto-linked to their Round-of-64 seats until they're played — the admin links them on "Selection Sunday"
+  (`link_opener`; 10.6 used the unmasked feed to find seats 41/57/49/17 men's, 41/49/17/29 women's). Region names are an
+  admin entry. Not observed: the TV's "upset" panel (only the final state was sampled). The Venue Home card can't be
+  checked off-season (its window starts Mar 1, 2027): open `/bracket` directly.
+- **Cost (§6):** 22 feed requests for the whole walked replay (1 per due tournament per sync; the 6,411 of a real-time
+  replay comes from pacing, not from per-run cost); a sync tick with both due = 7–19 PostgREST calls, ≤ 4 s; an idle
+  tick = **1 read, 0 feed**, 0.4 s. Matches §6.
 
