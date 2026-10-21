@@ -19,7 +19,7 @@ below; handoff `docs/squares-and-brackets-plan_PHASE_6.6_HANDOFF.md`.
 **6.6.1 built 2026-10-21 (no migration; committed locally, not pushed)**: in season mode the cron archives a leftover
 rehearsal or an old season's event and discovers the Super Bowl in the same run; an old season's Super Bowl can be
 archived any time; a rehearsal can't be created during the window. §30; handoff
-`docs/squares-and-brackets-plan_PHASE_6.6.1_HANDOFF.md`. **6.6.2 built 2026-10-21** (finished-game screen no longer loops on the board; committed `0517f18`). **6.6.3 built 2026-10-21** (idle settle once an hour; rehearsal points only at hidden venues; handoff `docs/squares-and-brackets-plan_PHASE_6.6.3_HANDOFF.md`). **6.6.4 built 2026-10-21** (tidy-ups; handoff `docs/squares-and-brackets-plan_PHASE_6.6.4_HANDOFF.md`). Next: 6.7 rehearsal (a December 2026 game).
+`docs/squares-and-brackets-plan_PHASE_6.6.1_HANDOFF.md`. **6.6.2 built 2026-10-21** (finished-game screen no longer loops on the board; committed `0517f18`). **6.6.3 built 2026-10-21** (idle settle once an hour; rehearsal points only at hidden venues; handoff `docs/squares-and-brackets-plan_PHASE_6.6.3_HANDOFF.md`). **6.6.4 built 2026-10-21** (tidy-ups; handoff `docs/squares-and-brackets-plan_PHASE_6.6.4_HANDOFF.md`). **6.7 part 1 (setup) done 2026-10-21**: rehearsal on KC @ SEA, Sun Oct 25 8:20 PM ET (Andrew's pick), at `venue-hightop-test`; the 4 Squares commits are pushed and deployed (`92a4aea`); Production `SQUARES_REHEARSAL_ENABLED` on; Preview branch `squares-rehearsal`. Next: 6.7 part 2 (the live run + checks) and Andrew's phone pass (6.8) on Sunday; handoff `docs/squares-and-brackets-plan_PHASE_6.7_HANDOFF.md`.
 **Phases 7 + 8 (bracket engine + player screens) committed `baeb6e4`**; migration `20261019203858` APPLIED. Flag off.
 **Phase 9 (bracket Prizes, Results, TV) built and committed locally 2026-10-20**; migration `20261019213121` APPLIED
 2026-10-20 (`supabase db push`, verified through PostgREST). Flag still off; nothing pushed or deployed. Andrew: no Prize
@@ -72,8 +72,8 @@ Preview `hightop-challenge-dfmbdbzwb` (branch `brackets-rehearsal` = `main@28a53
 `NEXT_PUBLIC_BRACKETS_ENABLED` = true, `BRACKETS_REHEARSAL_ENABLED` = false, `LEGAL_LAST_UPDATED` bumped, redeployed.
 The card shows from Mar 1, discovery/sync start Mar 14. §27 below. Latest handoff:
 `docs/squares-and-brackets-plan_PHASE_10.8_HANDOFF.md`.
-**Next:** 10.9 (Selection Sunday, Mar 14, 2027). Squares: 6.5 part 2 (the Oct 22 capture) and 6.6.1–6.6.4,
-in any order, then 6.7.
+**Next:** 10.9 (Selection Sunday, Mar 14, 2027). Squares: 6.5 part 2 (the Oct 22 capture), then the 6.7 live run (Sun Oct 25);
+6.6.1–6.6.4 are done and deployed.
 
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
@@ -323,7 +323,7 @@ migration); then 6.5–6.9.
 | 6.6.2 | Finished-game screen: no board re-read loop | Sonnet 5.5 | low | Built 2026-10-21 |
 | 6.6.3 | Settlement keeps paying what's owed after the watch; rehearsal points only at hidden venues | Opus 5.5 | medium | Built 2026-10-21 |
 | 6.6.4 | Tidy-ups: misplaced doc comment, one "blocked result" filter | Sonnet 5.5 | low | Built 2026-10-21 |
-| 6.7 | Rehearsal on `venue-hightop-test` with a real NFL game | Opus 5.5 | high | Preview env vars, phone pass |
+| 6.7 | Rehearsal on `venue-hightop-test` with a real NFL game — **set up 2026-10-21** (KC @ SEA, Oct 25); live run pending | Opus 5.5 | high | Preview env vars, phone pass |
 | 6.8 | Andrew's phone + TV pass (checklist section A) | — | — | yes |
 | 6.9 | Launch: flag on + redeploy by **Mon Jan 25, 2027**; watch Feb 14 | Opus 5.5 | medium | yes |
 
@@ -548,6 +548,11 @@ migration); then 6.5–6.9.
   `venue-hightop-test`, with a test Squares prize there. Run claim → lock → draw → live → each moment graded →
   points → prize coupon → Results → TV, plus one void + re-grade. Record actual BDL requests, cron actions and DB
   reads against §6. Andrew does checklist section A on the Preview during it.
+- **Part 1 (setup) done 2026-10-21.** Andrew chose KC @ SEA (BDL `1392321`, Sun Oct 25, 2026, kickoff 00:20Z Oct 26)
+  over a December game. Event `6f7c7584-…` (rehearsal), test prize `0289f9d9-…` (all four moments, $10), 46 test
+  players hold 92 squares. Production's cron drives it on `SQUARES_REHEARSAL_ENABLED` alone (verified: it stamped the
+  event a minute after the deploy). Preview `hightop-challenge-p3267il9b` (branch `squares-rehearsal`). Run sheet
+  for part 2: `docs/squares-and-brackets-plan_PHASE_6.7_HANDOFF.md` §6.
 
 #### 6.8 — Phone + TV pass (Andrew)
 - `docs/squares-and-brackets-device-checklist.md` section A, during 6.7. Any failure becomes 6.8.x.
