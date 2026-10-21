@@ -199,6 +199,16 @@ describe("moment evidence while live: positive evidence only", () => {
     expect(quartersFinishedFromStatus("Final/OT")).toBe(4);
   });
 
+  it("reads the live feed's '<clock> - <quarter>' status (WSH @ SF capture, 2026-10-19)", () => {
+    expect(quartersFinishedFromStatus("15:00 - 1st")).toBe(0);
+    expect(quartersFinishedFromStatus("0:13 - 1st")).toBe(0);
+    expect(quartersFinishedFromStatus("14:25 - 2nd")).toBe(1);
+    expect(quartersFinishedFromStatus("5:56 - 3rd")).toBe(2);
+    expect(quartersFinishedFromStatus("14:05 - 4th")).toBe(3);
+    expect(quartersFinishedFromStatus("0:06 - 4th")).toBe(3);
+    expect(quartersFinishedFromStatus("3rd & 5 - 2nd")).toBe(0);
+  });
+
   it("treats points in a later quarter as proof the earlier one is over", () => {
     const game = live({ status: "In Progress", home_team_q1: 7, home_team_q2: 3, home_team_score: 10, visitor_team_q1: 0, visitor_team_score: 0 });
     expect(scoreOf(game, "home", "q1")).toEqual({ col: 7, row: 0 });
@@ -252,37 +262,57 @@ describe("post-final cross-check", () => {
 // Phase 0's live capture (scripts/capture-nfl-live-game.cjs) — present once a game has been
 // watched. Replays it a minute at a time through the real rule: every moment it would have graded
 // must match what the finished record says. Nothing to check until a capture exists.
+type CaptureSnapshot = { firstSeen: string; lastSeen: string; game: NflFeedGame };
+
+/** Replays a capture minute by minute through the live rule; returns each graded score + the status it was graded on. */
+const replayCapture = (snapshots: CaptureSnapshot[], colSide: SquaresSide) => {
+  const observed = new Map<SquaresMoment, MomentObservation>();
+  const graded = new Map<SquaresMoment, { score: { col: number; row: number }; status: string }>();
+  for (const snap of snapshots) {
+    for (let t = Date.parse(snap.firstSeen); t <= Date.parse(snap.lastSeen); t += 60_000) {
+      for (const proof of squaresMomentEvidence(snap.game, colSide)) {
+        if (graded.has(proof.moment)) continue;
+        const step = planMomentStep(proof, observed.get(proof.moment) ?? null, t);
+        if (step.action === "observe") observed.set(proof.moment, step.observation);
+        if (step.action === "clear") observed.delete(proof.moment);
+        if (step.action === "grade") graded.set(proof.moment, { score: step.score, status: String(snap.game.status) });
+      }
+    }
+  }
+  return graded;
+};
+
 describe("live capture replay", () => {
   const captures = existsSync(FIXTURES) ? readdirSync(FIXTURES).filter((name) => /^nfl-live-capture-\d+\.json$/.test(name)) : [];
   it.each(captures.length ? captures : ["(none yet)"])("never grades a wrong score: %s", (name) => {
     if (name === "(none yet)") return;
-    const capture = JSON.parse(readFileSync(path.join(FIXTURES, name), "utf8")) as {
-      snapshots: Array<{ firstSeen: string; lastSeen: string; game: NflFeedGame }>;
-    };
+    const capture = JSON.parse(readFileSync(path.join(FIXTURES, name), "utf8")) as { snapshots: CaptureSnapshot[] };
     const finalSnapshot = [...capture.snapshots].reverse().find((snap) => snap.game.status_state === "final");
     if (!finalSnapshot) return; // still in progress
     const axes = squaresAxes(finalSnapshot.game);
     expect(axes).not.toBeNull();
     const colSide = axes!.colSide;
     const truth = new Map(squaresMomentEvidence(finalSnapshot.game, colSide).map((item) => [item.moment, item]));
-    const observed = new Map<SquaresMoment, MomentObservation>();
-    const graded = new Map<SquaresMoment, { col: number; row: number }>();
-    for (const snap of capture.snapshots) {
-      for (let t = Date.parse(snap.firstSeen); t <= Date.parse(snap.lastSeen); t += 60_000) {
-        for (const proof of squaresMomentEvidence(snap.game, colSide)) {
-          if (graded.has(proof.moment)) continue;
-          const step = planMomentStep(proof, observed.get(proof.moment) ?? null, t);
-          if (step.action === "observe") observed.set(proof.moment, step.observation);
-          if (step.action === "clear") observed.delete(proof.moment);
-          if (step.action === "grade") graded.set(proof.moment, step.score);
-        }
-      }
-    }
+    const graded = replayCapture(capture.snapshots, colSide);
     for (const moment of SQUARES_MOMENTS) {
       const proof = truth.get(moment);
       expect(proof?.state, `${name} ${moment} provable from the final`).toBe("over");
-      expect(graded.get(moment), `${name} ${moment}`).toEqual(proof?.state === "over" ? proof.score : undefined);
+      expect(graded.get(moment)?.score, `${name} ${moment}`).toEqual(proof?.state === "over" ? proof.score : undefined);
     }
+  });
+
+  // Plan 6.5: before the "<clock> - <quarter>" status was read, Q1 waited for points in the 2nd and Q3
+  // for points in the 4th (up to an hour late). Each quarter is now graded during the next one.
+  it("grades each quarter during the next one (WSH @ SF, 1392308)", () => {
+    const capture = JSON.parse(readFileSync(path.join(FIXTURES, "nfl-live-capture-1392308.json"), "utf8")) as {
+      snapshots: CaptureSnapshot[];
+    };
+    const final = [...capture.snapshots].reverse().find((snap) => snap.game.status_state === "final")!;
+    const graded = replayCapture(capture.snapshots, squaresAxes(final.game)!.colSide);
+    expect(graded.get("q1")?.status).toMatch(/ - 2nd$/);
+    expect(graded.get("half")?.status).toMatch(/ - 3rd$/);
+    expect(graded.get("q3")?.status).toMatch(/ - 4th$/);
+    expect(graded.get("final")?.status).toBe("Final");
   });
 });
 

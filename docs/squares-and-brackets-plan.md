@@ -9,8 +9,10 @@ committed locally; their migrations are APPLIED to production; flags off; nothin
 `supabase migration list` on 2026-10-19). **6.3 is built and committed locally** (paying winners; no migration).
 **6.4 is built and committed locally** (player screen keeps up with a void; no migration).
 6.1–6.4 were pushed and deployed to Production on 2026-10-21 (with the `a9488db` push), so the §13 F1 fix is live.
-**6.5 in progress, parked** (live-game recorders restarted 2026-10-19; WSH @ SF Oct 19, NE @ CHI Oct 22) — finish it
-after those games: `docs/squares-and-brackets-plan_PHASE_6.5_HANDOFF.md` (interim).
+**6.5 part 1 built 2026-10-21 (no migration; not pushed)**: the Oct 19 WSH @ SF capture showed the live status is
+`"14:25 - 2nd"`; the rule now reads it, so each quarter is graded during the next one instead of up to an hour late
+(scores were already right). Part 2 = replay Thursday's NE @ CHI capture (recorder PID 10302 running; Mac awake Oct 22
+evening). §28 below; handoff `docs/squares-and-brackets-plan_PHASE_6.5_HANDOFF.md`.
 **Phases 7 + 8 (bracket engine + player screens) committed `baeb6e4`**; migration `20261019203858` APPLIED. Flag off.
 **Phase 9 (bracket Prizes, Results, TV) built and committed locally 2026-10-20**; migration `20261019213121` APPLIED
 2026-10-20 (`supabase db push`, verified through PostgREST). Flag still off; nothing pushed or deployed. Andrew: no Prize
@@ -308,7 +310,7 @@ migration); then 6.5–6.9.
 | 6.2 | Squares event lifecycle: rehearsal events, archive, late voids (one migration) | Opus 5.5 | high | `supabase db push` |
 | 6.3 | Paying winners: chunked writes, stuck results, no idle reads | Opus 5.5 | medium | — |
 | 6.4 | Player screen after the final keeps up with a void | Sonnet 5.5 | medium | — |
-| 6.5 | Quarter rule checked against the live captures | Opus 5.5 | medium | Mac awake Oct 19 + 22 |
+| 6.5 | Quarter rule checked against the live captures (part 1 done 2026-10-21, §28) | Opus 5.5 | medium | Mac awake Oct 22 |
 | 6.6 | Re-review of 6.1–6.5 (`/code-review high`) | Opus 5.5 | high | — |
 | 6.7 | Rehearsal on `venue-hightop-test` with a real NFL game | Opus 5.5 | high | Preview env vars, phone pass |
 | 6.8 | Andrew's phone + TV pass (checklist section A) | — | — | yes |
@@ -1223,3 +1225,19 @@ Handoff (full numbers, ids, commands): `docs/squares-and-brackets-plan_PHASE_10.
 - **Test data:** the two archived 10.6 rehearsals (`f6728bdc-…`, `53323143-…`) were given `main_lock_passed_at`
   2026-10-21 19:25:40Z / `second_lock_passed_at` 19:28:40Z (≈ ±2 min, read off their entry timestamps; one-off data fix,
   prizes were already settled), so Results dates them Oct 21 instead of Oct 3–12.
+
+## 28. 6.5 as built (2026-10-21, part 1 of 2) — read before 6.6
+
+- **Capture `1392308` (WSH @ SF, Oct 19, SF 23–17) is committed** at `tests/fixtures/squares/nfl-live-capture-1392308.json`.
+  Live `status` strings, in order: `"10/19 - 8:15 PM EDT"` (`status_state` `scheduled`, also for the first ~3 min after
+  kickoff), then `"15:00 - 1st"` … `"0:06 - 4th"` (`in_progress`), then `"Final"` (`final`). `period`/`time` fields are
+  absent. A quarter's field goes from `null` to `0` when that quarter starts; `null` = not started yet.
+- **Not seen** (the Mac slept: 45 polls over 5 h, 5–35 min gaps): the halftime and end-of-quarter strings, and OT.
+  The rule still knows `Halftime` / `End of 1st` from before; part 2 (NE @ CHI, `1392309`, Oct 22) should show them.
+- **Change:** `quartersFinishedFromStatus` (`lib/squares.ts`) reads `^<m:ss> - (1st|2nd|3rd|4th)$` (anchored both
+  ends) as "quarter N in progress" = N − 1 quarters finished. Before it, Q1 waited for points in the 2nd quarter (graded
+  73 min late in the replay) and Q3 for points in the 4th; a scoreless next quarter meant waiting for the final. Scores
+  were correct either way — the sum check and the 60 s hold are unchanged.
+- **Tests:** new status cases + `grades each quarter during the next one (WSH @ SF, 1392308)` in
+  `tests/squares-engine.test.ts` (shared `replayCapture` helper). Full suite 5,232 pass / 13 skip.
+

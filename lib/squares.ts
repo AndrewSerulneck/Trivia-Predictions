@@ -223,6 +223,10 @@ export const quartersFinishedFromStatus = (status: string | null | undefined): n
   if (end) return ({ "1st": 1, first: 1, "2nd": 2, second: 2, "3rd": 3, third: 3 } as Record<string, number>)[end[1]] ?? 4;
   if (/\bhalf\s*-?\s*time\b|^half$/.test(text)) return 2;
   if (/\bovertime\b|^\d?ot\b|\b\d?ot\s+\d{1,2}:\d{2}\b/.test(text)) return 4;
+  // The live feed's own form (WSH @ SF capture, 2026-10-19): "<clock> - <quarter>", e.g. "14:25 - 2nd".
+  // Anchored on both ends so "3rd & 5" or a kickoff time can never match.
+  const clock = text.match(/^\d{1,2}:\d{2}\s*-\s*(1st|2nd|3rd|4th)$/);
+  if (clock) return ({ "1st": 0, "2nd": 1, "3rd": 2, "4th": 3 } as Record<string, number>)[clock[1]];
   const quarter = (ordinal: string, n: number) =>
     new RegExp(`\\b(?:${ordinal})\\s*(?:quarter|qtr|q)\\b|\\bq${n}\\b|\\b${n}q\\b`).test(text);
   if (quarter("4th|fourth", 4)) return 3;
