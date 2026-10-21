@@ -40,12 +40,12 @@ EARLIER (never later); Follow feed writes the feed's lock at once; the late-lock
 Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.1_HANDOFF.md`.
 **10.2–10.5.1 committed `a9488db`, pushed and deployed to Production 2026-10-21** (Vercel `hightop-challenge-bgmf8863g`,
 Ready; this push also shipped the earlier local commits 6.1–6.4, 7–9 and 10.1). Flags still off.
-**10.5.2 built 2026-10-21 (not committed; migration `20261021134157_bracket_feed_scores_keep.sql` NOT applied — Andrew:
+**10.5.2 committed `fe7aad7` and pushed 2026-10-21 (migration `20261021134157_bracket_feed_scores_keep.sql` NOT applied — Andrew:
 `supabase db push`)**: a stale sync never clears an entered final score; the sync and the admin override record the same
 total; a championship winner the stored score contradicts needs the corrected score; the panel says "Enter both scores,
-or neither". §24 below. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.2_HANDOFF.md`.
-**Next:** 10.5.3 (the TV follows a rehearsal clock change) and 10.5.4 (a refused draft isn't sent twice), in any
-order; both must be done before the 10.6 rehearsal. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews 6.1–6.5
+or neither". §24 below. **10.5.3 built 2026-10-21 (not committed):** the TV's per-venue cache keeps only which tournaments show, so a rehearsal
+`set_clock` reaches the TV on the next 15 s shared read. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.3_HANDOFF.md`.
+**Next:** 10.5.4 (a refused draft isn't sent twice); it must be done before the 10.6 rehearsal. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews 6.1–6.5
 only (Phases 7–9 were reviewed here).
 
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md

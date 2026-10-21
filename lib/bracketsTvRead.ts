@@ -31,7 +31,7 @@ type Shared = { atMs: number; tournaments: BracketTournamentRecord[]; games: Map
 let shared: Shared | null = null;
 const venueCache = new Map<
   string,
-  { atMs: number; revision: string; tournaments: BracketTournamentRecord[]; entries: BracketTvEntry[]; timeZone: string }
+  { atMs: number; revision: string; tournamentIds: string[]; entries: BracketTvEntry[]; timeZone: string }
 >();
 
 /**
@@ -124,7 +124,7 @@ export async function getBracketTvPayload(venueId: string, nowMs: number = Date.
         getVenueTimezone(venueId),
       ]);
       if (!entries) return null;
-      venue = { atMs: nowMs, revision: state.revision, tournaments: shown.value, entries, timeZone };
+      venue = { atMs: nowMs, revision: state.revision, tournamentIds: shown.value.map((t) => t.id), entries, timeZone };
       venueCache.set(venueId, venue);
     }
     if (venue.entries.length === 0) return null;
@@ -134,7 +134,10 @@ export async function getBracketTvPayload(venueId: string, nowMs: number = Date.
       const ms = Date.parse(String(at ?? ""));
       return Number.isFinite(ms) ? ms : null;
     };
-    const tournaments: BracketTvTournament[] = venue.tournaments.map((t) => {
+    // The venue cache keeps only WHICH tournaments show; clock, locks and winner seats come from the
+    // 15-second shared read, so a rehearsal `set_clock` reaches the TV at once (plan 10.5.3).
+    const shownIds = new Set(venue.tournamentIds);
+    const tournaments: BracketTvTournament[] = state.tournaments.filter((t) => shownIds.has(t.id)).map((t) => {
       return {
         id: t.id,
         gender: t.gender,

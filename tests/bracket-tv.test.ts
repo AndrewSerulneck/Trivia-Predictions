@@ -233,6 +233,20 @@ describe("getBracketTvPayload (cost)", () => {
     expect(entriesRead).toHaveBeenCalledTimes(4);
   });
 
+  it("follows a rehearsal clock change at once, with no new entries read (plan 10.5.3, §22 R3)", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BRACKETS_ENABLED", "true");
+    tournamentsMock.mockResolvedValue({ ok: true, value: [record] });
+    gamesMock.mockResolvedValue({ ok: true, value: new Map([["t-men", []]]) });
+    entriesRead.mockResolvedValue({ data: [row], error: null });
+    expect(await getBracketTvPayload("v1", inWindow)).not.toBeNull();
+
+    // `set_clock` walks the rehearsal back to before the lock: the next shared read (15 s on) carries it.
+    const earlier = { ...record, clockOffsetSeconds: Math.round((inWindow + 16_000 - (FIRST_TIP - 3_600_000)) / 1000) };
+    tournamentsMock.mockResolvedValue({ ok: true, value: [earlier] });
+    expect(await getBracketTvPayload("v1", inWindow + 16_000)).toBeNull();
+    expect(entriesRead).toHaveBeenCalledTimes(1);
+  });
+
   it("never reads the venue while no rehearsal is current", async () => {
     vi.stubEnv("NEXT_PUBLIC_BRACKETS_ENABLED", "true");
     tournamentsMock.mockResolvedValue({ ok: true, value: [record] });
