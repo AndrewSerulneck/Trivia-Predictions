@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import { BracketTvScreen } from "@/components/venue-screen/BracketTvScreen";
 import { CategoryBlitzIntermissionScreen } from "@/components/venue-screen/CategoryBlitzIntermissionScreen";
 import { CategoryBlitzScreen } from "@/components/venue-screen/CategoryBlitzScreen";
 import { IdleVenueScreen } from "@/components/venue-screen/IdleVenueScreen";
@@ -11,7 +12,7 @@ import { SquaresTvScreen } from "@/components/venue-screen/SquaresTvScreen";
 import { ScreenTransition } from "@/components/venue-screen/ScreenTransition";
 import { TvGoLiveTakeover, type GameLabel } from "@/components/venue-screen/TvGoLiveTakeover";
 import { VenueScreenStatus } from "@/components/venue-screen/VenueScreenStatus";
-import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
+import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 import { getVenueScreenTheme, type VenueScreenMode } from "@/lib/venueScreenBrand";
 import type { VenueScreenState } from "@/lib/venueScreen";
 import {
@@ -105,7 +106,9 @@ function VenueTitle({ state, accent }: { state: VenueScreenState; accent: string
         ? "Category Blitz"
         : state.mode === "squares"
           ? SQUARES_GAME_NAME
-          : state.mode;
+          : state.mode === "bracket"
+            ? BRACKET_GAME_NAME
+            : state.mode;
   return (
     <header className="flex w-full items-center justify-between gap-8 px-8 py-6 lg:px-10">
       <div className="min-w-0">
@@ -174,6 +177,7 @@ function getScreenTransitionKey(state: VenueScreenState): string {
     return `cb:${state.categoryBlitz.phase}:${state.categoryBlitz.roundId ?? "x"}`;
   }
   if (state.mode === "squares") return `sq:${state.squares.phase}`;
+  if (state.mode === "bracket") return `br:${state.bracket.key}`;
   return "idle";
 }
 
@@ -302,7 +306,7 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
   });
   const transitionKey = getScreenTransitionKey(state);
   const screenTransform =
-    state.mode === "idle" || state.mode === "squares"
+    state.mode === "idle" || state.mode === "squares" || state.mode === "bracket"
       ? getVenueScreenBurnInTransform(nowMs) : "translate3d(0, 0, 0)";
 
   return (
@@ -329,6 +333,11 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
             {state.mode === "squares" ? (
               <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
                 <SquaresTvScreen state={state} accent={theme.accent} />
+              </ScreenTransition>
+            ) : null}
+            {state.mode === "bracket" ? (
+              <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
+                <BracketTvScreen state={state} accent={theme.accent} />
               </ScreenTransition>
             ) : null}
             {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} /> : null}

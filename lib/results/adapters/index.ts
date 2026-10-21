@@ -1,5 +1,6 @@
 import "server-only";
 
+import { bracketResultsAdapter } from "@/lib/results/adapters/bracket";
 import { liveTriviaResultsAdapter } from "@/lib/results/adapters/liveTrivia";
 import { squaresResultsAdapter } from "@/lib/results/adapters/squares";
 import { isResultsCompetitionId, type ResultsCompetitionId } from "@/lib/results/competitions";
@@ -12,6 +13,7 @@ import type { ResultsAdapter } from "@/lib/results/types";
 export const RESULTS_ADAPTERS: Record<ResultsCompetitionId, ResultsAdapter> = {
   live_trivia: liveTriviaResultsAdapter,
   squares: squaresResultsAdapter,
+  bracket: bracketResultsAdapter,
 };
 
 /** The adapter for a competition id from a URL, or null for anything not on Results. */

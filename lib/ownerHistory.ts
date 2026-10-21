@@ -8,6 +8,7 @@ import {
   type OwnerRewardCycle,
   type OwnerRewardDetail,
 } from "@/lib/ownerHistoryDisplay";
+import { BRACKET_PRIZE_DEFINITION_ID, BRACKET_PRIZE_NO_SCORERS_NOTE, bracketPrizeKeyLabel, bracketPrizeKeyOfCycle } from "@/lib/bracketPrizes";
 import { buildRankedWeekHistory } from "@/lib/rankedWeekHistory";
 import { ResultsNotFoundError } from "@/lib/results/errors";
 import { loadUsernames } from "@/lib/results/playerNames";
@@ -155,14 +156,19 @@ export const getOwnerRewardDetail = async (params: {
     const prev = happenedAt.get(key) ?? null;
     if (at && (!prev || Date.parse(at) > Date.parse(prev))) happenedAt.set(key, at);
   }
-  const labelFor = (cycleStart: string): string =>
-    formatCycleLabel({
+  const isBracketPrize = campaign.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID;
+  const labelFor = (cycleStart: string): string => {
+    const label = formatCycleLabel({
       cycleStart,
       recurringType: campaign.recurringType,
       timeZone,
       happenedAt: happenedAt.get(Date.parse(cycleStart)) ?? null,
       currentYear,
     });
+    // A March Madness prize has one cycle per bracket: name the bracket ("Men's bracket · Won Mon, Apr 5").
+    const key = isBracketPrize ? bracketPrizeKeyOfCycle(cycleStart) : null;
+    return key ? `${bracketPrizeKeyLabel(key)} · ${label}` : label;
+  };
 
   let cycles: OwnerRewardCycle[];
   if (campaign.winCondition === "ranked_places") {
@@ -183,6 +189,7 @@ export const getOwnerRewardDetail = async (params: {
         minPlayers: row.min_players ?? null,
       })),
       placePrizes: campaign.placePrizes,
+      ...(isBracketPrize ? { noScorersNote: BRACKET_PRIZE_NO_SCORERS_NOTE } : {}),
     });
     // Redeemed is keyed by player, which the week rows (usernames only) no longer carry: look it up
     // by (cycle, place) from the ledger instead. A deleted player's coupon is gone with their account,

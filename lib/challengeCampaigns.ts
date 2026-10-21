@@ -19,6 +19,7 @@ import {
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import { chunkIds } from "@/lib/postgrestIds";
 import { SQUARES_PRIZE_DEFINITION_ID, normalizeSquaresMoments } from "@/lib/squaresPrizes";
+import { BRACKET_PRIZE_DEFINITION_ID, normalizeBracketPrizeKeys, type BracketPrizeKey } from "@/lib/bracketPrizes";
 import type { SquaresMoment } from "@/lib/seasonalPoints";
 import type {
   ChallengeCampaign,
@@ -312,8 +313,9 @@ export function resolveRewardPrize(row: RewardPrizeSourceRow): {
 }
 
 // The game types a campaign may name. "squares" is only ever a Super Bowl Squares prize's own
-// game (squares_prizes migration 20261019131139); Squares venue points are seasonal credits that
-// never accrue to a campaign, so it is NOT part of the "every game" default below.
+// game (squares_prizes migration 20261019131139), and "bracket" a March Madness prize's
+// (bracket_prizes migration 20261019213121); their venue points are seasonal credits that never
+// accrue to a campaign, so neither is part of the "every game" default below.
 const VALID_GAME_TYPES: Array<Exclude<ChallengeGameType, "trivia">> = [
   "pickem",
   "fantasy",
@@ -322,9 +324,12 @@ const VALID_GAME_TYPES: Array<Exclude<ChallengeGameType, "trivia">> = [
   "bingo",
   "nfl-pickem",
   "squares",
+  "bracket",
 ];
 /** What an empty / unrecognised game_types means: every year-round game (as before Squares). */
-const ALL_GAMES_DEFAULT: Array<Exclude<ChallengeGameType, "trivia">> = VALID_GAME_TYPES.filter((type) => type !== "squares");
+const ALL_GAMES_DEFAULT: Array<Exclude<ChallengeGameType, "trivia">> = VALID_GAME_TYPES.filter(
+  (type) => type !== "squares" && type !== "bracket",
+);
 const VALID_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const VALID_IMAGE_FITS: ChallengeImageFitMode[] = ["cover", "contain"];
 const VALID_CHALLENGE_MODES: ChallengeMode[] = ["progress", "leaderboard"];
@@ -1512,6 +1517,11 @@ export async function createChallengeCampaign(input: {
    * when set, so every other reward's insert is unchanged even before 20261019131139 is applied.
    */
   squaresMoments?: SquaresMoment[] | null;
+  /**
+   * March Madness bracket prizes only: the brackets that pay (validated by createReward). Written
+   * only when set, so every other reward's insert is unchanged even before 20261019213121 is applied.
+   */
+  bracketKeys?: BracketPrizeKey[] | null;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
   const name = String(input.name ?? "").trim();
@@ -1528,6 +1538,7 @@ export async function createChallengeCampaign(input: {
       : null;
   const prizePosDelivery = normalizePrizePosDelivery(input.prizePosDelivery);
   const squaresMoments = normalizeSquaresMoments(input.squaresMoments ?? null);
+  const bracketKeys = normalizeBracketPrizeKeys(input.bracketKeys ?? null);
   if (
     prizePosDelivery === "gift_card" &&
     !prizeCanBeScannableGiftCard(prizeKind, prizeKind === "menu_item" ? normalizeDiscountKind(input.prizeDiscountKind) : null)
@@ -1601,6 +1612,7 @@ export async function createChallengeCampaign(input: {
       : {}),
     ...(Number.isInteger(input.minPlayers) ? { min_players: input.minPlayers } : {}),
     ...(squaresMoments ? { squares_moments: squaresMoments } : {}),
+    ...(bracketKeys ? { bracket_keys: bracketKeys } : {}),
   };
 
   const { data, error } = await supabaseAdmin!
@@ -1612,7 +1624,7 @@ export async function createChallengeCampaign(input: {
     throw new Error(error?.message ?? "Failed to create challenge campaign.");
   }
   const created = mapCampaignRow(data);
-  return squaresMoments ? { ...created, squaresMoments } : created;
+  return { ...created, ...(squaresMoments ? { squaresMoments } : {}), ...(bracketKeys ? { bracketKeys } : {}) };
 }
 
 export async function updateChallengeCampaign(input: {
@@ -2095,6 +2107,59 @@ export async function loadSquaresPrizeMoments(campaignIds: readonly string[]): P
     if (parsed) moments.set(row.id, parsed);
   }
   return moments;
+}
+
+type BracketPrizeCampaignRow = ChallengeCampaignRow & { bracket_keys: string[] | null };
+
+/**
+ * Every active March Madness bracket prize, each with its brackets — the award step's input
+ * (lib/bracketPrizeAwards.ts), read once per tournament when its championship is graded. One read
+ * (a season has a few dozen bracket prizes at most; capped). `bracket_keys` is selected here by name
+ * because it is deliberately NOT in CAMPAIGN_SELECT_COLUMNS (only bracket code needs it, so every
+ * other read is unaffected by migration 20261019213121). Archived prizes (is_active = false) are left
+ * out: archiving stops a prize. Throws on any read error — including that column missing — so the
+ * award step never mistakes a failed read for "no prizes" (the sync retries next run).
+ */
+export async function listActiveBracketPrizeCampaigns(): Promise<ChallengeCampaign[]> {
+  assertConfigured();
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select(`${CAMPAIGN_SELECT_COLUMNS}, bracket_keys`)
+    .eq("reward_definition_id", BRACKET_PRIZE_DEFINITION_ID)
+    .eq("is_active", true)
+    .order("created_at", { ascending: true })
+    .limit(2000)
+    .returns<BracketPrizeCampaignRow[]>();
+  if (error) throw new Error(error.message ?? "Failed to load bracket prizes.");
+  return (data ?? []).map((row) => ({ ...mapCampaignRow(row), bracketKeys: normalizeBracketPrizeKeys(row.bracket_keys) }));
+}
+
+/**
+ * campaign id → the brackets it pays, for describing bracket prizes (attachRewardDescriptions).
+ * Never throws: a failed read (or migration 20261019213121 not applied yet) is logged and answers an
+ * empty map, and those prizes fall back to their stored wording.
+ */
+export async function loadBracketPrizeKeys(campaignIds: readonly string[]): Promise<Map<string, BracketPrizeKey[]>> {
+  const keys = new Map<string, BracketPrizeKey[]>();
+  const wanted = [...new Set(campaignIds.map((id) => String(id ?? "").trim()))].filter((id) => CAMPAIGN_ID_PATTERN.test(id));
+  if (wanted.length === 0 || !supabaseAdmin) return keys;
+  const { data, error } = await supabaseAdmin
+    .from("challenge_campaigns")
+    .select("id, bracket_keys")
+    .in("id", wanted)
+    .returns<Array<{ id: string; bracket_keys: string[] | null }>>();
+  if (error) {
+    console.error(
+      isMissingColumn(error, "bracket_keys") ? "[BracketPrize] keys-column-missing" : "[BracketPrize] keys-read-failed",
+      { message: error.message },
+    );
+    return keys;
+  }
+  for (const row of data ?? []) {
+    const parsed = normalizeBracketPrizeKeys(row.bracket_keys);
+    if (parsed) keys.set(row.id, parsed);
+  }
+  return keys;
 }
 
 /**
@@ -2649,8 +2714,12 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
   // normal way therefore matches zero ledger rows and the winner is never shown
   // as having won. They are resolved below from their most recent ledger row
   // instead of from a computed anchor.
-  const cycleKeyedCampaigns = campaigns.filter((c) => c.winCondition !== "game_winner");
-  const gameWinnerCampaigns = campaigns.filter((c) => c.winCondition === "game_winner");
+  // A March Madness bracket prize is "ranked_places" but one-off with one cycle per bracket
+  // (lib/bracketPrizes.ts), so it has no computable anchor either: it rides the same path.
+  const readsOwnCycles = (c: ChallengeCampaign): boolean =>
+    c.winCondition === "game_winner" || c.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID;
+  const cycleKeyedCampaigns = campaigns.filter((c) => !readsOwnCycles(c));
+  const gameWinnerCampaigns = campaigns.filter(readsOwnCycles);
 
   // Per-campaign target cycle start (recurring: real cycle; one-time: epoch).
   const targetMsById = new Map<string, number>();
@@ -2769,10 +2838,14 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
         });
         continue;
       }
-      if (campaign.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID) {
+      if (
+        campaign.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID ||
+        campaign.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID
+      ) {
         // A Super Bowl Squares prize is ONE contest whose moments are separate cycles
         // (lib/squaresPrizes.ts), and winner_quota is its moment count — so every row counts,
-        // and a guest who won any moment (not just the latest) sees their coupon.
+        // and a guest who won any moment (not just the latest) sees their coupon. A bracket prize
+        // is the same with one cycle per bracket (winner_quota = brackets × places).
         gameWinnerResolved.push({
           campaignId: campaign.id,
           cycleStartIso: campaignRows[0].cycle_start,

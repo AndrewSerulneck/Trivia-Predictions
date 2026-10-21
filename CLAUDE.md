@@ -1124,3 +1124,12 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   `-mx-2 !max-w-none` matches the app bar). Teams are in seats: an opening-round game with no linked seat shows "TBD" until an
   admin links it; linked + undecided shows "A / B". The seasonal app-bar label is `BRACKET_SHORT_NAME` ("Bracket") in
   `lib/venueGameCards.ts`.
+- **Bracket Prizes, Results, TV (Phase 9, 2026-10-20, migration `20261019213121`, applied 2026-10-20; flag off).**
+  Andrew: the bracket screen shows NO Prize line — Prizes tab and Results only. Definition `bracket_challenge`
+  (`lib/bracketPrizes.ts`, a leaf: the registry imports it): places only, partner picks the brackets that pay
+  (`challenge_campaigns.bracket_keys`, NOT in `CAMPAIGN_SELECT_COLUMNS`), the usual `players` minimum. One cycle per
+  bracket per tournament, keyed ONLY by `bracketPrizeCycleStart`; settled once after the championship by
+  `settleBracketPrizes` (`lib/bracketPrizeAwards.ts`, from `lib/bracketsSync.ts`) → `award_ranked_cycle_places`, then
+  `bracket_tournaments.prizes_settled_at`. A later admin correction never changes settled prizes. Results adapter
+  `lib/results/adapters/bracket.ts` (breakdown = picks right/wrong). TV `mode: "bracket"` replaces idle only, inside the
+  existing poll (`lib/bracketsTvRead.ts` → `lib/bracketsTv.ts` → `BracketTvScreen.tsx`; zero I/O off-season).

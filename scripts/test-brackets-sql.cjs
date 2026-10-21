@@ -18,6 +18,7 @@ const MIGRATIONS = [
   "supabase/migrations/20261019045030_seasonal_points_credits.sql",
   "supabase/migrations/20261019051458_squares_engine.sql",
   "supabase/migrations/20261019203858_brackets_engine.sql",
+  "supabase/migrations/20261019213121_bracket_prizes.sql",
 ];
 
 const SCHEMA = `
@@ -27,6 +28,11 @@ const SCHEMA = `
     points integer not null default 0, constraint users_points_non_negative check (points >= 0));
   create table game_sessions(session_id uuid primary key default gen_random_uuid(), game_type text not null,
     constraint game_sessions_type_valid check (game_type in ('trivia')));
+  -- Phase 9a: only the challenge_campaigns columns it touches, with the game-types check as
+  -- 20261019131139 (Squares prizes) left it.
+  create table challenge_campaigns(id uuid primary key default gen_random_uuid(), game_types text[] not null default '{}',
+    constraint challenge_campaigns_game_types_valid check (array_length(game_types, 1) is null
+      or game_types <@ array['pickem','fantasy','trivia','bingo','speed-trivia','live-trivia','nfl-pickem','squares']::text[]));
 `;
 
 const id = (n) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
@@ -236,6 +242,42 @@ async function run() {
     assert.equal((await one(`select bracket_score_of(array[32,16,8,4,2,1]::smallint[]) as s`)).s, 1920);
     assert.equal((await one(`select bracket_score_of(array[0,0,8,4,2,1]::smallint[]) as s`)).s, 1280);
 
+    // ── Phase 9a: bracket prizes + the Results read (20261019213121) ──────────────────────
+    await db.query(`insert into challenge_campaigns (game_types) values ('{squares}'), ('{bracket}')`);
+    for (const [keys, ok] of [
+      ["{men_main}", true],
+      ["{men_main,women_second}", true],
+      ["{men_main,women_main,men_second,women_second}", true],
+      ["{}", false],
+      ["{men_main,men_main}", false],
+      ["{men_final}", false],
+    ]) {
+      const attempt = db.query(`insert into challenge_campaigns (game_types, bracket_keys) values ('{bracket}', $1::text[])`, [keys]);
+      if (ok) await attempt;
+      else await assert.rejects(attempt, /challenge_campaigns_bracket_keys_valid/, `bracket_keys ${keys} refused`);
+    }
+    await assert.rejects(
+      db.query(`insert into challenge_campaigns (game_types) values ('{march}')`),
+      /challenge_campaigns_game_types_valid/,
+      "an unknown game type is still refused",
+    );
+    assert.equal(
+      (await one(`select prizes_settled_at from bracket_tournaments where id = $1`, [T])).prizes_settled_at,
+      null,
+      "prizes_settled_at starts empty",
+    );
+    // bracket_venue_games = entries with at least one pick, per tournament and kind, at that venue only.
+    const expected = await rows(
+      `select tournament_id, kind, count(*)::int as entries from bracket_entries where venue_id = 'v1' and pick_count > 0
+       group by tournament_id, kind order by tournament_id, kind`,
+    );
+    const venueGames = await rows(`select * from bracket_venue_games('v1') order by tournament_id, kind`);
+    assert.ok(expected.length > 0, "v1 has entries to count");
+    assert.deepEqual(venueGames, expected, "bracket_venue_games counts v1's entries");
+    await db.query(`update bracket_entries set pick_count = 0 where venue_id = 'v2'`);
+    assert.deepEqual(await rows(`select * from bracket_venue_games('v2')`), [], "an entry with no picks is not a game");
+    assert.deepEqual(await rows(`select * from bracket_venue_games('nowhere')`), []);
+
     // ── Grants and RLS ────────────────────────────────────────────────────────────────────
     for (const table of ["bracket_tournaments", "bracket_games", "bracket_rounds", "bracket_entries", "bracket_admin_log"]) {
       const rls = await one(`select relrowsecurity, relforcerowsecurity from pg_class where relname = $1`, [table]);
@@ -252,6 +294,8 @@ async function run() {
       "bracket_record_results(uuid, smallint[], integer, boolean, text, text)",
       "bracket_picks_problem(smallint[], text, smallint[])",
       "bracket_round_correct(smallint[], text, smallint[])",
+      "bracket_venue_games(text)",
+      "bracket_keys_valid(text[])",
     ]) {
       for (const role of ["anon", "authenticated"]) {
         const can = await one(`select has_function_privilege($1, $2, 'execute') as ok`, [role, `public.${fn}`]);

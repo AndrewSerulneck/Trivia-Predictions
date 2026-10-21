@@ -32,6 +32,7 @@ class FakeQuery {
   gt(col: string, value: string) { this.filters.push((row) => String(row[col]) > value); return this; }
   in(col: string, values: unknown[]) { this.filters.push((row) => values.includes(row[col])); return this; }
   limit(n: number) { this.max = n; return this; }
+  returns() { return this; }
   maybeSingle() { this.mode = "maybe"; return this; }
   single() { this.mode = "single"; return this; }
   update(payload: Row) { this.op = "update"; this.payload = payload; return this; }
@@ -46,6 +47,7 @@ class FakeQuery {
         id: nextId(),
         archived_at: null,
         completed_at: null,
+        prizes_settled_at: null,
         next_sync_at: null,
         feed_checked_at: null,
         main_lock_at: null,
@@ -114,6 +116,17 @@ const rpc = async (name: string, args: Row) => {
       return { credit_user_id: c.user_id, credit_source_key: c.source_key, credit_points: c.points, outcome: "credited", existing_user_id: null, existing_points: null };
     });
     return { data: out, error: null };
+  }
+  if (name === "award_ranked_cycle_places") {
+    // The real RPC is proven by the ranked-places SQL tests; this records what the sync asked for.
+    const winners = args.p_winners as Array<{ user_id: string; place: number; points: number }>;
+    const settled = (tables.challenge_cycle_settlements ??= []);
+    if (settled.some((r) => r.challenge_id === args.p_challenge_id && r.cycle_start === args.p_cycle_start)) {
+      return { data: [{ status: "already_resolved", winners_awarded: 0 }], error: null };
+    }
+    const status = winners.length > 0 ? "awarded" : "no_scorers";
+    settled.push({ challenge_id: args.p_challenge_id, cycle_start: args.p_cycle_start, venue_id: args.p_venue_id, outcome: status, participant_count: args.p_participant_count, winners });
+    return { data: [{ status, winners_awarded: winners.length }], error: null };
   }
   throw new Error(`unexpected rpc ${name}`);
 };
@@ -188,6 +201,22 @@ describe("bracket sync, minute by minute through March Madness 2027", () => {
     const end = Date.parse("2027-04-07T03:59:00Z"); // Apr 6 23:59 Eastern: the window's last minute
     const perfect = bracketWinnerSeats(mergeBracketFeed([], FEEDS.men as BracketFeedGame[]).games);
     const home = homeBracket();
+    // Two March Madness prizes at v1: one set up on Selection Sunday (pays), one after the men's lock
+    // (was never on offer, so it pays nothing).
+    const prize = (id: string, createdAt: string) => ({
+      id, name: "March Madness Challenge", rules: "", venue_ids: ["v1"], game_types: ["bracket"],
+      reward_definition_id: "bracket_challenge", is_active: true, win_condition: "ranked_places", challenge_mode: "progress",
+      recurring_type: "none", schedule_type: "single_day", active_days: [], winner_quota: 4, points_required_to_win: 1,
+      end_date: "2027-04-06", created_at: createdAt, bracket_keys: ["men_main", "women_main"], min_players: null,
+      place_prizes: [
+        { place: 1, prize_kind: "gift_card", prize_gift_certificate_amount: 30 },
+        { place: 2, prize_kind: "gift_card", prize_gift_certificate_amount: 20 },
+      ],
+    });
+    tables.challenge_campaigns = [
+      prize("aaaaaaaa-0000-0000-0000-000000000001", "2027-03-14T23:30:00Z"),
+      prize("aaaaaaaa-0000-0000-0000-000000000002", "2027-03-20T12:00:00Z"),
+    ];
     let entered = false;
     const errors: string[] = [];
     for (let now = start; now <= end; now += MINUTE) {
@@ -218,6 +247,21 @@ describe("bracket sync, minute by minute through March Madness 2027", () => {
     const keys = (tables.seasonal_points_credits ?? []).map((c) => String(c.source_key));
     expect(new Set(keys).size).toBe(keys.length);
     expect(keys.filter((k) => k.startsWith(String(tables.bracket_entries[0].id))).length).toBe(6);
+
+    // Prizes (Phase 9a): settled once after each championship, only for the prize set up in time.
+    // Men's: Ann (perfect) 1st, Bob 2nd. Women's: nobody entered, so it is recorded as paying nobody.
+    const settled = tables.challenge_cycle_settlements ?? [];
+    expect(settled.map((r) => r.challenge_id)).toEqual(["aaaaaaaa-0000-0000-0000-000000000001", "aaaaaaaa-0000-0000-0000-000000000001"]);
+    const menCycle = settled.find((r) => (r.winners as unknown[]).length > 0) as Row;
+    expect(menCycle.winners).toEqual([
+      { user_id: ANN, place: 1, points: 1920 },
+      { user_id: BOB, place: 2, points: bracketScore(home, perfect, "main") },
+    ]);
+    expect(menCycle.participant_count).toBe(2);
+    expect(Date.parse(String(menCycle.cycle_start))).toBe(Math.floor(Date.parse(String(men.created_at)) / MINUTE) * MINUTE + 1000);
+    const womenCycle = settled.find((r) => r !== menCycle) as Row;
+    expect(womenCycle).toMatchObject({ outcome: "no_scorers", participant_count: 0 });
+    expect(tables.bracket_tournaments.every((t) => typeof t.prizes_settled_at === "string")).toBe(true);
 
     // Plan §6 estimated 6–8k requests for the whole tournament (both genders); report the real number.
     expect(io.feedRequests).toBeLessThan(8000);

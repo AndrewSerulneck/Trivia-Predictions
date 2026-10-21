@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { BRACKET_TEASER_SUBTITLE, BRACKET_TITLE_LINES, SQUARES_TITLE_LINES, type VenueGameKey } from "@/lib/venueGameCards";
 import type { LiveTriviaPayloadFailureReason } from "@/lib/liveTriviaClientState";
+import { BRACKET_PRIZE_DEFINITION_ID } from "@/lib/bracketPrizes";
 import type {
   RewardPrizeKind,
   RewardMenuItem,
@@ -294,7 +295,12 @@ export function rewardHeadline(card: ChallengeCampaignCard): string {
   if (card.winCondition === "ranked_places") {
     const prizes = card.placePrizes ?? [];
     if (prizes.length === 1) return describeRewardPrize(prizes[0]) || card.name;
-    if (prizes.length > 1) return `Weekly prizes for the top ${prizes.length}`;
+    // A March Madness prize pays its places per bracket, not per week.
+    if (prizes.length > 1) {
+      return card.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID
+        ? `Bracket prizes for the top ${prizes.length}`
+        : `Weekly prizes for the top ${prizes.length}`;
+    }
     return card.name;
   }
   if (!isCompletePrize(card)) return card.name;

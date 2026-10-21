@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
     const screenState = applyVenueScreenDebugMode(state, debugMode, nowMs);
     const cacheHeaders =
-      (screenState.mode === "idle" || screenState.mode === "squares") && !debugMode
+      (screenState.mode === "idle" || screenState.mode === "squares" || screenState.mode === "bracket") && !debugMode
         ? { "Cache-Control": "s-maxage=15, stale-while-revalidate=15" }
         : { "Cache-Control": "no-store" };
 

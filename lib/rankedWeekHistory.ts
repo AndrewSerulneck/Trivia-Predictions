@@ -44,8 +44,8 @@ export type RankedWeekHistoryRow = {
   note: string | null;
 };
 
-const noteFor = (settlement: RankedSettlementInput): string | null => {
-  if (settlement.outcome === "no_scorers") return "Nobody scored this week.";
+const noteFor = (settlement: RankedSettlementInput, noScorersNote: string): string | null => {
+  if (settlement.outcome === "no_scorers") return noScorersNote;
   if (settlement.outcome === "below_minimum") {
     const played = `${settlement.participantCount} player${settlement.participantCount === 1 ? "" : "s"}`;
     return settlement.minPlayers
@@ -60,7 +60,10 @@ export const buildRankedWeekHistory = (params: {
   winners: readonly RankedWinnerInput[];
   settlements: readonly RankedSettlementInput[];
   placePrizes: readonly RewardPlacePrize[] | null | undefined;
+  /** What a cycle nobody scored in says; a March Madness bracket isn't a week. */
+  noScorersNote?: string;
 }): RankedWeekHistoryRow[] => {
+  const noScorersNote = params.noScorersNote ?? "Nobody scored this week.";
   const prizeByPlace = new Map((params.placePrizes ?? []).map((prize) => [prize.place, describeRewardPrize(prize)]));
   const rows = new Map<number, RankedWeekHistoryRow>();
 
@@ -72,7 +75,7 @@ export const buildRankedWeekHistory = (params: {
       outcome: settlement.outcome,
       participantCount: settlement.participantCount,
       winners: [],
-      note: noteFor(settlement),
+      note: noteFor(settlement, noScorersNote),
     });
   }
   for (const winner of params.winners) {

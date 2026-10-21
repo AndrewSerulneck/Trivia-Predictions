@@ -27,6 +27,8 @@ export function getVenueScreenPollIntervalMs(state: VenueScreenState): number {
   }
   // Squares re-reads the board server-side at most every 15 s, so polling faster only repeats it.
   if (state.mode === "squares") return 15_000;
+  // March Madness results land at most every couple of minutes (the bracket sync's pace).
+  if (state.mode === "bracket") return 30_000;
   return 20_000;
 }
 

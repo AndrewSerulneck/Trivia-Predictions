@@ -11,11 +11,13 @@ committed locally; their migrations are APPLIED to production; flags off; nothin
 Andrew: push + deploy (6.1–6.4 ride together).
 **6.5 in progress, parked** (live-game recorders restarted 2026-10-19; WSH @ SF Oct 19, NE @ CHI Oct 22) — finish it
 after those games: `docs/squares-and-brackets-plan_PHASE_6.5_HANDOFF.md` (interim).
-**Phase 7 (bracket engine) built 2026-10-19, not committed**; its migration `20261019203858` is NOT applied (Andrew:
-`supabase db push`). Flag off. Handoff: `docs/squares-and-brackets-plan_PHASE_7_HANDOFF.md`.
-**Phase 8 (bracket player screens) built 2026-10-19, not committed**, on top of Phase 7: `/bracket` + `components/bracket/`,
-no new migration, flag still off. Latest handoff: `docs/squares-and-brackets-plan_PHASE_8_HANDOFF.md`. §15 below.
-**Next:** finish 6.5 after the games; 6.6 (re-review, should now cover Phases 7 + 8); Phase 9 (bracket Prizes, Results, TV).
+**Phases 7 + 8 (bracket engine + player screens) committed `baeb6e4`**; migration `20261019203858` APPLIED. Flag off.
+**Phase 9 (bracket Prizes, Results, TV) built and committed locally 2026-10-20**; migration `20261019213121` APPLIED
+2026-10-20 (`supabase db push`, verified through PostgREST). Flag still off; nothing pushed or deployed. Andrew: no Prize
+line on the bracket screen — Prizes only on the Prizes tab and Results. Latest handoff:
+`docs/squares-and-brackets-plan_PHASE_9_HANDOFF.md`. §16 below.
+**Next:** finish 6.5 after the games; 6.6 (re-review, should cover Phases 7–9) — or Phase 10, which starts with
+`/code-review high` on Phases 7–9.
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -445,6 +447,8 @@ migration); then 6.5–6.9.
   (`hasBreakdown: true`, a player's 63 picks right/wrong) plus a placement rule (week row of the final).
 - **9b (Sonnet 5.5 · medium):** TV view in the tournament window: the venue's top 10, today's games, and the biggest
   upset busting brackets. Same no-new-polling rule as Phase 5.
+- **Built 2026-10-20 (committed locally; migration `20261019213121` applied).** As built and deviations: §16.
+  Detail: `docs/squares-and-brackets-plan_PHASE_9_HANDOFF.md`.
 
 ### Phase 10 — Bracket review, rehearsal, launch (Opus 5.5 · high)
 - Run `/code-review high` on Phases 7–9 and fix the findings.
@@ -641,3 +645,35 @@ Full detail: `docs/squares-and-brackets-plan_PHASE_8_HANDOFF.md`.
 - **Not changed:** every rule (lib/brackets/*, SQL), the Phase 7 routes, the engine. Tests: `tests/brackets-view.test.ts`
   (25), `tests/bracket-screen.test.ts` (20, jsdom), `tests/bracket-screen-contract.test.ts` (10), fixture helper
   `tests/fixtures/brackets/view.ts`.
+
+## 16. Phase 9 as built (2026-10-20) — read before Phase 10
+
+Full detail: `docs/squares-and-brackets-plan_PHASE_9_HANDOFF.md`.
+- **Andrew (2026-10-19): the bracket screen shows NO Prize line** — bracket prizes appear only on the Prizes tab and on
+  Results. `components/bracket/` and `lib/bracketsView.ts` never mention a prize.
+- Migration `20261019213121_bracket_prizes.sql` (PGlite-proven by `npm run test:brackets-sql`, applied 2026-10-20):
+  `'bracket'` in `challenge_campaigns_game_types_valid`; `challenge_campaigns.bracket_keys text[]` (checked by
+  `bracket_keys_valid`; deliberately NOT in `CAMPAIGN_SELECT_COLUMNS`); `bracket_tournaments.prizes_settled_at`; RPC
+  `bracket_venue_games(venue)` (Results' one aggregate read). No new table, no users FK.
+- Prize definition `bracket_challenge` (`lib/rewardDefinitions.ts`, description `calendar: "march_madness"`). Pure rules
+  in `lib/bracketPrizes.ts` (leaf module) + `lib/bracketPrizeTerms.ts`. Always won by places (1st/2nd/3rd ladder); the
+  partner picks which brackets pay (`men_main`, `women_main`, `men_second`, `women_second`; nothing pre-selected; a
+  locked bracket is greyed and refused server-side, 409); the usual `players` minimum step applies. Offered while
+  `isBracketPrizeOffered` (flag on, until Apr 6 Eastern).
+- **Each chosen bracket of each tournament is ONE cycle**: `bracketPrizeCycleStart` = the tournament row's creation
+  minute + the key's position (1–4) in seconds — the one key. Settled ONCE, after the championship is graded and every
+  round is paid, by `settleBracketPrizes` (`lib/bracketPrizeAwards.ts`) from `lib/bracketsSync.ts`, through
+  `award_ranked_cycle_places`, then `prizes_settled_at` is stamped (a failure keeps the 2-minute pace and retries). A
+  prize pays only if active, for that venue, created before that bracket locked (real time for a rehearsal) and not
+  closed before it. A rehearsal pays only at hidden venues. **An admin result correction after settlement does NOT
+  change prizes** (admin panel says so).
+- Results: `bracket` registered (`hasBreakdown: true`), adapter `lib/results/adapters/bracket.ts` (inert with flag and
+  switch off; gameKey `<tournament id>:<kind>`; dated on the lock day; breakdown = each pick right/wrong with points),
+  placement rule = a week row in the week it was settled, labelled with the bracket.
+- **TV (9b):** `mode: "bracket"` replaces the idle screen only (live games still win), inside the existing
+  `/api/venue-screen/state` poll (CDN 15 s; client polls every 30 s). `lib/bracketsTvRead.ts` (zero I/O unless
+  `isBracketsServerLive`; one shared tournaments+games read per 15 s; per venue one entries read, refreshed only when a
+  result/lock changes or after 10 min) → `lib/bracketsTv.ts` (`buildBracketTvPayload`: the bracket with the most entries
+  here that has locked; top 10; today's games; the biggest upset busting brackets here in the last 36 h) →
+  `components/venue-screen/BracketTvScreen.tsx`. Tests: `tests/bracket-tv.test.ts`.
+

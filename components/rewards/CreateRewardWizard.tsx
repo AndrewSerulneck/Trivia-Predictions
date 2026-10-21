@@ -14,6 +14,10 @@
 // ever won by holding the winning square) and asks "Which moments pay a prize?" as its terms step.
 // Its tile shows only in season (offeredRewardDefinitions). Every Squares branch is gated on its id.
 //
+// March Madness (Phase 9a) is always won by places: it skips "how it's won", asks "Which brackets
+// pay a prize?" and "How many places?" as its terms step, then the usual minimum-players step and one
+// prize per place. Every bracket branch is gated on its id.
+//
 // "How is this reward won?" is asked FIRST because it decides whether the rest of
 // the questions even make sense, and the old Single Game / Recurring chips plus
 // the trailing Quantity step are replaced by one plain-English contract:
@@ -100,7 +104,16 @@ import {
   SCANNABLE_CHOICE_GIFT_CARD,
   SCANNABLE_CHOICE_QUESTION,
 } from "@/lib/posStaffInstructions";
-import type { RewardPrizeInput, RewardSquaresContext } from "@/lib/rewards";
+import type { RewardBracketContext, RewardPrizeInput, RewardSquaresContext } from "@/lib/rewards";
+import {
+  BRACKET_PRIZE_DEFINITION_ID,
+  BRACKET_PRIZE_KEYS,
+  BRACKET_PRIZE_KEYS_MESSAGE,
+  BRACKET_PRIZE_UNAVAILABLE_MESSAGE,
+  bracketPrizeKeyLabel,
+  type BracketPrizeKey,
+} from "@/lib/bracketPrizes";
+import { describeBracketPrizeTerms } from "@/lib/bracketPrizeTerms";
 import { SQUARES_MOMENTS, type SquaresMoment } from "@/lib/seasonalPoints";
 import {
   SQUARES_PRIZE_DEFINITION_ID,
@@ -152,6 +165,8 @@ export type RewardCreationContextDTO = {
   nflSeason?: NFLRewardSeasonContext | null;
   /** Super Bowl Squares prizes only: when the numbers are drawn, once the game is known. */
   squares?: RewardSquaresContext | null;
+  /** March Madness prizes only: which brackets have locked (a locked one can't be chosen). */
+  bracket?: RewardBracketContext | null;
   /**
    * POS plan Phase 1: the venue has a live POS connection, so a percent-off prize also
    * needs its value at the register (lib/pos/prizeValue.ts). Optional: absent = false.
@@ -177,6 +192,8 @@ export type CreateRewardSubmission = {
   minPlayers?: number;
   /** Super Bowl Squares prizes: the moments that each pay one prize, in game order. */
   squaresMoments?: SquaresMoment[];
+  /** March Madness prizes: the brackets that each pay the place ladder. */
+  bracketKeys?: BracketPrizeKey[];
 };
 
 export type CreateRewardWizardVenue = { id: string; name: string };
@@ -385,6 +402,10 @@ export function CreateRewardWizard({
   // Nothing pre-selected: Next stays off until the partner picks at least one.
   const [squaresMoments, setSquaresMoments] = useState<SquaresMoment[]>([]);
 
+  // ── March Madness: which brackets pay a prize ──────────────────────────────
+  // Nothing pre-selected: Next stays off until the partner picks at least one open bracket.
+  const [bracketKeys, setBracketKeys] = useState<BracketPrizeKey[]>([]);
+
   // ── The game picker (Phase 5, flag-gated) ───────────────────────────────────
   // Replaces the period-based sentence for game-winner rewards: the partner
   // picks exact scheduled games instead of a count. Selection is a set of
@@ -426,6 +447,8 @@ export function CreateRewardWizard({
   // A Squares prize is "game_winner" in the engine, but its winner holds a square, not a top score:
   // there is nothing for a minimum to protect.
   const isSquaresDefinition = definition?.id === SQUARES_PRIZE_DEFINITION_ID;
+  // March Madness is always won by places, so it always offers the minimum.
+  const isBracketDefinition = definition?.id === BRACKET_PRIZE_DEFINITION_ID;
   const offersMinPlayers = !isSquaresDefinition && (winCondition === "game_winner" || winCondition === "ranked_places");
   const step =
     controlledStep === undefined
@@ -533,6 +556,12 @@ export function CreateRewardWizard({
         )
       : null;
   }, [squaresLockAt]);
+
+  // March Madness: the brackets that have locked (greyed out; the server refuses them too).
+  const bracketLocks = useMemo(
+    () => new Map((context?.bracket?.brackets ?? []).map((bracket) => [bracket.key, bracket.locked] as const)),
+    [context],
+  );
 
   // Weeks the server offers for a "Single week" reward (never a started week).
   const selectableWeeks = nflSeason?.selectableWeeks ?? EMPTY_SELECTABLE_WEEKS;
@@ -675,6 +704,7 @@ export function CreateRewardWizard({
   const handlePickDefinition = async (picked: RewardDefinition) => {
     const isNFLPick = picked.id === NFL_PICKEM_DEFINITION_ID;
     const isSquaresPick = picked.id === SQUARES_PRIZE_DEFINITION_ID;
+    const isBracketPick = picked.id === BRACKET_PRIZE_DEFINITION_ID;
     // requiresScheduledGame is null for the NFL and Squares definitions (they gate on a
     // season, not anything a venue schedules), so the "not available" copy — and whether a
     // "schedule it" link even makes sense — differs.
@@ -682,19 +712,22 @@ export function CreateRewardWizard({
       ? REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE
       : isSquaresPick
         ? SQUARES_PRIZE_UNAVAILABLE_MESSAGE
-        : REWARD_TERMS_NOT_SCHEDULED_MESSAGE;
+        : isBracketPick
+          ? BRACKET_PRIZE_UNAVAILABLE_MESSAGE
+          : REWARD_TERMS_NOT_SCHEDULED_MESSAGE;
 
     setDefinition(picked);
     setThreshold(picked.defaultThreshold);
     setCustomThreshold("");
-    // Squares is only ever won by holding the winning square.
-    setWinCondition(isSquaresPick ? "game_winner" : "points_threshold");
+    // Squares is only ever won by holding the winning square; March Madness only by places.
+    setWinCondition(isSquaresPick ? "game_winner" : isBracketPick ? "ranked_places" : "points_threshold");
     setNflScopeKind("weekly");
     setNflWeekNumber(null);
     setSquaresMoments([]);
+    setBracketKeys([]);
     setContextError(null);
     setNotScheduledError(null);
-    setNotScheduledHasNoLink(isNFLPick || isSquaresPick);
+    setNotScheduledHasNoLink(isNFLPick || isSquaresPick || isBracketPick);
 
     const cached = definitionContexts[picked.id];
     if (cached) {
@@ -784,6 +817,11 @@ export function CreateRewardWizard({
           squaresMoments.length > 0
           ? { cadence: "none" as const, activeDays: [] as string[], winnerQuota: squaresMoments.length }
           : null
+        : isBracketDefinition
+        ? // One-off, each chosen bracket pays its places — the facts createReward fixes for March Madness.
+          bracketKeys.length > 0
+          ? { cadence: "none" as const, activeDays: [] as string[], winnerQuota: bracketKeys.length * placeCount }
+          : null
         : isRanked
         ? // Weekly by definition; its quota is its place count; its nights are the counted games
           // (the same three facts createReward derives for a ranked reward).
@@ -800,6 +838,8 @@ export function CreateRewardWizard({
     [
       isSquaresDefinition,
       squaresMoments,
+      isBracketDefinition,
+      bracketKeys,
       isRanked,
       rankedNights,
       placeCount,
@@ -820,6 +860,7 @@ export function CreateRewardWizard({
     // A one-off-only venue has no period, but its reward still submits (cadence
     // "none") and describeReward words it, so the preview shows there too.
     if (!isSquaresDefinition && !isRanked && !isNFLDefinition && !pickedSlotTerms && !period && !isOneOffOnly) return null;
+    // isRanked covers March Madness too (it is always won by places).
     const now = new Date();
     // "Starts Thu, Sep 10" until the reward's first covered NFL week begins — the
     // exact rule the venue page uses (nflRewardUpcomingStartDate), fed the dates
@@ -853,6 +894,7 @@ export function CreateRewardWizard({
         placePrizes: isRanked ? placePrizes : null,
         minPlayers: sentMinPlayers,
         squaresMoments: isSquaresDefinition ? squaresMoments : null,
+        bracketKeys: isBracketDefinition ? bracketKeys : null,
         prizeKind: isRanked ? null : prize.prizeKind,
         prizeMenuItem: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItem : null,
         prizeMenuItemName: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItemName : null,
@@ -885,6 +927,8 @@ export function CreateRewardWizard({
     sentMinPlayers,
     isSquaresDefinition,
     squaresMoments,
+    isBracketDefinition,
+    bracketKeys,
   ]);
 
   const handleSubmit = async () => {
@@ -892,6 +936,11 @@ export function CreateRewardWizard({
     if (isSquaresDefinition) {
       if (squaresMoments.length === 0) {
         setSubmitError(SQUARES_PRIZE_MOMENTS_MESSAGE);
+        return;
+      }
+    } else if (isBracketDefinition) {
+      if (bracketKeys.length === 0) {
+        setSubmitError(BRACKET_PRIZE_KEYS_MESSAGE);
         return;
       }
     } else if (isRanked) {
@@ -956,6 +1005,7 @@ export function CreateRewardWizard({
         ...(isRanked ? { placePrizes: placePrizeInputs } : {}),
         ...(sentMinPlayers !== null ? { minPlayers: sentMinPlayers } : {}),
         ...(isSquaresDefinition ? { squaresMoments } : {}),
+        ...(isBracketDefinition ? { bracketKeys } : {}),
       });
       if (!result.ok) {
         setSubmitError(result.error);
@@ -1171,6 +1221,55 @@ export function CreateRewardWizard({
                 it, nobody wins that one.
                 {squaresDrawLabel ? ` Set it up before the numbers are drawn, ${squaresDrawLabel}.` : ""}
               </p>
+            </div>
+          ) : isBracketDefinition ? (
+            <div className="space-y-3">
+              <div>
+                <p className={s.label}>Which brackets pay a prize?</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {BRACKET_PRIZE_KEYS.map((key) => {
+                    const picked = bracketKeys.includes(key);
+                    const locked = Boolean(bracketLocks.get(key));
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        aria-pressed={picked}
+                        disabled={locked}
+                        onClick={() =>
+                          setBracketKeys((prev) => BRACKET_PRIZE_KEYS.filter((k) => (k === key ? !picked : prev.includes(k))))
+                        }
+                        className={`${s.chip} ${picked ? s.chipActive : ""} disabled:opacity-40`}
+                      >
+                        {bracketPrizeKeyLabel(key)}
+                        {locked ? " (locked)" : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <p className={s.label}>How many places?</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {Array.from({ length: MAX_RANKED_PLACES }, (_, index) => index + 1).map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setPlaceCount(count)}
+                      className={`${s.chip} ${placeCount === count ? s.chipActive : ""}`}
+                    >
+                      {count === 1 ? "1st only" : `Top ${count}`}
+                    </button>
+                  ))}
+                </div>
+                <p className={`mt-1.5 ${s.helpText}`}>
+                  {placeCount === 1
+                    ? "The top bracket at your venue wins."
+                    : `The top ${placeCount} brackets at your venue each win a prize, one place each.`}{" "}
+                  {bracketKeys.length > 1 ? "Each bracket you pick pays its own places. " : ""}
+                  Winners are named after the championship game. Set it up before a bracket locks.
+                </p>
+              </div>
             </div>
           ) : isNFLDefinition ? (
             <div className="space-y-4">
@@ -1519,6 +1618,8 @@ export function CreateRewardWizard({
             nextDisabled={
               isSquaresDefinition
                 ? squaresMoments.length === 0
+                : isBracketDefinition
+                ? bracketKeys.length === 0
                 : isRanked
                 ? false
                 : isNFLDefinition
@@ -1587,7 +1688,9 @@ export function CreateRewardWizard({
               />
             ) : null}
             <p className={`mt-1.5 ${s.helpText}`}>
-              {isRanked
+              {isBracketDefinition
+                ? "Pay out only if at least this many players fill out that bracket at your venue. Below it, nobody wins that bracket."
+                : isRanked
                 ? "Pay out only if at least this many players answered a question that week. Below it, nobody wins and the week is recorded."
                 : isNFLDefinition
                   ? `Name a winner only if at least this many players make picks that ${nflScopeKind === "season" ? "season" : "week"}. With no minimum, even one player can win.`
@@ -1816,7 +1919,15 @@ export function CreateRewardWizard({
               <>
                 <div className={s.summaryRow}>
                   <span>Won by</span>
-                  <span className="font-bold">{placeCount === 1 ? "Top scorer each week" : `Top ${placeCount} each week`}</span>
+                  <span className="font-bold">
+                    {isBracketDefinition
+                      ? placeCount === 1
+                        ? "Top bracket"
+                        : `Top ${placeCount} brackets`
+                      : placeCount === 1
+                        ? "Top scorer each week"
+                        : `Top ${placeCount} each week`}
+                  </span>
                 </div>
                 {placePrizeInputs.map((input, index) => (
                   <div key={index} className={s.summaryRow}>
@@ -1835,6 +1946,12 @@ export function CreateRewardWizard({
               <div className={s.summaryRow}>
                 <span>Most off at the register</span>
                 <span className="font-bold">${(derivedPrizes[0].posValueCents / 100).toFixed(2)}</span>
+              </div>
+            ) : null}
+            {isBracketDefinition ? (
+              <div className={s.summaryRow}>
+                <span>Pays for</span>
+                <span className="font-bold">{bracketKeys.map(bracketPrizeKeyLabel).join(", ")}</span>
               </div>
             ) : null}
             {isSquaresDefinition ? (
@@ -1865,6 +1982,8 @@ export function CreateRewardWizard({
           <p className={s.sentence}>
             {isSquaresDefinition
               ? describeSquaresPrizeTerms(squaresMoments, squaresMoments.length)
+              : isBracketDefinition
+              ? describeBracketPrizeTerms(bracketKeys, placePrizes, minPlayers)
               : isRanked
               ? describeRankedTerms(placePrizes, minPlayers)
               : isNFLDefinition

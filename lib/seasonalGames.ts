@@ -111,6 +111,15 @@ export const isSquaresWindowClosed = (now: Date): boolean =>
 export const isSquaresServerLive = (now: Date): boolean =>
   isSquaresEnabled() && (seasonalWindowState(SEASONAL_GAME_WINDOWS.squares, now) === "open" || isSquaresRehearsalEnabled());
 
+/**
+ * Server reads that show the bracket game on the venue TV (Phase 9b), the same rule as Squares: the
+ * public flag, and either the card window or the rehearsal switch (a rehearsal shows only at hidden
+ * venues, because only they have rehearsal entries). The switch alone never runs a TV read, so a
+ * Production rehearsal costs the TVs nothing. Pure, no I/O.
+ */
+export const isBracketsServerLive = (now: Date): boolean =>
+  isBracketsEnabled() && (seasonalWindowState(SEASONAL_GAME_WINDOWS.bracket, now) === "open" || isBracketsRehearsalEnabled());
+
 /** A seasonal game's card: hidden while its flag is off, else by its window. */
 export const seasonalCardState = (key: SeasonalGameKey, now: Date): SeasonalCardState =>
   isSeasonalGameEnabled(key) ? seasonalWindowState(SEASONAL_GAME_WINDOWS[key], now) : "hidden";

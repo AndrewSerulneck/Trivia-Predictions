@@ -2,6 +2,8 @@ import { OWNER_COMPETITION_TEMPLATES } from "@/lib/ownerCompetitionTemplates";
 import { getRewardDefinition } from "@/lib/rewardDefinitions";
 import { describeRankedTerms } from "@/lib/rankedPlaceRewards";
 import { SQUARES_PRIZE_DEFINITION_ID, describeSquaresPrizeTerms } from "@/lib/squaresPrizes";
+import { BRACKET_PRIZE_DEFINITION_ID } from "@/lib/bracketPrizes";
+import { describeBracketPrizeTerms } from "@/lib/bracketPrizeTerms";
 import { describeCampaignGameWinnerTerms } from "@/lib/rewardGameSlots";
 import { periodForCadence, renderTermsSentence } from "@/lib/rewardTerms";
 import type { ChallengeCampaign } from "@/types";
@@ -60,6 +62,10 @@ export const formatTimeLabel = (time: string | undefined): string => {
  */
 export const rewardTermsText = (competition: OwnerCompetition): string | null => {
   if (!competition.rewardDefinitionId) return null;
+  // March Madness: the brackets it pays, then the ladder (it is ranked_places, but never weekly).
+  if (competition.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID) {
+    return describeBracketPrizeTerms(competition.bracketKeys, competition.placePrizes, competition.minPlayers);
+  }
   // A weekly places reward has no "N rewards a week" quota sentence: its terms ARE the prize ladder.
   if (competition.winCondition === "ranked_places") {
     return describeRankedTerms(competition.placePrizes, competition.minPlayers);

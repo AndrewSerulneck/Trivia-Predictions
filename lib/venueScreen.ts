@@ -7,6 +7,8 @@ import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
 import { getLiveShowdownState, type LiveShowdownState } from "@/lib/liveShowdownEngine";
 import type { SquaresTvPayload } from "@/lib/squaresTv";
 import { getSquaresTvPayload } from "@/lib/squaresTvRead";
+import type { BracketTvPayload } from "@/lib/bracketsTv";
+import { getBracketTvPayload } from "@/lib/bracketsTvRead";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getVenueScreenPollIntervalMs } from "@/lib/venueScreenTiming";
 import { getVenueById } from "@/lib/venues";
@@ -92,6 +94,17 @@ export type VenueScreenState =
       updatedAt: number;
     }
   | {
+      // March Madness (Phase 9b): replaces the idle attract screen only — a live game still wins.
+      ok: true;
+      mode: "bracket";
+      venue: VenueScreenVenue;
+      liveTrivia: null;
+      categoryBlitz: null;
+      idle: null;
+      bracket: BracketTvPayload;
+      updatedAt: number;
+    }
+  | {
       ok: true;
       mode: "idle";
       venue: VenueScreenVenue;
@@ -141,6 +154,8 @@ export type VenueScreenSelectionInput = {
   };
   /** Present only when Squares should replace the idle screen (see getSquaresTvPayload). */
   squares?: SquaresTvPayload | null;
+  /** Present only when March Madness should replace the idle screen (see getBracketTvPayload). */
+  bracket?: BracketTvPayload | null;
   updatedAt: number;
 };
 
@@ -547,6 +562,19 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
     };
   }
 
+  if (input.bracket) {
+    return {
+      ok: true,
+      mode: "bracket",
+      venue,
+      liveTrivia: null,
+      categoryBlitz: null,
+      idle: null,
+      bracket: input.bracket,
+      updatedAt,
+    };
+  }
+
   return {
     ok: true,
     mode: "idle",
@@ -596,13 +624,15 @@ export async function getVenueScreenState(
     return null;
   }
 
-  // Squares replaces only the idle screen, so it is read only when nothing else is live.
+  // Squares and March Madness replace only the idle screen, so they are read only when nothing else
+  // is live (each read is zero I/O outside its own season).
   const wouldBeIdle = !liveTrivia.isGameActive && !categoryBlitz.session;
-  const [sponsorSlots, squares] = await Promise.all([
+  const [sponsorSlots, squares, bracket] = await Promise.all([
     screenConfig.screenSponsorRotationEnabled
       ? getActiveVenueScreenSponsors(safeVenueId, nowMs)
       : Promise.resolve<VenueScreenSponsorSlot[]>([]),
     wouldBeIdle ? getSquaresTvPayload(safeVenueId, nowMs) : Promise.resolve(null),
+    wouldBeIdle ? getBracketTvPayload(safeVenueId, nowMs) : Promise.resolve(null),
   ]);
 
   return selectVenueScreenState({
@@ -611,6 +641,7 @@ export async function getVenueScreenState(
     categoryBlitz,
     idle: { sponsorSlots },
     squares,
+    bracket,
     updatedAt: nowMs,
   });
 }

@@ -13,7 +13,7 @@
 // (The screen previously used emerald for Category Blitz, which did not match
 // the brand's Blitz identity — these tokens are the source of truth now.)
 
-export type VenueScreenMode = "live-trivia" | "category-blitz" | "squares" | "idle";
+export type VenueScreenMode = "live-trivia" | "category-blitz" | "squares" | "bracket" | "idle";
 
 /**
  * Shared framer-motion easing curve for the venue TV's Tv*.tsx panels — a
@@ -117,10 +117,24 @@ const SQUARES_THEME: VenueScreenTheme = {
   accentBorder: "rgba(252,211,77,0.30)",
 };
 
+// March Madness: basketball orange over the dark stage (the game's tile is #c2410c).
+const BRACKET_THEME: VenueScreenTheme = {
+  stageGradient:
+    "radial-gradient(120% 90% at 8% 0%, rgba(234,88,12,0.26), transparent 46%), radial-gradient(120% 90% at 100% 100%, rgba(6,182,212,0.16), transparent 44%), linear-gradient(135deg, #020617 0%, #1a0d06 48%, #040b18 100%)",
+  ambientA: "rgba(234,88,12,0.26)",
+  ambientB: "rgba(6,182,212,0.16)",
+  accent: SCREEN_COLORS.amber300,
+  accentSoft: SCREEN_COLORS.cyan300,
+  glow: SCREEN_COLORS.amber400,
+  accentTint: "rgba(251,146,60,0.12)",
+  accentBorder: "rgba(253,186,116,0.30)",
+};
+
 const THEMES: Record<VenueScreenMode, VenueScreenTheme> = {
   "live-trivia": LIVE_TRIVIA_THEME,
   "category-blitz": CATEGORY_BLITZ_THEME,
   squares: SQUARES_THEME,
+  bracket: BRACKET_THEME,
   idle: IDLE_THEME,
 };
 

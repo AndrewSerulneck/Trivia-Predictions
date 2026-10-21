@@ -30,6 +30,7 @@ const OWN_DEFINITION_CHECK: Record<string, RegExp> = {
   "lib/rankedRewardBackfill.ts": /isLiveTriviaRankedCampaign\(row\)/,
   "lib/nflPickEmWinnerRewards.ts": /campaign\.rewardDefinitionId === NFL_PICKEM_REWARD_DEFINITION_ID/,
   "lib/squaresPrizeAwards.ts": /campaign\.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID/,
+  "lib/bracketPrizeAwards.ts": /campaign\.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID/,
 };
 
 /**

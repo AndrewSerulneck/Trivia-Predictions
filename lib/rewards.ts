@@ -1,6 +1,22 @@
 import "server-only";
 
-import { computeUpcomingCycleStart, createChallengeCampaign, loadSquaresPrizeMoments } from "@/lib/challengeCampaigns";
+import {
+  computeUpcomingCycleStart,
+  createChallengeCampaign,
+  loadBracketPrizeKeys,
+  loadSquaresPrizeMoments,
+} from "@/lib/challengeCampaigns";
+import {
+  BRACKET_PRIZE_DEFINITION_ID,
+  BRACKET_PRIZE_KEYS_MESSAGE,
+  BRACKET_PRIZE_LOCKED_MESSAGE,
+  BRACKET_PRIZE_PAIRS,
+  BRACKET_PRIZE_UNAVAILABLE_MESSAGE,
+  isBracketPrizeOffered,
+  normalizeBracketPrizeKeys,
+  type BracketPrizeKey,
+} from "@/lib/bracketPrizes";
+import { listCurrentBracketTournaments } from "@/lib/bracketsStore";
 import { SEASONAL_GAME_WINDOWS } from "@/lib/seasonalGames";
 import {
   SQUARES_PRIZE_DEFINITION_ID,
@@ -10,7 +26,7 @@ import {
   normalizeSquaresMoments,
 } from "@/lib/squaresPrizes";
 import { getCurrentSquaresEvent } from "@/lib/squaresStore";
-import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
+import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 import type { SquaresMoment } from "@/lib/seasonalPoints";
 import {
   listScheduleTimezones,
@@ -120,6 +136,11 @@ export { REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE };
 // lib/squaresPrizes.ts so the wizard's block shows the same words.
 export const REWARD_SQUARES_UNAVAILABLE_MESSAGE = SQUARES_PRIZE_UNAVAILABLE_MESSAGE;
 export const REWARD_SQUARES_WIN_CONDITION_MESSAGE = `A ${SQUARES_GAME_NAME} prize goes to whoever holds the winning square, so it has no points target.`;
+// March Madness's equivalents: out of season is a 409 like Squares; a bracket already locked is too
+// (the partner chose nothing wrong, the bracket simply started).
+export const REWARD_BRACKET_UNAVAILABLE_MESSAGE = BRACKET_PRIZE_UNAVAILABLE_MESSAGE;
+export const REWARD_BRACKET_LOCKED_MESSAGE = BRACKET_PRIZE_LOCKED_MESSAGE;
+export const REWARD_BRACKET_WIN_CONDITION_MESSAGE = `A ${BRACKET_GAME_NAME} prize goes to the top brackets at your venue (1st, 2nd and 3rd).`;
 
 const WINNER_QUOTA_CAP = 100;
 
@@ -299,6 +320,17 @@ export type RewardCreationContext = {
    * numbers are drawn, if the game is known yet. null for every other definition.
    */
   squares?: RewardSquaresContext | null;
+  /**
+   * Present only for the March Madness prize (and only while it can be created): which brackets have
+   * locked. null for every other definition.
+   */
+  bracket?: RewardBracketContext | null;
+};
+
+/** What the wizard may say about the brackets a March Madness prize can pay. */
+export type RewardBracketContext = {
+  /** Every bracket, in BRACKET_PRIZE_KEYS order. A locked one can't be chosen. */
+  brackets: Array<{ key: BracketPrizeKey; lockAt: string | null; locked: boolean }>;
 };
 
 /** What the wizard may say about the Squares game a prize is being set up for. */
@@ -393,12 +425,15 @@ const nflSeasonWeeksCache = new Map<number, ReadCacheEntry<NFLWeekDates[]>>();
 // Squares prizes' moments, keyed by the sorted campaign ids. A prize's moments never change after
 // it is created, so the guest route reuses them like the NFL weeks.
 const squaresMomentsCache = new Map<string, ReadCacheEntry<Map<string, SquaresMoment[]>>>();
+// March Madness prizes' brackets, the same way (they never change after creation either).
+const bracketKeysCache = new Map<string, ReadCacheEntry<Map<string, BracketPrizeKey[]>>>();
 
 /** Test hook: forget every cached schedule and NFL season read. */
 export function clearRewardDescriptionCaches(): void {
   venueScheduleCache.clear();
   nflSeasonWeeksCache.clear();
   squaresMomentsCache.clear();
+  bracketKeysCache.clear();
 }
 
 /**
@@ -484,6 +519,32 @@ async function loadSquaresMoments(
     cachedReads,
     () => loadSquaresPrizeMoments(ids),
     (moments) => moments.size > 0,
+  );
+}
+
+/**
+ * The brackets of every March Madness prize in `campaigns` that doesn't already carry them (the shared
+ * campaign select leaves bracket_keys out). One read for all of them, none when there are none.
+ */
+async function loadBracketKeys(
+  campaigns: ReadonlyArray<Pick<ChallengeCampaign, "id" | "rewardDefinitionId" | "bracketKeys">>,
+  cachedReads: boolean,
+): Promise<Map<string, BracketPrizeKey[]>> {
+  const ids = [
+    ...new Set(
+      campaigns
+        .filter((campaign) => campaign.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID && !campaign.bracketKeys)
+        .map((campaign) => campaign.id),
+    ),
+  ].sort();
+  if (ids.length === 0) return new Map();
+  return readThroughCache(
+    bracketKeysCache,
+    ids.join(","),
+    REWARD_NFL_WEEKS_CACHE_TTL_MS,
+    cachedReads,
+    () => loadBracketPrizeKeys(ids),
+    (keys) => keys.size > 0,
   );
 }
 
@@ -593,6 +654,7 @@ async function loadVenueGameSlots(
  *    an NFL reward is present — the same read the upcoming state needs.
  *  - challenge_campaigns.squares_moments: ONE read, only when a Super Bowl Squares
  *    prize is present (the shared select leaves that column out), cached 10 minutes.
+ *  - challenge_campaigns.bracket_keys: the same, only when a March Madness prize is present.
  *  - With `cachedReads` (the guest route, polled every 30 s per player), both of
  *    the above are reused per server instance for 5 / 10 minutes — see the
  *    description read cache above. Admin and partner lists leave it off.
@@ -642,7 +704,7 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
     ),
   ];
 
-  const [spansBySeason, slotsByVenue, timezoneByVenue, squaresMomentsById] = await Promise.all([
+  const [spansBySeason, slotsByVenue, timezoneByVenue, squaresMomentsById, bracketKeysById] = await Promise.all([
     hasNFL ? loadNFLSeasonWeekDates(campaigns, cachedReads) : Promise.resolve(new Map<number, NFLWeekDates[]>()),
     scheduleVenueIds.length > 0 ? loadVenueGameSlots(scheduleVenueIds, now, cachedReads) : Promise.resolve(null),
     Promise.all(
@@ -656,6 +718,7 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
       }),
     ).then((entries) => new Map<string, string | null>(entries)),
     loadSquaresMoments(campaigns, cachedReads),
+    loadBracketKeys(campaigns, cachedReads),
   ]);
 
   const withUpcoming: Array<T & { upcomingStartDate?: string }> = hasNFL
@@ -672,6 +735,7 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
       {
         ...campaign,
         squaresMoments: campaign.squaresMoments ?? squaresMomentsById.get(campaign.id) ?? null,
+        bracketKeys: campaign.bracketKeys ?? bracketKeysById.get(campaign.id) ?? null,
         schedule: slots ? { slots } : null,
         nfl: scope
           ? {
@@ -685,7 +749,8 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
       now,
     );
     const squaresMoments = campaign.squaresMoments ?? squaresMomentsById.get(campaign.id);
-    return { ...campaign, ...(squaresMoments ? { squaresMoments } : {}), description };
+    const bracketKeys = campaign.bracketKeys ?? bracketKeysById.get(campaign.id);
+    return { ...campaign, ...(squaresMoments ? { squaresMoments } : {}), ...(bracketKeys ? { bracketKeys } : {}), description };
   });
 }
 
@@ -911,6 +976,25 @@ export async function resolveRewardCreationContext(
     };
   }
 
+  // ── March Madness branch ──────────────────────────────────────────────────
+  // Gated on the brackets flag + season, never a venue schedule. One read: the current tournaments,
+  // so the wizard can grey out a bracket that has already locked (the server refuses it too).
+  if (definition.id === BRACKET_PRIZE_DEFINITION_ID) {
+    const bracket = await resolveBracketPrizeContext(new Date());
+    return {
+      definitionId: definition.id,
+      scheduled: bracket !== null,
+      hasRecurringSchedule: false,
+      scheduleDays: [],
+      timezone: null,
+      allowedCadences: bracket ? ["none"] : [],
+      scheduleShapes: [],
+      gameSlots: [],
+      nflSeason: null,
+      bracket,
+    };
+  }
+
   const schedules =
     definition.requiresScheduledGame === "live_trivia"
       ? await getVenueLiveTriviaSchedules(venueId)
@@ -975,6 +1059,31 @@ async function resolveSquaresPrizeContext(now: Date): Promise<RewardSquaresConte
   const lockMs = Date.parse(event.lockAt);
   if (event.drawnAt || !Number.isFinite(lockMs) || now.getTime() >= lockMs) return null;
   return { lockAt: new Date(lockMs).toISOString() };
+}
+
+/**
+ * Can a March Madness prize be created right now, and which brackets have locked? Null = no: the flag
+ * is off, the season is over, every bracket has locked, or the tournaments couldn't be read (fail
+ * closed: never offer a prize on a bracket that may already be under way). Only LIVE tournaments are
+ * read; a rehearsal's own lock is checked when it pays (lib/bracketPrizeAwards.ts). Before Selection
+ * Sunday no tournament exists yet, so every bracket is open.
+ */
+async function resolveBracketPrizeContext(now: Date): Promise<RewardBracketContext | null> {
+  if (!isBracketPrizeOffered(now)) return null;
+  const current = await listCurrentBracketTournaments();
+  if (!current.ok) {
+    console.error("[BracketPrize] tournaments-read-failed", { message: current.error });
+    return null;
+  }
+  const nowMs = now.getTime();
+  const brackets = BRACKET_PRIZE_PAIRS.map(({ key, gender, kind }) => {
+    const tournament = current.value.find((t) => t.purpose === "live" && t.gender === gender) ?? null;
+    const lockAt = tournament ? (kind === "main" ? tournament.mainLockAt : tournament.secondLockAt) : null;
+    const lockMs = lockAt ? Date.parse(lockAt) : Number.NaN;
+    const locked = Boolean(tournament?.completedAt) || (Number.isFinite(lockMs) && nowMs >= lockMs);
+    return { key, lockAt: Number.isFinite(lockMs) ? new Date(lockMs).toISOString() : null, locked };
+  });
+  return brackets.every((bracket) => bracket.locked) ? null : { brackets };
 }
 
 // Discriminated prize input — the wizard sends one of these shapes.
@@ -1143,6 +1252,11 @@ export type CreateRewardParams = {
    * Required for that definition, ignored by every other.
    */
   squaresMoments?: SquaresMoment[] | null;
+  /**
+   * March Madness prizes only: the brackets that pay (men_main / women_main / men_second /
+   * women_second), each its own 1st / 2nd / 3rd. Required for that definition, ignored by every other.
+   */
+  bracketKeys?: BracketPrizeKey[] | null;
   /** Stamp the creating owner (null/absent = admin-created). */
   createdByOwnerId?: string | null;
 };
@@ -1217,11 +1331,14 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   // REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE for why they must stay distinct.
   const isNFLReward = definition.id === NFL_REWARD_DEFINITION_ID;
   const isSquaresReward = definition.id === SQUARES_PRIZE_DEFINITION_ID;
+  const isBracketReward = definition.id === BRACKET_PRIZE_DEFINITION_ID;
   const unavailableMessage = isNFLReward
     ? REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE
     : isSquaresReward
       ? REWARD_SQUARES_UNAVAILABLE_MESSAGE
-      : REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE;
+      : isBracketReward
+        ? REWARD_BRACKET_UNAVAILABLE_MESSAGE
+        : REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE;
 
   const venueId = String(params.venueId ?? "").trim();
   if (!venueId) throw new Error(unavailableMessage);
@@ -1230,6 +1347,7 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   if (!context.scheduled) throw new Error(unavailableMessage);
 
   if (isSquaresReward) return createSquaresReward(definition, params, venueId);
+  if (isBracketReward) return createBracketReward(definition, params, venueId, context.bracket ?? null);
 
   const winCondition: ChallengeWinCondition =
     params.winCondition === "game_winner" || params.winCondition === "ranked_places"
@@ -1546,6 +1664,84 @@ async function createSquaresReward(
     placePrizes: null,
     minPlayers: null,
     squaresMoments,
+    createdByOwnerId: params.createdByOwnerId ?? null,
+  });
+}
+
+/**
+ * A March Madness prize (docs/squares-and-brackets-plan.md Phase 9a). The partner picks the brackets,
+ * the places (1–3, one prize each) and an optional minimum; everything else is fixed here:
+ *   - won by "ranked_places": 1st / 2nd / 3rd among the venue's entries in each chosen bracket, ranked
+ *     by the bracket's own standings (points, tiebreaker, earliest save), paid once after that
+ *     tournament's championship is graded (lib/bracketPrizeAwards.ts, through award_ranked_cycle_places);
+ *   - one-off ("none"), winner_quota = brackets × places, no active days, no points target (the NOT
+ *     NULL sentinel 1, never read), never pinned to games;
+ *   - end_date = the bracket card window's last day, so an old season's prize never pays a new one.
+ * A bracket that has already locked is refused (409), never dropped. Anything else the client sends
+ * for those is refused, never silently changed.
+ */
+async function createBracketReward(
+  definition: NonNullable<ReturnType<typeof getRewardDefinition>>,
+  params: CreateRewardParams,
+  venueId: string,
+  context: RewardBracketContext | null,
+): Promise<ChallengeCampaign> {
+  if (params.winCondition !== "ranked_places") throw new RewardTermsError(REWARD_BRACKET_WIN_CONDITION_MESSAGE);
+  if (Array.isArray(params.gameWinnerSlots) && params.gameWinnerSlots.length > 0) {
+    throw new RewardTermsError(REWARD_BRACKET_WIN_CONDITION_MESSAGE);
+  }
+  const bracketKeys = normalizeBracketPrizeKeys(params.bracketKeys ?? null);
+  if (!bracketKeys) throw new RewardTermsError(BRACKET_PRIZE_KEYS_MESSAGE);
+  const lockedKeys = new Set((context?.brackets ?? []).filter((bracket) => bracket.locked).map((bracket) => bracket.key));
+  if (!context || bracketKeys.some((key) => lockedKeys.has(key))) throw new Error(REWARD_BRACKET_LOCKED_MESSAGE);
+  const placePrizes = normalizePlacePrizeInputs(params.placePrizes);
+  const minPlayers = normalizeMinPlayersInput(params.minPlayers, "ranked_places");
+  const winnerQuota = bracketKeys.length * placePrizes.length;
+  const endDate = SEASONAL_GAME_WINDOWS.bracket.closesAfter;
+
+  return createChallengeCampaign({
+    name: definition.name,
+    // The frozen fallback wording (every reader composes it fresh — attachRewardDescriptions).
+    rules: describeReward(
+      {
+        rules: "",
+        recurringType: "none",
+        activeDays: [],
+        winnerQuota,
+        pointsRequiredToWin: 1,
+        winCondition: "ranked_places",
+        rewardDefinitionId: definition.id,
+        bracketKeys,
+        placePrizes,
+        minPlayers,
+      },
+      new Date(),
+    ).summary,
+    winCondition: "ranked_places",
+    venueIds: [venueId],
+    gameTypes: [definition.gameType],
+    challengeMode: definition.challengeMode,
+    pointsRequiredToWin: 1,
+    scheduleType: "single_day",
+    recurringType: "none",
+    activeDays: [],
+    winnerQuota,
+    endDate,
+    gameWinnerSlots: null,
+    nflWeekScope: null,
+    rewardDefinitionId: definition.id,
+    // A places prize keeps its prizes in the ladder; its own prize columns stay empty.
+    prizeKind: null,
+    prizeMenuItem: null,
+    prizeMenuItemName: null,
+    prizeDiscountKind: null,
+    prizeDiscountValue: null,
+    prizeGiftCertificateAmount: null,
+    prizePosValueCents: null,
+    prizePosDelivery: null,
+    placePrizes,
+    minPlayers,
+    bracketKeys,
     createdByOwnerId: params.createdByOwnerId ?? null,
   });
 }

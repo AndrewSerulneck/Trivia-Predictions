@@ -232,6 +232,7 @@ describe("never select the typed answer (R1)", () => {
   const sources = [
     "lib/results/adapters/liveTrivia.ts",
     "lib/results/adapters/squares.ts",
+    "lib/results/adapters/bracket.ts",
     "lib/results/ownerResults.ts",
     "lib/results/entryToken.ts",
     "lib/results/playerNames.ts",

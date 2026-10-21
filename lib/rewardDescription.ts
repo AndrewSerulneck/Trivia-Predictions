@@ -36,6 +36,13 @@ import {
 } from "@/lib/rewardGameSlots";
 import { normalizeNFLWeekScope } from "@/lib/nflPickEmRewardWeeks";
 import { describePlacePrizeLadder, placeOrdinal, rankedWeekNights } from "@/lib/rankedPlaceRewards";
+import {
+  bracketPrizeKeyLabel,
+  bracketPrizeKeyOfCycle,
+  bracketPrizeTop,
+  describeBracketPrizeKeys,
+  normalizeBracketPrizeKeys,
+} from "@/lib/bracketPrizes";
 import { SQUARES_LOCK_BEFORE_KICKOFF_MS } from "@/lib/squares";
 import {
   SQUARES_PRIZE_MOMENT_PHRASES,
@@ -44,7 +51,7 @@ import {
   squaresPrizeMomentOf,
 } from "@/lib/squaresPrizes";
 import { SQUARES_PER_PLAYER_CAP } from "@/lib/seasonalGames";
-import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
+import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -104,6 +111,7 @@ export type RewardDescriptionInput = Pick<
       | "placePrizes"
       | "minPlayers"
       | "squaresMoments"
+      | "bracketKeys"
     >
   > &
   RewardPrizeSummaryInput & {
@@ -644,6 +652,37 @@ const describeSquaresReward = (
   };
 };
 
+// ── March Madness bracket rewards ───────────────────────────────────────────
+
+type BracketTemplates = Extract<RewardDefinition["description"], { calendar: "march_madness" }>;
+
+/**
+ * 1st / 2nd / 3rd in each chosen bracket (lib/bracketPrizes.ts). Null when the brackets aren't known —
+ * a caller that couldn't read them (attachRewardDescriptions) — and the stored `rules` stand in.
+ */
+const describeBracketReward = (templates: BracketTemplates, input: RewardDescriptionInput): RewardDescription | null => {
+  const keys = normalizeBracketPrizeKeys(input.bracketKeys ?? null);
+  if (!keys) return null;
+  const ladder = [...(input.placePrizes ?? [])].sort((a, b) => a.place - b.place);
+  const minimum = minPlayersOf(input);
+  return {
+    summary: fill(templates.places, {
+      top: bracketPrizeTop(ladder.length),
+      brackets: describeBracketPrizeKeys(keys),
+      ladder: describePlacePrizeLadder(ladder) || `Win ${describeRewardPrizeInSentence({})}.`,
+    }).trim(),
+    when: `Fill out your bracket in ${BRACKET_GAME_NAME} before it locks. Winners are named after the championship game.`,
+    fineprint: [
+      keys.length > 1 ? "Each bracket pays its own places." : "",
+      "Ties go to the closest guess of the championship game's total points, then the earliest bracket.",
+      minimum ? `At least ${minimum} players need to fill out that bracket for prizes to be awarded.` : "",
+    ]
+      .filter(Boolean)
+      .join(" "),
+    isCustom: false,
+  };
+};
+
 /**
  * "Next contest starts Thu, Oct 9." — only when this cycle's quota is filled on a
  * recurring reward that will actually run again: never for a paused reward
@@ -694,6 +733,9 @@ export function describeReward(input: RewardDescriptionInput, now: Date): Reward
   }
   if (templates.calendar === "super_bowl_squares") {
     return describeSquaresReward(templates, input, prize) ?? legacyDescription(input);
+  }
+  if (templates.calendar === "march_madness") {
+    return describeBracketReward(templates, input) ?? legacyDescription(input);
   }
 
   const scheduled = describeScheduleReward(definition, templates, input, prize);
@@ -752,6 +794,14 @@ export function describeRewardWin(input: RewardDescriptionInput, win: RewardWinF
     // The moment is in the coupon's own cycle key (squaresPrizeCycleStart).
     const moment = squaresPrizeMomentOf(cycleStart);
     return moment ? fill(templates.wonMoment, { moment: SQUARES_PRIZE_MOMENT_PHRASES[moment] }) : null;
+  }
+
+  if (templates.calendar === "march_madness") {
+    // The bracket is in the coupon's own cycle key (bracketPrizeCycleStart); the place is the coupon's.
+    const key = bracketPrizeKeyOfCycle(cycleStart);
+    const place = Number(win.place);
+    if (!key || !Number.isInteger(place) || place < 1) return null;
+    return fill(templates.wonPlace, { place: placeOrdinal(place), bracket: bracketPrizeKeyLabel(key).toLowerCase() });
   }
 
   const zone = win.timezone || DEFAULT_VENUE_TIMEZONE;

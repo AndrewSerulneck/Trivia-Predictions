@@ -78,7 +78,7 @@ function GameRow({ tournamentId, game, post, busy }: { tournamentId: string; gam
         onClick={() =>
           void post(
             { action: "override_result", tournamentId, round: game.round, location: game.location, winner: winner || null, reason },
-            "Override this result? Every bracket is re-scored. If its round was already complete, that round's venue points are taken back and paid again.",
+            "Override this result? Every bracket is re-scored. If its round was already complete, that round's venue points are taken back and paid again. Prizes already settled after the championship are NOT changed.",
           )
         }
       >
@@ -126,6 +126,12 @@ function TournamentCard({ item, post, busy }: { item: BracketsAdminTournament; p
           Feed read {formatTime(t.feedCheckedAt)} · next {t.nextSyncAt ? formatTime(t.nextSyncAt) : t.completedAt ? "done" : "now"} ·{" "}
           {t.winnerSeats.filter((s) => s !== null).length} of 63 decided
           {t.championshipTotal !== null ? ` · championship total ${t.championshipTotal}` : ""}
+        </p>
+        <p className="text-caption text-slate-600">
+          Prizes:{" "}
+          {t.prizesSettledAt
+            ? `settled ${formatTime(t.prizesSettledAt)} (a later correction does not change them)`
+            : "settled after the championship"}
         </p>
         <p className="text-caption text-slate-600">
           Venue points by round:{" "}

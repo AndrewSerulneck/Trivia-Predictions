@@ -75,7 +75,8 @@ export type BracketsViewResult = { ok: true; tournaments: BracketTournamentView[
 const teamView = (team: BracketGameState["homeTeam"]): BracketTeamView | null =>
   team ? { name: team.college || team.name, abbreviation: team.abbreviation, seed: team.seed } : null;
 
-const gameView = (game: BracketGameState): BracketGameView => ({
+/** One stored game as the screens see it (also the Results breakdown's seat names). */
+export const gameView = (game: BracketGameState): BracketGameView => ({
   round: game.round,
   location: game.location,
   slot: game.slot,

@@ -10,6 +10,7 @@
 
 import { placeOrdinal } from "@/lib/rankedPlaceRewards";
 import { SQUARES_PRIZE_DEFINITION_ID } from "@/lib/squaresPrizes";
+import { BRACKET_PRIZE_DEFINITION_ID } from "@/lib/bracketPrizes";
 import type { ChallengeWinCondition, CampaignRecurringType } from "@/types";
 
 export type OwnerRewardCycleWinner = {
@@ -112,6 +113,10 @@ export const rewardHowWonLabel = (reward: {
 }): string => {
   const isNFL = reward.rewardDefinitionId === "nfl_pickem_challenge";
   if (reward.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID) return "Winning square";
+  if (reward.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID) {
+    const places = Math.max(1, Math.round(Number(reward.placeCount) || 1));
+    return places === 1 ? "Top bracket" : `Top ${places} brackets`;
+  }
   if (reward.winCondition === "ranked_places") {
     const places = Math.max(1, Math.round(Number(reward.placeCount) || 1));
     return places === 1 ? "Top player each week" : `Top ${places} players each week`;

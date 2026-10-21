@@ -16,6 +16,8 @@
 // | Super Bowl Squares (one cycle per moment)           | that season's Squares game card (the game's |
 // |                                                     | date), labelled with the moment; else a day |
 // |                                                     | row on that date                            |
+// | March Madness (one cycle per bracket)               | a week row in the week it was settled (the  |
+// |                                                     | championship's), labelled with the bracket  |
 // | monthly / yearly / one-off, or no cycle date        | a day row on the day it was finalized       |
 //
 // DATES. Every date is venue-local; a pinned game-winner reward is dated in its games' own zone
@@ -38,6 +40,12 @@ import {
 } from "@/lib/ownerHistoryDisplay";
 import { buildRankedWeekHistory } from "@/lib/rankedWeekHistory";
 import { SQUARES_PRIZE_DEFINITION_ID, squaresPrizeMomentOf } from "@/lib/squaresPrizes";
+import {
+  BRACKET_PRIZE_DEFINITION_ID,
+  BRACKET_PRIZE_NO_SCORERS_NOTE,
+  bracketPrizeKeyLabel,
+  bracketPrizeKeyOfCycle,
+} from "@/lib/bracketPrizes";
 import { SQUARES_MOMENT_LABELS } from "@/lib/squaresView";
 import type { ResultsGameRow, ResultsRewardAttach, ResultsRewardItem, ResultsRewardWinner } from "@/lib/results/types";
 import type { ChallengeCampaign } from "@/types";
@@ -209,6 +217,14 @@ const placeCycle = (
   // NFL Pick 'Em follows the NFL week, not a venue game: the week it was finalized.
   if (isNFL(campaign)) return happenedDate ? weekPlacement(happenedDate) : null;
 
+  // March Madness: settled once the championship is graded, so the week it was settled (its cycle key
+  // is the tournament row's creation minute, not a game date). Labelled with the bracket.
+  if (campaign.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID) {
+    if (!happenedDate) return null;
+    const key = bracketPrizeKeyOfCycle(cycleStart);
+    return { ...weekPlacement(happenedDate), label: key ? bracketPrizeKeyLabel(key) : null };
+  }
+
   // Super Bowl Squares: each moment is its own cycle, keyed on the kickoff minute
   // (lib/squaresPrizes.ts), so its date IS the game's date — on the Squares game card.
   if (campaign.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID) {
@@ -273,6 +289,7 @@ const winnersOf = (cycle: Cycle): { winners: ResultsRewardWinner[]; note: string
           ]
         : [],
       placePrizes: cycle.campaign.placePrizes,
+      ...(cycle.campaign.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID ? { noScorersNote: BRACKET_PRIZE_NO_SCORERS_NOTE } : {}),
     });
     return {
       winners: (week?.winners ?? []).map((winner) => ({ place: winner.place, username: winner.username, points: winner.points })),

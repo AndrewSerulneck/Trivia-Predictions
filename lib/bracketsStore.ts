@@ -30,6 +30,8 @@ export type BracketTournamentRecord = {
   feedCheckedAt: string | null;
   nextSyncAt: string | null;
   completedAt: string | null;
+  /** Every bracket prize was settled after the championship (lib/bracketPrizeAwards.ts, Phase 9a). */
+  prizesSettledAt: string | null;
   archivedAt: string | null;
   createdBy: string;
   createdAt: string;
@@ -43,7 +45,7 @@ export type BracketRoundRecord = {
 };
 
 export const TOURNAMENT_COLUMNS =
-  "id, gender, season, purpose, clock_offset_seconds, region_names, winner_seats, championship_total, main_lock_at, main_lock_set_by, second_lock_at, second_lock_set_by, feed_checked_at, next_sync_at, completed_at, archived_at, created_by, created_at";
+  "id, gender, season, purpose, clock_offset_seconds, region_names, winner_seats, championship_total, main_lock_at, main_lock_set_by, second_lock_at, second_lock_set_by, feed_checked_at, next_sync_at, completed_at, prizes_settled_at, archived_at, created_by, created_at";
 
 const GAME_COLUMNS =
   "round, location, slot, feed_game_id, tip_at, status_state, status_detail, home_team, away_team, home_score, away_score, winner_side, result_source, teams_set_by, feeds_seat, feeds_seat_set_by, mismatch_note";
@@ -64,6 +66,7 @@ type TournamentRow = {
   feed_checked_at: string | null;
   next_sync_at: string | null;
   completed_at: string | null;
+  prizes_settled_at: string | null;
   archived_at: string | null;
   created_by: string;
   created_at: string;
@@ -111,6 +114,7 @@ export const tournamentFromRow = (row: TournamentRow): BracketTournamentRecord =
   feedCheckedAt: row.feed_checked_at,
   nextSyncAt: row.next_sync_at,
   completedAt: row.completed_at,
+  prizesSettledAt: row.prizes_settled_at ?? null,
   archivedAt: row.archived_at,
   createdBy: row.created_by,
   createdAt: row.created_at,

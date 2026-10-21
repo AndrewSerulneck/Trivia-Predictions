@@ -19,10 +19,15 @@ import type {
   RewardMenuItem,
   RewardPrizeKind,
 } from "@/types";
+import { BRACKET_PRIZE_DEFINITION_ID, isBracketPrizeOffered } from "@/lib/bracketPrizes";
 import { SQUARES_PRIZE_DEFINITION_ID, isSquaresPrizeOffered } from "@/lib/squaresPrizes";
-import { SQUARES_EVENT_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
+import { BRACKET_GAME_NAME, SQUARES_EVENT_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 
-export type RewardDefinitionId = "live_trivia_challenge" | "nfl_pickem_challenge" | typeof SQUARES_PRIZE_DEFINITION_ID;
+export type RewardDefinitionId =
+  | "live_trivia_challenge"
+  | "nfl_pickem_challenge"
+  | typeof SQUARES_PRIZE_DEFINITION_ID
+  | typeof BRACKET_PRIZE_DEFINITION_ID;
 
 /**
  * The Live Trivia Challenge's definition id. Its two sweeps (game winner, weekly places) pay ONLY
@@ -54,6 +59,8 @@ export const LIVE_TRIVIA_REWARD_DEFINITION_ID = "live_trivia_challenge" satisfie
  *   {place}     — weekly places win line: "1st"
  *   {moments}   — Squares: the moments that pay, "halftime or the end of the game"
  *   {moment}    — Squares win line: "halftime"
+ *   {brackets}  — March Madness: the brackets that pay, "the men's bracket or the women's bracket"
+ *   {bracket}   — March Madness win line: "men's bracket"
  *
  * Never write "this venue" — the guest is standing in it.
  */
@@ -99,6 +106,14 @@ export type RewardDescriptionTemplates =
       moments: string;
       /** Prize-wallet coupon: "You held the winning … square at {moment}". */
       wonMoment: string;
+    }
+  | {
+      /** March Madness brackets: 1st / 2nd / 3rd in each chosen bracket (lib/bracketPrizes.ts). */
+      calendar: "march_madness";
+      /** "Finish {top} in {brackets}. {ladder}" */
+      places: string;
+      /** Prize-wallet coupon: "You finished {place} in your {bracket}". */
+      wonPlace: string;
     };
 
 export type RewardDefinition = {
@@ -247,15 +262,48 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
       wonMoment: `You held the winning ${SQUARES_EVENT_NAME} square at {moment}`,
     },
   },
+  {
+    // March Madness brackets (docs/squares-and-brackets-plan.md Phase 9a). Won only by finishing 1st /
+    // 2nd / 3rd in a chosen bracket at the venue ("ranked_places", one cycle per bracket), with the
+    // partner's optional minimum. Gated on the brackets flag + season, not a schedule. Offered only
+    // while isBracketPrizeOffered (offeredRewardDefinitions below).
+    id: BRACKET_PRIZE_DEFINITION_ID,
+    name: `${BRACKET_GAME_NAME} Challenge`,
+    gameName: BRACKET_GAME_NAME,
+    gameType: "bracket",
+    challengeMode: "progress",
+    requiresScheduledGame: null,
+    requirementTemplate: "Finish at the top of your bracket",
+    supportsGameWinner: false,
+    gameWinnerRequirement: "Finish at the top of your bracket",
+    supportsRankedPlaces: true,
+    rankedPlacesRequirement: "Finish at the top of your bracket",
+    thresholdOptions: [],
+    defaultThreshold: 1,
+    thresholdStep: 1,
+    accent: "bracket",
+    glyph: "🏀",
+    description: {
+      calendar: "march_madness",
+      places: "Finish {top} in {brackets}. {ladder}",
+      wonPlace: "You finished {place} in your {bracket}",
+    },
+  },
 ] as const;
 
 /**
  * The definitions the Create Prize wizard offers today. Every definition is always readable
  * (getRewardDefinition — old prizes must still describe themselves); this only hides a seasonal
- * one out of season: Squares while its flag is off or after its card window.
+ * one out of season: Squares or March Madness while its flag is off or after its card window.
  */
 export function offeredRewardDefinitions(now: Date = new Date()): RewardDefinition[] {
-  return REWARD_DEFINITIONS.filter((definition) => definition.id !== SQUARES_PRIZE_DEFINITION_ID || isSquaresPrizeOffered(now));
+  return REWARD_DEFINITIONS.filter((definition) =>
+    definition.id === SQUARES_PRIZE_DEFINITION_ID
+      ? isSquaresPrizeOffered(now)
+      : definition.id === BRACKET_PRIZE_DEFINITION_ID
+        ? isBracketPrizeOffered(now)
+        : true,
+  );
 }
 
 export function getRewardDefinition(id: string): RewardDefinition | null {

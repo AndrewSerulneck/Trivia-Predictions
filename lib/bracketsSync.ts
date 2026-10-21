@@ -1,5 +1,6 @@
 import "server-only";
 
+import { settleBracketPrizes } from "@/lib/bracketPrizeAwards";
 import { creditSeasonalPoints } from "@/lib/seasonalPointsCredit";
 import {
   SEASONAL_GAME_WINDOWS,
@@ -88,6 +89,8 @@ export type BracketSyncReport = {
   locksMoved: string[];
   paidRounds: number[];
   credited: number;
+  /** Bracket prizes settled this run (Phase 9a): cycles answered, or null when not due. */
+  prizeCycles: number | null;
   needsAdmin: string | null;
   nextSyncAt: string | null;
   dryRun: boolean;
@@ -221,6 +224,7 @@ export async function syncBracketTournament(
     locksMoved: [],
     paidRounds: [],
     credited: 0,
+    prizeCycles: null,
     needsAdmin: null,
     nextSyncAt: null,
     dryRun,
@@ -316,14 +320,34 @@ export async function syncBracketTournament(
     report.errors.push(`pay: ${paid.error}`);
   }
 
-  // After the championship, keep checking every couple of minutes until every round is paid.
+  // Bracket prizes (Phase 9a): once the championship is graded and every round is paid, settle every
+  // prize of this tournament, once (prizes_settled_at). A failure keeps the 2-minute pace below.
+  let prizesSettled = tournament.prizesSettledAt !== null;
+  let prizesSettledAt: string | null = null;
+  if (allPaid && !prizesSettled && conflict < 0) {
+    const prizes = await settleBracketPrizes(tournament, winnerSeats, total, new Date(realNowMs));
+    if (!prizes.ok) report.errors.push(`prizes: ${prizes.error}`);
+    else if (prizes.ready) {
+      prizesSettled = true;
+      prizesSettledAt = new Date(realNowMs).toISOString();
+      report.prizeCycles = prizes.settlements.length;
+    }
+  }
+
+  // After the championship, keep checking every couple of minutes until every round is paid and the
+  // prizes are settled.
   const nextRealMs =
-    nextTournamentMs !== null ? nextTournamentMs + offsetMs : allPaid ? null : realNowMs + BRACKET_LIVE_SYNC_MS;
+    nextTournamentMs !== null
+      ? nextTournamentMs + offsetMs
+      : allPaid && prizesSettled
+        ? null
+        : realNowMs + BRACKET_LIVE_SYNC_MS;
   report.nextSyncAt = isoOrNull(nextRealMs);
   const updated = await updateBracketTournament(tournament.id, {
     ...lockPatch,
     feed_checked_at: new Date(realNowMs).toISOString(),
     next_sync_at: report.nextSyncAt,
+    ...(prizesSettledAt ? { prizes_settled_at: prizesSettledAt } : {}),
   });
   if (!updated.ok) report.errors.push(`tournament write: ${updated.error}`);
   return report;

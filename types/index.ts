@@ -367,6 +367,12 @@ export interface ChallengeCampaign {
    * only by the Squares paths — lib/squaresPrizeAwards.ts and attachRewardDescriptions).
    */
   squaresMoments?: Array<"q1" | "half" | "q3" | "final"> | null;
+  /**
+   * March Madness bracket prizes: the brackets that each pay the place ladder. Null/absent for every
+   * other reward. NOT in the shared campaign select (challenge_campaigns.bracket_keys is read only by
+   * the bracket paths — lib/bracketPrizeAwards.ts and attachRewardDescriptions).
+   */
+  bracketKeys?: Array<"men_main" | "women_main" | "men_second" | "women_second"> | null;
   /** Which pre-set reward definition created this (e.g. "live_trivia_challenge"), or null. */
   rewardDefinitionId?: string | null;
   /** New prize model. Null on pre-Rewards campaigns unless derived from legacy prizeType. */

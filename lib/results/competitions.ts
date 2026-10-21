@@ -7,7 +7,7 @@
 // lib/results/rewardPlacement.ts if it has rewards). tests/results-registry-contract.test.ts fails
 // when the list and the adapter map disagree.
 
-import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
+import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 
 export type ResultsCompetition = {
   /** Stable id, carried on every game row and in the game URLs. */
@@ -25,6 +25,9 @@ export const RESULTS_COMPETITIONS = [
   // Super Bowl Squares (docs/squares-and-brackets-plan.md Phase 4): one game per season, scored in
   // the venue points its winning squares paid. No per-player breakdown.
   { id: "squares", label: SQUARES_GAME_NAME, scoreUnit: "pts", hasBreakdown: false },
+  // March Madness (Phase 9a): one game per bracket the venue played (tournament × main / second
+  // chance), scored in bracket points. Breakdown = a player's picks, right or wrong.
+  { id: "bracket", label: BRACKET_GAME_NAME, scoreUnit: "pts", hasBreakdown: true },
 ] as const satisfies readonly ResultsCompetition[];
 
 export type ResultsCompetitionId = (typeof RESULTS_COMPETITIONS)[number]["id"];

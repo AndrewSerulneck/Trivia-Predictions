@@ -1220,3 +1220,108 @@ describe("CreateRewardWizard — Super Bowl Squares (squares plan Phase 4)", () 
     expect(screen.queryByText("Schedule Live Trivia")).toBeNull();
   });
 });
+
+describe("CreateRewardWizard — March Madness (squares plan Phase 9a)", () => {
+  const BRACKET_CONTEXT: RewardCreationContextDTO = {
+    scheduled: true,
+    hasRecurringSchedule: false,
+    scheduleDays: [],
+    timezone: null,
+    allowedCadences: ["none"],
+    scheduleShapes: [],
+    gameSlots: [],
+    nflSeason: null,
+    bracket: {
+      brackets: [
+        { key: "men_main", lockAt: "2027-03-18T16:15:00.000Z", locked: true },
+        { key: "women_main", lockAt: "2027-03-19T16:00:00.000Z", locked: false },
+        { key: "men_second", lockAt: null, locked: false },
+        { key: "women_second", lockAt: null, locked: false },
+      ],
+    },
+  };
+  const renderBracket = (context: RewardCreationContextDTO = BRACKET_CONTEXT) => {
+    const onSubmit = vi.fn(async () => ({ ok: true as const }));
+    render(
+      createElement(CreateRewardWizard, {
+        variant: "admin",
+        venues: [{ id: "venue-1", name: "The Pub" }],
+        defaultVenueId: "venue-1",
+        scheduleLinkHref: "/admin/schedule",
+        fetchContext: async (_venueId: string, definitionId: string) =>
+          definitionId === "bracket_challenge" ? context : { ...LIVE_CONTEXT, scheduled: false },
+        onSubmit,
+        onCreated: () => {},
+        onCancel: () => {},
+      }),
+    );
+    return { onSubmit };
+  };
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+
+  it("isn't offered while the brackets flag is off", async () => {
+    renderBracket();
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    expect(screen.queryByRole("button", { name: /March Madness/ })).toBeNull();
+  });
+
+  it("asks which brackets and how many places, then the minimum and a prize per place", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BRACKETS_ENABLED", "true");
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2027-03-18T20:00:00.000Z"));
+    const { onSubmit } = renderBracket();
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /March Madness/ }));
+    await screen.findByText("Which brackets pay a prize?");
+    expect(screen.queryByText("How is this prize won?")).toBeNull();
+    expect(screen.queryByText("Points target")).toBeNull();
+    // A locked bracket can't be chosen.
+    expect(screen.getByRole("button", { name: /Men's bracket \(locked\)/ })).toHaveProperty("disabled", true);
+    const next = () => screen.getByRole("button", { name: /Next: Minimum Players/ });
+    expect(next()).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: "Women's second chance" }));
+    fireEvent.click(screen.getByRole("button", { name: "Women's bracket" }));
+    fireEvent.click(screen.getByRole("button", { name: "Top 2" }));
+    expect(next()).toHaveProperty("disabled", false);
+    fireEvent.click(next());
+    await screen.findByText("How many players must play?");
+    expect(document.body.textContent).toContain("fill out that bracket at your venue");
+    fireEvent.click(screen.getByRole("button", { name: "No minimum" }));
+    fireEvent.click(screen.getByRole("button", { name: /Next: Offer a Prize/ }));
+    await screen.findByText("Choose a prize for each place.");
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["1st place", "2nd place"]);
+    fireEvent.click(screen.getByRole("button", { name: /Next: Confirm/ }));
+    await screen.findByText("Confirm");
+    expect(screen.getByText("Pays for").nextSibling?.textContent).toBe("Women's bracket, Women's second chance");
+    expect(screen.getByText("Won by").nextSibling?.textContent).toBe("Top 2 brackets");
+    expect(document.body.textContent).toContain("Finish top 2 in the women's bracket or the women's second chance.");
+    expect(document.body.textContent).toContain("Top 2 in the women's bracket and the women's second chance, each paid separately.");
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    const submission = (onSubmit.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
+    expect(submission).toMatchObject({
+      definitionId: "bracket_challenge",
+      cadence: "none",
+      winCondition: "ranked_places",
+      winnerQuota: 4,
+      bracketKeys: ["women_main", "women_second"],
+    });
+    expect(submission.placePrizes).toHaveLength(2);
+    expect(submission).not.toHaveProperty("minPlayers");
+  });
+
+  it("blocks without a schedule link when no bracket can take a prize", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BRACKETS_ENABLED", "true");
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2027-03-30T16:00:00.000Z"));
+    renderBracket({ ...BRACKET_CONTEXT, scheduled: false, allowedCadences: [], bracket: null });
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /March Madness/ }));
+    await screen.findByText(/prizes can only be set up during the tournament season/);
+    expect(screen.queryByText("Schedule Live Trivia")).toBeNull();
+  });
+});
