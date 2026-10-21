@@ -9,7 +9,9 @@
 // What is proven: the save rules (open, lock by the database clock, the rehearsal clock offset,
 // own venue, rehearsal = hidden venues only, pick consistency, second chance), set-based grading,
 // an admin result change reversing the affected round's credits and bumping its grade_no, the
-// consistency checks on results, cascades on player deletion, grants and RLS.
+// consistency checks on results, cascades on player deletion, grants and RLS. 10.1
+// (20261021035254): result_held, bracket_save_feed_games never overwriting what an admin took over,
+// and bracket_record_results answering `stale` when the seats changed since the caller read them.
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { PGlite } = require(process.env.BRACKETS_PGLITE_MODULE || "@electric-sql/pglite");
@@ -19,6 +21,7 @@ const MIGRATIONS = [
   "supabase/migrations/20261019051458_squares_engine.sql",
   "supabase/migrations/20261019203858_brackets_engine.sql",
   "supabase/migrations/20261019213121_bracket_prizes.sql",
+  "supabase/migrations/20261021035254_bracket_admin_corrections.sql",
 ];
 
 const SCHEMA = `
@@ -278,6 +281,86 @@ async function run() {
     assert.deepEqual(await rows(`select * from bracket_venue_games('v2')`), [], "an entry with no picks is not a game");
     assert.deepEqual(await rows(`select * from bracket_venue_games('nowhere')`), []);
 
+    // ── 10.1: held results, the sync's game writer, stale results (20261021035254) ─────────
+    const W = (await one(`insert into bracket_tournaments (gender, season) values ('women', 2026) returning id`)).id;
+    const team = (n) => ({ id: n, name: `T${n}`, fullName: `Team ${n}`, college: `College ${n}`, abbreviation: `T${n}`, seed: 1 });
+    const game = (fields) => ({
+      round: 1, slot: null, feed_game_id: 900, tip_at: "2027-03-18T16:00:00Z", status_state: "final", status_detail: "Final",
+      home_team: team(1), away_team: team(2), home_score: 70, away_score: 60, winner_side: null, result_source: null,
+      feeds_seat: null, feeds_seat_set_by: null, mismatch_note: null, seen_winner_side: null, seen_result_held: false,
+      ...fields,
+    });
+    const feedWrite = async (games) => (await one(`select bracket_save_feed_games($1, $2::jsonb) as n`, [W, JSON.stringify(games)])).n;
+    const g = (round, loc) => one(`select * from bracket_games where tournament_id = $1 and round = $2 and location = $3`, [W, round, loc]);
+
+    // New rows: only what the sync may decide (a feed winner, an 'auto' link).
+    assert.equal(
+      await feedWrite([
+        game({ location: 1, slot: 0, winner_side: "home", result_source: "feed" }),
+        game({ location: 2, slot: 1, winner_side: "home", result_source: "admin" }),
+        game({ location: 3, slot: 2 }),
+        game({ location: 4, slot: 3 }),
+        game({ location: 5, slot: 4, winner_side: "home", result_source: "feed" }),
+        game({ round: 0, location: 1, feeds_seat: 5, feeds_seat_set_by: "auto" }),
+        game({ round: 0, location: 2, feeds_seat: 9, feeds_seat_set_by: "admin" }),
+      ]),
+      7,
+    );
+    assert.deepEqual([(await g(1, 1)).winner_side, (await g(1, 1)).result_source], ["home", "feed"], "a new feed winner is stored");
+    assert.deepEqual([(await g(1, 2)).winner_side, (await g(1, 2)).result_source], [null, null], "the sync never writes an admin result");
+    assert.deepEqual([(await g(0, 1)).feeds_seat, (await g(0, 1)).feeds_seat_set_by], [5, "auto"]);
+    assert.deepEqual([(await g(0, 2)).feeds_seat, (await g(0, 2)).feeds_seat_set_by], [null, null], "the sync never writes an admin link");
+
+    // An admin takes things over AFTER the sync read them (seen = what the sync merged against).
+    await db.query(`update bracket_games set winner_side = 'away', result_source = 'admin' where tournament_id = $1 and round = 1 and location = 2`, [W]);
+    await db.query(`update bracket_games set result_held = true where tournament_id = $1 and round = 1 and location = 3`, [W]);
+    await db.query(`update bracket_games set teams_set_by = 'admin', home_team = $2::jsonb where tournament_id = $1 and round = 1 and location = 4`, [W, JSON.stringify(team(40))]);
+    await db.query(`update bracket_games set feeds_seat = 7, feeds_seat_set_by = 'admin' where tournament_id = $1 and round = 0 and location = 1`, [W]);
+    await assert.rejects(
+      db.query(`update bracket_games set winner_side = 'home', result_source = 'admin' where tournament_id = $1 and round = 1 and location = 3`, [W]),
+      /bracket_games_held_has_no_winner/,
+      "a held game has no winner",
+    );
+    assert.equal(
+      await feedWrite([
+        game({ location: 2, slot: 1, home_score: 71, winner_side: "home", result_source: "feed", mismatch_note: "stale note" }),
+        game({ location: 3, slot: 2, winner_side: "home", result_source: "feed", mismatch_note: "stale note" }),
+        game({ location: 4, slot: 3, home_team: team(41), status_detail: "Final/OT" }),
+        game({ round: 0, location: 1, feeds_seat: 5, feeds_seat_set_by: "auto" }),
+        game({ round: 0, location: 2, feeds_seat: 11, feeds_seat_set_by: "auto" }),
+      ]),
+      5,
+    );
+    const g2 = await g(1, 2);
+    assert.deepEqual([g2.winner_side, g2.result_source, g2.home_score, g2.mismatch_note], ["away", "admin", 71, null], "admin winner kept, scores updated, stale note dropped");
+    const g3 = await g(1, 3);
+    assert.deepEqual([g3.winner_side, g3.result_held, g3.mismatch_note], [null, true, null], "a held game is never filled");
+    const g4 = await g(1, 4);
+    assert.deepEqual([g4.home_team.id, g4.teams_set_by, g4.status_detail], [40, "admin", "Final/OT"], "admin teams kept");
+    assert.deepEqual([(await g(0, 1)).feeds_seat, (await g(0, 1)).feeds_seat_set_by], [7, "admin"], "admin link kept");
+    assert.deepEqual([(await g(0, 2)).feeds_seat, (await g(0, 2)).feeds_seat_set_by], [11, "auto"], "an auto link fills an unlinked opener");
+
+    // The mismatch note follows the result the sync saw; a held game takes the sync's note when it saw the hold.
+    await feedWrite([game({ location: 5, slot: 4, winner_side: "home", result_source: "feed", mismatch_note: "Feed says away", seen_winner_side: "home" })]);
+    assert.equal((await g(1, 5)).mismatch_note, "Feed says away");
+    await feedWrite([game({ location: 5, slot: 4, winner_side: "away", result_source: "feed", mismatch_note: "other", seen_winner_side: "away" })]);
+    assert.deepEqual([(await g(1, 5)).winner_side, (await g(1, 5)).mismatch_note], ["home", "Feed says away"], "a decided game never changes; a note against another result is dropped");
+    await feedWrite([game({ location: 3, slot: 2, mismatch_note: "Held; feed says home", seen_result_held: true })]);
+    assert.deepEqual([(await g(1, 3)).winner_side, (await g(1, 3)).mismatch_note], [null, "Held; feed says home"]);
+    await assert.rejects(db.query(`select bracket_save_feed_games($1, '{}'::jsonb)`, [W]), /JSON array/);
+
+    // Stale results: the sync passes the seats it read; anything recorded since → nothing changes.
+    const empty = Array.from({ length: 63 }, () => null);
+    const someSeats = upTo(HOME, 1);
+    const recordExpecting = (seats, expected) =>
+      one(`select * from bracket_record_results($1, $2::smallint[], null, false, null, 'sync', $3::smallint[])`, [W, pg(seats), pg(expected)]);
+    const stale = await recordExpecting(someSeats, someSeats);
+    assert.deepEqual([stale.stale, stale.changed_slots], [true, 0], "seats differ from what the caller read: stale");
+    assert.deepEqual((await one(`select winner_seats from bracket_tournaments where id = $1`, [W])).winner_seats, empty, "nothing written");
+    const fresh = await recordExpecting(someSeats, empty);
+    assert.deepEqual([fresh.stale, fresh.changed_slots], [false, 32]);
+    assert.equal((await record(W, someSeats)).stale, false, "an admin-style call (no expected seats) is never stale");
+
     // ── Grants and RLS ────────────────────────────────────────────────────────────────────
     for (const table of ["bracket_tournaments", "bracket_games", "bracket_rounds", "bracket_entries", "bracket_admin_log"]) {
       const rls = await one(`select relrowsecurity, relforcerowsecurity from pg_class where relname = $1`, [table]);
@@ -291,7 +374,8 @@ async function run() {
     }
     for (const fn of [
       "bracket_save_entry(uuid, text, uuid, text, smallint[], integer)",
-      "bracket_record_results(uuid, smallint[], integer, boolean, text, text)",
+      "bracket_record_results(uuid, smallint[], integer, boolean, text, text, smallint[])",
+      "bracket_save_feed_games(uuid, jsonb)",
       "bracket_picks_problem(smallint[], text, smallint[])",
       "bracket_round_correct(smallint[], text, smallint[])",
       "bracket_venue_games(text)",

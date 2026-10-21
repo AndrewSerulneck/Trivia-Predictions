@@ -201,6 +201,14 @@ describe("getBracketTvPayload (cost)", () => {
     tournamentsMock.mockResolvedValue({ ok: true, value: [{ ...record, winnerSeats: next }] });
     await getBracketTvPayload("v1", inWindow + 32_000);
     expect(entriesRead).toHaveBeenCalledTimes(3);
+
+    // An admin correction flips a decided winner (same number decided): read again too (10.1, §17 B8).
+    const decided = next.findIndex((seat, slot) => slot < 32 && seat !== null);
+    const flipped = [...next];
+    flipped[decided] = next[decided] === 2 * decided ? 2 * decided + 1 : 2 * decided;
+    tournamentsMock.mockResolvedValue({ ok: true, value: [{ ...record, winnerSeats: flipped }] });
+    await getBracketTvPayload("v1", inWindow + 48_000);
+    expect(entriesRead).toHaveBeenCalledTimes(4);
   });
 
   it("hides itself on a failed read", async () => {

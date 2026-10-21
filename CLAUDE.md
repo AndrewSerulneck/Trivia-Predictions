@@ -1133,3 +1133,12 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   `bracket_tournaments.prizes_settled_at`. A later admin correction never changes settled prizes. Results adapter
   `lib/results/adapters/bracket.ts` (breakdown = picks right/wrong). TV `mode: "bracket"` replaces idle only, inside the
   existing poll (`lib/bracketsTvRead.ts` → `lib/bracketsTv.ts` → `BracketTvScreen.tsx`; zero I/O off-season).
+- **Phase 10 review (2026-10-20): fixes are sub-phases 10.1–10.4, findings in plan §17.** Same rule as Phase 6: no
+  in-place patches. Never turn `NEXT_PUBLIC_BRACKETS_ENABLED` on in Production before 10.1–10.4 are done and the 10.6
+  replay has passed (launch is 10.8, by Mar 8, 2027).
+- **Bracket admin corrections (10.1, 2026-10-21, migration `20261021035254`, NOT applied).** The sync writes games
+  ONLY through `bracket_save_feed_games` (`saveFeedBracketGames`), which keeps whatever an admin took over in the
+  current row; admin actions write only their own columns (`updateBracketGameColumns`). Never upsert whole
+  `bracket_games` rows (contract test). The sync records results only against the seats it read
+  (`expectedWinnerSeats` → `stale`); every result/game admin action sets `next_sync_at = now`; "No result" =
+  `result_held` (the feed never fills it until `release_result`). Plan §18.

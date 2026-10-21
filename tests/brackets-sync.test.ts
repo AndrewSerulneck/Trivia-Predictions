@@ -7,12 +7,16 @@ import ncaawBracket from "./fixtures/brackets/ncaaw-bracket-season-2025.json";
 // for the bracket_* tables and RPCs (the real SQL is proven by `npm run test:brackets-sql`). The
 // feed answers as it would have at each minute (maskBracketFeedAt). Checks the glue: discovery →
 // open → lock → results → per-round venue points paid once → stop; the request budget (plan §6);
-// zero I/O outside the window; discovery never re-creating an archived tournament.
+// zero I/O outside the window; discovery never re-creating an archived tournament. Plan 10.1: an
+// admin correction is paid again at the next tick (also after the championship), "No result" holds
+// against the feed, and a sync write landing after an admin override keeps the admin's result.
 
 type Row = Record<string, unknown>;
 const tables: Record<string, Row[]> = {};
 let clockMs = 0;
 const io = { selects: [] as string[], feedRequests: 0 };
+/** Runs once, inside the next bracket_save_feed_games call, before it writes (the 10.1 race). */
+const hooks: { beforeFeedWrite: ((tournamentId: string) => Promise<void>) | null } = { beforeFeedWrite: null };
 let uuid = 0;
 const nextId = () => `00000000-0000-0000-0000-${String(++uuid).padStart(12, "0")}`;
 
@@ -89,20 +93,88 @@ class FakeQuery {
 }
 
 const rpc = async (name: string, args: Row) => {
+  if (name === "bracket_save_feed_games") {
+    // Mirrors 20261021035254 (proven on PGlite): feed columns always; what an admin took over in
+    // the CURRENT row is kept.
+    if (hooks.beforeFeedWrite) {
+      const hook = hooks.beforeFeedWrite;
+      hooks.beforeFeedWrite = null;
+      await hook(String(args.p_tournament_id));
+    }
+    const rows = (tables.bracket_games ??= []);
+    for (const g of args.p_games as Row[]) {
+      const current = rows.find((r) => r.tournament_id === args.p_tournament_id && r.round === g.round && r.location === g.location);
+      const feedWinner = g.result_source === "feed" && g.winner_side !== null;
+      const autoLink = g.feeds_seat_set_by === "auto" && g.feeds_seat !== null;
+      const feedCols = {
+        feed_game_id: g.feed_game_id, tip_at: g.tip_at, status_state: g.status_state, status_detail: g.status_detail,
+        home_score: g.home_score, away_score: g.away_score,
+      };
+      if (!current) {
+        rows.push({
+          tournament_id: args.p_tournament_id, round: g.round, location: g.location, slot: g.slot, ...feedCols,
+          home_team: g.home_team, away_team: g.away_team,
+          winner_side: feedWinner ? g.winner_side : null, result_source: feedWinner ? "feed" : null, result_held: false,
+          teams_set_by: "feed", feeds_seat: autoLink ? g.feeds_seat : null, feeds_seat_set_by: autoLink ? "auto" : null,
+          mismatch_note: g.mismatch_note,
+        });
+        continue;
+      }
+      const seenSame = (current.winner_side ?? null) === g.seen_winner_side && Boolean(current.result_held) === Boolean(g.seen_result_held);
+      Object.assign(current, {
+        ...feedCols,
+        ...(current.teams_set_by === "admin" ? {} : { home_team: g.home_team, away_team: g.away_team }),
+        ...(current.feeds_seat_set_by !== "admin" && autoLink ? { feeds_seat: g.feeds_seat, feeds_seat_set_by: "auto" } : {}),
+        ...(current.winner_side == null && !current.result_held && feedWinner ? { winner_side: g.winner_side, result_source: "feed" } : {}),
+        ...(seenSame ? { mismatch_note: g.mismatch_note } : {}),
+      });
+    }
+    return { data: (args.p_games as Row[]).length, error: null };
+  }
   if (name === "bracket_record_results") {
     const t = tables.bracket_tournaments.find((row) => row.id === args.p_tournament_id) as Row;
     const before = t.winner_seats as Array<number | null>;
     const next = args.p_winner_seats as Array<number | null>;
+    const expected = args.p_expected_winner_seats as Array<number | null> | null;
+    if (expected && JSON.stringify(expected) !== JSON.stringify(before)) {
+      return { data: [{ changed_slots: 0, regraded_rounds: [], reversed_credits: 0, graded_entries: 0, stale: true }], error: null };
+    }
     const changedDecided = before.some((seat, i) => seat !== null && seat !== next[i]);
     if (changedDecided && !args.p_allow_change) return { data: null, error: { message: "needs an admin override" } };
-    Object.assign(t, { winner_seats: next, championship_total: args.p_championship_total, completed_at: next[62] === null ? null : new Date(clockMs).toISOString() });
+    // Rounds complete before a changed decided slot: spend their keys at the current grade_no, bump it.
+    const regraded: number[] = [];
+    let reversed = 0;
+    for (let round = 1; round <= 6; round += 1) {
+      const slots = slotsOfRound(round as BracketRound);
+      const changed = slots.some((slot) => before[slot] !== null && before[slot] !== next[slot]);
+      if (!changed || slots.some((slot) => before[slot] === null)) continue;
+      const r = tables.bracket_rounds.find((row) => row.tournament_id === t.id && row.round === round) as Row;
+      const ledger = (tables.seasonal_points_credits ??= []);
+      for (const entry of (tables.bracket_entries ?? []).filter((e) => e.tournament_id === t.id && (e.kind === "main" || round >= 3))) {
+        const key = `${entry.id}:r${round}:${r.grade_no}`;
+        const paid = ledger.find((l) => l.source_key === key);
+        if (paid && !paid.spent) {
+          const user = tables.users.find((u) => u.id === paid.user_id) as Row;
+          user.points = Number(user.points) - Number(paid.points);
+          paid.spent = "reversed";
+        } else if (!paid) ledger.push({ source_key: key, user_id: entry.user_id, points: 1, spent: "burned" });
+        reversed += 1;
+      }
+      Object.assign(r, { grade_no: Number(r.grade_no) + 1, paid_grade_no: null, paid_at: null });
+      regraded.push(round);
+    }
+    Object.assign(t, {
+      winner_seats: next,
+      championship_total: args.p_championship_total,
+      completed_at: next[62] === null ? null : (t.completed_at ?? new Date(clockMs).toISOString()),
+    });
     let graded = 0;
     for (const entry of (tables.bracket_entries ?? []).filter((e) => e.tournament_id === t.id)) {
       const rc = bracketRoundCorrect(entry.picks as Array<number | null>, next, entry.kind as BracketKind);
       if (JSON.stringify(rc) !== JSON.stringify(entry.round_correct)) graded += 1;
       Object.assign(entry, { round_correct: rc, score: bracketScoreFromRoundCorrect(rc) });
     }
-    return { data: [{ changed_slots: 0, regraded_rounds: [], reversed_credits: 0, graded_entries: graded }], error: null };
+    return { data: [{ changed_slots: 0, regraded_rounds: regraded, reversed_credits: reversed, graded_entries: graded, stale: false }], error: null };
   }
   if (name === "credit_seasonal_points") {
     const ledger = (tables.seasonal_points_credits ??= []);
@@ -148,8 +220,9 @@ vi.mock("@/lib/bracketsFeed", () => ({
 }));
 
 import { bracketWinnerSeats, maskBracketFeedAt, mergeBracketFeed, type BracketFeedGame } from "@/lib/brackets/games";
-import { bracketRoundCorrect, bracketScore, bracketScoreFromRoundCorrect } from "@/lib/brackets/scoring";
-import { emptyPicks, type BracketKind } from "@/lib/brackets/tree";
+import { bracketRoundCorrect, bracketRoundVenuePoints, bracketScore, bracketScoreFromRoundCorrect } from "@/lib/brackets/scoring";
+import { emptyPicks, slotsOfRound, type BracketKind, type BracketRound } from "@/lib/brackets/tree";
+import { runBracketsAdminAction } from "@/lib/bracketsAdmin";
 import { runBracketsTick } from "@/lib/bracketsSync";
 
 FEEDS.men = shift(ncaabBracket as BracketFeedGame[]);
@@ -187,6 +260,7 @@ beforeEach(() => {
   ];
   io.selects = [];
   io.feedRequests = 0;
+  hooks.beforeFeedWrite = null;
   vi.stubEnv("NEXT_PUBLIC_BRACKETS_ENABLED", "true");
   vi.stubEnv("BRACKETS_REHEARSAL_ENABLED", "");
 });
@@ -313,4 +387,126 @@ describe("bracket sync, minute by minute through March Madness 2027", () => {
     expect((t.winner_seats as Array<number | null>).every((s) => s === null)).toBe(true); // replay clock: nothing played yet
     expect(Date.parse(String(t.main_lock_at))).toBeGreaterThan(replayAt);
   });
+});
+
+describe("admin corrections reach players and stick (plan 10.1)", () => {
+  const SELECTION_SUNDAY = Date.parse("2027-03-14T23:00:00Z"); // a discovery minute
+  const AFTER_FINALS = Date.parse("2027-04-06T15:00:00Z"); // both championships over; window still open
+  const perfect = () => bracketWinnerSeats(mergeBracketFeed([], FEEDS.men as BracketFeedGame[]).games);
+  const men = () => tables.bracket_tournaments.find((t) => t.gender === "men" && t.purpose === "live") as Row;
+  const game = (round: number, location: number) =>
+    tables.bracket_games.find((g) => g.tournament_id === men().id && g.round === round && g.location === location) as Row;
+  const round = (n: number) => tables.bracket_rounds.find((r) => r.tournament_id === men().id && r.round === n) as Row;
+  /** Venue points a bracket is owed against the men's results as stored now. */
+  const owed = (picks: Array<number | null>) =>
+    bracketRoundCorrect(picks, men().winner_seats as Array<number | null>, "main").reduce(
+      (sum, correct, i) => sum + bracketRoundVenuePoints((i + 1) as BracketRound, correct),
+      0,
+    );
+  const enter = async () => {
+    await tick(SELECTION_SUNDAY);
+    for (const [user, picks] of [[ANN, perfect()], [BOB, homeBracket()]] as const) {
+      (tables.bracket_entries ??= []).push({
+        id: nextId(), tournament_id: men().id, kind: "main", user_id: user, venue_id: "v1",
+        picks, round_correct: [0, 0, 0, 0, 0, 0], score: 0, pick_count: 63, tiebreaker: 140, submitted_at: new Date(SELECTION_SUNDAY).toISOString(),
+      });
+    }
+  };
+  const finish = async () => {
+    await enter();
+    await tick(AFTER_FINALS);
+    expect(men().next_sync_at).toBeNull(); // decided, paid and settled: never due again on its own
+    expect(points(ANN)).toBe(192);
+  };
+  const admin = (action: Record<string, unknown>, atMs: number) => {
+    clockMs = atMs;
+    return runBracketsAdminAction({ tournamentId: men().id, ...action } as Parameters<typeof runBracketsAdminAction>[0], "tester", atMs);
+  };
+
+  it("pays a re-graded round again at the next tick, even after the championship (B1)", async () => {
+    await finish();
+    const champion = game(6, 1).winner_side;
+    const other = champion === "home" ? "away" : "home";
+    const at = AFTER_FINALS + 60 * MINUTE;
+    const result = await admin({ action: "override_result", round: 6, location: 1, winner: other, reason: "Feed had the wrong champion" }, at);
+    expect(result).toMatchObject({ ok: true });
+    expect(result.ok && result.message).toMatch(/paid again at the next sync.*within a minute/);
+    expect(men().next_sync_at).toBe(new Date(at).toISOString());
+    expect(round(6)).toMatchObject({ grade_no: 2, paid_grade_no: null });
+    expect(points(ANN)).toBeLessThan(192); // round 6 taken back
+
+    const report = await tick(at + MINUTE);
+    const synced = report.synced.find((s) => s.tournamentId === men().id);
+    expect(synced?.paidRounds).toEqual([6]);
+    expect(synced?.needsAdmin).toBeNull();
+    expect(round(6)).toMatchObject({ grade_no: 2, paid_grade_no: 2 });
+    expect(points(ANN)).toBe(owed(perfect()));
+    expect(points(BOB)).toBe(owed(homeBracket()));
+    expect(game(6, 1)).toMatchObject({ winner_side: other, result_source: "admin" }); // the feed only reports
+    expect(String(game(6, 1).mismatch_note)).toMatch(/Feed says/);
+    expect(men().next_sync_at).toBeNull();
+
+    // After the window the cron no longer drives it: the message says so, and Sync now pays.
+    const late = Date.parse("2027-04-08T15:00:00Z");
+    const back = await admin({ action: "override_result", round: 6, location: 1, winner: champion, reason: "Back to the feed's champion" }, late);
+    expect(back.ok && back.message).toMatch(/press Sync now/);
+    expect((await tick(late + MINUTE)).skipped).toBe("inactive");
+    const synced2 = await admin({ action: "sync" }, late + 2 * MINUTE);
+    expect(synced2.ok && synced2.sync?.paidRounds).toEqual([6]);
+    expect(points(ANN)).toBe(192);
+  }, 60_000);
+
+  it("holds a game on No result until an admin lets the feed decide (B2)", async () => {
+    await finish();
+    const champion = game(6, 1).winner_side;
+    const at = AFTER_FINALS + 60 * MINUTE;
+    const held = await admin({ action: "override_result", round: 6, location: 1, winner: null, reason: "Hold: feed result disputed" }, at);
+    expect(held.ok && held.message).toMatch(/held/);
+    expect(game(6, 1)).toMatchObject({ winner_side: null, result_source: null, result_held: true });
+
+    for (const minutes of [1, 2, 60, 61]) await tick(at + minutes * MINUTE);
+    expect(game(6, 1)).toMatchObject({ winner_side: null, result_held: true });
+    expect(String(game(6, 1).mismatch_note)).toMatch(/held/);
+    expect((men().winner_seats as Array<number | null>)[62]).toBeNull();
+
+    expect(await admin({ action: "release_result", round: 6, location: 2, reason: "x".repeat(5) }, at)).toMatchObject({ ok: false });
+    const released = await admin({ action: "release_result", round: 6, location: 1, reason: "Feed confirmed" }, at + 62 * MINUTE);
+    expect(released).toMatchObject({ ok: true });
+    await tick(at + 63 * MINUTE);
+    expect(game(6, 1)).toMatchObject({ winner_side: champion, result_source: "feed", result_held: false, mismatch_note: null });
+    expect(men().winner_seats).toEqual(perfect());
+    expect(points(ANN)).toBe(192); // round 6 paid again under its new grade
+    expect(round(6).paid_grade_no).toBe(round(6).grade_no);
+  }, 60_000);
+
+  it("keeps an admin override that lands between the sync's read and its write (B3)", async () => {
+    await enter();
+    const at = Date.parse("2027-03-19T12:00:00Z"); // the first Round-of-64 day is over
+    const decidedNow = mergeBracketFeed([], maskBracketFeedAt(FEEDS.men as BracketFeedGame[], at)).games.find(
+      (g) => g.round === 1 && g.winnerSide && g.homeTeam && g.awayTeam,
+    );
+    expect(decidedNow).toBeDefined();
+    const location = decidedNow?.location as number;
+    const adminSide = decidedNow?.winnerSide === "home" ? "away" : "home";
+    hooks.beforeFeedWrite = async (tournamentId) => {
+      expect(tournamentId).toBe(men().id); // men's is synced first (created first)
+      const result = await admin({ action: "override_result", round: 1, location, winner: adminSide, reason: "Scorer error" }, at);
+      expect(result).toMatchObject({ ok: true });
+    };
+    const first = await tick(at);
+    const run = first.synced.find((s) => s.tournamentId === men().id);
+    expect(run?.errors).toEqual([]);
+    expect(game(1, location)).toMatchObject({ winner_side: adminSide, result_source: "admin" });
+    const adminSeat = 2 * (location - 1) + (adminSide === "home" ? 0 : 1);
+    expect((men().winner_seats as Array<number | null>)[location - 1]).toBe(adminSeat);
+    expect(run?.newResults).toBe(0); // stale: recorded nothing on its old read
+
+    const second = await tick(at + MINUTE); // the admin asked for a sync now
+    const next = second.synced.find((s) => s.tournamentId === men().id);
+    expect(next?.needsAdmin).toBeNull();
+    expect(next?.errors).toEqual([]);
+    expect(next?.newResults).toBeGreaterThan(0);
+    expect((men().winner_seats as Array<number | null>)[location - 1]).toBe(adminSeat);
+    expect(game(1, location).result_source).toBe("admin");
+  }, 60_000);
 });

@@ -66,6 +66,21 @@ describe("one writer each", () => {
     expect(filesContaining(/recordBracketResults\(/)).toEqual(["lib/bracketsAdmin.ts", "lib/bracketsStore.ts", "lib/bracketsSync.ts"]);
   });
 
+  it("game rows: the sync writes only through bracket_save_feed_games, an admin only its own columns (10.1)", () => {
+    expect(filesContaining('"bracket_save_feed_games"')).toEqual(["lib/bracketsStore.ts"]);
+    expect(filesContaining(/saveFeedBracketGames\(/)).toEqual(["lib/bracketsStore.ts", "lib/bracketsSync.ts"]);
+    expect(filesContaining(/updateBracketGameColumns\(/)).toEqual(["lib/bracketsAdmin.ts", "lib/bracketsStore.ts"]);
+    // Nothing upserts or inserts whole game rows any more (that overwrote admin results, §17 B3).
+    expect(filesContaining(/from\("bracket_games"\)\s*\.(upsert|insert)\(/)).toEqual([]);
+    expect(filesContaining("saveBracketGames")).toEqual([]);
+  });
+
+  it("the sync records results only against the winner seats it read (10.1)", () => {
+    const sync = readFileSync(path.join(ROOT, "lib/bracketsSync.ts"), "utf8");
+    expect(sync).toMatch(/expectedWinnerSeats: tournament\.winnerSeats/);
+    expect(sync).toMatch(/finishBracketSyncRun\(/);
+  });
+
   it("bracket venue points are paid only by the sync, through creditSeasonalPoints", () => {
     expect(filesContaining('creditSeasonalPoints("bracket"')).toEqual(["lib/bracketsSync.ts"]);
   });

@@ -30,12 +30,14 @@ import { BRACKET_GENDERS, BRACKET_ROUNDS, isBracketKind, type BracketRound } fro
 import {
   bracketTournamentExists,
   createBracketTournament,
+  finishBracketSyncRun,
   getBracketGames,
   getBracketRounds,
+  getBracketWinnerSeats,
   listCurrentBracketTournaments,
   logBracketsAdmin,
   recordBracketResults,
-  saveBracketGames,
+  saveFeedBracketGames,
   tournamentNowMs,
   updateBracketTournament,
   type BracketTournamentRecord,
@@ -53,9 +55,15 @@ import {
 //   • a tournament is read from the feed only when its next_sync_at is due: every 2 min while a
 //     game is live, else at the next tip or hourly, whichever is first; never after its
 //     championship is decided and paid (nextBracketSyncAt). ≈ 30 requests/h per tournament live.
-//   Each feed read: one games read, one upsert of the changed games (≤ 79 rows), one results RPC
-//   when a winner is new (set-based grading of every entry), one rounds read once a round is
-//   complete, and one tournament update.
+//   Each feed read: one games read, one write of the changed games (bracket_save_feed_games, ≤ 79
+//   rows), one results RPC when a winner is new (set-based grading of every entry), one rounds read
+//   once a round is complete (+ one winner-seats re-read when a round is due to be paid), and one
+//   tournament update (a second one only if an admin asked for a sync during the run).
+// Admin corrections (plan 10.1): an admin action that changes results or games sets next_sync_at =
+// now, so the next cron minute re-reads and pays — including after the championship, when the sync
+// is otherwise never due again. The run never overwrites an admin's game columns (the RPC keeps
+// them), records results only against the winner seats it read (else `stale`: it stops and the next
+// run starts fresh), and never pushes back a next_sync_at an admin set during the run.
 // Venue points are paid per entry per round once the whole round is decided: one keyset-paged
 // read of the tournament's entries (1,000 a page) and one credit call per 500 credits —
 // ≈ 40 + 40 calls per round at 20k entries, once.
@@ -113,9 +121,15 @@ const isoOrNull = (ms: number | null): string | null => (ms === null ? null : ne
 const sameInstant = (a: string | null, b: string | null): boolean =>
   a === b || (a !== null && b !== null && Date.parse(a) === Date.parse(b));
 
+const modeDrives = (t: Pick<BracketTournamentRecord, "purpose">, mode: BracketsSyncMode | null): boolean =>
+  t.purpose === "live" ? Boolean(mode?.live) : Boolean(mode?.rehearsal);
+
 /** The tournament is the sync's to drive in this mode. */
-const drives = (t: BracketTournamentRecord, mode: BracketsSyncMode | null, force: boolean): boolean =>
-  force || (t.purpose === "live" ? Boolean(mode?.live) : Boolean(mode?.rehearsal));
+const drives = (t: BracketTournamentRecord, mode: BracketsSyncMode | null, force: boolean): boolean => force || modeDrives(t, mode);
+
+/** Will the every-minute cron pick this tournament up on its own right now? (Admin messages.) */
+export const isBracketSyncAutomatic = (t: Pick<BracketTournamentRecord, "purpose">, now: Date): boolean =>
+  modeDrives(t, bracketsSyncMode(now));
 
 /** Is it time to read the feed for this tournament? */
 export const isBracketSyncDue = (t: BracketTournamentRecord, realNowMs: number): boolean => {
@@ -137,7 +151,16 @@ export async function payCompleteBracketRounds(
   if (complete.length === 0) return { ok: true, paidRounds: [], credited: 0, allPaid: false };
   const rounds = await getBracketRounds(tournament.id);
   if (!rounds.ok) return { ok: false, error: `rounds read: ${rounds.error}` };
-  const due = rounds.value.filter((r) => complete.includes(r.round) && r.paidGradeNo !== r.gradeNo);
+  let due = rounds.value.filter((r) => complete.includes(r.round) && r.paidGradeNo !== r.gradeNo);
+  if (due.length > 0) {
+    // Re-check completeness against the seats as stored now, read AFTER the rounds (plan 10.1): an
+    // admin correction committed before this read shows here (a round it made incomplete isn't
+    // paid); one committed after the rounds read bumped grade_no, so the keys paid below are already
+    // spent and the paid mark matches nothing. Either way nothing is paid on stale results.
+    const fresh = await getBracketWinnerSeats(tournament.id);
+    if (!fresh.ok) return { ok: false, error: `winner seats read: ${fresh.error}` };
+    due = due.filter((r) => isBracketRoundComplete(r.round, fresh.value));
+  }
   const paidRounds: number[] = [];
   let credited = 0;
   for (const round of due) {
@@ -284,7 +307,7 @@ export async function syncBracketTournament(
     return report;
   }
 
-  const saved = await saveBracketGames(tournament.id, merged.changed);
+  const saved = await saveFeedBracketGames(tournament.id, merged.changed, stored.value);
   if (!saved.ok) {
     report.errors.push(`games write: ${saved.error}`);
     return report;
@@ -303,9 +326,18 @@ export async function syncBracketTournament(
       allowChange: false,
       reason: null,
       actor: options.actor ?? "sync",
+      expectedWinnerSeats: tournament.winnerSeats,
     });
     if (!recorded.ok) {
       report.errors.push(`record results: ${recorded.error}`);
+      return report;
+    }
+    if (recorded.value.stale) {
+      // An admin changed results during this run. Nothing was recorded or paid; the admin action
+      // set next_sync_at = now, so the next minute starts again from fresh rows.
+      report.newResults = 0;
+      report.needsAdmin = null;
+      console.warn("[Brackets] results-stale", { tournamentId: tournament.id });
       return report;
     }
   }
@@ -343,12 +375,16 @@ export async function syncBracketTournament(
         ? null
         : realNowMs + BRACKET_LIVE_SYNC_MS;
   report.nextSyncAt = isoOrNull(nextRealMs);
-  const updated = await updateBracketTournament(tournament.id, {
-    ...lockPatch,
-    feed_checked_at: new Date(realNowMs).toISOString(),
-    next_sync_at: report.nextSyncAt,
-    ...(prizesSettledAt ? { prizes_settled_at: prizesSettledAt } : {}),
-  });
+  const updated = await finishBracketSyncRun(
+    tournament.id,
+    tournament.nextSyncAt,
+    {
+      ...lockPatch,
+      feed_checked_at: new Date(realNowMs).toISOString(),
+      ...(prizesSettledAt ? { prizes_settled_at: prizesSettledAt } : {}),
+    },
+    report.nextSyncAt,
+  );
   if (!updated.ok) report.errors.push(`tournament write: ${updated.error}`);
   return report;
 }

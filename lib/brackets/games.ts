@@ -13,6 +13,8 @@
 //
 // Corrections are never automatic: once a game has a winner here, a feed record that disagrees is
 // reported (mismatch_note) and an admin decides (override_result). Same stance as Squares and Bingo.
+// A game an admin HELD ("No result", result_held) is never filled from the feed either: its final is
+// only reported, until an admin overrides it or lets the feed decide (plan 10.1).
 
 import {
   BRACKET_GAMES_PER_ROUND,
@@ -84,6 +86,8 @@ export type BracketGameState = {
   winnerSide: BracketSide | null;
   /** Who decided the winner: the feed, or an admin override. */
   resultSource: "feed" | "admin" | null;
+  /** An admin chose "No result": no winner, and the feed never fills it until an admin lets it (10.1). */
+  resultHeld: boolean;
   /** 'admin' = an admin set this game's teams; the feed no longer overwrites them. */
   teamsSetBy: "feed" | "admin";
   /** Opening round only: the round-1 seat its winner fills. */
@@ -147,6 +151,7 @@ export const emptyBracketGame = (round: number, location: number): BracketGameSt
   awayScore: null,
   winnerSide: null,
   resultSource: null,
+  resultHeld: false,
   teamsSetBy: "feed",
   feedsSeat: null,
   feedsSeatSetBy: null,
@@ -227,10 +232,14 @@ const mergeOne = (stored: BracketGameState, feed: BracketFeedGame): { game: Brac
   if (isCount(feed.away_team?.score)) next.awayScore = feed.away_team.score;
   const side = feedWinnerSide(feed);
   let mismatch: string | null = null;
-  if (stored.winnerSide === null) {
+  if (stored.resultHeld) {
+    mismatch = side ? `Feed says the ${side} team won; the result is held (No result) by an admin.` : null;
+    next.mismatchNote = mismatch;
+  } else if (stored.winnerSide === null) {
     if (side) {
       next.winnerSide = side;
       next.resultSource = "feed";
+      next.mismatchNote = null;
     }
   } else if (side && side !== stored.winnerSide) {
     mismatch = `Feed says the ${side} team won; stored result is ${stored.winnerSide} (${stored.resultSource ?? "feed"}).`;

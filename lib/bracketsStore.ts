@@ -8,7 +8,10 @@ import { BRACKET_SLOT_COUNT, type BracketGender, type BracketRound } from "@/lib
 // March Madness brackets: shared reads/writes of the bracket_* tables (migration 20261019203858)
 // for the sync, the player API and the admin panel. Entries are written only by the
 // bracket_save_entry RPC (lib/bracketsEntries.ts); winner seats and scores only by
-// bracket_record_results (recordBracketResults below — its one caller module).
+// bracket_record_results (recordBracketResults below — its one caller module). Game rows (10.1):
+// the sync writes only through bracket_save_feed_games (saveFeedBracketGames), which never
+// overwrites what an admin took over; an admin action writes only its own columns
+// (updateBracketGameColumns). Nothing writes whole game rows.
 
 export type BracketPurpose = "live" | "rehearsal";
 
@@ -48,7 +51,7 @@ export const TOURNAMENT_COLUMNS =
   "id, gender, season, purpose, clock_offset_seconds, region_names, winner_seats, championship_total, main_lock_at, main_lock_set_by, second_lock_at, second_lock_set_by, feed_checked_at, next_sync_at, completed_at, prizes_settled_at, archived_at, created_by, created_at";
 
 const GAME_COLUMNS =
-  "round, location, slot, feed_game_id, tip_at, status_state, status_detail, home_team, away_team, home_score, away_score, winner_side, result_source, teams_set_by, feeds_seat, feeds_seat_set_by, mismatch_note";
+  "round, location, slot, feed_game_id, tip_at, status_state, status_detail, home_team, away_team, home_score, away_score, winner_side, result_source, result_held, teams_set_by, feeds_seat, feeds_seat_set_by, mismatch_note";
 
 type TournamentRow = {
   id: string;
@@ -86,6 +89,7 @@ type GameRow = {
   away_score: number | null;
   winner_side: "home" | "away" | null;
   result_source: "feed" | "admin" | null;
+  result_held: boolean | null;
   teams_set_by: "feed" | "admin";
   feeds_seat: number | null;
   feeds_seat_set_by: "auto" | "admin" | null;
@@ -134,14 +138,15 @@ const gameFromRow = (row: GameRow): BracketGameState => ({
   awayScore: row.away_score,
   winnerSide: row.winner_side,
   resultSource: row.result_source,
+  resultHeld: row.result_held === true,
   teamsSetBy: row.teams_set_by,
   feedsSeat: row.feeds_seat === null ? null : Number(row.feeds_seat),
   feedsSeatSetBy: row.feeds_seat_set_by,
   mismatchNote: row.mismatch_note,
 });
 
-const gameToRow = (tournamentId: string, game: BracketGameState) => ({
-  tournament_id: tournamentId,
+/** The sync's view of one changed game, for bracket_save_feed_games (which decides what it may keep). */
+const feedGameToJson = (game: BracketGameState, seen: BracketGameState | undefined) => ({
   round: game.round,
   location: game.location,
   slot: game.slot,
@@ -155,11 +160,11 @@ const gameToRow = (tournamentId: string, game: BracketGameState) => ({
   away_score: game.awayScore,
   winner_side: game.winnerSide,
   result_source: game.resultSource,
-  teams_set_by: game.teamsSetBy,
   feeds_seat: game.feedsSeat,
   feeds_seat_set_by: game.feedsSeatSetBy,
   mismatch_note: game.mismatchNote ? game.mismatchNote.slice(0, 500) : null,
-  updated_at: new Date().toISOString(),
+  seen_winner_side: seen?.winnerSide ?? null,
+  seen_result_held: seen?.resultHeld ?? false,
 });
 
 export type StoreResult<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -227,15 +232,74 @@ export async function getBracketGamesFor(tournamentIds: readonly string[]): Prom
   return { ok: true, value: map };
 }
 
-/** Upsert changed game rows (one request; a tournament has at most 79). */
-export async function saveBracketGames(tournamentId: string, games: readonly BracketGameState[]): Promise<StoreResult<number>> {
+const FEED_GAMES_RPC = "bracket_save_feed_games";
+
+/**
+ * The sync's write of the games it changed (one request; a tournament has at most 79). `seen` is
+ * the stored rows the merge started from. The RPC writes the feed's columns and keeps whatever an
+ * admin took over in the CURRENT row (result, hold, teams, opening-round link), so an admin action
+ * that lands between the sync's read and this write always survives (plan 10.1, §17 B3).
+ */
+export async function saveFeedBracketGames(
+  tournamentId: string,
+  games: readonly BracketGameState[],
+  seen: readonly BracketGameState[],
+): Promise<StoreResult<number>> {
   if (!supabaseAdmin) return noDb;
   if (games.length === 0) return { ok: true, value: 0 };
-  const { error } = await supabaseAdmin
+  const seenByKey = new Map(seen.map((game) => [`${game.round}:${game.location}`, game]));
+  const { data, error } = await supabaseAdmin.rpc(FEED_GAMES_RPC, {
+    p_tournament_id: tournamentId,
+    p_games: games.map((game) => feedGameToJson(game, seenByKey.get(`${game.round}:${game.location}`))),
+  });
+  if (error) {
+    console.error(isMissingFunction(error, FEED_GAMES_RPC) ? "[Brackets] rpc-missing" : "[Brackets] feed-games-write-failed", {
+      tournamentId,
+      message: error.message,
+    });
+    return { ok: false, error: error.message };
+  }
+  return { ok: true, value: Number(data ?? 0) };
+}
+
+/** The columns an admin action may set on one game; each action passes only its own. */
+export type BracketGameAdminPatch = Partial<
+  Pick<BracketGameState, "winnerSide" | "resultSource" | "resultHeld" | "mismatchNote" | "homeTeam" | "awayTeam" | "teamsSetBy" | "feedsSeat" | "feedsSeatSetBy">
+>;
+
+const ADMIN_PATCH_COLUMNS: Record<keyof BracketGameAdminPatch, string> = {
+  winnerSide: "winner_side",
+  resultSource: "result_source",
+  resultHeld: "result_held",
+  mismatchNote: "mismatch_note",
+  homeTeam: "home_team",
+  awayTeam: "away_team",
+  teamsSetBy: "teams_set_by",
+  feedsSeat: "feeds_seat",
+  feedsSeatSetBy: "feeds_seat_set_by",
+};
+
+/** An admin fix-up of one game: writes only the given columns, never the feed's (plan 10.1). */
+export async function updateBracketGameColumns(
+  tournamentId: string,
+  game: Pick<BracketGameState, "round" | "location">,
+  patch: BracketGameAdminPatch,
+): Promise<StoreResult<null>> {
+  if (!supabaseAdmin) return noDb;
+  const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  for (const [key, column] of Object.entries(ADMIN_PATCH_COLUMNS) as Array<[keyof BracketGameAdminPatch, string]>) {
+    if (key in patch) row[column] = patch[key];
+  }
+  const { data, error } = await supabaseAdmin
     .from("bracket_games")
-    .upsert(games.map((game) => gameToRow(tournamentId, game)), { onConflict: "tournament_id,round,location" });
+    .update(row)
+    .eq("tournament_id", tournamentId)
+    .eq("round", game.round)
+    .eq("location", game.location)
+    .select("round");
   if (error) return { ok: false, error: error.message };
-  return { ok: true, value: games.length };
+  if (!data || (Array.isArray(data) && data.length === 0)) return { ok: false, error: "No such game." };
+  return { ok: true, value: null };
 }
 
 export async function getBracketRounds(tournamentId: string): Promise<StoreResult<BracketRoundRecord[]>> {
@@ -292,19 +356,58 @@ export async function updateBracketTournament(id: string, patch: Record<string, 
   return { ok: true, value: null };
 }
 
+/** Just the stored winner seats (the payment re-check, plan 10.1). */
+export async function getBracketWinnerSeats(id: string): Promise<StoreResult<Array<number | null>>> {
+  if (!supabaseAdmin) return noDb;
+  const { data, error } = await supabaseAdmin.from("bracket_tournaments").select("winner_seats").eq("id", id).maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "No such tournament." };
+  return { ok: true, value: seatList((data as { winner_seats: Array<number | null> | null }).winner_seats) };
+}
+
+/**
+ * The sync's end-of-run tournament write. next_sync_at is written only while it is still the value
+ * the run read (`seenNextSyncAt`): an admin action that asked for a sync meanwhile (next_sync_at =
+ * now, plan 10.1) must not be pushed back, or after the championship (next = null) a correction would
+ * never be paid. One request normally; a second, without next_sync_at, only when that happened.
+ */
+export async function finishBracketSyncRun(
+  id: string,
+  seenNextSyncAt: string | null,
+  patch: Record<string, unknown>,
+  nextSyncAt: string | null,
+): Promise<StoreResult<{ nextSyncWritten: boolean }>> {
+  if (!supabaseAdmin) return noDb;
+  const updatedAt = new Date().toISOString();
+  let query = supabaseAdmin
+    .from("bracket_tournaments")
+    .update({ ...patch, next_sync_at: nextSyncAt, updated_at: updatedAt })
+    .eq("id", id);
+  query = seenNextSyncAt === null ? query.is("next_sync_at", null) : query.eq("next_sync_at", seenNextSyncAt);
+  const { data, error } = await query.select("id");
+  if (error) return { ok: false, error: error.message };
+  if (Array.isArray(data) && data.length > 0) return { ok: true, value: { nextSyncWritten: true } };
+  const rest = await updateBracketTournament(id, patch);
+  return rest.ok ? { ok: true, value: { nextSyncWritten: false } } : rest;
+}
+
 export type RecordResultsOutcome = {
   changedSlots: number;
   regradedRounds: number[];
   reversedCredits: number;
   gradedEntries: number;
+  /** The stored winner seats were not `expectedWinnerSeats`: nothing was changed (10.1). */
+  stale: boolean;
 };
 
 const RECORD_RPC = "bracket_record_results";
 
 /**
  * Store the tournament's winner seats and re-grade every entry (bracket_record_results). The sync
- * passes allowChange = false (it only fills undecided slots; the RPC refuses anything else); an
- * admin override passes true with a reason, and the RPC reverses the affected rounds' credits.
+ * passes allowChange = false (it only fills undecided slots; the RPC refuses anything else) and the
+ * seats it read as expectedWinnerSeats (anything recorded since → `stale`, nothing changed); an
+ * admin override passes true with a reason and no expected seats, and the RPC reverses the affected
+ * rounds' credits.
  */
 export async function recordBracketResults(params: {
   tournamentId: string;
@@ -313,6 +416,7 @@ export async function recordBracketResults(params: {
   allowChange: boolean;
   reason: string | null;
   actor: string;
+  expectedWinnerSeats?: ReadonlyArray<number | null> | null;
 }): Promise<StoreResult<RecordResultsOutcome> & { code?: "rpc_missing" | "rpc_failed" }> {
   if (!supabaseAdmin) return noDb;
   const { data, error } = await supabaseAdmin.rpc(RECORD_RPC, {
@@ -322,6 +426,7 @@ export async function recordBracketResults(params: {
     p_allow_change: params.allowChange,
     p_reason: params.reason,
     p_actor: params.actor,
+    p_expected_winner_seats: params.expectedWinnerSeats ? [...params.expectedWinnerSeats] : null,
   });
   if (error) {
     const missing = isMissingFunction(error, RECORD_RPC);
@@ -332,7 +437,7 @@ export async function recordBracketResults(params: {
     return { ok: false, error: error.message, code: missing ? "rpc_missing" : "rpc_failed" };
   }
   const row = (Array.isArray(data) ? data[0] : data) as
-    | { changed_slots: number; regraded_rounds: number[] | null; reversed_credits: number; graded_entries: number }
+    | { changed_slots: number; regraded_rounds: number[] | null; reversed_credits: number; graded_entries: number; stale: boolean | null }
     | undefined;
   return {
     ok: true,
@@ -341,6 +446,7 @@ export async function recordBracketResults(params: {
       regradedRounds: (row?.regraded_rounds ?? []).map(Number),
       reversedCredits: Number(row?.reversed_credits ?? 0),
       gradedEntries: Number(row?.graded_entries ?? 0),
+      stale: row?.stale === true,
     },
   };
 }

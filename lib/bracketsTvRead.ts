@@ -30,10 +30,14 @@ type Shared = { atMs: number; tournaments: BracketTournamentRecord[]; games: Map
 let shared: Shared | null = null;
 const venueCache = new Map<string, { atMs: number; revision: string; entries: BracketTvEntry[]; timeZone: string }>();
 
-/** What, if it changes, can change a venue's standings: results, the final's total, the locks. */
-const revisionOf = (tournaments: readonly BracketTournamentRecord[]): string =>
+/**
+ * What, if it changes, can change a venue's standings: results, the final's total, the locks. The
+ * winner seats themselves, not how many are decided: an admin correction that flips a winner keeps
+ * the count and must still refresh the standings (plan 10.1, §17 B8).
+ */
+export const bracketTvRevisionOf = (tournaments: readonly BracketTournamentRecord[]): string =>
   tournaments
-    .map((t) => `${t.id}:${t.winnerSeats.filter((seat) => seat !== null).length}:${t.championshipTotal ?? ""}:${t.mainLockAt ?? ""}:${t.secondLockAt ?? ""}`)
+    .map((t) => `${t.id}:${t.winnerSeats.map((seat) => seat ?? "").join(",")}:${t.championshipTotal ?? ""}:${t.mainLockAt ?? ""}:${t.secondLockAt ?? ""}`)
     .join("|");
 
 async function readShared(nowMs: number): Promise<Shared | null> {
@@ -49,7 +53,7 @@ async function readShared(nowMs: number): Promise<Shared | null> {
     return null;
   }
   const views = new Map([...games.value.entries()].map(([id, list]) => [id, list.map(gameView)] as const));
-  shared = { atMs: nowMs, tournaments: current.value, games: views, revision: revisionOf(current.value) };
+  shared = { atMs: nowMs, tournaments: current.value, games: views, revision: bracketTvRevisionOf(current.value) };
   return shared;
 }
 

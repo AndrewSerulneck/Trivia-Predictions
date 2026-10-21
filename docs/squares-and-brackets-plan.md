@@ -16,8 +16,16 @@ after those games: `docs/squares-and-brackets-plan_PHASE_6.5_HANDOFF.md` (interi
 2026-10-20 (`supabase db push`, verified through PostgREST). Flag still off; nothing pushed or deployed. Andrew: no Prize
 line on the bracket screen — Prizes only on the Prizes tab and Results. Latest handoff:
 `docs/squares-and-brackets-plan_PHASE_9_HANDOFF.md`. §16 below.
-**Next:** finish 6.5 after the games; 6.6 (re-review, should cover Phases 7–9) — or Phase 10, which starts with
-`/code-review high` on Phases 7–9.
+**Phase 10's review step done 2026-10-20** (code review of Phases 7–9, findings checked, checklist section B
+finished; docs only, nothing committed). Findings §17; fixes are sub-phases **10.1–10.4**, then re-review, replay
+rehearsal, Andrew's phone pass, launch by Mar 8, 2027 and the live watch (10.5–10.9). Latest handoff:
+`docs/squares-and-brackets-plan_PHASE_10_HANDOFF.md`.
+**10.1 built 2026-10-21 (not committed; migration `20261021035254` NOT applied — Andrew: `supabase db push`)**:
+admin corrections are paid again at the next cron minute (also after the final), "No result" holds a game, the sync
+never overwrites an admin's game columns, the TV refreshes on a flipped winner. §18 below. Latest handoff:
+`docs/squares-and-brackets-plan_PHASE_10.1_HANDOFF.md`.
+**Next:** 10.2 (Opus 5.5 · medium), then 10.3 / 10.4. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews
+6.1–6.5 only (Phases 7–9 were reviewed here).
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -63,7 +71,8 @@ bracket feeds (the paid "GOAT" tier, $39.99/mo per sport) and NFL quarter-by-qua
 request. Running costs are estimated in §6.
 
 **Needs you:** now, a push + deploy of fix 6.1 (built 2026-10-19) (it protects the NFL Pick 'Em prize at Pacific Street from going to a
-trivia winner). Later: one `supabase db push` (6.2), the rehearsal phone pass (6.8), and the launch (6.9). Your §7
+trivia winner). Later: one `supabase db push` (6.2), the rehearsal phone pass (6.8), and the launch (6.9).
+For Brackets: one `supabase db push` (10.1's migration `20261021035254`, built 2026-10-21), the replay phone pass (10.7), and the launch by Mar 8 (10.8). Your §7
 answers are recorded in §1 (items 9–15).
 
 ---
@@ -170,7 +179,7 @@ Implied by existing rules (CLAUDE.md), also not up for debate:
 | 7 | Bracket engine: 4 tournaments, sync, grading, admin fix-ups | Opus 5.5 | high | 2–3 sessions |
 | 8 | Bracket player screens: fill out, copy, view, standings | Sonnet 5.5 | high | 2–3 sessions |
 | 9 | Bracket Prizes + Results + TV | Opus 5.5 (9a) / Sonnet 5.5 (9b) | high / medium | 2 sessions |
-| 10 | Bracket review, replay rehearsal, launch (by Mar 8), live watch | Opus 5.5 | high | 1–2 sessions + Andrew |
+| 10 | Bracket review, replay rehearsal, launch (by Mar 8), live watch: review done; fixes and launch are 10.1–10.9 below | Opus 5.5 | high | 1–2 sessions + Andrew |
 | 11 | Post-season usage vs estimate, clean-up | Sonnet 5.5 | low | 1 session |
 
 ### Phase 0 — Data spike (Opus 5.5 · medium)
@@ -451,12 +460,138 @@ migration); then 6.5–6.9.
   Detail: `docs/squares-and-brackets-plan_PHASE_9_HANDOFF.md`.
 
 ### Phase 10 — Bracket review, rehearsal, launch (Opus 5.5 · high)
-- Run `/code-review high` on Phases 7–9 and fix the findings.
-- Replay the 2025 tournament on `venue-hightop-test` with time travel (admin dry run), including second chance.
-- Andrew does the phone pass (device checklist section B). Turn on `NEXT_PUBLIC_BRACKETS_ENABLED` and redeploy by
-  **Mon Mar 8, 2027**.
-- **Selection Sunday (Mar 14):** check the feed and region names the same evening, and use the fix-up tool for any
-  First Four placeholder issue before the lock on Mar 18.
+**Phase 10 itself (done 2026-10-20):** `/code-review high` over Phases 7–9 (`baeb6e4~1..3273e4d`), each finding
+checked against the code, and device checklist section B finished (Prizes, Results, TV, replay). Findings: §17. Same
+rule as Phase 6 (Andrew, 2026-10-19): **no in-place patches**. Each problem gets a designed fix as a sub-phase below.
+Nothing here is live (the flag is off, and no tournament exists until Mar 14, 2027), so no sub-phase has to ship on
+its own. Order: 10.1 first (it touches the same sync/admin code as 10.2 and 10.4), then 10.2, 10.3 and 10.4 in any
+order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).**
+
+| Sub-phase | What | Model | Effort | Needs Andrew |
+|---|---|---|---|---|
+| 10.1 | Admin corrections reach players and stick (§17 B1, B2, B3, B8) | Opus 5.5 | high | `supabase db push` (one small migration) |
+| 10.2 | Lock and final-score guards (§17 B5, B6) | Opus 5.5 | medium | — |
+| 10.3 | Bracket drafts never drop picks (§17 B4) | Sonnet 5.5 | medium | — |
+| 10.4 | TV shows only this venue's games; one home for shared helpers; pay due rounds in one pass (§17 B7, B9, B10) | Opus 5.5 | medium | — |
+| 10.5 | Re-review of 10.1–10.4 (`/code-review high`) | Opus 5.5 | high | — |
+| 10.6 | Replay rehearsal of the March 2026 tournaments on `venue-hightop-test` | Opus 5.5 | high | Preview env vars, phone pass |
+| 10.7 | Andrew's phone + TV pass (checklist section B) | — | — | yes |
+| 10.8 | Launch: flag on + redeploy by **Mon Mar 8, 2027** | Opus 5.5 | medium | yes |
+| 10.9 | Selection Sunday check (Mar 14) and live watch to the finals (Apr 5) | Opus 5.5 | medium | — |
+
+#### 10.1 — Admin corrections reach players and stick (Opus 5.5 · high) — do first — **built 2026-10-21** (§18)
+- **Problems (§17 B1, B2, B3, B8):**
+  - An `override_result` that re-grades a complete round takes that round's venue points back, but never schedules a
+    sync. After the championship (`next_sync_at` null, `completed_at` set), `isBracketSyncDue` stays false, so the points
+    are **never paid again**, even though the admin message says "the next sync pays them again". During the tournament
+    the payment just waits for the next scheduled sync (up to an hour).
+  - "No result" (override with `winner: null`) is undone 2 minutes later: `mergeOne` (`lib/brackets/games.ts`) fills
+    any game whose stored winner is null from the feed, and the sync records it. An admin can't hold back a bad feed
+    result.
+  - Race: the sync reads `bracket_games`, then upserts whole merged rows. An admin override written in between is
+    overwritten in `bracket_games` (`winner_seats` keeps the admin result), so every later sync reports a conflict and
+    records nothing for the whole tournament until the admin re-applies the override.
+  - TV: `revisionOf` (`lib/bracketsTvRead.ts`) keys the per-venue entries cache on the number of decided slots, so a
+    correction that flips a winner leaves the TV standings stale for up to 10 minutes.
+- **Design:**
+  - Any admin action that changes results or games (`override_result`, `link_opener`, `set_seat_team`) sets
+    `next_sync_at = now` once it has succeeded, so the next cron minute re-reads and pays. Keep the admin message
+    accurate: if the bracket sync is off where the cron runs, say "press Sync" (the 6.2 Squares wording).
+  - "Hold" a game: new column `bracket_games.result_held boolean not null default false` (one new migration; the
+    existing check `(winner_side is null) = (result_source is null)` forbids an admin-sourced null winner, and old
+    migrations are never edited). "No result" sets it; `mergeOne` never fills a held game and writes a mismatch note
+    instead; any override with a winner, and a new admin action "Let the feed decide", clear it. Admin panel: a HELD
+    badge.
+  - The sync must never overwrite an admin result. Preferred: the sync's write sends only feed-owned columns (tip,
+    status, scores, feed teams, mismatch note) plus a winner **only** for a game it is filling, through a conditional
+    write that fills only when `winner_side is null and not result_held` (an RPC in the same migration, or two upsert
+    batches). Decide in the phase and record it. A test simulates the interleaving.
+  - TV `revisionOf`: use the winner seats themselves (for example `winnerSeats.join(",")`), not their count.
+- **Tests:** unit (override → due; held game not refilled; feed-owned write keeps an admin winner; revision changes on
+  a flipped winner); SQL on PGlite (`npm run test:brackets-sql`) for the new column/RPC; the full 2026 replay
+  (`tests/brackets-*.test.ts`) still passes with the same totals.
+
+#### 10.2 — Lock and final-score guards (Opus 5.5 · medium)
+- **Problems (§17 B5, B6):**
+  - `move_lock` only checks that the round hasn't started yet. It accepts a lock **after** the first tip, so
+    `bracket_save_entry` keeps accepting picks for games already being played or finished.
+  - Prizes settle only when `championshipTotal` is known. A final decided without both scores (feed stalled, admin
+    override) never settles, and the sync keeps reading both feeds every 2 minutes until the window closes.
+- **Design:**
+  - `move_lock` refuses a `lockAt` later than the earliest tip of that kind's first round (Round of 64 for main, Sweet 16
+    for second chance), on the tournament's clock. If no tips are known yet, it allows it and the sync logs a warning
+    when a later feed shows a tip before the admin lock. Plain refusal copy in the panel.
+  - `override_result` on the championship accepts optional `homeScore` / `awayScore` (both or neither, 0–200 each),
+    so an admin can supply the total. When the champion is decided but the total is missing, the sync sets `needsAdmin`
+    ("Enter the final score") and slows to the post-season pace (hourly), not every 2 minutes. Prizes still never settle
+    without the total: the tiebreaker is a rule players were promised. `rankBracketEntries` already handles a null total
+    (ties by submit time); that stays for live standings.
+- **Tests:** lock refusal at, before and after the first tip (real and rehearsal clocks); final override with scores →
+  prizes settle; no total → hourly pace + needsAdmin.
+
+#### 10.3 — Bracket drafts never drop picks (Sonnet 5.5 · medium)
+- **Problem (§17 B4):** `persist()` (`components/bracket/BracketEditor.tsx`) returns `false` at once while another
+  save is in flight. The exit flush (app bar Back) then navigates away and the newest picks are never sent. "Save
+  bracket" tapped during a background save fails with a buzz and no message.
+- **Design:** keep the in-flight save as a promise in a ref. `persist()` awaits it, then sends again if `versionRef`
+  moved on (one follow-up send at most per call). The exit flush keeps its 3 s cap (`EXIT_SAVE_WAIT_MS`) over the whole
+  chain. Finish waits the same way and shows the result. No extra request when nothing changed.
+- **Tests (jsdom, `tests/bracket-screen.test.ts`):** pick → Next (slow save) → pick → Back: the second send carries
+  the newest picks and navigation waits for it; Save during a background save succeeds; no send when the version is
+  unchanged.
+
+#### 10.4 — TV games, shared helpers, one-pass payment (Opus 5.5 · medium)
+- **Problems (§17 B7, B9, B10):**
+  - The TV's "today's games" takes games from every current tournament, including a rehearsal on its replay clock and
+    the other gender's tournament.
+  - `realLockMs` in `lib/results/adapters/bracket.ts` repeats `bracketRealLockMs` (`lib/bracketPrizeAwards.ts`); the
+    63-seat picks normalizer is written three times (`picksOf` in `lib/bracketsEntries.ts`, `seatList` in
+    `lib/bracketsStore.ts`, inline in `lib/bracketsTvRead.ts`). Results, prizes and the TV could drift on when a bracket
+    locked.
+  - `payCompleteBracketRounds` reads every entry of the tournament once **per** due round (after a correction that
+    re-grades rounds 1–4: four full passes, ≈ 80 page reads at 20k entries).
+- **Design:**
+  - TV: games only from the chosen bracket's tournament; a rehearsal tournament only at a hidden venue (the TV read
+    already has the venue). Decide whether the other gender's games stay (they are interesting at a bar); recommended:
+    the chosen tournament only, matching the standings shown beside them.
+  - One home for the real-lock rule (move `bracketRealLockMs` to `lib/brackets/` or `lib/bracketsStore.ts`, used by
+    prizes and Results) and one exported picks normalizer used by all three readers. A contract test pins both.
+  - Payment: one keyset pass over the entries crediting every due round (each row already has `round_correct`), then
+    mark each round paid only if its `grade_no` is unchanged. **Keep the ledger keys exactly**
+    (`entry:r<round>:<grade_no>`). Re-sending stays safe because the key pays once.
+- **Tests:** TV payload with a rehearsal + live tournament; contract test for the helpers; payment of three due rounds
+  in one pass with the same credits as three passes (replay totals unchanged).
+
+#### 10.5 — Re-review (Opus 5.5 · high)
+- `/code-review high` over the 10.1–10.4 commits. New findings become 10.5.1, 10.5.2, … (designed fix, not an
+  in-place patch).
+
+#### 10.6 — Replay rehearsal (Opus 5.5 · high)
+- Needs 10.1–10.4 deployed and 10.1's migration applied. On a Preview with `NEXT_PUBLIC_BRACKETS_ENABLED` on, and
+  `BRACKETS_REHEARSAL_ENABLED` on **Production** (the cron runs only there; the switch alone drives the sync and never
+  shows anything to players, §14), the admin creates rehearsals of the **March 2026** men's and women's tournaments
+  (feed `season` 2025) on `venue-hightop-test`, with the replay clock just before Selection Sunday. A test partner
+  prize there for all four brackets.
+- Walk the clock: brackets open → fill out main + second chance on two test accounts (one copies from another venue)
+  → lock → each round graded and paid → second chance opens after the Round of 32 → a correction after the final
+  (10.1: points come back) → "No result" holds → championship → prizes → Results → TV. Record feed requests, cron
+  actions and DB reads against §6.
+- **Archive both rehearsal tournaments at the end** (10.8 depends on it).
+
+#### 10.7 — Phone + TV pass (Andrew)
+- `docs/squares-and-brackets-device-checklist.md` section B, during 10.6. Any failure becomes 10.7.x.
+
+#### 10.8 — Launch (Opus 5.5 · medium)
+- Check that no rehearsal tournament is current (archived in 10.6), turn `BRACKETS_REHEARSAL_ENABLED` off, turn on
+  `NEXT_PUBLIC_BRACKETS_ENABLED` in Production and redeploy by **Mon Mar 8, 2027**. Check `/rules` shows the bracket
+  section and bump `LEGAL_LAST_UPDATED` (`lib/legalInfo.ts`). Confirm the partner Prize wizard offers the bracket prize.
+
+#### 10.9 — Selection Sunday and live watch (Opus 5.5 · medium)
+- **Selection Sunday (Mar 14):** the same evening, check discovery created both tournaments, region names, all 32
+  Round-of-64 games, and the opening-round links; use the fix-up tools for any First Four placeholder before the men's
+  lock on **Thu Mar 18** (women's Mar 19).
+- Watch logs on Mar 18–21 and the finals (Apr 4/5): prizes settled, `prizes_settled_at` stamped. Record actual
+  request counts against §6 for Phase 11.
 
 ### Phase 11 — Post-season (Sonnet 5.5 · low)
 - Compare actual requests, DB rows and function time with §6. Report differences to Andrew.
@@ -676,4 +811,50 @@ Full detail: `docs/squares-and-brackets-plan_PHASE_9_HANDOFF.md`.
   result/lock changes or after 10 min) → `lib/bracketsTv.ts` (`buildBracketTvPayload`: the bracket with the most entries
   here that has locked; top 10; today's games; the biggest upset busting brackets here in the last 36 h) →
   `components/venue-screen/BracketTvScreen.tsx`. Tests: `tests/bracket-tv.test.ts`.
+
+## 17. Phase 10 code review (2026-10-20) — the findings behind 10.1–10.4
+
+`/code-review high` over `baeb6e4~1..3273e4d` (Phases 7–9). Every finding was then checked by reading the code (no
+production data exists: no tournament until Mar 14, 2027). Full detail: `docs/squares-and-brackets-plan_PHASE_10_HANDOFF.md`.
+
+| # | Finding | Checked | Severity | Fix |
+|---|---|---|---|---|
+| B1 | `override_result` re-grades a complete round (old credits taken back) but never sets `next_sync_at`; after the championship the sync is never due again, so the points are never re-paid (`lib/bracketsAdmin.ts` override branch; `isBracketSyncDue`, `lib/bracketsSync.ts:121`) | Confirmed: `completed_at` is coalesced (stays set), `next_sync_at` null → not due | **High** (players lose points) | 10.1 |
+| B2 | "No result" (override, winner null) is refilled from the feed on the next sync (`mergeOne`, `lib/brackets/games.ts:230`) | Confirmed; the admin panel offers "No result" | Medium | 10.1 |
+| B3 | The sync upserts whole game rows from a snapshot read before an admin override, overwriting it; then every sync reports a conflict and records nothing | Confirmed (`saveBracketGames` upserts full rows); needs an override during a sync run; self-reported, recoverable by re-applying | Low–medium | 10.1 |
+| B4 | `persist()` returns false while a save is in flight, so Back and Finish drop unsent picks (`components/bracket/BracketEditor.tsx:81`) | Confirmed | Medium (players lose picks) | 10.3 |
+| B5 | `move_lock` accepts a lock later than the first tip, so entries stay open during play (`lib/bracketsAdmin.ts` `move_lock`) | Confirmed (only checks "started yet") | Medium (admin error, cheap guard) | 10.2 |
+| B6 | Prizes need `championshipTotal`; a final decided without both scores never settles and the sync reads every 2 min until the window closes (`lib/bracketPrizeAwards.ts:131`) | Confirmed; admin has no way to enter scores | Low–medium (rare feed stall) | 10.2 |
+| B7 | TV "today's games" spans every current tournament, rehearsals included (`lib/bracketsTv.ts:136`) | Confirmed; rehearsal case needs a non-archived rehearsal with the flag on | Low | 10.4 |
+| B8 | TV entries cache keyed on the decided-slot COUNT, so a flipped winner stays stale ≤ 10 min (`lib/bracketsTvRead.ts:34`) | Confirmed | Low | 10.1 |
+| B9 | Duplicated rules: real-lock time (prizes vs Results) and the picks normalizer (three copies) | Confirmed | Low (drift risk) | 10.4 |
+| B10 | `payCompleteBracketRounds` reads all entries once per due round | Confirmed; only after corrections or a failed pay run | Low (cost rule) | 10.4 |
+
+## 18. 10.1 as built (2026-10-21) — read before 10.2–10.6
+
+Handoff: `docs/squares-and-brackets-plan_PHASE_10.1_HANDOFF.md`. Migration `20261021035254_bracket_admin_corrections.sql`
+(not applied yet). Not committed.
+- **Decision (RPC, not two upsert batches):** PostgREST upserts whole rows, so only a conditional write against the
+  CURRENT row can keep an admin's result. The sync's only game writer is `bracket_save_feed_games` (via
+  `saveFeedBracketGames`, `lib/bracketsStore.ts`): feed columns always; teams unless `teams_set_by = 'admin'`; an
+  opening link only as `'auto'` over a non-admin one; a winner only into an empty, unheld game; the mismatch note
+  only when the row's result is still the one the sync merged against (`seen_winner_side` / `seen_result_held`).
+  Admin actions write only their own columns (`updateBracketGameColumns`). `saveBracketGames` is deleted; a contract
+  test fails on any `from("bracket_games").upsert/insert`.
+- **Results are compare-and-set:** `bracket_record_results` gained `p_expected_winner_seats` (dropped and re-created:
+  the return type gained `stale`). The sync passes the seats it read; if an admin recorded since, nothing changes,
+  the run stops before paying, and the admin's `next_sync_at = now` re-runs it next minute. Admin calls pass null.
+  The admin override grades from a fresh games read after its own write (a sync fill in between isn't cleared).
+- **Paying re-checks the seats:** `payCompleteBracketRounds` reads the stored winner seats AFTER the rounds (only when
+  a round is due) and pays only rounds complete in them. 10.4 rewrites this function: keep that order.
+- **"Sync now" survives the run:** the sync's end write (`finishBracketSyncRun`) sets `next_sync_at` only if it is
+  still the value the run read; otherwise a second write without it. Every result/game admin action
+  (`override_result`, `release_result`, `link_opener`, `set_seat_team`) sets `next_sync_at = now`; the message says
+  "press Sync now" when the cron doesn't drive the tournament (`isBracketSyncAutomatic`, e.g. after Apr 6).
+- **Hold:** `bracket_games.result_held` (check: a held game has no winner). "No result" holds (also on an undecided
+  game: the panel allows it); `mergeOne` never fills a held game and writes "…the result is held (No result) by an
+  admin." when the feed has a final; a winner override or the new action **`release_result`** ("Let the feed
+  decide", needs a reason, only on a held game) clears it. Panel: HELD badge, the button, and a problems line.
+- **TV:** `bracketTvRevisionOf` (`lib/bracketsTvRead.ts`) keys on the winner seats themselves.
+- Replay unchanged: 6,411 feed requests for both 2027 tournaments; totals and prize results identical.
 

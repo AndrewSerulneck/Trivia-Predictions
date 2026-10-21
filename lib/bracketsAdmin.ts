@@ -30,6 +30,7 @@ import {
 import {
   bracketsFeedSeason,
   bracketsSyncMode,
+  isBracketSyncAutomatic,
   runBracketsTick,
   syncBracketTournament,
   type BracketSyncReport,
@@ -45,9 +46,9 @@ import {
   listCurrentBracketTournaments,
   logBracketsAdmin,
   recordBracketResults,
-  saveBracketGames,
   tournamentFromRow,
   tournamentNowMs,
+  updateBracketGameColumns,
   updateBracketTournament,
   type BracketPurpose,
   type BracketRoundRecord,
@@ -95,6 +96,7 @@ export type BracketsAdminAction =
   | { action: "link_opener"; tournamentId: string; location: number; seat: number | null }
   | { action: "set_seat_team"; tournamentId: string; slot: number; side: "home" | "away"; teamId: number | null }
   | { action: "override_result"; tournamentId: string; round: number; location: number; winner: "home" | "away" | null; reason: string }
+  | { action: "release_result"; tournamentId: string; round: number; location: number; reason: string }
   | { action: "move_lock"; tournamentId: string; kind: BracketKind; lockAt: string | null }
   | { action: "set_clock"; tournamentId: string; asOf: string }
   | { action: "archive"; tournamentId: string; reason: string };
@@ -155,6 +157,13 @@ export const parseBracketsAdminAction = (body: unknown): BracketsAdminAction | {
       if (!reason) return { error: "A reason (3–400 characters) is required." };
       return { action, tournamentId, round: input.round, location: input.location, winner: input.winner, reason };
     }
+    case "release_result": {
+      if (!isInt(input.round, 0, 6) || !isInt(input.location, 1, 32)) return { error: "round (0–6) and location are required." };
+      if (input.round > 0 && slotOf(input.round, input.location) === null) return { error: "No such game." };
+      const reason = reasonOf(input.reason);
+      if (!reason) return { error: "A reason (3–400 characters) is required." };
+      return { action, tournamentId, round: input.round, location: input.location, reason };
+    }
     case "move_lock": {
       if (!isBracketKind(input.kind)) return { error: "kind must be main or second." };
       const lockAt = input.lockAt === null ? null : isoOf(input.lockAt);
@@ -199,7 +208,10 @@ export const bracketProblems = (tournament: BracketTournamentRecord, games: read
     if (opener.feedsSeat === null) problems.push(`Opening-round game ${opener.location} isn't linked to a Round-of-64 seat.`);
   }
   if (tournament.regionNames.every((name) => name === null)) problems.push("Region names aren't set (players see Region 1–4).");
-  for (const game of games) if (game.mismatchNote) problems.push(`Round ${game.round} game ${game.location}: ${game.mismatchNote}`);
+  for (const game of games) {
+    if (game.mismatchNote) problems.push(`Round ${game.round} game ${game.location}: ${game.mismatchNote}`);
+    else if (game.resultHeld) problems.push(`Round ${game.round} game ${game.location} is held (No result): the feed won't decide it until you let it.`);
+  }
   if (round1.length === 32 && !tournament.mainLockAt) problems.push("The main bracket has no lock time (no tip times in the feed).");
   return problems;
 };
@@ -408,21 +420,30 @@ export async function runBracketsAdminAction(
   if (!gamesRead.ok) return refuse(500, gamesRead.error);
   const games = gamesRead.value;
 
+  // Every change below writes only its own columns of one game (never the feed's, plan 10.1), then
+  // asks for a sync now: the next cron minute re-reads the feed, records and pays. That is what
+  // re-pays a re-graded round after the championship, when the sync is otherwise never due again.
+  const followUp = async (): Promise<string> => {
+    const asked = await updateBracketTournament(tournament.id, { next_sync_at: new Date(nowMs).toISOString() });
+    if (!asked.ok) console.error("[Brackets] sync-request-failed", { tournamentId: tournament.id, message: asked.error });
+    return asked.ok && isBracketSyncAutomatic(tournament, new Date(nowMs))
+      ? "The sync picks it up within a minute."
+      : "The automatic sync is off right now: press Sync now.";
+  };
+
   if (action.action === "link_opener") {
     const opener = games.find((g) => g.round === 0 && g.location === action.location);
     if (!opener) return refuse(404, "No such opening-round game.");
     if (action.seat !== null && games.some((g) => g.round === 0 && g !== opener && g.feedsSeat === action.seat)) {
       return refuse(409, "Another opening-round game is already linked to that seat.");
     }
-    const next: BracketGameState = {
-      ...opener,
+    const saved = await updateBracketGameColumns(tournament.id, opener, {
       feedsSeat: action.seat,
       feedsSeatSetBy: action.seat === null ? null : "admin",
-    };
-    const saved = await saveBracketGames(tournament.id, [next]);
+    });
     if (!saved.ok) return refuse(500, saved.error);
     await log("link_opener", { location: action.location, seat: action.seat, previous: opener.feedsSeat });
-    return { ok: true, message: action.seat === null ? "Unlinked; the sync will try again." : "Linked." };
+    return { ok: true, message: `${action.seat === null ? "Unlinked; the sync will try again." : "Linked."} ${await followUp()}` };
   }
 
   if (action.action === "set_seat_team") {
@@ -430,12 +451,12 @@ export async function runBracketsAdminAction(
     if (!game) return refuse(404, "That Round-of-64 game isn't in the feed yet.");
     const team = action.teamId === null ? null : (teamsOf(games).find((t) => t.id === action.teamId) ?? null);
     if (action.teamId !== null && !team) return refuse(404, "That team isn't in this tournament.");
-    const next: BracketGameState = {
-      ...game,
+    // Both sides are written: once teams_set_by is 'admin' the feed no longer fills either one.
+    const saved = await updateBracketGameColumns(tournament.id, game, {
       teamsSetBy: "admin",
-      ...(action.side === "home" ? { homeTeam: team } : { awayTeam: team }),
-    };
-    const saved = await saveBracketGames(tournament.id, [next]);
+      homeTeam: action.side === "home" ? team : game.homeTeam,
+      awayTeam: action.side === "away" ? team : game.awayTeam,
+    });
     if (!saved.ok) return refuse(500, saved.error);
     await log("set_seat_team", {
       slot: action.slot,
@@ -443,7 +464,17 @@ export async function runBracketsAdminAction(
       teamId: action.teamId,
       previous: (action.side === "home" ? game.homeTeam : game.awayTeam)?.id ?? null,
     });
-    return { ok: true, message: "Team set. The feed no longer changes this game's teams." };
+    return { ok: true, message: `Team set. The feed no longer changes this game's teams. ${await followUp()}` };
+  }
+
+  if (action.action === "release_result") {
+    const game = games.find((g) => g.round === action.round && g.location === action.location);
+    if (!game) return refuse(404, "No such game.");
+    if (!game.resultHeld) return refuse(409, "This game isn't held.");
+    const saved = await updateBracketGameColumns(tournament.id, game, { resultHeld: false, mismatchNote: null });
+    if (!saved.ok) return refuse(500, saved.error);
+    await log("release_result", { round: action.round, location: action.location, reason: action.reason });
+    return { ok: true, message: `The feed decides this game again: the next sync records its final. ${await followUp()}` };
   }
 
   if (action.action === "override_result") {
@@ -452,25 +483,29 @@ export async function runBracketsAdminAction(
     if (action.winner && !(action.winner === "home" ? game.homeTeam : game.awayTeam)) {
       return refuse(409, "That side has no team yet.");
     }
-    const next: BracketGameState = {
-      ...game,
-      winnerSide: action.winner,
-      resultSource: action.winner ? "admin" : null,
-      mismatchNote: null,
-    };
+    // "No result" HOLDS the game (result_held): the sync never fills it from the feed until an admin
+    // overrides it again or lets the feed decide. A winner clears any hold.
     // The game row first: if the results RPC then fails, the sync reports the disagreement
     // (needsAdmin) instead of overwriting it, and re-applying this override finishes the job.
-    const saved = await saveBracketGames(tournament.id, [next]);
+    const saved = await updateBracketGameColumns(tournament.id, game, {
+      winnerSide: action.winner,
+      resultSource: action.winner ? "admin" : null,
+      resultHeld: action.winner === null,
+      mismatchNote: null,
+    });
     if (!saved.ok) return refuse(500, saved.error);
     if (action.round === 0) {
       await log("override_result", { round: 0, location: action.location, winner: action.winner, reason: action.reason });
-      return { ok: true, message: "Opening-round result saved (it doesn't score)." };
+      return { ok: true, message: `Opening-round result saved (it doesn't score). ${await followUp()}` };
     }
-    const nextGames = games.map((g) => (g === game ? next : g));
+    // Grade from the games as they are now, not the read above: a sync may have filled another game
+    // in between, and recording without it would clear (and re-grade) that result.
+    const fresh = await getBracketGames(tournament.id);
+    if (!fresh.ok) return refuse(500, `The game was saved but the games couldn't be re-read (${fresh.error}). Apply the override again.`);
     const recorded = await recordBracketResults({
       tournamentId: tournament.id,
-      winnerSeats: bracketWinnerSeats(nextGames),
-      championshipTotal: championshipTotal(nextGames),
+      winnerSeats: bracketWinnerSeats(fresh.value),
+      championshipTotal: championshipTotal(fresh.value),
       allowChange: true,
       reason: action.reason,
       actor,
@@ -481,6 +516,7 @@ export async function runBracketsAdminAction(
       location: action.location,
       winner: action.winner,
       previous: game.winnerSide,
+      held: action.winner === null,
       reason: action.reason,
       regradedRounds: recorded.value.regradedRounds,
       reversedCredits: recorded.value.reversedCredits,
@@ -489,10 +525,12 @@ export async function runBracketsAdminAction(
     return {
       ok: true,
       message:
-        `Result saved; ${recorded.value.gradedEntries} bracket(s) re-scored.` +
+        `Result saved${action.winner === null ? " and held: the feed won't fill this game until you let it" : ""}; ` +
+        `${recorded.value.gradedEntries} bracket(s) re-scored.` +
         (regraded.length
-          ? ` Round(s) ${regraded.join(", ")} were already complete: their venue points were taken back and the next sync pays them again.`
-          : ""),
+          ? ` Round(s) ${regraded.join(", ")} were already complete: their venue points were taken back and are paid again at the next sync.`
+          : "") +
+        ` ${await followUp()}`,
     };
   }
 

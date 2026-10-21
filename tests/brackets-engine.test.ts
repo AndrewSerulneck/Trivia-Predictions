@@ -321,6 +321,23 @@ describe("feed merge", () => {
     expect(roundsChangedBetween(bracketWinnerSeats(stored), bracketWinnerSeats(again.games))).toEqual([]);
   });
 
+  it("never fills a game an admin held (No result): it reports the feed's final instead (10.1)", () => {
+    const decided = mergeBracketFeed([], feed).games;
+    const held = decided.map((g) => (g.slot === 0 ? { ...g, winnerSide: null, resultSource: null, resultHeld: true } : g));
+    const again = mergeBracketFeed(held, feed);
+    const game = again.games.find((g) => g.slot === 0);
+    expect(game).toMatchObject({ winnerSide: null, resultSource: null, resultHeld: true });
+    expect(game?.mismatchNote).toMatch(/held/);
+    expect(bracketWinnerSeats(again.games)[0]).toBeNull();
+    expect(again.mismatches).toHaveLength(1);
+    // Reported once: the same pull again changes nothing.
+    expect(mergeBracketFeed(again.games, feed).changed).toEqual([]);
+    // Let the feed decide (hold and note cleared): the next pull fills it.
+    const released = again.games.map((g) => (g.slot === 0 ? { ...g, resultHeld: false, mismatchNote: null } : g));
+    const filled = mergeBracketFeed(released, feed).games.find((g) => g.slot === 0);
+    expect(filled).toMatchObject({ winnerSide: decided.find((g) => g.slot === 0)?.winnerSide, resultSource: "feed", mismatchNote: null });
+  });
+
   it("keeps an admin's teams and seat links", () => {
     const stored = mergeBracketFeed([], feed).games.map((g) =>
       g.slot === 0

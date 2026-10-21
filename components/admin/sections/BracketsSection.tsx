@@ -10,8 +10,9 @@ import type { BracketSyncReport } from "@/lib/bracketsSync";
 // Admin panel for the bracket engine (docs/squares-and-brackets-plan.md, Phase 7). Status plus the
 // fix-ups: create a tournament (live, or a rehearsal replay on a past season), run / dry-run the
 // sync, region names, link an opening-round game to its seat, set a seat's team, override a result
-// (re-grades; a complete round's venue points are taken back and paid again), move a lock, set a
-// rehearsal's replay clock, archive. Every change is logged server-side.
+// (re-grades; a complete round's venue points are taken back and paid again; "No result" HOLDS the
+// game so the feed can't fill it until "Let the feed decide"), move a lock, set a rehearsal's replay
+// clock, archive. Every change is logged server-side and asks for a sync (plan 10.1).
 
 const ROUND_LABEL: Record<number, string> = {
   0: "Opening round",
@@ -53,12 +54,17 @@ function GameRow({ tournamentId, game, post, busy }: { tournamentId: string; gam
   const status = game.winnerSide
     ? `${game.winnerSide === "home" ? teamLabel(game.homeTeam) : teamLabel(game.awayTeam)} won${game.resultSource === "admin" ? " (admin)" : ""}`
     : game.statusDetail ?? "—";
+  // "No result" on a game that isn't held yet is a change: it holds the game.
+  const unchanged = winner === (game.winnerSide ?? "") && (winner !== "" || game.resultHeld);
   return (
     <li className="flex flex-wrap items-end gap-2 border-b border-slate-100 py-2">
       <div className="min-w-[14rem] flex-1">
         <p className="text-sm text-slate-900">
           {game.round === 0 ? `Opener ${game.location}` : `Slot ${game.slot}`} · {teamLabel(game.homeTeam)} {game.homeScore ?? ""} vs{" "}
-          {teamLabel(game.awayTeam)} {game.awayScore ?? ""}
+          {teamLabel(game.awayTeam)} {game.awayScore ?? ""}{" "}
+          {game.resultHeld && (
+            <span className="rounded bg-amber-100 px-2 py-0.5 text-caption font-bold text-amber-800">HELD</span>
+          )}
         </p>
         <p className="text-caption text-slate-600">
           {formatTime(game.tipAt)} · {status}
@@ -74,16 +80,34 @@ function GameRow({ tournamentId, game, post, busy }: { tournamentId: string; gam
       <button
         type="button"
         className={buttonClass}
-        disabled={busy || reason.trim().length < 3 || winner === (game.winnerSide ?? "")}
+        disabled={busy || reason.trim().length < 3 || unchanged}
         onClick={() =>
           void post(
             { action: "override_result", tournamentId, round: game.round, location: game.location, winner: winner || null, reason },
-            "Override this result? Every bracket is re-scored. If its round was already complete, that round's venue points are taken back and paid again. Prizes already settled after the championship are NOT changed.",
+            (winner
+              ? "Override this result? "
+              : "Hold this game with no result? The feed won't fill it until you press Let the feed decide. ") +
+              "Every bracket is re-scored. If its round was already complete, that round's venue points are taken back and paid again at the next sync. Prizes already settled after the championship are NOT changed.",
           )
         }
       >
         Override
       </button>
+      {game.resultHeld && (
+        <button
+          type="button"
+          className={buttonClass}
+          disabled={busy || reason.trim().length < 3}
+          onClick={() =>
+            void post(
+              { action: "release_result", tournamentId, round: game.round, location: game.location, reason },
+              "Let the feed decide this game? The next sync records the feed's final result.",
+            )
+          }
+        >
+          Let the feed decide
+        </button>
+      )}
     </li>
   );
 }

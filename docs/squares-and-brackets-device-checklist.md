@@ -6,8 +6,8 @@ Plan: `docs/squares-and-brackets-plan.md`.
 
 **Section A (Squares)** is done during the Phase 6.7 rehearsal, on the Preview deployment the rehearsal uses,
 at the hidden test venue `venue-hightop-test`. You need **two** player accounts (two phones, or one phone plus
-a private browser window) and one partner account that owns the test venue. **Section B (Brackets)** comes in
-Phase 10.
+a private browser window) and one partner account that owns the test venue. **Section B (Brackets)** is done during
+the Phase 10.6 replay rehearsal, set up the same way.
 
 ---
 
@@ -90,8 +90,10 @@ Phase 10.
 
 ## B. March Madness Brackets
 
-Finalised in Phase 10. **Phase 8's screens, for a rehearsal on `venue-hightop-test` (admin → Brackets → Create a
-rehearsal; `NEXT_PUBLIC_BRACKETS_ENABLED` on a Preview, `BRACKETS_REHEARSAL_ENABLED` where the cron runs):**
+Finished in Phase 10 (2026-10-20). Done during the 10.6 replay of the March 2026 tournaments on `venue-hightop-test`
+(admin → Brackets → Create a rehearsal; `NEXT_PUBLIC_BRACKETS_ENABLED` on a Preview, `BRACKETS_REHEARSAL_ENABLED` on
+Production, where the cron runs). The replay clock lets the admin skip from one round to the next, so the whole
+tournament takes an evening, not three weeks. Same accounts as section A.
 
 ### B1. Fill out
 - [ ] The Venue Home card opens `/bracket`; the three tutorial cards show their art (bracket, lock rows, doubling bars) and
@@ -111,3 +113,25 @@ rehearsal; `NEXT_PUBLIC_BRACKETS_ENABLED` on a Preview, `BRACKETS_REHEARSAL_ENAB
   Still alive in words.
 - [ ] "Standings" lists the venue, your row is highlighted, "Find a player" filters, Refresh works.
 - [ ] Men's / Women's and Bracket / Second chance switch without losing your place.
+- [ ] Before the lock, Second chance isn't offered yet. After the Round of 32 it appears; fill it out (12 games, then the
+  Final Four) and it locks at the first Sweet 16 tip.
+
+### B3. Corrections (admin, during the replay)
+- [ ] After a round is complete, the admin overrides one of its results: both players' scores change, and their venue
+  points for that round come back within a few minutes (after 10.1, also after the final).
+- [ ] "No result" on a game keeps it undecided; the next sync doesn't put the feed's result back (after 10.1).
+
+### B4. Prizes and Results
+- [ ] Before the replay, the partner account creates a **March Madness bracket** prize at the test venue for the men's
+  bracket and the men's second chance, 1st/2nd/3rd. The wizard asks for a minimum number of players; nothing is
+  pre-selected.
+- [ ] The bracket screen never mentions a prize.
+- [ ] After the championship, the winners see gift cards on **Redeem Prizes**; each coupon names the bracket and the place.
+- [ ] Partner Dashboard → **Results**: each bracket appears in the week it was settled, with its prize row. Tap it: full
+  standings with "Find a player". Tap a player: each pick, right or wrong, with its points.
+
+### B5. The TV
+- [ ] Before any bracket at the venue locks, the TV shows its usual idle screen.
+- [ ] After the lock: the venue's top 10 (usernames, scores), today's games with live scores, and an upset that busted
+  brackets here, when there is one. Readable from across the room; nothing cut off at 1920 × 1080.
+- [ ] Start a Live Trivia game during the replay: the TV switches to trivia, then back to the brackets.
