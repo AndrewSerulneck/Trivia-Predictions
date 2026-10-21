@@ -1161,4 +1161,7 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   `main_lock_passed_at` / `second_lock_passed_at` once set (else lock + the current offset): a rehearsal's offset
   shrinks with every forward `set_clock`, so the old rule put the lock weeks early (no prize paid, §25 F1). Stamps are
   written once, ONLY through `lockPassedPatch` (`lib/bracketsStore.ts`), by `set_clock` and the sync — contract test.
-  `BRACKETS_REHEARSAL_ENABLED` is ACTIVE in Production since 2026-10-21; keep it on until 10.8. Plan §26.
+  Plan §26.
+- **Brackets LAUNCHED in Production 2026-10-21 (10.8, early; Andrew skipped the 10.7 phone pass).**
+  `NEXT_PUBLIC_BRACKETS_ENABLED` = true, `BRACKETS_REHEARSAL_ENABLED` = false (Production). Card from Mar 1, sync from
+  Mar 14 (zero I/O before); partners can set up a bracket Prize now. A rehearsal now needs the switch back on. Plan §27.

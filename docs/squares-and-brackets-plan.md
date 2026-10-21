@@ -59,7 +59,11 @@ ACTIVE in Production — keep it on until launch (10.8).**
 passed, so a walked replay pays its prizes and Results dates it right. Re-run PASSED on the Production cron + the updated
 Preview `hightop-challenge-dfmbdbzwb` (branch `brackets-rehearsal` = `main@28a5328`). §26 below. Latest handoff:
 `docs/squares-and-brackets-plan_PHASE_10.7.1_HANDOFF.md`.
-**Next:** Andrew's phone pass (10.7) on that Preview. 6.5 still waits on the Oct 19/22 captures; 6.6
+**10.8 LAUNCHED 2026-10-21 (early, Andrew's call; the 10.7 phone pass was skipped):** Production
+`NEXT_PUBLIC_BRACKETS_ENABLED` = true, `BRACKETS_REHEARSAL_ENABLED` = false, `LEGAL_LAST_UPDATED` bumped, redeployed.
+The card shows from Mar 1, discovery/sync start Mar 14. §27 below. Latest handoff:
+`docs/squares-and-brackets-plan_PHASE_10.8_HANDOFF.md`.
+**Next:** 10.9 (Selection Sunday, Mar 14, 2027). Squares: 6.5 still waits on the Oct 19/22 captures; 6.6
 re-reviews 6.1–6.5 only (Phases 7–9 were reviewed here).
 
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
@@ -107,8 +111,7 @@ bracket feeds (the paid "GOAT" tier, $39.99/mo per sport) and NFL quarter-by-qua
 request. Running costs are estimated in §6.
 
 **Needs you:** for Squares, the rehearsal phone pass (6.8) and the launch (6.9) (6.1–6.4 were pushed and deployed
-2026-10-21). For Brackets: one `supabase db push` (10.5.2's migration), the replay phone pass (10.7), and the launch by
-Mar 8 (10.8). Your §7
+2026-10-21). Brackets launched 2026-10-21 (10.8); nothing needed from you until Selection Sunday, Mar 14 (10.9). Your §7
 answers are recorded in §1 (items 9–15).
 
 ---
@@ -516,8 +519,8 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
 | 10.5.4 | A refused draft isn't sent twice (§22 R8) — **deployed 2026-10-21** | Sonnet 5.5 | low | — |
 | 10.6 | Replay rehearsal of the March 2026 tournaments on `venue-hightop-test` — **run 2026-10-21** (§25) | Opus 5.5 | high | Preview env vars, phone pass |
 | 10.7.1 | A rehearsal remembers when its lock really passed: prizes pay and Results dates right in a walked replay (§25 F1); then re-run the prize step | Opus 5.5 | medium | `supabase db push` (one small migration) |
-| 10.7 | Andrew's phone + TV pass (checklist section B) | — | — | yes |
-| 10.8 | Launch: flag on + redeploy by **Mon Mar 8, 2027** | Opus 5.5 | medium | yes |
+| 10.7 | Andrew's phone + TV pass (checklist section B) — **skipped by Andrew 2026-10-21** | — | — | yes |
+| 10.8 | Launch: flag on + redeploy by **Mon Mar 8, 2027** — **done 2026-10-21** (§27) | Opus 5.5 | medium | yes |
 | 10.9 | Selection Sunday check (Mar 14) and live watch to the finals (Apr 5) | Opus 5.5 | medium | — |
 
 #### 10.1 — Admin corrections reach players and stick (Opus 5.5 · high) — do first — **built 2026-10-21** (§18)
@@ -1202,3 +1205,21 @@ Handoff (full numbers, ids, commands): `docs/squares-and-brackets-plan_PHASE_10.
   tournament, no active bracket prize.
 - **Not fixed (test data):** the two archived 10.6 rehearsals have no stamp, so Results still dates their brackets Oct 3–12.
 
+## 27. 10.8 as built (2026-10-21) — launch, early
+
+- **Andrew chose to launch today** rather than in early March, and to skip the 10.7 phone + TV pass. Recorded so it isn't
+  re-asked.
+- **Pre-checks:** no current `bracket_tournaments` row (`archived_at IS NULL` → none); both `bracket_challenge` prizes
+  (`216ae2f4-…`, `42449580-…`, `venue-hightop-test`) are `is_active = false`.
+- **Production env:** `BRACKETS_REHEARSAL_ENABLED` updated to `false` (`vercel env update`, not removed);
+  `NEXT_PUBLIC_BRACKETS_ENABLED` = `true` added. The Preview (`brackets-rehearsal`) env vars are unchanged.
+- **`LEGAL_LAST_UPDATED`** (`lib/legalInfo.ts`) → "October 21, 2026"; `/rules` shows the bracket section with the flag on.
+- **What turns on, and when (unchanged code):** `/bracket`, `/api/bracket/*` and the Results adapter answer now; the
+  partner Prize wizard offers the bracket prize now (`isBracketPrizeOffered`: flag + on/before Apr 6, 2027); the Venue
+  Home card is hidden until the Mar 1 teaser; `bracketsSyncMode` is null (zero feed requests, zero DB reads) until Mar 14;
+  the TV read runs only Mar 14 – Apr 6.
+- **Rehearsals are off in Production now.** A new rehearsal needs `BRACKETS_REHEARSAL_ENABLED` set back to `true`
+  (server-side, no redeploy); it never discovers and plays only at hidden venues.
+- **Test data:** the two archived 10.6 rehearsals (`f6728bdc-…`, `53323143-…`) were given `main_lock_passed_at`
+  2026-10-21 19:25:40Z / `second_lock_passed_at` 19:28:40Z (≈ ±2 min, read off their entry timestamps; one-off data fix,
+  prizes were already settled), so Results dates them Oct 21 instead of Oct 3–12.
