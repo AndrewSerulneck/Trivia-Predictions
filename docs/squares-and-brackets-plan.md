@@ -52,7 +52,14 @@ Preview + the hidden test venues; both rehearsals archived after). Everything he
 replay no prize pays and Results dates the brackets weeks early (§25 F1) → fix is sub-phase **10.7.1** (needs `supabase
 db push`), then a short re-run of the prize step. §25 below. Latest handoff:
 `docs/squares-and-brackets-plan_PHASE_10.6_HANDOFF.md`.
-**Next:** 10.7.1, then Andrew's phone pass (10.7) on the same Preview. 6.5 still waits on the Oct 19/22 captures; 6.6
+**Production redeployed 2026-10-21 (`1530a61`, Vercel `hightop-challenge-ohyvvlj5a`): `BRACKETS_REHEARSAL_ENABLED` is now
+ACTIVE in Production — keep it on until launch (10.8).**
+**10.7.1 built, committed `28a5328`, pushed and deployed 2026-10-21** (Vercel `hightop-challenge-kwrih3x7r`; migration
+`20261021203544_bracket_lock_passed_at.sql` APPLIED via `supabase db push`): a rehearsal stamps when each lock really
+passed, so a walked replay pays its prizes and Results dates it right. Re-run PASSED on the Production cron + the updated
+Preview `hightop-challenge-dfmbdbzwb` (branch `brackets-rehearsal` = `main@28a5328`). §26 below. Latest handoff:
+`docs/squares-and-brackets-plan_PHASE_10.7.1_HANDOFF.md`.
+**Next:** Andrew's phone pass (10.7) on that Preview. 6.5 still waits on the Oct 19/22 captures; 6.6
 re-reviews 6.1–6.5 only (Phases 7–9 were reviewed here).
 
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
@@ -715,6 +722,8 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
   rehearsal, a fresh prize (all four brackets), two quick entries, cross the lock, jump past the final, and check coupons
   on Redeem Prizes + the prize rows in Results. Archive after.
 
+- **Done 2026-10-21** — §26 and `docs/squares-and-brackets-plan_PHASE_10.7.1_HANDOFF.md`.
+
 #### 10.7 — Phone + TV pass (Andrew)
 - `docs/squares-and-brackets-device-checklist.md` section B, during 10.6. Any failure becomes 10.7.x.
 
@@ -1164,4 +1173,32 @@ Handoff (full numbers, ids, commands): `docs/squares-and-brackets-plan_PHASE_10.
 - **Cost (§6):** 22 feed requests for the whole walked replay (1 per due tournament per sync; the 6,411 of a real-time
   replay comes from pacing, not from per-run cost); a sync tick with both due = 7–19 PostgREST calls, ≤ 4 s; an idle
   tick = **1 read, 0 feed**, 0.4 s. Matches §6.
+
+## 26. 10.7.1 as built (2026-10-21) — read before 10.7 and 10.8
+
+- **Design as recommended in §4 10.7.1.** Migration `20261021203544_bracket_lock_passed_at.sql` (applied): nullable
+  `bracket_tournaments.main_lock_passed_at` / `second_lock_passed_at` (real time). Written ONLY through
+  `lockPassedPatch` (`lib/bracketsStore.ts`), each once: `set_clock` (`lib/bracketsAdmin.ts`) stamps a lock its jump
+  crosses with the call's time, and a lock already passed on the old clock with lock + the OLD offset (so the stamp is
+  fixed before the offset changes); the sync (`syncBracketTournament`, in its end-of-run write) stamps a lock it first
+  sees passed with lock + its offset. `bracketRealLockMs` returns the stamp when set, else lock + current offset (the
+  old rule, kept for rows from before). Live tournaments get a stamp equal to the lock (offset 0) — harmless.
+  `move_lock` never touches a stamp: entries really were open until the stamp.
+- **Contract (`tests/brackets-contract.test.ts`):** only `lib/bracketsStore.ts` adds an offset to a lock and names a
+  `*_lock_passed_at` column as a write key; `lockPassedPatch` is called only by the sync and `set_clock`.
+- **Tests:** walked replay in `tests/brackets-sync.test.ts` (create → prize → `set_clock` across the lock → past the
+  final → prize settles with 1st place); Results dates a walked rehearsal on its stamp day
+  (`tests/lib.results-bracket-adapter.test.ts`). Both fail with the old rule (checked by switching the stamp read off).
+- **Re-run on Production + Preview (2026-10-21, ≈ 3 minutes real time):** men's rehearsal
+  `9ff190e7-579f-4626-96e1-75b2c92d0175` (season 2025, replay from 2026-03-15 23:00Z) on `venue-hightop-test`; prize
+  `42449580-888d-468a-9e68-d395f562c693` (all four brackets, $25 / $15, no minimum) created 20:44:02Z; entries
+  `bktrehearsal1` (home picks) and `bktrehearsal2` (away picks). `set_clock` → 2026-03-21 06:00Z at 20:44:08Z stamped
+  `main_lock_passed_at` = 20:44:08Z. **The Production cron** then synced it (32 Round-of-64 results at 20:44:43Z); `set_clock`
+  → 2026-04-07 06:00Z stamped `second_lock_passed_at` = 20:44:52Z; the next cron minute (20:45:43Z) graded all 63, total 132,
+  paid every round and settled prizes: men's main **awarded** (1st `bktrehearsal1` 660 pts $25, 2nd `bktrehearsal2` 100 pts
+  $15), men's second chance `no_scorers` (no entries). Results lists the bracket dated **2026-10-21** with both prize rows
+  ("Nobody scored." for the second chance). The winner's wallet on the Preview (`GET /api/challenge-campaigns/redeem`)
+  shows the $25 coupon at Hightop Test Bar. Archived the rehearsal and set the prize inactive after; no current
+  tournament, no active bracket prize.
+- **Not fixed (test data):** the two archived 10.6 rehearsals have no stamp, so Results still dates their brackets Oct 3–12.
 

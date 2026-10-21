@@ -1157,3 +1157,8 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   (`lib/bracketsStore.ts`); "rehearsals only at hidden venues" ONLY through `bracketTournamentsShownAt`
   (`lib/bracketsEntries.ts`, screen + TV) — contract test. The TV lists only the shown bracket's tournament's games.
   Due rounds are paid in ONE pass over the entries (`payBracketRounds`, `lib/bracketsSync.ts`). Plan §21.
+- **Bracket lock-passed stamps (10.7.1, 2026-10-21, migration `20261021203544`, applied).** `bracketRealLockMs` returns
+  `main_lock_passed_at` / `second_lock_passed_at` once set (else lock + the current offset): a rehearsal's offset
+  shrinks with every forward `set_clock`, so the old rule put the lock weeks early (no prize paid, §25 F1). Stamps are
+  written once, ONLY through `lockPassedPatch` (`lib/bracketsStore.ts`), by `set_clock` and the sync — contract test.
+  `BRACKETS_REHEARSAL_ENABLED` is ACTIVE in Production since 2026-10-21; keep it on until 10.8. Plan §26.
