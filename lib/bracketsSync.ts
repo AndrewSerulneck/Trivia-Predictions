@@ -17,6 +17,7 @@ import {
   maskBracketFeedAt,
   mergeBracketFeed,
   nextBracketSyncAt,
+  BRACKET_IDLE_SYNC_MS,
   BRACKET_LIVE_SYNC_MS,
   type BracketFeedGame,
 } from "@/lib/brackets/games";
@@ -26,7 +27,7 @@ import {
   isBracketRoundComplete,
   kindScoresRound,
 } from "@/lib/brackets/scoring";
-import { BRACKET_GENDERS, BRACKET_ROUNDS, isBracketKind, type BracketRound } from "@/lib/brackets/tree";
+import { BRACKET_GENDERS, BRACKET_ROUNDS, BRACKET_SLOT_COUNT, isBracketKind, type BracketRound } from "@/lib/brackets/tree";
 import {
   bracketTournamentExists,
   createBracketTournament,
@@ -64,9 +65,14 @@ import {
 // is otherwise never due again. The run never overwrites an admin's game columns (the RPC keeps
 // them), records results only against the winner seats it read (else `stale`: it stops and the next
 // run starts fresh), and never pushes back a next_sync_at an admin set during the run.
+// Final score (plan 10.2): prizes need the championship total (the tiebreaker). A championship
+// decided without one (a stalled feed) is read hourly, not every 2 min, and reports needsAdmin until
+// the feed or an admin (championship override with scores) supplies it. A known total is never
+// cleared by a feed that has none.
 // Venue points are paid per entry per round once the whole round is decided: one keyset-paged
-// read of the tournament's entries (1,000 a page) and one credit call per 500 credits —
-// ≈ 40 + 40 calls per round at 20k entries, once.
+// read of the tournament's entries (1,000 a page) for ALL due rounds together (plan 10.4) and one
+// credit call per 500 credits — ≈ 20 reads + 40 credit calls per round at 20k entries, once; a
+// correction that re-grades several rounds still costs one pass of reads.
 
 export type BracketsSyncMode = { live: boolean; rehearsal: boolean };
 
@@ -161,12 +167,12 @@ export async function payCompleteBracketRounds(
     if (!fresh.ok) return { ok: false, error: `winner seats read: ${fresh.error}` };
     due = due.filter((r) => isBracketRoundComplete(r.round, fresh.value));
   }
+  // One keyset pass over the entries credits every due round (plan 10.4, §17 B10); each round is
+  // then marked paid only if its grade_no is unchanged.
+  const paid = await payBracketRounds(tournament.id, due);
+  if (!paid.ok) return { ok: false, error: `rounds ${due.map((r) => r.round).join(",")}: ${paid.error}` };
   const paidRounds: number[] = [];
-  let credited = 0;
   for (const round of due) {
-    const paid = await payBracketRound(tournament.id, round.round, round.gradeNo);
-    if (!paid.ok) return { ok: false, error: `round ${round.round}: ${paid.error}` };
-    credited += paid.credited;
     const { error } = await supabaseAdmin
       .from("bracket_rounds")
       .update({ paid_grade_no: round.gradeNo, paid_at: new Date().toISOString() })
@@ -179,18 +185,24 @@ export async function payCompleteBracketRounds(
   const allPaid =
     complete.length === BRACKET_ROUNDS.length &&
     rounds.value.every((r) => r.paidGradeNo === r.gradeNo || paidRounds.includes(r.round));
-  return { ok: true, paidRounds, credited, allPaid };
+  return { ok: true, paidRounds, credited: paid.credited, allPaid };
 }
 
-async function payBracketRound(
+/**
+ * Credit the venue points of every due round in ONE keyset pass over the tournament's entries (each
+ * row carries its `round_correct`), keyed `entry:r<round>:<grade_no>` exactly as before. A page's
+ * credits for all due rounds go in one creditSeasonalPoints call (it batches by 500).
+ */
+async function payBracketRounds(
   tournamentId: string,
-  round: BracketRound,
-  gradeNo: number,
+  due: ReadonlyArray<{ round: BracketRound; gradeNo: number }>,
 ): Promise<{ ok: true; credited: number } | { ok: false; error: string }> {
   if (!supabaseAdmin) return { ok: false, error: "Supabase admin client is not configured." };
+  if (due.length === 0) return { ok: true, credited: 0 };
   let after: string | null = null;
   let credited = 0;
-  let blocked = 0;
+  const blocked = new Map<number, number>();
+  const roundOfKey = new Map<string, number>();
   for (;;) {
     let query = supabaseAdmin
       .from("bracket_entries")
@@ -203,9 +215,16 @@ async function payBracketRound(
     if (error) return { ok: false, error: `entries read: ${error.message}` };
     const rows = (data ?? []) as Array<{ id: string; user_id: string; kind: string; round_correct: number[] | null }>;
     const credits = rows.flatMap((row) => {
-      if (!isBracketKind(row.kind) || !kindScoresRound(row.kind, round)) return [];
-      const points = bracketRoundVenuePoints(round, Number(row.round_correct?.[round - 1] ?? 0));
-      return points > 0 ? [{ userId: row.user_id, sourceKey: bracketCreditKey(row.id, round, gradeNo), points }] : [];
+      if (!isBracketKind(row.kind)) return [];
+      const kind = row.kind;
+      return due.flatMap(({ round, gradeNo }) => {
+        if (!kindScoresRound(kind, round)) return [];
+        const points = bracketRoundVenuePoints(round, Number(row.round_correct?.[round - 1] ?? 0));
+        if (points <= 0) return [];
+        const sourceKey = bracketCreditKey(row.id, round, gradeNo);
+        roundOfKey.set(sourceKey, round);
+        return [{ userId: row.user_id, sourceKey, points }];
+      });
     });
     if (credits.length > 0) {
       const result = await creditSeasonalPoints("bracket", credits);
@@ -214,13 +233,20 @@ async function payBracketRound(
         if (item.outcome === "credited") credited += 1;
         // A burned key (an admin correction raced this payment), a key paid to someone else, or a
         // player gone: never re-sent as a fix, so it can't block the round (Squares §13 F8).
-        else if (item.outcome === "user_not_found" || (item.existingUserId && item.existingUserId !== item.userId)) blocked += 1;
+        else if (item.outcome === "user_not_found" || (item.existingUserId && item.existingUserId !== item.userId)) {
+          const round = roundOfKey.get(item.sourceKey) ?? 0;
+          blocked.set(round, (blocked.get(round) ?? 0) + 1);
+        }
       }
     }
+    roundOfKey.clear();
     if (rows.length < PAY_PAGE) break;
     after = rows[rows.length - 1].id;
   }
-  if (blocked > 0) console.warn("[Brackets] credit-blocked", { tournamentId, round, gradeNo, blocked });
+  for (const { round, gradeNo } of due) {
+    const count = blocked.get(round) ?? 0;
+    if (count > 0) console.warn("[Brackets] credit-blocked", { tournamentId, round, gradeNo, blocked: count });
+  }
   return { ok: true, credited };
 }
 
@@ -282,7 +308,10 @@ export async function syncBracketTournament(
   // with (an admin override half-written) is left alone and reported.
   const computed = bracketWinnerSeats(merged.games);
   const conflict = computed.findIndex((seat, slot) => tournament.winnerSeats[slot] !== null && seat !== tournament.winnerSeats[slot]);
-  const total = championshipTotal(merged.games);
+  const finalDecided = computed[BRACKET_SLOT_COUNT - 1] !== null;
+  // A total an admin entered stays when the feed has none (a stale run may even have written the
+  // game's scores back to null). Only a decided final has one.
+  const total = championshipTotal(merged.games) ?? (finalDecided ? tournament.championshipTotal : null);
   const newSlots = computed.filter((seat, slot) => seat !== null && tournament.winnerSeats[slot] === null).length;
   report.newResults = conflict >= 0 ? 0 : newSlots;
   if (conflict >= 0) {
@@ -291,8 +320,16 @@ export async function syncBracketTournament(
   const winnerSeats = conflict >= 0 ? tournament.winnerSeats : computed;
 
   const autos = autoBracketLocks(merged.games);
+  const storedAutos = autoBracketLocks(stored.value);
   const lockPatch: Record<string, string> = {};
   const moveLock = (kind: "main" | "second", current: string | null, setBy: "auto" | "admin", next: string | null) => {
+    const lateAdminLock = setBy === "admin" && next && current && Date.parse(next) < Date.parse(current) && tNow < Date.parse(current);
+    if (lateAdminLock && !sameInstant(storedAutos[kind], next)) {
+      // The admin's lock is after the first tip the feed now shows (plan 10.2): never moved here,
+      // but entries would stay open during games. Logged once, on the run whose merge moved the
+      // first tip (plan 10.5.1); the admin panel's problems line is the standing signal.
+      console.warn("[Brackets] admin-lock-after-first-tip", { tournamentId: tournament.id, kind, lockAt: current, firstTip: next });
+    }
     if (setBy !== "auto" || !next || sameInstant(current, next)) return;
     if (current !== null && tNow >= Date.parse(current)) return; // a passed lock never moves
     lockPatch[kind === "main" ? "main_lock_at" : "second_lock_at"] = next;
@@ -366,14 +403,22 @@ export async function syncBracketTournament(
     }
   }
 
+  // Every round paid, prizes waiting only for the final score: an hourly look at the feed, and a
+  // human is asked for it. Nothing else would change it.
+  const awaitingScore = conflict < 0 && finalDecided && total === null && allPaid && !prizesSettled;
+  if (awaitingScore) {
+    report.needsAdmin ??= "Enter the final score: the championship is decided but the feed has no score, so prizes can't settle.";
+    console.warn("[Brackets] championship-score-missing", { tournamentId: tournament.id });
+  }
+
   // After the championship, keep checking every couple of minutes until every round is paid and the
-  // prizes are settled.
+  // prizes are settled (hourly while only the final score is missing).
   const nextRealMs =
     nextTournamentMs !== null
       ? nextTournamentMs + offsetMs
       : allPaid && prizesSettled
         ? null
-        : realNowMs + BRACKET_LIVE_SYNC_MS;
+        : realNowMs + (awaitingScore ? BRACKET_IDLE_SYNC_MS : BRACKET_LIVE_SYNC_MS);
   report.nextSyncAt = isoOrNull(nextRealMs);
   const updated = await finishBracketSyncRun(
     tournament.id,

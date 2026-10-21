@@ -1,11 +1,11 @@
 import "server-only";
 
 import { gameView } from "@/lib/bracketsEntries";
-import { getBracketGames } from "@/lib/bracketsStore";
+import { bracketRealLockMs, getBracketGames } from "@/lib/bracketsStore";
 import { BRACKET_ROUND_NAMES, bracketDisplayYear, bracketOptionLabel, bracketRegionName, bracketSeatTeams } from "@/lib/bracketsView";
 import { bracketRoundPoints, rankBracketEntries } from "@/lib/brackets/scoring";
 import {
-  BRACKET_SLOT_COUNT,
+  bracketSeatList,
   isBracketKind,
   locationOfSlot,
   regionOfSlot,
@@ -105,11 +105,16 @@ const parseGameKey = (gameKey: string): { tournamentId: string; kind: BracketKin
   return { tournamentId, kind };
 };
 
-/** When the bracket locked, in REAL time (a rehearsal's clock runs behind by its offset). */
-const realLockMs = (tournament: TournamentRow, kind: BracketKind): number | null => {
-  const lockMs = Date.parse(String((kind === "main" ? tournament.main_lock_at : tournament.second_lock_at) ?? ""));
-  return Number.isFinite(lockMs) ? lockMs + Number(tournament.clock_offset_seconds ?? 0) * 1000 : null;
-};
+/** When the bracket locked, in REAL time — the shared rule (bracketRealLockMs), on this adapter's row. */
+const realLockMs = (tournament: TournamentRow, kind: BracketKind): number | null =>
+  bracketRealLockMs(
+    {
+      mainLockAt: tournament.main_lock_at,
+      secondLockAt: tournament.second_lock_at,
+      clockOffsetSeconds: Number(tournament.clock_offset_seconds ?? 0),
+    },
+    kind,
+  );
 
 /** "Men's bracket 2027" (a rehearsal says so). */
 const gameTitle = (tournament: TournamentRow, kind: BracketKind): string =>
@@ -322,22 +327,22 @@ const getBreakdown: NonNullable<ResultsAdapter["getBreakdown"]> = async ({ venue
     const team = seats[seat];
     return team ? `${team.name}${team.seed !== null ? ` (${team.seed})` : ""}` : `Seat ${seat + 1}`;
   };
-  const winners = game.tournament.winner_seats ?? [];
+  const winners = bracketSeatList(game.tournament.winner_seats);
+  const picks = bracketSeatList(mine.picks);
   const regionNames = game.tournament.region_names ?? [];
 
   const breakdown: ResultsBreakdownRow[] = slotsOfKind(game.kind).flatMap((slot) => {
-    const raw = mine.picks?.[slot];
-    if (raw === null || raw === undefined || slot >= BRACKET_SLOT_COUNT) return [];
-    const pick = Number(raw);
+    const pick = picks[slot];
+    if (pick === null || pick === undefined) return [];
     const winner = winners[slot];
     const round = roundOfSlot(slot);
-    const decided = winner !== null && winner !== undefined;
-    const right = decided && Number(winner) === pick;
+    const decided = winner !== null;
+    const right = decided && winner === pick;
     return [
       {
         group: BRACKET_ROUND_NAMES[round],
         label: slotLabel(slot, regionNames),
-        detail: decided && !right ? `${teamName(pick)} · won by ${teamName(Number(winner))}` : teamName(pick),
+        detail: decided && !right ? `${teamName(pick)} · won by ${teamName(winner)}` : teamName(pick),
         outcome: !decided ? ("none" as const) : right ? ("right" as const) : ("wrong" as const),
         points: right ? bracketRoundPoints(round) : 0,
       },

@@ -20,12 +20,27 @@ line on the bracket screen — Prizes only on the Prizes tab and Results. Latest
 finished; docs only, nothing committed). Findings §17; fixes are sub-phases **10.1–10.4**, then re-review, replay
 rehearsal, Andrew's phone pass, launch by Mar 8, 2027 and the live watch (10.5–10.9). Latest handoff:
 `docs/squares-and-brackets-plan_PHASE_10_HANDOFF.md`.
-**10.1 built 2026-10-21 (not committed; migration `20261021035254` NOT applied — Andrew: `supabase db push`)**:
-admin corrections are paid again at the next cron minute (also after the final), "No result" holds a game, the sync
-never overwrites an admin's game columns, the TV refreshes on a flipped winner. §18 below. Latest handoff:
-`docs/squares-and-brackets-plan_PHASE_10.1_HANDOFF.md`.
-**Next:** 10.2 (Opus 5.5 · medium), then 10.3 / 10.4. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews
-6.1–6.5 only (Phases 7–9 were reviewed here).
+**10.1 built and committed 2026-10-21 (`9f9de25`; migration `20261021035254` APPLIED — in `supabase migration
+list` and the RPC answers, checked 2026-10-21)**: admin corrections are paid again at the next cron minute (also after the final), "No result"
+holds a game, the sync never overwrites an admin's game columns, the TV refreshes on a flipped winner. §18 below.
+**10.2 built 2026-10-21 (not committed; no migration)**: a lock can't be moved past its first tip; the championship
+override takes the final score, and a final decided without one is read hourly with "Enter the final score". §19
+below. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.2_HANDOFF.md`.
+**10.3 built 2026-10-21 (not committed; no migration)**: a bracket draft is never dropped — Back, Next, Save and the
+tab going to the background all wait for a save already in flight, then send anything newer. §20 below. Latest handoff:
+`docs/squares-and-brackets-plan_PHASE_10.3_HANDOFF.md`.
+**10.4 built 2026-10-21 (not committed; no migration)**: the TV lists only the shown bracket's tournament's games (a
+rehearsal only at a hidden venue); one home each for the real-time lock and the 63-seat normalizer; due rounds are paid
+in one pass over the entries. §21 below. Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.4_HANDOFF.md`.
+**10.5 re-review done 2026-10-21 (docs only, nothing committed)**: `/code-review high` over 10.1–10.4; 9 findings
+confirmed, 1 rejected. Fixes are sub-phases **10.5.1–10.5.4** (one needs `supabase db push`). §22 below. Latest
+handoff: `docs/squares-and-brackets-plan_PHASE_10.5_HANDOFF.md`.
+**10.5.1 built 2026-10-21 (not committed; no migration)**: after the first tip an admin lock can still be pulled
+EARLIER (never later); Follow feed writes the feed's lock at once; the late-lock warning is logged once. §23 below.
+Latest handoff: `docs/squares-and-brackets-plan_PHASE_10.5.1_HANDOFF.md`.
+**Next:** 10.5.2 (the championship score stays put and agrees with the winner). 10.5.2–10.5.4 must be done before
+the 10.6 rehearsal. 6.5 still waits on the Oct 19/22 captures; 6.6 re-reviews 6.1–6.5 only (Phases 7–9 were reviewed
+here).
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
 
@@ -70,9 +85,9 @@ Dates confirmed in Phase 0 (NCAA.com 2027 schedules, Super Bowl LXI = Feb 14, 20
 bracket feeds (the paid "GOAT" tier, $39.99/mo per sport) and NFL quarter-by-quarter scores. Each bracket feed is one
 request. Running costs are estimated in §6.
 
-**Needs you:** now, a push + deploy of fix 6.1 (built 2026-10-19) (it protects the NFL Pick 'Em prize at Pacific Street from going to a
-trivia winner). Later: one `supabase db push` (6.2), the rehearsal phone pass (6.8), and the launch (6.9).
-For Brackets: one `supabase db push` (10.1's migration `20261021035254`, built 2026-10-21), the replay phone pass (10.7), and the launch by Mar 8 (10.8). Your §7
+**Needs you:** for Squares, the rehearsal phone pass (6.8) and the launch (6.9) (6.1–6.4 were pushed and deployed
+2026-10-21). For Brackets: one `supabase db push` (10.5.2's migration), the replay phone pass (10.7), and the launch by
+Mar 8 (10.8). Your §7
 answers are recorded in §1 (items 9–15).
 
 ---
@@ -473,7 +488,11 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
 | 10.2 | Lock and final-score guards (§17 B5, B6) | Opus 5.5 | medium | — |
 | 10.3 | Bracket drafts never drop picks (§17 B4) | Sonnet 5.5 | medium | — |
 | 10.4 | TV shows only this venue's games; one home for shared helpers; pay due rounds in one pass (§17 B7, B9, B10) | Opus 5.5 | medium | — |
-| 10.5 | Re-review of 10.1–10.4 (`/code-review high`) | Opus 5.5 | high | — |
+| 10.5 | Re-review of 10.1–10.4 (`/code-review high`) — **done 2026-10-21** (§22) | Opus 5.5 | high | — |
+| 10.5.1 | A late admin lock can still be pulled earlier after the first tip; warn once (§22 R1, R9, R10) — **built 2026-10-21** (§23) | Opus 5.5 | medium | — |
+| 10.5.2 | The championship score stays put and agrees with the winner (§22 R2, R4, R5, R7) | Opus 5.5 | medium | `supabase db push` (one small migration) |
+| 10.5.3 | The TV follows a rehearsal clock change at once (§22 R3) | Sonnet 5.5 | low | — |
+| 10.5.4 | A refused draft isn't sent twice (§22 R8) | Sonnet 5.5 | low | — |
 | 10.6 | Replay rehearsal of the March 2026 tournaments on `venue-hightop-test` | Opus 5.5 | high | Preview env vars, phone pass |
 | 10.7 | Andrew's phone + TV pass (checklist section B) | — | — | yes |
 | 10.8 | Launch: flag on + redeploy by **Mon Mar 8, 2027** | Opus 5.5 | medium | yes |
@@ -511,7 +530,7 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
   a flipped winner); SQL on PGlite (`npm run test:brackets-sql`) for the new column/RPC; the full 2026 replay
   (`tests/brackets-*.test.ts`) still passes with the same totals.
 
-#### 10.2 — Lock and final-score guards (Opus 5.5 · medium)
+#### 10.2 — Lock and final-score guards (Opus 5.5 · medium) — **built 2026-10-21** (§19)
 - **Problems (§17 B5, B6):**
   - `move_lock` only checks that the round hasn't started yet. It accepts a lock **after** the first tip, so
     `bracket_save_entry` keeps accepting picks for games already being played or finished.
@@ -540,7 +559,7 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
   the newest picks and navigation waits for it; Save during a background save succeeds; no send when the version is
   unchanged.
 
-#### 10.4 — TV games, shared helpers, one-pass payment (Opus 5.5 · medium)
+#### 10.4 — TV games, shared helpers, one-pass payment (Opus 5.5 · medium) — **built 2026-10-21** (§21)
 - **Problems (§17 B7, B9, B10):**
   - The TV's "today's games" takes games from every current tournament, including a rehearsal on its replay clock and
     the other gender's tournament.
@@ -562,9 +581,90 @@ order, then 10.5–10.9. **10.1–10.4 must be done before the rehearsal (10.6).
 - **Tests:** TV payload with a rehearsal + live tournament; contract test for the helpers; payment of three due rounds
   in one pass with the same credits as three passes (replay totals unchanged).
 
-#### 10.5 — Re-review (Opus 5.5 · high)
+#### 10.5 — Re-review (Opus 5.5 · high) — **done 2026-10-21** (§22)
 - `/code-review high` over the 10.1–10.4 commits. New findings become 10.5.1, 10.5.2, … (designed fix, not an
   in-place patch).
+- Result: 9 confirmed, 1 rejected (§22). **10.5.1–10.5.4 must be done before 10.6** (the rehearsal walks the lock,
+  the final score, `set_clock` and the TV). Order: any; 10.5.1 and 10.5.2 both touch `lib/bracketsAdmin.ts` and
+  `lib/bracketsSync.ts`, so do them one after the other, not in parallel.
+
+#### 10.5.1 — A late admin lock can be pulled earlier after the first tip (Opus 5.5 · medium) — **built 2026-10-21** (§23)
+- **Problem (§22 R1):** `lockMoveRefusal` refuses every move once the kind's first round has tipped
+  (`kindHasStarted`). If the feed shows a first tip earlier than an admin lock only after that tip has passed (or the
+  admin misses the panel line before it), the admin can't close entries: the panel says "Move it or press Follow feed"
+  and `move_lock` answers 409. `bracket_save_entry` keeps accepting picks until the admin lock, while games are played.
+- **Design:** after the kind has started, allow a move that makes the lock EARLIER and never reopens: a `lockAt` ≤ the
+  current lock, or Follow feed when the automatic lock (`autoBracketLocks(games)[kind]`) is ≤ the current lock. Any
+  later lock, a reopening (new lock later than the tournament's now when the current one has passed), or a kind with
+  no current lock still refuses. A lock moved into the past closes entries at once (the save RPC compares `now >= lock`).
+  Before the tip, 10.2's rule is unchanged. Panel: keep the problems line; make its copy say "Move it to the first tip
+  or earlier". Picks saved between the tip and the corrected lock stay saved. Note: `bracket_save_entry` doesn't refuse
+  a pick of an already-decided game, so in that window a player can pick finished games; whether to also refuse
+  changed picks of tipped games in the save RPC is an open question for Andrew (10.5 handoff §7) — not part of 10.5.1.
+- **R9 (warn once):** the sync logs `[Brackets] admin-lock-after-first-tip` on every run while the condition holds
+  (every 2 min during play). Log it only when the run's merge changed the first tip, i.e. when
+  `autoBracketLocks(stored games)[kind]` (before the merge) differs from the merged one, or the run is the first to see
+  a tip earlier than the lock. The admin panel's problems line stays the standing signal.
+- **R10 (cleanup, same file):** in `payBracketRounds` the per-page `roundOfKey` map only recovers the round of a
+  blocked credit. Count blocked credits per round from the due entry the credit was built from (e.g. build credits as
+  `{ credit, round }` pairs and index results by position, if `creditSeasonalPoints` keeps order — check first), or
+  leave it: optional, no behaviour change, replay totals must stay identical.
+- **Tests:** `lockMoveRefusal` after the first tip: earlier → allowed; equal → allowed; later → refused; Follow feed
+  with auto ≤ current → allowed, auto > current → refused; passed lock never moves later (real and rehearsal clocks).
+  Sync: two runs with the same tips warn once.
+
+#### 10.5.2 — The championship score stays put and agrees with the winner (Opus 5.5 · medium)
+- **Problems (§22 R2, R4, R5, R7):**
+  - `bracket_save_feed_games` writes `home_score`/`away_score` from the run's merged rows unconditionally. A sync that
+    read the final before an admin entered its score writes the scores back to null (10.2 noted this as cosmetic). It
+    is not only cosmetic: the admin override path grades with `championshipTotal(fresh games)`, no fallback, so the
+    next override of ANY game passes `championshipTotal: null` and `bracket_record_results` clears
+    `bracket_tournaments.championship_total`. Prizes then wait again ("Enter the final score") although the admin was
+    told "Final score saved". The admin panel also shows blank score fields for a total that is stored.
+  - An override of the championship winner without new scores is accepted even when the stored scores say the other
+    team won (e.g. feed 70–65 home, admin picks away). The total (135) still settles prizes, with no warning.
+  - Panel: filling only one score field silently sends no scores (the button just stays off, or the override goes
+    without them).
+- **Design:**
+  - New migration (`supabase migration new bracket_feed_scores_keep`): `create or replace` `bracket_save_feed_games`
+    with `home_score = coalesce(v_g.home_score, g.home_score)` (same for away). Equivalent for the feed (`mergeOne`
+    only ever sets a score when the feed has one), so only the stale-null write changes. Never edit `20261021035254`.
+    Grants unchanged (functions aren't affected by the 2026-10-30 grant change; keep the revoke/grant lines).
+  - Once scores can't be nulled by a stale run, the sync's fallback (`?? (finalDecided ? tournament.championshipTotal
+    : null)`, `lib/bracketsSync.ts`) can stay as defence; the override path gets the same fallback so both writers of
+    `championship_total` agree: one shared helper (e.g. `recordedChampionshipTotal(games, tournament)` in
+    `lib/bracketsStore.ts`) used by both, pinned by the contract test.
+  - `override_result` on the championship with a winner and no new scores refuses (409) when both stored scores are
+    known and the chosen side's score isn't strictly higher: "The stored score says the other team won: enter the
+    corrected score too." "No result" stays allowed.
+  - Panel: when exactly one score field is filled, show "Enter both scores, or neither" under the fields and keep
+    Override off. Clearing a stored score isn't needed (enter the right one); don't add it.
+- **Tests:** SQL on PGlite (`npm run test:brackets-sql`): a feed row with null scores keeps the stored scores, a feed
+  score still overwrites. Unit: stale sync → admin override of a round-5 game keeps the total; contradicting winner
+  refused, consistent one accepted; panel half-filled hint. Replay totals unchanged.
+
+#### 10.5.3 — The TV follows a rehearsal clock change at once (Sonnet 5.5 · low)
+- **Problem (§22 R3, a 10.4 regression):** `getBracketTvPayload` (`lib/bracketsTvRead.ts`) caches the venue's shown
+  tournament RECORDS and builds the payload from them. `bracketTvRevisionOf` doesn't include `clockOffsetSeconds`, so
+  after `set_clock` on a rehearsal the TV keeps the old offset (today's games, lock and phase, upset window) for up to
+  10 minutes. The 10.6 rehearsal walks the clock with `set_clock`, so its TV checks would read stale.
+- **Design:** the venue cache keeps the shown tournament IDS (plus entries and time zone); the payload maps over
+  `state.tournaments` filtered to those ids, so every non-entries field (clock, locks, winner seats) is the 15-second
+  shared read. Don't add the offset to the revision (that would re-read entries for a clock change that can't change
+  them).
+- **Tests (`tests/bracket-tv.test.ts`):** change a rehearsal's offset in the shared read between two calls inside the
+  venue TTL → the second payload uses the new clock with no new entries read.
+
+#### 10.5.4 — A refused draft isn't sent twice (Sonnet 5.5 · low)
+- **Problem (§22 R8):** in `persist()` (`components/bracket/BracketEditor.tsx`) a caller that waited on a failed send
+  re-sends the same version. Right for a network failure; wasted for a definite refusal (`locked`, `not_open`,
+  invalid picks): two requests and the message set twice whenever two saves overlap.
+- **Design:** remember the version of a definite refusal (`refusedVersionRef`); a waiter returns false without sending
+  when `versionRef` still equals it. A new pick (version moves on) sends again. Network failures keep retrying as now.
+  The tab-hide save still waits for the send in flight (sending a newer keepalive alongside it could land out of order
+  and the older save would overwrite it); accepted.
+- **Tests (`tests/bracket-screen.test.ts`):** held save answered `locked` + a second caller waiting → one request;
+  network failure + waiter → two requests (unchanged).
 
 #### 10.6 — Replay rehearsal (Opus 5.5 · high)
 - Needs 10.1–10.4 deployed and 10.1's migration applied. On a Preview with `NEXT_PUBLIC_BRACKETS_ENABLED` on, and
@@ -833,7 +933,7 @@ production data exists: no tournament until Mar 14, 2027). Full detail: `docs/sq
 ## 18. 10.1 as built (2026-10-21) — read before 10.2–10.6
 
 Handoff: `docs/squares-and-brackets-plan_PHASE_10.1_HANDOFF.md`. Migration `20261021035254_bracket_admin_corrections.sql`
-(not applied yet). Not committed.
+(applied; checked 2026-10-21). Committed `9f9de25`.
 - **Decision (RPC, not two upsert batches):** PostgREST upserts whole rows, so only a conditional write against the
   CURRENT row can keep an admin's result. The sync's only game writer is `bracket_save_feed_games` (via
   `saveFeedBracketGames`, `lib/bracketsStore.ts`): feed columns always; teams unless `teams_set_by = 'admin'`; an
@@ -858,3 +958,117 @@ Handoff: `docs/squares-and-brackets-plan_PHASE_10.1_HANDOFF.md`. Migration `2026
 - **TV:** `bracketTvRevisionOf` (`lib/bracketsTvRead.ts`) keys on the winner seats themselves.
 - Replay unchanged: 6,411 feed requests for both 2027 tournaments; totals and prize results identical.
 
+## 19. 10.2 as built (2026-10-21) — read before 10.3–10.6
+
+Handoff: `docs/squares-and-brackets-plan_PHASE_10.2_HANDOFF.md`. No migration. Not committed.
+- **Lock guard (B5):** `lockMoveRefusal` (`lib/bracketsAdmin.ts`, pure) is the one rule `move_lock` asks: refused once
+  the kind's first round has tipped (`kindHasStarted`, unchanged), and refused for a `lockAt` LATER than the kind's
+  first tip (`lockAfterFirstTip` = `autoBracketLocks(games)[kind]`: Round of 64 for main, Sweet 16 for second chance).
+  A lock exactly at the tip is allowed (that is the automatic lock); Follow feed (null) is always allowed before the
+  tip. Tips and `lockAt` are both on the tournament's clock, so a rehearsal compares replay times. No tips known →
+  allowed; then the sync logs `[Brackets] admin-lock-after-first-tip` on each run where a feed tip is earlier than an
+  admin lock that hasn't passed, and the admin panel lists it as a problem (`bracketProblems` now takes the tournament
+  clock). The sync still never moves an admin lock.
+- **Final score (B6):** `override_result` takes optional `homeScore` / `awayScore` (request body) → parsed `scores`:
+  championship only (round 6), both or neither, integers 0–200, the winner's strictly higher, never with "No result".
+  They go on the game row (`homeScore`/`awayScore` joined `BracketGameAdminPatch`), and the override grades with
+  `championshipTotal(fresh games)`, so `bracket_tournaments.championship_total` is set in the same call. A later feed
+  score overwrites the game's scores (the feed's columns), so the feed wins if it ever reports one before prizes
+  settle; settled prizes never change.
+- **The sync never clears a known total:** `total = championshipTotal(merged) ?? (final decided ? tournament.championshipTotal : null)`.
+  A sync that read before an admin's score write may write the game's scores back to null (feed columns are always
+  written, 10.1's RPC); the tournament's total and the prizes are unaffected. Cosmetic only; not fixed (would need a
+  migration).
+- **Pace:** after the final, rounds all paid, prizes waiting only for the total → `needsAdmin` "Enter the final score…",
+  `[Brackets] championship-score-missing`, next read in an hour (`BRACKET_IDLE_SYNC_MS`) instead of 2 min. A pay or
+  prize error keeps the 2-min retry. The panel also lists "The championship has no final score…". An override of the
+  championship without a score says "Prizes need the final score".
+- Note: the feed only decides a game WITH both scores (`feedWinnerSide`), so the real B6 case is an admin picking the
+  champion while the feed is stalled. Prizes still never settle without the total (the tiebreaker players were
+  promised); live standings keep ranking with a null total.
+- Panel: the championship row has Home/Away score fields; Override is enabled when they change.
+- Replay unchanged: 6,411 feed requests, same totals.
+
+## 20. 10.3 as built (2026-10-21) — read before 10.4–10.6
+
+Handoff: `docs/squares-and-brackets-plan_PHASE_10.3_HANDOFF.md`. No migration. Not committed. One component changed.
+- **B4 fix (`components/bracket/BracketEditor.tsx`):** the save in flight is a promise in `inflightRef` (replaces
+  `savingRef`). `persist()` first `while`-waits for it (a failed or throwing send counts as finished), then, only if
+  `versionRef` ≠ `sentVersionRef`, sends the newest picks and records itself as the in-flight send. Nothing changed =
+  no request. A failed earlier send is retried by the next caller (its version was never marked sent).
+- **Every caller now waits instead of giving up:** the exit flush (`BracketGame` still caps the whole chain at
+  `EXIT_SAVE_WAIT_MS` = 3 s via `Promise.race`), step changes (`goTo`), Finish (shows the real result) and the
+  tab-hidden save (the old `!savingRef.current` guard is gone, so a background save during a slow send isn't skipped).
+- **Tests (`tests/bracket-screen.test.ts`, `installFetch` gained `holdEntry`):** Back during a held save sends the
+  second save with both picks and only then leaves; a tab-hide save plus Save tapped in the same tick sends twice and
+  ends on "Your bracket is in" with the success buzz; the existing "step that changed nothing doesn't save again" case
+  still pins the no-extra-request rule.
+- Not browser-tested (jsdom only); covered by checklist B3 in the 10.6 replay.
+
+## 21. 10.4 as built (2026-10-21) — read before 10.5–10.6
+
+Handoff: `docs/squares-and-brackets-plan_PHASE_10.4_HANDOFF.md`. No migration. Not committed.
+- **TV games (B7):** `buildBracketTvPayload` (`lib/bracketsTv.ts`) lists today's games of the CHOSEN bracket's
+  tournament only, on its clock (decision: the other gender's games are dropped, matching the standings beside them, as
+  the plan recommended). `getBracketTvPayload` (`lib/bracketsTvRead.ts`) passes only the tournaments the venue shows:
+  `bracketTournamentsShownAt(venueId, tournaments)` (`lib/bracketsEntries.ts`, now the ONE home of "rehearsals only at
+  hidden venues", also used by the bracket screen). It reads `venues.hidden` only while a rehearsal is current, once per
+  venue refresh (revision change or 10 min), cached with the entries; a failed read hides the brackets.
+- **One home (B9):** `bracketRealLockMs` moved to `lib/bracketsStore.ts` (beside `tournamentNowMs`); prizes and the
+  Results adapter (which maps its snake_case row) both call it. `bracketSeatList(value: unknown)` in
+  `lib/brackets/tree.ts` replaces `picksOf` (`lib/bracketsEntries.ts`), `seatList` (`lib/bracketsStore.ts`), the inline
+  copy in `lib/bracketsTvRead.ts`, and the Results breakdown's hand-rolled null checks. Pinned in
+  `tests/brackets-contract.test.ts` ("one home for shared rules").
+- **One-pass payment (B10):** `payCompleteBracketRounds` keeps 10.1's order (rounds read → winner-seats re-read → pay),
+  then `payBracketRounds(tournamentId, due)` makes ONE keyset pass over the entries and builds credits for every due
+  round per page (keys unchanged: `entry:r<round>:<grade_no>`), then each round is marked paid with its `grade_no`
+  guard. Behaviour change: a failure mid-pass marks NO round paid (before: earlier rounds were marked); the retry
+  re-sends their credits, which come back `already_credited`. `credit-blocked` is still logged per round.
+- Tests: `tests/bracket-tv.test.ts` (other tournament's games excluded; rehearsal only at a hidden venue; no venue read
+  without a rehearsal), `tests/brackets-sync.test.ts` (three due rounds → one `bracket_entries` read, same credits and
+  ledger keys), contract test above. Replay unchanged: 6,411 feed requests, same totals.
+
+
+## 22. 10.5 re-review (2026-10-21) — the findings behind 10.5.1–10.5.4
+
+`/code-review high` over 10.1 (`9f9de25`) and the uncommitted 10.2–10.4 working tree. Each finding was then checked by
+reading the code (no tournament exists until Mar 14, 2027, so no production data). Handoff:
+`docs/squares-and-brackets-plan_PHASE_10.5_HANDOFF.md`.
+
+| # | Finding | Checked | Severity | Fix |
+|---|---|---|---|---|
+| R1 | Once the first tip has passed, `lockMoveRefusal` refuses every move, so an admin lock found to be after that tip can't be pulled earlier; the panel still says "Move it or press Follow feed" (`lib/bracketsAdmin.ts` `lockMoveRefusal`) | Confirmed: `kindHasStarted` is checked first; `bracket_save_entry` closes only on `lock_at` | **Medium** (entries open during play) | 10.5.1 |
+| R2 | The admin override records `championshipTotal(fresh games)` with no fallback, so after a stale sync nulled the final's scores, any later override clears `championship_total` (`lib/bracketsAdmin.ts` override branch) | Confirmed; needs the 10.2 race (a sync reading before the admin's score write) | Low | 10.5.2 |
+| R3 | The TV venue cache keeps whole tournament records; the revision has no clock offset, so a rehearsal `set_clock` is ignored ≤ 10 min (`lib/bracketsTvRead.ts`, 10.4) | Confirmed; rehearsal only, but 10.6 depends on it | Low | 10.5.3 |
+| R4 | Root of R2: `bracket_save_feed_games` writes scores unconditionally, so a stale run nulls admin-entered scores; the sync's total fallback hides it only in the sync | Confirmed (`mergeOne` keeps stored scores; the RPC doesn't) | Low | 10.5.2 |
+| R5 | Overriding the championship winner without new scores accepts a winner the stored scores contradict; that total settles prizes | Confirmed | Low | 10.5.2 |
+| R6 | A score-only entry on a feed-decided final sets `result_source = 'admin'`, "locking the feed out" | **Rejected**: the feed never changes a stored winner whatever its source (`mergeOne` only fills empty games or notes a mismatch), and the feed decides only with both scores, so the case can't arise | — | — |
+| R7 | Panel: one score field filled → no scores sent, no hint (`components/admin/sections/BracketsSection.tsx`) | Confirmed (clearing a score isn't needed: enter the right one) | Low (UX) | 10.5.2 |
+| R8 | `persist()`: a waiter re-sends the same version after a definite refusal (`locked`) — two requests per overlap (`components/bracket/BracketEditor.tsx`) | Confirmed; the keepalive-on-hide waiting behind a send is not a regression (before 10.3 it was skipped) | Low | 10.5.4 |
+| R9 | `[Brackets] admin-lock-after-first-tip` is logged on every sync run while it holds (every 2 min in play) | Confirmed | Low (log cost) | 10.5.1 |
+| R10 | `payBracketRounds` keeps a per-page `roundOfKey` map just to name the round of a blocked credit | Confirmed; style only | Nit | 10.5.1 (optional) |
+
+## 23. 10.5.1 as built (2026-10-21) — read before 10.5.2
+
+Handoff: `docs/squares-and-brackets-plan_PHASE_10.5.1_HANDOFF.md`. No migration. Not committed.
+- **Lock after the first tip (R1):** `lockMoveRefusal(kind, lockAt, currentLockAt, games, winnerSeats, tournamentNow)`
+  (`lib/bracketsAdmin.ts`, new `currentLockAt` argument). Before the kind has started: 10.2's rule, unchanged. After:
+  allowed only when the target (the admin's `lockAt`, or for Follow feed `autoBracketLocks(games)[kind]`) is ≤ the
+  current lock; no current lock, or a later target, refuses ("…its lock can only move earlier (<current> or before)").
+  A passed lock therefore never moves later, on either clock (the comparison is lock vs lock; `kindHasStarted` uses the
+  tournament clock).
+- **Follow feed writes the feed's lock at once** (`move_lock`: `lockAt ?? autoBracketLocks(games)[kind]`, set_by
+  `auto`), before and after the tip. Before, it wrote null until the next sync, and `bracket_save_entry` answers
+  `not_open` for a null lock — entries flickered "not open" for up to a minute. With no tips known it still writes null.
+- **Panel copy:** the problems line now says "Move it to the first tip or earlier, or press Follow feed." No UI change.
+- **Warn once (R9):** `syncBracketTournament` logs `[Brackets] admin-lock-after-first-tip` only when the condition holds
+  AND `autoBracketLocks(stored games)[kind]` differs from the merged one (this run's merge moved the first tip — which
+  includes the first run that sees any tip). The panel's problems line stays the standing signal.
+- **R10 left as is (decision):** `creditSeasonalPoints` returns results in the RPC's row order, which isn't guaranteed
+  to match the input, so indexing by position isn't safe; the `roundOfKey` map stays.
+- **Open, not built:** picks of games already tipped/decided saved in the late-lock window stay saved (10.5 handoff §7,
+  option a). Whether to also refuse them in `bracket_save_entry` is Andrew's call (option b, its own sub-phase).
+- Tests: `tests/brackets-contract.test.ts` ("after the first tip, a lock only moves earlier"), `tests/brackets-sync.test.ts`
+  ("a late admin lock found after the first tip can be pulled in, and is logged once"; the 10.2 test's last step now
+  expects an earlier move allowed and a later one refused). Full suite 5,218 passed / 13 skipped; replay unchanged
+  (6,411 feed requests).

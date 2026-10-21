@@ -137,3 +137,14 @@ export const regionOfSlot = (slot: number): number | null =>
 
 /** An empty 63-pick array. */
 export const emptyPicks = (): Array<number | null> => Array.from({ length: BRACKET_SLOT_COUNT }, () => null);
+
+/**
+ * A stored 63-seat array (an entry's picks, a tournament's winner seats) as exactly 63 seats or
+ * nulls — the ONE normalizer every reader uses (plan 10.4, §17 B9). Missing, short or non-array
+ * values read as nulls.
+ */
+export const bracketSeatList = (value: unknown): Array<number | null> =>
+  Array.from({ length: BRACKET_SLOT_COUNT }, (_, i) => {
+    const seat = Array.isArray(value) ? value[i] : null;
+    return seat === null || seat === undefined ? null : Number(seat);
+  });

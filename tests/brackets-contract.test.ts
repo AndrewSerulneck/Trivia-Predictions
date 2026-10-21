@@ -31,7 +31,7 @@ import { BRACKET_TIEBREAKER_MAX } from "@/lib/brackets/picks";
 import { bracketMaxScore } from "@/lib/brackets/scoring";
 import { BRACKET_ROUND_POINTS } from "@/lib/seasonalPoints";
 import { bracketsSyncMode } from "@/lib/bracketsSync";
-import { kindHasStarted, parseBracketsAdminAction } from "@/lib/bracketsAdmin";
+import { kindHasStarted, lockMoveRefusal, parseBracketsAdminAction } from "@/lib/bracketsAdmin";
 import { emptyBracketGame } from "@/lib/brackets/games";
 import { getBracketStandings, getBracketsView, parseBracketPicks } from "@/lib/bracketsEntries";
 
@@ -96,6 +96,29 @@ describe("one writer each", () => {
 
   it("the rehearsal switch has one reader", () => {
     expect(filesContaining("process.env.BRACKETS_REHEARSAL_ENABLED")).toEqual(["lib/seasonalGames.ts"]);
+  });
+});
+
+describe("one home for shared rules (plan 10.4, §17 B9)", () => {
+  it("the real-time lock: bracketRealLockMs in lib/bracketsStore.ts, asked by prizes and Results", () => {
+    expect(filesContaining(/export const bracketRealLockMs\b/)).toEqual(["lib/bracketsStore.ts"]);
+    expect(filesContaining(/bracketRealLockMs\(/)).toEqual(["lib/bracketPrizeAwards.ts", "lib/results/adapters/bracket.ts"]);
+    // Nobody else adds a rehearsal's offset to a lock.
+    expect(filesContaining(/lock\w*\s*\+\s*[\w.]*clock_?offset/i)).toEqual(["lib/bracketsStore.ts"]);
+  });
+
+  it("the 63-seat normalizer: bracketSeatList in lib/brackets/tree.ts, used by every stored-seats reader", () => {
+    expect(filesContaining(/export const bracketSeatList\b/)).toEqual(["lib/brackets/tree.ts"]);
+    expect(filesContaining("seat === null || seat === undefined ? null : Number(seat)")).toEqual(["lib/brackets/tree.ts"]);
+    for (const file of ["lib/bracketsEntries.ts", "lib/bracketsStore.ts", "lib/bracketsTvRead.ts", "lib/results/adapters/bracket.ts"]) {
+      expect(readFileSync(path.join(ROOT, file), "utf8"), file).toMatch(/bracketSeatList\(/);
+    }
+    expect(filesContaining(/\b(picksOf|seatList)\s*=/)).toEqual([]);
+  });
+
+  it("a rehearsal shows only at hidden venues: one rule for the bracket screen and the TV", () => {
+    expect(filesContaining(/export async function bracketTournamentsShownAt\b/)).toEqual(["lib/bracketsEntries.ts"]);
+    expect(filesContaining(/bracketTournamentsShownAt\(/)).toEqual(["lib/bracketsEntries.ts", "lib/bracketsTvRead.ts"]);
   });
 });
 
@@ -209,6 +232,69 @@ describe("admin actions", () => {
     expect(kindHasStarted("main", games, none, Date.parse(tip) - 60_000)).toBe(false);
     expect(kindHasStarted("main", games, none, Date.parse(tip))).toBe(true);
     expect(kindHasStarted("second", games, none, Date.parse(tip))).toBe(false);
+  });
+
+  it("never moves a lock past the kind's first tip (plan 10.2, §17 B5)", () => {
+    const r64 = "2027-03-18T16:15:00Z";
+    const s16 = "2027-03-25T23:00:00Z";
+    const games = [
+      { ...emptyBracketGame(1, 1), tipAt: "2027-03-18T19:00:00Z" },
+      { ...emptyBracketGame(1, 2), tipAt: r64 },
+      { ...emptyBracketGame(3, 1), tipAt: s16 },
+    ];
+    const none = Array.from({ length: 63 }, () => null);
+    const before = Date.parse(r64) - 86_400_000;
+    const at = (iso: string, deltaMs: number) => new Date(Date.parse(iso) + deltaMs).toISOString();
+    expect(lockMoveRefusal("main", at(r64, -3_600_000), null, games, none, before)).toBeNull();
+    expect(lockMoveRefusal("main", r64, null, games, none, before)).toBeNull(); // at the tip = the feed's own lock
+    expect(lockMoveRefusal("main", at(r64, 60_000), null, games, none, before)).toMatch(/after the first Round-of-64 tip/);
+    expect(lockMoveRefusal("main", null, null, games, none, before)).toBeNull(); // Follow feed
+    // Second chance compares with the first Sweet 16 tip, not the Round of 64.
+    expect(lockMoveRefusal("second", at(s16, -60_000), null, games, none, before)).toBeNull();
+    expect(lockMoveRefusal("second", at(s16, 60_000), null, games, none, before)).toMatch(/after the first Sweet 16 tip/);
+    // No tips known yet: allowed (the sync warns and the panel lists it if a later feed shows one).
+    expect(lockMoveRefusal("main", at(r64, 86_400_000), null, [emptyBracketGame(1, 1)], none, before)).toBeNull();
+  });
+
+  it("after the first tip, a lock only moves earlier (plan 10.5.1, §22 R1)", () => {
+    const r64 = "2027-03-18T16:15:00Z";
+    const games = [
+      { ...emptyBracketGame(1, 1), tipAt: "2027-03-18T19:00:00Z" },
+      { ...emptyBracketGame(1, 2), tipAt: r64 },
+    ];
+    const none = Array.from({ length: 63 }, () => null);
+    const at = (iso: string, deltaMs: number) => new Date(Date.parse(iso) + deltaMs).toISOString();
+    const lateLock = at(r64, 3 * 3_600_000); // an admin lock the feed shows to be after the first tip
+    const playing = Date.parse(r64) + 60_000; // the first game has tipped; the late lock hasn't passed
+    expect(lockMoveRefusal("main", at(r64, 3_600_000), lateLock, games, none, playing)).toBeNull(); // earlier
+    expect(lockMoveRefusal("main", lateLock, lateLock, games, none, playing)).toBeNull(); // equal
+    expect(lockMoveRefusal("main", at(r64, -3_600_000), lateLock, games, none, playing)).toBeNull(); // into the past: closes at once
+    expect(lockMoveRefusal("main", at(lateLock, 60_000), lateLock, games, none, playing)).toMatch(/only move earlier/); // later
+    expect(lockMoveRefusal("main", null, lateLock, games, none, playing)).toBeNull(); // Follow feed: auto (r64) ≤ current
+    expect(lockMoveRefusal("main", null, at(r64, -60_000), games, none, playing)).toMatch(/only move earlier/); // auto > current
+    // A passed lock never moves later (it would reopen entries), on any clock.
+    const passed = at(r64, -60_000);
+    expect(lockMoveRefusal("main", at(r64, -30_000), passed, games, none, playing)).toMatch(/only move earlier/);
+    expect(lockMoveRefusal("main", at(r64, -120_000), passed, games, none, playing)).toBeNull();
+    // Started with no lock at all (entries are not open): nothing to pull in.
+    expect(lockMoveRefusal("main", at(r64, -60_000), null, games, none, playing)).toMatch(/can't move/);
+    // A decided first-round game counts as started even before a tip time.
+    const decided = none.map((seat, slot) => (slot === 0 ? 0 : seat));
+    expect(lockMoveRefusal("main", at(lateLock, 60_000), lateLock, games, decided, Date.parse(r64) - 86_400_000)).toMatch(/only move earlier/);
+  });
+
+  it("takes a championship score only with a winner, both or neither (plan 10.2, §17 B6)", () => {
+    const base = { action: "override_result", tournamentId: T, round: 6, location: 1, winner: "home", reason: "feed stalled" };
+    expect(parseBracketsAdminAction(base)).toMatchObject({ scores: null });
+    expect(parseBracketsAdminAction({ ...base, homeScore: 72, awayScore: 65 })).toMatchObject({ scores: { home: 72, away: 65 } });
+    expect(parseBracketsAdminAction({ ...base, homeScore: 72 })).toHaveProperty("error");
+    expect(parseBracketsAdminAction({ ...base, homeScore: 72, awayScore: 201 })).toHaveProperty("error");
+    expect(parseBracketsAdminAction({ ...base, homeScore: 72.5, awayScore: 65 })).toHaveProperty("error");
+    expect(parseBracketsAdminAction({ ...base, homeScore: 65, awayScore: 72 })).toHaveProperty("error"); // winner lower
+    expect(parseBracketsAdminAction({ ...base, homeScore: 70, awayScore: 70 })).toHaveProperty("error");
+    expect(parseBracketsAdminAction({ ...base, winner: null, homeScore: 72, awayScore: 65 })).toHaveProperty("error");
+    expect(parseBracketsAdminAction({ ...base, round: 5, homeScore: 72, awayScore: 65 })).toHaveProperty("error");
+    expect(parseBracketsAdminAction({ ...base, winner: "away", homeScore: 65, awayScore: 72 })).toMatchObject({ scores: { home: 65, away: 72 } });
   });
 
   it("refuses what is missing or wrong", () => {

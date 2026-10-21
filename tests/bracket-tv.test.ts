@@ -12,10 +12,17 @@ vi.mock("@/lib/bracketsStore", () => ({
   tournamentNowMs: (t: { clockOffsetSeconds: number }, now: number) => now - t.clockOffsetSeconds * 1000,
 }));
 const entriesRead = vi.fn();
+const venueRead = vi.fn();
+const inCalls: Array<{ column: string; values: unknown[] }> = [];
 vi.mock("@/lib/supabaseAdmin", () => {
   const builder: Record<string, unknown> = {};
-  for (const name of ["from", "select", "eq", "in", "gt", "order"]) builder[name] = () => builder;
+  for (const name of ["from", "select", "eq", "gt", "order"]) builder[name] = () => builder;
+  builder.in = (column: string, values: unknown[]) => {
+    inCalls.push({ column, values });
+    return builder;
+  };
   builder.limit = () => entriesRead();
+  builder.maybeSingle = () => venueRead();
   return { supabaseAdmin: builder };
 });
 vi.mock("@/lib/timezone", () => ({ getVenueTimezone: async () => "America/New_York" }));
@@ -118,6 +125,19 @@ describe("buildBracketTvPayload", () => {
     expect(payload?.title).toBe("Men's second chance 2026");
   });
 
+  it("lists today's games of the shown bracket's tournament only (plan 10.4, §17 B7)", () => {
+    // Another tournament (the other gender, or a rehearsal on its replay clock) with games "today".
+    const other = tournament({
+      id: "t-other",
+      gender: "women",
+      games: live.views.map((game) => ({ ...game, home: game.home ? { ...game.home, name: "OTHER" } : null })),
+    });
+    const payload = buildBracketTvPayload({ tournaments: [tournament(), other], entries: [perfect], timeZone: TZ });
+    expect(payload?.title).toBe("Men's bracket 2026");
+    expect(payload?.games.length).toBeGreaterThan(0);
+    expect(payload?.games.some((game) => game.home.name === "OTHER")).toBe(false);
+  });
+
   it("says final standings once the championship is decided", () => {
     const done = tournament({ winnerSeats: full.winnerSeats, games: full.views });
     expect(buildBracketTvPayload({ tournaments: [done], entries: [perfect], timeZone: TZ })?.complete).toBe(true);
@@ -166,6 +186,8 @@ describe("getBracketTvPayload (cost)", () => {
     tournamentsMock.mockReset();
     gamesMock.mockReset();
     entriesRead.mockReset();
+    venueRead.mockReset();
+    inCalls.length = 0;
     clearBracketTvCache();
     vi.unstubAllEnvs();
   });
@@ -209,6 +231,33 @@ describe("getBracketTvPayload (cost)", () => {
     tournamentsMock.mockResolvedValue({ ok: true, value: [{ ...record, winnerSeats: flipped }] });
     await getBracketTvPayload("v1", inWindow + 48_000);
     expect(entriesRead).toHaveBeenCalledTimes(4);
+  });
+
+  it("never reads the venue while no rehearsal is current", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BRACKETS_ENABLED", "true");
+    tournamentsMock.mockResolvedValue({ ok: true, value: [record] });
+    gamesMock.mockResolvedValue({ ok: true, value: new Map([["t-men", []]]) });
+    entriesRead.mockResolvedValue({ data: [row], error: null });
+    expect(await getBracketTvPayload("v1", inWindow)).not.toBeNull();
+    expect(venueRead).not.toHaveBeenCalled();
+  });
+
+  it("shows a rehearsal only at a hidden venue (plan 10.4, §17 B7)", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BRACKETS_ENABLED", "true");
+    const rehearsal = { ...record, id: "t-reh", gender: "women", purpose: "rehearsal" };
+    tournamentsMock.mockResolvedValue({ ok: true, value: [record, rehearsal] });
+    gamesMock.mockResolvedValue({ ok: true, value: new Map([["t-men", []], ["t-reh", live.views]]) });
+    entriesRead.mockResolvedValue({ data: [row], error: null });
+    const entryIds = () => inCalls.filter((call) => call.column === "tournament_id").at(-1)?.values;
+
+    venueRead.mockResolvedValueOnce({ data: { hidden: false }, error: null });
+    expect(await getBracketTvPayload("v-real", inWindow)).not.toBeNull();
+    expect(entryIds()).toEqual(["t-men"]);
+
+    venueRead.mockResolvedValueOnce({ data: { hidden: true }, error: null });
+    expect(await getBracketTvPayload("v-test", inWindow + 1_000)).not.toBeNull();
+    expect(entryIds()).toEqual(["t-men", "t-reh"]);
+    expect(venueRead).toHaveBeenCalledTimes(2);
   });
 
   it("hides itself on a failed read", async () => {

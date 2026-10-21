@@ -9,6 +9,7 @@ import {
 } from "@/lib/seasonalGames";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
+  autoBracketLocks,
   bracketKindPhase,
   bracketWinnerSeats,
   championshipTotal,
@@ -20,6 +21,7 @@ import {
 import {
   BRACKET_KINDS,
   BRACKET_SEAT_COUNT,
+  BRACKET_SLOT_COUNT,
   isBracketGender,
   isBracketKind,
   slotOf,
@@ -95,7 +97,16 @@ export type BracketsAdminAction =
   | { action: "set_region_names"; tournamentId: string; names: Array<string | null> }
   | { action: "link_opener"; tournamentId: string; location: number; seat: number | null }
   | { action: "set_seat_team"; tournamentId: string; slot: number; side: "home" | "away"; teamId: number | null }
-  | { action: "override_result"; tournamentId: string; round: number; location: number; winner: "home" | "away" | null; reason: string }
+  | {
+      action: "override_result";
+      tournamentId: string;
+      round: number;
+      location: number;
+      winner: "home" | "away" | null;
+      reason: string;
+      /** Championship only, both or neither (plan 10.2): the final score when the feed has none. */
+      scores: { home: number; away: number } | null;
+    }
   | { action: "release_result"; tournamentId: string; round: number; location: number; reason: string }
   | { action: "move_lock"; tournamentId: string; kind: BracketKind; lockAt: string | null }
   | { action: "set_clock"; tournamentId: string; asOf: string }
@@ -155,7 +166,17 @@ export const parseBracketsAdminAction = (body: unknown): BracketsAdminAction | {
       if (input.winner !== "home" && input.winner !== "away" && input.winner !== null) return { error: "winner must be home, away, or null to clear." };
       const reason = reasonOf(input.reason);
       if (!reason) return { error: "A reason (3–400 characters) is required." };
-      return { action, tournamentId, round: input.round, location: input.location, winner: input.winner, reason };
+      const given = (value: unknown) => value !== undefined && value !== null && value !== "";
+      let scores: { home: number; away: number } | null = null;
+      if (given(input.homeScore) || given(input.awayScore)) {
+        if (input.round !== 6) return { error: "A score can be entered only for the championship." };
+        if (!isInt(input.homeScore, 0, 200) || !isInt(input.awayScore, 0, 200)) return { error: "Enter both scores (0–200 each), or neither." };
+        if (input.winner === null) return { error: "A score needs a winner (No result has no score)." };
+        const [winning, losing] = input.winner === "home" ? [input.homeScore, input.awayScore] : [input.awayScore, input.homeScore];
+        if (winning <= losing) return { error: "The winner's score must be higher than the loser's." };
+        scores = { home: input.homeScore, away: input.awayScore };
+      }
+      return { action, tournamentId, round: input.round, location: input.location, winner: input.winner, reason, scores };
     }
     case "release_result": {
       if (!isInt(input.round, 0, 6) || !isInt(input.location, 1, 32)) return { error: "round (0–6) and location are required." };
@@ -189,8 +210,50 @@ const teamsOf = (games: readonly BracketGameState[]): BracketTeam[] => {
   return [...byId.values()].sort((a, b) => (a.seed ?? 99) - (b.seed ?? 99) || a.college.localeCompare(b.college));
 };
 
+const FIRST_ROUND_NAME: Record<BracketKind, string> = { main: "Round-of-64", second: "Sweet 16" };
+
+/**
+ * An admin lock later than the kind's first tip (tournament clock), or null. Entries would stay
+ * open while games are played (plan 10.2, §17 B5). No tips known = nothing to compare with.
+ */
+export const lockAfterFirstTip = (kind: BracketKind, lockAt: string | null, games: readonly BracketGameState[]): string | null => {
+  const firstTip = autoBracketLocks(games)[kind];
+  return lockAt && firstTip && Date.parse(lockAt) > Date.parse(firstTip) ? firstTip : null;
+};
+
+/**
+ * Why an admin can't move this lock there, or null (plan 10.2). `lockAt` null = Follow feed. Once
+ * the kind has started, a move may only make the lock EARLIER (plan 10.5.1): a late admin lock can
+ * still be pulled in, but entries never reopen. A lock moved into the past closes entries at once.
+ * Pure.
+ */
+export const lockMoveRefusal = (
+  kind: BracketKind,
+  lockAt: string | null,
+  currentLockAt: string | null,
+  games: readonly BracketGameState[],
+  winnerSeats: ReadonlyArray<number | null>,
+  tournamentNow: number,
+): string | null => {
+  if (kindHasStarted(kind, games, winnerSeats, tournamentNow)) {
+    const target = lockAt ?? autoBracketLocks(games)[kind];
+    if (currentLockAt && target && Date.parse(target) <= Date.parse(currentLockAt)) return null;
+    return currentLockAt
+      ? `This bracket's first games have already tipped, so its lock can only move earlier (${new Date(currentLockAt).toISOString()} or before).`
+      : "This bracket's first games have already tipped, so its lock can't move.";
+  }
+  const firstTip = lockAfterFirstTip(kind, lockAt, games);
+  return firstTip
+    ? `The lock can't be after the first ${FIRST_ROUND_NAME[kind]} tip (${new Date(firstTip).toISOString()}): entries would stay open while games are played. Pick that time or earlier, or Follow feed.`
+    : null;
+};
+
 /** Things an admin should look at before the lock (Selection Sunday) or during the tournament. */
-export const bracketProblems = (tournament: BracketTournamentRecord, games: readonly BracketGameState[]): string[] => {
+export const bracketProblems = (
+  tournament: BracketTournamentRecord,
+  games: readonly BracketGameState[],
+  tournamentNow: number,
+): string[] => {
   const problems: string[] = [];
   const round1 = games.filter((g) => g.round === 1);
   if (round1.length < 32) problems.push(`Only ${round1.length} of 32 Round-of-64 games are in the feed.`);
@@ -213,6 +276,16 @@ export const bracketProblems = (tournament: BracketTournamentRecord, games: read
     else if (game.resultHeld) problems.push(`Round ${game.round} game ${game.location} is held (No result): the feed won't decide it until you let it.`);
   }
   if (round1.length === 32 && !tournament.mainLockAt) problems.push("The main bracket has no lock time (no tip times in the feed).");
+  for (const kind of BRACKET_KINDS) {
+    const lockAt = kind === "main" ? tournament.mainLockAt : tournament.secondLockAt;
+    const setBy = kind === "main" ? tournament.mainLockSetBy : tournament.secondLockSetBy;
+    if (setBy === "admin" && lockAt && tournamentNow < Date.parse(lockAt) && lockAfterFirstTip(kind, lockAt, games)) {
+      problems.push(`The ${kind === "main" ? "main bracket" : "second-chance"} lock is after the first ${FIRST_ROUND_NAME[kind]} tip: entries stay open during games. Move it to the first tip or earlier, or press Follow feed.`);
+    }
+  }
+  if ((tournament.winnerSeats[BRACKET_SLOT_COUNT - 1] ?? null) !== null && tournament.championshipTotal === null) {
+    problems.push("The championship has no final score, so prizes can't settle: enter it with Override on the championship game.");
+  }
   return problems;
 };
 
@@ -248,7 +321,7 @@ export async function getBracketsAdminOverview(nowMs: number = Date.now()): Prom
       rounds: rounds.value,
       games: games.value,
       teams: teamsOf(games.value),
-      problems: bracketProblems(tournament, games.value),
+      problems: bracketProblems(tournament, games.value, tNow),
     });
   }
   const { data: logRows, error: logError } = await supabaseAdmin
@@ -389,12 +462,20 @@ export async function runBracketsAdminAction(
     case "move_lock": {
       const lockGames = await getBracketGames(tournament.id);
       if (!lockGames.ok) return refuse(500, lockGames.error);
-      if (kindHasStarted(action.kind, lockGames.value, tournament.winnerSeats, tournamentNowMs(tournament, nowMs))) {
-        return refuse(409, "This bracket's first games have already tipped, so its lock can't move.");
-      }
+      const lockRefusal = lockMoveRefusal(
+        action.kind,
+        action.lockAt,
+        action.kind === "main" ? tournament.mainLockAt : tournament.secondLockAt,
+        lockGames.value,
+        tournament.winnerSeats,
+        tournamentNowMs(tournament, nowMs),
+      );
+      if (lockRefusal) return refuse(409, lockRefusal);
       const column = action.kind === "main" ? "main_lock" : "second_lock";
+      // Follow feed writes the feed's lock now (what the next sync would write), so entries never
+      // pass through "no lock" (closed as not_open) in between (plan 10.5.1).
       const updated = await updateBracketTournament(tournament.id, {
-        [`${column}_at`]: action.lockAt,
+        [`${column}_at`]: action.lockAt ?? autoBracketLocks(lockGames.value)[action.kind],
         [`${column}_set_by`]: action.lockAt ? "admin" : "auto",
         next_sync_at: new Date(nowMs).toISOString(),
       });
@@ -483,6 +564,7 @@ export async function runBracketsAdminAction(
     if (action.winner && !(action.winner === "home" ? game.homeTeam : game.awayTeam)) {
       return refuse(409, "That side has no team yet.");
     }
+    if (action.scores && game.slot !== BRACKET_SLOT_COUNT - 1) return refuse(409, "A score can be entered only for the championship.");
     // "No result" HOLDS the game (result_held): the sync never fills it from the feed until an admin
     // overrides it again or lets the feed decide. A winner clears any hold.
     // The game row first: if the results RPC then fails, the sync reports the disagreement
@@ -492,6 +574,7 @@ export async function runBracketsAdminAction(
       resultSource: action.winner ? "admin" : null,
       resultHeld: action.winner === null,
       mismatchNote: null,
+      ...(action.scores ? { homeScore: action.scores.home, awayScore: action.scores.away } : {}),
     });
     if (!saved.ok) return refuse(500, saved.error);
     if (action.round === 0) {
@@ -517,6 +600,7 @@ export async function runBracketsAdminAction(
       winner: action.winner,
       previous: game.winnerSide,
       held: action.winner === null,
+      ...(action.scores ? { scores: action.scores, previousScores: { home: game.homeScore, away: game.awayScore } } : {}),
       reason: action.reason,
       regradedRounds: recorded.value.regradedRounds,
       reversedCredits: recorded.value.reversedCredits,
@@ -527,6 +611,13 @@ export async function runBracketsAdminAction(
       message:
         `Result saved${action.winner === null ? " and held: the feed won't fill this game until you let it" : ""}; ` +
         `${recorded.value.gradedEntries} bracket(s) re-scored.` +
+        (action.scores
+          ? tournament.prizesSettledAt
+            ? " Final score saved; prizes were already settled and don't change."
+            : ` Final score saved (total ${action.scores.home + action.scores.away}): prizes settle at the next sync.`
+          : game.slot === BRACKET_SLOT_COUNT - 1 && action.winner && championshipTotal(fresh.value) === null
+            ? " Prizes need the final score: enter both scores and override again."
+            : "") +
         (regraded.length
           ? ` Round(s) ${regraded.join(", ")} were already complete: their venue points were taken back and are paid again at the next sync.`
           : "") +

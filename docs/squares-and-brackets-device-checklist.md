@@ -120,6 +120,10 @@ tournament takes an evening, not three weeks. Same accounts as section A.
 - [ ] After a round is complete, the admin overrides one of its results: both players' scores change, and their venue
   points for that round come back within a few minutes (after 10.1, also after the final).
 - [ ] "No result" on a game keeps it undecided; the next sync doesn't put the feed's result back (after 10.1).
+- [ ] Moving the main lock to a minute after the first Round-of-64 tip is refused with a plain message; a time before it
+  is saved (after 10.2).
+- [ ] On the championship row, enter both final scores with the winner and Override: the tournament shows "championship
+  total" and, a minute later, the prizes settle (after 10.2).
 
 ### B4. Prizes and Results
 - [ ] Before the replay, the partner account creates a **March Madness bracket** prize at the test venue for the men's

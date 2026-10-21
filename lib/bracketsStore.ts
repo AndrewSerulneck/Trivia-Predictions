@@ -3,7 +3,7 @@ import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import type { BracketGameState, BracketTeam } from "@/lib/brackets/games";
-import { BRACKET_SLOT_COUNT, type BracketGender, type BracketRound } from "@/lib/brackets/tree";
+import { bracketSeatList, type BracketGender, type BracketKind, type BracketRound } from "@/lib/brackets/tree";
 
 // March Madness brackets: shared reads/writes of the bracket_* tables (migration 20261019203858)
 // for the sync, the player API and the admin panel. Entries are written only by the
@@ -96,12 +96,6 @@ type GameRow = {
   mismatch_note: string | null;
 };
 
-const seatList = (value: Array<number | null> | null): Array<number | null> =>
-  Array.from({ length: BRACKET_SLOT_COUNT }, (_, i) => {
-    const seat = value?.[i];
-    return seat === null || seat === undefined ? null : Number(seat);
-  });
-
 export const tournamentFromRow = (row: TournamentRow): BracketTournamentRecord => ({
   id: row.id,
   gender: row.gender,
@@ -109,7 +103,7 @@ export const tournamentFromRow = (row: TournamentRow): BracketTournamentRecord =
   purpose: row.purpose,
   clockOffsetSeconds: Number(row.clock_offset_seconds ?? 0),
   regionNames: Array.from({ length: 4 }, (_, i) => row.region_names?.[i] ?? null),
-  winnerSeats: seatList(row.winner_seats),
+  winnerSeats: bracketSeatList(row.winner_seats),
   championshipTotal: row.championship_total === null ? null : Number(row.championship_total),
   mainLockAt: row.main_lock_at,
   mainLockSetBy: row.main_lock_set_by,
@@ -174,6 +168,19 @@ const noDb = { ok: false as const, error: "Supabase admin client is not configur
 /** The tournament's own clock (rehearsals replay the past). */
 export const tournamentNowMs = (tournament: Pick<BracketTournamentRecord, "clockOffsetSeconds">, realNowMs: number): number =>
   realNowMs - tournament.clockOffsetSeconds * 1000;
+
+/**
+ * The bracket kind's lock in REAL time (a rehearsal's clock runs `clockOffsetSeconds` behind); null
+ * = no lock set. The ONE home of this rule: prizes (was this prize created before the lock?) and
+ * Results both ask it (plan 10.4, §17 B9).
+ */
+export const bracketRealLockMs = (
+  tournament: Pick<BracketTournamentRecord, "mainLockAt" | "secondLockAt" | "clockOffsetSeconds">,
+  kind: BracketKind,
+): number | null => {
+  const lockMs = Date.parse(String((kind === "main" ? tournament.mainLockAt : tournament.secondLockAt) ?? ""));
+  return Number.isFinite(lockMs) ? lockMs + tournament.clockOffsetSeconds * 1000 : null;
+};
 
 /** Every tournament that is not archived (at most a handful). */
 export async function listCurrentBracketTournaments(): Promise<StoreResult<BracketTournamentRecord[]>> {
@@ -264,10 +271,17 @@ export async function saveFeedBracketGames(
 
 /** The columns an admin action may set on one game; each action passes only its own. */
 export type BracketGameAdminPatch = Partial<
-  Pick<BracketGameState, "winnerSide" | "resultSource" | "resultHeld" | "mismatchNote" | "homeTeam" | "awayTeam" | "teamsSetBy" | "feedsSeat" | "feedsSeatSetBy">
+  Pick<
+    BracketGameState,
+    "winnerSide" | "resultSource" | "resultHeld" | "mismatchNote" | "homeTeam" | "awayTeam" | "teamsSetBy" | "feedsSeat" | "feedsSeatSetBy" | "homeScore" | "awayScore"
+  >
 >;
 
 const ADMIN_PATCH_COLUMNS: Record<keyof BracketGameAdminPatch, string> = {
+  // Scores only from the championship override (plan 10.2), when the feed has none; the feed's
+  // later scores still win (bracket_save_feed_games writes them).
+  homeScore: "home_score",
+  awayScore: "away_score",
   winnerSide: "winner_side",
   resultSource: "result_source",
   resultHeld: "result_held",
@@ -362,7 +376,7 @@ export async function getBracketWinnerSeats(id: string): Promise<StoreResult<Arr
   const { data, error } = await supabaseAdmin.from("bracket_tournaments").select("winner_seats").eq("id", id).maybeSingle();
   if (error) return { ok: false, error: error.message };
   if (!data) return { ok: false, error: "No such tournament." };
-  return { ok: true, value: seatList((data as { winner_seats: Array<number | null> | null }).winner_seats) };
+  return { ok: true, value: bracketSeatList((data as { winner_seats: Array<number | null> | null }).winner_seats) };
 }
 
 /**

@@ -10,7 +10,7 @@ import {
 } from "@/lib/brackets/games";
 import { bracketPicksProblem, copyableBracketPicks, isBracketTiebreaker } from "@/lib/brackets/picks";
 import { bracketMaxPossible, rankBracketEntries } from "@/lib/brackets/scoring";
-import { BRACKET_KINDS, BRACKET_SLOT_COUNT, isBracketKind, type BracketGender, type BracketKind } from "@/lib/brackets/tree";
+import { BRACKET_KINDS, BRACKET_SLOT_COUNT, bracketSeatList, isBracketKind, type BracketGender, type BracketKind } from "@/lib/brackets/tree";
 import {
   getBracketGamesFor,
   getBracketTournament,
@@ -90,12 +90,6 @@ export const gameView = (game: BracketGameState): BracketGameView => ({
   feedsSeat: game.round === 0 ? game.feedsSeat : null,
 });
 
-const picksOf = (value: unknown): Array<number | null> =>
-  Array.from({ length: BRACKET_SLOT_COUNT }, (_, i) => {
-    const seat = Array.isArray(value) ? value[i] : null;
-    return seat === null || seat === undefined ? null : Number(seat);
-  });
-
 type EntryRow = {
   id: string;
   tournament_id: string;
@@ -110,16 +104,29 @@ type EntryRow = {
 
 const ENTRY_COLUMNS = "id, tournament_id, kind, venue_id, picks, tiebreaker, pick_count, score, submitted_at";
 
-/** The tournaments a venue shows: live ones everywhere, rehearsals only at hidden venues. */
+/**
+ * Of these tournaments, the ones a venue shows: live ones everywhere, rehearsals only at hidden
+ * venues — the one home of that rule for the bracket screen and the TV. Reads the venue only when a
+ * rehearsal is among them.
+ */
+export async function bracketTournamentsShownAt<T extends Pick<BracketTournamentRecord, "purpose">>(
+  venueId: string,
+  tournaments: readonly T[],
+): Promise<{ ok: true; value: T[] } | { ok: false; error: string }> {
+  if (!tournaments.some((t) => t.purpose === "rehearsal")) return { ok: true, value: [...tournaments] };
+  if (!supabaseAdmin) return { ok: false, error: "Supabase admin client is not configured." };
+  const { data, error } = await supabaseAdmin.from("venues").select("hidden").eq("id", venueId).maybeSingle();
+  if (error) return { ok: false, error: error.message };
+  const hidden = (data as { hidden?: boolean | null } | null)?.hidden === true;
+  return { ok: true, value: tournaments.filter((t) => t.purpose === "live" || hidden) };
+}
+
+/** The current tournaments a venue shows. */
 async function tournamentsForVenue(venueId: string): Promise<{ ok: true; value: BracketTournamentRecord[] } | { ok: false; error: string }> {
   if (!supabaseAdmin) return { ok: false, error: "Supabase admin client is not configured." };
   const current = await listCurrentBracketTournaments();
   if (!current.ok) return current;
-  if (!current.value.some((t) => t.purpose === "rehearsal")) return { ok: true, value: current.value };
-  const { data, error } = await supabaseAdmin.from("venues").select("hidden").eq("id", venueId).maybeSingle();
-  if (error) return { ok: false, error: error.message };
-  const hidden = (data as { hidden?: boolean | null } | null)?.hidden === true;
-  return { ok: true, value: current.value.filter((t) => t.purpose === "live" || hidden) };
+  return bracketTournamentsShownAt(venueId, current.value);
 }
 
 /** The whole bracket screen for one venue, from the reader's point of view (`userId` may be null). */
@@ -174,7 +181,7 @@ export async function getBracketsView(params: { venueId: string; userId: string 
         const lockAt = kind === "main" ? t.mainLockAt : t.secondLockAt;
         const phase = bracketKindPhase({ kind, nowMs: tNow, lockAt, fullField, winnerSeats: t.winnerSeats });
         const row = mine.get(`${t.id}:${kind}`);
-        const picks = row ? picksOf(row.picks) : null;
+        const picks = row ? bracketSeatList(row.picks) : null;
         return [
           kind,
           {
@@ -331,7 +338,7 @@ export async function copyBracketEntry(params: {
   if (!entry) return { ok: true, outcome: "no_source", savedAt: null, problem: null };
   const tournament = await getBracketTournament(params.tournamentId);
   if (!tournament.ok) return { ok: false, error: tournament.error };
-  const sourcePicks = picksOf((entry as { picks: unknown }).picks);
+  const sourcePicks = bracketSeatList((entry as { picks: unknown }).picks);
   const picks = copyableBracketPicks(sourcePicks, params.kind, tournament.value?.winnerSeats ?? []);
   if (!picks) {
     return {
@@ -408,7 +415,7 @@ export async function getBracketStandings(params: {
         rank: entry.rank,
         username: String(user?.username ?? "").trim() || "Player",
         score: entry.score,
-        maxPossible: bracketMaxPossible(picksOf(entry.row.picks), tournament.winnerSeats, params.kind),
+        maxPossible: bracketMaxPossible(bracketSeatList(entry.row.picks), tournament.winnerSeats, params.kind),
         pickCount: Number(entry.row.pick_count),
         mine: params.userId !== null && entry.row.user_id === params.userId,
       };

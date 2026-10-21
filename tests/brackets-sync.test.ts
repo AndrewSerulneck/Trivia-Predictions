@@ -456,6 +456,33 @@ describe("admin corrections reach players and stick (plan 10.1)", () => {
     expect(points(ANN)).toBe(192);
   }, 60_000);
 
+  it("pays several due rounds in ONE pass over the entries, with the same credits (plan 10.4, §17 B10)", async () => {
+    await finish();
+    const before = { ann: points(ANN), bob: points(BOB) };
+    const keysBefore = (tables.seasonal_points_credits ?? []).map((c) => String(c.source_key)).sort();
+    // Rounds 1–3 as if their pay runs had failed: unpaid, nothing in the ledger.
+    const ledger = tables.seasonal_points_credits;
+    for (const n of [1, 2, 3]) {
+      Object.assign(round(n), { paid_grade_no: null, paid_at: null });
+      for (const credit of ledger.filter((c) => String(c.source_key).endsWith(`:r${n}:1`))) {
+        const user = tables.users.find((u) => u.id === credit.user_id) as Row;
+        user.points = Number(user.points) - Number(credit.points);
+      }
+    }
+    tables.seasonal_points_credits = ledger.filter((c) => !/:r[123]:1$/.test(String(c.source_key)));
+    expect(points(ANN)).toBeLessThan(before.ann);
+
+    const at = AFTER_FINALS + 60 * MINUTE;
+    men().next_sync_at = new Date(at).toISOString();
+    io.selects = [];
+    const report = await tick(at);
+    expect(report.synced.find((s) => s.tournamentId === men().id)?.paidRounds).toEqual([1, 2, 3]);
+    expect(io.selects.filter((table) => table === "bracket_entries")).toHaveLength(1); // one page, all three rounds
+    expect([1, 2, 3].map((n) => round(n).paid_grade_no)).toEqual([1, 1, 1]);
+    expect({ ann: points(ANN), bob: points(BOB) }).toEqual(before);
+    expect((tables.seasonal_points_credits ?? []).map((c) => String(c.source_key)).sort()).toEqual(keysBefore);
+  }, 60_000);
+
   it("holds a game on No result until an admin lets the feed decide (B2)", async () => {
     await finish();
     const champion = game(6, 1).winner_side;
@@ -508,5 +535,141 @@ describe("admin corrections reach players and stick (plan 10.1)", () => {
     expect(next?.newResults).toBeGreaterThan(0);
     expect((men().winner_seats as Array<number | null>)[location - 1]).toBe(adminSeat);
     expect(game(1, location).result_source).toBe("admin");
+  }, 60_000);
+});
+
+describe("lock and final-score guards (plan 10.2)", () => {
+  const SELECTION_SUNDAY = Date.parse("2027-03-14T23:00:00Z");
+  const AFTER_FINALS = Date.parse("2027-04-06T15:00:00Z");
+  const men = (purpose = "live") => tables.bracket_tournaments.find((t) => t.gender === "men" && t.purpose === purpose) as Row;
+  const admin = (tournamentId: string, action: Record<string, unknown>, atMs: number) => {
+    clockMs = atMs;
+    return runBracketsAdminAction({ tournamentId, ...action } as Parameters<typeof runBracketsAdminAction>[0], "tester", atMs);
+  };
+  const minutesFrom = (iso: unknown, minutes: number) => new Date(Date.parse(String(iso)) + minutes * MINUTE).toISOString();
+
+  it("refuses a main lock after the first Round-of-64 tip, live (B5)", async () => {
+    await tick(SELECTION_SUNDAY);
+    const firstTip = men().main_lock_at; // auto = the first Round-of-64 tip
+    expect(typeof firstTip).toBe("string");
+    const id = String(men().id);
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: minutesFrom(firstTip, 1) }, SELECTION_SUNDAY)).toMatchObject({
+      ok: false,
+      status: 409,
+      error: expect.stringMatching(/after the first Round-of-64 tip/),
+    });
+    expect(men().main_lock_at).toBe(firstTip);
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: firstTip }, SELECTION_SUNDAY)).toMatchObject({ ok: true });
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: minutesFrom(firstTip, -60) }, SELECTION_SUNDAY)).toMatchObject({ ok: true });
+    expect(men()).toMatchObject({ main_lock_at: minutesFrom(firstTip, -60), main_lock_set_by: "admin" });
+    // Once it has tipped, the lock only moves earlier (plan 10.5.1): never later, never reopened.
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: minutesFrom(firstTip, -30) }, Date.parse(String(firstTip)))).toMatchObject({
+      ok: false,
+      error: expect.stringMatching(/only move earlier/),
+    });
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: minutesFrom(firstTip, -120) }, Date.parse(String(firstTip)))).toMatchObject({ ok: true });
+  });
+
+  it("a late admin lock found after the first tip can be pulled in, and is logged once (plan 10.5.1, §22 R1/R9)", async () => {
+    await tick(SELECTION_SUNDAY);
+    const firstTip = String(men().main_lock_at);
+    const id = String(men().id);
+    // The feed used to show the first tip 6 h later, and the admin locked 3 h after the real one.
+    for (const game of tables.bracket_games) {
+      if (game.tournament_id === id && game.tip_at) game.tip_at = minutesFrom(game.tip_at, 360);
+    }
+    Object.assign(men(), { main_lock_at: minutesFrom(firstTip, 180), main_lock_set_by: "admin" });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    try {
+      await admin(id, { action: "sync" }, SELECTION_SUNDAY); // this run's merge moves the first tip back
+      await admin(id, { action: "sync" }, SELECTION_SUNDAY + MINUTE); // same tips: no second warning
+      expect(warn.mock.calls.filter(([tag]) => tag === "[Brackets] admin-lock-after-first-tip")).toHaveLength(1);
+    } finally {
+      warn.mockRestore();
+    }
+    const playing = Date.parse(firstTip) + 10 * MINUTE; // games are being played; the late lock hasn't passed
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: minutesFrom(firstTip, 240) }, playing)).toMatchObject({
+      ok: false,
+      status: 409,
+      error: expect.stringMatching(/only move earlier/),
+    });
+    // Follow feed: the feed's lock (the first tip) is earlier, so it's written at once and entries close.
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: null }, playing)).toMatchObject({ ok: true });
+    expect(men()).toMatchObject({ main_lock_at: firstTip, main_lock_set_by: "auto" });
+    // Closed now: it can't be moved later again.
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: minutesFrom(firstTip, 60) }, playing)).toMatchObject({ ok: false, status: 409 });
+  });
+
+  it("compares on a rehearsal's replay clock (B5)", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BRACKETS_ENABLED", "");
+    vi.stubEnv("BRACKETS_REHEARSAL_ENABLED", "true");
+    const now = Date.parse("2027-05-01T15:00:00Z");
+    const replayAt = Date.parse("2027-03-15T12:00:00Z");
+    tables.bracket_tournaments = [
+      {
+        id: nextId(), gender: "men", season: 2026, purpose: "rehearsal", clock_offset_seconds: Math.round((now - replayAt) / 1000),
+        archived_at: null, completed_at: null, next_sync_at: null, winner_seats: Array.from({ length: 63 }, () => null),
+        main_lock_set_by: "auto", second_lock_set_by: "auto", main_lock_at: null, second_lock_at: null, region_names: null, championship_total: null,
+        created_at: new Date(now).toISOString(),
+      },
+    ];
+    clockMs = now;
+    await runBracketsTick({ now: new Date(now) });
+    const firstTip = men("rehearsal").main_lock_at;
+    expect(Date.parse(String(firstTip))).toBeGreaterThan(replayAt); // replay time, not real time
+    const id = String(men("rehearsal").id);
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: minutesFrom(firstTip, 30) }, now)).toMatchObject({ ok: false, status: 409 });
+    expect(await admin(id, { action: "move_lock", kind: "main", lockAt: minutesFrom(firstTip, -30) }, now)).toMatchObject({ ok: true });
+  });
+
+  it("a final with no score: hourly + needsAdmin, then the admin's score settles the prizes (B6)", async () => {
+    const original = FEEDS.men;
+    // The feed stalls in the championship's second half: no final, no score.
+    const stalled = (team: BracketFeedGame["home_team"]) => (team ? { ...team, score: null, winner: null } : team);
+    FEEDS.men = (original as BracketFeedGame[]).map((g) =>
+      g.round === 6
+        ? { ...g, status: "in", status_state: "in", status_detail: "2nd Half", home_team: stalled(g.home_team), away_team: stalled(g.away_team) }
+        : g,
+    );
+    try {
+      await tick(SELECTION_SUNDAY);
+      await tick(AFTER_FINALS);
+      const id = String(men().id);
+      const champion = (original as BracketFeedGame[]).find((g) => g.round === 6);
+      const winner = champion?.home_team?.winner === true ? "home" : "away";
+      const decidedAt = AFTER_FINALS + 10 * MINUTE;
+      const picked = await admin(id, { action: "override_result", round: 6, location: 1, winner, reason: "Feed stuck; champion confirmed" }, decidedAt);
+      expect(picked).toMatchObject({ ok: true, message: expect.stringMatching(/Prizes need the final score/) });
+
+      const first = await tick(decidedAt + MINUTE);
+      const run = first.synced.find((s) => s.tournamentId === id);
+      expect(run?.errors).toEqual([]);
+      expect(run?.needsAdmin).toMatch(/Enter the final score/);
+      expect((men().winner_seats as Array<number | null>)[62]).not.toBeNull();
+      expect(men()).toMatchObject({ championship_total: null, prizes_settled_at: null });
+      expect(men().next_sync_at).toBe(new Date(decidedAt + MINUTE + 60 * MINUTE).toISOString()); // hourly, not every 2 min
+
+      io.feedRequests = 0;
+      for (const minutes of [3, 5, 30]) await tick(decidedAt + minutes * MINUTE);
+      expect(io.feedRequests).toBe(0);
+
+      const [home, away] = winner === "home" ? [70, 64] : [64, 70];
+      const at = decidedAt + 40 * MINUTE;
+      const saved = await admin(id, { action: "override_result", round: 6, location: 1, winner, scores: { home, away }, reason: "Final score from the box score" }, at);
+      expect(saved).toMatchObject({ ok: true, message: expect.stringMatching(/total 134\): prizes settle at the next sync/) });
+      expect(men().championship_total).toBe(134);
+
+      const next = await tick(at + MINUTE);
+      const settled = next.synced.find((s) => s.tournamentId === id);
+      expect(settled?.needsAdmin).toBeNull();
+      expect(settled?.errors).toEqual([]);
+      expect(typeof men().prizes_settled_at).toBe("string");
+      expect(men()).toMatchObject({ championship_total: 134, next_sync_at: null });
+      // The still-stalled feed has no score: it never clears the admin's total.
+      const game = tables.bracket_games.find((g) => g.tournament_id === id && g.round === 6) as Row;
+      expect(game).toMatchObject({ home_score: home, away_score: away, result_source: "admin" });
+    } finally {
+      FEEDS.men = original;
+    }
   }, 60_000);
 });

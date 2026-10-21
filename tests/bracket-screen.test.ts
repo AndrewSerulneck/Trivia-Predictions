@@ -37,6 +37,8 @@ const installFetch = (server: {
   entryStatus?: number;
   entryOutcome?: string;
   stateStatus?: number;
+  /** Called before each entry save is answered: return a promise to make the save slow. */
+  holdEntry?: (index: number) => Promise<void> | undefined;
 }) => {
   const calls: Calls = { state: 0, standings: 0, entries: [], copies: [] };
   const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -55,6 +57,7 @@ const installFetch = (server: {
       if (url.startsWith("/api/bracket/entry")) {
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
         calls.entries.push(body);
+        await server.holdEntry?.(calls.entries.length);
         if (server.entryStatus && server.entryStatus !== 200) return json({ ok: false, outcome: server.entryOutcome }, server.entryStatus);
         return json({ ok: true, outcome: "saved", savedAt: "2027-03-15T10:00:00.000Z" });
       }
@@ -242,6 +245,60 @@ describe("filling out a bracket", () => {
     await click(button("Exit game"));
     expect(calls.entries).toHaveLength(1);
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends the newest picks when Back is tapped during a slow save, and waits for them", async () => {
+    const onBack = vi.fn();
+    let release: () => void = () => {};
+    const slow = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const calls = installFetch({ tournaments: [openMen()], holdEntry: (index) => (index === 1 ? slow : undefined) });
+    await mountScreen(onBack);
+    await click(button("Fill out my bracket"));
+    await click(within(screen.getAllByRole("group")[0]).getAllByRole("button")[0]);
+    await click(button("Next")); // save 1 starts and stays open
+    expect(calls.entries).toHaveLength(1);
+    await click(within(screen.getAllByRole("group")[1]).getAllByRole("button")[0]); // a newer pick while the save is out
+    await click(button("Exit game"));
+    expect(onBack).not.toHaveBeenCalled();
+    await act(async () => release());
+    await advance(0);
+    await flush();
+    expect(calls.entries).toHaveLength(2);
+    expect((calls.entries[1].picks as Array<number | null>).filter((seat) => seat !== null)).toHaveLength(2);
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("saves the bracket when Save is tapped during a background save", async () => {
+    let release: () => void = () => {};
+    const slow = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const calls = installFetch({
+      tournaments: [openMen({ mine: entryOf(replayGames("men").winnerSeats) })],
+      holdEntry: (index) => (index === 1 ? slow : undefined),
+    });
+    await mountScreen();
+    await click(button("Edit my bracket"));
+    await click(screen.getByRole("tab", { name: /Finish/ }));
+    const input = screen.getByLabelText("Tiebreaker") as HTMLInputElement;
+    await act(async () => fireEvent.change(input, { target: { value: "150" } }));
+    // The tab goes to the background (save 1, held) and Save is tapped before the screen shows "Saving…".
+    await act(async () => {
+      Object.defineProperty(document, "hidden", { configurable: true, value: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+      fireEvent.click(button("Save bracket"));
+    });
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+    expect(calls.entries).toHaveLength(1);
+    await act(async () => release());
+    await advance(0);
+    await flush();
+    expect(calls.entries).toHaveLength(2);
+    expect(haptic).toHaveBeenCalledWith("success");
+    expect(haptic).not.toHaveBeenCalledWith("warning");
+    expect(screen.getByRole("heading", { name: "Your bracket is in" })).toBeTruthy();
   });
 
   it("goes back a step on Android's Back inside the app, then leaves", async () => {

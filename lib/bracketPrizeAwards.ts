@@ -7,8 +7,8 @@ import {
 } from "@/lib/challengeCampaigns";
 import { BRACKET_PRIZE_DEFINITION_ID, BRACKET_PRIZE_PAIRS, bracketPrizeCycleStart, type BracketPrizeKey } from "@/lib/bracketPrizes";
 import { rankBracketEntries } from "@/lib/brackets/scoring";
-import { BRACKET_SLOT_COUNT, type BracketKind } from "@/lib/brackets/tree";
-import type { BracketTournamentRecord } from "@/lib/bracketsStore";
+import { BRACKET_SLOT_COUNT } from "@/lib/brackets/tree";
+import { bracketRealLockMs, type BracketTournamentRecord } from "@/lib/bracketsStore";
 import type { RankedPlace } from "@/lib/rankedPlaceRewards";
 import { chunkIds } from "@/lib/postgrestIds";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -58,15 +58,6 @@ export type BracketPrizeSettleResult =
   | { ok: true; ready: false }
   | { ok: true; ready: true; settlements: BracketPrizeSettlement[] }
   | { ok: false; error: string };
-
-/** The bracket kind's lock in REAL time (a rehearsal's clock runs `clockOffsetSeconds` behind). */
-export const bracketRealLockMs = (
-  tournament: Pick<BracketTournamentRecord, "mainLockAt" | "secondLockAt" | "clockOffsetSeconds">,
-  kind: BracketKind,
-): number | null => {
-  const lockMs = Date.parse(String((kind === "main" ? tournament.mainLockAt : tournament.secondLockAt) ?? ""));
-  return Number.isFinite(lockMs) ? lockMs + tournament.clockOffsetSeconds * 1000 : null;
-};
 
 /**
  * Was this prize on offer for this bracket? See WHICH PRIZES above. Pure. Unparseable dates and a

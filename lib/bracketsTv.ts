@@ -1,6 +1,7 @@
 // March Madness on the venue TV (docs/squares-and-brackets-plan.md, Phase 9b). Pure and client-safe:
 // it turns the venue's bracket read into the small payload the TV draws — the venue's top 10, today's
-// games and the biggest upset busting brackets here. It adds no request of its own: the TV already
+// games of that bracket's tournament and the biggest upset busting brackets here. The caller passes
+// only the tournaments this venue shows (a rehearsal only at a hidden venue). It adds no request of its own: the TV already
 // polls /api/venue-screen/state, and that route reads the brackets (lib/bracketsTvRead.ts).
 
 import type { BracketGameView } from "@/lib/bracketsEntries";
@@ -132,14 +133,14 @@ export const buildBracketTvPayload = (params: {
     maxPossible: bracketMaxPossible(entry.picks, winnerSeats, kind),
   }));
 
-  // Today's games across this venue's tournaments (each tournament's own clock), in tip order.
-  const games = params.tournaments
-    .flatMap((t) =>
-      t.games.filter((game) => {
-        const tipMs = Date.parse(String(game.tipAt ?? ""));
-        return Number.isFinite(tipMs) && dayOf(tipMs, params.timeZone) === dayOf(t.nowMs, params.timeZone) && game.home && game.away;
-      }),
-    )
+  // Today's games of the shown bracket's tournament only (on its own clock), in tip order — the games
+  // that move the standings beside them, never the other gender's or a rehearsal's (plan 10.4, §17 B7).
+  const today = dayOf(tournament.nowMs, params.timeZone);
+  const games = tournament.games
+    .filter((game) => {
+      const tipMs = Date.parse(String(game.tipAt ?? ""));
+      return Number.isFinite(tipMs) && dayOf(tipMs, params.timeZone) === today && game.home && game.away;
+    })
     .sort((a, b) => Date.parse(String(a.tipAt)) - Date.parse(String(b.tipAt)))
     .slice(0, BRACKET_TV_GAMES)
     .map((game) => ({

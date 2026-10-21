@@ -12,7 +12,8 @@ import type { BracketSyncReport } from "@/lib/bracketsSync";
 // sync, region names, link an opening-round game to its seat, set a seat's team, override a result
 // (re-grades; a complete round's venue points are taken back and paid again; "No result" HOLDS the
 // game so the feed can't fill it until "Let the feed decide"), move a lock, set a rehearsal's replay
-// clock, archive. Every change is logged server-side and asks for a sync (plan 10.1).
+// clock, archive. Every change is logged server-side and asks for a sync (plan 10.1). The
+// championship row also takes the final score, for when the feed has none (prizes need it, 10.2).
 
 const ROUND_LABEL: Record<number, string> = {
   0: "Opening round",
@@ -51,11 +52,17 @@ const syncSummary = (sync: BracketSyncReport): string =>
 function GameRow({ tournamentId, game, post, busy }: { tournamentId: string; game: BracketGameState; post: Post; busy: boolean }) {
   const [winner, setWinner] = useState<string>(game.winnerSide ?? "");
   const [reason, setReason] = useState("");
+  const isFinal = game.round === 6;
+  const [homeScore, setHomeScore] = useState(game.homeScore === null ? "" : String(game.homeScore));
+  const [awayScore, setAwayScore] = useState(game.awayScore === null ? "" : String(game.awayScore));
+  // Scores go with the override only when both are filled and differ from what is stored.
+  const scoresGiven = isFinal && homeScore !== "" && awayScore !== "";
+  const scoresChanged = scoresGiven && (Number(homeScore) !== game.homeScore || Number(awayScore) !== game.awayScore);
   const status = game.winnerSide
     ? `${game.winnerSide === "home" ? teamLabel(game.homeTeam) : teamLabel(game.awayTeam)} won${game.resultSource === "admin" ? " (admin)" : ""}`
     : game.statusDetail ?? "—";
   // "No result" on a game that isn't held yet is a change: it holds the game.
-  const unchanged = winner === (game.winnerSide ?? "") && (winner !== "" || game.resultHeld);
+  const unchanged = winner === (game.winnerSide ?? "") && (winner !== "" || game.resultHeld) && !scoresChanged;
   return (
     <li className="flex flex-wrap items-end gap-2 border-b border-slate-100 py-2">
       <div className="min-w-[14rem] flex-1">
@@ -76,6 +83,32 @@ function GameRow({ tournamentId, game, post, busy }: { tournamentId: string; gam
         <option value="home">{teamLabel(game.homeTeam)}</option>
         <option value="away">{teamLabel(game.awayTeam)}</option>
       </select>
+      {isFinal && (
+        <>
+          <input
+            className={`${adminField} w-24`}
+            type="number"
+            min={0}
+            max={200}
+            inputMode="numeric"
+            aria-label={`${teamLabel(game.homeTeam)} final score`}
+            placeholder="Home pts"
+            value={homeScore}
+            onChange={(e) => setHomeScore(e.target.value)}
+          />
+          <input
+            className={`${adminField} w-24`}
+            type="number"
+            min={0}
+            max={200}
+            inputMode="numeric"
+            aria-label={`${teamLabel(game.awayTeam)} final score`}
+            placeholder="Away pts"
+            value={awayScore}
+            onChange={(e) => setAwayScore(e.target.value)}
+          />
+        </>
+      )}
       <input className={adminField} placeholder="Reason (logged)" value={reason} onChange={(e) => setReason(e.target.value)} />
       <button
         type="button"
@@ -83,7 +116,15 @@ function GameRow({ tournamentId, game, post, busy }: { tournamentId: string; gam
         disabled={busy || reason.trim().length < 3 || unchanged}
         onClick={() =>
           void post(
-            { action: "override_result", tournamentId, round: game.round, location: game.location, winner: winner || null, reason },
+            {
+              action: "override_result",
+              tournamentId,
+              round: game.round,
+              location: game.location,
+              winner: winner || null,
+              reason,
+              ...(scoresChanged ? { homeScore: Number(homeScore), awayScore: Number(awayScore) } : {}),
+            },
             (winner
               ? "Override this result? "
               : "Hold this game with no result? The feed won't fill it until you press Let the feed decide. ") +

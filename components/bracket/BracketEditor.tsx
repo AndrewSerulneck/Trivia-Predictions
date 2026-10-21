@@ -65,7 +65,8 @@ export function BracketEditor({
   // Every change bumps `version`; a send records the version it carried. Equal = nothing unsent.
   const versionRef = useRef(0);
   const sentVersionRef = useRef(0);
-  const savingRef = useRef(false);
+  // The send in flight, if any. A caller that arrives meanwhile waits for it, then sends what is newer.
+  const inflightRef = useRef<Promise<boolean> | null>(null);
   const markChanged = useCallback(() => {
     versionRef.current += 1;
   }, []);
@@ -74,26 +75,33 @@ export function BracketEditor({
   const onFinish = step.id === bracketFinishStepId;
   const tiebreaker = parseTiebreakerText(tiebreakerText);
 
-  /** Send the draft if it changed. True when nothing needed sending or the send worked. */
+  /** Send the draft if it changed. True when nothing needed sending or the send worked. Waits for a send already in flight. */
   const persist = useCallback(
     async (keepalive = false): Promise<boolean> => {
+      // A while, not an if: another caller may start the next send while this one waits.
+      while (inflightRef.current) await inflightRef.current.catch(() => false);
       if (versionRef.current === sentVersionRef.current) return true;
-      if (savingRef.current) return false;
       const parsed = parseTiebreakerText(tiebreakerRef.current);
       // A half-typed tiebreaker never blocks the picks: they go with the last good guess.
       const guess = parsed === undefined ? (mine?.tiebreaker ?? null) : parsed;
       const version = versionRef.current;
-      savingRef.current = true;
+      const send = (async (): Promise<boolean> => {
+        const result = await onSave(picksRef.current, guess, keepalive);
+        if (result.ok) {
+          sentVersionRef.current = version;
+          return true;
+        }
+        setMessage(result.network ? "No connection. Your picks will save when you're back online." : bracketSaveMessage(result.outcome));
+        return false;
+      })();
+      inflightRef.current = send;
       setSaving(true);
-      const result = await onSave(picksRef.current, guess, keepalive);
-      savingRef.current = false;
-      setSaving(false);
-      if (result.ok) {
-        sentVersionRef.current = version;
-        return true;
+      try {
+        return await send;
+      } finally {
+        inflightRef.current = null;
+        setSaving(false);
       }
-      setMessage(result.network ? "No connection. Your picks will save when you're back online." : bracketSaveMessage(result.outcome));
-      return false;
     },
     [mine?.tiebreaker, onSave],
   );
@@ -110,7 +118,7 @@ export function BracketEditor({
   // The tab going to the background is the last moment we can be sure to send a draft.
   useEffect(() => {
     const onHide = () => {
-      if (document.hidden && versionRef.current !== sentVersionRef.current && !savingRef.current) void persist(true);
+      if (document.hidden && versionRef.current !== sentVersionRef.current) void persist(true);
     };
     document.addEventListener("visibilitychange", onHide);
     return () => document.removeEventListener("visibilitychange", onHide);

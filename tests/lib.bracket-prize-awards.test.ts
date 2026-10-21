@@ -63,11 +63,10 @@ vi.mock("@/lib/challengeCampaigns", async (importOriginal) => {
 import {
   bracketPrizeCoversBracket,
   bracketPrizePlaces,
-  bracketRealLockMs,
   settleBracketPrizes,
 } from "@/lib/bracketPrizeAwards";
 import { bracketPrizeCycleStart } from "@/lib/bracketPrizes";
-import type { BracketTournamentRecord } from "@/lib/bracketsStore";
+import { bracketRealLockMs, type BracketTournamentRecord } from "@/lib/bracketsStore";
 import type { ChallengeCampaign } from "@/types";
 
 const DONE = Array.from({ length: 63 }, (_, slot) => slot); // any non-null seats: the championship is decided
