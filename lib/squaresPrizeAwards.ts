@@ -7,7 +7,7 @@ import { SQUARES_PRIZE_DEFINITION_ID, SQUARES_PRIZE_MOMENT_PHRASES, squaresPrize
 import { chunkIds } from "@/lib/postgrestIds";
 import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import { SQUARES_GAME_NAME } from "@/lib/venueGameCards";
-import type { SquaresEventRecord } from "@/lib/squaresStore";
+import { readHiddenVenueIds, type SquaresEventRecord } from "@/lib/squaresStore";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { ChallengeCampaign } from "@/types";
 
@@ -21,7 +21,8 @@ import type { ChallengeCampaign } from "@/types";
 //
 // SAFE TO REPEAT: the ledger is unique on (prize, cycle, winner) and the quota is 1, so a run that
 // dies before stamping just re-asks and gets won:false. A row is stamped only when every award for
-// it answered; a failed one stays unchecked and is retried next run.
+// it answered; a failed one stays unchecked and is retried by the next run (hourly once the watch
+// is over, plan 6.6.3).
 //
 // WHICH PRIZES: active (archiving stops a prize), at the board's venue, paying that moment, created
 // BEFORE the lock (a prize set up after claims closed was never on offer to the players holding
@@ -36,8 +37,8 @@ import type { ChallengeCampaign } from "@/types";
 // coupon is spent and kept), tells that guest, and stamps prize_withdrawn_at.
 //
 // COST: two indexed reads per settlement run while the event is watched (squares_results_prize_
-// unchecked_idx and squares_results_prize_withdraw_idx; normally both empty; none once the watch is
-// over, plan 6.3). When a moment is graded: + one prizes read per POSTGREST_ID_CHUNK winning venues
+// unchecked_idx and squares_results_prize_withdraw_idx; normally both empty; once the watch is over,
+// only on the hourly idle settle, plan 6.6.3). When a moment is graded: + one prizes read per POSTGREST_ID_CHUNK winning venues
 // + one RPC per (venue with a prize for that moment and a winner) + one stamp write per
 // POSTGREST_ID_CHUNK rows (lib/postgrestIds.ts). A void: + one RPC per voided winning result that
 // was checked for prizes.
@@ -81,7 +82,8 @@ export type SquaresPrizeReport = { actions: string[]; errors: string[] };
 
 /**
  * Award every unchecked winning result of `event` to the prizes that pay it. Never throws: problems
- * land in `report.errors` and the affected rows are retried next run.
+ * land in `report.errors` and the affected rows are retried by the next run (hourly once the watch
+ * is over, plan 6.6.3).
  */
 export async function awardSquaresPrizes(
   event: Pick<SquaresEventRecord, "id" | "kickoffAt" | "lockAt" | "purpose">,
@@ -109,19 +111,15 @@ export async function awardSquaresPrizes(
   const venueIds = [...new Set(rows.flatMap((row) => (row.board?.venue_id ? [row.board.venue_id] : [])))];
 
   // Rehearsal only: which of these venues are hidden. One read, made only for a rehearsal event with
-  // an unchecked winner. A failed read stops the run (retried next run), never pays.
-  const hiddenVenues = new Set<string>();
+  // an unchecked winner. A failed read stops the run (retried by the next run), never pays.
+  let hiddenVenues = new Set<string>();
   if (event.purpose === "rehearsal" && venueIds.length > 0) {
-    for (const chunk of chunkIds(venueIds)) {
-      const { data: venueRows, error: venueError } = await supabaseAdmin.from("venues").select("id, hidden").in("id", chunk);
-      if (venueError) {
-        report.errors.push(`prize venues read: ${venueError.message}`);
-        return;
-      }
-      for (const venue of (venueRows ?? []) as Array<{ id: string; hidden: boolean | null }>) {
-        if (venue.hidden === true) hiddenVenues.add(venue.id);
-      }
+    const hidden = await readHiddenVenueIds(venueIds);
+    if (!hidden.ok) {
+      report.errors.push(`prize venues read: ${hidden.error}`);
+      return;
     }
+    hiddenVenues = hidden.value;
   }
   let prizes: ChallengeCampaign[];
   try {

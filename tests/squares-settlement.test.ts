@@ -439,6 +439,7 @@ describe("runSquaresTick — a leftover event (plan 6.6.1)", () => {
 
 // Plan 6.3: paying winners — chunked writes, results that can never be paid, no idle reads.
 describe("paying Squares winners (plan 6.3)", () => {
+  const SUPER_BOWL = { id: "event-1", purpose: "super_bowl" as const };
   const unpaidResult = (n: number, userId: string, creditKey = `board-${n}:q1:1`): Row => ({
     id: `result-${n}`, event_id: "event-1", board_id: `board-${n}`, moment: "q1", grade_no: 1, winning_cell: 0,
     user_id: userId, points: 25, credit_key: creditKey, credited_at: null, voided_at: null, credit_blocked_at: null,
@@ -449,7 +450,7 @@ describe("paying Squares winners (plan 6.3)", () => {
     tables.users = Array.from({ length: 400 }, (_, i) => ({ id: userId(i), points: 0 }));
     tables.squares_results = Array.from({ length: 400 }, (_, i) => unpaidResult(i, userId(i)));
     const report = { actions: [] as string[], errors: [] as string[] };
-    await payUnpaidSquaresResults("event-1", report);
+    await payUnpaidSquaresResults(SUPER_BOWL, report);
     expect(report.errors).toEqual([]);
     expect(report.actions).toEqual(["paid_400"]);
     expect(tables.squares_results.every((r) => r.credited_at)).toBe(true);
@@ -467,7 +468,7 @@ describe("paying Squares winners (plan 6.3)", () => {
       unpaidResult(3, "33333333-3333-3333-3333-333333333333"), // account gone
     ];
     const report = { actions: [] as string[], errors: [] as string[] };
-    await payUnpaidSquaresResults("event-1", report);
+    await payUnpaidSquaresResults(SUPER_BOWL, report);
     expect(report.errors).toEqual([]);
     expect(report.actions).toEqual(["paid_1", "credit_blocked_1", "credit_blocked_1"]);
     const [paid, otherUser, gone] = tables.squares_results;
@@ -481,7 +482,7 @@ describe("paying Squares winners (plan 6.3)", () => {
     // The next run reads nothing left to pay and sends no credit.
     const ledgerBefore = tables.seasonal_points_credits.length;
     const again = { actions: [] as string[], errors: [] as string[] };
-    await payUnpaidSquaresResults("event-1", again);
+    await payUnpaidSquaresResults(SUPER_BOWL, again);
     expect(again.actions).toEqual([]);
     expect(tables.seasonal_points_credits).toHaveLength(ledgerBefore);
     expect(error.mock.calls.filter(([tag]) => tag === "[Squares] credit-blocked")).toHaveLength(2);
@@ -510,7 +511,7 @@ describe("paying Squares winners (plan 6.3)", () => {
   it("reads only the event once the post-final watch is over (§13 F7)", async () => {
     await playToFinal();
     io.selects = [];
-    const report = await tick(Date.parse("2027-02-15T06:00:00Z"));
+    const report = await tick(Date.parse("2027-02-15T06:07:00Z"));
     expect(report.skipped).toBe("watch_over");
     expect(io.selects).toEqual(["squares_events"]);
   });
@@ -519,7 +520,7 @@ describe("paying Squares winners (plan 6.3)", () => {
     await tick(Date.parse("2027-02-01T05:15:00Z"));
     await tick(Date.parse("2027-02-14T23:00:00Z")); // drawn, never completed
     io.selects = [];
-    const report = await tick(Date.parse("2027-02-15T12:00:00Z"));
+    const report = await tick(Date.parse("2027-02-15T12:07:00Z"));
     expect(report.skipped).toBe("no_final_deadline");
     expect(io.selects).toEqual(["squares_events"]);
   });
@@ -530,8 +531,77 @@ describe("paying Squares winners (plan 6.3)", () => {
     await tick(Date.parse("2027-02-15T02:33:00Z")); // inside the watch, between feed reads
     expect(io.selects).toContain("squares_results");
     io.selects = [];
-    clockMs = Date.parse("2027-02-15T06:00:00Z");
+    clockMs = Date.parse("2027-02-15T06:07:00Z");
     await runSquaresTick({ now: new Date(clockMs), force: true });
     expect(io.selects).toContain("squares_results");
+  });
+
+  // Plan 6.6.3 (§29 S5): after the watch, a failed credit is still retried — once an hour.
+  it("idle: settles at minute 0 (a failed credit is retried), reads only the event at any other minute", async () => {
+    await playToFinal();
+    const eventId = String(tables.squares_events[0].id);
+    tables.squares_results.push({ ...unpaidResult(9, ANN, "board-9:q1:1"), event_id: eventId });
+    const before = points(ANN);
+    io.selects = [];
+    const quiet = await tick(Date.parse("2027-02-15T06:07:00Z"));
+    expect(quiet.skipped).toBe("watch_over");
+    expect(io.selects).toEqual(["squares_events"]);
+    expect(points(ANN)).toBe(before);
+
+    io.selects = [];
+    const feedBefore = feed.requests;
+    const hourly = await tick(Date.parse("2027-02-15T07:00:00Z"));
+    expect(hourly.skipped).toBe("watch_over");
+    expect(hourly.actions).toContain("paid_1");
+    expect(io.selects).toContain("squares_results");
+    expect(io.selects).not.toContain("venues");
+    expect(feed.requests).toBe(feedBefore);
+    expect(points(ANN)).toBe(before + 25);
+    expect(tables.squares_results.find((r) => r.id === "result-9")?.credited_at).toBeTruthy();
+  });
+
+  // Plan 6.6.3 (§29 S6): a rehearsal pays points only at hidden venues.
+  it("rehearsal: a win at a venue no longer hidden is blocked with a note; a hidden venue's win is paid", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    tables.venues = [
+      { id: "v-hidden", hidden: true },
+      { id: "v-visible", hidden: false },
+    ];
+    tables.squares_results = [
+      { ...unpaidResult(1, ANN), board: { venue_id: "v-hidden" } },
+      { ...unpaidResult(2, BOB), board: { venue_id: "v-visible" } },
+    ];
+    const report = { actions: [] as string[], errors: [] as string[] };
+    await payUnpaidSquaresResults({ id: "event-1", purpose: "rehearsal" }, report);
+    expect(report.errors).toEqual([]);
+    expect(report.actions).toEqual(["paid_1", "credit_blocked_1"]);
+    const [hiddenWin, visibleWin] = tables.squares_results;
+    expect(hiddenWin.credited_at).toBeTruthy();
+    expect(visibleWin).toMatchObject({ credited_at: null, credit_blocked_note: "Rehearsal win at a venue that is no longer hidden." });
+    expect(visibleWin.credit_blocked_at).toBeTruthy();
+    expect(points(ANN)).toBe(25);
+    expect(points(BOB)).toBe(0);
+    expect(tables.seasonal_points_credits).toHaveLength(1);
+    error.mockRestore();
+  });
+
+  it("rehearsal: a venue the read doesn't return is not hidden (fails closed)", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    tables.venues = [];
+    tables.squares_results = [{ ...unpaidResult(1, ANN), board: { venue_id: "v-gone" } }];
+    const report = { actions: [] as string[], errors: [] as string[] };
+    await payUnpaidSquaresResults({ id: "event-1", purpose: "rehearsal" }, report);
+    expect(report.actions).toEqual(["credit_blocked_1"]);
+    expect(tables.seasonal_points_credits ?? []).toHaveLength(0);
+    error.mockRestore();
+  });
+
+  it("a Super Bowl event reads no venues", async () => {
+    tables.squares_results = [{ ...unpaidResult(1, ANN), board: { venue_id: "v-visible" } }];
+    tables.venues = [{ id: "v-visible", hidden: false }];
+    const report = { actions: [] as string[], errors: [] as string[] };
+    await payUnpaidSquaresResults(SUPER_BOWL, report);
+    expect(report.actions).toEqual(["paid_1"]);
+    expect(io.selects).not.toContain("venues");
   });
 });

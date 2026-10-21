@@ -1,5 +1,6 @@
 import "server-only";
 
+import { chunkIds } from "@/lib/postgrestIds";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   SQUARES_MOMENTS,
@@ -166,6 +167,24 @@ export async function getCurrentSquaresEvent(): Promise<StoreResult<SquaresEvent
     .maybeSingle();
   if (error) return { ok: false, error: error.message };
   return { ok: true, value: data ? toEventRecord(data as EventRow) : null };
+}
+
+/**
+ * Which of these venues are hidden (venues.hidden = true) — the rehearsal guard behind squares_claim,
+ * shared by the points and the Prizes paths (plan 6.2, 6.6.3). One read per POSTGREST_ID_CHUNK ids.
+ * A venue missing from the answer is not hidden; any failed read fails the whole call.
+ */
+export async function readHiddenVenueIds(venueIds: string[]): Promise<StoreResult<Set<string>>> {
+  if (!supabaseAdmin) return unavailable();
+  const hidden = new Set<string>();
+  for (const chunk of chunkIds(venueIds)) {
+    const { data, error } = await supabaseAdmin.from("venues").select("id, hidden").in("id", chunk);
+    if (error) return { ok: false, error: error.message };
+    for (const venue of (data ?? []) as Array<{ id: string; hidden: boolean | null }>) {
+      if (venue.hidden === true) hidden.add(venue.id);
+    }
+  }
+  return { ok: true, value: hidden };
 }
 
 /** The event's four moments, in game order. Missing rows are re-created (an interrupted create). */

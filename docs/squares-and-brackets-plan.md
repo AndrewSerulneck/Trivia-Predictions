@@ -19,7 +19,7 @@ below; handoff `docs/squares-and-brackets-plan_PHASE_6.6_HANDOFF.md`.
 **6.6.1 built 2026-10-21 (no migration; committed locally, not pushed)**: in season mode the cron archives a leftover
 rehearsal or an old season's event and discovers the Super Bowl in the same run; an old season's Super Bowl can be
 archived any time; a rehearsal can't be created during the window. §30; handoff
-`docs/squares-and-brackets-plan_PHASE_6.6.1_HANDOFF.md`. **6.6.2 built 2026-10-21** (finished-game screen no longer loops on the board; handoff `docs/squares-and-brackets-plan_PHASE_6.6.2_HANDOFF.md`). Next: 6.6.3–6.6.4.
+`docs/squares-and-brackets-plan_PHASE_6.6.1_HANDOFF.md`. **6.6.2 built 2026-10-21** (finished-game screen no longer loops on the board; committed `0517f18`). **6.6.3 built 2026-10-21** (idle settle once an hour; rehearsal points only at hidden venues; handoff `docs/squares-and-brackets-plan_PHASE_6.6.3_HANDOFF.md`). **6.6.4 built 2026-10-21** (tidy-ups; handoff `docs/squares-and-brackets-plan_PHASE_6.6.4_HANDOFF.md`). Next: 6.7 rehearsal (a December 2026 game).
 **Phases 7 + 8 (bracket engine + player screens) committed `baeb6e4`**; migration `20261019203858` APPLIED. Flag off.
 **Phase 9 (bracket Prizes, Results, TV) built and committed locally 2026-10-20**; migration `20261019213121` APPLIED
 2026-10-20 (`supabase db push`, verified through PostgREST). Flag still off; nothing pushed or deployed. Andrew: no Prize
@@ -321,8 +321,8 @@ migration); then 6.5–6.9.
 | 6.6 | Re-review of 6.1–6.5 (`/code-review high`) — **done 2026-10-21**, findings §29 | Opus 5.5 | high | — |
 | 6.6.1 | A leftover event (rehearsal, or last season's Super Bowl) never blocks the season — **built 2026-10-21**, §30 | Opus 5.5 | medium | — |
 | 6.6.2 | Finished-game screen: no board re-read loop | Sonnet 5.5 | low | Built 2026-10-21 |
-| 6.6.3 | Settlement keeps paying what's owed after the watch; rehearsal points only at hidden venues | Opus 5.5 | medium | — |
-| 6.6.4 | Tidy-ups: misplaced doc comment, one "blocked result" filter | Sonnet 5.5 | low | — |
+| 6.6.3 | Settlement keeps paying what's owed after the watch; rehearsal points only at hidden venues | Opus 5.5 | medium | Built 2026-10-21 |
+| 6.6.4 | Tidy-ups: misplaced doc comment, one "blocked result" filter | Sonnet 5.5 | low | Built 2026-10-21 |
 | 6.7 | Rehearsal on `venue-hightop-test` with a real NFL game | Opus 5.5 | high | Preview env vars, phone pass |
 | 6.8 | Andrew's phone + TV pass (checklist section A) | — | — | yes |
 | 6.9 | Launch: flag on + redeploy by **Mon Jan 25, 2027**; watch Feb 14 | Opus 5.5 | medium | yes |
@@ -528,6 +528,11 @@ migration); then 6.5–6.9.
 - **Tests:** settlement: idle at minute 0 → settle runs (credit retried); idle at minute 7 → no settle reads;
   rehearsal unpaid row at a visible venue → blocked with the note, at a hidden venue → paid; Super Bowl event → no
   venues read.
+- **Built 2026-10-21** as designed. The shared reader is `readHiddenVenueIds` (`lib/squaresStore.ts`), used by both
+  `payUnpaidSquaresResults` and `awardSquaresPrizes`. `payUnpaidSquaresResults` now takes the event
+  (`{ id, purpose }`), not an id. Note constant `SQUARES_REHEARSAL_VISIBLE_VENUE_NOTE`. A venue the read doesn't
+  return counts as not hidden (blocked). The `no-final-deadline` warning moved inside the idle minute-0 branch
+  (same minute, same once-an-hour). Handoff `docs/squares-and-brackets-plan_PHASE_6.6.3_HANDOFF.md`.
 
 #### 6.6.4 — Tidy-ups (Sonnet 5.5 · low) — §29 S8, S9
 - S8: in `lib/liveTriviaRankedRewards.ts`, 6.1 inserted `isLiveTriviaRankedCampaign` (with its doc) between

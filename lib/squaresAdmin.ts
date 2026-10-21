@@ -170,14 +170,14 @@ async function countRows(table: "squares_boards" | "squares_results", eventId: s
   return count ?? 0;
 }
 
+/** A result whose points can never be paid: blocked, not credited, not voided. The one definition of "blocked". */
+const onlyBlockedResults = <Q extends { not: (c: string, op: string, v: null) => Q; is: (c: string, v: null) => Q }>(query: Q): Q =>
+  query.not("credit_blocked_at", "is", null).is("credited_at", null).is("voided_at", null);
+
 async function countBlockedResults(eventId: string): Promise<number> {
-  const { count } = await supabaseAdmin!
-    .from("squares_results")
-    .select("id", { count: "exact", head: true })
-    .eq("event_id", eventId)
-    .not("credit_blocked_at", "is", null)
-    .is("credited_at", null)
-    .is("voided_at", null);
+  const { count } = await onlyBlockedResults(
+    supabaseAdmin!.from("squares_results").select("id", { count: "exact", head: true }).eq("event_id", eventId),
+  );
   return count ?? 0;
 }
 
@@ -199,13 +199,12 @@ export async function getSquaresAdminOverview(): Promise<{ ok: true; overview: S
         .from("squares_claims")
         .select("cell, squares_boards!inner(event_id)", { count: "exact", head: true })
         .eq("squares_boards.event_id", event.id),
-      supabaseAdmin
-        .from("squares_results")
-        .select("id, moment, grade_no, user_id, credit_blocked_note, credit_blocked_at", { count: "exact" })
-        .eq("event_id", event.id)
-        .not("credit_blocked_at", "is", null)
-        .is("credited_at", null)
-        .is("voided_at", null)
+      onlyBlockedResults(
+        supabaseAdmin
+          .from("squares_results")
+          .select("id, moment, grade_no, user_id, credit_blocked_note, credit_blocked_at", { count: "exact" })
+          .eq("event_id", event.id),
+      )
         .order("credit_blocked_at", { ascending: true })
         .limit(SQUARES_BLOCKED_SHOWN),
     ]);

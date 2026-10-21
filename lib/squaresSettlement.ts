@@ -30,6 +30,7 @@ import {
   getCurrentSquaresEvent,
   getSquaresMoments,
   logSquaresAdmin,
+  readHiddenVenueIds,
   type SquaresEventRecord,
   type SquaresLiveScore,
   type SquaresMomentRecord,
@@ -52,9 +53,10 @@ import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 //     SQUARES_POST_FINAL_WATCH_MS from the void (squares_events.reopened_at, plan 6.2).
 // Grading is one set-based RPC per moment for every board; paying is one batched credit call, then
 // each venue's Prizes for that moment (lib/squaresPrizeAwards.ts: indexed reads, normally empty).
-// Those settlement reads (three) run only while the event is watched: once the post-final watch is
-// over, or the no-final deadline has passed with no late-void watch, a run is the one event read
-// and nothing else (plan 6.3, §13 F7).
+// Those settlement reads (three) run every run only while the event is watched: once the post-final
+// watch is over, or the no-final deadline has passed with no late-void watch, a run is the one event
+// read and nothing else (plan 6.3, §13 F7) — except at minute 0 of each hour, when it also settles
+// once, so a credit, prize or withdrawal that failed is still retried (plan 6.6.3, §29 S5).
 
 /**
  * Why the settlement runs now (plan 6.2), or null = it does nothing. A pure check: no I/O.
@@ -151,12 +153,17 @@ async function tick(options: { now?: Date; force?: boolean }): Promise<SquaresTi
       if (!drew) return report;
     }
 
-    // Once nothing is watched any more, the run ends here, before the settlement reads (plan 6.3,
-    // §13 F7): no idle reads for the rest of the window. An admin action (void, enter scores, Run
-    // now) still calls settleSquaresWinners directly, so a fix-up still pays.
+    // Once nothing is watched any more, the run ends here (plan 6.3, §13 F7). Once an hour it first
+    // settles: the "anything owed?" check (three indexed reads, normally empty) that retries a failed
+    // credit, prize or withdrawal, including one from an admin fix-up after the watch (plan 6.6.3).
     const idle = idleReason(event, nowMs, force);
-    if (idle === "no_final_deadline" && now.getUTCMinutes() === 0) console.warn("[Squares] no-final-deadline", { eventId: event.id });
-    if (idle) return { ...report, skipped: idle };
+    if (idle) {
+      if (now.getUTCMinutes() === 0) {
+        if (idle === "no_final_deadline") console.warn("[Squares] no-final-deadline", { eventId: event.id });
+        await settleSquaresWinners(event, report, now);
+      }
+      return { ...report, skipped: idle };
+    }
 
     await settleSquaresWinners(event, report, now);
 
@@ -430,15 +437,18 @@ export async function settleSquaresWinners(
   report: { actions: string[]; errors: string[] },
   now: Date = new Date(),
 ): Promise<void> {
-  await payUnpaidSquaresResults(event.id, report);
+  await payUnpaidSquaresResults(event, report);
   await awardSquaresPrizes(event, report, now);
   await withdrawVoidedSquaresPrizes(event, report, now);
 }
 
-type UnpaidRow = { id: string; user_id: string; credit_key: string; points: number };
+type UnpaidRow = { id: string; user_id: string; credit_key: string; points: number; board?: { venue_id: string } | null };
 
 /** Most unpaid results paid per run (two credit batches); the rest wait for the next run. */
 const PAY_PER_RUN = 1000;
+
+/** The block note of a rehearsal win at a venue that is no longer hidden (plan 6.6.3, §29 S6). */
+export const SQUARES_REHEARSAL_VISIBLE_VENUE_NOTE = "Rehearsal win at a venue that is no longer hidden.";
 
 /** Why a result's credit can never land, or null when it was paid (or should simply be retried). */
 export const squaresCreditBlockNote = (result: Pick<SeasonalCreditResult, "outcome" | "userId" | "existingUserId">): string | null => {
@@ -455,11 +465,21 @@ export const squaresCreditBlockNote = (result: Pick<SeasonalCreditResult, "outco
  * just marked. A result that can never be paid (squaresCreditBlockNote — only reachable through
  * another bug, plan §13 F8) is stamped credit_blocked_at + a note and logged once, so it is not
  * re-sent every run; the admin panel lists it. Every id-list write is chunked (§13 F2).
+ *
+ * A REHEARSAL pays points only at hidden venues, like its Prizes (plan 6.6.3, §29 S6): the select
+ * also reads each row's venue, then one venues read (readHiddenVenueIds); a row at a venue that is
+ * not hidden is blocked with SQUARES_REHEARSAL_VISIBLE_VENUE_NOTE. A failed venues read pays nothing
+ * this run. A Super Bowl event reads no venues.
  */
-export async function payUnpaidSquaresResults(eventId: string, report: { actions: string[]; errors: string[] }): Promise<void> {
+export async function payUnpaidSquaresResults(
+  event: Pick<SquaresEventRecord, "id" | "purpose">,
+  report: { actions: string[]; errors: string[] },
+): Promise<void> {
+  const eventId = event.id;
+  const rehearsal = event.purpose === "rehearsal";
   const { data, error } = await supabaseAdmin!
     .from("squares_results")
-    .select("id, user_id, credit_key, points")
+    .select(rehearsal ? "id, user_id, credit_key, points, board:squares_boards!inner(venue_id)" : "id, user_id, credit_key, points")
     .eq("event_id", eventId)
     .not("user_id", "is", null)
     .is("credited_at", null)
@@ -470,18 +490,35 @@ export async function payUnpaidSquaresResults(eventId: string, report: { actions
     report.errors.push(`unpaid read: ${error.message}`);
     return;
   }
-  const unpaid = (data ?? []) as UnpaidRow[];
+  let unpaid = (data ?? []) as unknown as UnpaidRow[];
   if (unpaid.length === 0) return;
 
-  const response = await creditSeasonalPoints(
-    "squares",
-    unpaid.map((row) => ({ userId: row.user_id, sourceKey: row.credit_key, points: Number(row.points) })),
-  );
-  if (!response.ok) report.errors.push(`credit: ${response.code} ${response.error}`);
+  const blocked = new Map<string, string[]>();
+  if (rehearsal) {
+    const venueIds = [...new Set(unpaid.flatMap((row) => (row.board?.venue_id ? [row.board.venue_id] : [])))];
+    const hidden = await readHiddenVenueIds(venueIds);
+    if (!hidden.ok) {
+      report.errors.push(`unpaid venues read: ${hidden.error}`);
+      return;
+    }
+    const visible = unpaid.filter((row) => !row.board?.venue_id || !hidden.value.has(row.board.venue_id));
+    if (visible.length > 0) {
+      blocked.set(SQUARES_REHEARSAL_VISIBLE_VENUE_NOTE, visible.map((row) => row.id));
+      unpaid = unpaid.filter((row) => !visible.includes(row));
+    }
+  }
+
+  const response =
+    unpaid.length > 0
+      ? await creditSeasonalPoints(
+          "squares",
+          unpaid.map((row) => ({ userId: row.user_id, sourceKey: row.credit_key, points: Number(row.points) })),
+        )
+      : null;
+  if (response && !response.ok) report.errors.push(`credit: ${response.code} ${response.error}`);
   const byKey = new Map(unpaid.map((row) => [row.credit_key, row]));
   const paidIds: string[] = [];
-  const blocked = new Map<string, string[]>();
-  for (const result of response.results) {
+  for (const result of response?.results ?? []) {
     const row = byKey.get(result.sourceKey);
     if (!row) continue;
     const note = squaresCreditBlockNote(result);

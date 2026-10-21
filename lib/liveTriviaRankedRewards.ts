@@ -138,11 +138,6 @@ export type ResolveRankedPlaceRewardsReport = {
 };
 
 /**
- * Why this reward can't be swept, or null when it can. createReward (Phase 3)
- * refuses each of these; this guards admin-edited rows. Reported every sweep so a
- * broken reward is visible in the logs rather than silently never paying.
- */
-/**
  * A Live Trivia weekly places prize — the only kind this sweep (and the backfill) pays. Another
  * game's ranked_places prize, or one with no definition id, is never Live Trivia's to settle
  * (docs/squares-and-brackets-plan.md §13 F1).
@@ -151,6 +146,11 @@ export function isLiveTriviaRankedCampaign(campaign: ChallengeCampaign): boolean
   return campaign.rewardDefinitionId === LIVE_TRIVIA_REWARD_DEFINITION_ID;
 }
 
+/**
+ * Why this reward can't be swept, or null when it can. createReward (Phase 3)
+ * refuses each of these; this guards admin-edited rows. Reported every sweep so a
+ * broken reward is visible in the logs rather than silently never paying.
+ */
 export function rankedRewardConfigError(campaign: ChallengeCampaign): string | null {
   if (campaign.venueIds.length !== 1) {
     return "A weekly places reward must be for exactly one venue.";
