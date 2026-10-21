@@ -19,7 +19,7 @@ below; handoff `docs/squares-and-brackets-plan_PHASE_6.6_HANDOFF.md`.
 **6.6.1 built 2026-10-21 (no migration; committed locally, not pushed)**: in season mode the cron archives a leftover
 rehearsal or an old season's event and discovers the Super Bowl in the same run; an old season's Super Bowl can be
 archived any time; a rehearsal can't be created during the window. §30; handoff
-`docs/squares-and-brackets-plan_PHASE_6.6.1_HANDOFF.md`. Next: 6.6.2–6.6.4.
+`docs/squares-and-brackets-plan_PHASE_6.6.1_HANDOFF.md`. **6.6.2 built 2026-10-21** (finished-game screen no longer loops on the board; handoff `docs/squares-and-brackets-plan_PHASE_6.6.2_HANDOFF.md`). Next: 6.6.3–6.6.4.
 **Phases 7 + 8 (bracket engine + player screens) committed `baeb6e4`**; migration `20261019203858` APPLIED. Flag off.
 **Phase 9 (bracket Prizes, Results, TV) built and committed locally 2026-10-20**; migration `20261019213121` APPLIED
 2026-10-20 (`supabase db push`, verified through PostgREST). Flag still off; nothing pushed or deployed. Andrew: no Prize
@@ -320,7 +320,7 @@ migration); then 6.5–6.9.
 | 6.5 | Quarter rule checked against the live captures (part 1 done 2026-10-21, §28) | Opus 5.5 | medium | Mac awake Oct 22 |
 | 6.6 | Re-review of 6.1–6.5 (`/code-review high`) — **done 2026-10-21**, findings §29 | Opus 5.5 | high | — |
 | 6.6.1 | A leftover event (rehearsal, or last season's Super Bowl) never blocks the season — **built 2026-10-21**, §30 | Opus 5.5 | medium | — |
-| 6.6.2 | Finished-game screen: no board re-read loop | Sonnet 5.5 | low | — |
+| 6.6.2 | Finished-game screen: no board re-read loop | Sonnet 5.5 | low | Built 2026-10-21 |
 | 6.6.3 | Settlement keeps paying what's owed after the watch; rehearsal points only at hidden venues | Opus 5.5 | medium | — |
 | 6.6.4 | Tidy-ups: misplaced doc comment, one "blocked result" filter | Sonnet 5.5 | low | — |
 | 6.7 | Rehearsal on `venue-hightop-test` with a real NFL game | Opus 5.5 | high | Preview env vars, phone pass |
@@ -499,6 +499,7 @@ migration); then 6.5–6.9.
 - **Solution:** the `complete` branch only reads the score on its cadence (`force` or `SQUARES_COMPLETE_POLL_MS`).
   The catch-up stays in `fetchScore`, which already re-reads the board once per score read when the revisions
   differ for the same event id. So a mismatch costs at most one board read per score read (every 5 min).
+- **Built 2026-10-21** as designed. Handoff `docs/squares-and-brackets-plan_PHASE_6.6.2_HANDOFF.md`.
 - **Tests:** `tests/squares-screen.test.ts`. Board revision B with held score A at `complete`: across 1 min of ticks
   there are zero board reads and one score read when the 5 min passes (none sooner). The existing re-grade catch-up
   test still passes.

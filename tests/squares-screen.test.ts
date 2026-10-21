@@ -357,6 +357,26 @@ describe("what it costs (plan §6)", () => {
     expect(calls.board).toBe(before + 1);
   });
 
+  it("after the final: a board newer than the cached score does not loop (plan 6.6.2)", async () => {
+    const board = makeBoard({ phase: "complete", digits: true });
+    board.event!.kickoffAt = "2020-01-01T00:00:00.000Z";
+    // The server's board is already re-graded; the CDN still serves the old score.
+    board.moments[3].result = { col: 7, row: 3, winningCell: 41, gradeNo: 2, winner: null };
+    const score = makeScore("complete");
+    score.moments[3].result = { col: 7, row: 3, winningCell: 41, gradeNo: 1 };
+    const calls = installFetch({ board, score });
+    await mountScreen();
+    const before = { board: calls.board, score: calls.score };
+    await advance(60_000);
+    await flush();
+    expect(calls.board).toBe(before.board);
+    expect(calls.score).toBe(before.score);
+    await advance(245_000);
+    await flush();
+    expect(calls.score).toBe(before.score + 1);
+    expect(calls.board).toBe(before.board + 1); // the catch-up: one board read per score read
+  });
+
   it("switches from the board to the score at the lock without a reload", async () => {
     const lock = new Date(Date.now() + 40_000).toISOString();
     const state = { board: makeBoard({ lockAt: lock }), score: makeScore("locked", false) };

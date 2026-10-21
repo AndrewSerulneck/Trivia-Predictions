@@ -153,11 +153,10 @@ export function useSquaresData(identity: { userId: string; venueId: string } | n
         return;
       }
       if (phase === "complete") {
-        // Done, but an admin void can still change the winners: catch up if the board is behind the score
-        // we hold, and look at the shared (CDN-cached) score rarely and on returning to the tab.
-        const latest = scoreRef.current;
-        if (latest?.event && boardRevision(current) !== scoreRevision(latest) && !inFlightRef.current.board) void fetchBoard();
-        else if (force || now - lastScoreAtRef.current >= SQUARES_COMPLETE_POLL_MS) void fetchScore();
+        // Done, but an admin void can still change the winners: look at the shared (CDN-cached) score rarely
+        // and on returning to the tab. fetchScore re-reads the board once when the revisions differ, so a board
+        // newer than the cached score costs one board read per score read, never one per tick (plan 6.6.2).
+        if (force || now - lastScoreAtRef.current >= SQUARES_COMPLETE_POLL_MS) void fetchScore();
         return;
       }
       const beforeLock = phase === "open" && lockMs !== null && now < lockMs;
