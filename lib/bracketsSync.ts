@@ -35,6 +35,7 @@ import {
   getBracketRounds,
   getBracketWinnerSeats,
   listCurrentBracketTournaments,
+  lockPassedPatch,
   logBracketsAdmin,
   recordBracketResults,
   recordedChampionshipTotal,
@@ -336,6 +337,14 @@ export async function syncBracketTournament(
   };
   moveLock("main", tournament.mainLockAt, tournament.mainLockSetBy, autos.main);
   moveLock("second", tournament.secondLockAt, tournament.secondLockSetBy, autos.second);
+  // The first run that sees a lock passed stamps when it really passed, before any later set_clock
+  // changes the offset (plan 10.7.1).
+  const lockPassed = lockPassedPatch(
+    tournament,
+    { main: lockPatch.main_lock_at ?? tournament.mainLockAt, second: lockPatch.second_lock_at ?? tournament.secondLockAt },
+    tNow,
+    { offsetSeconds: tournament.clockOffsetSeconds },
+  );
 
   const nextTournamentMs = nextBracketSyncAt(merged.games, tNow);
   if (dryRun) {
@@ -424,6 +433,7 @@ export async function syncBracketTournament(
     tournament.nextSyncAt,
     {
       ...lockPatch,
+      ...lockPassed,
       feed_checked_at: new Date(realNowMs).toISOString(),
       ...(prizesSettledAt ? { prizes_settled_at: prizesSettledAt } : {}),
     },

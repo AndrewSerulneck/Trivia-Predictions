@@ -223,6 +223,7 @@ import { bracketWinnerSeats, maskBracketFeedAt, mergeBracketFeed, type BracketFe
 import { bracketRoundCorrect, bracketRoundVenuePoints, bracketScore, bracketScoreFromRoundCorrect } from "@/lib/brackets/scoring";
 import { emptyPicks, slotsOfRound, type BracketKind, type BracketRound } from "@/lib/brackets/tree";
 import { runBracketsAdminAction } from "@/lib/bracketsAdmin";
+import { bracketRealLockMs, lockPassedPatch, tournamentFromRow } from "@/lib/bracketsStore";
 import { runBracketsTick } from "@/lib/bracketsSync";
 
 FEEDS.men = shift(ncaabBracket as BracketFeedGame[]);
@@ -386,6 +387,93 @@ describe("bracket sync, minute by minute through March Madness 2027", () => {
     const t = tables.bracket_tournaments[0];
     expect((t.winner_seats as Array<number | null>).every((s) => s === null)).toBe(true); // replay clock: nothing played yet
     expect(Date.parse(String(t.main_lock_at))).toBeGreaterThan(replayAt);
+  });
+});
+
+describe("a walked rehearsal remembers when its lock really passed (plan 10.7.1, §25 F1)", () => {
+  it("pays the prize created before the lock, after set_clock walks across the lock and on past the final", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BRACKETS_ENABLED", "");
+    vi.stubEnv("BRACKETS_REHEARSAL_ENABLED", "true");
+    const start = Date.parse("2027-05-01T15:00:00Z"); // real time; the replay clock reads Selection Sunday
+    const replayAt = Date.parse("2027-03-15T12:00:00Z");
+    const rehearsalId = nextId();
+    tables.bracket_tournaments = [
+      {
+        id: rehearsalId, gender: "men", season: 2026, purpose: "rehearsal", clock_offset_seconds: Math.round((start - replayAt) / 1000),
+        archived_at: null, completed_at: null, next_sync_at: null, prizes_settled_at: null, winner_seats: Array.from({ length: 63 }, () => null),
+        main_lock_set_by: "auto", second_lock_set_by: "auto", main_lock_at: null, second_lock_at: null, region_names: null, championship_total: null,
+        main_lock_passed_at: null, second_lock_passed_at: null, created_at: new Date(start).toISOString(),
+      },
+    ];
+    for (const round of [1, 2, 3, 4, 5, 6]) {
+      (tables.bracket_rounds ??= []).push({ tournament_id: rehearsalId, round, grade_no: 1, paid_grade_no: null, paid_at: null });
+    }
+    tables.venues = [{ id: "vh", hidden: true }];
+    const t = () => tables.bracket_tournaments.find((row) => row.id === rehearsalId) as Row;
+    const admin = (action: Record<string, unknown>, atMs: number) => {
+      clockMs = atMs;
+      return runBracketsAdminAction({ tournamentId: rehearsalId, ...action } as Parameters<typeof runBracketsAdminAction>[0], "tester", atMs);
+    };
+    const sync = async (atMs: number) => {
+      clockMs = atMs;
+      await runBracketsTick({ now: new Date(atMs) });
+    };
+
+    await sync(start);
+    const lockAt = String(t().main_lock_at);
+    expect(t().main_lock_passed_at).toBeNull();
+
+    // The partner's prize, created before the lock (real time), paying the men's main bracket.
+    const prizeAt = start + 2 * MINUTE;
+    tables.challenge_campaigns = [
+      {
+        id: "c-bracket", name: "Bracket prize", created_at: new Date(prizeAt).toISOString(), reward_definition_id: "bracket_challenge",
+        is_active: true, venue_ids: ["vh"], bracket_keys: ["men_main"], schedule_type: "single_day", active_days: [], game_types: [],
+        recurring_type: "none", place_prizes: [{ place: 1, prize_kind: "gift_card", prize_gift_certificate_amount: 25 }],
+      },
+    ];
+    const perfect = bracketWinnerSeats(mergeBracketFeed([], FEEDS.men as BracketFeedGame[]).games);
+    for (const [user, picks] of [[ANN, perfect], [BOB, homeBracket()]] as const) {
+      (tables.bracket_entries ??= []).push({
+        id: nextId(), tournament_id: rehearsalId, kind: "main", user_id: user, venue_id: "vh", picks, round_correct: [0, 0, 0, 0, 0, 0],
+        score: 0, pick_count: 63, tiebreaker: 140, submitted_at: new Date(prizeAt).toISOString(),
+      });
+    }
+
+    // Walk across the lock: it passes for players at the moment of this call.
+    const crossAt = start + 10 * MINUTE;
+    expect(await admin({ action: "set_clock", asOf: new Date(Date.parse(lockAt) + MINUTE).toISOString() }, crossAt)).toMatchObject({ ok: true });
+    expect(t().main_lock_passed_at).toBe(new Date(crossAt).toISOString());
+    await sync(crossAt + MINUTE);
+    expect(t().main_lock_passed_at).toBe(new Date(crossAt).toISOString()); // written once
+
+    // Jump on past the final: the offset shrinks by weeks, the stamp stays.
+    const finalAt = start + 20 * MINUTE;
+    expect(await admin({ action: "set_clock", asOf: "2027-04-06T15:00:00Z" }, finalAt)).toMatchObject({ ok: true });
+    for (let m = 1; m <= 10 && !t().prizes_settled_at; m += 1) await sync(finalAt + m * MINUTE);
+    expect(t().main_lock_passed_at).toBe(new Date(crossAt).toISOString());
+    // The old rule (lock + the current offset) would put the lock weeks before the prize existed.
+    expect(Date.parse(lockAt) + Number(t().clock_offset_seconds) * 1000).toBeLessThan(prizeAt);
+    expect(bracketRealLockMs(tournamentFromRow(t() as Parameters<typeof tournamentFromRow>[0]), "main")).toBe(crossAt);
+
+    expect(typeof t().prizes_settled_at).toBe("string");
+    const settled = (tables.challenge_cycle_settlements ?? []).filter((row) => row.challenge_id === "c-bracket");
+    expect(settled).toHaveLength(1);
+    expect(settled[0]).toMatchObject({ venue_id: "vh", outcome: "awarded", winners: [expect.objectContaining({ user_id: ANN, place: 1 })] });
+  }, 60_000);
+
+  it("a lock already passed before a jump keeps lock + the OLD offset; a live tournament's real lock is unchanged", () => {
+    const base = {
+      mainLockAt: "2027-03-18T16:15:00Z", secondLockAt: null, mainLockPassedAt: null, secondLockPassedAt: null,
+    };
+    // Live: offset 0, the sync's stamp is the lock itself.
+    const live = lockPassedPatch(base, { main: base.mainLockAt, second: null }, Date.parse("2027-03-18T17:00:00Z"), { offsetSeconds: 0 });
+    expect(live).toEqual({ main_lock_passed_at: "2027-03-18T16:15:00.000Z" });
+    expect(bracketRealLockMs({ ...base, mainLockPassedAt: live.main_lock_passed_at, clockOffsetSeconds: 0 }, "main")).toBe(Date.parse(base.mainLockAt));
+    expect(bracketRealLockMs({ ...base, clockOffsetSeconds: 0 }, "main")).toBe(Date.parse(base.mainLockAt));
+    // Not passed yet: nothing to stamp. Already stamped: never rewritten.
+    expect(lockPassedPatch(base, { main: base.mainLockAt, second: null }, Date.parse("2027-03-18T16:00:00Z"), { offsetSeconds: 0 })).toEqual({});
+    expect(lockPassedPatch({ ...base, mainLockPassedAt: "2027-01-01T00:00:00Z" }, { main: base.mainLockAt, second: null }, Date.parse("2027-04-01T00:00:00Z"), { offsetSeconds: 0 })).toEqual({});
   });
 });
 

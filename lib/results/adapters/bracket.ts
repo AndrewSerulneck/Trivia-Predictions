@@ -56,7 +56,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 const ENTRIES_CAP = 1000;
 
 const TOURNAMENT_SELECT =
-  "id, gender, season, purpose, clock_offset_seconds, region_names, winner_seats, championship_total, main_lock_at, second_lock_at, completed_at";
+  "id, gender, season, purpose, clock_offset_seconds, region_names, winner_seats, championship_total, main_lock_at, second_lock_at, main_lock_passed_at, second_lock_passed_at, completed_at";
 
 type TournamentRow = {
   id: string;
@@ -69,6 +69,8 @@ type TournamentRow = {
   championship_total: number | null;
   main_lock_at: string | null;
   second_lock_at: string | null;
+  main_lock_passed_at: string | null;
+  second_lock_passed_at: string | null;
   completed_at: string | null;
 };
 
@@ -111,6 +113,8 @@ const realLockMs = (tournament: TournamentRow, kind: BracketKind): number | null
     {
       mainLockAt: tournament.main_lock_at,
       secondLockAt: tournament.second_lock_at,
+      mainLockPassedAt: tournament.main_lock_passed_at ?? null,
+      secondLockPassedAt: tournament.second_lock_passed_at ?? null,
       clockOffsetSeconds: Number(tournament.clock_offset_seconds ?? 0),
     },
     kind,

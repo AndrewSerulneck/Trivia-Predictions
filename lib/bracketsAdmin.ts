@@ -45,6 +45,7 @@ import {
   getBracketRounds,
   getBracketTournament,
   listCurrentBracketTournaments,
+  lockPassedPatch,
   logBracketsAdmin,
   recordBracketResults,
   recordedChampionshipTotal,
@@ -451,9 +452,20 @@ export async function runBracketsAdminAction(
       if (tournament.purpose !== "rehearsal") return refuse(409, "Only a rehearsal has a replay clock.");
       const offset = Math.round((nowMs - Date.parse(action.asOf)) / 1000);
       if (offset < 0) return refuse(400, "The replay time must be in the past.");
-      const updated = await updateBracketTournament(tournament.id, { clock_offset_seconds: offset, next_sync_at: new Date(nowMs).toISOString() });
+      // Fix when each lock really passed before the offset changes (plan 10.7.1): a lock already
+      // passed on the old clock passed at lock + the old offset; one this jump crosses passes now.
+      const locks = { main: tournament.mainLockAt, second: tournament.secondLockAt };
+      const lockPassed = {
+        ...lockPassedPatch(tournament, locks, Date.parse(action.asOf), { atMs: nowMs }),
+        ...lockPassedPatch(tournament, locks, tournamentNowMs(tournament, nowMs), { offsetSeconds: tournament.clockOffsetSeconds }),
+      };
+      const updated = await updateBracketTournament(tournament.id, {
+        clock_offset_seconds: offset,
+        ...lockPassed,
+        next_sync_at: new Date(nowMs).toISOString(),
+      });
       if (!updated.ok) return refuse(500, updated.error);
-      await log("set_clock", { asOf: action.asOf, offsetSeconds: offset });
+      await log("set_clock", { asOf: action.asOf, offsetSeconds: offset, ...lockPassed });
       return {
         ok: true,
         message: "Replay clock set; the next sync reads from there. (Moving it back doesn't undo results already recorded.)",

@@ -105,6 +105,10 @@ describe("one home for shared rules (plan 10.4, §17 B9)", () => {
     expect(filesContaining(/bracketRealLockMs\(/)).toEqual(["lib/bracketPrizeAwards.ts", "lib/results/adapters/bracket.ts"]);
     // Nobody else adds a rehearsal's offset to a lock.
     expect(filesContaining(/lock\w*\s*\+\s*[\w.]*clock_?offset/i)).toEqual(["lib/bracketsStore.ts"]);
+    // When a lock really passed is stamped only through lockPassedPatch (plan 10.7.1).
+    expect(filesContaining(/export const lockPassedPatch\b/)).toEqual(["lib/bracketsStore.ts"]);
+    expect(filesContaining(/lockPassedPatch\(/)).toEqual(["lib/bracketsAdmin.ts", "lib/bracketsSync.ts"]);
+    expect(filesContaining(/["'`]\w*lock_passed_at["'`]|\$\{kind\}_lock_passed_at/)).toEqual(["lib/bracketsStore.ts"]);
   });
 
   it("the 63-seat normalizer: bracketSeatList in lib/brackets/tree.ts, used by every stored-seats reader", () => {

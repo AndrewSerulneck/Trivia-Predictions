@@ -181,6 +181,21 @@ describe("March Madness on Results", () => {
     expect(early.games).toEqual([]);
   });
 
+  it("dates a walked rehearsal on the day its lock really passed, not lock + the current offset (plan 10.7.1)", async () => {
+    // Replay of March 2026, walked to the final: the offset left is only a few days, so lock + offset
+    // lands in March; the stamp says the lock really passed on Oct 21.
+    db.tables.bracket_tournaments = [
+      {
+        ...tournament(MEN, "men", true, "2026-03-19T16:15:00Z"),
+        purpose: "rehearsal",
+        clock_offset_seconds: 3 * 24 * 3600,
+        main_lock_passed_at: "2026-10-21T19:40:00Z",
+      },
+    ];
+    const page = await bracketResultsAdapter.listGames({ venueId: "v1", before: null, limit: 20, nowMs: Date.parse("2026-10-22T12:00:00Z") });
+    expect(page.games).toMatchObject([{ gameKey: `${MEN}:main`, date: "2026-10-21", startsAt: "2026-10-21T19:40:00.000Z" }]);
+  });
+
   it("gives the standings in the bracket's order, scorers only, with tokens instead of ids", async () => {
     const detail = await bracketResultsAdapter.getStandings({ venueId: "v1", gameKey: `${MEN}:main`, nowMs: AFTER });
     expect(detail.standings.map((row) => [row.rank, row.username, row.score])).toEqual([

@@ -30,6 +30,9 @@ export type BracketTournamentRecord = {
   mainLockSetBy: "auto" | "admin";
   secondLockAt: string | null;
   secondLockSetBy: "auto" | "admin";
+  /** When each lock really passed (real time, written once — plan 10.7.1); null = not yet. */
+  mainLockPassedAt: string | null;
+  secondLockPassedAt: string | null;
   feedCheckedAt: string | null;
   nextSyncAt: string | null;
   completedAt: string | null;
@@ -48,7 +51,7 @@ export type BracketRoundRecord = {
 };
 
 export const TOURNAMENT_COLUMNS =
-  "id, gender, season, purpose, clock_offset_seconds, region_names, winner_seats, championship_total, main_lock_at, main_lock_set_by, second_lock_at, second_lock_set_by, feed_checked_at, next_sync_at, completed_at, prizes_settled_at, archived_at, created_by, created_at";
+  "id, gender, season, purpose, clock_offset_seconds, region_names, winner_seats, championship_total, main_lock_at, main_lock_set_by, second_lock_at, second_lock_set_by, main_lock_passed_at, second_lock_passed_at, feed_checked_at, next_sync_at, completed_at, prizes_settled_at, archived_at, created_by, created_at";
 
 const GAME_COLUMNS =
   "round, location, slot, feed_game_id, tip_at, status_state, status_detail, home_team, away_team, home_score, away_score, winner_side, result_source, result_held, teams_set_by, feeds_seat, feeds_seat_set_by, mismatch_note";
@@ -66,6 +69,8 @@ type TournamentRow = {
   main_lock_set_by: "auto" | "admin";
   second_lock_at: string | null;
   second_lock_set_by: "auto" | "admin";
+  main_lock_passed_at?: string | null;
+  second_lock_passed_at?: string | null;
   feed_checked_at: string | null;
   next_sync_at: string | null;
   completed_at: string | null;
@@ -109,6 +114,8 @@ export const tournamentFromRow = (row: TournamentRow): BracketTournamentRecord =
   mainLockSetBy: row.main_lock_set_by,
   secondLockAt: row.second_lock_at,
   secondLockSetBy: row.second_lock_set_by,
+  mainLockPassedAt: row.main_lock_passed_at ?? null,
+  secondLockPassedAt: row.second_lock_passed_at ?? null,
   feedCheckedAt: row.feed_checked_at,
   nextSyncAt: row.next_sync_at,
   completedAt: row.completed_at,
@@ -170,16 +177,48 @@ export const tournamentNowMs = (tournament: Pick<BracketTournamentRecord, "clock
   realNowMs - tournament.clockOffsetSeconds * 1000;
 
 /**
- * The bracket kind's lock in REAL time (a rehearsal's clock runs `clockOffsetSeconds` behind); null
- * = no lock set. The ONE home of this rule: prizes (was this prize created before the lock?) and
- * Results both ask it (plan 10.4, §17 B9).
+ * The bracket kind's lock in REAL time; null = no lock set. Once the lock has passed this is its
+ * stamp (`…LockPassedAt`, plan 10.7.1): a rehearsal's offset shrinks with every forward `set_clock`,
+ * so lock + the CURRENT offset would land up to the whole walk early. Before that (or on a row with
+ * no stamp) it is lock + the current offset. The ONE home of this rule: prizes (was this prize created
+ * before the lock?) and Results both ask it (plan 10.4, §17 B9).
  */
 export const bracketRealLockMs = (
-  tournament: Pick<BracketTournamentRecord, "mainLockAt" | "secondLockAt" | "clockOffsetSeconds">,
+  tournament: Pick<
+    BracketTournamentRecord,
+    "mainLockAt" | "secondLockAt" | "mainLockPassedAt" | "secondLockPassedAt" | "clockOffsetSeconds"
+  >,
   kind: BracketKind,
 ): number | null => {
   const lockMs = Date.parse(String((kind === "main" ? tournament.mainLockAt : tournament.secondLockAt) ?? ""));
-  return Number.isFinite(lockMs) ? lockMs + tournament.clockOffsetSeconds * 1000 : null;
+  if (!Number.isFinite(lockMs)) return null;
+  const passedMs = Date.parse(String((kind === "main" ? tournament.mainLockPassedAt : tournament.secondLockPassedAt) ?? ""));
+  return Number.isFinite(passedMs) ? passedMs : lockMs + tournament.clockOffsetSeconds * 1000;
+};
+
+/**
+ * The lock-passed stamps to write (plan 10.7.1): for each kind with a lock, no stamp yet, and a lock
+ * the tournament clock `tournamentNow` has reached, when it passed in real time — lock + the clock's
+ * `offsetSeconds`, or `atMs` (a `set_clock` jump that crosses it: the call's time). Written once: the
+ * sync (its offset) and `set_clock` (before the jump: the old offset; across it: now) both ask this, so
+ * the stamp is fixed before the offset ever changes under it. `locks` = the lock times this write
+ * leaves in place (the sync may move an unpassed auto lock in the same write).
+ */
+export const lockPassedPatch = (
+  tournament: Pick<BracketTournamentRecord, "mainLockPassedAt" | "secondLockPassedAt">,
+  locks: { main: string | null; second: string | null },
+  tournamentNow: number,
+  passedAt: { offsetSeconds: number } | { atMs: number },
+): Record<string, string> => {
+  const patch: Record<string, string> = {};
+  for (const kind of ["main", "second"] as const) {
+    if ((kind === "main" ? tournament.mainLockPassedAt : tournament.secondLockPassedAt) !== null) continue;
+    const lockMs = Date.parse(String(locks[kind] ?? ""));
+    if (!Number.isFinite(lockMs) || tournamentNow < lockMs) continue;
+    const passedMs = "atMs" in passedAt ? passedAt.atMs : lockMs + passedAt.offsetSeconds * 1000;
+    patch[`${kind}_lock_passed_at`] = new Date(passedMs).toISOString();
+  }
+  return patch;
 };
 
 /**
