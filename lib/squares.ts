@@ -168,6 +168,15 @@ export const squaresEventPurposeFor = (game: NflFeedGame, season: number): Squar
   isSuperBowlRecord(game) && Number(game.season) === season ? "super_bowl" : "rehearsal";
 
 /**
+ * Whether a current event is left over from before this season's window (plan 6.6.1, §29 S1/S2): a
+ * rehearsal (hidden venues only), or an earlier season's Super Bowl (its window has closed). In
+ * season mode the settlement archives one so discovery can create the Super Bowl. A rehearsal's
+ * season is its feed game's season, which can equal this one, so purpose is checked as well.
+ */
+export const isStaleSquaresEvent = (event: { purpose: SquaresEventPurpose; season: number }, season: number): boolean =>
+  event.purpose === "rehearsal" || event.season !== season;
+
+/**
  * After an admin void re-opens an event (squares_events.reopened_at), the settlement keeps reading
  * the feed for SQUARES_POST_FINAL_WATCH_MS — even past the 12-hour no-final deadline — so a late void
  * re-grades from the feed as the admin message promises (plan 6.2, §13 F3).

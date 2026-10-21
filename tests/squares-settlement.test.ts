@@ -111,6 +111,7 @@ vi.mock("@/lib/squaresFeed", () => ({
 
 import type { NflFeedGame } from "@/lib/squares";
 import { winningCell } from "@/lib/squares";
+import { runSquaresAdminAction } from "@/lib/squaresAdmin";
 import { payUnpaidSquaresResults, runSquaresTick, squaresCreditBlockNote } from "@/lib/squaresSettlement";
 
 const postseason = JSON.parse(
@@ -366,6 +367,73 @@ describe("runSquaresTick — event lifecycle (plan 6.2)", () => {
     vi.stubEnv("SQUARES_REHEARSAL_ENABLED", "");
     const report = await tick(Date.parse("2026-12-06T18:00:00Z"));
     expect(report).toMatchObject({ ran: false, skipped: "inactive" });
+  });
+});
+
+// Plan 6.6.1 (§29 S1, S2): a leftover event never blocks the season.
+describe("runSquaresTick — a leftover event (plan 6.6.1)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const leftover = (fields: Row): Row => ({
+    id: "leftover-1", season: 2026, bdl_game_id: 999, col_side: "visitor", col_team: {}, row_team: {}, purpose: "rehearsal",
+    kickoff_at: "2026-12-06T18:00:00Z", lock_at: "2026-12-06T17:30:00Z", lock_at_set_by: "auto",
+    drawn_at: "2026-12-06T17:30:00Z", completed_at: "2026-12-06T21:30:00Z", archived_at: null, reopened_at: null,
+    feed_checked_at: null, live_score: null, ...fields,
+  });
+  const current = () => (tables.squares_events ?? []).filter((e) => !e.archived_at);
+
+  it("season mode: archives a current rehearsal, then discovers the Super Bowl in the same run", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    tables.squares_events = [leftover({})];
+    const at = Date.parse("2027-02-01T05:15:00Z");
+    const report = await tick(at);
+    expect(report.actions).toEqual(["stale_event_archived", "event_created"]);
+    expect(tables.squares_events[0].archived_at).toBe(new Date(at).toISOString());
+    expect(current()).toHaveLength(1);
+    expect(current()[0]).toMatchObject({ purpose: "super_bowl", bdl_game_id: finalRecord.id });
+    expect(tables.squares_admin_log.find((entry) => entry.event_id === "leftover-1")).toMatchObject({
+      action: "archive", actor: "auto", detail: { purpose: "rehearsal", season: 2026, reason: "Season opened: replaced by this season's Super Bowl" },
+    });
+    expect(warn.mock.calls.filter(([tag]) => tag === "[Squares] stale-event-archived")).toHaveLength(1);
+    warn.mockRestore();
+  });
+
+  it("season mode: archives last season's Super Bowl the same way", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    tables.squares_events = [leftover({ purpose: "super_bowl", season: 2025, bdl_game_id: 555 })];
+    const report = await tick(Date.parse("2027-02-01T05:15:00Z"));
+    expect(report.actions).toEqual(["stale_event_archived", "event_created"]);
+    expect(current()[0]).toMatchObject({ purpose: "super_bowl", season: 2026 });
+    warn.mockRestore();
+  });
+
+  it("rehearsal mode never archives a rehearsal", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "");
+    vi.stubEnv("SQUARES_REHEARSAL_ENABLED", "true");
+    tables.squares_events = [leftover({})];
+    const report = await tick(Date.parse("2026-12-07T12:00:00Z"));
+    expect(report.actions).not.toContain("stale_event_archived");
+    expect(tables.squares_events[0].archived_at).toBeNull();
+  });
+
+  it("season mode leaves this season's Super Bowl alone", async () => {
+    await tick(Date.parse("2027-02-01T05:15:00Z"));
+    const report = await tick(Date.parse("2027-02-01T05:30:00Z"));
+    expect(report.actions).not.toContain("stale_event_archived");
+    expect(tables.squares_events).toHaveLength(1);
+    expect(tables.squares_events[0].archived_at).toBeNull();
+  });
+
+  it("admin create_from_game refuses a rehearsal while the Super Bowl window is live", async () => {
+    vi.useFakeTimers({ now: Date.parse("2027-02-05T15:00:00Z"), toFake: ["Date"] });
+    feed.game = { ...finalRecord, id: 999, season: 2026, postseason: false };
+    const result = await runSquaresAdminAction({ action: "create_from_game", gameId: 999 }, "admin");
+    vi.useRealTimers();
+    expect(result).toMatchObject({ ok: false, status: 409 });
+    expect(result.ok ? "" : result.error).toMatch(/live for the Super Bowl until 2027-02-15; rehearse after the window/);
+    expect(tables.squares_events ?? []).toHaveLength(0);
   });
 });
 

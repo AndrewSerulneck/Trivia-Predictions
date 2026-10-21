@@ -13,6 +13,7 @@ import {
   gradedMomentMismatches,
   isDigitPermutation,
   isSquaresReopenWatchOn,
+  isStaleSquaresEvent,
   lockAtFor,
   planMomentStep,
   quartersFinishedFromStatus,
@@ -450,13 +451,24 @@ describe("event lifecycle (plan 6.2)", () => {
   });
 
   it("refuses archiving a drawn Super Bowl until the card window closes (Eastern); rehearsals and undrawn events any time", () => {
-    const drawn = { purpose: "super_bowl" as const, drawnAt: "2027-02-14T23:00:00Z" };
+    const drawn = { purpose: "super_bowl" as const, drawnAt: "2027-02-14T23:00:00Z", season: squaresSeason() };
     expect(squaresArchiveRefusal(drawn, new Date("2027-02-15T12:00:00Z"))).toMatch(/can't be archived until/);
     // Feb 16 00:30 UTC is still Feb 15 in New York.
     expect(squaresArchiveRefusal(drawn, new Date("2027-02-16T00:30:00Z"))).not.toBeNull();
     expect(squaresArchiveRefusal(drawn, new Date("2027-02-16T05:30:00Z"))).toBeNull();
-    expect(squaresArchiveRefusal({ purpose: "super_bowl", drawnAt: null }, new Date("2027-02-10T12:00:00Z"))).toBeNull();
-    expect(squaresArchiveRefusal({ purpose: "rehearsal", drawnAt: "2026-12-06T17:30:00Z" }, new Date("2026-12-06T20:00:00Z"))).toBeNull();
+    expect(squaresArchiveRefusal({ purpose: "super_bowl", drawnAt: null, season: squaresSeason() }, new Date("2027-02-10T12:00:00Z"))).toBeNull();
+    expect(squaresArchiveRefusal({ purpose: "rehearsal", drawnAt: "2026-12-06T17:30:00Z", season: squaresSeason() }, new Date("2026-12-06T20:00:00Z"))).toBeNull();
+  });
+
+  it("allows archiving an earlier season's drawn Super Bowl inside this window (6.6.1, §29 S1)", () => {
+    const old = { purpose: "super_bowl" as const, drawnAt: "2026-02-08T23:00:00Z", season: squaresSeason() - 1 };
+    expect(squaresArchiveRefusal(old, new Date("2027-02-05T12:00:00Z"))).toBeNull();
+  });
+
+  it("isStaleSquaresEvent: a rehearsal, or another season's event", () => {
+    expect(isStaleSquaresEvent({ purpose: "rehearsal", season: 2026 }, 2026)).toBe(true);
+    expect(isStaleSquaresEvent({ purpose: "super_bowl", season: 2025 }, 2026)).toBe(true);
+    expect(isStaleSquaresEvent({ purpose: "super_bowl", season: 2026 }, 2026)).toBe(false);
   });
 
   it("set_game never changes an event's purpose", () => {

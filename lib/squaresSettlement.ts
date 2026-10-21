@@ -13,6 +13,7 @@ import {
   gradedMomentMismatches,
   isFinalRecord,
   isSquaresReopenWatchOn,
+  isStaleSquaresEvent,
   liveScoreOf,
   planMomentStep,
   squaresMomentEvidence,
@@ -123,13 +124,19 @@ async function tick(options: { now?: Date; force?: boolean }): Promise<SquaresTi
       report.errors.push(`event read: ${current.error}`);
       return report;
     }
-    if (!current.value) {
+    // Season mode only: a leftover rehearsal or an old season's event would block discovery all
+    // window (plan 6.6.1, §29 S2), so the run archives it and goes on to discover in the same run.
+    let event = current.value;
+    if (event && mode === "season" && isStaleSquaresEvent(event, squaresSeason())) {
+      if (!(await archiveStaleEvent(report, event, now))) return report;
+      event = null;
+    }
+    if (!event) {
       // A rehearsal is created by an admin, never discovered (no Super Bowl in the feed yet).
       if (!force && mode !== "season") return { ...report, skipped: "no_event" };
       await discoverEvent(report, now, force);
       return report;
     }
-    const event = current.value;
     report.eventId = event.id;
     const lockMs = Date.parse(event.lockAt);
     const kickoffMs = Date.parse(event.kickoffAt);
@@ -199,6 +206,31 @@ const idleReason = (
   if (!(nowMs - Date.parse(event.kickoffAt) > SQUARES_NO_FINAL_DEADLINE_MS)) return null;
   return isSquaresReopenWatchOn(event.reopenedAt, nowMs) ? null : "no_final_deadline";
 };
+
+/**
+ * Archives a stale current event (isStaleSquaresEvent) so this season's Super Bowl can be created.
+ * Safe: a rehearsal only ever had boards at hidden venues, and an old season's window is closed.
+ * Unpaid rows stay as they are, as with a manual archive. Guarded on archived_at, so two runs log
+ * it once. False = the write failed (the next run tries again).
+ */
+async function archiveStaleEvent(report: SquaresTickReport, event: SquaresEventRecord, now: Date): Promise<boolean> {
+  const { data, error } = await supabaseAdmin!
+    .from("squares_events")
+    .update({ archived_at: now.toISOString(), updated_at: now.toISOString() })
+    .eq("id", event.id)
+    .is("archived_at", null)
+    .select("id");
+  if (error) {
+    report.errors.push(`stale archive: ${error.message}`);
+    return false;
+  }
+  if ((data ?? []).length === 0) return true;
+  const detail = { eventId: event.id, purpose: event.purpose, season: event.season };
+  console.warn("[Squares] stale-event-archived", detail);
+  report.actions.push("stale_event_archived");
+  await logSquaresAdmin(event.id, "archive", "auto", { ...detail, reason: "Season opened: replaced by this season's Super Bowl" });
+  return true;
+}
 
 async function discoverEvent(report: SquaresTickReport, now: Date, force: boolean): Promise<void> {
   if (!force && now.getUTCMinutes() % SQUARES_DISCOVERY_EVERY_MINUTES !== 0) {

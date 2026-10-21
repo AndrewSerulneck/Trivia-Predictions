@@ -1081,7 +1081,8 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   `lib/squaresTv.ts` (`buildSquaresTvPayload`: shows only once drawn, a claim exists, and until kickoff + 7 h; no user ids)
   → `components/venue-screen/SquaresTvScreen.tsx`. Poll 15 s; the route CDN-caches this mode like idle.
 - **Phase 6 review (2026-10-19): fixes are sub-phases 6.1–6.9, findings in plan §13.** Before turning the flag on,
-  6.1–6.4 must be done. **6.1 built 2026-10-19 (committed, deploy pending):** every prize sweep pays only its own
+  6.1–6.4 must be done. The 6.6 re-review (2026-10-21, plan §29) added 6.6.1–6.6.4, also required before the 6.7
+  rehearsal. **6.1 built 2026-10-19 (committed, deploy pending):** every prize sweep pays only its own
   `rewardDefinitionId` (`isLiveTriviaGameWinnerCampaign`, `isLiveTriviaRankedCampaign`, `isNFLWeekWinnerCampaign`, the
   Squares check); a new file that calls `awardCycleWinner`/`awardRankedCyclePlaces` fails
   `tests/prize-sweep-ownership-contract.test.ts` until it does too. Never turn `NEXT_PUBLIC_SQUARES_ENABLED` on in Production before 6.9 (rehearsals run
@@ -1095,7 +1096,8 @@ Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest han
   `SQUARES_REHEARSAL_ENABLED`** (server-side, one reader `isSquaresRehearsalEnabled()` in `lib/seasonalGames.ts`): ALONE it
   runs the settlement (`squaresSettlementMode` → `rehearsal`, never discovers) — that is what goes on Production for 6.7;
   with the public flag it also runs the TV read (`isSquaresServerLive`) — Preview only. Archive any rehearsal event
-  before 6.9.
+  before 6.9 (since 6.6.1 the season-mode cron also archives a leftover rehearsal or old season's event itself, and
+  admin create refuses a rehearsal during the window).
 - **Paying Squares winners (6.3, 2026-10-19, no migration).** A list of ids sent to PostgREST (`.in()`, `.overlaps()`)
   goes through `chunkIds` (`lib/postgrestIds.ts`, `POSTGREST_ID_CHUNK` = 150) — never one request with more (the URL
   limit; `tests/lib.postgrest-ids.test.ts` pins the Squares payers). A result whose points can never be paid (key paid

@@ -136,15 +136,16 @@ const refuse = (status: number, error: string): SquaresAdminResult => ({ ok: fal
 
 /**
  * Why an event can't be archived yet, or null (plan 6.2, §13 F4). Players' screens read the current
- * event, so archiving a drawn Super Bowl blanks every board — refused until the card window has
- * closed (after Feb 15, Eastern). Before the draw it stays allowed (a wrong-game fix-up; set_game
- * usually suffices), and a rehearsal can be archived any time.
+ * event, so archiving this season's drawn Super Bowl blanks every board — refused until the card
+ * window has closed (after Feb 15, Eastern). Before the draw it stays allowed (a wrong-game fix-up;
+ * set_game usually suffices), a rehearsal can be archived any time, and so can an earlier season's
+ * Super Bowl: its window closed long ago, and the current window constant says nothing about it (6.6.1).
  */
 export const squaresArchiveRefusal = (
-  event: Pick<SquaresEventRecord, "purpose" | "drawnAt">,
+  event: Pick<SquaresEventRecord, "purpose" | "drawnAt" | "season">,
   now: Date,
 ): string | null => {
-  if (event.purpose !== "super_bowl" || !event.drawnAt || isSquaresWindowClosed(now)) return null;
+  if (event.purpose !== "super_bowl" || !event.drawnAt || event.season !== squaresSeason() || isSquaresWindowClosed(now)) return null;
   return `The numbers are drawn and players' boards show this event, so it can't be archived until the card window closes (after ${SEASONAL_GAME_WINDOWS.squares.closesAfter}, Eastern). To fix a moment, void it instead.`;
 };
 
@@ -275,6 +276,10 @@ export async function runSquaresAdminAction(action: SquaresAdminAction, actor: s
     // it is that Super Bowl (squaresEventPurposeFor; a record without a season fails safe).
     const purpose: SquaresEventPurpose =
       action.action === "discover" ? "super_bowl" : squaresEventPurposeFor(feed.value, squaresSeason());
+    // While the Super Bowl window is live the settlement archives any rehearsal it finds (6.6.1).
+    if (purpose === "rehearsal" && squaresSettlementMode(new Date()) === "season") {
+      return refuse(409, `Squares is live for the Super Bowl until ${SEASONAL_GAME_WINDOWS.squares.closesAfter}; rehearse after the window.`);
+    }
     const created = await createSquaresEvent(feed.value, {
       season: feed.value.season ?? squaresSeason(),
       createdBy: actor,

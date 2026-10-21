@@ -13,6 +13,13 @@ committed locally; their migrations are APPLIED to production; flags off; nothin
 `"14:25 - 2nd"`; the rule now reads it, so each quarter is graded during the next one instead of up to an hour late
 (scores were already right). Part 2 = replay Thursday's NE @ CHI capture (recorder PID 10302 running; Mac awake Oct 22
 evening). §28 below; handoff `docs/squares-and-brackets-plan_PHASE_6.5_HANDOFF.md`.
+**6.6 re-review done 2026-10-21 (docs only)**: `/code-review high` over 6.1–6.5 part 1; 6 findings
+confirmed, 3 rejected. Fixes are sub-phases **6.6.1–6.6.4** (no migrations), all before the 6.7 rehearsal. §29
+below; handoff `docs/squares-and-brackets-plan_PHASE_6.6_HANDOFF.md`.
+**6.6.1 built 2026-10-21 (no migration; committed locally, not pushed)**: in season mode the cron archives a leftover
+rehearsal or an old season's event and discovers the Super Bowl in the same run; an old season's Super Bowl can be
+archived any time; a rehearsal can't be created during the window. §30; handoff
+`docs/squares-and-brackets-plan_PHASE_6.6.1_HANDOFF.md`. Next: 6.6.2–6.6.4.
 **Phases 7 + 8 (bracket engine + player screens) committed `baeb6e4`**; migration `20261019203858` APPLIED. Flag off.
 **Phase 9 (bracket Prizes, Results, TV) built and committed locally 2026-10-20**; migration `20261019213121` APPLIED
 2026-10-20 (`supabase db push`, verified through PostgREST). Flag still off; nothing pushed or deployed. Andrew: no Prize
@@ -65,8 +72,8 @@ Preview `hightop-challenge-dfmbdbzwb` (branch `brackets-rehearsal` = `main@28a53
 `NEXT_PUBLIC_BRACKETS_ENABLED` = true, `BRACKETS_REHEARSAL_ENABLED` = false, `LEGAL_LAST_UPDATED` bumped, redeployed.
 The card shows from Mar 1, discovery/sync start Mar 14. §27 below. Latest handoff:
 `docs/squares-and-brackets-plan_PHASE_10.8_HANDOFF.md`.
-**Next:** 10.9 (Selection Sunday, Mar 14, 2027). Squares: 6.5 still waits on the Oct 19/22 captures; 6.6
-re-reviews 6.1–6.5 only (Phases 7–9 were reviewed here).
+**Next:** 10.9 (Selection Sunday, Mar 14, 2027). Squares: 6.5 part 2 (the Oct 22 capture) and 6.6.1–6.6.4,
+in any order, then 6.7.
 
 Each phase ends with a handoff note `docs/squares-and-brackets-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule). After each phase, update this status line to point at the latest handoff.
@@ -311,7 +318,11 @@ migration); then 6.5–6.9.
 | 6.3 | Paying winners: chunked writes, stuck results, no idle reads | Opus 5.5 | medium | — |
 | 6.4 | Player screen after the final keeps up with a void | Sonnet 5.5 | medium | — |
 | 6.5 | Quarter rule checked against the live captures (part 1 done 2026-10-21, §28) | Opus 5.5 | medium | Mac awake Oct 22 |
-| 6.6 | Re-review of 6.1–6.5 (`/code-review high`) | Opus 5.5 | high | — |
+| 6.6 | Re-review of 6.1–6.5 (`/code-review high`) — **done 2026-10-21**, findings §29 | Opus 5.5 | high | — |
+| 6.6.1 | A leftover event (rehearsal, or last season's Super Bowl) never blocks the season — **built 2026-10-21**, §30 | Opus 5.5 | medium | — |
+| 6.6.2 | Finished-game screen: no board re-read loop | Sonnet 5.5 | low | — |
+| 6.6.3 | Settlement keeps paying what's owed after the watch; rehearsal points only at hidden venues | Opus 5.5 | medium | — |
+| 6.6.4 | Tidy-ups: misplaced doc comment, one "blocked result" filter | Sonnet 5.5 | low | — |
 | 6.7 | Rehearsal on `venue-hightop-test` with a real NFL game | Opus 5.5 | high | Preview env vars, phone pass |
 | 6.8 | Andrew's phone + TV pass (checklist section A) | — | — | yes |
 | 6.9 | Launch: flag on + redeploy by **Mon Jan 25, 2027**; watch Feb 14 | Opus 5.5 | medium | yes |
@@ -442,6 +453,88 @@ migration); then 6.5–6.9.
 #### 6.6 — Re-review (Opus 5.5 · high)
 - `/code-review high` over the 6.1–6.5 commits. New findings become 6.6.1, 6.6.2, … in the same style (designed fix,
   not an in-place patch).
+- **Done 2026-10-21 (docs only):** reviewed `9c8ebfe`, `4a565a8`, `3c69e29`, `c43fa66`, `3d88939` (6.1–6.5 part 1;
+  6.5 part 2 doesn't exist yet). 9 findings, each checked against the code and the feed fixtures: 6 confirmed, 3
+  rejected. Findings §29; fixes 6.6.1–6.6.4 below; all four before the 6.7 rehearsal (6.6.1 also before 6.9). Handoff:
+  `docs/squares-and-brackets-plan_PHASE_6.6_HANDOFF.md`. If 6.5 part 2 changes `quartersFinishedFromStatus`, that
+  change gets its own short review at the end of part 2. It doesn't reopen 6.6.
+
+#### 6.6.1 — A leftover event never blocks the season (Opus 5.5 · medium) — §29 S1, S2
+- **Problems:** (S2) only one event can be current (`squares_events_one_current`), and the settlement discovers the
+  Super Bowl only when there is none. A 6.7 rehearsal left un-archived is still current on Feb 1. Discovery never
+  runs, every claim at a real venue answers `rehearsal_only`, and the Super Bowl board never exists. Only a CLAUDE.md
+  line guards this. (S1) `squaresArchiveRefusal` checks today against the CURRENT window constant, not the event's
+  season. Once Phase 11 rolls the window to Feb 2028, a drawn Feb 2027 Super Bowl that was never archived can't be
+  archived until Feb 16, 2028. "discover" / "create_from_game" refuse while it is current, so nothing can replace it
+  all season.
+- **Solution (no migration):**
+  - One pure predicate `isStaleSquaresEvent(event, season)` in `lib/squares.ts`: `purpose === "rehearsal"` or
+    `event.season !== season`. Unit-tested.
+  - In `tick` (`lib/squaresSettlement.ts`), **season mode only**: a current event that is stale is archived by the
+    run itself, in a write guarded `.eq("id", …).is("archived_at", null)`. The run then logs `[Squares]
+    stale-event-archived` with `{ eventId, purpose, season }`, adds a `squares_admin_log` row (actor `auto`, reason
+    "Season opened: replaced by this season's Super Bowl"), and continues into `discoverEvent` in the same run. Safe:
+    a rehearsal only ever had boards at hidden venues, and an old season's window is closed. Unpaid rows on it stay
+    as they are (same as a manual archive of a rehearsal). Rehearsal mode never archives anything.
+  - `squaresArchiveRefusal` refuses only for this season's drawn Super Bowl: `purpose === "super_bowl" && drawnAt &&
+    event.season === squaresSeason() && !isSquaresWindowClosed(now)`. Message unchanged.
+  - Admin `create_from_game` refuses a `rehearsal` while `squaresSettlementMode(now) === "season"` (409: "Squares is
+    live for the Super Bowl until <closesAfter>; rehearse after the window."). Otherwise the next run would archive it.
+  - Keep the 6.9 "archive the rehearsal first" step as a belt-and-braces check, and change its wording to say the cron
+    now does it if forgotten.
+- **Cost:** none in steady state. One guarded update + one log insert, at most once per season.
+- **Built 2026-10-21** as designed (§30). Handoff `docs/squares-and-brackets-plan_PHASE_6.6.1_HANDOFF.md`.
+- **Tests:** settlement: season mode with a current rehearsal → archived, then discovery runs in the same run;
+  season mode with last season's Super Bowl → same; rehearsal mode with a rehearsal → untouched; season mode with
+  this season's Super Bowl → untouched. Admin: archive of a drawn previous-season Super Bowl allowed inside the next
+  window; rehearsal create refused in season mode.
+
+#### 6.6.2 — Finished-game screen: no board re-read loop (Sonnet 5.5 · low) — §29 S4
+- **Problem:** at phase `complete`, `useSquaresData`'s 5 s tick re-reads the board whenever the board's revision
+  differs from the held score's, and only otherwise reads the score. If the board is NEWER than the CDN-cached score,
+  the mismatch never clears: the board read is uncached and the score is up to 15 s stale. Example: a void, then a
+  re-grade the next minute; the 5-minute score poll returns the cached "voided" copy, and its re-read returns the
+  re-graded board. That tab then re-reads the board (~5 DB queries) every 5 s for as long as it is open, which breaks
+  "never poll the board per player after the lock".
+- **Solution:** the `complete` branch only reads the score on its cadence (`force` or `SQUARES_COMPLETE_POLL_MS`).
+  The catch-up stays in `fetchScore`, which already re-reads the board once per score read when the revisions
+  differ for the same event id. So a mismatch costs at most one board read per score read (every 5 min).
+- **Tests:** `tests/squares-screen.test.ts`. Board revision B with held score A at `complete`: across 1 min of ticks
+  there are zero board reads and one score read when the 5 min passes (none sooner). The existing re-grade catch-up
+  test still passes.
+
+#### 6.6.3 — Settlement keeps paying what's owed; rehearsal points only at hidden venues (Opus 5.5 · medium) — §29 S5, S6
+- **Problems:** (S5) since 6.3 the tick returns before `settleSquaresWinners` once the watch is over (`watch_over` /
+  `no_final_deadline`). After that, a credit, prize award or coupon withdrawal that failed is never retried by the
+  cron. This covers a failure that outlasts the 3 h watch, and an admin fix-up after the watch whose own settle hit
+  an error. `lib/squaresPrizeAwards.ts` still says "retried next run" (lines ~24, ~84, ~112). (S6) the hidden-venue
+  check that 6.2 added for a rehearsal applies to Prizes only. `payUnpaidSquaresResults` credits venue points with no
+  such check, so a venue un-hidden mid-rehearsal (e.g. a self-serve venue revealed by the Stripe webhook) gets real
+  points that a rehearsal awarded.
+- **Solution:**
+  - S5: while idle, run `settleSquaresWinners` once an hour (`now.getUTCMinutes() === 0`, the same minute as the
+    `no-final-deadline` warning), then return with the idle `skipped` reason. The settle is the "anything owed?"
+    check: three indexed reads, normally empty. Correct the three comments to "retried by the next run (hourly once
+    the watch is over)".
+  - S6: for a `rehearsal` event only, `payUnpaidSquaresResults` reads each unpaid row's venue
+    (`squares_boards!inner(venue_id)` in the same select). It then reads `venues.hidden` for those venues, chunked by
+    `chunkIds`, using the same reader the prize path uses. Share it, don't copy it. Rows at a venue that is not hidden
+    (or whose read failed — fail closed: skip this run, don't block) are stamped `credit_blocked_at` with note
+    "Rehearsal win at a venue that is no longer hidden." through the existing 6.3 block path. They show in the admin
+    panel and never block Archive. A `super_bowl` event adds no reads.
+- **Cost:** S5 adds 3 reads/hour while idle, about 72/day until Feb 15 (vs ≈ 4,300/day before 6.3). S6 adds one
+  venues read per pay run with unpaid rows on a rehearsal event, so zero in season.
+- **Tests:** settlement: idle at minute 0 → settle runs (credit retried); idle at minute 7 → no settle reads;
+  rehearsal unpaid row at a visible venue → blocked with the note, at a hidden venue → paid; Super Bowl event → no
+  venues read.
+
+#### 6.6.4 — Tidy-ups (Sonnet 5.5 · low) — §29 S8, S9
+- S8: in `lib/liveTriviaRankedRewards.ts`, 6.1 inserted `isLiveTriviaRankedCampaign` (with its doc) between
+  `rankedRewardConfigError`'s doc block and the function. Move that doc block back above `rankedRewardConfigError`.
+- S9: the "blocked result" filter (`credit_blocked_at` not null, `credited_at` null, `voided_at` null) is written
+  twice in `lib/squaresAdmin.ts` (`countBlockedResults` and the overview's blocked select). Put it in one small
+  query helper that both use, next to the `unpaidOnly` filter in `countRows`.
+- No behaviour change. Run the existing tests.
 
 #### 6.7 — Rehearsal (Opus 5.5 · high)
 - Needs 6.2's migration applied and its rehearsal gate deployed. Pick a December 2026 game (regular season ends
@@ -455,8 +548,9 @@ migration); then 6.5–6.9.
 
 #### 6.9 — Launch (Opus 5.5 · medium)
 - Turn on `NEXT_PUBLIC_SQUARES_ENABLED` in Production and redeploy by **Mon Jan 25, 2027**; bump
-  `LEGAL_LAST_UPDATED`; turn the rehearsal switch off; **archive the rehearsal event first** (discovery only runs with
-  no current event, and players' screens would show the rehearsal board — 6.2). On Jan 31 confirm the event is discovered with the right AFC/NFC
+  `LEGAL_LAST_UPDATED`; turn the rehearsal switch off; **archive the rehearsal event first** (belt and braces: since
+  6.6.1 the cron archives a leftover rehearsal itself on the first season-mode run, but archiving by hand means no
+  minute of Feb 1 shows the rehearsal board). On Jan 31 confirm the event is discovered with the right AFC/NFC
   axes. Watch logs on Feb 14 and record actual request counts against §6.
 
 ### Phase 7 — Bracket engine (Opus 5.5 · high)
@@ -1241,3 +1335,42 @@ Handoff (full numbers, ids, commands): `docs/squares-and-brackets-plan_PHASE_10.
 - **Tests:** new status cases + `grades each quarter during the next one (WSH @ SF, 1392308)` in
   `tests/squares-engine.test.ts` (shared `replayCapture` helper). Full suite 5,232 pass / 13 skip.
 
+
+## 29. 6.6 re-review (2026-10-21) — the findings behind 6.6.1–6.6.4
+
+The `code-review` skill at `high` reviewed the five Squares commits `9c8ebfe` (6.1), `4a565a8` (6.2), `3c69e29` (6.3),
+`c43fa66` (6.4) and `3d88939` (6.5 part 1). Each finding was then checked by reading the code. S3 was also checked
+against the committed feed fixture. No Squares event exists in production, so there was no data to check. Handoff:
+`docs/squares-and-brackets-plan_PHASE_6.6_HANDOFF.md`.
+
+| # | Finding | Checked | Severity | Fix |
+|---|---|---|---|---|
+| S1 | `squaresArchiveRefusal` compares today with the current window constant, not the event's season. Once Phase 11 rolls the window forward, last season's un-archived Super Bowl can't be archived until the new window closes, and `discover` / `create_from_game` refuse while it is current, which deadlocks the season (`lib/squaresAdmin.ts:143`) | Confirmed: `isSquaresWindowClosed` reads `SEASONAL_GAME_WINDOWS.squares`; the event's `season` column is unused there; create refuses "Archive it first" | Medium (next season) | 6.6.1 |
+| S2 | In season mode a current rehearsal event blocks Super Bowl discovery: every real-venue claim answers `rehearsal_only` and the Super Bowl board never exists. Only a doc line ("archive first") guards it (`lib/squaresSettlement.ts` `tick`) | Confirmed: `discoverEvent` runs only when `getCurrentSquaresEvent` is empty | **Medium** (would break launch day if 6.9's step is missed) | 6.6.1 |
+| S3 | `squaresEventPurposeFor` marks any AFC-vs-NFC postseason game as `super_bowl`, e.g. a Pro Bowl record (`lib/squares.ts:167`) | **Rejected**: `tests/fixtures/squares/nfl-postseason-2025.json` (the feed's whole 2025 postseason, 13 games) has exactly one inter-conference game, the week-5 Super Bowl; the feed carries no Pro Bowl, so an admin would have to type an id the feed doesn't list | — | — |
+| S4 | At `complete`, a board newer than the CDN-cached score makes `useSquaresData` re-read the board every 5 s for as long as the tab is open; the score is never re-read on that path (`components/squares/useSquaresData.ts:155`) | Confirmed: the `else` that reads the score is unreachable while the revisions differ; a void then re-grade inside the 15 s CDN window reaches it | Medium (cost; per-player uncached reads) | 6.6.2 |
+| S5 | The 6.3 idle return comes before `settleSquaresWinners`, so after the watch a failed credit / prize / withdrawal is never retried by the cron, while `lib/squaresPrizeAwards.ts` still says "retried next run" | Confirmed; needs a failure that outlasts the 3 h watch, or an admin fix-up after it whose own settle errs | Low | 6.6.3 |
+| S6 | A rehearsal's second guard covers Prizes only: `payUnpaidSquaresResults` credits points with no hidden-venue check, so a venue un-hidden mid-rehearsal gets real points (`lib/squaresSettlement.ts:427`) | Confirmed; the prize path's own comment names the case ("only possible if that venue was un-hidden mid-rehearsal") | Low | 6.6.3 |
+| S7 | Ownership is enforced by a filter after `listActiveRankedPlaceCampaigns`, not inside the reader; a new non-award consumer would get every definition's prizes (`lib/liveTriviaRankedRewards.ts:404`) | **Rejected** (style/altitude): both callers filter (`lib/liveTriviaRankedRewards.ts:404`, `lib/rankedRewardBackfill.ts:112`), and `tests/prize-sweep-ownership-contract.test.ts` pins every file that pays. A reader that lists prizes doesn't pay anything | — | — |
+| S8 | 6.1 inserted `isLiveTriviaRankedCampaign` between `rankedRewardConfigError`'s doc block and the function, so the old doc now sits on the wrong function (`lib/liveTriviaRankedRewards.ts:140`) | Confirmed | Nit | 6.6.4 |
+| S9 | The "blocked result" filter is written twice in `lib/squaresAdmin.ts` (`countBlockedResults`, overview select) | Confirmed | Nit | 6.6.4 |
+
+
+## 30. 6.6.1 as built (2026-10-21) — read before 6.6.3 and 6.7
+
+- **`isStaleSquaresEvent(event, season)`** (`lib/squares.ts`, pure): `purpose === "rehearsal" || event.season !== season`.
+- **`tick`** (`lib/squaresSettlement.ts`): when `mode === "season"` (also on an admin Run now in season mode) and the
+  current event is stale, `archiveStaleEvent` sets `archived_at` with `.eq("id").is("archived_at", null).select("id")`.
+  Only if that write matched a row does it log `[Squares] stale-event-archived` `{ eventId, purpose, season }`, push
+  action `stale_event_archived`, and write a `squares_admin_log` row: action `archive`, actor `auto`, detail
+  `{ eventId, purpose, season, reason: "Season opened: replaced by this season's Super Bowl" }`. Then it falls into the
+  no-event branch: `discoverEvent` (still throttled to every 15th minute, so creation can land up to 14 min later). A
+  failed write pushes `stale archive: …` and ends the run; the next run retries. Rehearsal mode never archives.
+- **`squaresArchiveRefusal`** now takes `season` and refuses only this season's (`squaresSeason()`) drawn Super Bowl
+  before the window closes. Message unchanged.
+- **Admin `create_from_game`** refuses a `rehearsal` with 409 "Squares is live for the Super Bowl until 2027-02-15;
+  rehearse after the window." while `squaresSettlementMode(now) === "season"`.
+- **Tests:** `tests/squares-settlement.test.ts` "a leftover event (plan 6.6.1)" (5 cases: rehearsal archived +
+  discovered in one run, last season's Super Bowl the same, rehearsal mode untouched, this season's Super Bowl
+  untouched, admin create refused); `tests/squares-engine.test.ts` (old-season archive allowed; `isStaleSquaresEvent`).
+  Full suite 5,239 pass / 13 skip; tsc and eslint clean.
