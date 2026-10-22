@@ -1,7 +1,8 @@
 # Light Theme for Venue Home, Pick 'Em, NFL Pick 'Em and Fantasy — Plan
 
 **Status (2026-10-22):** Phases 1–8 done. Phases 1–4 committed (`155bbb7`), 5–7 committed (`939e7fb`); Phase 8
-(code review, fixes 8.1–8.5, phone checklist, docs) done, **not committed**. Flag off everywhere: no visible change.
+(code review, fixes 8.1–8.5, phone checklist, docs) committed (`9a52252`). **2026-10-22 (Andrew): Appearance is
+Dark / Light only — "Match my phone" removed** (a saved legacy `system` reads as Dark). Flag off everywhere: no visible change.
 What's left is Andrew's phone pass (`docs/light-theme-device-checklist.md`) and turning the flag on (rollout runbook
 below). Latest handoff: `docs/light-theme-plan_PHASE_8_HANDOFF.md`. 9:16 social-video stills of the mockups:
 `docs/light-theme-mockups/social-9x16/` (`node scripts/render-social-mockups.cjs`; copied to

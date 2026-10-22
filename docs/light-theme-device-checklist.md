@@ -31,12 +31,12 @@ Tick a column when it passes; write a note when it doesn't. A dash means "doesn'
 
 | # | Check | A | B | C | D | E |
 |---|---|---|---|---|---|---|
-| 1.1 | Venue home → menu. Above "Delete my account" there's **APPEARANCE** with three buttons: Dark / Light / Match my phone, and one line: "Light works on Venue Home, Pick 'Em, NFL Pick 'Em and Fantasy. Other games stay dark." | | | | | |
+| 1.1 | Venue home → menu. Above "Delete my account" there's **APPEARANCE** with two buttons: Dark / Light, and one line: "Light works on Venue Home, Pick 'Em, NFL Pick 'Em and Fantasy. Other games stay dark." | | | | | |
 | 1.2 | **Dark** is selected the first time. | | | | | |
 | 1.3 | Tap **Light**: the venue home behind the open menu turns light straight away. The menu itself turns light too. | | | | | |
 | 1.4 | Close the app / tab completely and open it again: still light, and **Light** is still selected. | | | | | |
 | 1.5 | Tap **Dark**: everything goes back to exactly how it looked before. | | | | | |
-| 1.6 | All three buttons fit on one line, with "Match my phone" not wrapped. | | | | | |
+| 1.6 | Both buttons fit on one line, the same width. | | | | | |
 | 1.7 | **Smallest screen:** iPhone SE, or Settings → Display → Display Zoom → Larger Text. Row still fits; nothing cut off. | | | | | |
 
 ## 2. The four light screens (choose Light first)
@@ -69,13 +69,7 @@ nothing still looks like a dark leftover.
 | 3.6 | Choose Light **while inside a game** (menu in Live Trivia): the game stays dark; the note under the buttons explains why. Go back to venue home: it's light. | | | | | |
 | 3.7 | Switch Light ↔ Dark while a game's own pop-up is open (e.g. a Pick 'Em result): nothing breaks. | | | | | |
 
-## 4. "Match my phone"
-
-| # | Check | A | B | C | D | E |
-|---|---|---|---|---|---|---|
-| 4.1 | Phone in Dark mode → choose **Match my phone**: venue home is dark. | | | | | |
-| 4.2 | With the app/tab open on venue home, switch the phone to Light mode (Control Centre / quick settings): venue home turns light by itself. | | | | | |
-| 4.3 | Switch the phone back to Dark: it turns dark again. | | | | | |
+## 4. (Removed 2026-10-22: "Match my phone" was dropped; the choice is Dark or Light.)
 
 ## 5. The bar at the top of the screen
 
@@ -121,5 +115,5 @@ Remove animations).
 - Everything passes → keep the variable on in Production (or turn it on now). That's the launch.
 - Anything fails → tell me the check number, phone and a screenshot. Nothing else needs to change
   while you test: with the variable off every screen is exactly as it was.
-- **Your decision, any time:** should new players start on **Match my phone** instead of Dark?
+- **Your decision, any time:** should new players start on **Light** instead of Dark?
   (`DEFAULT_THEME_PREFERENCE`, plan §6 Q1.) Today everyone starts on Dark.

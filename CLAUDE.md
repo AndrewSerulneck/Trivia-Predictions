@@ -176,8 +176,8 @@ remain optional operational monitoring, not unfinished plan work.
 Plan + handoffs: `docs/light-theme-plan.md`; phone pass `docs/light-theme-device-checklist.md` (Andrew only).
 - **Four screens have a light version: Venue Home, Pick 'Em, NFL Pick 'Em, Fantasy.** Everything else stays dark.
   `lib/theme.ts` is the one home: the flag `NEXT_PUBLIC_LIGHT_THEME_ENABLED` (`isLightThemeEnabled()`; build-time, so
-  redeploy), the light paths (`LIGHT_THEME_PATH_PATTERN`), the choice (localStorage `htc_theme`, Dark / Light / Match
-  my phone; default Dark = `DEFAULT_THEME_PREFERENCE`, Andrew's call), `THEME_COLOR` and the Appearance copy. Flag off
+  redeploy), the light paths (`LIGHT_THEME_PATH_PATTERN`), the choice (localStorage `htc_theme`, Dark / Light only —
+  no "Match my phone", Andrew 2026-10-22; default Dark = `DEFAULT_THEME_PREFERENCE`, Andrew's call), `THEME_COLOR` and the Appearance copy. Flag off
   = no pre-paint script, no `ThemeRouteSync`, no Appearance row: every page dark.
 - **The choice never goes to the server.** No cookie, no account column: the root layout must never read
   `cookies()`/`headers()` (it would make every static page a per-visit render; `tests/light-theme-contract.test.ts`).

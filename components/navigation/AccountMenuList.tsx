@@ -112,7 +112,7 @@ export function AccountMenuList({ onNavigate, hasUnclaimedPrize = false }: Accou
             </li>
           );
         })}
-        {/* Dark / Light / Match my phone (docs/light-theme-plan.md Phase 7). Build-time flag:
+        {/* Dark / Light (docs/light-theme-plan.md Phase 7). Build-time flag:
             off = no row, every page dark. */}
         {isLightThemeEnabled() ? (
           <li className="!mt-4">

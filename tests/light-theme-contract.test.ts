@@ -57,16 +57,15 @@ describe("which screens can be light", () => {
     expect(DEFAULT_THEME_PREFERENCE).toBe("dark");
     expect(parseThemePreference(null)).toBe("dark");
     expect(parseThemePreference("LIGHT")).toBe("dark");
-    expect(resolveTheme("light", "/pickem", false)).toBe("light");
-    expect(resolveTheme("light", "/trivia", false)).toBe("dark");
-    expect(resolveTheme("system", "/fantasy", true)).toBe("light");
-    expect(resolveTheme("system", "/fantasy", false)).toBe("dark");
-    expect(resolveTheme("dark", "/fantasy", true)).toBe("dark");
+    expect(parseThemePreference("system")).toBe("dark");
+    expect(resolveTheme("light", "/pickem")).toBe("light");
+    expect(resolveTheme("light", "/trivia")).toBe("dark");
+    expect(resolveTheme("dark", "/fantasy")).toBe("dark");
   });
 });
 
 describe("pre-paint script", () => {
-  const run = (stored: string | null, pathname: string, prefersLight: boolean, storageThrows = false): boolean => {
+  const run = (stored: string | null, pathname: string, storageThrows = false): boolean => {
     const attributes = new Map<string, string>();
     const localStorage = {
       getItem: () => {
@@ -74,9 +73,8 @@ describe("pre-paint script", () => {
         return stored;
       },
     };
-    const window = { matchMedia: () => ({ matches: prefersLight }) };
     const document = { documentElement: { setAttribute: (key: string, value: string) => attributes.set(key, value) } };
-    new Function("localStorage", "location", "window", "document", themePrePaintScript())(localStorage, { pathname }, window, document);
+    new Function("localStorage", "location", "document", themePrePaintScript())(localStorage, { pathname }, document);
     return attributes.get(THEME_ATTRIBUTE) === "light";
   };
 
@@ -84,16 +82,14 @@ describe("pre-paint script", () => {
     const stored: Array<string | null> = [null, "", "nonsense", "dark", "light", "system"];
     for (const value of stored) {
       for (const p of [...PATHS.light, ...PATHS.dark]) {
-        for (const prefersLight of [false, true]) {
-          const expected = resolveTheme(parseThemePreference(value) as ThemePreference, p, prefersLight) === "light";
-          expect(run(value, p, prefersLight), `${value} ${p} ${prefersLight}`).toBe(expected);
-        }
+        const expected = resolveTheme(parseThemePreference(value) as ThemePreference, p) === "light";
+        expect(run(value, p), `${value} ${p}`).toBe(expected);
       }
     }
   });
 
   it("leaves the page dark when storage is blocked", () => {
-    expect(run("light", "/pickem", true, true)).toBe(false);
+    expect(run("light", "/pickem", true)).toBe(false);
   });
 });
 

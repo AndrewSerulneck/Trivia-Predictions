@@ -1,7 +1,6 @@
 // Light theme — the one home for the theme decision (docs/light-theme-plan.md §3).
 //
-// Dark is the default everywhere. A player who chooses Light (or "Match my phone" on a phone set
-// to light) gets `data-theme="light"` on <html> ONLY on the four light-capable screens — Venue
+// Dark is the default everywhere. A player who chooses Light gets `data-theme="light"` on <html> ONLY on the four light-capable screens — Venue
 // Home, Pick 'Em, NFL Pick 'Em, Fantasy — and app/globals.css `:root[data-theme="light"]` swaps
 // the colour tokens. Every other screen stays dark because the attribute is simply absent there.
 //
@@ -18,8 +17,10 @@
 // Pure apart from the browser helpers at the bottom, which guard `window` and wrap every
 // storage access in try/catch (private windows and blocked storage throw).
 
-export type ThemePreference = "dark" | "light" | "system";
-export type ResolvedTheme = "dark" | "light";
+// Light or Dark only (Andrew, 2026-10-22: no "Match my phone"). A stored legacy "system" reads as
+// the default.
+export type ThemePreference = "dark" | "light";
+export type ResolvedTheme = ThemePreference;
 
 export const THEME_STORAGE_KEY = "htc_theme";
 export const THEME_ATTRIBUTE = "data-theme";
@@ -33,8 +34,6 @@ export const DEFAULT_THEME_PREFERENCE: ThemePreference = "dark";
  */
 export const LIGHT_THEME_PATH_PATTERN = "^/(?:venue/[^/]+|pickem(?:/.*)?|nfl-pickem|fantasy(?:/.*)?)/?$";
 const LIGHT_THEME_PATH_RE = new RegExp(LIGHT_THEME_PATH_PATTERN);
-
-export const PREFERS_LIGHT_MEDIA_QUERY = "(prefers-color-scheme: light)";
 
 /**
  * `<meta name="theme-color">` (the browser's and Android's bar colour above the page) per theme:
@@ -51,7 +50,6 @@ export const APPEARANCE_COPY = {
   options: [
     { value: "dark", label: "Dark" },
     { value: "light", label: "Light" },
-    { value: "system", label: "Match my phone" },
   ],
 } as const satisfies { title: string; note: string; options: ReadonlyArray<{ value: ThemePreference; label: string }> };
 
@@ -66,14 +64,10 @@ export const isLightThemeEnabled = (): boolean => truthy(process.env.NEXT_PUBLIC
 export const isLightThemePath = (pathname: string): boolean => LIGHT_THEME_PATH_RE.test(pathname);
 
 export const parseThemePreference = (raw: unknown): ThemePreference =>
-  raw === "dark" || raw === "light" || raw === "system" ? raw : DEFAULT_THEME_PREFERENCE;
+  raw === "dark" || raw === "light" ? raw : DEFAULT_THEME_PREFERENCE;
 
-export const resolveTheme = (preference: ThemePreference, pathname: string, prefersLight: boolean): ResolvedTheme => {
-  if (!isLightThemePath(pathname)) return "dark";
-  if (preference === "light") return "light";
-  if (preference === "system") return prefersLight ? "light" : "dark";
-  return "dark";
-};
+export const resolveTheme = (preference: ThemePreference, pathname: string): ResolvedTheme =>
+  preference === "light" && isLightThemePath(pathname) ? "light" : "dark";
 
 /**
  * Inline <head> script: the same decision as `resolveTheme`, before React or any CSS paints.
@@ -82,9 +76,7 @@ export const resolveTheme = (preference: ThemePreference, pathname: string, pref
  */
 export const themePrePaintScript = (): string =>
   `(function(){try{var p=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});` +
-  `if(p!=="dark"&&p!=="light"&&p!=="system")p=${JSON.stringify(DEFAULT_THEME_PREFERENCE)};` +
-  `if(p==="dark"||!new RegExp(${JSON.stringify(LIGHT_THEME_PATH_PATTERN)}).test(location.pathname))return;` +
-  `if(p==="system"&&!(window.matchMedia&&window.matchMedia(${JSON.stringify(PREFERS_LIGHT_MEDIA_QUERY)}).matches))return;` +
+  `if(p!=="light"||!new RegExp(${JSON.stringify(LIGHT_THEME_PATH_PATTERN)}).test(location.pathname))return;` +
   `document.documentElement.setAttribute(${JSON.stringify(THEME_ATTRIBUTE)},"light")` +
   `}catch(_){}})()`;
 
@@ -129,15 +121,6 @@ export const writeThemePreference = (preference: ThemePreference): void => {
   preferenceListeners.forEach((listener) => listener());
 };
 
-export const prefersLightColorScheme = (): boolean => {
-  if (typeof window === "undefined") return false;
-  try {
-    return window.matchMedia?.(PREFERS_LIGHT_MEDIA_QUERY).matches === true;
-  } catch {
-    return false;
-  }
-};
-
 /**
  * Sets or clears the light attribute for `pathname` and points `<meta name="theme-color">` at the
  * matching colour. A no-op (always dark) with the flag off. `color-scheme` follows the attribute
@@ -146,7 +129,7 @@ export const prefersLightColorScheme = (): boolean => {
  */
 export const applyThemeForPath = (pathname: string): ResolvedTheme => {
   if (typeof document === "undefined") return "dark";
-  const theme = isLightThemeEnabled() ? resolveTheme(readThemePreference(), pathname, prefersLightColorScheme()) : "dark";
+  const theme = isLightThemeEnabled() ? resolveTheme(readThemePreference(), pathname) : "dark";
   const root = document.documentElement;
   if (theme === "light") root.setAttribute(THEME_ATTRIBUTE, "light");
   else root.removeAttribute(THEME_ATTRIBUTE);

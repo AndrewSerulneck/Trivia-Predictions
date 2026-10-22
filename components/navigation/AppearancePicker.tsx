@@ -12,8 +12,8 @@ import {
   type ThemePreference,
 } from "@/lib/theme";
 
-// The Appearance row of the player menu (docs/light-theme-plan.md Phase 7): Dark / Light / Match my
-// phone. The choice is saved on the phone (lib/theme.ts) and applied at once, so a player on Venue
+// The Appearance row of the player menu (docs/light-theme-plan.md Phase 7): Dark / Light (Andrew,
+// 2026-10-22: no "Match my phone"). The choice is saved on the phone (lib/theme.ts) and applied at once, so a player on Venue
 // Home sees the page change under the open drawer. AccountMenuList renders it only while the
 // light-theme flag is on. Words live in APPEARANCE_COPY; the look is the venue hub's tab switch.
 export const AppearancePicker = () => {
@@ -39,7 +39,7 @@ export const AppearancePicker = () => {
       <div
         role="radiogroup"
         aria-labelledby={titleId}
-        className="mt-2 grid grid-cols-[auto_auto_1fr] gap-1 rounded-full border border-ht-tab-track-edge bg-ht-tab-track p-1 shadow-ht-tab-track"
+        className="mt-2 grid grid-cols-2 gap-1 rounded-full border border-ht-tab-track-edge bg-ht-tab-track p-1 shadow-ht-tab-track"
       >
         {APPEARANCE_COPY.options.map((option) => {
           const selected = preference === option.value;

@@ -223,13 +223,19 @@ describe("theme-color", () => {
 });
 
 describe("Appearance row", () => {
-  it("offers Dark / Light / Match my phone and starts on the saved choice", async () => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, "system");
+  it("offers only Dark / Light and starts on the saved choice", async () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "light");
     render(createElement(AppearancePicker));
     const radios = await screen.findAllByRole("radio");
-    expect(radios.map((r) => r.textContent)).toEqual(APPEARANCE_COPY.options.map((o) => o.label));
-    expect(APPEARANCE_COPY.options.map((o) => o.value)).toEqual(["dark", "light", "system"]);
-    expect(screen.getByRole("radio", { name: "Match my phone" }).getAttribute("aria-checked")).toBe("true");
+    expect(radios.map((r) => r.textContent)).toEqual(["Dark", "Light"]);
+    expect(APPEARANCE_COPY.options.map((o) => o.value)).toEqual(["dark", "light"]);
+    expect(screen.getByRole("radio", { name: "Light" }).getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("reads a saved legacy \"Match my phone\" as Dark", async () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "system");
+    render(createElement(AppearancePicker));
+    expect((await screen.findByRole("radio", { name: "Dark" })).getAttribute("aria-checked")).toBe("true");
   });
 
   it("saves the choice and applies it at once", () => {
