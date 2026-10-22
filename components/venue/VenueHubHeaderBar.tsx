@@ -51,13 +51,13 @@ function VenueHubHeaderBarInner({
           (the installed app). The phone padding is restated here so the website looks the same. */}
       <header
         ref={headerRef}
-        className="fixed inset-x-0 top-0 z-[1100] shrink-0 border-b border-white/10 bg-[rgba(2,6,23,0.92)] pt-[max(env(safe-area-inset-top),0px)] backdrop-blur-xl max-[430px]:p-[0.625rem] max-[430px]:pt-[max(env(safe-area-inset-top),0.625rem)]"
+        className="fixed inset-x-0 top-0 z-[1100] shrink-0 border-b border-ht-overlay/10 bg-ht-hub-bar pt-[max(env(safe-area-inset-top),0px)] backdrop-blur-xl max-[430px]:p-[0.625rem] max-[430px]:pt-[max(env(safe-area-inset-top),0.625rem)]"
       >
         <div className="flex items-center justify-between px-4 py-1.5">
           <button
             type="button"
             onClick={onOpenMenu}
-            className="tp-clean-button tp-player-hit-target tp-player-pressable inline-flex h-11 w-11 items-center justify-center rounded-[10px] border border-white/10 bg-ht-surface text-ht-fg-primary"
+            className="tp-clean-button tp-player-hit-target tp-player-pressable inline-flex h-11 w-11 items-center justify-center rounded-[10px] border border-ht-overlay/10 bg-ht-surface text-ht-fg-primary"
             aria-label="Open navigation menu"
             aria-expanded={isMenuOpen}
           >
@@ -66,7 +66,7 @@ function VenueHubHeaderBarInner({
             </svg>
           </button>
           <h2
-            className="truncate px-3 text-center text-[1.15rem] font-black uppercase tracking-[0.04em] text-cyan-300 [font-family:var(--ht-font-display)]"
+            className="truncate px-3 text-center text-[1.15rem] font-black uppercase tracking-[0.04em] text-ht-venue-accent [font-family:var(--ht-font-display)]"
           >
             {venueDisplayName}
           </h2>
@@ -76,13 +76,13 @@ function VenueHubHeaderBarInner({
         </div>
         <div className="px-4 pb-2">
           <div className="mx-auto w-full max-w-[24rem] sm:max-w-md">
-            <div className="rounded-full border border-cyan-400/35 bg-slate-900/90 p-1 shadow-[0_8px_24px_rgba(2,6,23,0.45)]">
+            <div className="rounded-full border border-ht-tab-track-edge bg-ht-tab-track p-1 shadow-ht-tab-track">
               <div className="grid grid-cols-3 gap-1">
                 <button
                   type="button"
                   onClick={() => onGoToScreen(0)}
                   className={`tp-clean-button tp-player-hit-target tp-player-pressable rounded-full px-2 py-2 text-caption font-black uppercase tracking-[0.08em] ${
-                    activeScreen === 0 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
+                    activeScreen === 0 ? "bg-ht-accent text-ht-on-fill" : "bg-ht-tab-idle text-ht-fg-secondary"
                   }`}
                 >
                   Games
@@ -91,7 +91,7 @@ function VenueHubHeaderBarInner({
                   type="button"
                   onClick={() => onGoToScreen(1)}
                   className={`tp-clean-button tp-player-hit-target tp-player-pressable rounded-full px-2 py-2 text-caption font-black uppercase tracking-[0.08em] ${
-                    activeScreen === 1 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
+                    activeScreen === 1 ? "bg-ht-accent text-ht-on-fill" : "bg-ht-tab-idle text-ht-fg-secondary"
                   }`}
                 >
                   Leaderboard
@@ -100,7 +100,7 @@ function VenueHubHeaderBarInner({
                   type="button"
                   onClick={() => onGoToScreen(2)}
                   className={`tp-clean-button tp-player-hit-target tp-player-pressable relative rounded-full px-2 py-2 text-caption font-black uppercase tracking-[0.08em] ${
-                    activeScreen === 2 ? "bg-cyan-400 text-slate-950" : "bg-slate-800/80 text-slate-200"
+                    activeScreen === 2 ? "bg-ht-accent text-ht-on-fill" : "bg-ht-tab-idle text-ht-fg-secondary"
                   }`}
                 >
                   Prizes

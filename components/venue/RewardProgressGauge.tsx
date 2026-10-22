@@ -35,13 +35,13 @@ export function RewardProgressGauge({ progress, target, barGradient, size = "car
   const percent = Math.min(100, Math.round((safeProgress / safeTarget) * 100));
   return (
     <div>
-      <div className={`w-full overflow-hidden rounded-full bg-slate-800/80 ${TRACK_CLASS_BY_SIZE[size]}`}>
+      <div className={`w-full overflow-hidden rounded-full bg-ht-panel-soft ${TRACK_CLASS_BY_SIZE[size]}`}>
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${percent}%`, background: barGradient }}
         />
       </div>
-      <div className={`font-semibold tabular-nums text-slate-500 ${READOUT_CLASS_BY_SIZE[size]}`}>
+      <div className={`font-semibold tabular-nums text-ht-fg-faint ${READOUT_CLASS_BY_SIZE[size]}`}>
         {safeProgress.toLocaleString()} / {safeTarget.toLocaleString()} pts
       </div>
     </div>

@@ -123,30 +123,30 @@ export const ViewTabs = ({
   const containerClass =
     game === "bingo"
       ? "border-sky-300/[0.18] bg-sky-300/[0.05]"
-      : "border-amber-200/[0.18] bg-amber-200/[0.05]";
+      : "border-ht-fantasy-title/[0.18] bg-ht-fantasy-title/[0.05]";
   return (
     <div className={`flex gap-0.5 rounded-full border p-1 ${containerClass}`}>
       {tabs.map((tab) => {
         const on = active === tab.id;
         const live = Boolean(tab.live) && on;
-        let buttonTone = "text-slate-400";
+        let buttonTone = "text-ht-fg-muted";
         if (on) {
           if (live) {
-            buttonTone = "bg-emerald-500/[0.16] text-emerald-300 shadow-[inset_0_0_0_1px_rgba(110,231,183,0.5)]";
+            buttonTone = "bg-emerald-500/[0.16] text-ht-success-fg shadow-[inset_0_0_0_1px_rgb(var(--ht-success-fg-rgb)/0.5)]";
           } else if (game === "bingo") {
             buttonTone = "bg-sky-300/[0.14] text-sky-300 shadow-[inset_0_0_0_1px_rgba(125,211,252,0.42)]";
           } else {
-            buttonTone = "bg-amber-200/[0.14] text-amber-200 shadow-[inset_0_0_0_1px_rgba(254,243,199,0.42)]";
+            buttonTone = "bg-ht-fantasy-title/[0.14] text-ht-fantasy-title shadow-[inset_0_0_0_1px_rgb(var(--ht-fantasy-accent-rgb)/0.42)]";
           }
         }
-        let badgeTone = "bg-white/[0.08] text-slate-500";
+        let badgeTone = "bg-ht-overlay/[0.08] text-ht-fg-faint";
         if (on) {
           if (live) {
-            badgeTone = "bg-emerald-500/30 text-emerald-300";
+            badgeTone = "bg-emerald-500/30 text-ht-success-fg";
           } else if (game === "bingo") {
             badgeTone = "bg-sky-300/25 text-sky-300";
           } else {
-            badgeTone = "bg-amber-200/25 text-amber-200";
+            badgeTone = "bg-ht-fantasy-title/25 text-ht-fantasy-title";
           }
         }
         return (
@@ -175,11 +175,11 @@ export const ViewTabs = ({
 // FoldLine — communicates "the ad lives just below, reachable on a slight scroll".
 export const FoldLine = () => (
   <div className="flex items-center gap-2 px-0.5">
-    <span className="h-px flex-1 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.18)_0_6px,transparent_6px_12px)]" />
+    <span className="h-px flex-1 bg-[repeating-linear-gradient(90deg,rgb(var(--ht-overlay-rgb)/0.18)_0_6px,transparent_6px_12px)]" />
     <span className="inline-flex items-center gap-1 text-caption font-black uppercase tracking-[0.14em] text-slate-600">
       Scroll
       <ChevronDown aria-hidden="true" className="h-2.5 w-2.5" />
     </span>
-    <span className="h-px flex-1 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.18)_0_6px,transparent_6px_12px)]" />
+    <span className="h-px flex-1 bg-[repeating-linear-gradient(90deg,rgb(var(--ht-overlay-rgb)/0.18)_0_6px,transparent_6px_12px)]" />
   </div>
 );

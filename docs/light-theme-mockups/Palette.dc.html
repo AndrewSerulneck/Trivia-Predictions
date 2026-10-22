@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Light colour set</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bree+Serif&amp;family=Nunito:wght@400;600;700;800;900&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 880px; height: 1040px; box-sizing: border-box; background: #FFFFFF; font-family: Nunito, system-ui, sans-serif; color: #0F172A; padding: 48px; display: flex; flex-direction: column; gap: 28px">
+  <div>
+    <h1 style="margin: 0; font-family: 'Bree Serif', serif; font-weight: 400; font-size: 36px">Light colour set</h1>
+    <p style="margin: 8px 0 0; font-size: 16px; color: #5B6B82">Each colour replaces its dark twin. Ratios are text contrast on white; 4.5 is the minimum for normal text.</p>
+  </div>
+
+  <sc-for list="{{groups}}" as="group" hint-placeholder-count="4">
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: #5B6B82">{{group.name}}</h2>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+        <sc-for list="{{group.items}}" as="sw" hint-placeholder-count="4">
+          <div style="border: 1px solid rgba(15,23,42,0.10); border-radius: 14px; overflow: hidden">
+            <div style="height: 64px; background: {{sw.hex}}; border-bottom: 1px solid rgba(15,23,42,0.08)"></div>
+            <div style="padding: 10px 12px">
+              <p style="margin: 0; font-size: 14px; font-weight: 900">{{sw.label}}</p>
+              <p style="margin: 2px 0 0; font-size: 13px; font-weight: 700; color: #5B6B82">{{sw.hex}} · {{sw.note}}</p>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </sc-for>
+
+  <section style="border-radius: 14px; background: #F3F5FA; padding: 16px 18px">
+    <p style="margin: 0; font-size: 14px; font-weight: 900">Unchanged in light</p>
+    <p style="margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: #334155">Game tiles on Venue Home keep their solid colours and white titles. Pop-up point animations, the prize gift card and the bar TV screen stay as they are.</p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      groups: [
+        { name: "Page and cards", items: [
+          { label: "Page", hex: "#F3F5FA", note: "was #020617" },
+          { label: "Card", hex: "#FFFFFF", note: "was #0F172A" },
+          { label: "Inset", hex: "#E8EDF4", note: "was #1E293B" },
+          { label: "Card edge", hex: "#E2E6ED", note: "8% ink line" }
+        ] },
+        { name: "Text", items: [
+          { label: "Primary", hex: "#0F172A", note: "17.9 : 1" },
+          { label: "Secondary", hex: "#334155", note: "10.4 : 1" },
+          { label: "Muted", hex: "#5B6B82", note: "5.4 : 1" },
+          { label: "Placeholder", hex: "#8492A6", note: "hints only" }
+        ] },
+        { name: "Accents (text and buttons)", items: [
+          { label: "Venue cyan", hex: "#0E7490", note: "5.4 : 1" },
+          { label: "Countdown amber", hex: "#92400E", note: "7.1 : 1" },
+          { label: "Pick 'Em navy", hex: "#1A2F72", note: "12.4 : 1" },
+          { label: "Fantasy green", hex: "#0F5C4A", note: "7.9 : 1" }
+        ] },
+        { name: "Status", items: [
+          { label: "Correct / won", hex: "#047857", note: "5.5 : 1" },
+          { label: "Wrong / error", hex: "#BE123C", note: "6.3 : 1" },
+          { label: "Pick 'Em magenta", hex: "#8A1C5C", note: "8.8 : 1" },
+          { label: "Fantasy gold", hex: "#A16207", note: "4.9 : 1" }
+        ] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

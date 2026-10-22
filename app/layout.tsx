@@ -13,6 +13,8 @@ import { LoginStuckStateBreaker } from "@/components/auth/LoginStuckStateBreaker
 import { OwnerRecoveryRedirectGuard } from "@/components/owner/OwnerRecoveryRedirectGuard";
 import { AppShell } from "@/components/ui/AppShell";
 import { AnimationTriggerProvider } from "@/components/animations/AnimationTriggerProvider";
+import { ThemeRouteSync } from "@/components/ui/ThemeRouteSync";
+import { isLightThemeEnabled, themePrePaintScript } from "@/lib/theme";
 import { initializeScheduledTasks } from "@/lib/scheduledTasks";
 import "./globals.css";
 
@@ -121,9 +123,18 @@ export default async function RootLayout({
     });
   }
 
+  // Light theme (docs/light-theme-plan.md): a build-time flag, never a cookie/header read here —
+  // that would make every static page a per-visit render. Off = neither is rendered.
+  const lightThemeEnabled = isLightThemeEnabled();
+
   return (
-    <html lang="en" className={`m-0 p-0 ${breeSerif.variable} ${nunito.variable}`}>
+    // suppressHydrationWarning: the theme script may add data-theme to <html> before React hydrates.
+    <html lang="en" className={`m-0 p-0 ${breeSerif.variable} ${nunito.variable}`} suppressHydrationWarning>
       <head>
+        {lightThemeEnabled ? (
+          // Sets data-theme="light" before the first paint on a light-capable screen (lib/theme.ts).
+          <script dangerouslySetInnerHTML={{ __html: themePrePaintScript() }} />
+        ) : null}
         {/* Next's `appleWebApp` metadata only emits the modern unprefixed
             `mobile-web-app-capable`, which WebKit only honors from iOS
             17.4+. Pre-17.4 iOS needs this legacy name to get the chromeless
@@ -143,6 +154,7 @@ export default async function RootLayout({
             <ScrollRescueGuard />
             <StandalonePwaRuntime />
             <ViewportHeightSync />
+            {lightThemeEnabled ? <ThemeRouteSync /> : null}
             {/* The player-only runtime (gameplay animations, the venue-entry
                 transition overlay, analytics and the two ad surfaces). Mounted
                 through a wrapper so its code is never downloaded on /owner/* or

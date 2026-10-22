@@ -170,7 +170,7 @@ export function Dropdown<T extends string>({
               OPTION_TEXT_CLASSES[size]
             } ${
               isSelected
-                ? "bg-ht-cyan-500/15 text-ht-cyan-300"
+                ? "bg-ht-cyan-500/15 text-ht-venue-accent"
                 : "text-ht-primary hover:bg-ht-elevated-2"
             }`}
           >
@@ -225,7 +225,7 @@ export function Dropdown<T extends string>({
                   setIsOpen(false);
                   footerAction.onSelect();
                 }}
-                className="block min-h-11 w-full truncate rounded-ht-sm px-3 py-2 text-left text-sm font-black text-ht-cyan-300 transition hover:bg-ht-elevated-2"
+                className="block min-h-11 w-full truncate rounded-ht-sm px-3 py-2 text-left text-sm font-black text-ht-venue-accent transition hover:bg-ht-elevated-2"
               >
                 {footerAction.label}
               </button>

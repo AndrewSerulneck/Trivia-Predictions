@@ -305,7 +305,7 @@ export function NotificationBell() {
         ? createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-[1200] overflow-hidden rounded-ht-lg border border-ht-border-soft bg-[#111827] shadow-ht-modal"
+          className="fixed z-[1200] overflow-hidden rounded-ht-lg border border-ht-border-soft bg-ht-popover shadow-ht-modal"
           style={
             menuPosition
               ? { top: `${menuPosition.top}px`, left: `${menuPosition.left}px`, width: `${menuPosition.width}px` }
@@ -313,17 +313,17 @@ export function NotificationBell() {
           }
         >
           <div className="px-4 pt-4 pb-2">
-            <p className="text-caption font-black uppercase tracking-[0.14em] text-cyan-400">Recent Activity</p>
+            <p className="text-caption font-black uppercase tracking-[0.14em] text-ht-accent">Recent Activity</p>
           </div>
           {items.length === 0 ? (
             <div className="space-y-1 px-4 py-5 text-center">
-              <p className="text-sm font-semibold text-slate-300">No recent activity yet</p>
-              <p className="text-xs text-slate-500">
+              <p className="text-sm font-semibold text-ht-fg-soft">No recent activity yet</p>
+              <p className="text-xs text-ht-fg-faint">
                 Game results and points will appear here.
               </p>
             </div>
           ) : (
-            <ul className="max-h-80 overflow-y-auto divide-y divide-slate-800">
+            <ul className="max-h-80 overflow-y-auto divide-y divide-ht-elevated">
               {items.map((item) => {
                 const points = extractPointsFromMessage(item.message);
                 const isPositive = points > 0;
@@ -358,24 +358,24 @@ export function NotificationBell() {
                         }
                         router.push(item.linkUrl ?? resolveNotificationHref(item.message));
                       }}
-                      className="tp-player-hit-target tp-player-pressable tp-clean-button flex w-full items-start gap-3 px-4 py-3 hover:bg-slate-800/60 transition-colors"
+                      className="tp-player-hit-target tp-player-pressable tp-clean-button flex w-full items-start gap-3 px-4 py-3 hover:bg-ht-row-hover transition-colors"
                     >
                       <span className={`mt-[5px] h-2 w-2 shrink-0 rounded-full ${dotColor}`} aria-hidden="true" />
                       <span className="min-w-0 flex-1 text-left">
-                        <span className={`block text-sm leading-snug ${item.read ? "text-slate-400" : "text-slate-100"}`}>
+                        <span className={`block text-sm leading-snug ${item.read ? "text-ht-fg-muted" : "text-ht-fg-strong"}`}>
                           {item.message}
                         </span>
-                        <span className="mt-0.5 block text-caption font-black uppercase tracking-[0.1em] text-slate-500">
+                        <span className="mt-0.5 block text-caption font-black uppercase tracking-[0.1em] text-ht-fg-faint">
                           {timeLabel}
                         </span>
                       </span>
                       <span
                         className={`shrink-0 text-sm font-black tabular-nums ${
                           isPositive
-                            ? "text-emerald-400"
+                            ? "text-ht-gain-fg"
                             : isError
-                            ? "text-rose-400"
-                            : "text-slate-500"
+                            ? "text-ht-loss-fg"
+                            : "text-ht-fg-faint"
                         }`}
                       >
                         {isPositive ? `+${points}` : isError ? "0" : "—"}
@@ -387,14 +387,14 @@ export function NotificationBell() {
             </ul>
           )}
           <p role="status" className="sr-only">{readMessage}</p>
-          {readError ? <p role="alert" className="px-4 text-sm text-rose-300">{readError}</p> : null}
-          <div className="border-t border-slate-800 px-4 py-2.5">
+          {readError ? <p role="alert" className="px-4 text-sm text-ht-danger-fg">{readError}</p> : null}
+          <div className="border-t border-ht-elevated px-4 py-2.5">
             <button
               type="button"
               onClick={() => { void markRead(); }}
               disabled={markingRead}
               aria-busy={markingRead}
-              className="tp-player-hit-target tp-player-pressable tp-clean-button text-caption font-black uppercase tracking-[0.1em] text-slate-500 hover:text-slate-300 transition-colors"
+              className="tp-player-hit-target tp-player-pressable tp-clean-button text-caption font-black uppercase tracking-[0.1em] text-ht-fg-faint hover:text-ht-fg-soft transition-colors"
             >
               {markingRead ? <><ButtonSpinner /> Updating…</> : "Mark all read"}
             </button>

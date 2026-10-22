@@ -334,7 +334,7 @@ export function LeaderboardTable({
       {headerTitle || showTimeframeControl || showGameControl ? (
         <div className="relative z-20 flex min-h-10 flex-wrap items-center justify-between gap-3">
           {headerTitle ? (
-            <p className="min-w-0 truncate text-sm font-black uppercase tracking-[0.14em] text-cyan-300">
+            <p className="min-w-0 truncate text-sm font-black uppercase tracking-[0.14em] text-ht-venue-accent">
               {headerTitle}
             </p>
           ) : (
@@ -353,13 +353,13 @@ export function LeaderboardTable({
                     }}
                     ariaLabel="Leaderboard game"
                     size="sm"
-                    className="inline-flex h-10 max-w-[11rem] items-center justify-between gap-2 rounded-ht-pill border border-cyan-400/35 bg-ht-elevated px-4 text-sm font-black text-ht-fg-primary shadow-ht-card outline-none transition hover:border-cyan-300/70 hover:text-cyan-100 focus:border-cyan-300 focus:shadow-ht-glow-cyan sm:max-w-[14rem]"
+                    className="inline-flex h-10 max-w-[11rem] items-center justify-between gap-2 rounded-ht-pill border border-ht-accent/35 bg-ht-elevated px-4 text-sm font-black text-ht-fg-primary shadow-ht-card outline-none transition hover:border-ht-venue-accent/70 hover:text-ht-accent-pale focus:border-ht-venue-accent focus:shadow-ht-glow-cyan sm:max-w-[14rem]"
                     renderTrigger={(selected, isOpen) => (
                       <>
                         <span className="truncate">{selected?.label ?? "All Games"}</span>
                         <ChevronDown
                           aria-hidden="true"
-                          className={`h-4 w-4 shrink-0 text-cyan-300 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                          className={`h-4 w-4 shrink-0 text-ht-venue-accent transition-transform ${isOpen ? "rotate-180" : ""}`}
                         />
                       </>
                     )}
@@ -371,7 +371,7 @@ export function LeaderboardTable({
                 <div className="relative min-w-0 shrink-0">
                   <button
                     type="button"
-                    className="inline-flex h-10 min-w-[8.5rem] max-w-[11rem] items-center justify-between gap-2 rounded-ht-pill border border-cyan-400/35 bg-ht-elevated px-4 text-sm font-black text-ht-fg-primary shadow-ht-card outline-none transition hover:border-cyan-300/70 hover:text-cyan-100 focus:border-cyan-300 focus:shadow-ht-glow-cyan disabled:cursor-not-allowed disabled:opacity-60 sm:max-w-[14rem]"
+                    className="inline-flex h-10 min-w-[8.5rem] max-w-[11rem] items-center justify-between gap-2 rounded-ht-pill border border-ht-accent/35 bg-ht-elevated px-4 text-sm font-black text-ht-fg-primary shadow-ht-card outline-none transition hover:border-ht-venue-accent/70 hover:text-ht-accent-pale focus:border-ht-venue-accent focus:shadow-ht-glow-cyan disabled:cursor-not-allowed disabled:opacity-60 sm:max-w-[14rem]"
                     aria-label={isNflPickEmSelected ? "NFL Pick 'Em week" : "Leaderboard timeframe"}
                     aria-haspopup="listbox"
                     aria-expanded={isTimeframeMenuOpen}
@@ -384,7 +384,7 @@ export function LeaderboardTable({
                     <span className="truncate">{secondaryControlLabel}</span>
                     <ChevronDown
                       aria-hidden="true"
-                      className={`h-4 w-4 shrink-0 text-cyan-300 transition-transform ${isTimeframeMenuOpen ? "rotate-180" : ""}`}
+                      className={`h-4 w-4 shrink-0 text-ht-venue-accent transition-transform ${isTimeframeMenuOpen ? "rotate-180" : ""}`}
                     />
                   </button>
                   {isTimeframeMenuOpen ? (
@@ -392,7 +392,7 @@ export function LeaderboardTable({
                       id={timeframeMenuId}
                       role="listbox"
                       aria-label={isNflPickEmSelected ? "NFL Pick 'Em week" : "Leaderboard timeframe"}
-                      className="absolute right-0 top-full z-[1400] mt-2 w-44 overflow-hidden rounded-ht-md border border-cyan-400/35 bg-slate-950 p-1 shadow-ht-modal"
+                      className="absolute right-0 top-full z-[1400] mt-2 w-44 overflow-hidden rounded-ht-md border border-ht-accent/35 bg-ht-menu-bg p-1 shadow-ht-modal"
                     >
                       {isNflPickEmSelected
                         ? nflWeekOptions.map((option) => {
@@ -405,7 +405,7 @@ export function LeaderboardTable({
                                 aria-selected={isSelected}
                                 className={`block w-full rounded-ht-sm px-3 py-2 text-left text-sm font-black transition ${
                                   isSelected
-                                    ? "bg-cyan-400/15 text-cyan-200"
+                                    ? "bg-ht-accent/15 text-ht-accent-soft"
                                     : "text-ht-fg-secondary hover:bg-ht-elevated hover:text-ht-fg-primary"
                                 }`}
                                 onClick={() => {
@@ -427,7 +427,7 @@ export function LeaderboardTable({
                                 aria-selected={isSelected}
                                 className={`block w-full rounded-ht-sm px-3 py-2 text-left text-sm font-black transition ${
                                   isSelected
-                                    ? "bg-cyan-400/15 text-cyan-200"
+                                    ? "bg-ht-accent/15 text-ht-accent-soft"
                                     : "text-ht-fg-secondary hover:bg-ht-elevated hover:text-ht-fg-primary"
                                 }`}
                                 onClick={() => {
@@ -448,12 +448,12 @@ export function LeaderboardTable({
         </div>
       ) : null}
       {errorMessage ? (
-        <div className="flex items-center justify-between gap-2 rounded-ht-md border border-amber-400/40 bg-amber-500/10 p-2 text-xs text-amber-300">
+        <div className="flex items-center justify-between gap-2 rounded-ht-md border border-ht-warn-edge/40 bg-amber-500/10 p-2 text-xs text-ht-warn-fg">
           <span>{errorMessage}</span>
           <button
             type="button"
             onClick={() => void load()}
-            className="rounded-ht-sm border border-amber-400/40 bg-ht-elevated px-2 py-1 font-semibold text-amber-300"
+            className="rounded-ht-sm border border-ht-warn-edge/40 bg-ht-elevated px-2 py-1 font-semibold text-ht-warn-fg"
           >
             Retry
           </button>
@@ -474,8 +474,8 @@ export function LeaderboardTable({
       ) : (
         <>
           {currentUserRank ? (
-            <div className="inline-flex rounded-ht-pill border border-amber-400/40 bg-amber-500/10 px-3 py-1.5">
-              <p className="text-base font-semibold text-amber-300">
+            <div className="inline-flex rounded-ht-pill border border-ht-warn-edge/40 bg-amber-500/10 px-3 py-1.5">
+              <p className="text-base font-semibold text-ht-warn-fg">
                 Your current rank: <strong>#{currentUserRank}</strong>
               </p>
             </div>
@@ -487,11 +487,11 @@ export function LeaderboardTable({
                 <col style={{ width: "56%" }} />
                 <col style={{ width: "24%" }} />
               </colgroup>
-              <thead className="bg-ht-elevated text-left text-ht-fg-primary border-b border-ht-border-soft">
+              <thead className="bg-ht-table-head-bg text-left text-ht-fg-primary border-b border-ht-border-soft">
                 <tr>
-                  <th className="px-3 py-2 text-sm font-black tracking-wide uppercase" style={{ color: "var(--ht-amber-500)", letterSpacing: "var(--ht-track-eyebrow)" }}>Rank</th>
-                  <th className="px-3 py-2 text-sm font-black tracking-wide uppercase" style={{ color: "var(--ht-amber-500)", letterSpacing: "var(--ht-track-eyebrow)" }}>Username</th>
-                  <th className="px-3 py-2 text-right text-sm font-black tracking-wide uppercase" style={{ color: "var(--ht-amber-500)", letterSpacing: "var(--ht-track-eyebrow)" }}>Points</th>
+                  <th className="px-3 py-2 text-sm font-black tracking-wide uppercase" style={{ color: "var(--ht-table-head)", letterSpacing: "var(--ht-track-eyebrow)" }}>Rank</th>
+                  <th className="px-3 py-2 text-sm font-black tracking-wide uppercase" style={{ color: "var(--ht-table-head)", letterSpacing: "var(--ht-track-eyebrow)" }}>Username</th>
+                  <th className="px-3 py-2 text-right text-sm font-black tracking-wide uppercase" style={{ color: "var(--ht-table-head)", letterSpacing: "var(--ht-track-eyebrow)" }}>Points</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ht-border-hairline bg-transparent">
@@ -506,7 +506,7 @@ export function LeaderboardTable({
                       <tr
                         className={
                           isCurrentUser
-                            ? "bg-amber-500/12"
+                            ? "bg-ht-you-row"
                             : isTopThree
                               ? "bg-ht-elevated/50"
                               : ""
@@ -516,11 +516,11 @@ export function LeaderboardTable({
                           <span
                             className={`inline-flex min-w-[2.45rem] items-center justify-center rounded-ht-pill border px-2 py-0.5 text-sm font-bold ht-tabular ${
                               entry.rank === 1
-                                ? "border-amber-400/60 bg-amber-500/20 text-amber-300"
+                                ? "border-ht-rank-1-edge bg-ht-rank-1-bg text-ht-rank-1-fg"
                                 : entry.rank === 2
-                                  ? "border-slate-400/50 bg-slate-500/20 text-slate-300"
+                                  ? "border-ht-rank-2-edge bg-ht-rank-2-bg text-ht-rank-2-fg"
                                   : entry.rank === 3
-                                    ? "border-orange-400/50 bg-orange-500/20 text-orange-300"
+                                    ? "border-ht-rank-3-edge bg-ht-rank-3-bg text-ht-rank-3-fg"
                                     : "border-ht-border-hairline bg-ht-elevated text-ht-fg-muted"
                             }`}
                           >
@@ -532,7 +532,7 @@ export function LeaderboardTable({
                             {entry.username}
                           </span>
                           {isCurrentUser ? (
-                            <span className="ml-2 rounded-ht-pill border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-caption font-semibold text-amber-300">
+                            <span className="ml-2 rounded-ht-pill border border-ht-warn-edge/40 bg-amber-500/15 px-2 py-0.5 text-caption font-semibold text-ht-warn-fg">
                               You
                             </span>
                           ) : null}

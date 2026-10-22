@@ -14,7 +14,10 @@
 
   /* -----------------------------------------------------------
      CANVAS & SURFACES
-     Every player-facing surface is dark. There is no light mode.
+     Dark is the default. Four screens have a light version
+     (Venue Home, Pick 'Em, NFL Pick 'Em, Fantasy) — the light values
+     live in :root[data-theme="light"] below. Tokens only, never a
+     per-component light class.
      ----------------------------------------------------------- */
   --ht-canvas:          #020617;   /* page background (slate-950)        */
   --ht-surface:         #0f172a;   /* card / panel default (slate-900)   */
@@ -176,7 +179,7 @@
   --ht-focus-ring: 0 0 0 2px rgba(34, 211, 238, 0.36);
 
   /* -----------------------------------------------------------
-     SHADOWS — dark-native. There are exactly three.
+     SHADOWS — dark-native (the light theme redefines --ht-shadow-card). There are exactly three.
      ----------------------------------------------------------- */
   --ht-shadow-card:    0 8px 24px rgba(0, 0, 0, 0.40);
   --ht-shadow-modal:   0 20px 60px rgba(0, 0, 0, 0.55);
@@ -238,6 +241,223 @@
   --ht-prize-card-base-to:     #020617;                 /* slate-950, bottom-right */
   --ht-prize-card-glow-cyan:   rgba(34, 211, 238, 0.35); /* cyan-400 @ 35%  */
   --ht-prize-card-glow-violet: rgba(139, 92, 246, 0.25); /* violet-500 @ 25% */
+
+  /* -----------------------------------------------------------
+     SCREEN TOKENS — the light theme (docs/light-theme-plan.md §2.1)
+     Each holds TODAY's dark literal here; :root[data-theme="light"]
+     below gives the light value. `-rgb` tokens are channel triples
+     ("253 230 138") so Tailwind's opacity modifier works on them
+     (`text-ht-pickem-accent/80`) and renders exactly what the old
+     `text-[#fde68a]/80` did. In a style attribute write
+     `rgb(var(--ht-pickem-accent-rgb))`. Tokens without `-rgb` are
+     whole colours: never put an opacity modifier on them.
+     ----------------------------------------------------------- */
+  --ht-venue-accent-rgb:     103 232 249;   /* cyan-300 #67e8f9 — venue name, active tab     */
+  --ht-countdown-rgb:        253 230 138;   /* amber-200 #fde68a — Live Trivia countdown      */
+  --ht-countdown-label-rgb:  252 211 77;    /* amber-300 #fcd34d — countdown eyebrow          */
+  --ht-pickem-accent-rgb:    253 230 138;   /* #fde68a — Pick 'Em / NFL Pick 'Em accent       */
+  --ht-pickem-picked:        rgba(253, 230, 138, 0.15); /* picked half of a game ticket       */
+  --ht-fantasy-accent-rgb:   254 243 199;   /* #fef3c7 — Fantasy chalk accent                 */
+  --ht-fantasy-points-rgb:   253 230 138;   /* #fde68a — Fantasy FP numbers                   */
+  --ht-success-fg-rgb:       110 231 183;   /* emerald-300 #6ee7b7 — correct / won            */
+  --ht-danger-fg-rgb:        253 164 175;   /* rose-300 #fda4af — wrong / error               */
+  --ht-points-fg-rgb:        252 211 77;    /* amber-300 #fcd34d — points pill number         */
+
+  /* Shared chrome (Phase 3): app bar, Back, bell menu, points pill, tabs,
+     form controls. Same rule: today's exact dark literal here. */
+  --ht-overlay-rgb:          255 255 255;   /* white — the tint that lifts a surface (white/8 etc.) */
+  --ht-accent-rgb:           34 211 238;    /* cyan-400 #22d3ee — eyebrow, field focus       */
+  --ht-fantasy-title-rgb:    253 230 138;   /* amber-200 #fde68a — Fantasy app-bar name, tabs */
+  --ht-gain-fg-rgb:          52 211 153;    /* emerald-400 #34d399 — "+12" in the bell menu  */
+  --ht-loss-fg-rgb:          251 113 133;   /* rose-400 #fb7185 — "0" in the bell menu       */
+  --ht-points-pill-edge-rgb: 251 191 36;    /* amber-400 #fbbf24 — points pill border        */
+  --ht-chrome-bar:           rgba(2, 6, 23, 0.86);       /* slate-950/86 — sticky app bar      */
+  --ht-popover:              #111827;                    /* gray-900 — bell menu               */
+  --ht-row-hover:            rgba(30, 41, 59, 0.6);      /* slate-800/60 — menu row hover      */
+  --ht-fg-strong:            #f1f5f9;                    /* slate-100 — unread alert text      */
+  --ht-fg-soft:              #cbd5e1;                    /* slate-300 — Back chevron, soft text */
+  --ht-fg-faint:             #64748b;                    /* slate-500 — small print that must stay readable */
+  --ht-field-border:         #334155;                    /* slate-700 — input/select border    */
+  --ht-points-pill-bg:       rgba(245, 158, 11, 0.15);   /* amber-500/15                       */
+  --ht-points-pill-flash-bg: rgba(251, 191, 36, 0.25);   /* amber-400/25 — just scored         */
+  --ht-points-flash-fg:      #fde68a;                    /* amber-200 — just scored            */
+  --ht-ad-label:             #a5b4fc;                    /* indigo-300 — ad placeholder slot id */
+
+  /* Venue Home (Phase 4): hub header, Games, Leaderboard, Prizes, prize pop-up.
+     Same rule: today's exact dark literal here, the light value in the light block. */
+  --ht-on-fill-rgb:          2 6 23;        /* slate-950 — text on a filled accent tab        */
+  --ht-accent-soft-rgb:      165 243 252;   /* cyan-200 #a5f3fc — text on a tinted accent button */
+  --ht-accent-pale-rgb:      207 250 254;   /* cyan-100 #cffafe — hover text on a leaderboard control */
+  --ht-countdown-soft-rgb:   254 243 199;   /* amber-100 #fef3c7 — line under the countdown   */
+  --ht-countdown-edge-rgb:   251 191 36;    /* amber-400 #fbbf24 — countdown card edge        */
+  --ht-danger-soft-rgb:      254 205 211;   /* rose-200 #fecdd3 — pulsing lobby button, error notice text */
+  --ht-danger-ring-rgb:      252 165 165;   /* red-300 #fca5a5 — pulsing lobby button ring    */
+  --ht-success-soft-rgb:     167 243 208;   /* emerald-200 #a7f3d0 — success notice text      */
+  --ht-warn-fg-rgb:          252 211 77;    /* amber-300 #fcd34d — warning / "You" text       */
+  --ht-warn-edge-rgb:        251 191 36;    /* amber-400 #fbbf24 — warning edge               */
+  --ht-gold-fg-rgb:          251 191 36;    /* amber-400 #fbbf24 — points number in the menu card */
+  --ht-skeleton-rgb:         51 65 85;      /* slate-700 — loading blocks                     */
+  --ht-skeleton-bg-rgb:      30 41 59;      /* slate-800 — loading card                       */
+  --ht-hub-bar:              rgba(2, 6, 23, 0.92);       /* venue hub header                  */
+  --ht-tab-track:            rgba(15, 23, 42, 0.9);      /* Games / Leaderboard / Prizes track */
+  --ht-tab-track-edge:       rgba(34, 211, 238, 0.35);   /* …its edge                         */
+  --ht-tab-idle:             rgba(30, 41, 59, 0.8);      /* …an unselected tab                */
+  --ht-panel-soft:           rgba(30, 41, 59, 0.8);      /* slate-800/80 — soft notice, gauge track */
+  --ht-edge-mid:             #475569;                    /* slate-600 — small button edge     */
+  --ht-menu-bg:              #020617;                    /* slate-950 — leaderboard drop-down */
+  --ht-panel-edge:           rgba(34, 211, 238, 0.3);    /* leaderboard card edge             */
+  --ht-you-row:              transparent;                /* the viewer's leaderboard row (today's bg-amber-500/12 is a dead class: no tint in dark) */
+  --ht-rank-1-bg:            rgba(245, 158, 11, 0.2);
+  --ht-rank-1-edge:          rgba(251, 191, 36, 0.6);
+  --ht-rank-1-fg:            #fcd34d;
+  --ht-rank-2-bg:            rgba(100, 116, 139, 0.2);
+  --ht-rank-2-edge:          rgba(148, 163, 184, 0.5);
+  --ht-rank-2-fg:            #cbd5e1;
+  --ht-rank-3-bg:            rgba(249, 115, 22, 0.2);
+  --ht-rank-3-edge:          rgba(251, 146, 60, 0.5);
+  --ht-rank-3-fg:            #fdba74;
+  --ht-table-head:           #f59e0b;                    /* amber-500 — Rank / Username / Points */
+  --ht-table-head-bg:        #1e293b;                    /* slate-800 — the heading row       */
+  --ht-fg-bright:            #ffffff;                    /* pure white body text on a dark card */
+  --ht-prize-card-bg:        #111827;                    /* gray-900 — a prize card           */
+  --ht-prize-won-bg:         linear-gradient(135deg, #1c1400, #2d1f00); /* …one the viewer won */
+  --ht-prize-won-edge:       rgba(251, 191, 36, 0.4);
+  --ht-chip-won-bg:          rgba(251, 191, 36, 0.18);   /* "You Won" chip                    */
+  --ht-chip-won-edge:        rgba(251, 191, 36, 0.3);
+  --ht-chip-won-fg:          #fcd34d;
+  --ht-chip-neutral-bg:      rgba(51, 65, 85, 0.5);      /* "All Claimed" / "Week Complete"   */
+  --ht-chip-neutral-edge:    rgba(71, 85, 105, 0.5);
+  --ht-claim-bg:             rgba(251, 191, 36, 0.12);   /* "Prize won! Tap to claim it."     */
+  --ht-claim-edge:           rgba(251, 191, 36, 0.35);
+  --ht-note-bg:              rgba(30, 41, 59, 0.7);      /* the rules box on a prize card     */
+  --ht-note-edge:            rgba(71, 85, 105, 0.4);
+  --ht-danger-wash:          rgba(76, 5, 25, 0.3);       /* rose-950/30 — retry button        */
+  --ht-danger-wash-strong:   rgba(136, 19, 55, 0.3);     /* rose-900/30 — error notice        */
+  --ht-success-wash:         rgba(6, 78, 59, 0.3);       /* emerald-900/30 — success notice   */
+  --ht-shadow-tile:          0 12px 26px rgba(15, 23, 42, 0.5);  /* a game tile               */
+  --ht-shadow-popup:         0 24px 48px rgba(0, 0, 0, 0.6);     /* the prize pop-up          */
+  --ht-shadow-loader:        0 12px 28px rgba(0, 0, 0, 0.5);     /* venue loading card        */
+  --ht-shadow-panel:         0 0 #0000;                          /* dark cards have no shadow  */
+  --ht-shadow-tab-track:     0 8px 24px rgba(2, 6, 23, 0.45);
+  --ht-shadow-drawer-closed: 0 20px 60px rgba(0, 0, 0, 0.55); /* = --ht-shadow-modal: today's closed drawer still casts it (dark only) */
+}
+
+/* =============================================================
+   LIGHT THEME (docs/light-theme-plan.md). Dark is the default and
+   every screen outside the four light-capable ones (Venue Home,
+   Pick 'Em, NFL Pick 'Em, Fantasy) stays dark: lib/theme.ts sets
+   data-theme="light" on <html> only on those paths, only for a player
+   who chose Light, and only while NEXT_PUBLIC_LIGHT_THEME_ENABLED is
+   on. Every token here MUST also exist in :root above (contract test).
+   Light text must reach 4.5:1 on white (contrast in the plan, §2.1).
+   ============================================================= */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --ht-canvas:          #f3f5fa;
+  --ht-surface:         #ffffff;
+  --ht-elevated:        #e8edf4;
+  --ht-elevated-2:      #e2e6ed;
+
+  --ht-border-hairline: rgba(15, 23, 42, 0.08);
+  --ht-border-soft:     rgba(15, 23, 42, 0.12);
+  --ht-border-strong:   rgba(15, 23, 42, 0.18);
+
+  --ht-fg-primary:      #0f172a;   /* 17.9:1 on white */
+  --ht-fg-secondary:    #334155;   /* 10.4:1          */
+  --ht-fg-muted:        #5b6b82;   /* 5.4:1 (4.97 on the page) */
+  --ht-fg-dim:          #8492a6;   /* placeholder / hints only */
+
+  --ht-shadow-card:     0 1px 2px rgba(15, 23, 42, 0.05), 0 6px 16px rgba(15, 23, 42, 0.06);
+
+  --ht-venue-accent-rgb:     14 116 144;    /* #0e7490 — 5.4:1; white text on it 5.4:1  */
+  --ht-countdown-rgb:        146 64 14;     /* #92400e — 7.1:1                          */
+  --ht-countdown-label-rgb:  180 83 9;      /* #b45309 — 5.0:1 on white ONLY (4.3 on elevated) */
+  --ht-pickem-accent-rgb:    26 47 114;     /* #1a2f72 — 12.4:1                         */
+  --ht-pickem-picked:        #fef3c7;
+  --ht-fantasy-accent-rgb:   15 92 74;      /* #0f5c4a — 7.9:1                          */
+  --ht-fantasy-points-rgb:   161 98 7;      /* #a16207 — 4.9:1 on white ONLY (4.2 on elevated) */
+  --ht-success-fg-rgb:       4 120 87;      /* #047857 — 5.5:1 (5.2 on #ecfdf5)         */
+  --ht-danger-fg-rgb:        190 18 60;     /* #be123c — 6.3:1 (5.7 on #fff1f2)         */
+  --ht-points-fg-rgb:        146 64 14;     /* #92400e — 7.1:1 (6.8 on #fffbeb)         */
+
+  --ht-shadow-modal:         0 12px 32px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.08);
+
+  --ht-overlay-rgb:          15 23 42;      /* slate-900 — darkens instead of lifting   */
+  --ht-accent-rgb:           14 116 144;    /* #0e7490 — 5.4:1                          */
+  --ht-fantasy-title-rgb:    15 92 74;      /* #0f5c4a — 7.9:1                          */
+  --ht-gain-fg-rgb:          4 120 87;      /* #047857 — 5.5:1                          */
+  --ht-loss-fg-rgb:          190 18 60;     /* #be123c — 6.3:1                          */
+  --ht-points-pill-edge-rgb: 180 83 9;      /* #b45309                                  */
+  --ht-chrome-bar:           rgba(255, 255, 255, 0.94);
+  --ht-popover:              #ffffff;
+  --ht-row-hover:            #f1f5f9;
+  --ht-fg-strong:            #0f172a;   /* 17.9:1 */
+  --ht-fg-soft:              #334155;   /* 10.4:1 */
+  --ht-fg-faint:             #5b6b82;   /* 5.4:1  */
+  --ht-field-border:         #cbd5e1;
+  --ht-points-pill-bg:       #fffbeb;
+  --ht-points-pill-flash-bg: #fef3c7;
+  --ht-points-flash-fg:      #78350f;   /* 9.4:1 on #fef3c7 */
+  --ht-ad-label:             #4338ca;   /* 7.9:1 */
+
+  /* Venue Home (Phase 4). */
+  --ht-on-fill-rgb:          255 255 255;   /* white on #0e7490 = 5.4:1                 */
+  --ht-accent-soft-rgb:      14 116 144;    /* #0e7490 — 4.6:1 on its own 10% tint      */
+  --ht-accent-pale-rgb:      14 116 144;
+  --ht-countdown-soft-rgb:   146 64 14;     /* #92400e                                  */
+  --ht-countdown-edge-rgb:   217 119 6;     /* amber-600 — used at 60%                  */
+  --ht-danger-soft-rgb:      190 18 60;     /* #be123c — 5.7:1 on #fff1f2               */
+  --ht-danger-ring-rgb:      190 18 60;
+  --ht-success-soft-rgb:     4 120 87;      /* #047857 — 5.2:1 on #ecfdf5               */
+  --ht-warn-fg-rgb:          146 64 14;     /* #92400e — 7.1:1                          */
+  --ht-warn-edge-rgb:        180 83 9;      /* #b45309                                  */
+  --ht-gold-fg-rgb:          146 64 14;     /* #92400e — 6.1:1 on the menu card's tint  */
+  --ht-skeleton-rgb:         203 213 225;   /* #cbd5e1                                  */
+  --ht-skeleton-bg-rgb:      232 237 244;   /* #e8edf4                                  */
+  --ht-hub-bar:              rgba(255, 255, 255, 0.94);
+  --ht-tab-track:            #e8edf4;
+  --ht-tab-track-edge:       transparent;
+  --ht-tab-idle:             transparent;
+  --ht-panel-soft:           #e8edf4;
+  --ht-edge-mid:             #cbd5e1;
+  --ht-menu-bg:              #ffffff;
+  --ht-panel-edge:           rgba(15, 23, 42, 0.08);
+  --ht-you-row:              #ecfeff;
+  --ht-rank-1-bg:            #fef3c7;
+  --ht-rank-1-edge:          rgba(180, 83, 9, 0.35);
+  --ht-rank-1-fg:            #92400e;       /* 6.3:1 on #fef3c7 */
+  --ht-rank-2-bg:            #f1f5f9;
+  --ht-rank-2-edge:          rgba(71, 85, 105, 0.3);
+  --ht-rank-2-fg:            #334155;
+  --ht-rank-3-bg:            #ffedd5;
+  --ht-rank-3-edge:          rgba(154, 52, 18, 0.3);
+  --ht-rank-3-fg:            #9a3412;
+  --ht-table-head:           #b45309;       /* 4.6:1 on #f3f5fa — only on that heading row */
+  --ht-table-head-bg:        #f3f5fa;
+  --ht-fg-bright:            #0f172a;
+  --ht-prize-card-bg:        #ffffff;
+  --ht-prize-won-bg:         #ffffff;
+  --ht-prize-won-edge:       rgba(4, 120, 87, 0.35);
+  --ht-chip-won-bg:          #ecfdf5;
+  --ht-chip-won-edge:        rgba(4, 120, 87, 0.25);
+  --ht-chip-won-fg:          #047857;       /* 5.2:1 on #ecfdf5 */
+  --ht-chip-neutral-bg:      #f1f5f9;
+  --ht-chip-neutral-edge:    rgba(15, 23, 42, 0.1);
+  --ht-claim-bg:             #ecfdf5;
+  --ht-claim-edge:           rgba(4, 120, 87, 0.35);
+  --ht-note-bg:              #f3f5fa;
+  --ht-note-edge:            rgba(15, 23, 42, 0.08);
+  --ht-danger-wash:          #fff1f2;
+  --ht-danger-wash-strong:   #fff1f2;
+  --ht-success-wash:         #ecfdf5;
+  --ht-shadow-tile:          0 8px 20px rgba(15, 23, 42, 0.18);
+  --ht-shadow-popup:         0 12px 32px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.08);
+  --ht-shadow-loader:        0 8px 20px rgba(15, 23, 42, 0.12);
+  --ht-shadow-panel:         0 1px 2px rgba(15, 23, 42, 0.05), 0 6px 16px rgba(15, 23, 42, 0.06);
+  --ht-shadow-tab-track:     0 0 #0000;
+  --ht-shadow-drawer-closed: 0 0 #0000;   /* a closed drawer must not tint the page's left edge */
+  --ht-shadow-glow-cyan:     0 0 0 1px rgba(14, 116, 144, 0.3), 0 8px 28px rgba(14, 116, 144, 0.14);
 }
 
 /* =============================================================

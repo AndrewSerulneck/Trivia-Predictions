@@ -57,7 +57,7 @@ function VenueChallengesPanelInner({
       <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
         <div className="mx-auto w-full max-w-[26rem] space-y-3">
           <div>
-            <p className="mb-3 text-caption font-black uppercase tracking-[0.14em] text-cyan-400">
+            <p className="mb-3 text-caption font-black uppercase tracking-[0.14em] text-ht-accent">
               {isChallengesLoading
                 ? "Prizes"
                 : challengeCards.length > 0
@@ -66,20 +66,20 @@ function VenueChallengesPanelInner({
             </p>
             <div className="space-y-2">
               {isChallengesLoading ? (
-                <div className="space-y-3 rounded-2xl border border-slate-700/60 bg-slate-800/40 p-4">
+                <div className="space-y-3 rounded-2xl border border-ht-skeleton/60 bg-ht-skeleton-bg/40 p-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-14 w-14 animate-pulse rounded-2xl bg-slate-700" />
+                    <div className="h-14 w-14 animate-pulse rounded-2xl bg-ht-skeleton" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3.5 w-40 animate-pulse rounded bg-slate-700" />
-                      <div className="h-2 w-full animate-pulse rounded bg-slate-700/70" />
-                      <div className="h-2 w-24 animate-pulse rounded bg-slate-700/50" />
+                      <div className="h-3.5 w-40 animate-pulse rounded bg-ht-skeleton" />
+                      <div className="h-2 w-full animate-pulse rounded bg-ht-skeleton/70" />
+                      <div className="h-2 w-24 animate-pulse rounded bg-ht-skeleton/50" />
                     </div>
                   </div>
                 </div>
               ) : null}
 
               {!isChallengesLoading && challengeCards.length === 0 ? (
-                <div className="rounded-2xl border border-slate-700/60 bg-slate-800/40 p-4 text-center text-sm font-semibold text-slate-500">
+                <div className="rounded-2xl border border-ht-skeleton/60 bg-ht-skeleton-bg/40 p-4 text-center text-sm font-semibold text-ht-fg-faint">
                   No prizes at this venue yet.
                 </div>
               ) : null}
@@ -133,12 +133,12 @@ function VenueChallengesPanelInner({
                     }}
                     disabled={!canOpenRules && !canOpenRedeem}
                     aria-disabled={!canOpenRules && !canOpenRedeem}
-                    className={`flex w-full flex-col overflow-hidden rounded-2xl p-4 text-left transition-opacity ${
+                    className={`flex w-full flex-col overflow-hidden rounded-2xl p-4 text-left shadow-ht-panel transition-opacity ${
                       !canOpenRules && !canOpenRedeem ? "cursor-default opacity-60" : "hover:opacity-90"
                     }`}
                     style={{
-                      background: isWinner ? "linear-gradient(135deg, #1c1400, #2d1f00)" : "#111827",
-                      border: `1.5px solid ${isWinner ? "rgba(251,191,36,0.4)" : iconStyle.cardAccent}`,
+                      background: isWinner ? "var(--ht-prize-won-bg)" : "var(--ht-prize-card-bg)",
+                      border: `1.5px solid ${isWinner ? "var(--ht-prize-won-edge)" : iconStyle.cardAccent}`,
                     }}
                   >
                     {/* Header row: icon + game eyebrow + prize headline + status chip */}
@@ -146,11 +146,11 @@ function VenueChallengesPanelInner({
                       <ChallengeIconBadge gameType={gameType} />
                       <div className="min-w-0 flex-1">
                         {gameLabel ? (
-                          <div className="text-caption font-black uppercase leading-tight tracking-[0.14em] text-slate-400">
+                          <div className="text-caption font-black uppercase leading-tight tracking-[0.14em] text-ht-fg-muted">
                             {gameLabel}
                           </div>
                         ) : null}
-                        <div className="mt-0.5 break-words text-xl font-black leading-snug text-slate-100">
+                        <div className="mt-0.5 break-words text-xl font-black leading-snug text-ht-fg-strong">
                           {headline}
                         </div>
                         {/* Status chip and the Details affordance share a row *under* the
@@ -159,40 +159,34 @@ function VenueChallengesPanelInner({
                             to three lines when Details sat beside them. */}
                         <div className="mt-1 flex items-center justify-between gap-2">
                           {isWon && isWinner ? (
-                            <span
-                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-amber-300"
-                              style={{ background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.3)" }}
-                            >
+                            <span className="inline-flex items-center rounded-full border border-ht-chip-won-edge bg-ht-chip-won-bg px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-ht-chip-won-fg">
                               You Won
                             </span>
                           ) : isWon ? (
-                            <span
-                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-slate-400"
-                              style={{ background: "rgba(51,65,85,0.5)", border: "1px solid rgba(71,85,105,0.5)" }}
-                            >
+                            <span className="inline-flex items-center rounded-full border border-ht-chip-neutral-edge bg-ht-chip-neutral-bg px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-ht-fg-muted">
                               All Claimed
                             </span>
                           ) : rankedCard?.status === "week_complete" ? (
-                            <span className="inline-flex items-center rounded-full border border-slate-600/50 bg-slate-700/50 px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-slate-400">
+                            <span className="inline-flex items-center rounded-full border border-ht-chip-neutral-edge bg-ht-chip-neutral-bg px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-ht-fg-muted">
                               Week Complete
                             </span>
                           ) : isUpcoming || rankedCard?.status === "upcoming" ? (
                             <span
-                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-amber-300"
+                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-ht-warn-fg"
                               style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)" }}
                             >
                               Upcoming
                             </span>
                           ) : (
                             <span
-                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-cyan-400"
+                              className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-ht-accent"
                               style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.2)" }}
                             >
                               In Progress
                             </span>
                           )}
                           {canOpenRules && (
-                            <span className="shrink-0 text-xs font-black uppercase tracking-[0.08em] text-slate-500">
+                            <span className="shrink-0 text-xs font-black uppercase tracking-[0.08em] text-ht-fg-faint">
                               Details ›
                             </span>
                           )}
@@ -202,8 +196,7 @@ function VenueChallengesPanelInner({
 
                     {/* Rules */}
                     {challenge.description?.summary || challenge.rules ? (
-                      <div className="mt-3 rounded-lg px-3 py-2.5 text-base leading-relaxed text-slate-400"
-                        style={{ background: "rgba(30,41,59,0.7)", border: "1px solid rgba(71,85,105,0.4)" }}>
+                      <div className="mt-3 rounded-lg border border-ht-note-edge bg-ht-note-bg px-3 py-2.5 text-base leading-relaxed text-ht-fg-muted">
                         {challenge.description?.summary ?? challenge.rules}
                       </div>
                     ) : null}
@@ -212,30 +205,29 @@ function VenueChallengesPanelInner({
                     {rankedCard ? (
                       <div className="mt-3 space-y-2">
                         {isWinner ? (
-                          <div className="inline-flex items-center rounded-full border border-amber-300/35 bg-amber-300/10 px-3 py-1.5 text-sm font-black uppercase tracking-[0.08em] text-amber-300">
+                          <div className="inline-flex items-center rounded-full border border-ht-claim-edge bg-ht-claim-bg px-3 py-1.5 text-sm font-black uppercase tracking-[0.08em] text-ht-chip-won-fg">
                             {isBusy ? "Opening…" : "Prize won! Tap to claim it."}
                           </div>
                         ) : null}
                         {rankedCard.lines.map((line) => (
-                          <p key={line} className="text-base text-slate-300">
+                          <p key={line} className="text-base text-ht-fg-soft">
                             {line}
                           </p>
                         ))}
                       </div>
                     ) : isWon && isWinner ? (
-                      <div className="mt-3 inline-flex items-center rounded-full px-3 py-1.5 text-sm font-black uppercase tracking-[0.08em] text-amber-300"
-                        style={{ border: "1px solid rgba(251,191,36,0.35)", background: "rgba(251,191,36,0.12)" }}>
+                      <div className="mt-3 inline-flex items-center rounded-full border border-ht-claim-edge bg-ht-claim-bg px-3 py-1.5 text-sm font-black uppercase tracking-[0.08em] text-ht-chip-won-fg">
                         {/* prizeClaimedAt is the AWARD timestamp (challenge_campaign_redemptions.claimed_at
                             defaults to now() on insert), not a redemption flag — it's always set the
                             instant a winner is picked, so it can't distinguish claimed vs. unclaimed. */}
                         {isBusy ? "Opening…" : "Prize won! Tap to claim it."}
                       </div>
                     ) : isWon ? (
-                      <p className="mt-3 text-base text-slate-500">
+                      <p className="mt-3 text-base text-ht-fg-faint">
                         {winnerUsernames.length > 0 ? (
                           <>
                             Congrats to{" "}
-                            <span className="text-slate-400">{winnerUsernames.join(", ")}</span>
+                            <span className="text-ht-fg-muted">{winnerUsernames.join(", ")}</span>
                             {" — "}
                             {winnerUsernames.length > 1 ? "all prizes" : "the prize"} for this cycle{" "}
                             {winnerUsernames.length > 1 ? "have" : "has"} been claimed.
@@ -245,13 +237,13 @@ function VenueChallengesPanelInner({
                         )}
                       </p>
                     ) : isUpcoming && upcomingStartDate ? (
-                      <p className="mt-3 text-base text-amber-300/80">
+                      <p className="mt-3 text-base text-ht-warn-fg/80">
                         Starts {formatUpcomingDate(upcomingStartDate)} — get your picks in early.
                       </p>
                     ) : challenge.challengeMode === "leaderboard" ? (
                       // Legacy leaderboard-mode rewards finish out their current cycle, but
                       // standings are never rendered on this panel (Rewards is progress-only).
-                      <p className="mt-3 text-base text-slate-500">In progress — check back for results.</p>
+                      <p className="mt-3 text-base text-ht-fg-faint">In progress — check back for results.</p>
                     ) : challenge.winCondition === "game_winner" || challenge.winCondition === "ranked_places" ? (
                       // No points target to bar-chart — the reward goes to whoever wins
                       // (or, for a weekly places reward, to the week's top players: its
@@ -261,7 +253,7 @@ function VenueChallengesPanelInner({
                       // summary above already says what to do and what you win; only a legacy
                       // hand-written reward (isCustom) needs this line.
                       challenge.description?.isCustom !== false ? (
-                        <p className="mt-3 text-base text-slate-500">Awarded to the winner.</p>
+                        <p className="mt-3 text-base text-ht-fg-faint">Awarded to the winner.</p>
                       ) : null
                     ) : (
                       <div className="mt-3">
@@ -276,7 +268,7 @@ function VenueChallengesPanelInner({
                 <button
                   type="button"
                   onClick={onRetryChallenges}
-                  className="rounded-md border border-rose-400/60 bg-rose-950/30 px-2 py-1 text-caption font-black uppercase tracking-[0.08em] text-rose-300"
+                  className="rounded-md border border-ht-loss-fg/60 bg-ht-danger-wash px-2 py-1 text-caption font-black uppercase tracking-[0.08em] text-ht-danger-fg"
                 >
                   {challengesError} Tap to retry
                 </button>

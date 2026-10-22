@@ -109,7 +109,7 @@ export type SignOutButtonProps = {
 };
 
 const DANGER_ROW_CLASS =
-  "w-full rounded-ht-lg border border-rose-400/45 bg-rose-500/10 px-4 py-3 text-left text-base font-black text-rose-300 transition-colors hover:bg-rose-500/15 disabled:opacity-50";
+  "w-full rounded-ht-lg border border-rose-400/45 bg-rose-500/10 px-4 py-3 text-left text-base font-black text-ht-danger-fg transition-colors hover:bg-rose-500/15 disabled:opacity-50";
 
 export function SignOutButton({
   variant,

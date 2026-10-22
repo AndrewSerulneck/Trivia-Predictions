@@ -30,12 +30,14 @@ export const EXIT_BACK_CIRCLE_LAYOUT_CLASS =
   "inline-flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border transition-colors";
 
 export const EXIT_BACK_TONE_CLASS: Record<NavTone, string> = {
-  dark: "border-white/10 bg-slate-900 text-slate-300 hover:text-white",
+  // Tokens, so the same circle turns white with a slate chevron on a light-theme screen
+  // (docs/light-theme-plan.md): dark values are exactly white/10, slate-900, slate-300, white.
+  dark: "border-ht-overlay/10 bg-ht-surface text-ht-fg-soft hover:text-ht-overlay",
   light: "border-slate-300 bg-white text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900",
 };
 
 const EXIT_BACK_LABEL_TONE_CLASS: Record<NavTone, string> = {
-  dark: "text-slate-300",
+  dark: "text-ht-fg-soft",
   light: "text-slate-600",
 };
 

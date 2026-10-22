@@ -45,7 +45,7 @@ export function AppBar({
   trailing?: ReactNode;
 }) {
   return (
-    <div className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-2.5 border-b border-white/[0.08] bg-slate-950/[0.86] px-[13px] pb-2 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur-md">
+    <div className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-2.5 border-b border-ht-overlay/[0.08] bg-ht-chrome-bar px-[13px] pb-2 pt-[max(env(safe-area-inset-top),8px)] backdrop-blur-md">
       <div className="flex min-w-0 items-center gap-1.5">{leading}</div>
       <div className="flex min-w-0 items-center gap-2">{center}</div>
       <div className="flex shrink-0 items-center gap-1.5">{trailing}</div>
@@ -63,12 +63,14 @@ export function GameAppBar({
   exitLabel?: string;
 }) {
   const summary = usePointsSummary();
+  // Only Pick 'Em, NFL Pick 'Em and Fantasy have a light version (lib/theme.ts), so only
+  // their names are tokens; the dark-only games keep their literal accents.
   const accentText =
     game === "bingo" ? "text-sky-300" :
-    game === "nfl-pickem" ? "text-amber-200" :
+    game === "pickem" || game === "nfl-pickem" ? "text-ht-pickem-accent" :
     game === "squares" ? "text-emerald-200" :
     game === "bracket" ? "text-orange-200" :
-    "text-amber-200";
+    "text-ht-fantasy-title";
 
   // The exit itself lives in ExitBackButton: `onExit` (the parent-injected exit
   // that runs the venue return animation) still wins, and when it's absent

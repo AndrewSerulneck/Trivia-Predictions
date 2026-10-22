@@ -141,7 +141,7 @@ export function InlineSlotAdClient({
       aria-label="Open Hightop Challenge advertising intake form"
     >
       <div className="flex min-h-[320px] flex-col items-center justify-center rounded-ht-lg border border-dashed border-ht-border-soft bg-ht-surface p-6 text-center transition-colors hover:bg-ht-elevated">
-        <span className="mb-2 rounded bg-indigo-500/15 px-2 py-1 font-mono text-sm font-bold text-indigo-300">
+        <span className="mb-2 rounded bg-indigo-500/15 px-2 py-1 font-mono text-sm font-bold text-ht-ad-label">
           {slotLabel}
         </span>
         <p className="text-caption font-semibold uppercase tracking-wide text-ht-fg-muted">Ad Placeholder</p>

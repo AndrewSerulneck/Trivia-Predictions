@@ -50,6 +50,9 @@ Apply this to every player-facing component you build. **All 7 must pass.**
 
 1. **One dark canvas.** Every player-facing surface uses `--ht-canvas`
    (`#020617`). No cream, no white, no light-gray card backgrounds.
+   Exception: the light version of Venue Home, Pick 'Em, NFL Pick 'Em and
+   Fantasy, done only through the `:root[data-theme="light"]` token values
+   in `colors_and_type.css` (`docs/light-theme-plan.md`).
 2. **The accent tells you where you are.** Cyan = home base / informational /
    focus / Live Trivia. Emerald = answering / success. Amber = countdowns /
    leaderboard / closest-guess. Fuchsia = answer reveal / intermission.

@@ -191,6 +191,15 @@ high-contrast, but restrained: **one glow, not five.**
 
 ### Colors
 
+- **Dark is the default; four screens have a light version** (2026-10-22,
+  `docs/light-theme-plan.md`): Venue Home, Pick 'Em, NFL Pick 'Em and
+  Fantasy, only for a player who chose Light. It is done with **tokens
+  only** — every colour is a variable with its dark value in `:root` and
+  its light value in `:root[data-theme="light"]` (this folder's
+  `colors_and_type.css`). Light page `#F3F5FA`, white cards with a faint
+  edge and soft shadow, near-black text, darker accents; light text reaches
+  4.5:1 on white. Never cream, never pale gold/cyan text on white. The rest
+  of this section describes the dark default.
 - **One canvas.** `--ht-canvas: #020617` (slate‑950). No alternate page
   background. Bingo *used to* paint the whole page with an orange turf
   gradient — that's dead. Game color identity is now expressed inside the

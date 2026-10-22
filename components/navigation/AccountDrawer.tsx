@@ -47,8 +47,8 @@ export function AccountDrawer({
       />
 
       <aside
-        className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] overflow-y-auto overscroll-contain border-r border-ht-border-soft bg-ht-surface px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-ht-modal transition-transform duration-200 ${
-          open ? "translate-x-0" : "-translate-x-full"
+        className={`absolute inset-y-0 left-0 w-[22rem] max-w-[92vw] overflow-y-auto overscroll-contain border-r border-ht-border-soft bg-ht-surface px-5 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] transition-transform duration-200 ${
+          open ? "translate-x-0 shadow-ht-modal" : "-translate-x-full shadow-ht-drawer-closed"
         }`}
       >
         <div className="mb-4 flex items-center justify-between">

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fantasy Draft, light</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bree+Serif&amp;family=Nunito:wght@400;600;700;800;900&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 1500px; box-sizing: border-box; background: #F3F5FA; font-family: Nunito, system-ui, sans-serif; color: #0F172A; overflow: hidden">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.94); border-bottom: 1px solid rgba(15,23,42,0.08); padding: 10px 13px 8px">
+    <button type="button" aria-label="Back to venue" style="width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #334155; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+    </button>
+    <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+      <img src="/_blob/b3dd928e56adfe750d01a774fc14e829" alt="" style="width: 26px; height: 26px; border-radius: 7px; background: #7c3aed; object-fit: contain">
+      <span style="font-size: 14px; font-weight: 900; letter-spacing: 0.11em; text-transform: uppercase; color: #0F5C4A">Fantasy</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px">
+      <span style="display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; border: 1px solid rgba(180,83,9,0.30); background: #FFFBEB; color: #92400E; font-size: 13px; font-weight: 900; padding: 5px 10px; font-variant-numeric: tabular-nums"><span style="width: 10px; height: 10px; border-radius: 999px; background: #F59E0B"></span>1,060</span>
+      <button type="button" aria-label="Notifications" style="width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #334155; display: flex; align-items: center; justify-content: center; padding: 0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <main style="padding: 12px 16px 120px; display: flex; flex-direction: column; gap: 12px">
+
+    <section style="background: #FFFFFF; border: 1px solid rgba(15,23,42,0.08); border-radius: 12px; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px">
+        <div style="flex: 1; display: flex; gap: 6px">
+          <button type="button" style="border-radius: 999px; border: 1px solid #0F5C4A; background: #0F5C4A; color: #FFFFFF; font-family: inherit; font-size: 12px; font-weight: 900; padding: 6px 12px">NBA</button>
+          <button type="button" style="border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #334155; font-family: inherit; font-size: 12px; font-weight: 900; padding: 6px 12px">MLB</button>
+          <button type="button" disabled style="display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #8492A6; font-family: inherit; font-size: 12px; font-weight: 900; padding: 6px 12px">NFL <span style="font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase">Soon</span></button>
+        </div>
+        <span style="font-size: 12px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B82">0 entries</span>
+      </div>
+      <div style="height: 1px; background: rgba(15,23,42,0.07)"></div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px">
+        <button type="button" aria-label="Previous day" style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(15,92,74,0.30); background: #F2F8F5; color: #0F5C4A; font-size: 12px; padding: 0">◀</button>
+        <div style="flex: 1; text-align: center; font-size: 25px; font-weight: 900; color: #0F172A">Today</div>
+        <button type="button" aria-label="Next day" disabled style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(15,92,74,0.20); background: #F2F8F5; color: #0F5C4A; font-size: 12px; padding: 0; opacity: 0.4">▶</button>
+        <span style="font-size: 12px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; color: #0F5C4A">Locks at tip</span>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border: 1px solid rgba(15,92,74,0.22); border-radius: 14px; padding: 12px; box-shadow: 0 1px 2px rgba(15,23,42,0.05), 0 6px 16px rgba(15,23,42,0.06)">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px">
+        <p style="margin: 0; font-size: 12px; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; color: #0F5C4A">Your lineup · 2/5</p>
+        <span style="border-radius: 999px; background: #FFFBEB; color: #92400E; font-size: 12px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px">Tip-off 7:30 PM</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px">
+        <sc-for list="{{slots}}" as="sl" hint-placeholder-count="5">
+          <button type="button" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 64px; border-radius: 10px; border: 1px {{sl.borderStyle}} {{sl.border}}; background: {{sl.bg}}; font-family: inherit; padding: 8px 2px">
+            <span style="font-size: 12px; font-weight: 900; line-height: 1; color: {{sl.nameColor}}">{{sl.name}}</span>
+            <span style="font-size: 12px; font-weight: 800; line-height: 1; color: {{sl.posColor}}">{{sl.pos}}</span>
+          </button>
+        </sc-for>
+      </div>
+      <p style="margin: 10px 0 0; font-size: 12px; color: #5B6B82">Tap players to build your roster.</p>
+    </section>
+
+    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+      <span style="font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #5B6B82">Sort</span>
+      <button type="button" style="border-radius: 999px; border: 1px solid #0F5C4A; background: #0F5C4A; color: #FFFFFF; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 10px">Projected</button>
+      <button type="button" style="border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #334155; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 10px">Position</button>
+      <button type="button" style="border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #334155; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 10px">Team</button>
+      <button type="button" style="border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #334155; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 10px">A–Z</button>
+      <button type="button" style="border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #334155; font-family: inherit; font-size: 12px; font-weight: 800; padding: 6px 10px">All positions ▾</button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 7px">
+      <sc-for list="{{pool}}" as="p" hint-placeholder-count="10">
+        <div style="display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px; border-radius: 10px; border: 1px solid {{p.border}}; background: {{p.bg}}; padding: 10px">
+          <div style="width: 30px; height: 30px; border-radius: 999px; background: #F2F8F5; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #0F5C4A">{{p.initials}}</div>
+          <div style="min-width: 0">
+            <div style="display: flex; align-items: center; gap: 6px">
+              <span style="font-size: 13px; font-weight: 900; color: #0F172A; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{p.name}}</span>
+              <sc-if value="{{p.top}}" hint-placeholder-val="{{false}}">
+                <span style="flex-shrink: 0; border-radius: 999px; background: #FEF3C7; color: #92400E; font-size: 12px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; padding: 0 6px">★ Top</span>
+              </sc-if>
+            </div>
+            <div style="margin-top: 2px; font-size: 12px; font-weight: 700; color: #5B6B82"><span style="color: #0F5C4A">{{p.pos}}</span> · {{p.team}} · <span style="color: #A16207">{{p.proj}} proj</span></div>
+          </div>
+          <button type="button" style="height: 32px; min-width: 76px; border-radius: 999px; border: 1px solid {{p.btnBorder}}; background: {{p.btnBg}}; color: {{p.btnText}}; font-family: inherit; font-size: 12px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase">{{p.btn}}</button>
+        </div>
+      </sc-for>
+    </div>
+  </main>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 24px 16px 20px; background: linear-gradient(to top, #F3F5FA 60%, rgba(243,245,250,0))">
+    <button type="button" style="width: 100%; border-radius: 14px; border: 0; background: #0F5C4A; color: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; padding: 16px; box-shadow: 0 8px 20px rgba(15,92,74,0.25)">Draft 3 more players</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const filled = [{ name: "Jokić", pos: "C" }, { name: "SGA", pos: "PG" }];
+    const slots = Array.from({ length: 5 }, (_, i) => {
+      const f = filled[i];
+      return f ? { name: f.name, pos: f.pos, bg: "#F2F8F5", border: "rgba(15,92,74,0.35)", borderStyle: "solid", nameColor: "#0F172A", posColor: "#0F5C4A" }
+               : { name: "+", pos: "Open", bg: "#FFFFFF", border: "rgba(15,23,42,0.18)", borderStyle: "solid", nameColor: "#5B6B82", posColor: "#5B6B82" };
+    });
+    const pool = [
+      ["Nikola Jokić", "NJ", "C", "DEN", "58.2", true, true],
+      ["Shai Gilgeous-Alexander", "SG", "PG", "OKC", "52.6", true, true],
+      ["Giannis Antetokounmpo", "GA", "PF", "MIL", "51.9", false, false],
+      ["Luka Dončić", "LD", "PG", "LAL", "51.4", false, false],
+      ["Victor Wembanyama", "VW", "C", "SAS", "47.8", false, false],
+      ["Anthony Edwards", "AE", "SG", "MIN", "44.1", false, false],
+      ["Jayson Tatum", "JT", "SF", "BOS", "43.5", false, false],
+      ["Jalen Brunson", "JB", "PG", "NYK", "41.0", false, false],
+      ["Tyrese Haliburton", "TH", "PG", "IND", "39.7", false, false],
+      ["Paolo Banchero", "PB", "PF", "ORL", "38.9", false, false]
+    ].map((r, i) => ({
+      name: r[0], initials: r[1], pos: r[2], team: r[3], proj: r[4], top: i === 0,
+      bg: r[5] ? "#F2F8F5" : "#FFFFFF",
+      border: r[5] ? "rgba(15,92,74,0.25)" : "rgba(15,23,42,0.08)",
+      btn: r[6] ? "✓ Drafted" : "Draft",
+      btnBg: r[6] ? "#ECFDF5" : "#0F5C4A",
+      btnBorder: r[6] ? "rgba(4,120,87,0.30)" : "#0F5C4A",
+      btnText: r[6] ? "#047857" : "#FFFFFF"
+    }));
+    return { slots: slots, pool: pool };
+  }
+}
+</script>
+</body>
+</html>

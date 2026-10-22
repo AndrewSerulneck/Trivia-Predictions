@@ -117,7 +117,7 @@ export function AccountMenuList({ onNavigate, hasUnclaimedPrize = false }: Accou
           <Link
             href={PLAYER_DELETE_ACCOUNT_PATH}
             onClick={onNavigate}
-            className="text-footnote font-bold text-ht-fg-muted underline underline-offset-2 hover:text-rose-300"
+            className="text-footnote font-bold text-ht-fg-muted underline underline-offset-2 hover:text-ht-danger-fg"
           >
             Delete my account
           </Link>

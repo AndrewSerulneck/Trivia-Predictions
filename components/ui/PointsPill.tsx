@@ -68,8 +68,8 @@ export function PointsPill({ summary, size = "md" }: { summary: PointsSummary; s
         id="tp-points-pill"
         className={`relative inline-flex items-center justify-center gap-1.5 rounded-lg border font-black tabular-nums transition-all duration-300 ${
           pointsFlash
-            ? "bg-amber-400/25 border-amber-400/50 text-amber-200"
-            : "bg-amber-500/15 border-amber-400/30 text-amber-300"
+            ? "bg-ht-points-pill-flash-bg border-ht-points-pill-edge/50 text-ht-points-flash-fg"
+            : "bg-ht-points-pill-bg border-ht-points-pill-edge/30 text-ht-points-fg"
         } ${pointsPop ? "scale-105" : "scale-100"} cursor-pointer ${sizing.wrap}`}
         aria-label="Open venue leaderboard"
       >

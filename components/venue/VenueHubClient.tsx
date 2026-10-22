@@ -1653,21 +1653,21 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       </div>
 
       <AccountDrawer open={isMenuOpen} onClose={() => setIsMenuOpen(false)} scrollLockId="venue-hub-menu">
-        <div className="mb-5 rounded-ht-lg border border-cyan-400/45 bg-cyan-400/10 px-4 py-3.5">
+        <div className="mb-5 rounded-ht-lg border border-ht-accent/45 bg-ht-accent/10 px-4 py-3.5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-[1.15rem] font-black leading-tight text-ht-fg-primary">
                 {menuUsername || "Guest"}
               </p>
-              <p className="mt-0.5 truncate text-caption font-semibold uppercase tracking-[0.1em] text-cyan-400">
+              <p className="mt-0.5 truncate text-caption font-semibold uppercase tracking-[0.1em] text-ht-accent">
                 {venueDisplayName}
               </p>
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-caption font-black uppercase tracking-[0.12em] text-amber-200/85">Points</p>
+              <p className="text-caption font-black uppercase tracking-[0.12em] text-ht-countdown/85">Points</p>
               <p
-                className="text-[1.02rem] font-black leading-tight"
-                style={{ color: "var(--ht-accent-gold, #fbbf24)", fontVariantNumeric: "tabular-nums" }}
+                className="text-[1.02rem] font-black leading-tight text-ht-gold-fg"
+                style={{ fontVariantNumeric: "tabular-nums" }}
               >
                 {(menuPoints ?? 0).toLocaleString()}
               </p>
@@ -1685,18 +1685,18 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
               type="button"
               onClick={() => void handlePasskeySetup()}
               disabled={isPasskeySetupLoading}
-              className="tp-player-hit-target tp-player-pressable mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-cyan-400/50 bg-cyan-400/15 px-3 py-2 text-sm font-black text-cyan-200 disabled:opacity-50" aria-busy={isPasskeySetupLoading}
+              className="tp-player-hit-target tp-player-pressable mt-3 inline-flex min-h-[40px] w-full items-center justify-center rounded-xl border border-ht-accent/50 bg-ht-accent/15 px-3 py-2 text-sm font-black text-ht-accent-soft disabled:opacity-50" aria-busy={isPasskeySetupLoading}
             >
             {(isPasskeySetupLoading) ? <ButtonSpinner /> : null}
               {isPasskeySetupLoading ? "Setting up passkey..." : "Set Up Passkey"}
             </button>
             {passkeySetupError ? (
-              <p className="mt-2 rounded-lg border border-rose-400/50 bg-rose-900/30 px-2 py-1 text-xs text-rose-200" role="alert">
+              <p className="mt-2 rounded-lg border border-ht-loss-fg/50 bg-ht-danger-wash-strong px-2 py-1 text-xs text-ht-danger-soft" role="alert">
                 {passkeySetupError}
               </p>
             ) : null}
             {passkeySetupMessage ? (
-              <p className="mt-2 rounded-lg border border-emerald-400/50 bg-emerald-900/30 px-2 py-1 text-xs text-emerald-200" role="status">
+              <p className="mt-2 rounded-lg border border-ht-gain-fg/50 bg-ht-success-wash px-2 py-1 text-xs text-ht-success-soft" role="status">
                 {passkeySetupMessage}
               </p>
             ) : null}
@@ -1716,7 +1716,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             onClick={() => setSelectedChallengeId(null)} transition={reducedMotion ? { duration: 0 } : undefined}
           >
             <motion.div
-              className="relative w-fit max-w-[calc(100vw-12px)] max-h-[calc(100svh-5rem)] overflow-y-auto rounded-2xl border border-cyan-400/40 bg-slate-900 px-5 pb-6 pt-5 shadow-[0_24px_48px_rgba(0,0,0,0.6)]"
+              className="relative w-fit max-w-[calc(100vw-12px)] max-h-[calc(100svh-5rem)] overflow-y-auto rounded-2xl border border-ht-accent/40 bg-ht-surface px-5 pb-6 pt-5 shadow-ht-popup"
               initial={reducedMotion ? false : { opacity: 0, y: 28, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.99 }}
@@ -1725,8 +1725,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
             >
               <button
                 type="button"
-                style={{ border: "1px solid rgba(255,255,255,0.12)" }}
-                className="tp-player-hit-target tp-player-pressable tp-clean-button absolute right-3 top-3 inline-flex h-10 min-w-[4.5rem] items-center justify-center rounded-full bg-slate-800 px-4 text-sm font-semibold text-slate-300"
+                style={{ border: "1px solid var(--ht-border-soft)" }}
+                className="tp-player-hit-target tp-player-pressable tp-clean-button absolute right-3 top-3 inline-flex h-10 min-w-[4.5rem] items-center justify-center rounded-full bg-ht-elevated px-4 text-sm font-semibold text-ht-fg-soft"
                 onClick={() => setSelectedChallengeId(null)}
                 aria-label="Close prize details"
               >
@@ -1737,26 +1737,26 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
               <div className="flex w-[min(92vw,24rem)] items-center gap-3 pr-24">
                 <ChallengeIconBadge gameType={selectedChallengeDetail.gameType} />
                 {selectedChallengeDetail.gameLabel ? (
-                  <span className="min-w-0 flex-1 text-caption font-black uppercase leading-tight tracking-[0.14em] text-slate-400">
+                  <span className="min-w-0 flex-1 text-caption font-black uppercase leading-tight tracking-[0.14em] text-ht-fg-muted">
                     {selectedChallengeDetail.gameLabel}
                   </span>
                 ) : null}
               </div>
-              <h4 className="mt-3 w-[min(92vw,24rem)] break-words text-3xl font-black leading-9 text-white">
+              <h4 className="mt-3 w-[min(92vw,24rem)] break-words text-3xl font-black leading-9 text-ht-fg-bright">
                 {selectedChallengeDetail.headline}
               </h4>
               {selectedChallenge.description?.summary || selectedChallenge.rules ? (
-                <p className="mt-4 w-[min(92vw,24rem)] text-xl leading-8 text-slate-300">
+                <p className="mt-4 w-[min(92vw,24rem)] text-xl leading-8 text-ht-fg-soft">
                   {selectedChallenge.description?.summary ?? selectedChallenge.rules}
                 </p>
               ) : null}
               {selectedChallenge.description?.when ? (
-                <p className="mt-3 w-[min(92vw,24rem)] text-lg leading-7 text-slate-400">
+                <p className="mt-3 w-[min(92vw,24rem)] text-lg leading-7 text-ht-fg-muted">
                   {selectedChallenge.description.when}
                 </p>
               ) : null}
               {selectedChallenge.description?.fineprint ? (
-                <p className="mt-3 w-[min(92vw,24rem)] text-base leading-6 text-slate-500">
+                <p className="mt-3 w-[min(92vw,24rem)] text-base leading-6 text-ht-fg-faint">
                   {selectedChallenge.description.fineprint}
                 </p>
               ) : null}
@@ -1773,21 +1773,21 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
               ) : selectedChallenge.winCondition === "game_winner" ? (
                 // Only a legacy hand-written reward (isCustom) needs this; composed ones say it.
                 selectedChallenge.description?.isCustom !== false ? (
-                  <p className="mt-5 w-[min(92vw,24rem)] text-lg text-slate-500">Awarded to the winner.</p>
+                  <p className="mt-5 w-[min(92vw,24rem)] text-lg text-ht-fg-faint">Awarded to the winner.</p>
                 ) : null
               ) : selectedChallengeDetail.upcomingStartDate ? (
                 // The description's `when` line already says "Starts … Get your picks in early."
                 selectedChallenge.description?.when ? null : (
-                <p className="mt-5 w-[min(92vw,24rem)] text-lg text-amber-300/80">
+                <p className="mt-5 w-[min(92vw,24rem)] text-lg text-ht-warn-fg/80">
                   Starts {formatCalendarDate(selectedChallengeDetail.upcomingStartDate)} — get your picks in early.
                 </p>
                 )
               ) : (
-                <p className="mt-5 w-[min(92vw,24rem)] text-lg text-slate-500">In progress — check back for results.</p>
+                <p className="mt-5 w-[min(92vw,24rem)] text-lg text-ht-fg-faint">In progress — check back for results.</p>
               )}
 
               {selectedChallengeDetail.quotaLine ? (
-                <p className="mt-3 w-[min(92vw,24rem)] text-base font-black uppercase tracking-[0.1em] text-cyan-300">
+                <p className="mt-3 w-[min(92vw,24rem)] text-base font-black uppercase tracking-[0.1em] text-ht-venue-accent">
                   {selectedChallengeDetail.quotaLine}
                 </p>
               ) : null}

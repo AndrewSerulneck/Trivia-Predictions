@@ -101,16 +101,16 @@ function VenueGamesPanelInner({
     <section className="venue-screen relative m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
       <div className={`venue-home-panel-content venue-home-games-fit w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-4 pt-2 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
         {showFastPathSkeleton ? (
-          <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-slate-700 bg-slate-800/80 px-3 py-2 text-center text-xs font-semibold text-slate-300">
+          <div className="mx-auto mb-2 w-full max-w-[24rem] rounded-2xl border border-ht-field-border bg-ht-panel-soft px-3 py-2 text-center text-xs font-semibold text-ht-fg-soft">
             <p>{arrivalStatusText}</p>
-            <p className="mt-0.5 text-caption uppercase tracking-[0.08em] text-slate-400">
+            <p className="mt-0.5 text-caption uppercase tracking-[0.08em] text-ht-fg-muted">
               {arrivalStage} · {Math.round(arrivalProgress)}%
             </p>
           </div>
         ) : null}
 
         <div className="mx-auto w-full max-w-[24rem] space-y-3 sm:max-w-md">
-          <div className="rounded-2xl border border-amber-400/60 bg-ht-surface p-3 shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+          <div className="rounded-2xl border border-ht-countdown-edge/60 bg-ht-surface p-3 shadow-ht-card">
             <div className="flex items-stretch gap-3">
               <div className="min-w-0 flex-1">
                 {(() => {
@@ -118,10 +118,10 @@ function VenueGamesPanelInner({
                   if (liveTriviaStatus.live) {
                     return (
                       <>
-                        <p className="text-caption font-black uppercase tracking-[0.14em] text-amber-300">
+                        <p className="text-caption font-black uppercase tracking-[0.14em] text-ht-countdown-label">
                           {recurringLabel ?? "Live Trivia in progress!"}
                         </p>
-                        <p className="mt-1 font-black text-amber-200 text-[2.2rem] leading-none">
+                        <p className="mt-1 font-black text-ht-countdown text-[2.2rem] leading-none">
                           Live now!
                         </p>
                       </>
@@ -132,21 +132,21 @@ function VenueGamesPanelInner({
                     nextLiveTriviaCountdownSeconds >= 86400;
                   if (isFarOut) {
                     return (
-                      <p className="font-black text-amber-200 text-[1.35rem] leading-snug">
+                      <p className="font-black text-ht-countdown text-[1.35rem] leading-snug">
                         {recurringLabel}
                       </p>
                     );
                   }
                   return (
                     <>
-                      <p className="text-caption font-black uppercase tracking-[0.14em] text-amber-300">
+                      <p className="text-caption font-black uppercase tracking-[0.14em] text-ht-countdown-label">
                         {recurringLabel ?? "Next Live Trivia Showdown In"}
                       </p>
-                      <p className="mt-1 font-black tabular-nums text-amber-200 text-[2.2rem] leading-none">
+                      <p className="mt-1 font-black tabular-nums text-ht-countdown text-[2.2rem] leading-none">
                         {nextLiveTriviaCountdownLabel}
                       </p>
                       {!recurringLabel && liveTriviaStatus.label ? (
-                        <p className="mt-1 text-xs font-semibold text-amber-100/90">{liveTriviaStatus.label}</p>
+                        <p className="mt-1 text-xs font-semibold text-ht-countdown-soft/90">{liveTriviaStatus.label}</p>
                       ) : null}
                     </>
                   );
@@ -160,8 +160,8 @@ function VenueGamesPanelInner({
                 disabled={pendingDestination !== null}
                 className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button min-w-[7.2rem] rounded-[12px] border px-4 py-2 text-lg font-black leading-tight transition-all motion-reduce:transition-none disabled:opacity-60 ${
                   lobbyButtonShouldPulse
-                    ? "animate-pulse motion-reduce:animate-none border-rose-300/60 bg-rose-400/20 text-rose-200 shadow-[0_0_0_1px_rgba(252,165,165,0.3)]"
-                    : "border-cyan-400/40 bg-cyan-400/10 text-cyan-200 shadow-[0_0_0_1px_rgba(34,211,238,0.28)] hover:bg-cyan-400/15"
+                    ? "animate-pulse motion-reduce:animate-none border-ht-danger-fg/60 bg-ht-loss-fg/20 text-ht-danger-soft shadow-[0_0_0_1px_rgb(var(--ht-danger-ring-rgb)/0.3)]"
+                    : "border-ht-accent/40 bg-ht-accent/10 text-ht-accent-soft shadow-[0_0_0_1px_rgb(var(--ht-accent-rgb)/0.28)] hover:bg-ht-accent/15"
                 }`)} aria-busy={pendingDestination === "live_trivia"}
               >
                 {pendingDestination === "live_trivia" ? <><ButtonSpinner /><br />Opening…</> : <>Enter<br />lobby</>}
@@ -186,7 +186,7 @@ function VenueGamesPanelInner({
                   }}
                   disabled={pendingDestination !== null}
                   data-venue-game-card={card.key}
-                  className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button tp-game-card-btn group relative w-full overflow-hidden rounded-[22px] border border-white/75 text-left shadow-[0_12px_26px_rgba(15,23,42,0.5)] ${isOpening ? "is-opening" : ""}`)}
+                  className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button tp-game-card-btn group relative w-full overflow-hidden rounded-[22px] border border-white/75 text-left shadow-ht-tile ${isOpening ? "is-opening" : ""}`)}
                   style={{ background: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }} aria-busy={isOpening}
                 >
                   {isOpening ? <span role="status" className="absolute bottom-2 right-3 z-10 inline-flex items-center gap-2 text-sm font-black"><ButtonSpinner /> Opening…</span> : null}
@@ -264,7 +264,7 @@ function VenueGamesPanelInner({
           <button
             type="button"
             onClick={onRetryBadges}
-            className="tp-player-hit-target tp-player-pressable mx-auto mt-2 block max-w-[24rem] rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-center text-caption font-semibold text-slate-300"
+            className="tp-player-hit-target tp-player-pressable mx-auto mt-2 block max-w-[24rem] rounded-full border border-ht-edge-mid bg-ht-elevated px-3 py-1.5 text-center text-caption font-semibold text-ht-fg-soft"
           >
             {badgeError} Tap to retry
           </button>

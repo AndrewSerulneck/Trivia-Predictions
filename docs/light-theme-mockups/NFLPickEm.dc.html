@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NFL Pick 'Em, light</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bree+Serif&amp;family=Nunito:wght@400;600;700;800;900&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 1640px; box-sizing: border-box; background: #F3F5FA; font-family: Nunito, system-ui, sans-serif; color: #0F172A; overflow: hidden">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(255,255,255,0.94); border-bottom: 1px solid rgba(15,23,42,0.08); padding: 10px 13px 8px">
+    <button type="button" aria-label="Back to venue" style="width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #334155; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+    </button>
+    <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+      <img src="/_blob/57cb1a58cbeaa1aa948f65b2770c3ae0" alt="" style="width: 26px; height: 26px; border-radius: 7px; background: #1a2f72; object-fit: contain">
+      <span style="font-size: 14px; font-weight: 900; letter-spacing: 0.11em; text-transform: uppercase; color: #1A2F72">NFL Pick 'Em</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px">
+      <span style="display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; border: 1px solid rgba(180,83,9,0.30); background: #FFFBEB; color: #92400E; font-size: 13px; font-weight: 900; padding: 5px 10px; font-variant-numeric: tabular-nums"><span style="width: 10px; height: 10px; border-radius: 999px; background: #F59E0B"></span>1,060</span>
+      <button type="button" aria-label="Notifications" style="width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(15,23,42,0.12); background: #FFFFFF; color: #334155; display: flex; align-items: center; justify-content: center; padding: 0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <main style="padding: 12px 12px 24px; display: flex; flex-direction: column; gap: 16px">
+    <section style="background: #FFFFFF; border: 1px solid rgba(15,23,42,0.08); border-radius: 16px; padding: 16px; box-shadow: 0 1px 2px rgba(15,23,42,0.05), 0 6px 16px rgba(15,23,42,0.06)">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span style="font-size: 24px">🏈</span>
+        <h1 style="margin: 0; font-family: 'Bree Serif', serif; font-weight: 400; font-size: 22px; line-height: 1; color: #1A2F72">NFL Pick ’Em</h1>
+      </div>
+      <p style="margin: 8px 0 0; font-size: 13px; font-weight: 600; line-height: 1.6; color: #5B6B82">Pick winners for every NFL matchup this week. Correct picks are worth 10 points. Picks lock at kickoff.</p>
+    </section>
+
+    <button type="button" style="display: flex; align-items: center; justify-content: space-between; width: 100%; border-radius: 12px; border: 1px solid rgba(26,47,114,0.20); background: #FFFFFF; color: #1A2F72; font-family: inherit; font-size: 13px; font-weight: 800; padding: 11px 12px">Week 7 · Oct 15 – Oct 19<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
+
+    <section style="background: #FFFFFF; border: 1px solid rgba(15,23,42,0.08); border-radius: 12px; padding: 16px; box-shadow: 0 1px 2px rgba(15,23,42,0.05), 0 6px 16px rgba(15,23,42,0.06)">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <h3 style="margin: 0; font-size: 13px; font-weight: 900; color: #1A2F72">Week 7 Summary</h3>
+        <span style="border-radius: 999px; background: #ECFDF5; color: #047857; font-size: 12px; font-weight: 800; padding: 2px 8px">Complete</span>
+      </div>
+      <div style="margin-top: 12px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+        <div style="border-radius: 8px; background: #F3F5FA; padding: 8px; text-align: center"><div style="font-size: 18px; font-weight: 900; color: #0F172A">14</div><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #5B6B82">Picks</div></div>
+        <div style="border-radius: 8px; background: #ECFDF5; padding: 8px; text-align: center"><div style="font-size: 18px; font-weight: 900; color: #047857">9</div><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #047857">Correct</div></div>
+        <div style="border-radius: 8px; background: #FFF1F2; padding: 8px; text-align: center"><div style="font-size: 18px; font-weight: 900; color: #BE123C">5</div><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #BE123C">Wrong</div></div>
+        <div style="border-radius: 8px; background: #FEF3C7; padding: 8px; text-align: center"><div style="font-size: 18px; font-weight: 900; color: #92400E">90</div><div style="font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #92400E">Points</div></div>
+      </div>
+      <div style="margin-top: 12px">
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #5B6B82"><span>Accuracy</span><span style="font-weight: 800; color: #0F172A">64%</span></div>
+        <div style="margin-top: 4px; height: 6px; border-radius: 999px; background: #E8EDF4; overflow: hidden"><div style="width: 64%; height: 100%; border-radius: 999px; background: #CA8A04"></div></div>
+      </div>
+    </section>
+
+    <sc-for list="{{days}}" as="day" hint-placeholder-count="2">
+      <section style="display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 12px; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; color: {{day.color}}">{{day.label}}</h2>
+        <sc-for list="{{day.games}}" as="g" hint-placeholder-count="2">
+          <div style="border-radius: 12px; overflow: hidden; border: 1px solid {{g.s.cardBorder}}; background: {{g.s.cardBg}}; box-shadow: {{g.s.shadow}}">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1px {{g.s.ruleStyle}} {{g.s.rule}}">
+              <span style="font-size: 12px; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; color: {{g.s.label}}">{{g.tag}}</span>
+              <span style="font-size: 12px; font-weight: 800; color: {{g.s.muted}}">Final</span>
+            </div>
+            <div style="display: flex; background: {{g.s.halvesBg}}">
+              <button type="button" disabled style="width: 50%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 8px; border: 0; background: {{g.awayBg}}; font-family: inherit">
+                <span style="width: 28px; height: 28px; box-sizing: border-box; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; border: 1px solid {{g.awayBox.border}}; background: {{g.awayBox.bg}}; color: {{g.awayBox.text}}; transform: {{g.awayBox.rotate}}">✓</span>
+                <span style="font-size: 15px; font-weight: 900; line-height: 1.2; color: {{g.s.team}}">{{g.away}}</span>
+                <span style="font-size: 18px; font-weight: 900; color: {{g.awayScoreColor}}; font-variant-numeric: tabular-nums">{{g.awayScore}}</span>
+              </button>
+              <div style="width: 1px; background: {{g.s.divider}}"></div>
+              <button type="button" disabled style="width: 50%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 8px; border: 0; background: {{g.homeBg}}; font-family: inherit">
+                <span style="width: 28px; height: 28px; box-sizing: border-box; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; border: 1px solid {{g.homeBox.border}}; background: {{g.homeBox.bg}}; color: {{g.homeBox.text}}; transform: {{g.homeBox.rotate}}">✓</span>
+                <span style="font-size: 15px; font-weight: 900; line-height: 1.2; color: {{g.s.team}}">{{g.home}}</span>
+                <span style="font-size: 18px; font-weight: 900; color: {{g.homeScoreColor}}; font-variant-numeric: tabular-nums">{{g.homeScore}}</span>
+              </button>
+            </div>
+            <sc-if value="{{g.hasResult}}" hint-placeholder-val="{{true}}">
+              <div style="padding: 6px 16px; font-size: 12px; font-weight: 800; letter-spacing: 0.04em; background: {{g.resultBg}}; color: {{g.resultText}}">{{g.result}}</div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </section>
+    </sc-for>
+
+    <section style="background: #FFFFFF; border: 1px solid rgba(15,23,42,0.08); border-radius: 16px; padding: 16px; box-shadow: 0 1px 2px rgba(15,23,42,0.05), 0 6px 16px rgba(15,23,42,0.06); display: flex; flex-direction: column; gap: 4px">
+      <h3 style="margin: 0 0 6px; font-size: 12px; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; color: #1A2F72">Week 7 Leaderboard</h3>
+      <sc-for list="{{board}}" as="row" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; border-radius: 10px; background: {{row.bg}}">
+          <span style="display: flex; gap: 10px; align-items: center"><span style="width: 18px; font-size: 13px; font-weight: 900; color: {{row.rankColor}}; font-variant-numeric: tabular-nums">{{row.rank}}</span><span style="font-size: 14px; font-weight: 800; color: #0F172A">{{row.name}}</span></span>
+          <span style="font-size: 14px; font-weight: 900; color: #0F172A; font-variant-numeric: tabular-nums">{{row.right}}</span>
+        </div>
+      </sc-for>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ticket":{"editor":"enum","options":["light","classic"],"default":"light"},"$preview":{"width":390,"height":1640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const classic = (this.props.ticket ?? 'light') === 'classic';
+    const s = classic ? {
+      cardBg: "linear-gradient(115deg,#1a2f72 0%,#1a2f72 46%,#6b1a4e 54%,#6b1a4e 100%)",
+      cardBorder: "rgba(253,230,138,0.45)", shadow: "0 8px 18px rgba(15,23,42,0.18)",
+      rule: "rgba(253,230,138,0.45)", ruleStyle: "dashed", label: "#fde68a",
+      halvesBg: "rgba(2,6,23,0.45)", divider: "rgba(253,230,138,0.20)", team: "#FFFFFF",
+      muted: "#cbd5e1", win: "#6ee7b7", lose: "#94a3b8",
+      awaySel: "rgba(253,230,138,0.15)", homeSel: "rgba(253,230,138,0.15)", awayIdle: "transparent", homeIdle: "transparent",
+      boxOn: { border: "#fde68a", bg: "#fde68a", text: "#1a2f72", rotate: "rotate(-7deg)" },
+      boxOff: { border: "rgba(253,230,138,0.45)", bg: "transparent", text: "transparent", rotate: "none" },
+      wonBg: "rgba(16,185,129,0.20)", wonText: "#6ee7b7", lostBg: "rgba(244,63,94,0.20)", lostText: "#fda4af"
+    } : {
+      cardBg: "#FFFFFF", cardBorder: "rgba(26,47,114,0.16)", shadow: "0 1px 2px rgba(15,23,42,0.05), 0 6px 16px rgba(15,23,42,0.06)",
+      rule: "rgba(26,47,114,0.10)", ruleStyle: "solid", label: "#1A2F72",
+      halvesBg: "#FFFFFF", divider: "rgba(26,47,114,0.12)", team: "#0F172A",
+      muted: "#5B6B82", win: "#047857", lose: "#5B6B82",
+      awaySel: "#FEF3C7", homeSel: "#FEF3C7", awayIdle: "#F5F7FD", homeIdle: "#FDF5F9",
+      boxOn: { border: "#1A2F72", bg: "#1A2F72", text: "#FFFFFF", rotate: "rotate(-7deg)" },
+      boxOff: { border: "rgba(26,47,114,0.35)", bg: "#FFFFFF", text: "transparent", rotate: "none" },
+      wonBg: "#ECFDF5", wonText: "#047857", lostBg: "#FFF1F2", lostText: "#BE123C"
+    };
+    const mk = (g) => ({
+      tag: g.tag, away: g.away, home: g.home, s: s,
+      awayBg: g.pick === "away" ? s.awaySel : s.awayIdle,
+      homeBg: g.pick === "home" ? s.homeSel : s.homeIdle,
+      awayBox: g.pick === "away" ? s.boxOn : s.boxOff,
+      homeBox: g.pick === "home" ? s.boxOn : s.boxOff,
+      awayScore: g.awayScore, homeScore: g.homeScore,
+      awayScoreColor: g.winner === "away" ? s.win : s.lose,
+      homeScoreColor: g.winner === "home" ? s.win : s.lose,
+      hasResult: Boolean(g.pick),
+      result: g.pick === g.winner ? "✓ Correct! +10 points" : "✗ Incorrect",
+      resultBg: g.pick === g.winner ? s.wonBg : s.lostBg,
+      resultText: g.pick === g.winner ? s.wonText : s.lostText
+    });
+    return {
+      days: [
+        { label: "🏈 Thursday Night", color: "#1A2F72", games: [
+          mk({ tag: "🏈 Thursday Night", away: "Pittsburgh Steelers", home: "Cincinnati Bengals", awayScore: "24", homeScore: "20", winner: "away", pick: "away" })
+        ] },
+        { label: "Sunday", color: "#5B6B82", games: [
+          mk({ tag: "NFL", away: "Kansas City Chiefs", home: "Las Vegas Raiders", awayScore: "31", homeScore: "17", winner: "away", pick: "away" }),
+          mk({ tag: "NFL", away: "Green Bay Packers", home: "Arizona Cardinals", awayScore: "23", homeScore: "27", winner: "home", pick: "away" }),
+          mk({ tag: "NFL", away: "Atlanta Falcons", home: "San Francisco 49ers", awayScore: "13", homeScore: "26", winner: "home", pick: "" })
+        ] }
+      ],
+      board: [
+        { rank: "1", name: "GridironGabe", right: "11", bg: "#FFFFFF", rankColor: "#92400E" },
+        { rank: "2", name: "You", right: "9", bg: "#EEF1FB", rankColor: "#92400E" },
+        { rank: "3", name: "HoopsHank", right: "9", bg: "#FFFFFF", rankColor: "#92400E" },
+        { rank: "4", name: "LuckyLefty", right: "7", bg: "#FFFFFF", rankColor: "#5B6B82" }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
