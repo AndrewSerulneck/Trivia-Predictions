@@ -96,6 +96,26 @@ Read the plan's §1 "Decisions already made" before asking Andrew anything. Hand
 `assets/store-src/`, run `npm run store:images`, then extend `tests/lib.merch-pricing.test.ts`. The
 store UI reads the catalog, so no component change is needed.
 
+## Adding a colour to a light-capable screen
+
+Venue Home, Pick 'Em, NFL Pick 'Em and Fantasy have a light version (`docs/light-theme-plan.md`).
+**Adding a colour there = a token with a dark and a light value.** Never an arbitrary hex
+(`text-[#fde68a]`), never `text-white` for body text, never a `dark:`/`light:` variant.
+
+1. Add `--ht-<name>` to `:root` (the dark value: what the screen shows today) AND to
+   `:root[data-theme="light"]` (light text ≥ 4.5:1 on white), in BOTH `app/globals.css` and
+   `design-system/hightop-challenge-design-system/project/colors_and_type.css` (same values; the
+   contract test compares them).
+2. Needs an opacity modifier (`/80`)? Make it a channel triple `--ht-<name>-rgb: 253 230 138` and
+   register `rgb(var(--ht-<name>-rgb) / <alpha-value>)`. Otherwise a plain `var(--ht-<name>)`.
+   Don't convert the old plain tokens (`--ht-elevated` etc.) to triples: `bg-ht-elevated/40` emits
+   nothing today, and making it work would change dark pixels.
+3. Register it under `ht` in `tailwind.config.ts` `colors` (or `boxShadow` for a shadow).
+4. Replacing an existing class? Prove dark is unchanged: add `P(old, new)` to
+   `scripts/theme-pairs/make-pairs.cjs` and run the pair check, and/or the screenshot harness
+   (`scripts/theme-screenshots.cjs`). The recipes are in `docs/light-theme-plan_PHASE_5_HANDOFF.md` §6.
+5. `text-white` on a coloured tile stays white; body text becomes a token. Convert by meaning.
+
 ## Prize gift card redesign (built 2026-10-15; device pass open)
 
 Plan: `docs/prize-gift-card-redesign-plan.md` (Andrew's decisions in §1 — don't re-ask; handoffs

@@ -101,11 +101,20 @@ export const readThemePreference = (): ThemePreference => {
 
 const preferenceListeners = new Set<() => void>();
 
-/** For `useSyncExternalStore` (the Appearance row): told whenever `writeThemePreference` saves. */
+/**
+ * Told whenever the choice changes: saved here by `writeThemePreference`, or in another tab of the
+ * same site (the `storage` event, Phase 8.4). Used by the Appearance row (`useSyncExternalStore`)
+ * and by ThemeRouteSync, which re-applies the theme.
+ */
 export const subscribeThemePreference = (listener: () => void): (() => void) => {
   preferenceListeners.add(listener);
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === THEME_STORAGE_KEY || event.key === null) listener();
+  };
+  if (typeof window !== "undefined") window.addEventListener("storage", onStorage);
   return () => {
     preferenceListeners.delete(listener);
+    if (typeof window !== "undefined") window.removeEventListener("storage", onStorage);
   };
 };
 

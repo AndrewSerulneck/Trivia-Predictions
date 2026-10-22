@@ -354,6 +354,8 @@ const config: Config = {
           "fantasy-me-row": "var(--ht-fantasy-me-row)",
           "fantasy-cta": "var(--ht-fantasy-cta)",
           "fantasy-toast-bg": "var(--ht-fantasy-toast-bg)",
+          "route-loader-bg": "var(--ht-route-loader-bg)",
+          "route-loader-fg": "var(--ht-route-loader-fg)",
           "danger-toast-bg": "var(--ht-danger-toast-bg)",
           "success-wash-dim": "var(--ht-success-wash-dim)",
           "success-wash-faint": "var(--ht-success-wash-faint)",

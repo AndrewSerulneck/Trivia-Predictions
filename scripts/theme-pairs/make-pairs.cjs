@@ -214,6 +214,8 @@ const pairs = [
   P("bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent", "[background-image:var(--ht-fantasy-cta-fade)]"),
   P("bg-slate-800 text-slate-400", "bg-ht-elevated text-ht-fg-muted"),
   P("bg-[linear-gradient(rgba(254,243,199,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(254,243,199,0.06)_1px,transparent_1px)]", "bg-[linear-gradient(var(--ht-fantasy-chalk-grid)_1px,transparent_1px),linear-gradient(90deg,var(--ht-fantasy-chalk-grid)_1px,transparent_1px)]"),
+  // ---- Phase 8.1: the full-screen route loader (components/ui/HightopLoader.tsx) ----
+  P("bg-[#030712] text-white", "bg-ht-route-loader-bg text-ht-route-loader-fg"),
   // inline styles in the pop-up animations
   P("", "", "color: #fde68a; text-shadow: 0 0 30px rgba(250,204,21,0.62), 0 0 62px rgba(250,204,21,0.42); filter: drop-shadow(0 0 14px rgba(250,204,21,0.75))", "color: rgb(var(--ht-pickem-accent-rgb)); text-shadow: 0 0 30px rgb(var(--ht-pickem-glow-rgb) / 0.62), 0 0 62px rgb(var(--ht-pickem-glow-rgb) / 0.42); filter: drop-shadow(0 0 14px rgb(var(--ht-pickem-glow-rgb) / 0.75))"),
 ];

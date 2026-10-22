@@ -1,16 +1,24 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { resetNativeStatusBarForTests, syncNativeStatusBar } from "@/lib/nativeStatusBar";
-import { APPEARANCE_COPY, applyThemeForPath, THEME_ATTRIBUTE, THEME_COLOR, THEME_STORAGE_KEY } from "@/lib/theme";
+import {
+  APPEARANCE_COPY,
+  applyThemeForPath,
+  subscribeThemePreference,
+  THEME_ATTRIBUTE,
+  THEME_COLOR,
+  THEME_STORAGE_KEY,
+} from "@/lib/theme";
 
 // docs/light-theme-plan.md Phase 7: the Appearance row, <meta name="theme-color"> and the app's
 // status bar. The rule that matters most: dark icons only on a strip we know turned white.
 
 import { AppearancePicker } from "@/components/navigation/AppearancePicker";
+import { HightopLoader } from "@/components/ui/HightopLoader";
 
 type Call = [string, string, Record<string, unknown>];
 
@@ -113,6 +121,75 @@ describe("app status bar", () => {
     expect(styles(calls).some((s) => s.startsWith("SystemBars"))).toBe(false);
   });
 
+  it("sends colour and icons together, so no frame shows white icons on a white strip (8.3)", async () => {
+    const calls: Call[] = [];
+    (window as unknown as Record<string, unknown>).Capacitor = {
+      isNativePlatform: () => true,
+      isPluginAvailable: (name: string) => name === "StatusBar",
+      // The colour call never answers: the icons must already have been asked for.
+      nativePromise: vi.fn((plugin: string, method: string, options: Record<string, unknown> = {}) => {
+        calls.push([plugin, method, options]);
+        return method === "setBackgroundColor" ? new Promise(() => undefined) : Promise.resolve({});
+      }),
+    };
+    Object.defineProperty(window.navigator, "userAgent", { value: "Mozilla HightopChallengeApp/1.0.0 (ios)", configurable: true });
+    syncNativeStatusBar("light");
+    await settle();
+    expect(colors(calls)).toEqual([THEME_COLOR.light]);
+    expect(styles(calls)).toEqual(["StatusBar:LIGHT"]);
+  });
+
+  it("Android reads the strip back only once per page load (8.3)", async () => {
+    const older = stubApp("android", ["StatusBar"], "#FFFFFF");
+    syncNativeStatusBar("light");
+    await settle();
+    syncNativeStatusBar("dark");
+    await settle();
+    syncNativeStatusBar("light");
+    await settle();
+    expect(older.filter(([, method]) => method === "getInfo")).toHaveLength(1);
+    expect(styles(older)).toEqual(["StatusBar:LIGHT", "StatusBar:DARK", "StatusBar:LIGHT"]);
+
+    resetNativeStatusBarForTests();
+    const newer = stubApp("android", ["StatusBar"], "#000000");
+    syncNativeStatusBar("light");
+    await settle();
+    syncNativeStatusBar("dark");
+    await settle();
+    newer.length = 0;
+    syncNativeStatusBar("light");
+    await settle();
+    // Android 15+: once known, a light screen never asks for white again.
+    expect(colors(newer)).toEqual([THEME_COLOR.dark]);
+    expect(styles(newer)).toEqual(["StatusBar:DARK"]);
+  });
+
+  it("a call landing just as a paint finishes is never dropped (8.2)", async () => {
+    for (let depth = 0; depth < 8; depth += 1) {
+      resetNativeStatusBarForTests();
+      let armed = true;
+      const calls: Call[] = [];
+      (window as unknown as Record<string, unknown>).Capacitor = {
+        isNativePlatform: () => true,
+        isPluginAvailable: (name: string) => name === "StatusBar",
+        nativePromise: vi.fn(async (plugin: string, method: string, options: Record<string, unknown> = {}) => {
+          calls.push([plugin, method, options]);
+          if (armed && method === "setStyle" && options.style === "LIGHT") {
+            armed = false;
+            let p = Promise.resolve();
+            for (let i = 0; i < depth; i += 1) p = p.then(() => undefined);
+            void p.then(() => syncNativeStatusBar("dark"));
+          }
+          return {};
+        }),
+      };
+      Object.defineProperty(window.navigator, "userAgent", { value: "Mozilla HightopChallengeApp/1.0.0 (ios)", configurable: true });
+      syncNativeStatusBar("light");
+      await settle();
+      expect(styles(calls).at(-1), `depth ${depth}`).toBe("StatusBar:DARK");
+    }
+  });
+
   it("an app without the StatusBar plugin is left alone", async () => {
     const calls = stubApp("ios", ["Haptics"]);
     syncNativeStatusBar("light");
@@ -167,8 +244,43 @@ describe("Appearance row", () => {
     expect(document.documentElement.hasAttribute(THEME_ATTRIBUTE)).toBe(false);
   });
 
+  it("follows a choice made in another tab (8.4)", () => {
+    render(createElement(AppearancePicker));
+    expect(screen.getByRole("radio", { name: "Dark" }).getAttribute("aria-checked")).toBe("true");
+    window.localStorage.setItem(THEME_STORAGE_KEY, "light");
+    act(() => {
+      window.dispatchEvent(new StorageEvent("storage", { key: THEME_STORAGE_KEY, newValue: "light" }));
+    });
+    expect(screen.getByRole("radio", { name: "Light" }).getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("only the theme key wakes a listener, and unsubscribing stops it (8.4)", () => {
+    const listener = vi.fn();
+    const stop = subscribeThemePreference(listener);
+    window.dispatchEvent(new StorageEvent("storage", { key: "tp_user_id" }));
+    expect(listener).not.toHaveBeenCalled();
+    window.dispatchEvent(new StorageEvent("storage", { key: THEME_STORAGE_KEY }));
+    expect(listener).toHaveBeenCalledTimes(1);
+    stop();
+    window.dispatchEvent(new StorageEvent("storage", { key: THEME_STORAGE_KEY }));
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
   it("is in the player menu only behind the flag", () => {
     const menu = readFileSync(path.resolve(process.cwd(), "components/navigation/AccountMenuList.tsx"), "utf8");
     expect(menu).toMatch(/isLightThemeEnabled\(\) \? \(\s*<li[^>]*>\s*<AppearancePicker \/>/);
+  });
+});
+
+describe("route loader (8.1)", () => {
+  it("takes its colours from tokens, so it is the page colour between two light screens", () => {
+    const { container } = render(createElement(HightopLoader, { delayMs: 0, variant: "fullScreen", showLabel: true, label: "Go" }));
+    const backdrop = container.firstElementChild?.className ?? "";
+    expect(backdrop).toContain("bg-ht-route-loader-bg");
+    expect(backdrop).not.toContain("#030712");
+    expect(screen.getByText("Go").className).toContain("text-ht-route-loader-fg");
+    const css = readFileSync(path.resolve(process.cwd(), "app/globals.css"), "utf8");
+    expect(css).toMatch(/--ht-route-loader-bg:\s+#030712;/); // dark: unchanged
+    expect(css).toMatch(/--ht-route-loader-fg:\s+#ffffff;/);
   });
 });

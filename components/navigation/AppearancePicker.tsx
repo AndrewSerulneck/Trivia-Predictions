@@ -16,7 +16,7 @@ import {
 // phone. The choice is saved on the phone (lib/theme.ts) and applied at once, so a player on Venue
 // Home sees the page change under the open drawer. AccountMenuList renders it only while the
 // light-theme flag is on. Words live in APPEARANCE_COPY; the look is the venue hub's tab switch.
-export function AppearancePicker() {
+export const AppearancePicker = () => {
   const titleId = useId();
   // The server (the drawer is server-rendered) can't see the phone's storage, so it renders the
   // default and the stored choice takes over on hydration.
@@ -62,4 +62,4 @@ export function AppearancePicker() {
       <p className="mt-2 text-sm leading-snug text-ht-fg-muted">{APPEARANCE_COPY.note}</p>
     </div>
   );
-}
+};

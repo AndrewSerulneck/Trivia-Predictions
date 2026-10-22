@@ -418,6 +418,10 @@
   --ht-fantasy-frame:        #0a3128;                    /* behind the page while playing (app/fantasy pages) */
   --ht-fantasy-picked-bg:    rgba(254, 243, 199, 0.06);  /* a drafted player-pool row        */
   --ht-fantasy-slot-filled:  rgba(254, 243, 199, 0.1);   /* a filled lineup slot             */
+
+  /* Route loader (Phase 8.1): the full-screen loader between pages (app/loading.tsx). */
+  --ht-route-loader-bg:      #030712;
+  --ht-route-loader-fg:      #ffffff;
 }
 
 /* =============================================================
@@ -611,6 +615,10 @@
   --ht-fantasy-frame:        #f3f5fa;
   --ht-fantasy-picked-bg:    #f2f8f5;
   --ht-fantasy-slot-filled:  #f2f8f5;
+
+  /* Route loader (Phase 8.1): the page colour, so light-to-light moves don't flash black. */
+  --ht-route-loader-bg:      #f3f5fa;
+  --ht-route-loader-fg:      #0f172a;
 }
 
 /* =============================================================

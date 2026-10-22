@@ -97,7 +97,7 @@ export const HightopLoader = ({
 
   const textClass =
     variant === "fullScreen"
-      ? `${metrics.text} font-black tracking-[0.05em] text-white [font-family:var(--ht-font-display)]`
+      ? `${metrics.text} font-black tracking-[0.05em] text-ht-route-loader-fg [font-family:var(--ht-font-display)]`
       : `${metrics.text} font-semibold tracking-[0.08em] text-ht-fg-muted`;
 
   const block = (
@@ -116,7 +116,7 @@ export const HightopLoader = ({
   if (variant === "fullScreen") {
     return (
       <div
-        className={`pointer-events-none fixed inset-0 z-[2400] flex h-screen w-screen items-center justify-center bg-[#030712] ${className}`}
+        className={`pointer-events-none fixed inset-0 z-[2400] flex h-screen w-screen items-center justify-center bg-ht-route-loader-bg ${className}`}
       >
         {block}
       </div>

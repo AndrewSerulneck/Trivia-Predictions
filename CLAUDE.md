@@ -172,6 +172,23 @@ remain optional operational monitoring, not unfinished plan work.
   `cqw`/`cqh` (the bingo boards) or show fewer rows — never shrink a label below 14px or let it push text off the card.
   Copy lives in `lib/venueGameCards.ts`. Check a change at a 350 px and a 289 px card (iPhone SE).
 
+## Light theme (built 2026-10-22, flag off)
+Plan + handoffs: `docs/light-theme-plan.md`; phone pass `docs/light-theme-device-checklist.md` (Andrew only).
+- **Four screens have a light version: Venue Home, Pick 'Em, NFL Pick 'Em, Fantasy.** Everything else stays dark.
+  `lib/theme.ts` is the one home: the flag `NEXT_PUBLIC_LIGHT_THEME_ENABLED` (`isLightThemeEnabled()`; build-time, so
+  redeploy), the light paths (`LIGHT_THEME_PATH_PATTERN`), the choice (localStorage `htc_theme`, Dark / Light / Match
+  my phone; default Dark = `DEFAULT_THEME_PREFERENCE`, Andrew's call), `THEME_COLOR` and the Appearance copy. Flag off
+  = no pre-paint script, no `ThemeRouteSync`, no Appearance row: every page dark.
+- **The choice never goes to the server.** No cookie, no account column: the root layout must never read
+  `cookies()`/`headers()` (it would make every static page a per-visit render; `tests/light-theme-contract.test.ts`).
+- **A colour on those screens is a token with a dark AND a light value** — in `:root` and
+  `:root[data-theme="light"]` of BOTH `app/globals.css` and `colors_and_type.css`, plus a `tailwind.config.ts` `ht.*`
+  entry. Never an arbitrary hex, never a `dark:`/`light:` variant. Steps: `AGENTS.md` "Adding a colour".
+  Dark must stay pixel-identical: `scripts/theme-screenshots.cjs` + `scripts/theme-pairs/`.
+- **App status bar: `lib/nativeStatusBar.ts` is the only painter.** Dark icons only on a strip known to be white
+  (Android 15+ ignores the colour, so it stays navy); never flip `overlaysWebView`. Installed iPhone PWA: a navy band
+  behind the clock on light screens (`html.tp-standalone[data-theme="light"]::after`).
+
 ## Mental Model & Terminology
 - **Core Concept:** Users join a specific physical venue and earn points playing mini-games (Trivia, Pick'em, Bingo, Predictions, Fantasy) scoped strictly to that venue. 
 - **Data Scoping:** Authentication is global (passkeys/username), but points, leaderboards, and game states are entirely venue-specific. Users can belong to multiple venues with completely independent point totals.

@@ -16,28 +16,34 @@ import { callNative, hasNativeCapability, nativePlatform } from "@/lib/nativeApp
 import { THEME_COLOR, type ResolvedTheme } from "@/lib/theme";
 
 // The plugins name a style after the strip's BACKGROUND: "DARK" = white icons, "LIGHT" = dark icons.
-const setIconStyle = async (style: "DARK" | "LIGHT"): Promise<void> => {
-  await callNative("StatusBar", "setStyle", { style });
-  if (hasNativeCapability("SystemBars")) await callNative("SystemBars", "setStyle", { style, bar: "StatusBar" });
-};
+const setIconStyle = (style: "DARK" | "LIGHT"): Promise<unknown> =>
+  Promise.all([
+    callNative("StatusBar", "setStyle", { style }),
+    hasNativeCapability("SystemBars") ? callNative("SystemBars", "setStyle", { style, bar: "StatusBar" }) : null,
+  ]);
 
 const sameColor = (a: unknown, b: string): boolean => typeof a === "string" && a.toLowerCase() === b.toLowerCase();
 
-const paintDark = async (): Promise<void> => {
-  await callNative("StatusBar", "setBackgroundColor", { color: THEME_COLOR.dark });
-  await setIconStyle("DARK");
+// Colour and icons go over the bridge together (Phase 8.3): waiting for one before sending the
+// other left a frame of white icons on a white strip (or dark icons on navy).
+const paint = async (theme: ResolvedTheme): Promise<void> => {
+  await Promise.all([
+    callNative("StatusBar", "setBackgroundColor", { color: THEME_COLOR[theme] }),
+    setIconStyle(theme === "light" ? "LIGHT" : "DARK"),
+  ]);
 };
 
+// Android only: does this phone let the app colour the strip? Learnt on the first light paint of a
+// page load, so only that one paint waits for the read-back; later ones are a single step.
+let androidStripTakesColor: boolean | null = null;
+
 const paintLight = async (): Promise<void> => {
+  if (nativePlatform() !== "android" || androidStripTakesColor === true) return paint("light");
+  if (androidStripTakesColor === false) return paint("dark");
   await callNative("StatusBar", "setBackgroundColor", { color: THEME_COLOR.light });
-  if (nativePlatform() === "android") {
-    const info = (await callNative("StatusBar", "getInfo")) as { color?: unknown } | null;
-    if (!sameColor(info?.color, THEME_COLOR.light)) {
-      await paintDark();
-      return;
-    }
-  }
-  await setIconStyle("LIGHT");
+  const info = (await callNative("StatusBar", "getInfo")) as { color?: unknown } | null;
+  androidStripTakesColor = sameColor(info?.color, THEME_COLOR.light);
+  await (androidStripTakesColor ? setIconStyle("LIGHT") : paint("dark"));
 };
 
 let painted: ResolvedTheme | null = null; // null = unknown (a fresh page load), so the first call always paints
@@ -56,22 +62,24 @@ export const syncNativeStatusBar = (theme: ResolvedTheme): void => {
     while (painted !== wanted) {
       const target = wanted;
       try {
-        await (target === "light" ? paintLight() : paintDark());
+        await (target === "light" ? paintLight() : paint("dark"));
       } catch {
         // An old or odd shell: try once to leave the safe navy look, then stop asking.
-        await paintDark().catch(() => undefined);
+        await paint("dark").catch(() => undefined);
       }
       painted = target;
     }
-  };
-  void run().finally(() => {
+    // Cleared in the same step as the last check (Phase 8.2): a call landing after it starts a
+    // new run instead of being dropped.
     running = false;
-  });
+  };
+  void run();
 };
 
 /** Test-only: forget what was painted. */
 export const resetNativeStatusBarForTests = (): void => {
   painted = null;
+  androidStripTakesColor = null;
   wanted = "dark";
   running = false;
 };

@@ -1,9 +1,9 @@
 # Light Theme for Venue Home, Pick 'Em, NFL Pick 'Em and Fantasy — Plan
 
-**Status (2026-10-22):** Phases 1–4 done and **committed (`155bbb7`)**; Phases 5 (Pick 'Em + NFL Pick 'Em), 6
-(Fantasy) and 7 (Appearance row, `theme-color`, app status bar, rollout runbook) done, **not committed**. Flag off
-everywhere: no visible change. Next: Phase 8 (review, phone checklist, docs). Latest handoff:
-`docs/light-theme-plan_PHASE_7_HANDOFF.md`. 9:16 social-video stills of the mockups:
+**Status (2026-10-22):** Phases 1–8 done. Phases 1–4 committed (`155bbb7`), 5–7 committed (`939e7fb`); Phase 8
+(code review, fixes 8.1–8.5, phone checklist, docs) done, **not committed**. Flag off everywhere: no visible change.
+What's left is Andrew's phone pass (`docs/light-theme-device-checklist.md`) and turning the flag on (rollout runbook
+below). Latest handoff: `docs/light-theme-plan_PHASE_8_HANDOFF.md`. 9:16 social-video stills of the mockups:
 `docs/light-theme-mockups/social-9x16/` (`node scripts/render-social-mockups.cjs`; copied to
 `~/Downloads/hightop-light-theme-mockups/` on Andrew's request).
 Handoffs go next to this file as `light-theme-plan_PHASE_<N>_HANDOFF.md`; update this line to point at
@@ -174,7 +174,7 @@ against.
 | 5 | Pick 'Em + NFL Pick 'Em to tokens + light values | Sonnet 5.5 | high |
 | 6 | Fantasy to tokens + light values | Opus 5.5 | high |
 | 7 | Appearance setting, native status bar, `theme-color`, rollout switch (**done**) | Opus 5.5 | high |
-| 8 | `/code-review` at high, fixes, phone checklist, docs | Opus 5.5 | high |
+| 8 | `/code-review` at high, fixes, phone checklist, docs (**done**) | Opus 5.5 | high |
 
 Why: Phases 2, 3 and 7 touch the root layout, every page's first paint, shared components used by every
 game, and the native bridge — mistakes there show up everywhere, so Opus. Phases 4–5 are mechanical
@@ -284,6 +284,30 @@ the four screens in dark and light, switching mid-session, moving from a light s
 (no flash), Reduce Motion, iPhone SE width, installed PWA. Headless browsers can't judge this surface;
 only Andrew can close the checklist. Update `CLAUDE.md` (a short "Light theme" section), `SYSTEM_CONTEXT.md`
 §10 and `AGENTS.md` ("adding a colour = a token with a dark and a light value").
+
+**As built (2026-10-22, handoff `light-theme-plan_PHASE_8_HANDOFF.md`).** `/code-review` at high on
+`155bbb7^..939e7fb` gave 7 findings. Fixed as sub-phases:
+
+- **8.1** The full-screen route loader (`app/loading.tsx` → `HightopLoader variant="fullScreen"`) was a fixed
+  `#030712`, so moving between two light screens (Venue Home → Pick 'Em / Fantasy, which have no `loading.tsx`)
+  flashed black. Now tokens `--ht-route-loader-bg` / `-fg` (dark `#030712` / `#ffffff` = unchanged; light
+  `#f3f5fa` / `#0f172a`). Partner pages use the same loader and are never light, so they are unchanged.
+- **8.2** `lib/nativeStatusBar.ts` cleared its "running" flag one microtask after the last check, so a call
+  landing in that gap was dropped (wrong strip until the next navigation). Now cleared in the same step.
+- **8.3** Colour and icons were sent one after the other (and on Android after a read-back), leaving a moment of
+  white icons on a white strip. Now sent together; Android reads the strip back only on the first light paint of a
+  page load and remembers the answer (Android 15+ then never asks for white again).
+- **8.4** A choice made in another tab now reaches this one (`storage` event in `subscribeThemePreference`;
+  `ThemeRouteSync` re-applies, the Appearance row updates).
+- **8.5** `AppearancePicker` is an arrow function (project style).
+
+Not changed, with reasons: `matchMedia(...).addEventListener` without an old-Safari fallback (Next 16 needs
+Safari 16.4+, and `lib/pwa.ts` already relies on it); several tokens are shared by colours that only match
+by coincidence (e.g. `ht-countdown` for Fantasy/NFL notices). That's a naming concern with no bug today, and
+renaming would risk dark pixels; split a token when one of its uses needs a different colour.
+
+Docs: `CLAUDE.md` "Light theme" section, `SYSTEM_CONTEXT.md` §10, `AGENTS.md` "Adding a colour to a
+light-capable screen", and `docs/light-theme-device-checklist.md`.
 
 ## 5. Traps
 
