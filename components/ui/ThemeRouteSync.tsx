@@ -2,20 +2,22 @@
 
 import { useEffect, useLayoutEffect } from "react";
 import { usePathname } from "next/navigation";
+import { syncNativeStatusBar } from "@/lib/nativeStatusBar";
 import { applyThemeForPath, PREFERS_LIGHT_MEDIA_QUERY } from "@/lib/theme";
 
 /**
  * Keeps <html data-theme> right after the first paint (docs/light-theme-plan.md §3.3). The inline
  * script in app/layout.tsx handles a full page load; this handles in-app navigation, so leaving a
  * light screen for Live Trivia turns dark in the same commit (layout effect = before paint), and
- * "Match my phone" follows the phone switching between light and dark. Mounted by the root layout
- * only while the light-theme flag is on (`isLightThemeEnabled`). Renders nothing.
+ * "Match my phone" follows the phone switching between light and dark. It also keeps
+ * `<meta name="theme-color">` and the app's status bar (lib/nativeStatusBar.ts) in step. Mounted by
+ * the root layout only while the light-theme flag is on (`isLightThemeEnabled`). Renders nothing.
  */
 export const ThemeRouteSync = () => {
   const pathname = usePathname();
 
   useLayoutEffect(() => {
-    applyThemeForPath(pathname);
+    syncNativeStatusBar(applyThemeForPath(pathname));
   }, [pathname]);
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export const ThemeRouteSync = () => {
       media = null;
     }
     if (!media) return;
-    const onChange = () => applyThemeForPath(window.location.pathname);
+    const onChange = () => syncNativeStatusBar(applyThemeForPath(window.location.pathname));
     media.addEventListener("change", onChange);
     return () => media?.removeEventListener("change", onChange);
   }, []);

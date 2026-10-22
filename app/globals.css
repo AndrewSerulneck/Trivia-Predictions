@@ -311,7 +311,85 @@
   --ht-shadow-loader:        0 12px 28px rgba(0, 0, 0, 0.5);     /* venue loading card        */
   --ht-shadow-panel:         0 0 #0000;                          /* dark cards have no shadow  */
   --ht-shadow-tab-track:     0 8px 24px rgba(2, 6, 23, 0.45);
-  --ht-shadow-drawer-closed: 0 20px 60px rgba(0, 0, 0, 0.55); /* = --ht-shadow-modal: today's closed drawer still casts it (dark only) */
+  --ht-shadow-drawer-closed: 0 20px 60px rgba(0, 0, 0, 0.55); /* = --ht-shadow-modal (today's closed drawer still casts it, dark only) */
+
+  /* Pick 'Em + NFL Pick 'Em (Phase 5): game ticket, tracker, header cards, week summary.
+     Same rule: today's exact dark literal here, the light value in the light block. */
+  --ht-pickem-on-fill-rgb: 26 47 114;     /* #1a2f72 — text/check on a filled Pick 'Em accent */
+  --ht-chip-fill-rgb:        2 6 23;        /* slate-950 — the day-arrow buttons' fill (used at 55–65%) */
+  --ht-pickem-glow-rgb:      250 204 21;    /* yellow-400 — "Double Points!" glow             */
+  --ht-ticket-bg:            linear-gradient(115deg, #1a2f72 0%, #1a2f72 46%, #6b1a4e 54%, #6b1a4e 100%); /* a game ticket; used as [background:var(--ht-ticket-bg)] */
+  --ht-ticket-edge:          rgba(253, 230, 138, 0.45);  /* ticket outline                    */
+  --ht-ticket-rule:          rgba(253, 230, 138, 0.45);  /* line under the ticket's header    */
+  --ht-ticket-rule-style:    dashed;                      /* dark = dashed, light = solid       */
+  --ht-ticket-halves:        rgba(2, 6, 23, 0.45);       /* the two team halves               */
+  --ht-ticket-away:          transparent;                 /* idle away half                    */
+  --ht-ticket-home:          transparent;                 /* idle home half                    */
+  --ht-ticket-divider:       rgba(253, 230, 138, 0.2);   /* line between the halves           */
+  --ht-ticket-box-edge:      rgba(253, 230, 138, 0.45);  /* empty check box outline           */
+  --ht-ticket-box-bg:        transparent;                 /* empty check box fill              */
+  --ht-ticket-meta:          #cbd5e1;                    /* slate-300 — kickoff time on a ticket */
+  --ht-pickem-card-edge:     rgba(253, 230, 138, 0.3);   /* header / tiebreaker / summary card edge */
+  --ht-summary-bg:           rgba(2, 6, 23, 0.8);        /* NFL week summary card             */
+  --ht-tracker-bg:           rgba(2, 6, 23, 0.55);       /* Pick Tracker body                 */
+  --ht-tracker-head:         rgba(0, 0, 0, 0.2);         /* Pick Tracker heading strip        */
+  --ht-seg-empty:            transparent;                 /* an unused tracker segment (today's bg-white/12 is a dead class: nothing draws in dark) */
+  --ht-danger-wash-soft:     rgba(76, 5, 25, 0.2);       /* rose-950/20 — tracker at the limit */
+  --ht-warn-wash:            rgba(69, 26, 3, 0.3);       /* amber-950/30 — notice             */
+  --ht-warn-wash-soft:       rgba(69, 26, 3, 0.2);       /* amber-950/20 — notice             */
+  --ht-success-label:        rgba(16, 185, 129, 0.7);    /* emerald-500/70 — "Correct" label  */
+  --ht-danger-label:         rgba(244, 63, 94, 0.7);     /* rose-500/70 — "Wrong" label       */
+  --ht-pickem-label:         rgba(253, 230, 138, 0.7);   /* #fde68a/70 — "Points" label       */
+  --ht-pickem-bar-bg:         rgba(253, 230, 138, 0.1);   /* the day picker bar               */
+  --ht-pickem-bar-edge:       rgba(253, 230, 138, 0.35);  /* …its edge                         */
+  --ht-warn-note:             rgba(254, 243, 199, 0.7);   /* amber-100/70 — small print in a warning notice */
+
+  /* Fantasy (Phase 6): control band, lineup builder, player pool, roster rows, leaderboard tab,
+     notices, toasts. The big live-points scoreboard is the chalkboard in BOTH themes (plan Q3)
+     and keeps its literal colours. */
+  --ht-fantasy-ink-rgb:      254 243 199;   /* #fef3c7 — chalk text: names, the date        */
+  --ht-fantasy-on-fill-rgb:  10 49 40;      /* #0a3128 — text on the selected sport chip     */
+  --ht-fantasy-ink-45:       rgba(254, 243, 199, 0.45); /* chalk small print at 45% */
+  --ht-fantasy-ink-50:       rgba(254, 243, 199, 0.5);
+  --ht-fantasy-ink-55:       rgba(254, 243, 199, 0.55);
+  --ht-fantasy-ink-60:       rgba(254, 243, 199, 0.6);
+  --ht-fantasy-band-bg:      rgba(253, 230, 138, 0.04);  /* sport + day control band        */
+  --ht-fantasy-band-edge:    rgba(253, 230, 138, 0.18);
+  --ht-fantasy-chip-bg:      rgba(255, 255, 255, 0.03);  /* an unselected sport chip         */
+  --ht-fantasy-chip-fg:      #94a3b8;                    /* slate-400 — its label            */
+  --ht-fantasy-count:        rgba(253, 230, 138, 0.55);  /* "1 entry"                        */
+  --ht-fantasy-dot-set:      #fde68a;                    /* amber-200 — "roster set" dot     */
+  --ht-fantasy-arrow-bg:     rgba(0, 0, 0, 0.25);        /* day arrows                       */
+  --ht-fantasy-board:        #0a3128;                    /* chalkboard cards: lineup, game start */
+  --ht-fantasy-chalk-grid:   rgba(254, 243, 199, 0.06);  /* the faint grid on those cards    */
+  --ht-fantasy-avatar:       #0a3128;                    /* player number disc               */
+  --ht-fantasy-avatar-ring:  rgba(254, 243, 199, 0.55);
+  --ht-fantasy-slot-empty:   rgba(0, 0, 0, 0.25);        /* an empty lineup slot             */
+  --ht-fantasy-row-bg:       rgba(254, 243, 199, 0.045); /* a roster row                     */
+  --ht-fantasy-row-edge:     rgba(254, 243, 199, 0.22);
+  --ht-fantasy-pool-row:     rgba(255, 255, 255, 0.015); /* a player-pool row                */
+  --ht-fantasy-card-edge:    rgba(254, 243, 199, 0.18);  /* leaderboard tab card             */
+  --ht-fantasy-me-row:       rgba(254, 243, 199, 0.06);  /* the viewer's leaderboard row     */
+  --ht-fantasy-cta:          #8b5cf6;                    /* violet-500 — Draft / Submit button */
+  --ht-fantasy-cta-fade:     linear-gradient(to top, #020617, rgba(2, 6, 23, 0.95), transparent); /* behind the submit bar */
+  --ht-fantasy-toast-bg:     rgba(16, 185, 129, 0.2);    /* emerald-500/20 — gain toast, saved toast */
+  --ht-fantasy-pop-gain:     #86efac;                    /* green-300 — "+4.5 pts" pop-up    */
+  --ht-fantasy-pop-loss:     #fca5a5;                    /* red-300                          */
+  --ht-danger-toast-bg:      rgba(76, 5, 25, 0.4);       /* rose-950/40 — loss toast         */
+  --ht-success-wash-dim:     rgba(2, 44, 34, 0.3);       /* emerald-950/30 — success notice  */
+  --ht-success-wash-faint:   rgba(2, 44, 34, 0.2);       /* emerald-950/20 — a scoring row   */
+  --ht-info-edge:            rgba(56, 189, 248, 0.3);    /* sky-400/30 — "At the venue" notice */
+  --ht-info-wash:            rgba(56, 189, 248, 0.08);
+  --ht-info-wash-soft:       rgba(8, 47, 73, 0.2);       /* sky-950/20 — an empty pitcher slot */
+  --ht-info-icon:            #60a5fa;                    /* blue-400                         */
+  --ht-info-fg:              #bae6fd;                    /* sky-200 — notice text, "Pitcher" */
+  --ht-top-chip-bg:          rgba(252, 211, 77, 0.15);   /* "Top" projected chip             */
+  --ht-shadow-toast:         0 8px 24px rgba(15, 23, 42, 0.45);
+  --ht-shadow-fantasy-cta:   0 8px 24px rgba(139, 92, 246, 0.35);
+  --ht-shadow-chalk:         0 0 #0000;                  /* dark: the scoreboard casts nothing */
+  --ht-fantasy-frame:        #0a3128;                    /* behind the page while playing (app/fantasy pages) */
+  --ht-fantasy-picked-bg:    rgba(254, 243, 199, 0.06);  /* a drafted player-pool row        */
+  --ht-fantasy-slot-filled:  rgba(254, 243, 199, 0.1);   /* a filled lineup slot             */
 }
 
 /* =============================================================
@@ -430,6 +508,81 @@
   --ht-shadow-tab-track:     0 0 #0000;
   --ht-shadow-drawer-closed: 0 0 #0000;   /* a closed drawer must not tint the page's left edge */
   --ht-shadow-glow-cyan:     0 0 0 1px rgba(14, 116, 144, 0.3), 0 8px 28px rgba(14, 116, 144, 0.14);
+
+  /* Pick 'Em + NFL Pick 'Em (Phase 5). */
+  --ht-pickem-on-fill-rgb: 255 255 255;   /* white on #1a2f72 = 12.4:1                 */
+  --ht-chip-fill-rgb:        255 255 255;
+  --ht-pickem-glow-rgb:      202 138 4;     /* yellow-600 — a halo that shows on white   */
+  --ht-ticket-bg:            #ffffff;
+  --ht-ticket-edge:          rgba(26, 47, 114, 0.16);
+  --ht-ticket-rule:          rgba(26, 47, 114, 0.1);
+  --ht-ticket-rule-style:    solid;
+  --ht-ticket-halves:        #ffffff;
+  --ht-ticket-away:          #f5f7fd;       /* faint navy                                */
+  --ht-ticket-home:          #fdf5f9;       /* faint magenta                             */
+  --ht-ticket-divider:       rgba(26, 47, 114, 0.12);
+  --ht-ticket-box-edge:      rgba(26, 47, 114, 0.35);
+  --ht-ticket-box-bg:        #ffffff;
+  --ht-ticket-meta:          #5b6b82;       /* 5.4:1 on white                            */
+  --ht-pickem-card-edge:     rgba(15, 23, 42, 0.08);
+  --ht-summary-bg:           #ffffff;
+  --ht-tracker-bg:           transparent;
+  --ht-tracker-head:         #f5f7fd;
+  --ht-seg-empty:            #e2e6ed;
+  --ht-danger-wash-soft:     #fff1f2;
+  --ht-warn-wash:            #fffbeb;
+  --ht-warn-wash-soft:       #fffbeb;
+  --ht-success-label:        #047857;       /* 5.2:1 on #ecfdf5                          */
+  --ht-danger-label:         #be123c;       /* 5.7:1 on #fff1f2                          */
+  --ht-pickem-label:         #1a2f72;
+  --ht-pickem-bar-bg:         #f5f7fd;
+  --ht-pickem-bar-edge:       rgba(26, 47, 114, 0.16);
+  --ht-warn-note:             #92400e;       /* 6.8:1 on #fffbeb */
+
+  /* Fantasy (Phase 6). */
+  --ht-fantasy-ink-rgb:      15 23 42;      /* #0f172a — 17.9:1                         */
+  --ht-fantasy-on-fill-rgb:  255 255 255;   /* white on #0f5c4a = 7.9:1                 */
+  --ht-fantasy-ink-45:       #5b6b82;
+  --ht-fantasy-ink-50:       #5b6b82;
+  --ht-fantasy-ink-55:       #5b6b82;       /* 5.4:1 on white, 5.1 on a selected row    */
+  --ht-fantasy-ink-60:       #5b6b82;
+  --ht-fantasy-band-bg:      #ffffff;
+  --ht-fantasy-band-edge:    rgba(15, 23, 42, 0.08);
+  --ht-fantasy-chip-bg:      #ffffff;
+  --ht-fantasy-chip-fg:      #334155;       /* 10.4:1                                   */
+  --ht-fantasy-count:        #5b6b82;
+  --ht-fantasy-dot-set:      #ca8a04;
+  --ht-fantasy-arrow-bg:     #f2f8f5;
+  --ht-fantasy-board:        #ffffff;
+  --ht-fantasy-chalk-grid:   transparent;
+  --ht-fantasy-avatar:       #f2f8f5;
+  --ht-fantasy-avatar-ring:  rgba(15, 23, 42, 0.12);
+  --ht-fantasy-slot-empty:   #ffffff;
+  --ht-fantasy-row-bg:       #ffffff;
+  --ht-fantasy-row-edge:     rgba(15, 23, 42, 0.08);
+  --ht-fantasy-pool-row:     #ffffff;
+  --ht-fantasy-card-edge:    rgba(15, 23, 42, 0.08);
+  --ht-fantasy-me-row:       #f2f8f5;
+  --ht-fantasy-cta:          #0f5c4a;       /* white text 7.9:1                         */
+  --ht-fantasy-cta-fade:     linear-gradient(to top, #f3f5fa, rgba(243, 245, 250, 0.95), rgba(243, 245, 250, 0));
+  --ht-fantasy-toast-bg:     #ecfdf5;
+  --ht-fantasy-pop-gain:     #15803d;
+  --ht-fantasy-pop-loss:     #b91c1c;
+  --ht-danger-toast-bg:      #fff1f2;
+  --ht-success-wash-dim:     #ecfdf5;
+  --ht-success-wash-faint:   #ecfdf5;
+  --ht-info-edge:            rgba(37, 99, 235, 0.22);
+  --ht-info-wash:            #eff6ff;
+  --ht-info-wash-soft:       #eff6ff;
+  --ht-info-icon:            #1d4ed8;
+  --ht-info-fg:              #1e40af;       /* 8.2:1 on #eff6ff                         */
+  --ht-top-chip-bg:          #fef3c7;
+  --ht-shadow-toast:         0 8px 20px rgba(15, 23, 42, 0.12);
+  --ht-shadow-fantasy-cta:   0 8px 20px rgba(15, 92, 74, 0.25);
+  --ht-shadow-chalk:         0 10px 24px rgba(10, 49, 40, 0.25);
+  --ht-fantasy-frame:        #f3f5fa;
+  --ht-fantasy-picked-bg:    #f2f8f5;
+  --ht-fantasy-slot-filled:  #f2f8f5;
 }
 
 *,
@@ -556,6 +709,21 @@ html.tp-standalone .tp-app-shell-safe-area {
  * all (showUserStatus/showPageTitle false), so it is the case that needs this. */
 html.tp-standalone .tp-app-shell-safe-area:not(:has(.tp-page-header)) {
   padding-top: env(safe-area-inset-top);
+}
+
+/* Light theme in the installed iPhone PWA (docs/light-theme-plan.md Phase 7). iOS draws the clock
+ * and battery WHITE over the page (`black-translucent`, read once at launch, can't change), so on
+ * a light screen they would vanish into the white app bar. Paint the strip under them navy. Zero
+ * height everywhere else: a browser tab, Android (its PWA bar sits above the page) and the app
+ * (its web view starts below the status bar) all have no top inset. */
+html.tp-standalone[data-theme="light"]::after {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: env(safe-area-inset-top);
+  background: #020617;
+  pointer-events: none;
+  z-index: 2147483000;
 }
 
 /* Category Blitz gameplay frame — docs/category-blitz-app-feel-plan.md, Phase 4.

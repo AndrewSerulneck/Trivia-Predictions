@@ -26,7 +26,7 @@ export default async function NFLPickEmPage({
       autoResume={false}
       showShellUserStatus={false}
       showShellAlerts={false}
-      playingBackgroundClassName="bg-[#020617]"
+      playingBackgroundClassName="bg-ht-canvas"
     >
       <NFLPickEmGameList initialWeekId={initialWeekId} />
     </GameLandingExperience>

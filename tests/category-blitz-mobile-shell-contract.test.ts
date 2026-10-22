@@ -70,11 +70,11 @@ describe("Category Blitz mobile shell contract", () => {
     // viewport on iOS with no way to scroll to it — see docs/mobile-game-screen-blackout-plan.md.
     // Only /category-blitz may get the h-full/overflow-hidden main branch and the
     // h-[100svh]/max-h-[100svh] wrapper branch; every other GAME_SCREEN_PATHS route must fall
-    // back to a plain scrollable main (flex-1 pb-24) and an unclamped wrapper (bg-slate-950 only).
+    // back to a plain scrollable main (flex-1 pb-24) and an unclamped wrapper (background class only).
     const gameScreenMainBranch = sourceBetween(appShellSource, ": isGameScreen\n    ? \"flex-1 pb-24\"", ": isFullscreen");
     const gameScreenWrapperBranch = sourceBetween(
       appShellSource,
-      ": isGameScreen\n          ? \"bg-slate-950\"",
+      ": isGameScreen\n          ? \"bg-ht-canvas\"",
       ": isFullscreen"
     );
 

@@ -10,7 +10,7 @@ const pairs = require(path.join(here, "pairs.json"));
   const browser = await chromium.launch();
   const page = await browser.newPage();
   await page.goto("file://" + path.join(here, "pairs.html"));
-  const props = ["color", "backgroundColor", "backgroundImage", "borderTopColor", "borderTopWidth", "borderTopStyle", "boxShadow"];
+  const props = ["color", "backgroundColor", "backgroundImage", "borderTopColor", "borderTopWidth", "borderTopStyle", "boxShadow", "textShadow", "filter", "stroke"];
   const results = await page.evaluate((props) => {
     const out = [];
     document.querySelectorAll("[data-pair]").forEach((row) => {

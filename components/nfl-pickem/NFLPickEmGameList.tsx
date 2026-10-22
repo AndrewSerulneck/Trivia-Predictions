@@ -442,22 +442,22 @@ export function NFLPickEmGameList({
 
   // Render
   return (
-    <div className="min-h-[100dvh] touch-pan-y bg-slate-950 pb-[max(env(safe-area-inset-bottom),24px)]">
+    <div className="min-h-[100dvh] touch-pan-y bg-ht-canvas pb-[max(env(safe-area-inset-bottom),24px)]">
       <GameAppBar game="nfl-pickem" onExit={onBack} />
 
       <div className="space-y-4 px-3 pt-3">
         {/* Header */}
-        <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-4 py-4">
+        <section className="rounded-2xl border border-ht-pickem-card-edge bg-ht-surface px-4 py-4 shadow-ht-panel">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🏈</span>
             <h1
-              className="text-[22px] leading-none text-[#fde68a]"
+              className="text-[22px] leading-none text-ht-pickem-accent"
               style={{ fontFamily: "var(--ht-font-display)" }}
             >
               NFL Pick &rsquo;Em
             </h1>
           </div>
-          <p className="mt-2 text-footnote font-semibold leading-relaxed text-slate-400">
+          <p className="mt-2 text-footnote font-semibold leading-relaxed text-ht-fg-muted">
             {previewWeek && selectedWeekId === previewWeek.id
               ? `Pick winners for every NFL matchup. The season kicks off ${previewWeekKickoffLabel}. Correct picks are worth 10 points. Picks lock at kickoff.`
               : "Pick winners for every NFL matchup this week. Correct picks are worth 10 points. Picks lock at kickoff."}
@@ -479,9 +479,9 @@ export function NFLPickEmGameList({
             onSelect={handleSelectWeek}
           />
         ) : (
-          <section className="rounded-2xl border border-amber-300/30 bg-amber-950/20 px-4 py-5 text-center">
-            <h2 className="text-[15px] font-black text-amber-100">NFL weeks are not available yet</h2>
-            <p className="mt-2 text-caption font-semibold leading-relaxed text-amber-100/70">
+          <section className="rounded-2xl border border-amber-300/30 bg-ht-warn-wash-soft px-4 py-5 text-center">
+            <h2 className="text-[15px] font-black text-ht-countdown-soft">NFL weeks are not available yet</h2>
+            <p className="mt-2 text-caption font-semibold leading-relaxed text-ht-warn-note">
               Check back once the current week opens on Thursday.
             </p>
           </section>
@@ -503,12 +503,12 @@ export function NFLPickEmGameList({
               initial={reducedMotion ? false : { opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
-              className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-4 py-3" transition={reducedMotion ? { duration: 0 } : undefined}
+              className="rounded-xl border border-rose-500/45 bg-ht-danger-wash px-4 py-3" transition={reducedMotion ? { duration: 0 } : undefined}
             >
-              <p className="text-caption font-semibold text-rose-300" role="alert">{error}</p>
+              <p className="text-caption font-semibold text-ht-danger-fg" role="alert">{error}</p>
               <button
                 onClick={() => setError("")}
-                className="mt-1 text-caption text-rose-400 underline"
+                className="mt-1 text-caption text-ht-loss-fg underline"
               >
                 Dismiss
               </button>
@@ -525,8 +525,8 @@ export function NFLPickEmGameList({
 
         {/* Degraded scoring-mode/spread-line surface — week-wide, not per-card */}
         {weekData && spreadsBannerState && (
-          <section className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-3">
-            <p className="text-caption font-semibold leading-relaxed text-amber-200">
+          <section className="rounded-xl border border-amber-500/40 bg-ht-warn-wash-soft px-4 py-3">
+            <p className="text-caption font-semibold leading-relaxed text-ht-countdown">
               {SPREADS_BANNER_COPY[spreadsBannerState]}
             </p>
           </section>
@@ -539,7 +539,7 @@ export function NFLPickEmGameList({
               <section key={group.key}>
                 <h2
                   className={`mb-2 flex items-center gap-2 text-caption font-black uppercase tracking-[0.16em] ${
-                    group.isThursdayNight ? "text-[#fde68a]" : "text-slate-400"
+                    group.isThursdayNight ? "text-ht-pickem-accent" : "text-ht-fg-muted"
                   }`}
                 >
                   {group.isThursdayNight && <span>🏈</span>} {group.label}

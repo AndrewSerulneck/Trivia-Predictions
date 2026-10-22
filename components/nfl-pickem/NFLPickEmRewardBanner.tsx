@@ -88,12 +88,12 @@ export function NFLPickEmRewardBanner() {
         return (
           <p
             key={campaign.id}
-            className="flex items-start gap-2 rounded-xl border border-[#fde68a]/25 bg-slate-900 px-3 py-2 text-caption leading-snug"
+            className="flex items-start gap-2 rounded-xl border border-ht-pickem-accent/25 bg-ht-surface px-3 py-2 text-caption leading-snug"
           >
             <span aria-hidden>🏆</span>
             <span className="min-w-0">
-              <span className="font-bold text-[#fde68a]">{summary}</span>{" "}
-              <span className={campaign.viewerWon ? "font-bold text-amber-300" : "text-slate-400"}>{status}</span>
+              <span className="font-bold text-ht-pickem-accent">{summary}</span>{" "}
+              <span className={campaign.viewerWon ? "font-bold text-ht-warn-fg" : "text-ht-fg-muted"}>{status}</span>
             </span>
           </p>
         );

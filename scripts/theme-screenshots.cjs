@@ -37,6 +37,29 @@ const clickButton = (name) => async (page) => {
   await page.waitForTimeout(1200);
 };
 
+// Scroll every scroller (the page keeps its own inner scroll container) to the bottom.
+const scrollTo = (fraction) => async (page) => {
+  await page.evaluate((f) => {
+    for (const el of document.querySelectorAll("*")) {
+      if (el.scrollHeight > el.clientHeight + 4 && /(auto|scroll)/.test(getComputedStyle(el).overflowY)) el.scrollTop = (el.scrollHeight - el.clientHeight) * f;
+    }
+    window.scrollTo(0, (document.documentElement.scrollHeight - window.innerHeight) * f);
+  }, fraction);
+  await page.waitForTimeout(500);
+};
+const scrollToBottom = scrollTo(1);
+
+// Fantasy: open the draft, then draft the two highest-projected players (filled slots, "✓ Drafted",
+// the floating submit bar).
+const draftTwo = async (page) => {
+  await clickButton(/draft your roster/i)(page);
+  for (let i = 0; i < 2; i += 1) {
+    await page.getByRole("button", { name: /^Draft$/ }).first().click();
+    await page.waitForTimeout(400);
+  }
+  await page.waitForTimeout(800);
+};
+
 /**
  * `inScope` shots are the four light-capable screens (captured dark and light). `chrome` shots are
  * the other screens that share the app bar, Back button, points pill, drawer and form CSS that
@@ -82,8 +105,43 @@ const SHOTS = [
   },
   { name: "pickem", path: "/pickem", group: "in-scope" },
   { name: "nfl-pickem", path: "/nfl-pickem", group: "in-scope" },
+  // Phase 5 states (scenario = which fixture variant answers; see the fixtures file). Captured dark
+  // from the pre-conversion build as their own baseline.
+  { name: "pickem-settled", path: "/pickem?sport=nhl", group: "in-scope", scenario: "pickem-settled" },
+  { name: "pickem-settled-bottom", path: "/pickem?sport=nhl", group: "in-scope", scenario: "pickem-settled", action: scrollToBottom, viewportOnly: true },
+  { name: "pickem-limit", path: "/pickem", group: "in-scope", scenario: "pickem-limit" },
+  { name: "pickem-history", path: `/pickem?date=${fixtures.HISTORY_DATE}`, group: "in-scope", scenario: "pickem-history" },
+  { name: "nfl-pickem-full", path: "/nfl-pickem", group: "in-scope", scenario: "nfl-full" },
+  { name: "nfl-pickem-full-mid", path: "/nfl-pickem", group: "in-scope", scenario: "nfl-full", action: scrollTo(0.4), viewportOnly: true },
+  { name: "nfl-pickem-full-bottom", path: "/nfl-pickem", group: "in-scope", scenario: "nfl-full", action: scrollToBottom, viewportOnly: true },
+  {
+    name: "nfl-pickem-expanded",
+    path: "/nfl-pickem",
+    group: "in-scope",
+    scenario: "nfl-full",
+    action: async (page) => {
+      await scrollToBottom(page);
+      await page.getByRole("button", { name: /shotplayer/ }).first().click();
+      await page.waitForTimeout(600);
+      await scrollToBottom(page);
+    },
+    viewportOnly: true,
+  },
   { name: "fantasy", path: "/fantasy", group: "in-scope" },
   { name: "fantasy-draft", path: "/fantasy", group: "in-scope", action: clickButton(/draft your roster/i) },
+  // Phase 6 states (scenarios in the fixtures file).
+  { name: "fantasy-draft-picked", path: "/fantasy", group: "in-scope", action: draftTwo },
+  { name: "fantasy-mlb", path: "/fantasy?sport=baseball", group: "in-scope", scenario: "fantasy-mlb", action: draftTwo },
+  { name: "fantasy-live", path: "/fantasy", group: "in-scope", scenario: "fantasy-live" },
+  { name: "fantasy-live-leaderboard", path: "/fantasy", group: "in-scope", scenario: "fantasy-live", action: clickButton(/^Leaderboard/) },
+  { name: "fantasy-final", path: "/fantasy", group: "in-scope", scenario: "fantasy-final" },
+  { name: "fantasy-banners", path: "/fantasy", group: "in-scope", scenario: "fantasy-banners" },
+  // Fantasy scrolls inside its own container: these show the rest of the same states.
+  { name: "fantasy-draft-picked-top", path: "/fantasy", group: "in-scope", action: async (page) => { await draftTwo(page); await scrollTo(0)(page); }, viewportOnly: true },
+  { name: "fantasy-mlb-top", path: "/fantasy?sport=baseball", group: "in-scope", scenario: "fantasy-mlb", action: async (page) => { await draftTwo(page); await scrollTo(0)(page); }, viewportOnly: true },
+  { name: "fantasy-live-mid", path: "/fantasy", group: "in-scope", scenario: "fantasy-live", action: scrollTo(0.5), viewportOnly: true },
+  { name: "fantasy-live-bottom", path: "/fantasy", group: "in-scope", scenario: "fantasy-live", action: scrollToBottom, viewportOnly: true },
+  { name: "fantasy-final-bottom", path: "/fantasy", group: "in-scope", scenario: "fantasy-final", action: scrollToBottom, viewportOnly: true },
   { name: "trivia", path: "/trivia", group: "chrome" },
   { name: "trivia-live", path: "/trivia/live", group: "chrome" },
   { name: "bingo", path: "/bingo", group: "chrome" },
@@ -164,7 +222,7 @@ const capture = async (flags) => {
           const url = new URL(request.url());
           if (url.origin !== origin) return route.abort();
           if (!url.pathname.startsWith("/api/")) return route.continue();
-          const body = fixtures.fixtureFor(request.method(), url.pathname);
+          const body = fixtures.fixtureFor(request.method(), url.pathname, url.searchParams, shot.scenario);
           if (body === null) {
             unmocked.add(`${request.method()} ${url.pathname}`);
             return route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ ok: false }) });

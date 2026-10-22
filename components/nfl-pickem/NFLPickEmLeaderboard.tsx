@@ -66,9 +66,9 @@ const outcomeLabel = (status: LeaderboardPick["status"]): string => {
 };
 
 const outcomeColor = (status: LeaderboardPick["status"]): string => {
-  if (status === "won") return "text-emerald-400";
-  if (status === "lost") return "text-rose-400";
-  return "text-slate-400";
+  if (status === "won") return "text-ht-gain-fg";
+  if (status === "lost") return "text-ht-loss-fg";
+  return "text-ht-fg-muted";
 };
 
 function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: RewardWinner }) {
@@ -79,7 +79,7 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
   return (
     <div
       className={`overflow-hidden rounded-xl border ${
-        entry.isCurrentUser ? "border-[#fde68a]/60 bg-[#fde68a]/10" : "border-[#fde68a]/20 bg-slate-900"
+        entry.isCurrentUser ? "border-ht-pickem-accent/60 bg-ht-pickem-accent/10" : "border-ht-pickem-accent/20 bg-ht-surface"
       }`}
     >
       <button
@@ -88,42 +88,42 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
         aria-expanded={isExpanded}
         className="tp-clean-button flex w-full items-center gap-2 px-3 py-2.5 text-left"
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#fde68a]/40 text-caption font-black text-[#fde68a]">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ht-pickem-accent/40 text-caption font-black text-ht-pickem-accent">
           {entry.rank}
         </span>
         {winner && (
           <span title={prize ? `Won this week's prize: ${prize}` : "Won this week's prize"} className="shrink-0">
             <Trophy
               aria-label={prize ? `Won this week's prize: ${prize}` : "Won this week's prize"}
-              className="h-3.5 w-3.5 text-[#fde68a]"
+              className="h-3.5 w-3.5 text-ht-pickem-accent"
             />
           </span>
         )}
-        <span className="min-w-0 flex-1 truncate text-footnote font-black text-white">
+        <span className="min-w-0 flex-1 truncate text-footnote font-black text-ht-fg-bright">
           {entry.username}
           {entry.isCurrentUser && (
-            <span className="ml-1.5 rounded-full bg-[#fde68a]/20 px-1.5 py-0.5 text-caption font-bold text-[#fde68a]">
+            <span className="ml-1.5 rounded-full bg-ht-pickem-accent/20 px-1.5 py-0.5 text-caption font-bold text-ht-pickem-accent">
               You
             </span>
           )}
         </span>
         <span className="flex shrink-0 items-center gap-2 text-caption font-black tabular-nums">
-          <span className="text-slate-400" title="Picks">
+          <span className="text-ht-fg-muted" title="Picks">
             {entry.picksCount}
           </span>
-          <span className="text-emerald-400" title="Correct">
+          <span className="text-ht-gain-fg" title="Correct">
             {entry.correctPicks}
           </span>
-          <span className="text-rose-400" title="Wrong">
+          <span className="text-ht-loss-fg" title="Wrong">
             {entry.incorrectPicks}
           </span>
-          <span className="text-[#fde68a]" title="Points">
+          <span className="text-ht-pickem-accent" title="Points">
             {entry.totalPoints}
           </span>
         </span>
         <ChevronDown
           aria-hidden="true"
-          className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+          className={`h-4 w-4 shrink-0 text-ht-fg-muted transition-transform ${isExpanded ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -134,30 +134,30 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
             animate={{ height: "auto", opacity: 1 }}
             exit={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
             transition={reducedMotion ? { duration: 0 } : { duration: 0.2 }}
-            className="overflow-hidden border-t border-[#fde68a]/15"
+            className="overflow-hidden border-t border-ht-pickem-accent/15"
           >
             <div className="space-y-1.5 px-3 py-2.5">
               {winner && (
-                <p className="flex items-center gap-1.5 text-caption font-bold text-[#fde68a]">
+                <p className="flex items-center gap-1.5 text-caption font-bold text-ht-pickem-accent">
                   <Trophy aria-hidden="true" className="h-3 w-3 shrink-0" />
                   Won this week&apos;s prize{prize ? `: ${prize}` : ""}
                 </p>
               )}
               {entry.tiebreaker && (
-                <p className="flex items-center gap-1.5 text-caption font-bold text-slate-400">
+                <p className="flex items-center gap-1.5 text-caption font-bold text-ht-fg-muted">
                   Tiebreaker:{" "}
                   {entry.tiebreaker.isHidden
                     ? "Hidden until kickoff"
                     : entry.tiebreaker.predictedTotal ?? "—"}
                   {entry.isTiebreakerWinner && (
-                    <span className="rounded-full bg-[#fde68a]/20 px-1.5 py-0.5 text-caption font-bold text-[#fde68a]">
+                    <span className="rounded-full bg-ht-pickem-accent/20 px-1.5 py-0.5 text-caption font-bold text-ht-pickem-accent">
                       Closest guess
                     </span>
                   )}
                 </p>
               )}
               {entry.picks.length === 0 ? (
-                <p className="text-caption text-slate-500">No picks.</p>
+                <p className="text-caption text-ht-fg-faint">No picks.</p>
               ) : (
                 entry.picks.map((pick) => {
                   const hidden = pick.isHidden || !pick.selectedTeam;
@@ -165,12 +165,12 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
                   return (
                     <div
                       key={pick.gameId}
-                      className="flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2.5 py-1.5 text-caption"
+                      className="flex items-center justify-between gap-2 rounded-lg bg-ht-overlay/5 px-2.5 py-1.5 text-caption"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-bold text-slate-200">{pick.gameLabel}</p>
+                        <p className="truncate font-bold text-ht-fg-secondary">{pick.gameLabel}</p>
                         {hidden ? (
-                          <p className="text-slate-500">Hidden until kickoff</p>
+                          <p className="text-ht-fg-faint">Hidden until kickoff</p>
                         ) : (
                           <p className={outcomeColor(pick.status)}>
                             Picked {pick.selectedTeam} · {outcomeLabel(pick.status)}
@@ -178,7 +178,7 @@ function LeaderboardRow({ entry, winner }: { entry: LeaderboardEntry; winner?: R
                         )}
                       </div>
                       {!hidden && hasScore && (
-                        <span className="shrink-0 font-black tabular-nums text-slate-300">
+                        <span className="shrink-0 font-black tabular-nums text-ht-fg-soft">
                           {pick.awayScore}–{pick.homeScore}
                         </span>
                       )}
@@ -323,14 +323,14 @@ export function NFLPickEmLeaderboard({
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
-        <h2 className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">Leaderboard</h2>
-        <div className="inline-flex rounded-full border border-[#fde68a]/30 bg-slate-900 p-0.5 text-caption font-bold">
+        <h2 className="text-caption font-black uppercase tracking-[0.16em] text-ht-pickem-accent">Leaderboard</h2>
+        <div className="inline-flex rounded-full border border-ht-pickem-accent/30 bg-ht-surface p-0.5 text-caption font-bold">
           <button
             type="button"
             aria-pressed={mode === "week"}
             onClick={() => setMode("week")}
             className={`rounded-full px-2.5 py-1 transition-colors ${
-              mode === "week" ? "bg-[#fde68a] text-[#1a2f72]" : "text-slate-400"
+              mode === "week" ? "bg-ht-pickem-accent text-ht-pickem-on-fill" : "text-ht-fg-muted"
             }`}
           >
             This Week
@@ -340,7 +340,7 @@ export function NFLPickEmLeaderboard({
             aria-pressed={mode === "season"}
             onClick={() => setMode("season")}
             className={`rounded-full px-2.5 py-1 transition-colors ${
-              mode === "season" ? "bg-[#fde68a] text-[#1a2f72]" : "text-slate-400"
+              mode === "season" ? "bg-ht-pickem-accent text-ht-pickem-on-fill" : "text-ht-fg-muted"
             }`}
           >
             Season
@@ -354,15 +354,15 @@ export function NFLPickEmLeaderboard({
             initial={reducedMotion ? false : { opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
-            className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-4 py-3" transition={reducedMotion ? { duration: 0 } : undefined}
+            className="rounded-xl border border-rose-500/45 bg-ht-danger-wash px-4 py-3" transition={reducedMotion ? { duration: 0 } : undefined}
           >
-            <p className="text-caption font-semibold text-rose-300" role="alert">{error}</p>
+            <p className="text-caption font-semibold text-ht-danger-fg" role="alert">{error}</p>
           </motion.div>
         )}
       </AnimatePresence>
 
       {showNoRewardNote && (
-        <p className="px-1 text-caption font-semibold text-slate-500">
+        <p className="px-1 text-caption font-semibold text-ht-fg-faint">
           No prize this week — fewer than {rewardMinPlayers} players made picks.
         </p>
       )}
@@ -372,7 +372,7 @@ export function NFLPickEmLeaderboard({
           <HightopLoader size="sm" variant="card" showLabel label="Loading leaderboard..." />
         </div>
       ) : !error && entries.length === 0 ? (
-        <p className="px-1 text-caption font-semibold text-slate-500">
+        <p className="px-1 text-caption font-semibold text-ht-fg-faint">
           {mode === "week" ? "No picks yet this week." : "No picks yet this season."}
         </p>
       ) : (

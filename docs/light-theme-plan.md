@@ -1,8 +1,9 @@
 # Light Theme for Venue Home, Pick 'Em, NFL Pick 'Em and Fantasy — Plan
 
-**Status (2026-10-22):** Phases 1–4 done (2 = foundation, 3 = shared chrome, 4 = Venue Home; flag off, no
-visible change in dark, **not committed**). Next: Phase 5 (Pick 'Em + NFL Pick 'Em). Latest handoff:
-`docs/light-theme-plan_PHASE_4_HANDOFF.md`. 9:16 social-video stills of the mockups:
+**Status (2026-10-22):** Phases 1–4 done and **committed (`155bbb7`)**; Phases 5 (Pick 'Em + NFL Pick 'Em), 6
+(Fantasy) and 7 (Appearance row, `theme-color`, app status bar, rollout runbook) done, **not committed**. Flag off
+everywhere: no visible change. Next: Phase 8 (review, phone checklist, docs). Latest handoff:
+`docs/light-theme-plan_PHASE_7_HANDOFF.md`. 9:16 social-video stills of the mockups:
 `docs/light-theme-mockups/social-9x16/` (`node scripts/render-social-mockups.cjs`; copied to
 `~/Downloads/hightop-light-theme-mockups/` on Andrew's request).
 Handoffs go next to this file as `light-theme-plan_PHASE_<N>_HANDOFF.md`; update this line to point at
@@ -172,7 +173,7 @@ against.
 | 4 | Venue Home to tokens + light values | Sonnet 5.5 | high |
 | 5 | Pick 'Em + NFL Pick 'Em to tokens + light values | Sonnet 5.5 | high |
 | 6 | Fantasy to tokens + light values | Opus 5.5 | high |
-| 7 | Appearance setting, native status bar, `theme-color`, rollout switch | Opus 5.5 | high |
+| 7 | Appearance setting, native status bar, `theme-color`, rollout switch (**done**) | Opus 5.5 | high |
 | 8 | `/code-review` at high, fixes, phone checklist, docs | Opus 5.5 | high |
 
 Why: Phases 2, 3 and 7 touch the root layout, every page's first paint, shared components used by every
@@ -255,6 +256,25 @@ scoreboard, roster rows, leaderboard tab, geofence/status/error banners), `Point
   `lib/theme.ts`).
 - Runbook lines: set `NEXT_PUBLIC_LIGHT_THEME_ENABLED=true` in Vercel Production, redeploy; reversal = unset
   + redeploy.
+
+**As built (2026-10-22, handoff `light-theme-plan_PHASE_7_HANDOFF.md`):** `components/navigation/AppearancePicker.tsx`
+(copy in `APPEARANCE_COPY`, `lib/theme.ts`), rendered by `AccountMenuList` behind `isLightThemeEnabled()`;
+`applyThemeForPath` also sets `<meta name="theme-color">` (`THEME_COLOR`: `#020617` / `#ffffff`, the white of the light
+app bar); `lib/nativeStatusBar.ts` paints the app's strip (StatusBar + SystemBars plugins; on Android the icons go
+dark only if the strip really turned white — Android 15+ keeps it navy); the installed iPhone PWA gets a navy band
+under its always-white clock on a light screen (`html.tp-standalone[data-theme="light"]::after`, `app/globals.css`).
+
+### Rollout runbook (light theme)
+
+1. Turn on: Vercel → Production → add `NEXT_PUBLIC_LIGHT_THEME_ENABLED` = `true` → **Redeploy** (a `NEXT_PUBLIC_*`
+   value is baked in at build time; without a redeploy nothing changes). Preview first if you want to try it.
+2. Check: open a venue home on a phone → menu → **Appearance** shows; tap Light → the page turns light at once;
+   open Live Trivia → dark; back → light again.
+3. Everyone still starts on Dark (`DEFAULT_THEME_PREFERENCE` in `lib/theme.ts`); changing that is a product decision.
+4. Reverse: remove the variable (or set it to `false`) → Redeploy. Every page is dark again and the menu row is gone;
+   a player's saved choice stays on their phone, unused, and comes back if the flag returns.
+5. Cost: none recurring (no request, no database, no cron). The app needs no new store release: shells without the
+   StatusBar plugin keep the navy strip.
 
 ### Phase 8 — Review and phone pass
 

@@ -49,6 +49,10 @@ export type NativePlatform = "ios" | "android";
  * - `Filesystem`: @capacitor/filesystem (saves the story picture to the app's cache so the share
  *   sheet can attach it on Android; Phase 4a.1).
  * - `CapacitorBarcodeScanner`: @capacitor/barcode-scanner (the in-app QR scanner; Phase 4b).
+ * - `StatusBar`: @capacitor/status-bar (the strip's colour and icons; native Phase 2D, used by the
+ *   light theme — lib/nativeStatusBar.ts).
+ * - `SystemBars`: Capacitor's own core plugin; it re-applies its icon style when an Android phone
+ *   rotates, so a style change goes to it too (lib/nativeStatusBar.ts).
  */
 export type NativeCapability =
   | "App"
@@ -57,7 +61,9 @@ export type NativeCapability =
   | "Share"
   | "Haptics"
   | "Filesystem"
-  | "CapacitorBarcodeScanner";
+  | "CapacitorBarcodeScanner"
+  | "StatusBar"
+  | "SystemBars";
 
 const UA_TOKEN_PATTERN = /HightopChallengeApp\/(\d+(?:\.\d+){0,2})\s*\((ios|android)\)/;
 

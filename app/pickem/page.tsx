@@ -26,7 +26,7 @@ export default async function PickEmPage({
       showPlayingBackButton={false}
       showShellUserStatus={false}
       showShellAlerts={false}
-      playingBackgroundClassName="bg-[#020617]"
+      playingBackgroundClassName="bg-ht-canvas"
     >
       <PickEmGameList initialSportSlug={initialSportSlug} initialDate={initialDate} />
     </GameLandingExperience>

@@ -321,14 +321,246 @@ const fantasyGames = {
 // app/api/fantasy/entries/route.ts
 const fantasyEntries = { ok: true, entries: [] };
 
+
+// ---- Phase 5 scenarios (Pick 'Em + NFL Pick 'Em states the default shots can't reach) ----
+// A shot names a `scenario`; fixtureFor() swaps in the matching answers. The default shots (no
+// scenario) are unchanged, so the pre-Phase-5 baseline stays comparable.
+
+const pickemSettledGames = (() => {
+  const base = (id, homeTeam, awayTeam, extra) => ({
+    ...pickemGame([id, homeTeam, awayTeam, 1]),
+    sportSlug: "nhl",
+    sportKey: "icehockey_nhl",
+    league: "NHL",
+    ...extra,
+  });
+  const picked = (id, team, status) => ({ userPickId: `pick-${id}`, userPickTeam: team, userPickStatus: status, userPickRewardPoints: status === "won" ? 10 : 0, userPickRewardClaimedAt: null });
+  return [
+    base("nhl-live", "Boston Bruins", "Toronto Maple Leafs", { status: "live", isLocked: true, homeScore: 2, awayScore: 1, periodLabel: "P2 · 8:41", ...picked("nhl-live", "Boston Bruins", "pending") }),
+    base("nhl-won", "New York Rangers", "Montreal Canadiens", { status: "final", isLocked: true, homeScore: 4, awayScore: 2, winnerTeam: "New York Rangers", ...picked("nhl-won", "New York Rangers", "won") }),
+    base("nhl-lost", "Chicago Blackhawks", "Dallas Stars", { status: "final", isLocked: true, homeScore: 1, awayScore: 3, winnerTeam: "Dallas Stars", ...picked("nhl-lost", "Chicago Blackhawks", "lost") }),
+    base("nhl-push", "Vegas Golden Knights", "Seattle Kraken", { status: "final", isLocked: true, homeScore: 3, awayScore: 3, winnerTeam: null, ...picked("nhl-push", "Seattle Kraken", "push") }),
+    base("nhl-locked", "Colorado Avalanche", "Edmonton Oilers", { isLocked: true, ...picked("nhl-locked", "Edmonton Oilers", "pending") }),
+    base("nhl-open", "Florida Panthers", "Tampa Bay Lightning", {}),
+  ];
+})();
+const pickemSettledResponse = {
+  ...pickemGames,
+  sport: pickemSports.sports[1],
+  games: pickemSettledGames,
+  pointsBank: { ...pickemGames.pointsBank, totalPicks: 5, settledPicks: 3, pendingPicks: 2, correctPicks: 1, incorrectPicks: 1, unclaimedCorrectPicks: 1, pendingPoints: 10 },
+};
+const pickemLimitPicks = {
+  ...pickemPicks,
+  picks: Array.from({ length: 10 }, (_, index) => ({ ...pickemPicks.picks[index % 2], id: `pick-limit-${index}`, gameId: `limit-${index}` })),
+};
+const HISTORY_DATE = "2026-10-24";
+const historyPick = (id, status, selected, home, away, sport) => ({
+  ...pickemPicks.picks[0],
+  id,
+  gameId: `${id}-game`,
+  sportSlug: sport,
+  league: sport.toUpperCase(),
+  status,
+  selectedTeam: selected,
+  homeTeam: home,
+  awayTeam: away,
+  startsAt: `${HISTORY_DATE}T23:00:00.000Z`,
+  homeScore: status === "pending" ? null : 101,
+  awayScore: status === "pending" ? null : 99,
+});
+const pickemHistoryPicks = {
+  ...pickemPicks,
+  picks: [
+    historyPick("hist-won", "won", "Boston Celtics", "Boston Celtics", "New York Knicks", "nba"),
+    historyPick("hist-lost", "lost", "Miami Heat", "Chicago Bulls", "Miami Heat", "nba"),
+    historyPick("hist-pending", "pending", "Seattle Kraken", "Vegas Golden Knights", "Seattle Kraken", "nhl"),
+    historyPick("hist-push", "push", "Dallas Stars", "Chicago Blackhawks", "Dallas Stars", "nhl"),
+  ],
+};
+
+// NFL week with every kind of card: Thursday night final (won), Sunday final (lost), a tie (push),
+// a live game with a pick, upcoming games, spreads, a prize banner, tiebreaker and leaderboard.
+const nflFullGames = (() => {
+  const make = (args, extra) => ({ ...nflGame(args), ...extra });
+  const picked = (team, status) => ({ userPickId: `p-${team}`, userPickTeam: team, userPickStatus: status, userPickRewardPoints: status === "won" ? 10 : 0, userPickRewardClaimedAt: null });
+  return [
+    make(["nfl-t1", "Cincinnati Bengals", "Pittsburgh Steelers", -72, null], {
+      status: "final", isLocked: true, homeScore: 20, awayScore: 24, winnerTeam: "Pittsburgh Steelers",
+      isThursdayGame: true, isThursdayNightSection: true, dayGroupKey: "2026-10-22", dayGroupLabel: "Thursday Night Football · Oct 22",
+      homeSpread: 3, awaySpread: -3, ...picked("Pittsburgh Steelers", "won"),
+    }),
+    make(["nfl-s1", "Las Vegas Raiders", "Kansas City Chiefs", -1, null], {
+      status: "final", isLocked: true, homeScore: 17, awayScore: 31, winnerTeam: "Kansas City Chiefs", homeSpread: 9.5, awaySpread: -9.5, ...picked("Las Vegas Raiders", "lost"),
+    }),
+    make(["nfl-s2", "Dallas Cowboys", "Philadelphia Eagles", -1, null], {
+      status: "final", isLocked: true, homeScore: 24, awayScore: 24, winnerTeam: null, homeSpread: 1, awaySpread: -1, ...picked("Dallas Cowboys", "push"),
+    }),
+    make(["nfl-s3", "Seattle Seahawks", "Green Bay Packers", 0, null], {
+      status: "live", isLocked: true, homeScore: 10, awayScore: 7, winnerTeam: null, homeSpread: -2.5, awaySpread: 2.5, ...picked("Green Bay Packers", "pending"),
+    }),
+    make(["nfl-s4", "San Francisco 49ers", "Atlanta Falcons", 4.4, null], { homeSpread: -6.5, awaySpread: 6.5, ...picked("San Francisco 49ers", "pending") }),
+    make(["nfl-s5", "Minnesota Vikings", "Detroit Lions", 8.3, null], { homeSpread: 3, awaySpread: -3 }),
+  ].map((game) => ({ ...game, dayGroupKey: game.isThursdayNightSection ? "2026-10-22" : LOCAL_DATE, dayGroupLabel: game.isThursdayNightSection ? game.dayGroupLabel : "Sunday, Oct 25" }));
+})();
+const nflFullGamesResponse = {
+  ...nflGames,
+  scoringMode: "spread",
+  spreadLinesUnavailable: true,
+  spreadsUnavailable: true,
+  games: nflFullGames,
+  userSummary: { picksCount: 5, correctPicks: 1, incorrectPicks: 1, totalPoints: 10, isComplete: false },
+};
+const nflRewards = {
+  ok: true,
+  campaigns: [
+    {
+      ...campaignBase,
+      id: "camp-nfl-most",
+      name: "Most picks right",
+      winCondition: "game_winner",
+      pointsRequiredToWin: 1,
+      progressPoints: 1,
+      winnerQuota: 1,
+      quotaRemaining: 1,
+      prizeKind: "gift_card",
+      prizeGiftCertificateAmount: 25,
+      description: { summary: "Most picks right this week wins a $25 gift card.", when: null, fineprint: null, isCustom: false },
+    },
+  ],
+  winners: [],
+  participantCount: 6,
+  hasActiveGameWinnerReward: true,
+  rewardMinPlayers: 3,
+};
+const nflTiebreaker = {
+  ok: true,
+  game: { gameId: "nfl-s5", homeTeam: "Minnesota Vikings", awayTeam: "Detroit Lions", startsAt: at(8.3), isLocked: false },
+  guess: { predictedTotal: 44 },
+};
+const nflLeaderboardPick = (gameId, label, team, status) => ({
+  gameId, gameLabel: label, homeTeam: label.split(" at ")[1], awayTeam: label.split(" at ")[0], startsAt: at(-1),
+  isHidden: false, selectedTeam: team, status, winnerTeam: null, homeScore: 24, awayScore: 17,
+});
+const nflLeaderboard = {
+  ok: true,
+  entries: [
+    { userId: "user-gridiron", username: "gridiron", picksCount: 14, correctPicks: 11, incorrectPicks: 3, totalPoints: 110, rank: 1, isCurrentUser: false, isTiebreakerWinner: true, tiebreaker: { isHidden: false, predictedTotal: 47, actualTotal: null }, picks: [] },
+    {
+      userId: USER_ID, username: USERNAME, picksCount: 5, correctPicks: 1, incorrectPicks: 1, totalPoints: 10, rank: 2, isCurrentUser: true,
+      tiebreaker: { isHidden: false, predictedTotal: 44, actualTotal: null },
+      picks: [
+        nflLeaderboardPick("a", "Pittsburgh Steelers at Cincinnati Bengals", "Pittsburgh Steelers", "won"),
+        nflLeaderboardPick("b", "Kansas City Chiefs at Las Vegas Raiders", "Las Vegas Raiders", "lost"),
+        nflLeaderboardPick("c", "Green Bay Packers at Seattle Seahawks", "Green Bay Packers", "pending"),
+      ],
+    },
+    { userId: "user-barflyer", username: "barflyer", picksCount: 12, correctPicks: 8, incorrectPicks: 4, totalPoints: 80, rank: 3, isCurrentUser: false, picks: [] },
+  ],
+};
+
+// ---- Phase 6 scenarios (Fantasy states the default shots can't reach) ----
+// fantasy-live: a live NBA roster today (4 of 5 scoring) + a venue leaderboard (My Sweat / Leaderboard).
+// fantasy-final: the same roster, final. fantasy-banners: a live MLB roster while NBA is selected (the
+// cross-sport nudge), the games list failing (error notice + "No NBA games scheduled").
+// fantasy-mlb: an MLB slate with pitchers and hitters (the draft builder's MLB sections).
+const NBA_DAILY_ID = `nba-daily-${LOCAL_DATE}`;
+const MLB_DAILY_ID = `mlb-daily-${LOCAL_DATE}`;
+const fantasyEntry = (id, sportKey, gameId, status, players, breakdown) => {
+  const points = Object.values(breakdown).reduce((sum, value) => sum + value, 0);
+  return {
+    id,
+    userId: USER_ID,
+    venueId: VENUE_ID,
+    sportKey,
+    gameId,
+    gameLabel: "Daily slate",
+    homeTeam: "",
+    awayTeam: "",
+    startsAt: at(-1),
+    lineup: players.map(([name]) => name),
+    lineupPlayers: players.map(([playerName, playerId]) => ({ playerId, playerName, headshotUrl: null, jerseyNumber: null })),
+    status,
+    points,
+    scoreBreakdown: breakdown,
+    rewardPoints: 0,
+    rewardClaimedAt: null,
+    liveCollectedPoints: points,
+    statsLastSourceUpdatedAt: null,
+    settledAt: status === "final" ? at(-0.1) : null,
+    createdAt: at(-3),
+    updatedAt: at(-0.2),
+  };
+};
+// Ids match fantasyGames.playerPool (1000 + index), so positions and teams resolve from the pool.
+const NBA_ROSTER = [["Nikola Jokic", 1002], ["Jayson Tatum", 1000], ["Anthony Davis", 1006], ["Jalen Brunson", 1001], ["LeBron James", 1003]];
+const NBA_BREAKDOWN = { 1002: 48.5, 1000: 39, 1006: 31.5, 1001: 9.5 };
+const fantasyLiveEntries = { ok: true, entries: [fantasyEntry("entry-live", "basketball_nba", NBA_DAILY_ID, "live", NBA_ROSTER, NBA_BREAKDOWN)] };
+const fantasyFinalEntries = { ok: true, entries: [fantasyEntry("entry-final", "basketball_nba", NBA_DAILY_ID, "final", NBA_ROSTER, { ...NBA_BREAKDOWN, 1003: 14 })] };
+const fantasyBannerEntries = {
+  ok: true,
+  entries: [fantasyEntry("entry-mlb", "baseball_mlb", MLB_DAILY_ID, "live", [["Gerrit Cole", 2000], ["Aaron Judge", 2003]], { 2000: 12, 2003: 9 })],
+};
+const fantasyLeaderboard = ["hoopsdad", USERNAME, "quizwiz", "barflyer"].map((username, index) => ({
+  entryId: `lb-${index}`,
+  userId: username === USERNAME ? USER_ID : `user-${username}`,
+  username,
+  points: 151 - index * 17.5,
+  status: "live",
+  rank: index + 1,
+  lineup: [],
+  rewardPoints: 0,
+}));
+const fantasyLiveGames = { ...fantasyGames, leaderboard: fantasyLeaderboard };
+const MLB_PLAYERS = [
+  ["Gerrit Cole", "SP", "NYY", 46],
+  ["Shohei Ohtani", "DH", "LAD", 41],
+  ["Tarik Skubal", "SP", "DET", 39],
+  ["Aaron Judge", "RF", "NYY", 37.5],
+  ["Emmanuel Clase", "RP", "CLE", 30],
+  ["Bobby Witt Jr.", "SS", "KC", 29],
+  ["Mookie Betts", "2B", "LAD", 27.5],
+];
+const fantasyMlbGames = {
+  ...fantasyGames,
+  games: [["mlb-g1", "New York Yankees", "Boston Red Sox", 3], ["mlb-g2", "Los Angeles Dodgers", "San Diego Padres", 6]].map(([id, homeTeam, awayTeam, hours]) => ({
+    id: `fantasy-${id}`, sportKey: "baseball_mlb", league: "MLB", startsAt: at(hours), gameLabel: `${awayTeam} @ ${homeTeam}`,
+    homeTeam, awayTeam, status: "scheduled", homeScore: null, awayScore: null, isLocked: false,
+  })),
+  playerPool: MLB_PLAYERS.map(([playerName, position, team, projectedLine], index) => ({
+    playerId: 2000 + index, playerName, headshotUrl: null, jerseyNumber: String(index + 11), coverage: 1, projectedLine, position, team,
+  })),
+  dailyGameId: MLB_DAILY_ID,
+};
+
 /**
  * Answer for one request, or null to fall through to the default (404 `{ ok: false }`, which every
  * screen treats as "nothing to show" — ads, analytics, presence and the other games' feeds).
  */
-const fixtureFor = (method, pathname) => {
+const fixtureFor = (method, pathname, search, scenario) => {
   if (method !== "GET") {
     return { ok: true };
   }
+  const sport = search ? search.get("sportSlug") : null;
+  if (scenario === "pickem-settled" && pathname === "/api/pickem/games" && sport === "nhl") return pickemSettledResponse;
+  if (scenario === "pickem-limit" && pathname === "/api/pickem/picks") return pickemLimitPicks;
+  if (scenario === "pickem-history" && pathname === "/api/pickem/picks") return pickemHistoryPicks;
+  if (scenario === "nfl-full") {
+    if (pathname === "/api/nfl-pickem/games") return nflFullGamesResponse;
+    if (pathname === "/api/nfl-pickem/rewards") return nflRewards;
+    if (pathname === "/api/nfl-pickem/tiebreaker") return nflTiebreaker;
+    if (pathname === "/api/nfl-pickem/leaderboard") return nflLeaderboard;
+  }
+  const poolRequest = Boolean(search && search.get("gameId"));
+  if (scenario === "fantasy-live" || scenario === "fantasy-final") {
+    if (pathname === "/api/fantasy/entries") return scenario === "fantasy-live" ? fantasyLiveEntries : fantasyFinalEntries;
+    if (pathname === "/api/fantasy/games") return fantasyLiveGames;
+  }
+  if (scenario === "fantasy-banners") {
+    if (pathname === "/api/fantasy/entries") return fantasyBannerEntries;
+    if (pathname === "/api/fantasy/games" && !poolRequest) return { ok: false, error: "Couldn't load today's games. Pull to retry." };
+  }
+  if (scenario === "fantasy-mlb" && pathname === "/api/fantasy/games") return fantasyMlbGames;
   switch (pathname) {
     case "/api/users/summary": return usersSummary;
     case "/api/notifications": return notifications;
@@ -346,4 +578,4 @@ const fixtureFor = (method, pathname) => {
   }
 };
 
-module.exports = { FIXED_NOW_ISO, FIXED_NOW_MS, VENUE, VENUE_ID, USER_ID, USERNAME, fixtureFor };
+module.exports = { HISTORY_DATE, FIXED_NOW_ISO, FIXED_NOW_MS, VENUE, VENUE_ID, USER_ID, USERNAME, fixtureFor };

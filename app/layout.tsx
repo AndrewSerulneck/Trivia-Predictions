@@ -14,7 +14,7 @@ import { OwnerRecoveryRedirectGuard } from "@/components/owner/OwnerRecoveryRedi
 import { AppShell } from "@/components/ui/AppShell";
 import { AnimationTriggerProvider } from "@/components/animations/AnimationTriggerProvider";
 import { ThemeRouteSync } from "@/components/ui/ThemeRouteSync";
-import { isLightThemeEnabled, themePrePaintScript } from "@/lib/theme";
+import { isLightThemeEnabled, THEME_COLOR, themePrePaintScript } from "@/lib/theme";
 import { initializeScheduledTasks } from "@/lib/scheduledTasks";
 import "./globals.css";
 
@@ -105,8 +105,9 @@ export const viewport: Viewport = {
   // Pins Safari's own chrome (URL bar, keyboard accessory strip) to the app's
   // dark base instead of letting it sample page content color — see Finding F
   // in docs/category-blitz-app-feel-plan.md, where an untinted accessory bar
-  // was the last non-DOM source of the reported magenta band.
-  themeColor: "#020617",
+  // was the last non-DOM source of the reported magenta band. A light screen
+  // swaps it to THEME_COLOR.light in the browser (lib/theme.ts applyThemeForPath).
+  themeColor: THEME_COLOR.dark,
   // Android Chrome's default (resizes-visual) leaves the layout viewport full
   // height when the keyboard opens, so fixed-position frames sized off
   // visualViewport never see it shrink. This makes Android match the iOS

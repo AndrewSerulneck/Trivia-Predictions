@@ -636,13 +636,13 @@ function PlayerHeadshot({
   live?: boolean;
   sizeClass?: string;
 }) {
-  const ringClass = live ? "border-[#6ee7b7]/60" : "border-[#fef3c7]/55";
+  const ringClass = live ? "border-ht-success-fg/60" : "border-ht-fantasy-avatar-ring";
   return (
     <div
-      className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-[#0a3128] ${ringClass} flex items-center justify-center`}
+      className={`${sizeClass} shrink-0 rounded-full border-[1.5px] bg-ht-fantasy-avatar ${ringClass} flex items-center justify-center`}
       aria-label={`${name} avatar`}
     >
-      <span className="text-caption font-bold leading-none text-[#fef3c7] select-none">
+      <span className="text-caption font-bold leading-none text-ht-fantasy-accent select-none">
         {jerseyNumber ?? playerInitials(name)}
       </span>
     </div>
@@ -661,14 +661,17 @@ function ordinalLabel(rank: number): string {
   return `${rank}${rank % 10 >= 1 && rank % 10 <= 3 ? suffix : "th"}`;
 }
 
-// Faint chalk grid overlay for the forest-green "chalkboard" surfaces.
-function ChalkGrid({ fine = false }: { fine?: boolean }) {
+// Faint chalk grid overlay for the forest-green "chalkboard" surfaces. It follows the theme (none on
+// the light theme's white cards) except on the live scoreboard, a chalkboard in both themes (`alwaysChalk`).
+function ChalkGrid({ fine = false, alwaysChalk = false }: { fine?: boolean; alwaysChalk?: boolean }) {
   return (
     <div
       aria-hidden
-      className={`pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(254,243,199,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(254,243,199,0.06)_1px,transparent_1px)] ${
-        fine ? "bg-[length:18px_18px]" : "bg-[length:20px_20px]"
-      }`}
+      className={`pointer-events-none absolute inset-0 ${
+        alwaysChalk
+          ? "bg-[linear-gradient(rgba(254,243,199,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(254,243,199,0.06)_1px,transparent_1px)]"
+          : "bg-[linear-gradient(var(--ht-fantasy-chalk-grid)_1px,transparent_1px),linear-gradient(90deg,var(--ht-fantasy-chalk-grid)_1px,transparent_1px)]"
+      } ${fine ? "bg-[length:18px_18px]" : "bg-[length:20px_20px]"}`}
     />
   );
 }
@@ -2222,7 +2225,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
 
   if (!userId || !venueId) {
     return (
-      <div className="rounded-2xl border border-amber-400/40 bg-amber-950/30 p-3 text-sm text-amber-300">
+      <div className="rounded-2xl border border-ht-warn-edge/40 bg-ht-warn-wash p-3 text-sm text-ht-warn-fg">
         Join a venue to create and track fantasy lineups.
       </div>
     );
@@ -2327,7 +2330,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
 
   return (
     <div
-      className="tp-fantasy-compact min-h-[100dvh] touch-pan-y bg-[#020617] text-[#f8fafc]"
+      className="tp-fantasy-compact min-h-[100dvh] touch-pan-y bg-ht-canvas text-ht-fg-primary"
       style={{ paddingBottom: fantasyBottomPadding }}
     >
       {settledCollectResult ? (
@@ -2347,10 +2350,10 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
               animate={reducedMotion ? { opacity: 1, y: 0, scale: 1 } : { opacity: 1, y: 0, scale: 1.05 }}
               exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -22, scale: 0.92 }}
               transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 340, damping: 26, mass: 0.8 }}
-              className={`rounded-full border px-4 py-1.5 text-sm font-black shadow-[0_8px_24px_rgba(15,23,42,0.45)] ${
+              className={`rounded-full border px-4 py-1.5 text-sm font-black shadow-ht-toast ${
                 flash.pointsDelta >= 0
-                  ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-300"
-                  : "border-rose-400/50 bg-rose-950/40 text-rose-300"
+                  ? "border-emerald-400/50 bg-ht-fantasy-toast-bg text-ht-success-fg"
+                  : "border-rose-400/50 bg-ht-danger-toast-bg text-ht-danger-fg"
               }`}
             >
               {flash.label} {flash.pointsDelta >= 0 ? "+" : ""}
@@ -2395,7 +2398,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                 key={`delta-${statAnimPop.id}`}
                 className="select-none font-black leading-none transform-gpu will-change-transform"
                 style={{
-                  color: statAnimPop.delta >= 0 ? "#86efac" : "#fca5a5",
+                  color: statAnimPop.delta >= 0 ? "var(--ht-fantasy-pop-gain)" : "var(--ht-fantasy-pop-loss)",
                   fontSize: "clamp(1.6rem, 7vw, 3rem)",
                   textShadow:
                     statAnimPop.delta >= 0
@@ -2428,7 +2431,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
       <div className="mx-auto w-full max-w-[30rem] space-y-3 px-4 pt-3">
 
         {/* ── Consolidated control band: multi-sport roster toggle + browse-past-days stepper ── */}
-        <div className="overflow-hidden rounded-xl border border-amber-200/[0.18] bg-amber-200/[0.04]">
+        <div className="overflow-hidden rounded-xl border border-ht-fantasy-band-edge bg-ht-fantasy-band-bg">
           {/* Sport-entry toggle — switch between your rosters, each with its own status dot */}
           <div className="flex items-center gap-2 px-2 py-1.5">
             <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -2439,7 +2442,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   status === "live"
                     ? "animate-pulse motion-reduce:animate-none bg-emerald-400"
                     : status === "set"
-                    ? "bg-amber-200"
+                    ? "bg-ht-fantasy-dot-set"
                     : status === "final"
                     ? "bg-slate-400"
                     : "";
@@ -2451,18 +2454,18 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                     onClick={() => sport.available && setSelectedSport(sport.key)}
                     className={"tp-player-hit-target tp-player-pressable " + (`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-caption font-black tracking-[0.03em] transition-colors disabled:cursor-not-allowed ${
                       on
-                        ? "border-amber-200 bg-amber-200 text-[#0a3128]"
+                        ? "border-ht-fantasy-title bg-ht-fantasy-title text-ht-fantasy-on-fill"
                         : sport.available
                         ? status
-                          ? "border-amber-200/30 bg-white/[0.03] text-amber-200"
-                          : "border-white/[0.12] bg-white/[0.03] text-slate-400"
-                        : "border-white/[0.12] bg-white/[0.03] text-slate-600 opacity-55"
+                          ? "border-ht-fantasy-title/30 bg-ht-fantasy-chip-bg text-ht-fantasy-title"
+                          : "border-ht-border-soft bg-ht-fantasy-chip-bg text-ht-fantasy-chip-fg"
+                        : "border-ht-border-soft bg-ht-fantasy-chip-bg text-slate-600 opacity-55"
                     }`)}
                   >
                     {status && !on ? <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}`} /> : null}
                     {sport.label}
                     {!sport.available ? (
-                      <span className={`text-caption font-extrabold uppercase tracking-[0.1em] ${on ? "text-[#0a3128]/70" : "text-slate-500"}`}>
+                      <span className={`text-caption font-extrabold uppercase tracking-[0.1em] ${on ? "text-ht-fantasy-on-fill/70" : "text-ht-fg-faint"}`}>
                         Soon
                       </span>
                     ) : null}
@@ -2470,38 +2473,38 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                 );
               })}
             </div>
-            <span className="shrink-0 pr-1 text-caption font-black uppercase tracking-[0.08em] text-amber-200/55">
+            <span className="shrink-0 pr-1 text-caption font-black uppercase tracking-[0.08em] text-ht-fantasy-count">
               {totalEntryCount} {totalEntryCount === 1 ? "entry" : "entries"}
             </span>
           </div>
 
-          <div className="h-px bg-white/[0.07]" />
+          <div className="h-px bg-ht-overlay/[0.07]" />
 
           {/* Date stepper — walk back through previous days + day status */}
           <div className="flex items-center gap-2 px-2 py-1.5">
             <button
               type="button"
               onClick={navigateToPrevDay}
-              className="tp-player-hit-target tp-player-pressable flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-black/25 text-caption font-black text-amber-200 "
+              className="tp-player-hit-target tp-player-pressable flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-ht-fantasy-title/30 bg-ht-fantasy-arrow-bg text-caption font-black text-ht-fantasy-title "
               aria-label="Previous day"
             >
               ◀
             </button>
             <div className="min-w-0 flex-1 text-center">
-              <span className="text-[25px] font-black text-[#fef3c7]">{formatDateLabel(selectedDate, serverTodayDate)}</span>
+              <span className="text-[25px] font-black text-ht-fantasy-ink">{formatDateLabel(selectedDate, serverTodayDate)}</span>
             </div>
             <button
               type="button"
               onClick={navigateToNextDay}
               disabled={isToday}
-              className="tp-player-hit-target tp-player-pressable flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-200/30 bg-black/25 text-caption font-black text-amber-200  disabled:opacity-30"
+              className="tp-player-hit-target tp-player-pressable flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-ht-fantasy-title/30 bg-ht-fantasy-arrow-bg text-caption font-black text-ht-fantasy-title  disabled:opacity-30"
               aria-label="Next day"
             >
               ▶
             </button>
             <span
               className={`shrink-0 whitespace-nowrap pr-1 text-caption font-black uppercase tracking-[0.06em] ${
-                isPastSelectedDate ? "text-slate-400" : "text-amber-200"
+                isPastSelectedDate ? "text-ht-fg-muted" : "text-ht-fantasy-title"
               }`}
             >
               {isPastSelectedDate
@@ -2522,11 +2525,11 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
           <button
             type="button"
             onClick={() => setSelectedSport(crossSportLiveSport.key)}
-            className="tp-player-hit-target tp-player-pressable flex w-full items-center gap-2 rounded-[10px] border border-emerald-300/30 bg-emerald-500/[0.07] px-3 py-2 text-left"
+            className="tp-player-hit-target tp-player-pressable flex w-full items-center gap-2 rounded-[10px] border border-ht-success-fg/30 bg-emerald-500/[0.07] px-3 py-2 text-left"
           >
             <span className="h-1.5 w-1.5 shrink-0 animate-pulse motion-reduce:animate-none rounded-full bg-emerald-400" />
-            <span className="text-caption font-bold leading-snug text-emerald-200">
-              Your <b className="text-[#6ee7b7]">{crossSportLiveSport.label}</b> roster is live right now — tap to sweat it.
+            <span className="text-caption font-bold leading-snug text-ht-success-soft">
+              Your <b className="text-ht-success-fg">{crossSportLiveSport.label}</b> roster is live right now — tap to sweat it.
             </span>
           </button>
         ) : null}
@@ -2534,19 +2537,19 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         <VenueEntryRulesPanel gameKey="fantasy" shouldDisplay={entries.length === 0} />
 
         {isGeofencePaused || venuePresence.isInteractionBlocked ? (
-          <p className="rounded-xl border border-amber-400/40 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-200">
+          <p className="rounded-xl border border-ht-warn-edge/40 bg-ht-warn-wash px-3 py-2 text-xs font-semibold text-ht-countdown">
             {geofencePauseReason || "Fantasy scoring is paused until we confirm you're back inside this partner venue."}
           </p>
         ) : null}
 
         {statusMessage ? (
-          <p className="rounded-xl border border-emerald-400/40 bg-emerald-950/30 px-3 py-2 text-xs font-semibold text-emerald-300" role="status">
+          <p className="rounded-xl border border-emerald-400/40 bg-ht-success-wash-dim px-3 py-2 text-xs font-semibold text-ht-success-fg" role="status">
             {statusMessage}
           </p>
         ) : null}
 
         {errorMessage ? (
-          <p className="rounded-xl border border-rose-400/40 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300" role="alert">
+          <p className="rounded-xl border border-rose-400/40 bg-ht-danger-wash px-3 py-2 text-xs font-semibold text-ht-danger-fg" role="alert">
             {errorMessage}
           </p>
         ) : null}
@@ -2568,8 +2571,8 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
             {activeFantasyTab === "sweat" ? (
               <>
             {/* Total FP scoreboard */}
-            <div className="relative overflow-hidden rounded-[18px] border-2 border-[#fef3c7]/55 bg-[#0a3128] px-3.5 pb-4 pt-3.5">
-              <ChalkGrid />
+            <div className="relative overflow-hidden rounded-[18px] border-2 border-[#fef3c7]/55 bg-[#0a3128] px-3.5 pb-4 pt-3.5 shadow-ht-chalk">
+              <ChalkGrid alwaysChalk />
               <div className="relative z-[2]">
                 <div className="flex items-center justify-between">
                   <p className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">Live Game</p>
@@ -2630,29 +2633,29 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
 
             {/* Geofence status banner */}
             {!isGeofencePaused && !venuePresence.isInteractionBlocked && hasLiveEntry ? (
-              <div className="flex items-center gap-2 rounded-[10px] border border-sky-400/30 bg-sky-400/[0.08] px-3 py-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <div className="flex items-center gap-2 rounded-[10px] border border-ht-info-edge bg-ht-info-wash px-3 py-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 stroke-ht-info-icon">
                   <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z" />
                   <circle cx="12" cy="10" r="2.5" />
                 </svg>
-                <span className="text-caption font-bold leading-snug text-sky-200">At the venue — live scoring active. Leave and scoring pauses.</span>
+                <span className="text-caption font-bold leading-snug text-ht-info-fg">At the venue — live scoring active. Leave and scoring pauses.</span>
               </div>
             ) : null}
 
             {/* Points ticker */}
             {statFlashes.length > 0 ? (
-              <div className="rounded-xl border border-[#6ee7b7]/[0.28] bg-emerald-500/[0.06] px-3 py-2.5">
+              <div className="rounded-xl border border-ht-success-fg/[0.28] bg-emerald-500/[0.06] px-3 py-2.5">
                 <div className="mb-2 flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 animate-pulse motion-reduce:animate-none rounded-full bg-emerald-400" />
-                  <p className="text-caption font-black uppercase tracking-[0.16em] text-[#6ee7b7]">Points ticker</p>
+                  <p className="text-caption font-black uppercase tracking-[0.16em] text-ht-success-fg">Points ticker</p>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {statFlashes.map((flash) => (
                     <div key={flash.id} className="flex items-center gap-2">
-                      <span className="min-w-[72px] shrink-0 rounded border border-[#6ee7b7]/35 bg-emerald-500/15 px-1.5 py-0.5 text-center text-caption font-black tracking-[0.08em] text-[#6ee7b7]">
+                      <span className="min-w-[72px] shrink-0 rounded border border-ht-success-fg/35 bg-emerald-500/15 px-1.5 py-0.5 text-center text-caption font-black tracking-[0.08em] text-ht-success-fg">
                         {flash.label}
                       </span>
-                      <span className={`shrink-0 font-mono text-caption font-[900] tabular-nums ${flash.pointsDelta >= 0 ? "text-[#6ee7b7]" : "text-rose-300"}`}>
+                      <span className={`shrink-0 font-mono text-caption font-[900] tabular-nums ${flash.pointsDelta >= 0 ? "text-ht-success-fg" : "text-ht-danger-fg"}`}>
                         {flash.pointsDelta >= 0 ? "+" : ""}{flash.pointsDelta.toFixed(1)} FP
                       </span>
                     </div>
@@ -2663,7 +2666,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
 
             {/* Your roster */}
             <div>
-                <p className="mb-2.5 text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">
+                <p className="mb-2.5 text-caption font-black uppercase tracking-[0.16em] text-ht-fantasy-title">
                   {canEditExistingEntryLineup ? "Your roster" : "Your roster · locked"}
                 </p>
                 <div className="flex flex-col gap-2.5">
@@ -2697,9 +2700,9 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         className={`grid grid-cols-[60px_1fr_auto] items-center gap-3.5 rounded-[18px] border px-4 py-4 transition-all motion-reduce:transition-none duration-300 ${
                           isHot
                             ? popTone === "loss"
-                              ? "scale-[1.02] border-rose-400/40 bg-rose-950/20"
-                              : "scale-[1.02] border-emerald-400/40 bg-emerald-950/20"
-                            : "border-[#fef3c7]/[0.22] bg-[#fef3c7]/[0.045]"
+                              ? "scale-[1.02] border-rose-400/40 bg-ht-danger-wash-soft"
+                              : "scale-[1.02] border-emerald-400/40 bg-ht-success-wash-faint"
+                            : "border-ht-fantasy-row-edge bg-ht-fantasy-row-bg shadow-ht-panel"
                         }`}
                       >
                         <PlayerHeadshot
@@ -2711,33 +2714,33 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         <div className="min-w-0 leading-tight">
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span className={`truncate text-[15px] font-black ${
-                              isHot ? (popTone === "loss" ? "text-rose-300" : "text-emerald-300") : "text-[#fef3c7]"
+                              isHot ? (popTone === "loss" ? "text-ht-danger-fg" : "text-ht-success-fg") : "text-ht-fantasy-ink"
                             }`}>
                               {player.playerName}
                             </span>
                             <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-caption font-black uppercase tracking-[0.08em] ${
                               isScoring
-                                ? "border border-[#6ee7b7]/40 bg-emerald-500/15 text-[#6ee7b7]"
-                                : "border border-white/10 bg-white/5 text-slate-400"
+                                ? "border border-ht-success-fg/40 bg-emerald-500/15 text-ht-success-fg"
+                                : "border border-ht-overlay/10 bg-ht-overlay/5 text-ht-fg-muted"
                             }`}>
                               {isScoring ? <span className="h-1 w-1 animate-pulse motion-reduce:animate-none rounded-full bg-emerald-400" /> : null}
                               {isScoring ? "Live" : "Pending"}
                             </span>
                           </div>
-                          <div className="mt-1 truncate text-caption font-bold text-[#fef3c7]/55">
-                            {poolItem?.position ? <span className="text-[#fde68a]">{poolItem.position}</span> : null}
+                          <div className="mt-1 truncate text-caption font-bold text-ht-fantasy-ink-55">
+                            {poolItem?.position ? <span className="text-ht-fantasy-title">{poolItem.position}</span> : null}
                             {poolItem?.position && poolItem?.team ? " · " : null}
                             {poolItem?.team ?? trackedEntry.gameLabel}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-caption font-black uppercase tracking-[0.14em] text-[#fef3c7]/45">FP</div>
+                          <div className="text-caption font-black uppercase tracking-[0.14em] text-ht-fantasy-ink-45">FP</div>
                           <SpringPop
                             popKey={playerPopTickById[String(player.playerId)] ?? 0}
                             glowSize={12}
                             glowColor={popTone === "loss" ? "red" : "green"}
                             className={`font-mono text-[24px] font-[900] leading-[1.05] tabular-nums ${
-                              isHot ? (popTone === "loss" ? "text-rose-200" : "text-emerald-200") : "text-[#fde68a]"
+                              isHot ? (popTone === "loss" ? "text-ht-danger-soft" : "text-ht-success-soft") : "text-ht-fantasy-points"
                             }`}
                           >
                             {playerPoints.toFixed(1)}
@@ -2751,7 +2754,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   <button
                     type="button"
                     onClick={startEditingRoster}
-                    className="tp-player-hit-target tp-player-pressable mt-3 flex min-h-[44px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-caption font-black uppercase tracking-[0.08em] text-[#fde68a] "
+                    className="tp-player-hit-target tp-player-pressable mt-3 flex min-h-[44px] w-full items-center justify-center rounded-[12px] border border-ht-fantasy-title/50 bg-ht-fantasy-title/15 text-caption font-black uppercase tracking-[0.08em] text-ht-fantasy-title "
                   >
                     Edit Roster
                   </button>
@@ -2761,30 +2764,30 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
             {hasLiveEntry ? (
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 animate-pulse motion-reduce:animate-none rounded-full bg-emerald-400" />
-                <p className="text-caption font-semibold text-[#6ee7b7]">Live · Streaming updates</p>
+                <p className="text-caption font-semibold text-ht-success-fg">Live · Streaming updates</p>
               </div>
             ) : null}
               </>
             ) : (
               /* Leaderboard tab — full venue board */
               leaderboard.length > 0 ? (
-                <div className="overflow-hidden rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a]">
+                <div className="overflow-hidden rounded-xl border border-ht-fantasy-card-edge bg-ht-surface shadow-ht-panel">
                   {leaderboard.map((row, i) => {
                     const isMe = row.userId === userId;
                     return (
                       <div
                         key={row.entryId}
-                        className={`flex items-center justify-between px-3.5 py-3 ${i ? "border-t border-white/5" : ""} ${isMe ? "bg-[#fef3c7]/[0.06]" : ""}`}
+                        className={`flex items-center justify-between px-3.5 py-3 ${i ? "border-t border-ht-overlay/5" : ""} ${isMe ? "bg-ht-fantasy-me-row" : ""}`}
                       >
                         <div className="flex min-w-0 items-center gap-2.5">
-                          <span className={`w-5 font-mono text-footnote font-[900] tabular-nums ${row.rank <= 3 ? "text-[#fde68a]" : "text-slate-500"}`}>
+                          <span className={`w-5 font-mono text-footnote font-[900] tabular-nums ${row.rank <= 3 ? "text-ht-fantasy-points" : "text-ht-fg-faint"}`}>
                             {row.rank}
                           </span>
-                          <span className={`truncate text-footnote ${isMe ? "font-black text-[#fef3c7]" : "font-bold text-slate-300"}`}>
+                          <span className={`truncate text-footnote ${isMe ? "font-black text-ht-fantasy-ink" : "font-bold text-ht-fg-soft"}`}>
                             {isMe ? "You" : row.username}
                           </span>
                         </div>
-                        <span className={`font-mono text-[14px] font-[900] tabular-nums ${isMe ? "text-[#6ee7b7]" : "text-slate-200"}`}>
+                        <span className={`font-mono text-[14px] font-[900] tabular-nums ${isMe ? "text-ht-success-fg" : "text-ht-fg-secondary"}`}>
                           {Number(row.points ?? 0).toFixed(1)}
                         </span>
                       </div>
@@ -2792,7 +2795,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   })}
                 </div>
               ) : (
-                <div className="rounded-xl border border-[#fef3c7]/[0.18] bg-[#0f172a] p-5 text-center text-caption font-bold text-slate-400">
+                <div className="rounded-xl border border-ht-fantasy-card-edge bg-ht-surface p-5 text-center text-caption font-bold text-ht-fg-muted">
                   No venue entries yet.
                 </div>
               )
@@ -2804,14 +2807,14 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         {activeFantasyTab === "sweat" ? (
           <>
             {selectedSport === "football" ? (
-              <div className="rounded-2xl border border-[#fef3c7]/20 bg-[#0a3128] p-4 text-center">
-                <p className="text-sm font-extrabold text-[#fef3c7]">🏈 Football fantasy is coming soon!</p>
+              <div className="rounded-2xl border border-ht-fantasy-accent/20 bg-ht-fantasy-board p-4 text-center shadow-ht-panel">
+                <p className="text-sm font-extrabold text-ht-fantasy-ink">🏈 Football fantasy is coming soon!</p>
               </div>
             ) : null}
 
             {/* Pool loading state — shown while player pool is being fetched */}
             {showPoolLoader ? (
-              <div className="relative overflow-hidden rounded-2xl border border-[#fef3c7]/30 bg-[#0a3128] p-4">
+              <div className="relative overflow-hidden rounded-2xl border border-ht-fantasy-accent/30 bg-ht-fantasy-board shadow-ht-panel p-4">
                 <ChalkGrid fine />
                 <div className="relative z-[2] flex items-center gap-3">
                   <BasketballLoader label="Loading today's player pool…" />
@@ -2822,7 +2825,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
             {/* Game start prompt */}
             {showGameStart ? (
               <div
-                className={`relative overflow-hidden rounded-2xl border border-[#fef3c7]/30 bg-[#0a3128] ${
+                className={`relative overflow-hidden rounded-2xl border border-ht-fantasy-accent/30 bg-ht-fantasy-board shadow-ht-panel ${
                   sportGames.length === 0 ? "p-8" : "p-4"
                 }`}
               >
@@ -2831,11 +2834,11 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   {sportGames.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 py-2 text-center">
                       <p className="text-2xl">{FANTASY_SPORTS.find((s) => s.key === selectedSport)?.icon ?? "🏆"}</p>
-                      <p className="text-base font-bold text-[#fde68a]">No {selectedSportLabel} games scheduled</p>
-                      <p className="text-xs text-[#fef3c7]/50">Check back on a game day or browse another sport</p>
+                      <p className="text-base font-bold text-ht-fantasy-title">No {selectedSportLabel} games scheduled</p>
+                      <p className="text-xs text-ht-fantasy-ink-50">Check back on a game day or browse another sport</p>
                     </div>
                   ) : (
-                    <p className="text-caption font-black uppercase tracking-[0.12em] text-[#fde68a]">
+                    <p className="text-caption font-black uppercase tracking-[0.12em] text-ht-fantasy-title">
                       {`${selectedSportLabel} · ${nextUnlockedGame ? "Next game" : "First game"} ${formatLocalDateTime((nextUnlockedGame ?? sportGames[0])!.startsAt)}`}
                     </p>
                   )}
@@ -2843,7 +2846,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                     <button
                       type="button"
                       onClick={() => setHasStartedGame(true)}
-                      className="tp-player-hit-target tp-player-pressable mt-3 w-full rounded-xl bg-[#8b5cf6] py-3 text-sm font-black uppercase tracking-[0.04em] text-white shadow-[0_8px_24px_rgba(139,92,246,0.35)] "
+                      className="tp-player-hit-target tp-player-pressable mt-3 w-full rounded-xl bg-ht-fantasy-cta py-3 text-sm font-black uppercase tracking-[0.04em] text-white shadow-ht-fantasy-cta "
                     >
                       {draftCtaLabel}
                     </button>
@@ -2856,20 +2859,20 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
             {showLineupBuilder ? (
               <>
                 {/* Chalkboard roster strip */}
-                <div className="relative overflow-hidden rounded-[14px] border border-[#fef3c7]/35 bg-[#0a3128] px-3 py-3">
+                <div className="relative overflow-hidden rounded-[14px] border border-ht-fantasy-accent/35 bg-ht-fantasy-board px-3 py-3 shadow-ht-panel">
                   <ChalkGrid fine />
                   <div className="relative z-[2]">
                     <div className="mb-2.5 flex items-center justify-between">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">
+                        <p className="text-caption font-black uppercase tracking-[0.16em] text-ht-fantasy-title">
                           Your lineup · {selectedPlayers.length}/{requiredLineupSize}
                         </p>
                         {selectedSport === "baseball" ? (
                           <>
-                            <span className="inline-flex items-center rounded-full border border-sky-300/35 bg-sky-400/10 px-2 py-1 text-caption font-black uppercase tracking-[0.1em] text-sky-200">
+                            <span className="inline-flex items-center rounded-full border border-sky-300/35 bg-sky-400/10 px-2 py-1 text-caption font-black uppercase tracking-[0.1em] text-ht-info-fg">
                               Pitchers {selectedMlbPitchers.length}/{FANTASY_MLB_PITCHER_COUNT}
                             </span>
-                            <span className="inline-flex items-center rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-1 text-caption font-black uppercase tracking-[0.1em] text-amber-200">
+                            <span className="inline-flex items-center rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-1 text-caption font-black uppercase tracking-[0.1em] text-ht-countdown">
                               Hitters {selectedMlbHitters.length}/{FANTASY_MLB_HITTER_COUNT}
                             </span>
                           </>
@@ -2879,7 +2882,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         <button
                           type="button"
                           onClick={startEditingRoster}
-                          className="tp-player-hit-target tp-player-pressable text-caption font-bold text-[#fde68a] underline"
+                          className="tp-player-hit-target tp-player-pressable text-caption font-bold text-ht-fantasy-title underline"
                         >
                           Edit
                         </button>
@@ -2890,17 +2893,17 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         {[
                           {
                             title: "Pitchers",
-                            accent: "text-sky-200",
+                            accent: "text-ht-info-fg",
                             slotAccent: "border-sky-300/35 bg-sky-400/10",
-                            emptyAccent: "border-sky-300/20 bg-sky-950/20",
+                            emptyAccent: "border-sky-300/20 bg-ht-info-wash-soft",
                             players: selectedMlbPitchers,
                             total: FANTASY_MLB_PITCHER_COUNT,
                           },
                           {
                             title: "Hitters",
-                            accent: "text-amber-200",
+                            accent: "text-ht-countdown",
                             slotAccent: "border-amber-300/35 bg-amber-400/10",
-                            emptyAccent: "border-amber-300/20 bg-amber-950/20",
+                            emptyAccent: "border-amber-300/20 bg-ht-warn-wash-soft",
                             players: selectedMlbHitters,
                             total: FANTASY_MLB_HITTER_COUNT,
                           },
@@ -2910,7 +2913,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                               <p className={`text-caption font-black uppercase tracking-[0.16em] ${section.accent}`}>
                                 {section.title}
                               </p>
-                              <span className="text-caption font-bold text-slate-400">
+                              <span className="text-caption font-bold text-ht-fg-muted">
                                 {section.players.length}/{section.total}
                               </span>
                             </div>
@@ -2939,14 +2942,14 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                         sizeClass="h-[42px] w-[42px]"
                                       />
                                     ) : (
-                                      <span className="text-base font-black text-[#fef3c7]/55">+</span>
+                                      <span className="text-base font-black text-ht-fantasy-ink-55">+</span>
                                     )}
                                     {filled ? (
-                                      <span className="w-full truncate px-1 text-caption font-black leading-tight text-[#fef3c7]">
+                                      <span className="w-full truncate px-1 text-caption font-black leading-tight text-ht-fantasy-ink">
                                         {name}
                                       </span>
                                     ) : null}
-                                    <span className={`text-caption font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
+                                    <span className={`text-caption font-extrabold leading-none ${filled ? "text-ht-fantasy-accent" : "text-ht-fg-faint"}`}>
                                       {item?.position ?? (section.title === "Pitchers" ? "P" : "BAT")}
                                     </span>
                                   </button>
@@ -2974,22 +2977,22 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                               aria-label={filled ? `Remove ${name}` : "Empty roster slot"}
                               className={"tp-player-hit-target tp-player-pressable " + (`flex min-w-0 flex-col items-center justify-center gap-1 rounded-[10px] px-0.5 py-2.5 text-center transition-transform  disabled:cursor-default ${
                                 filled
-                                  ? "border border-[#fef3c7]/40 bg-[#fef3c7]/10"
-                                  : "border border-dashed border-[#fef3c7]/25 bg-black/25"
+                                  ? "border border-ht-fantasy-accent/40 bg-ht-fantasy-slot-filled"
+                                  : "border border-dashed border-ht-fantasy-accent/25 bg-ht-fantasy-slot-empty"
                               }`)}
                             >
                               {filled ? (
                                 <PlayerHeadshot name={name!} jerseyNumber={playerPoolJerseyByName.get(normalizePlayerKey(name!)) ?? null} sizeClass="h-[34px] w-[34px]" />
                               ) : (
-                                <span className="text-base font-black text-[#fef3c7]/55">+</span>
+                                <span className="text-base font-black text-ht-fantasy-ink-55">+</span>
                               )}
                               {filled ? (
-                                <span className="grid w-full min-w-0 px-0.5 text-center text-caption font-black leading-[0.95] text-[#fef3c7]">
+                                <span className="grid w-full min-w-0 px-0.5 text-center text-caption font-black leading-[0.95] text-ht-fantasy-ink">
                                   <span className="truncate">{lineupName.first}</span>
                                   {lineupName.rest ? <span className="truncate">{lineupName.rest}</span> : null}
                                 </span>
                               ) : null}
-                              <span className={`text-caption font-extrabold leading-none ${filled ? "text-[#fef3c7]" : "text-slate-500"}`}>
+                              <span className={`text-caption font-extrabold leading-none ${filled ? "text-ht-fantasy-accent" : "text-ht-fg-faint"}`}>
                                 {poolItem?.position ?? "—"}
                               </span>
                             </button>
@@ -3001,19 +3004,19 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                       <button
                         type="button"
                         onClick={startEditingRoster}
-                        className="tp-player-hit-target tp-player-pressable mt-2.5 flex min-h-[42px] w-full items-center justify-center rounded-[12px] border border-[#fde68a]/50 bg-[#fde68a]/15 text-caption font-black uppercase tracking-[0.08em] text-[#fde68a] "
+                        className="tp-player-hit-target tp-player-pressable mt-2.5 flex min-h-[42px] w-full items-center justify-center rounded-[12px] border border-ht-fantasy-title/50 bg-ht-fantasy-title/15 text-caption font-black uppercase tracking-[0.08em] text-ht-fantasy-title "
                       >
                         Edit Roster
                       </button>
                     ) : null}
                     {!canModifyRosterSelections ? (
-                      <p className="mt-2.5 text-caption text-[#fef3c7]/55">
+                      <p className="mt-2.5 text-caption text-ht-fantasy-ink-55">
                         {canEditExistingEntryLineup
                           ? "Roster locked in. Tap Edit to make changes before tipoff."
                           : "Roster locked — games have started."}
                       </p>
                     ) : selectedSport === "baseball" ? (
-                      <p className="mt-2.5 text-caption text-[#fef3c7]/60">
+                      <p className="mt-2.5 text-caption text-ht-fantasy-ink-60">
                         Draft exactly 3 pitchers and 3 hitters for your MLB roster.
                       </p>
                     ) : null}
@@ -3025,7 +3028,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                   <div className="space-y-2.5">
                     {/* Sort + filter controls */}
                     <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-                      <span className="shrink-0 self-center text-caption font-extrabold uppercase tracking-[0.12em] text-slate-500">Sort</span>
+                      <span className="shrink-0 self-center text-caption font-extrabold uppercase tracking-[0.12em] text-ht-fg-faint">Sort</span>
                       {(["projected", "alpha", "position", "team"] as const).map((mode) => (
                         <button
                           key={mode}
@@ -3033,18 +3036,18 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                           onClick={() => setSortBy(mode)}
                           className={"tp-player-hit-target tp-player-pressable " + (`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1.5 text-caption font-extrabold tracking-[0.04em] transition-colors ${
                             sortBy === mode
-                              ? "border-[#fef3c7]/40 bg-[#fef3c7]/15 text-[#fef3c7]"
-                              : "border-white/[0.12] bg-transparent text-slate-400"
+                              ? "border-ht-fantasy-accent/40 bg-ht-fantasy-accent/15 text-ht-fantasy-accent"
+                              : "border-ht-border-soft bg-transparent text-ht-fg-muted"
                           }`)}
                         >
                           {mode === "projected" ? "Proj" : mode === "alpha" ? "A–Z" : mode === "position" ? "Pos" : "Team"}
                         </button>
                       ))}
-                      <span className="mx-0.5 h-4 w-px shrink-0 self-center bg-white/10" />
+                      <span className="mx-0.5 h-4 w-px shrink-0 self-center bg-ht-overlay/10" />
                       <select
                         value={filterPosition}
                         onChange={(e) => setFilterPosition(e.target.value)}
-                        className="shrink-0 rounded-full border-white/[0.12] bg-transparent px-2.5 py-1.5 text-caption font-extrabold text-slate-300 focus:outline-none"
+                        className="shrink-0 rounded-full border-ht-border-soft bg-transparent px-2.5 py-1.5 text-caption font-extrabold text-ht-fg-soft focus:outline-none"
                       >
                         <option value="all">All positions</option>
                         {CANONICAL_POSITIONS.map((pos) => (
@@ -3054,7 +3057,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                       <select
                         value={filterTeam}
                         onChange={(e) => setFilterTeam(e.target.value)}
-                        className="shrink-0 rounded-full border-white/[0.12] bg-transparent px-2.5 py-1.5 text-caption font-extrabold text-slate-300 focus:outline-none"
+                        className="shrink-0 rounded-full border-ht-border-soft bg-transparent px-2.5 py-1.5 text-caption font-extrabold text-ht-fg-soft focus:outline-none"
                       >
                         <option value="all">All teams</option>
                         {uniqueTeams.map((team) => (
@@ -3078,8 +3081,8 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                           <p
                             className={`mx-auto max-w-[28rem] ${
                               playerPoolEmptyReason === "no-games"
-                                ? "text-xl font-bold leading-8 text-slate-200"
-                                : "text-sm leading-6 text-slate-400"
+                                ? "text-xl font-bold leading-8 text-ht-fg-secondary"
+                                : "text-sm leading-6 text-ht-fg-muted"
                             }`}
                           >
                             {playerPoolEmptyReason === "no-games" ? (
@@ -3093,7 +3096,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                         )}
                       </div>
                     ) : sortedFilteredPool.length === 0 ? (
-                      <p className="py-4 text-center text-sm text-slate-500">No players match this filter.</p>
+                      <p className="py-4 text-center text-sm text-ht-fg-faint">No players match this filter.</p>
                     ) : (
                       <>
                         <div className="flex flex-col gap-[7px]">
@@ -3113,35 +3116,35 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                 key={item.playerName}
                                 className={`grid grid-cols-[30px_1fr_auto] items-center gap-2.5 rounded-[10px] px-2.5 py-2.5 ${
                                   isSelected
-                                    ? "border border-[#fef3c7]/30 bg-[#fef3c7]/[0.06]"
-                                    : "border border-white/[0.06] bg-white/[0.015]"
+                                    ? "border border-ht-fantasy-accent/30 bg-ht-fantasy-picked-bg"
+                                    : "border border-ht-overlay/[0.06] bg-ht-fantasy-pool-row"
                                 }`}
                               >
                                 <PlayerHeadshot name={item.playerName} jerseyNumber={item.jerseyNumber ?? null} />
                                 <div className="min-w-0 leading-[1.15]">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="truncate text-footnote font-black text-[#fef3c7]">{item.playerName}</span>
+                                    <span className="truncate text-footnote font-black text-ht-fantasy-ink">{item.playerName}</span>
                                     {selectedSport === "baseball" ? (
                                       <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-caption font-black uppercase tracking-[0.08em] ${
                                         rosterRole === "pitcher"
-                                          ? "border border-sky-300/35 bg-sky-400/10 text-sky-200"
-                                          : "border border-amber-300/35 bg-amber-400/10 text-amber-200"
+                                          ? "border border-sky-300/35 bg-sky-400/10 text-ht-info-fg"
+                                          : "border border-amber-300/35 bg-amber-400/10 text-ht-countdown"
                                       }`}>
                                         {rosterRole === "pitcher" ? "Pitcher" : "Hitter"}
                                       </span>
                                     ) : null}
                                     {isTop ? (
-                                      <span className="shrink-0 rounded-full border border-[#fcd34d]/40 bg-[#fcd34d]/15 px-1.5 text-caption font-black uppercase tracking-[0.06em] text-[#fcd34d]">★ Top</span>
+                                      <span className="shrink-0 rounded-full border border-ht-warn-fg/40 bg-ht-top-chip-bg px-1.5 text-caption font-black uppercase tracking-[0.06em] text-ht-warn-fg">★ Top</span>
                                     ) : null}
                                   </div>
-                                  <div className="mt-0.5 truncate text-caption font-bold text-[#fef3c7]/55">
-                                    {item.position ? <span className="text-[#fde68a]">{item.position}</span> : null}
+                                  <div className="mt-0.5 truncate text-caption font-bold text-ht-fantasy-ink-55">
+                                    {item.position ? <span className="text-ht-fantasy-title">{item.position}</span> : null}
                                     {item.position && item.team ? " · " : null}
                                     {item.team ?? ""}
                                     {proj > 0 ? (
                                       <>
                                         {item.position || item.team ? " · " : null}
-                                        <span className="text-[#fde68a]">{proj} proj</span>
+                                        <span className="text-ht-fantasy-points">{proj} proj</span>
                                       </>
                                     ) : null}
                                   </div>
@@ -3152,8 +3155,8 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                                   onClick={() => togglePlayer(item)}
                                   className={"tp-player-hit-target tp-player-pressable " + (`h-8 min-w-[64px] rounded-full text-caption font-black uppercase tracking-[0.04em] transition-colors disabled:opacity-40 ${
                                     isSelected
-                                      ? "border border-[#6ee7b7]/55 bg-emerald-500/15 text-[#6ee7b7]"
-                                      : "border border-[#fef3c7]/45 bg-[#fef3c7]/10 text-[#fde68a]"
+                                      ? "border border-ht-success-fg/55 bg-emerald-500/15 text-ht-success-fg"
+                                      : "border border-ht-fantasy-accent/45 bg-ht-fantasy-accent/10 text-ht-fantasy-title"
                                   }`)}
                                 >
                                   {isSelected ? "✓ Drafted" : isRoleFull && selectedSport === "baseball" ? "Full" : "Draft"}
@@ -3166,7 +3169,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                           <button
                             type="button"
                             onClick={() => setVisibleCount((n) => n + 25)}
-                            className="tp-player-hit-target tp-player-pressable w-full rounded-[10px] border border-white/10 bg-white/[0.02] py-2.5 text-caption font-extrabold tracking-[0.04em] text-slate-400"
+                            className="tp-player-hit-target tp-player-pressable w-full rounded-[10px] border border-ht-overlay/10 bg-ht-overlay/[0.02] py-2.5 text-caption font-extrabold tracking-[0.04em] text-ht-fg-muted"
                           >
                             Load more players ({sortedFilteredPool.length - visibleCount})
                           </button>
@@ -3203,7 +3206,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                 : { opacity: 1, scale: 1, y: 0 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98, y: -4 }}
             transition={reducedMotion ? { duration: 0 } : { duration: submissionAnimationComplete ? 0.65 : 0.3, ease: "easeOut" }}
-            className="fixed left-1/2 z-[2400] w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-emerald-400/60 bg-emerald-500/20 px-3 py-3 shadow-[0_14px_32px_rgba(16,185,129,0.35)]"
+            className="fixed left-1/2 z-[2400] w-[min(92vw,28rem)] -translate-x-1/2 rounded-xl border border-emerald-400/60 bg-ht-fantasy-toast-bg px-3 py-3 shadow-[0_14px_32px_rgba(16,185,129,0.35)]"
             style={{ bottom: "calc(6.75rem + env(safe-area-inset-bottom, 0px))" }}
             role="status"
             aria-live="polite"
@@ -3213,11 +3216,11 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                 initial={reducedMotion ? false : { scale: 0.7, rotate: -12 }}
                 animate={reducedMotion ? { scale: 1, rotate: 0 } : { scale: [0.7, 1.15, 1], rotate: [0, 5, 0] }}
                 transition={reducedMotion ? { duration: 0 } : { duration: 0.45, ease: "easeOut" }}
-                className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-emerald-300/70 bg-emerald-500/25 text-emerald-300"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-ht-success-fg/70 bg-emerald-500/25 text-ht-success-fg"
               >
                 ✓
               </motion.span>
-              <span className="text-sm font-bold text-emerald-300">
+              <span className="text-sm font-bold text-ht-success-fg">
                 {existingEntryForSelectedGame ? "Roster Updated" : "Roster Locked In"}
               </span>
             </div>
@@ -3230,7 +3233,7 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
         ? createPortal(
             <div
               data-fantasy-submit-cta
-              className="pointer-events-none bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent px-4 pt-3"
+              className="pointer-events-none [background-image:var(--ht-fantasy-cta-fade)] px-4 pt-3"
               style={{
                 position: "fixed",
                 left: 0,
@@ -3246,8 +3249,8 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                 disabled={submitting || !isLineupComplete}
                 className={"tp-player-hit-target tp-player-pressable " + (`pointer-events-auto flex w-full items-center justify-center gap-2.5 rounded-[14px] py-4 text-base font-black uppercase tracking-[0.04em] transition-all motion-reduce:transition-none  disabled:cursor-not-allowed disabled:opacity-65 ${
                   isLineupComplete && !submitting
-                    ? "bg-[#8b5cf6] text-white shadow-[0_8px_24px_rgba(139,92,246,0.35)]"
-                    : "bg-slate-800 text-slate-400"
+                    ? "bg-ht-fantasy-cta text-white shadow-ht-fantasy-cta"
+                    : "bg-ht-elevated text-ht-fg-muted"
                 }`)} aria-busy={submitting}
               >
               {(submitting) ? <ButtonSpinner /> : null}

@@ -11,7 +11,7 @@ export default async function FantasyWnbaPage({
   const initialEntryId = String(params.entryId ?? "").trim();
 
   return (
-    <GameLandingExperience gameKey="fantasy" playLabel="Play Fantasy">
+    <GameLandingExperience gameKey="fantasy" playLabel="Play Fantasy" playingBackgroundClassName="bg-ht-fantasy-frame">
       <FantasyHome defaultSport="wnba" initialDate={initialDate} initialEntryId={initialEntryId} />
     </GameLandingExperience>
   );

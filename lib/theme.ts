@@ -15,7 +15,7 @@
 // off (the default) = neither the script nor ThemeRouteSync is rendered, every page is dark.
 // This file is the only reader of the flag and of `htc_theme`.
 //
-// Pure apart from the three browser helpers at the bottom, which guard `window` and wrap every
+// Pure apart from the browser helpers at the bottom, which guard `window` and wrap every
 // storage access in try/catch (private windows and blocked storage throw).
 
 export type ThemePreference = "dark" | "light" | "system";
@@ -35,6 +35,25 @@ export const LIGHT_THEME_PATH_PATTERN = "^/(?:venue/[^/]+|pickem(?:/.*)?|nfl-pic
 const LIGHT_THEME_PATH_RE = new RegExp(LIGHT_THEME_PATH_PATTERN);
 
 export const PREFERS_LIGHT_MEDIA_QUERY = "(prefers-color-scheme: light)";
+
+/**
+ * `<meta name="theme-color">` (the browser's and Android's bar colour above the page) per theme:
+ * the dark page's navy, and white to match the light screens' app bar (`--ht-chrome-bar` /
+ * `--ht-hub-bar`, white at 94%). app/layout.tsx renders the dark one; `applyThemeForPath` swaps it.
+ * The app's native status bar uses the same two colours (lib/nativeStatusBar.ts).
+ */
+export const THEME_COLOR: Record<ResolvedTheme, string> = { dark: "#020617", light: "#ffffff" };
+
+/** The Appearance row's words (components/navigation/AppearancePicker.tsx). Edit copy here. */
+export const APPEARANCE_COPY = {
+  title: "Appearance",
+  note: "Light works on Venue Home, Pick 'Em, NFL Pick 'Em and Fantasy. Other games stay dark.",
+  options: [
+    { value: "dark", label: "Dark" },
+    { value: "light", label: "Light" },
+    { value: "system", label: "Match my phone" },
+  ],
+} as const satisfies { title: string; note: string; options: ReadonlyArray<{ value: ThemePreference; label: string }> };
 
 const truthy = (value: string | undefined): boolean => {
   const v = (value ?? "").trim().toLowerCase();
@@ -80,14 +99,25 @@ export const readThemePreference = (): ThemePreference => {
   }
 };
 
-/** Saves the choice. The caller re-applies with `applyThemeForPath` (Phase 7's Appearance row). */
+const preferenceListeners = new Set<() => void>();
+
+/** For `useSyncExternalStore` (the Appearance row): told whenever `writeThemePreference` saves. */
+export const subscribeThemePreference = (listener: () => void): (() => void) => {
+  preferenceListeners.add(listener);
+  return () => {
+    preferenceListeners.delete(listener);
+  };
+};
+
+/** Saves the choice. The caller re-applies with `applyThemeForPath` (the Appearance row). */
 export const writeThemePreference = (preference: ThemePreference): void => {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(THEME_STORAGE_KEY, preference);
   } catch {
-    // storage blocked: the choice lasts until the page is reloaded
+    // storage blocked: nothing is kept, so the page and the row both stay on the default
   }
+  preferenceListeners.forEach((listener) => listener());
 };
 
 export const prefersLightColorScheme = (): boolean => {
@@ -99,13 +129,21 @@ export const prefersLightColorScheme = (): boolean => {
   }
 };
 
-/** Sets or clears the light attribute for `pathname`. A no-op (always dark) with the flag off. */
+/**
+ * Sets or clears the light attribute for `pathname` and points `<meta name="theme-color">` at the
+ * matching colour. A no-op (always dark) with the flag off. `color-scheme` follows the attribute
+ * in CSS (app/globals.css), so it needs nothing here. The caller passes the result to
+ * `syncNativeStatusBar` (lib/nativeStatusBar.ts) for the app's status bar.
+ */
 export const applyThemeForPath = (pathname: string): ResolvedTheme => {
   if (typeof document === "undefined") return "dark";
   const theme = isLightThemeEnabled() ? resolveTheme(readThemePreference(), pathname, prefersLightColorScheme()) : "dark";
   const root = document.documentElement;
   if (theme === "light") root.setAttribute(THEME_ATTRIBUTE, "light");
   else root.removeAttribute(THEME_ATTRIBUTE);
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+    if (meta.content !== THEME_COLOR[theme]) meta.content = THEME_COLOR[theme];
+  });
   return theme;
 };
 

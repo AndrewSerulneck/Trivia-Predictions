@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { AppearancePicker } from "@/components/navigation/AppearancePicker";
 import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { marketingHref } from "@/lib/domainSplit";
 import { PLAYER_DELETE_ACCOUNT_PATH } from "@/lib/accountDeletionShared";
 import { LEGAL_LINKS } from "@/lib/legalInfo";
+import { isLightThemeEnabled } from "@/lib/theme";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AccountMenuList — THE player account menu.
@@ -110,6 +112,13 @@ export function AccountMenuList({ onNavigate, hasUnclaimedPrize = false }: Accou
             </li>
           );
         })}
+        {/* Dark / Light / Match my phone (docs/light-theme-plan.md Phase 7). Build-time flag:
+            off = no row, every page dark. */}
+        {isLightThemeEnabled() ? (
+          <li className="!mt-4">
+            <AppearancePicker />
+          </li>
+        ) : null}
         {/* Account deletion (Apple 5.1.1(v) / Google Play). Deliberately a quiet text
             link, and kept away from Sign Out: the legal row and the divider sit between
             them. The page behind it asks for typed confirmation. */}

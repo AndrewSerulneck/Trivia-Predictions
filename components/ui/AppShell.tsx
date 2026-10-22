@@ -101,7 +101,7 @@ export function AppShell({ children }: AppShellProps) {
           : isCategoryBlitzRoute
           ? "h-[100svh] min-h-[100svh] max-h-[100svh] overflow-hidden bg-slate-950"
           : isGameScreen
-          ? "bg-slate-950"
+          ? "bg-ht-canvas"
           : isFullscreen
           ? ""
           : "tp-app-shell-safe-area mx-auto flex flex-col max-w-[720px] box-border overflow-x-hidden overflow-y-visible"

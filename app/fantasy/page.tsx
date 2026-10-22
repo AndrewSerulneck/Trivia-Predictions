@@ -22,7 +22,13 @@ export default async function FantasyPage({
   const initialEntryId = String(params.entryId ?? "").trim();
 
   return (
-    <GameLandingExperience gameKey="fantasy" playLabel="Play Fantasy" playingHidesShellNav playingContainerClassName="p-0">
+    <GameLandingExperience
+      gameKey="fantasy"
+      playLabel="Play Fantasy"
+      playingHidesShellNav
+      playingContainerClassName="p-0"
+      playingBackgroundClassName="bg-ht-fantasy-frame"
+    >
       <FantasyHome defaultSport={initialSport} initialDate={initialDate} initialEntryId={initialEntryId} />
     </GameLandingExperience>
   );

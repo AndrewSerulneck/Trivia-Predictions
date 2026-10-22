@@ -797,7 +797,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
       <style>{`
         @keyframes sport-pop {
           0%   { transform: scale(1); }
-          35%  { transform: scale(1.08); box-shadow: 0 0 0 5px rgba(253,230,138,0.34); }
+          35%  { transform: scale(1.08); box-shadow: 0 0 0 5px rgb(var(--ht-pickem-accent-rgb) / 0.34); }
           65%  { transform: scale(0.98); }
           100% { transform: scale(1); }
         }
@@ -822,14 +822,14 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
       <GameAppBar game="pickem" onExit={onBack} />
 
       <div className="space-y-3 px-2 pt-2">
-        <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-3 py-3">
+        <section className="rounded-2xl border border-ht-pickem-card-edge bg-ht-surface px-3 py-3 shadow-ht-panel">
           <h2
-            className="text-[20px] leading-none text-[#fde68a]"
+            className="text-[20px] leading-none text-ht-pickem-accent"
             style={{ fontFamily: "var(--ht-font-display)" }}
           >
             Hightop Pick &apos;Em
           </h2>
-          <p className="mt-2 text-footnote font-semibold leading-relaxed text-slate-400">
+          <p className="mt-2 text-footnote font-semibold leading-relaxed text-ht-fg-muted">
             Select winners by checking a team. Picks lock at scheduled start time and are final.
           </p>
 
@@ -838,15 +838,15 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             transition={reducedMotion ? { duration: 0 } : { duration: 0.35 }}
             className={`mt-3 overflow-hidden rounded-xl border ${
               pickCount >= PICKEM_PICK_LIMIT
-                ? "border-rose-400/60 bg-rose-950/20"
-                : "border-[#fde68a]/30 bg-[#020617]/55"
+                ? "border-rose-400/60 bg-ht-danger-wash-soft"
+                : "border-ht-pickem-accent/30 bg-ht-tracker-bg"
             }`}
           >
-            <div className="flex items-center justify-between border-b border-[#fde68a]/20 bg-black/20 px-3 py-1.5">
-              <span className="text-caption font-black uppercase tracking-[0.16em] text-slate-400">Pick Tracker</span>
+            <div className="flex items-center justify-between border-b border-ht-pickem-accent/20 bg-ht-tracker-head px-3 py-1.5">
+              <span className="text-caption font-black uppercase tracking-[0.16em] text-ht-fg-muted">Pick Tracker</span>
               <span
                 className={`text-caption font-black uppercase tracking-[0.16em] ${
-                  pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-[#fde68a]"
+                  pickCount >= PICKEM_PICK_LIMIT ? "text-ht-loss-fg" : "text-ht-pickem-accent"
                 } ${pickCount >= PICKEM_PICK_LIMIT && limitPulse ? "pickem-limit-pulse" : ""}`}
               >
                 {pickCount >= PICKEM_PICK_LIMIT ? "Limit Reached" : "Daily Picks"}
@@ -861,8 +861,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                       i < pickCount
                         ? pickCount >= PICKEM_PICK_LIMIT
                           ? `bg-rose-500 ${limitPulse ? "pickem-limit-pulse" : ""}`
-                          : "bg-[#fde68a]"
-                        : "bg-white/12"
+                          : "bg-ht-pickem-accent"
+                        : "bg-ht-seg-empty"
                     }`}
                   />
                 ))}
@@ -873,17 +873,17 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                 animate={reducedMotion ? { scale: 1 } : { scale: [1, 1.16, 1] }}
                 transition={reducedMotion ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }}
                 className={`shrink-0 text-[19px] font-black leading-none tabular-nums ${
-                  pickCount >= PICKEM_PICK_LIMIT ? "text-rose-400" : "text-[#fde68a]"
+                  pickCount >= PICKEM_PICK_LIMIT ? "text-ht-loss-fg" : "text-ht-pickem-accent"
                 }`}
               >
                 {pickCount}
-                <span className="text-caption font-semibold text-slate-400">/{PICKEM_PICK_LIMIT}</span>
+                <span className="text-caption font-semibold text-ht-fg-muted">/{PICKEM_PICK_LIMIT}</span>
               </motion.span>
             </div>
           </motion.div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <div className="flex w-full items-center justify-between rounded-xl border border-[#fde68a]/35 bg-[#fde68a]/10 px-2 py-1.5">
+            <div className="flex w-full items-center justify-between rounded-xl border border-ht-pickem-bar-edge bg-ht-pickem-bar-bg px-2 py-1.5">
               <button
                 type="button"
                 onClick={() => {
@@ -891,12 +891,12 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                   setSubmitMessage("");
                   setErrorMessage("");
                 }}
-                className="tp-player-hit-target tp-player-pressable tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#fde68a]/45 bg-slate-950/65 text-[#fde68a]"
+                className="tp-player-hit-target tp-player-pressable tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-ht-pickem-accent/45 bg-ht-chip-fill/65 text-ht-pickem-accent"
                 aria-label="Previous day"
               >
                 ◀
               </button>
-              <span className="text-xs font-extrabold tracking-[0.02em] text-slate-50">
+              <span className="text-xs font-extrabold tracking-[0.02em] text-ht-fg-primary">
                 {new Date(`${selectedDate}T00:00:00.000Z`).toLocaleDateString(undefined, {
                   weekday: "short",
                   timeZone: "UTC",
@@ -917,7 +917,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                   setErrorMessage("");
                 }}
                 disabled={isViewingToday}
-                className="tp-player-hit-target tp-player-pressable tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#fde68a]/30 bg-slate-950/55 text-[#fde68a] disabled:cursor-not-allowed disabled:opacity-35"
+                className="tp-player-hit-target tp-player-pressable tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-ht-pickem-accent/30 bg-ht-chip-fill/55 text-ht-pickem-accent disabled:cursor-not-allowed disabled:opacity-35"
                 aria-label="Next day"
               >
                 ▶
@@ -925,7 +925,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             </div>
 
             {!userId || !venueId ? (
-              <span className="rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.08em] text-amber-300">
+              <span className="rounded-full border border-amber-300/35 bg-amber-400/10 px-2 py-0.5 text-caption font-semibold uppercase tracking-[0.08em] text-ht-warn-fg">
                 Browse only
               </span>
             ) : null}
@@ -937,7 +937,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                 {loadingSports ? (
                   <HightopLoader size="sm" variant="card" showLabel label="Loading sports..." />
                 ) : sports.length === 0 ? (
-                  <p className="text-xs text-slate-400">No sports available.</p>
+                  <p className="text-xs text-ht-fg-muted">No sports available.</p>
                 ) : (
                   sports.map((item) => {
                     const isSelected = selectedSportSlug === item.slug;
@@ -958,10 +958,10 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                         }}
                         className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button inline-flex h-12 w-full items-center justify-center rounded-full border p-0 text-2xl leading-none ${
                           isSelected
-                            ? "border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
+                            ? "border-ht-pickem-accent bg-ht-pickem-accent text-ht-pickem-on-fill"
                             : isDisabled
-                            ? "cursor-not-allowed border-white/10 bg-white/[0.03] text-slate-600 opacity-60"
-                            : "border-white/15 bg-white/[0.03] text-slate-400"
+                            ? "cursor-not-allowed border-ht-overlay/10 bg-ht-overlay/[0.03] text-slate-600 opacity-60"
+                            : "border-ht-overlay/15 bg-ht-overlay/[0.03] text-ht-fg-muted"
                         } ${flashingSportSlug === item.slug ? "sport-pop" : ""}`)}
                         aria-label={item.label}
                         title={item.label}
@@ -977,14 +977,14 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         </section>
 
         {errorMessage ? (
-          <div className="rounded-xl border border-rose-500/45 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-300" role="alert">
+          <div className="rounded-xl border border-rose-500/45 bg-ht-danger-wash px-3 py-2 text-xs font-semibold text-ht-danger-fg" role="alert">
             {errorMessage}
           </div>
         ) : null}
 
         <span role="status" className="sr-only">{savedMessage}</span>
       {submitMessage ? (
-          <div className="rounded-xl border border-amber-400/45 bg-amber-950/30 px-3 py-2 text-xs font-semibold text-amber-300" role="alert">
+          <div className="rounded-xl border border-amber-400/45 bg-ht-warn-wash px-3 py-2 text-xs font-semibold text-ht-warn-fg" role="alert">
             {submitMessage}
           </div>
         ) : null}
@@ -993,29 +993,29 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           loadingPickHistory ? (
             <HightopLoader size="sm" variant="card" showLabel label="Loading your picks..." />
           ) : historicalPicks.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
+            <div className="rounded-xl border border-ht-overlay/10 bg-ht-overlay/[0.03] px-3 py-2 text-xs text-ht-fg-muted">
               No picks found for this date.
             </div>
           ) : (
             <section className="space-y-3">
               <div className="flex items-end justify-between gap-2">
-                <h3 className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">Your Picks</h3>
-                <span className="text-caption font-bold tracking-[0.03em] text-slate-500">{historicalPicks.length} picks</span>
+                <h3 className="text-caption font-black uppercase tracking-[0.16em] text-ht-pickem-accent">Your Picks</h3>
+                <span className="text-caption font-bold tracking-[0.03em] text-ht-fg-faint">{historicalPicks.length} picks</span>
               </div>
               <ul className="space-y-2.5">
                 {historicalPicks.map((pick) => {
                   const statusClass =
                     pick.status === "won"
-                      ? "border-emerald-500/45 bg-emerald-500/15 text-emerald-300"
+                      ? "border-emerald-500/45 bg-emerald-500/15 text-ht-success-fg"
                       : pick.status === "lost"
-                      ? "border-rose-500/45 bg-rose-500/15 text-rose-300"
+                      ? "border-rose-500/45 bg-rose-500/15 text-ht-danger-fg"
                       : pick.status === "pending"
-                      ? "border-amber-400/45 bg-amber-500/15 text-amber-300"
-                      : "border-white/10 bg-white/[0.04] text-slate-400";
+                      ? "border-amber-400/45 bg-amber-500/15 text-ht-warn-fg"
+                      : "border-ht-overlay/10 bg-ht-overlay/[0.04] text-ht-fg-muted";
                   return (
-                    <li key={pick.id} className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                    <li key={pick.id} className="rounded-xl border border-ht-overlay/10 bg-ht-overlay/[0.03] px-3 py-2.5">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-extrabold text-slate-100">
+                        <p className="text-xs font-extrabold text-ht-fg-strong">
                           <span className="mr-1" aria-hidden="true">{getSportIcon(pick.sportSlug)}</span>
                           {pick.league}
                         </p>
@@ -1023,9 +1023,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                           {pick.status}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs font-semibold text-slate-300">{pick.awayTeam} at {pick.homeTeam}</p>
-                      <p className="mt-1 text-caption text-slate-500">{formatLocalStartTime(pick.startsAt)}</p>
-                      <p className="mt-1.5 text-caption font-semibold text-slate-400">Your pick: {pick.selectedTeam}</p>
+                      <p className="mt-1 text-xs font-semibold text-ht-fg-soft">{pick.awayTeam} at {pick.homeTeam}</p>
+                      <p className="mt-1 text-caption text-ht-fg-faint">{formatLocalStartTime(pick.startsAt)}</p>
+                      <p className="mt-1.5 text-caption font-semibold text-ht-fg-muted">Your pick: {pick.selectedTeam}</p>
                     </li>
                   );
                 })}
@@ -1035,15 +1035,15 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         ) : loadingGames ? (
           <HightopLoader size="sm" variant="card" showLabel label="Loading games..." />
         ) : !sport ? (
-          <div className="rounded-xl border border-amber-400/45 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
+          <div className="rounded-xl border border-amber-400/45 bg-ht-warn-wash px-3 py-2 text-xs text-ht-warn-fg">
             Choose a sport to load today&apos;s games.
           </div>
         ) : !sport.isClickable ? (
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
+          <div className="rounded-xl border border-ht-overlay/10 bg-ht-overlay/[0.03] px-3 py-2 text-xs text-ht-fg-muted">
             {sport.label} Pick &apos;Em is coming soon.
           </div>
         ) : grouped.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-slate-400">
+          <div className="rounded-xl border border-ht-overlay/10 bg-ht-overlay/[0.03] px-3 py-2 text-xs text-ht-fg-muted">
             Sorry, no games available. Check back later!
           </div>
         ) : (
@@ -1051,8 +1051,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             {grouped.map(([league, leagueGames]) => (
               <section key={league}>
                 <div className="mb-2 flex items-end justify-between">
-                  <h3 className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</h3>
-                  <span className="text-caption font-bold tracking-[0.03em] text-slate-500">{leagueGames.length} games</span>
+                  <h3 className="text-caption font-black uppercase tracking-[0.16em] text-ht-pickem-accent">{league}</h3>
+                  <span className="text-caption font-bold tracking-[0.03em] text-ht-fg-faint">{leagueGames.length} games</span>
                 </div>
 
                 <ul className="space-y-2.5">
@@ -1076,12 +1076,12 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
 
                     return (
                       <Fragment key={game.id}>
-                        <li className="overflow-hidden rounded-xl border border-[#fde68a]/45 bg-[linear-gradient(115deg,#1a2f72_0%,#1a2f72_46%,#6b1a4e_54%,#6b1a4e_100%)]">
-                          <div className="flex items-center justify-between border-b border-dashed border-[#fde68a]/45 px-4 py-2">
-                            <span className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">{league}</span>
+                        <li className="overflow-hidden rounded-xl border border-ht-ticket-edge shadow-ht-panel [background:var(--ht-ticket-bg)]">
+                          <div className="flex items-center justify-between border-b border-ht-ticket-rule [border-bottom-style:var(--ht-ticket-rule-style)] px-4 py-2">
+                            <span className="text-caption font-black uppercase tracking-[0.16em] text-ht-pickem-accent">{league}</span>
                             <span
                               className={`inline-flex items-center gap-1 text-caption font-extrabold ${
-                                game.status === "live" ? "text-emerald-300" : "text-slate-300"
+                                game.status === "live" ? "text-ht-success-fg" : "text-ht-ticket-meta"
                               }`}
                             >
                               {game.status === "live" ? (
@@ -1091,7 +1091,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                             </span>
                           </div>
                           <span role="status" className="sr-only">{savingGames.has(game.id) ? "Saving…" : ""}</span>
-                          <div className="flex overflow-hidden bg-[#020617]/45">
+                          <div className="flex overflow-hidden bg-ht-ticket-halves">
                             <button
                               type="button"
                               aria-disabled={disableAwaySelection}
@@ -1123,26 +1123,26 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                               className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${
                                 disableAwaySelection ? "cursor-not-allowed opacity-45" : ""
                               } ${
-                                awaySelected ? "bg-[#fde68a]/15" : ""
+                                awaySelected ? "bg-ht-pickem-picked" : "bg-ht-ticket-away"
                               } ${pickPulseByGameId[game.id] === game.awayTeam ? "scale-[1.01]" : ""}`)}
                             >
                               <span
                                 className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black ${
                                   awaySelected
-                                    ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
-                                    : "border border-[#fde68a]/45 text-transparent"
+                                    ? "rotate-[-7deg] border border-ht-pickem-accent bg-ht-pickem-accent text-ht-pickem-on-fill"
+                                    : "border border-ht-ticket-box-edge bg-ht-ticket-box-bg text-transparent"
                                 }`}
                               >
                                 ✓
                               </span>
-                              <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-white">
+                              <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-ht-fg-bright">
                                 {game.awayTeam}
                               </span>
-                              <span className={`text-[16px] font-black tabular-nums ${isAwayWinner ? "text-emerald-300" : "text-slate-200"}`}>
+                              <span className={`text-[16px] font-black tabular-nums ${isAwayWinner ? "text-ht-success-fg" : "text-ht-fg-secondary"}`}>
                                 {getDisplayedScoreCell(game, game.awayTeam, game.awayScore)}
                               </span>
                             </button>
-                            <div className="w-px shrink-0 bg-[#fde68a]/20" />
+                            <div className="w-px shrink-0 bg-ht-ticket-divider" />
                             <button
                               type="button"
                               aria-disabled={disableHomeSelection}
@@ -1174,22 +1174,22 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                               className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button flex w-1/2 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${
                                 disableHomeSelection ? "cursor-not-allowed opacity-45" : ""
                               } ${
-                                homeSelected ? "bg-[#fde68a]/15" : ""
+                                homeSelected ? "bg-ht-pickem-picked" : "bg-ht-ticket-home"
                               } ${pickPulseByGameId[game.id] === game.homeTeam ? "scale-[1.01]" : ""}`)}
                             >
                               <span
                                 className={`inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-[14px] font-black ${
                                   homeSelected
-                                    ? "rotate-[-7deg] border border-[#fde68a] bg-[#fde68a] text-[#1a2f72]"
-                                    : "border border-[#fde68a]/45 text-transparent"
+                                    ? "rotate-[-7deg] border border-ht-pickem-accent bg-ht-pickem-accent text-ht-pickem-on-fill"
+                                    : "border border-ht-ticket-box-edge bg-ht-ticket-box-bg text-transparent"
                                 }`}
                               >
                                 ✓
                               </span>
-                              <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-white">
+                              <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-ht-fg-bright">
                                 {game.homeTeam}
                               </span>
-                              <span className={`text-[16px] font-black tabular-nums ${isHomeWinner ? "text-emerald-300" : "text-slate-200"}`}>
+                              <span className={`text-[16px] font-black tabular-nums ${isHomeWinner ? "text-ht-success-fg" : "text-ht-fg-secondary"}`}>
                                 {getDisplayedScoreCell(game, game.homeTeam, game.homeScore)}
                               </span>
                             </button>
@@ -1199,8 +1199,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                             <div
                               className={`px-4 py-1.5 text-caption font-extrabold tracking-[0.04em] ${
                                 game.userPickStatus === "won"
-                                  ? "bg-emerald-500/15 text-emerald-300"
-                                  : "bg-rose-500/15 text-rose-300"
+                                  ? "bg-emerald-500/15 text-ht-success-fg"
+                                  : "bg-rose-500/15 text-ht-danger-fg"
                               }`}
                             >
                               {game.userPickStatus === "won"
@@ -1213,7 +1213,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                         </li>
 
                         {shouldRenderAdBreak ? (
-                          <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-2">
+                          <div className="rounded-xl border border-dashed border-ht-overlay/15 bg-ht-overlay/[0.03] p-2">
                             <InlineSlotAdClient
                               slot={PICKEM_INLINE_SLOTS[sequenceIndex] ?? "pickem-inline-cards-1-5"}
                               venueId={venueId}
@@ -1245,10 +1245,10 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                       key={multiplierAnim.id}
                       className="select-none whitespace-nowrap font-black leading-none transform-gpu will-change-transform"
                       style={{
-                        color: "#fde68a",
+                        color: "rgb(var(--ht-pickem-accent-rgb))",
                         fontSize: "clamp(2.1rem, 10vw, 4.6rem)",
-                        textShadow: "0 0 30px rgba(250,204,21,0.62), 0 0 62px rgba(250,204,21,0.42)",
-                        filter: "drop-shadow(0 0 14px rgba(250,204,21,0.75))",
+                        textShadow: "0 0 30px rgb(var(--ht-pickem-glow-rgb) / 0.62), 0 0 62px rgb(var(--ht-pickem-glow-rgb) / 0.42)",
+                        filter: "drop-shadow(0 0 14px rgb(var(--ht-pickem-glow-rgb) / 0.75))",
                       }}
                       initial={reducedMotion ? false : { scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
                       animate={reducedMotion ? { scale: 1, y: 0, rotate: 0, opacity: 1 } : {

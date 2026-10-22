@@ -140,20 +140,20 @@ export function NFLTiebreakerCard({
   const showSavedGuess = savedGuess !== null && !saving && inputValue.trim() === String(savedGuess);
 
   return (
-    <section className="rounded-2xl border border-[#fde68a]/30 bg-slate-900 px-4 py-4">
-      <h2 className="text-caption font-black uppercase tracking-[0.16em] text-[#fde68a]">Tiebreaker</h2>
-      <p className="mt-1 text-caption font-semibold text-slate-400">
+    <section className="rounded-2xl border border-ht-pickem-card-edge bg-ht-surface px-4 py-4 shadow-ht-panel">
+      <h2 className="text-caption font-black uppercase tracking-[0.16em] text-ht-pickem-accent">Tiebreaker</h2>
+      <p className="mt-1 text-caption font-semibold text-ht-fg-muted">
         If you tie for the most correct picks this week, this decides the winner.
       </p>
-      <p className="mt-3 text-[14px] font-bold text-white">
+      <p className="mt-3 text-[14px] font-bold text-ht-fg-bright">
         How many total points will be scored in {game.awayTeam} at {game.homeTeam}?
       </p>
 
       <p role="status" className="sr-only">{saveMessage}</p>
-      {error && <p role="alert" className="mt-2 text-caption font-semibold text-rose-400">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-caption font-semibold text-ht-loss-fg">{error}</p>}
 
       {game.isLocked ? (
-        <p className="mt-3 text-footnote font-bold text-slate-300">
+        <p className="mt-3 text-footnote font-bold text-ht-fg-soft">
           {savedGuess !== null ? `Your guess: ${savedGuess}` : "You didn't answer the tiebreaker."}
         </p>
       ) : (
@@ -170,7 +170,7 @@ export function NFLTiebreakerCard({
                 setInputValue(event.target.value);
                 setJustSaved(false);
               }}
-              className="w-24 rounded-xl border border-[#fde68a]/30 bg-slate-950 px-3 py-2 text-[14px] font-bold text-white focus:outline-none focus:ring-2 focus:ring-[#fde68a]/40"
+              className="w-24 rounded-xl border border-ht-pickem-accent/30 bg-ht-canvas px-3 py-2 text-[14px] font-bold text-ht-fg-bright focus:outline-none focus:ring-2 focus:ring-ht-pickem-accent/40"
               aria-label="Predicted total points"
             />
             <button
@@ -178,7 +178,7 @@ export function NFLTiebreakerCard({
               onClick={handleSave}
               disabled={saving || inputValue === ""}
               className={`tp-player-hit-target tp-player-pressable tp-clean-button inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-footnote font-black transition-all duration-300 disabled:opacity-50 ${
-                justSaved ? "scale-105 bg-emerald-400 text-emerald-950" : "scale-100 bg-[#fde68a] text-[#1a2f72]"
+                justSaved ? "scale-105 bg-emerald-400 text-emerald-950" : "scale-100 bg-ht-pickem-accent text-ht-pickem-on-fill"
               }`}
               aria-busy={saving}
             >
@@ -188,12 +188,12 @@ export function NFLTiebreakerCard({
             </button>
           </div>
           {showSavedGuess && (
-            <p className="mt-2 inline-flex items-center gap-1 text-caption font-bold text-emerald-400">
+            <p className="mt-2 inline-flex items-center gap-1 text-caption font-bold text-ht-gain-fg">
               <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
               Your guess of {savedGuess} is saved
             </p>
           )}
-          <p className="mt-2 text-caption font-semibold text-slate-500">Locks at {formatKickoff(game.startsAt)}</p>
+          <p className="mt-2 text-caption font-semibold text-ht-fg-faint">Locks at {formatKickoff(game.startsAt)}</p>
         </>
       )}
     </section>
