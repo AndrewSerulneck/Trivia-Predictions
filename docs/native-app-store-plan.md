@@ -8,7 +8,7 @@ through 4b plus review fixes R1–R5 is committed AND pushed to `origin/main` (`
 still blank); (2) Andrew — rebuild the shell from `main` and run 3B.3 + section I of
 `docs/native-app-device-checklist.md`; (3) Phase 4d (no account needed); (4) Phase 5 Android half (needs
 only Firebase — see Phase 5); then, once the paid Apple account exists: Part B (2B), 4c, Phase 5 iOS half,
-6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** **Phases 9c + 9d are BUILT and pushed (`678e680`; handoffs `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`, `…_PHASE_9D_HANDOFF.md`).** **Phase 9e is BUILT and pushed (2026-10-22; migration `20261023011500` applied to production 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** Next: 9g (`/app` "Get the app?" page for phones, added 2026-10-22), then 9f. **Sharing Phases 9a–9g (added
+6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** **Phases 9c + 9d are BUILT and pushed (`678e680`; handoffs `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`, `…_PHASE_9D_HANDOFF.md`).** **Phase 9e is BUILT and pushed (`20a97e2`, 2026-10-22; migration `20261023011500` applied to production 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** **Phase 9f review is DONE (2026-10-22; handoff `docs/native-app-store-plan_PHASE_9F_HANDOFF.md`): 16 fixes scheduled as 9f.1–9f.6 + an iPad fix folded into 9g; Andrew's phone pass = section J of `docs/native-app-device-checklist.md`.** **Phase 9f.1 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_1_HANDOFF.md`).** **Phase 9f.2 is BUILT (2026-10-22, not committed; iPhone check pending; handoff `docs/native-app-store-plan_PHASE_9F_2_HANDOFF.md`).** **Phase 9f.3 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_3_HANDOFF.md`).** **Phase 9f.4 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_4_HANDOFF.md`).** **Phase 9f.5 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_5_HANDOFF.md`).** **Phase 9f.6 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_6_HANDOFF.md`).** Next: ship 9f.1–9f.6 in ONE deploy, then install the build on his iPhone, then 9g, then section J (item 33 = the 9f.2 iPhone check). **Sharing Phases 9a–9g (added
 2026-10-22)** need no Apple account except 9d's in-app Instagram direct-share.
 **Phases 1a and 1b are DONE and deployed (2026-10-08)** — latest handoff
 `docs/native-app-store-plan_PHASE_1B_HANDOFF.md` (1a: `…_PHASE_1A_HANDOFF.md`). Migration
@@ -242,6 +242,7 @@ Model rule (Andrew): **never more capable than Opus 5.5.** Models: `claude-opus-
 | 9e | Venue Instagram handle (revived 2026-10-22) + the partner picks what a share shows: handle, name, address — all, none or any mix — asked when they set up a Prize or schedule a game; the @handle goes in the caption | **Opus 5.5** | high | 1–2 sessions |
 | 9g | `/app` on a phone asks "Get the app?" first ("Get the app" / "No thanks, play in the browser") instead of jumping straight to a store | Sonnet 5.5 | medium | 1 session |
 | 9f | Review + Andrew's phone pass of every share path (9a–9e, 9g) | **Opus 5.5** (review) + Andrew | high | 1 session |
+| 9f.1–9f.6 | Fixes from the 9f review (share-sheet taps, iPhone Instagram caption, redraws, stale venue choice, partner box, Pick 'Em points) | Sonnet 5.5 / Opus 5.5 (see each) | medium–high | 1 session each (9f.6 tiny) |
 
 Phases 0 and 1 run in parallel; Phase 0 is mostly waiting on paperwork. Phase 2 can start once
 Xcode is installed. Free Apple provisioning can put a test build on Andrew's own iPhone before the
@@ -1240,6 +1241,13 @@ sign-in). Change it so a phone sees one small page first:
   player runtime, no fonts download beyond what next/font already serves, text ≥ 12 px, minimal design). Both
   choices are plain links, so they work without JavaScript.
 - **Cost:** unchanged — one function call per scan/tap, no DB read. "Get the app" is one extra tap for a phone.
+- **iPad (9f review finding R14, 2026-10-22):** iPadOS 13+ Safari sends a Mac User-Agent ("Macintosh", no "iPad"), so
+  the server can't tell an iPad from a Mac, and `decideAppLinkDestination`'s `/iPhone|iPad|iPod/` misses it — an iPad
+  would get the desktop destination once the listing is live. **Fix in 9g:** while the iOS listing is live, a
+  `Macintosh` + Safari UA (no `Chrome`/`CriOS`/`Firefox`/`FxiOS`/`Edg` token) gets the "ask" page in a "maybe iPad"
+  form: a tiny inline script shows "Get the app" (App Store) when `navigator.maxTouchPoints > 1`, otherwise
+  `location.replace("/info#app")`; without JavaScript it shows both plain links ("Get the iPad app" and "Continue to the
+  website" → `/info#app`). Store URL unset → unchanged (the sign-in). Cost unchanged (same one function call).
 - Tests: extend the UA → destination table (ask vs redirect vs sign-in, store URLs set/unset); the page's two
   links; the QR value is still `APP_DOWNLOAD_URL`. Ship it any time; it only shows once Phase 6/7 fill the store
   URLs.
@@ -1252,6 +1260,131 @@ sign-in). Change it so a phone sees one small page first:
   device (which app the share sheet offers, what text arrives), the in-app Instagram Story editor (iPhone and Android,
   with and without Instagram installed), "Copy caption + link". 9e: a venue with a handle and each show/hide choice.
   9g: the "Get the app?" page on both phones once the listings are live.
+
+**Status (2026-10-22): review DONE** (`/code-review` high over `9cf67f7..20a97e2` = 9a–9e; 9g isn't built yet, so it is
+reviewed with its own build). 17 findings; each one was checked against the code, and 16 became the fix phases below.
+**Andrew's phone pass is written** as section **J** of `docs/native-app-device-checklist.md` (items 27–42); best run after
+9f.1 and 9f.3–9f.5 are deployed (9f.2 needs an app rebuild). Handoff: `docs/native-app-store-plan_PHASE_9F_HANDOFF.md`.
+
+#### Phase 9f fix phases (from the 9f review, 2026-10-22) — fix in these phases, never as in-place patches
+
+Same rule as the Squares/Bracket reviews: each phase gets its own handoff (`…_PHASE_9F_<N>_HANDOFF.md`), tests that would
+have caught the bug, and the gates (`npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run build`). **Order:** 9f.1,
+9f.3, 9f.4, 9f.5, 9f.6 (all website-only; can ship in one deploy), then 9f.2 with the next app rebuild, then 9g, then
+Andrew's section J. None needs a migration. None adds a recurring cost except 9f.4 (one small venue read, see there).
+
+##### 9f.1 — Share-sheet taps that report the wrong result (Sonnet 5.5, high; website only)
+- **R1 — X is always "Couldn't open X" on the website** (`StoryCaptureModal.tsx` `pickDestination`, x-intent branch).
+  `window.open(url, "_blank", "noopener")` returns `null` by spec even when the tab opens, so every successful open shows
+  the failure hint and logs `x: blocked`. **Fix:** `const tab = window.open(url, "_blank"); if (tab) tab.opener = null;
+  opened = tab !== null` (same protection, a real answer). Test: a jsdom `window.open` stub returning a window → the
+  "opened" hint.
+- **R2 — Two taps run two shares** (same function). The Instagram Story path never sets `nativeShareState` to
+  `"sharing"`, and state set in one tap isn't visible to a second tap in the same frame. **Fix:** one `destinationBusyRef`
+  (a ref, set synchronously as the first line of `pickDestination`, cleared in `finally`) that every destination and
+  "Copy caption + link" check; the row shows disabled while it's set. Test: two `pickDestination` calls in one tick → one
+  plugin call, one analytics event.
+- **R3 — The in-app Instagram fallback opens the share sheet too late** (same function). When the plugin says
+  "unavailable"/"failed", `shareCapturedStory` calls `navigator.share` after several awaits (base64 + the bridge), when
+  the tap no longer counts as a tap; WKWebView refuses it (`NotAllowedError`) and the player sees a failure panel.
+  **Fix:** never chain a share sheet after an await. On a non-"opened" outcome, set `instagramStoryDirect` false (as
+  today) and show the hint "Instagram didn't open. Tap More to share the picture." (new line in `SHARE_DESTINATION_COPY`,
+  `copyPresets.ts`) — the next tap opens the sheet inside a real tap. Test: outcome "unavailable" → no `navigator.share`
+  call, that hint.
+
+##### 9f.2 — iPhone app: the Instagram Story shortcut wipes the copied caption (Opus 5.5, high; app rebuild + Andrew's iPhone)
+- **R4** — `native/ios/App/App/InstagramStoriesPlugin.swift` `shareToStory` calls `UIPasteboard.general.setItems(...)`
+  with only the sticker image, which REPLACES the caption + link that `pickDestination` copied a moment earlier. The sheet
+  still says "Caption + link copied. Paste the link in a link sticker", but Paste in Instagram gives no link — the one
+  thing the Story needed to send people to the app. (Android uses an intent and leaves the clipboard alone.)
+- **Fix:** the web side passes the caption to the plugin (`shareToInstagramStory(blob, { caption })`,
+  `lib/nativeInstagramStories.ts`); the plugin writes ONE pasteboard item that carries both the sticker keys and
+  `"public.utf8-plain-text": caption` (same 5-minute expiry), so a Paste in Instagram's link sticker still finds the
+  link. **Check on the iPhone first** (Meta's doc doesn't say whether Instagram clears the pasteboard on open): if the
+  text is gone after Instagram reads it, fall back to the honest version — before opening Instagram the sheet says
+  "Copy the link after you add the picture" and the hint after opening is the copy-in-Instagram instruction (never claim
+  "copied" when it isn't). Old app builds keep today's behaviour (capability-checked; the extra option is ignored).
+- Needs a shell rebuild (`cd native && npx cap sync ios`) and a new store build; record the result in section J item 33.
+- **Status (2026-10-22): BUILT, not committed** (handoff `docs/native-app-store-plan_PHASE_9F_2_HANDOFF.md`). The fix above,
+  plus: the sheet now waits for its own caption copy to land before calling the plugin, so the two pasteboard writes can't
+  race. iOS simulator build passes. **The iPhone check is NOT done yet** — it needs this website change deployed and a new
+  app build on the phone (the app loads the live site, so a new build alone still sends no caption). The honest-wording
+  fallback is NOT built; build it only if item 33 shows the text gone.
+
+##### 9f.3 — Pictures that keep redrawing, broken thumbnails, lighter closed buttons (Sonnet 5.5, high; website only)
+- **Status (2026-10-22): BUILT, not committed** (handoff `docs/native-app-store-plan_PHASE_9F_3_HANDOFF.md`; tests `tests/share-pictures-stability.test.ts`). Done as written, plus: the sheet is a small inner component `StoryShareSheet` mounted only while open (so `achievedAtIso` is pinned by `useState(payload.achievedAtIso)` at mount), and Category Blitz's payload comes from `useCategoryBlitzSharePayload` (a hook over primitives; React Compiler's lint refuses a `useMemo` over values derived from the in-place sort).
+- **R5 — Category Blitz's sheet may never settle** (`components/category-blitz/CategoryBlitzGame.tsx` `CompleteScreen`):
+  the payload is rebuilt every render with a fresh `achievedAtIso`, so `StoryShareLauncher`'s `preparedStory` changes
+  identity every render; `useSharePictures` keeps restarting (placeholders, Share disabled) and an edited selfie caption
+  is dropped (its key includes `achievedAtIso`). **Fix (both halves):** `useMemo` the payload in `CompleteScreen` on its
+  primitive inputs (as `ShareWinButton` already does), AND make the launcher robust for any future caller: it memoises on
+  a content key (the payload's fields without `achievedAtIso`, JSON-stringified) and pins `achievedAtIso` to the value at
+  the moment the sheet opened. Test: re-render the launcher with an equal-but-new payload → no redraw.
+- **R6 — Broken thumbnails after "Take a selfie instead" → "Designs"** (`components/social-share/useSharePictures.ts`):
+  the effect's cleanup revokes the object URLs but leaves them in state; coming back with the same win and size reuses
+  that state, so the `<img>` tags point at revoked `blob:` URLs. **Fix:** the cleanup also resets the state for that
+  key (`setState(EMPTY)` when `cancelled`), or the state carries the run's id and `current` requires it. Test: active →
+  inactive → active → no picture URL from the first run is returned.
+- **R7 — A closed share button does work it doesn't need** (findings 13–15, cost only, no wrong output):
+  `useShareVenue` reads + parses storage on every mount because `active || venueId` is always true → gate on `active`;
+  `StoryShareLauncher` mounts `StoryCaptureModal` (two `prepareStorySharePayload` builds and its effects) while closed →
+  render it only when open, and delete the reset-on-close effects that only existed for that; `ShareWinButton`'s
+  `useSyncExternalStore` with a no-op subscribe re-reads three storage values every render → read once
+  (`useState` initializer; keep the server snapshot "" so hydration is unchanged). The prize wallet and Bingo lists render
+  many of these buttons. Tests: the existing `tests/share-win-button.test.ts` + a "closed launcher renders no modal" test.
+
+##### 9f.4 — The partner's choice must always win over an old copy (Opus 5.5, high; website only; tiny new read — Andrew's note)
+- **Status (2026-10-22): BUILT, not committed** (handoff `docs/native-app-store-plan_PHASE_9F_4_HANDOFF.md`). Done as written.
+  Andrew's "Execute 9f.4" = go-ahead on the read's cost. Added: `fetchVenueById` in `lib/venues.ts` (a failed read is
+  `{ ok: false }`, never the built-in fallback venue, whose default choices could show a name the partner turned off;
+  `getVenueById` now wraps it, unchanged for its callers); the join list's 5-minute session cache counts as fresh; the
+  rules are one pure function, `resolveShareVenue`.
+- **R8 — Before the venue loads, the screen's own name/address are used** (`applyShareVenue(payload, null)`,
+  `lib/socialShare/shareVenue.ts`): a player who arrives by deep link (nothing remembered) can share the first picture,
+  with a name/address the partner turned off, before `getVenueById` returns.
+- **R9 — The remembered venue never expires** (`readShareVenue`): the hub's `htc_share_venue_v2` entry has no date and,
+  when present, `useShareVenue` never re-reads; a partner's change is ignored on any game reached without passing through
+  the venue home (bookmark, notification).
+- **Fix:** (1) the remembered entry gains `savedAt` (bump the key to `htc_share_venue_v3`); the hub rewrites it as today
+  (no new request there). (2) When the share sheet OPENS and the entry is missing or older than 10 minutes, read the one
+  venue row (`getVenueById`, as today's no-entry path), once per venue per sheet open. (3) While that read is in flight,
+  the pictures draw but every destination and "Copy caption + link" waits ("Getting your picture ready…"). (4) If the read
+  fails: use the remembered entry if there is one; else the safe fallback — no bar name, address or handle on the picture
+  or in the caption (the win + the app panel still share); never the screen's own name. `applyShareVenue` keeps being the
+  one place the choice is applied; the "unknown" case becomes an explicit `"unknown"` input, not `null` = defaults.
+- **Cost (for Andrew):** 9e promised zero new requests; this adds at most one single-row venue read per share-sheet open,
+  only when the player hasn't been on that venue's home in the last 10 minutes. At today's volume (tens of shares a day)
+  that's tens of tiny reads a day; at 10,000 shares a day it's ≤ 10,000 small reads a day — negligible next to the venue
+  hub's own reads. The cheaper alternative (no read, accept stale choices up to forever) is what R9 is. Lowering the
+  window below 10 minutes raises the count only for players who share without visiting the hub.
+- Tests: the expiry table (fresh / stale / missing / read fails with and without a remembered entry); a deep-link share
+  can't reach any destination before the read settles; contract test unchanged (`applyShareVenue` called only by the launcher).
+
+##### 9f.5 — Partner "On shared pictures" box fixes (Sonnet 5.5, medium; website only)
+- **Status (2026-10-23): BUILT, not committed** (handoff `docs/native-app-store-plan_PHASE_9F_5_HANDOFF.md`). R10–R12 done as written; tests `tests/share-details-panel.test.ts`.
+`components/owner/share/ShareDetailsPanel.tsx`:
+- **R10 — A failed first load is stuck:** no retry; "Change" only renders once details exist. **Fix:** a "Try again"
+  button under the error (`SHARE_DETAILS_COPY.retry`, `lib/venueShareDetails.ts`) that re-runs the GET.
+- **R11 — Switching venue without a remount shows "…" forever, and a draft can be saved to the wrong venue:** the load
+  effect returns early for a cached key without updating `loaded`, and `draft`/`message` survive a `venueId` change.
+  **Fix:** derive the shown details from `cache.get(key)` (set `loaded` from the cache when the key changes), and keep
+  `draft` + `message` keyed by `key` (a draft for venue A is never shown or PATCHed for venue B). Test: render A → B → A
+  with A cached → A's details shown; a draft started on A is gone on B.
+- **R12 — Save fails on a hidden field:** with "Instagram handle" off, the handle input is hidden but `save()` still
+  validates it. **Fix:** with the handle off, an invalid draft handle is not checked and the SAVED handle is sent
+  unchanged (turning it back on later restores it); with it on, today's check. Test: "my bar!" + handle off → Save succeeds
+  with the old handle.
+
+##### 9f.6 — Pick 'Em: today's shared points assume 10 per pick (Haiku 4.5 or Sonnet 5.5, low; website only)
+- **R13** — `components/pickem/PickEmGameList.tsx` `todayWinPoints` = won games × 10, while the history total uses each
+  pick's `rewardPoints`. Latent today (every pick is `PICKEM_REWARD_POINTS` = 10) but wrong the day a pick is worth
+  something else. **Fix:** sum `game.userPickRewardPoints` (already on each game, `lib/pickem.ts`), with the same `|| 10`
+  fallback as the history line. Test: a won game worth 20 → the share shows 20.
+
+**Not scheduled (recorded so it isn't re-raised):** review finding 17, "relative imports in `lib/socialShare/`"
+(`./contracts`, `./copyPresets`). Sibling `./` imports have been this folder's convention since July (`storyCanvas.ts`,
+`storyPayloads.ts`, `sharePipeline.ts`…); the CLAUDE.md rule's example forbids `../`. A folder-wide switch to `@/` is
+harmless but cosmetic — only if Andrew asks.
 
 **Order and dependencies:** 9a first (every picture prints its link). 9b and 9c can follow before the store
 listings are live: the badges switch on with Phase 7's flag. 9d's Instagram direct-share needs the

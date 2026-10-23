@@ -111,12 +111,20 @@ export const ShareDetailsPanel = ({
     return cached ? { key, details: cached } : null;
   });
   const [loadError, setLoadError] = useState<{ key: string; message: string } | null>(null);
-  const [draft, setDraft] = useState<Draft | null>(null);
+  // A draft and a message belong to the venue they were made on: a different `key` shows neither.
+  const [draftState, setDraftState] = useState<{ key: string; draft: Draft } | null>(null);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ kind: "error" | "ok"; text: string } | null>(null);
+  const [messageState, setMessageState] = useState<{ key: string; kind: "error" | "ok"; text: string } | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
-  const details = loaded?.key === key ? loaded.details : null;
+  // The module cache outlives this component, so a venue seen before (A → B → A) shows at once.
+  const details = (loaded?.key === key ? loaded.details : null) ?? cache.get(key) ?? null;
   const error = loadError?.key === key ? loadError.message : null;
+  const draft = draftState?.key === key ? draftState.draft : null;
+  const message = messageState?.key === key ? messageState : null;
+  const setDraft = (next: Draft | null) => setDraftState(next ? { key, draft: next } : null);
+  const setMessage = (next: { kind: "error" | "ok"; text: string } | null) =>
+    setMessageState(next ? { key, ...next } : null);
 
   useEffect(() => {
     if (!venueId || cache.has(key)) return;
@@ -132,7 +140,18 @@ export const ShareDetailsPanel = ({
     return () => {
       cancelled = true;
     };
-  }, [host, key, venueId]);
+  }, [host, key, venueId, attempt]);
+
+  // Leaving a venue throws its draft and message away (coming back to A starts clean).
+  useEffect(() => {
+    setDraftState((cur) => (cur && cur.key !== key ? null : cur));
+    setMessageState((cur) => (cur && cur.key !== key ? null : cur));
+  }, [key]);
+
+  const retry = () => {
+    setLoadError(null);
+    setAttempt((n) => n + 1);
+  };
 
   const startEditing = () => {
     if (!details) return;
@@ -142,11 +161,17 @@ export const ShareDetailsPanel = ({
 
   const save = async () => {
     if (!draft || saving) return;
-    const handle = parseInstagramHandle(draft.handle);
+    // Hidden field, hidden check: with the handle off the saved handle is sent as it is, so turning
+    // it back on later restores it.
+    const handle = draft.showInstagram
+      ? parseInstagramHandle(draft.handle)
+      : ({ ok: true, handle: details?.instagramHandle ?? null } as const);
     if (!handle.ok) {
       setMessage({ kind: "error", text: handle.error });
       return;
     }
+    const savingKey = key;
+    const savingVenueId = venueId;
     setSaving(true);
     setMessage(null);
     try {
@@ -154,7 +179,7 @@ export const ShareDetailsPanel = ({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          venueId,
+          venueId: savingVenueId,
           instagramHandle: handle.handle,
           showName: draft.showName,
           showAddress: draft.showAddress,
@@ -163,12 +188,12 @@ export const ShareDetailsPanel = ({
       });
       const reply = (await res.json().catch(() => ({ ok: false }))) as Reply;
       if (!reply.ok || !reply.details) throw new Error(reply.error ?? COPY.saveFailed);
-      cache.set(key, reply.details);
-      setLoaded({ key, details: reply.details });
-      setDraft(null);
-      setMessage({ kind: "ok", text: COPY.saved });
+      cache.set(savingKey, reply.details);
+      setLoaded({ key: savingKey, details: reply.details });
+      setDraftState((cur) => (cur?.key === savingKey ? null : cur));
+      setMessageState({ key: savingKey, kind: "ok", text: COPY.saved });
     } catch (err) {
-      setMessage({ kind: "error", text: err instanceof Error ? err.message : COPY.saveFailed });
+      setMessageState({ key: savingKey, kind: "error", text: err instanceof Error ? err.message : COPY.saveFailed });
     } finally {
       setSaving(false);
     }
@@ -198,6 +223,11 @@ export const ShareDetailsPanel = ({
         <div className="min-w-0 flex-1">
           <p className={t.label}>{COPY.heading}</p>
           <p className={t.value}>{details ? shareDetailsSummary(details) : error ? COPY.loadFailed : "…"}</p>
+          {error && !details ? (
+            <button type="button" onClick={retry} className={t.link}>
+              {COPY.retry}
+            </button>
+          ) : null}
         </div>
         {details && !draft ? (
           <button type="button" onClick={startEditing} aria-label="Change what shared pictures show" className={t.link}>

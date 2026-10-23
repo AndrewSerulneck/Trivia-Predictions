@@ -50,6 +50,13 @@ type PickEmGame = {
   userPickRewardClaimedAt?: string | null;
 };
 
+// Phase 9f.6: today's shared points = the won games' own pick values (same fallback as the history total).
+export const todayWinPointsOf = (games: PickEmGame[]): number =>
+  games.reduce(
+    (sum, game) => (game.userPickStatus === "won" ? sum + Math.max(0, game.userPickRewardPoints || 10) : sum),
+    0
+  );
+
 type SportsResponse = {
   ok: boolean;
   sports?: PickEmSport[];
@@ -490,7 +497,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         .reduce((sum, pick) => sum + Math.max(0, pick.rewardPoints || 10), 0),
     [historicalPicks]
   );
-  const todayWinPoints = useMemo(() => games.filter((game) => game.userPickStatus === "won").length * 10, [games]);
+  const todayWinPoints = useMemo(() => todayWinPointsOf(games), [games]);
 
   useEffect(() => {
     if (!selectedSportSlug || historicalPicks.length === 0) return;

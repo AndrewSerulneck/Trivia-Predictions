@@ -7,7 +7,15 @@ import type { StorySharePayload } from "@/lib/socialShare/contracts";
 import { shareTagNudge, shareWinHeadline } from "@/lib/socialShare/copyPresets";
 import { buildShareDesignSpec, STORY_SHARE_SIZE_ORDER, type StoryShareDesign } from "@/lib/socialShare/shareDesigns";
 import { STORY_SHARE_GAME_TYPES } from "@/lib/socialShare/shareGames";
-import { applyShareVenue, readShareVenue, rememberShareVenue, toShareVenue, type ShareVenue } from "@/lib/socialShare/shareVenue";
+import {
+  applyShareVenue,
+  readShareVenue,
+  rememberShareVenue,
+  resolveShareVenue,
+  SHARE_VENUE_FRESH_MS,
+  toShareVenue,
+  type ShareVenue,
+} from "@/lib/socialShare/shareVenue";
 import { buildPrizeStorySharePayload, buildStorySharePayload, prepareStorySharePayload } from "@/lib/socialShare/storyPayloads";
 import {
   DEFAULT_VENUE_SHARE_DETAILS,
@@ -141,10 +149,14 @@ describe("the choice → headline, caption and picture (all 8 combinations)", ()
     expect(shareTagNudge(payload.venueName, payload.venueInstagram)).toBe("Tag The Pour House in your post");
   });
 
-  it("venue not known yet: the screen's payload as built (the defaults), never a handle", () => {
-    const payload = applyShareVenue({ ...gamePayload(), venueInstagram: "sneaky" }, null);
-    expect(payload.venueName).toBe("The Pour House");
-    expect(payload.venueInstagram).toBeNull();
+  it("venue unknown (9f.4): no bar at all — never the screen's own name, address or a handle", () => {
+    for (const base of [gamePayload(), prizePayload()]) {
+      const payload = applyShareVenue({ ...base, venueAddress: ADDRESS, venueInstagram: "sneaky" }, "unknown");
+      expect(payload).toMatchObject({ venueName: null, subtitle: null, venueAddress: null, venueInstagram: null });
+      expect(everyText(payload).some((text) => /pour house|1010 pacific|brooklyn|@sneaky/i.test(text))).toBe(false);
+      // The win and the app link still share.
+      expect(prepareStorySharePayload(payload).shareText).toMatch(/https:\/\/hightopchallenge\.com\/app$/);
+    }
   });
 
   it("every registry game honours it — a new game gets the same treatment with no extra code", () => {
@@ -173,15 +185,21 @@ describe("the player side reads the choice with the venue it already has (zero n
     });
   });
 
-  it("carries the choice, and remembers it under the v2 key", () => {
-    rememberShareVenue({ ...baseVenue, instagramHandle: "thepourhouse", shareShowName: false, shareShowAddress: true, shareShowInstagram: true });
-    expect(window.localStorage.getItem("htc_share_venue_v2")).toBeTruthy();
-    expect(readShareVenue("v1")).toMatchObject({ instagram: "thepourhouse", show: { name: false, address: true, instagram: true } });
+  it("carries the choice, and remembers it under the v3 key with the time it was saved", () => {
+    rememberShareVenue({ ...baseVenue, instagramHandle: "thepourhouse", shareShowName: false, shareShowAddress: true, shareShowInstagram: true }, 1_000);
+    expect(JSON.parse(window.localStorage.getItem("htc_share_venue_v3") ?? "{}")).toMatchObject({ savedAt: 1_000 });
+    expect(readShareVenue("v1", 2_000)).toMatchObject({
+      fresh: true,
+      venue: { instagram: "thepourhouse", show: { name: false, address: true, instagram: true } },
+    });
   });
 
-  it("an old v1 entry (no choice) is never read as a choice", () => {
+  it("old v1/v2 entries (no date) are never read as a choice", () => {
     window.localStorage.setItem("htc_share_venue_v1", JSON.stringify({ id: "v1", name: "The Pour House", address: null }));
-    window.localStorage.setItem("htc_share_venue_v2", JSON.stringify({ id: "v1", name: "The Pour House", address: null }));
+    window.localStorage.setItem(
+      "htc_share_venue_v2",
+      JSON.stringify({ id: "v1", name: "The Pour House", address: null, instagram: null, show: { name: true, address: true, instagram: true } }),
+    );
     expect(readShareVenue("v1")).toBeNull();
   });
 
@@ -189,6 +207,63 @@ describe("the player side reads the choice with the venue it already has (zero n
     const code = read("lib/venues.ts");
     expect(code).toMatch(/instagram_handle, share_show_name, share_show_address, share_show_instagram/);
     expect(code).toMatch(/VENUE_SELECT_TIERS = \[VENUE_SELECT_WITH_SHARE_DETAILS, VENUE_SELECT_WITH_PARSED_ADDRESS, VENUE_SELECT_LEGACY\]/);
+  });
+});
+
+describe("9f.4 — the partner's choice always wins over an old copy", () => {
+  const baseVenue: Venue = { id: "v1", name: "pour", displayName: "The Pour House", latitude: 1, longitude: 1, radius: 100 };
+  const NOW = 50 * 60 * 1000;
+
+  beforeEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+  afterEach(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+
+  it("an entry is fresh for 10 minutes, then stale (still returned, as the fallback)", () => {
+    rememberShareVenue(baseVenue, NOW - SHARE_VENUE_FRESH_MS + 1);
+    expect(readShareVenue("v1", NOW)?.fresh).toBe(true);
+    rememberShareVenue(baseVenue, NOW - SHARE_VENUE_FRESH_MS);
+    expect(readShareVenue("v1", NOW)).toMatchObject({ fresh: false, venue: { id: "v1" } });
+    // A clock that went backwards never makes an entry fresh.
+    rememberShareVenue(baseVenue, NOW + 60_000);
+    expect(readShareVenue("v1", NOW)?.fresh).toBe(false);
+    expect(readShareVenue("other", NOW)).toBeNull();
+  });
+
+  it("the join list's own 5-minute cache counts as fresh", () => {
+    rememberShareVenue(baseVenue, 0);
+    window.sessionStorage.setItem(
+      "tp_venues_cache_v1",
+      JSON.stringify({ venues: [{ ...baseVenue, shareShowName: false }], fetchedAt: Date.now() }),
+    );
+    expect(readShareVenue("v1")).toMatchObject({ fresh: true, venue: { show: { name: false } } });
+  });
+
+  const remembered = venue({ name: false, address: true, instagram: false });
+  const latest = venue({ name: true, address: false, instagram: true });
+
+  it.each([
+    ["fresh entry: used, no read, ready", { venue: remembered, fresh: true }, null, remembered, true],
+    ["stale entry, read in flight: the entry draws, NOT ready", { venue: remembered, fresh: false }, "pending", remembered, false],
+    ["stale entry, read landed: the latest choice", { venue: remembered, fresh: false }, latest, latest, true],
+    ["stale entry, read failed: the entry", { venue: remembered, fresh: false }, "failed", remembered, true],
+    ["missing, read in flight: no bar, NOT ready", null, "pending", "unknown", false],
+    ["missing, read landed: the latest choice", null, latest, latest, true],
+    ["missing, read failed: no bar (safe fallback), ready", null, "failed", "unknown", true],
+  ] as const)("%s", (_label, stored, read, expectedVenue, expectedReady) => {
+    expect(resolveShareVenue(stored, read)).toEqual({ venue: expectedVenue, ready: expectedReady });
+  });
+
+  it("a failed read is told apart from a real answer (never the built-in fallback venue)", () => {
+    const code = read("lib/venues.ts");
+    expect(code).toMatch(/export async function fetchVenueById[\s\S]{0,1200}if \(error\) return \{ ok: false \};/);
+    const hook = stripComments(read("components/social-share/useShareVenue.ts"));
+    expect(hook).toContain("fetchVenueById(");
+    expect(hook).not.toContain("getVenueById(");
   });
 });
 

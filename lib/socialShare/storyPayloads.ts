@@ -88,6 +88,14 @@ export interface PrepareStorySharePayloadOptions {
   mirrorPreview?: boolean;
 }
 
+/**
+ * What a payload SAYS, without the moment it was built: two payloads with the same key draw the same
+ * pictures. `achievedAtIso` is a "now" stamp that changes on every rebuild (Phase 9f.3, R5).
+ */
+export function storyPayloadContentKey(payload: StorySharePayload): string {
+  return JSON.stringify({ ...payload, achievedAtIso: null });
+}
+
 function nowIso(): string {
   return new Date().toISOString();
 }

@@ -108,14 +108,18 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   (`planShareDestination`); words in `copyPresets.ts`. The clipboard write starts inside the tap before any await (browsers
   allow it only then; `lib/copyText.ts`), and the picture still goes with NO `url` field. In the app, Instagram Story uses
   our plugin `InstagramStories` (`native/…/InstagramStoriesPlugin.{swift,java}`, Meta App ID in
-  `native/capacitor.config.json`; web side `lib/nativeInstagramStories.ts`, capability-checked; old builds → share sheet).
-  Next: 9g (`/app` "Get the app?" page), then 9f.
+  `native/capacitor.config.json`; web side `lib/nativeInstagramStories.ts`, capability-checked; old builds → share sheet). On iPhone the picture REPLACES
+  the pasteboard, so the caption goes to the plugin and rides in the same item (9f.2) — never a picture-only `setItems`.
+  Next: the 9f review's fix phases (9f.1–9f.4 built 2026-10-22; 9f.5–9f.6; 9f.2's iPhone check is section J item 33) (plan; handoff `docs/native-app-store-plan_PHASE_9F_HANDOFF.md`), then 9g.
 - **What a share shows (Phase 9e, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** ONE choice per venue
   (Andrew): `venues.instagram_handle` (bare, CHECK = `parseInstagramHandle` in `lib/venueShareDetails.ts`) + `share_show_name /
   _address / _instagram` (default true; migration `20261023011500`, applied 2026-10-22). Applied in ONE place, `applyShareVenue` (`lib/socialShare/shareVenue.ts`), called only by
   `StoryShareLauncher` — so every game/prize, including new ones, honours it; no screen sets `venueInstagram` (contract test). Players
   read it on the venue rows they already load (`lib/venues.ts` select tiers step down if the columns are missing; localStorage
-  `htc_share_venue_v2`). Partners edit it in ONE panel, `components/owner/share/ShareDetailsPanel.tsx` (Schedule Review, the
+  `htc_share_venue_v3` with `savedAt`). **9f.4: the partner's choice always wins** — a remembered copy older than 10 min
+  (`SHARE_VENUE_FRESH_MS`) means the open sheet reads the one row (`fetchVenueById`, which tells a failed read from the
+  fallback list), and nothing can be sent until it settles (`resolveShareVenue`); unknown → `applyShareVenue(p, "unknown")`
+  = no bar at all, never the screen's own name. Partners edit it in ONE panel, `components/owner/share/ShareDetailsPanel.tsx` (Schedule Review, the
   owner wizard's `confirmExtra`, Game Settings; admin venue form with `host="admin"`), saved on its own via
   `PATCH /api/owner/venues/share-details` (owner auth + venue check first) or `/api/admin/venues/share-details`.
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
@@ -934,7 +938,12 @@ quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/str
   no `pending` row, the add stops before Stripe (`payment_unconfirmed`, `ledger-write-missed`) — never charge on an
   in-memory copy (6.9). Missing-RPC checks share `isMissingFunction` (`lib/supabaseRpcErrors.ts`).
 
-## POS Rewards Integration (Square / Clover; Toast deferred) — Phases 1–2 built 2026-10-04/05
+## POS Rewards Integration (Square live; Toast is the PRIORITY; Clover alongside) — Phases 1–2 built 2026-10-04/05
+
+**2026-10-18 (Andrew): Toast is the priority, and Toast and Clover both become available to partners** — plan §1b,
+Phase 4a–4f (Toast access now; endpoint `POST /api/pos/toast/loyalty` built to the public spec, flag-gated, fails
+closed). The coupon code (`redeem_code`) and `release_challenge_prize` RPC are built once in 4b, shared with Clover.
+Clover resumes in parallel (needs a Dev Kit, plan §6 item 8).
 
 Committed `27f5eea`, deployed 2026-10-05 with the flag OFF. **Phase 3 (Clover) = our own Clover register app** (Andrew,
 2026-10-05): staff scan or type the coupon's code in our app on the Clover register (no staff phones, no Partner

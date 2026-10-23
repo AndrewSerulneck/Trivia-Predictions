@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Image as ImageIcon, Share2 } from "lucide-react";
 import type { StorySharePayload } from "@/lib/socialShare/contracts";
 import { applyShareVenue } from "@/lib/socialShare/shareVenue";
-import { prepareStorySharePayload } from "@/lib/socialShare/storyPayloads";
+import { prepareStorySharePayload, storyPayloadContentKey } from "@/lib/socialShare/storyPayloads";
 import { StoryCaptureModal } from "./StoryCaptureModal";
 import { useShareVenue } from "./useShareVenue";
 
@@ -22,6 +22,32 @@ function getDefaultLauncherTitle(payload: StorySharePayload): string {
   return payload.isChampion ? "Share your win" : "Share your result";
 }
 
+/**
+ * The open share sheet. Mounted only while open, so a closed button costs nothing (9f.3, R7) and every
+ * open starts fresh. It holds the payload steady: the same content keeps the same prepared story however
+ * often the host re-renders with a new object or a new `achievedAtIso`, so the pictures are drawn once and
+ * an edited caption survives (R5). `achievedAtIso` is pinned to the moment the sheet opened.
+ */
+function StoryShareSheet({ payload, onClose }: { payload: StorySharePayload; onClose: () => void }) {
+  const { venue, ready: venueReady } = useShareVenue(payload.venueId, true);
+  const [openedAtIso] = useState(payload.achievedAtIso);
+  const contentKey = storyPayloadContentKey(payload);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `contentKey` is the payload's content; the object's identity must not matter.
+  const stablePayload = useMemo(() => ({ ...payload, achievedAtIso: openedAtIso }), [contentKey, openedAtIso]);
+  const preparedStory = useMemo(() => prepareStorySharePayload(applyShareVenue(stablePayload, venue)), [stablePayload, venue]);
+
+  return (
+    <StoryCaptureModal
+      isOpen
+      onClose={onClose}
+      title={preparedStory.headline}
+      subtitle={preparedStory.subheadline}
+      preparedStory={preparedStory}
+      venueReady={venueReady}
+    />
+  );
+}
+
 export function StoryShareLauncher({
   payload,
   buttonLabel = "Create story",
@@ -31,8 +57,6 @@ export function StoryShareLauncher({
   variant = "card",
 }: StoryShareLauncherProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const venue = useShareVenue(payload.venueId, isOpen);
-  const preparedStory = useMemo(() => prepareStorySharePayload(applyShareVenue(payload, venue)), [payload, venue]);
   const launcherTitle = title ?? getDefaultLauncherTitle(payload);
 
   const openButton = (
@@ -65,13 +89,7 @@ export function StoryShareLauncher({
       </section>
       )}
 
-      <StoryCaptureModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        title={preparedStory.headline}
-        subtitle={preparedStory.subheadline}
-        preparedStory={preparedStory}
-      />
+      {isOpen ? <StoryShareSheet payload={payload} onClose={() => setIsOpen(false)} /> : null}
     </>
   );
 }

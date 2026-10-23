@@ -59,6 +59,9 @@ export const useSharePictures = (
     return () => {
       cancelled = true;
       created.forEach((url) => URL.revokeObjectURL(url));
+      // The state held those URLs: drop them with the pictures, or coming back to the same win and
+      // size would hand out released `blob:` addresses (Phase 9f.3, R6).
+      setState(EMPTY);
     };
     // `first` only orders the first draw; changing the selection must not redraw.
     // eslint-disable-next-line react-hooks/exhaustive-deps

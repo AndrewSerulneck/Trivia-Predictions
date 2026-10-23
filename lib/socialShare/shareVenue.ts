@@ -10,9 +10,10 @@ import type { StorySharePayload, StoryShareVenueAddress } from "./contracts";
  * if the venue's partner chose it (Phase 9e, one choice per venue).
  *
  * Zero requests in the usual case: the venue hub remembers the venue it already loaded
- * (`rememberShareVenue`), and a game screen reads it back. Only when nothing is remembered
- * (a deep link straight into a game) does the share sheet read the one venue row, once,
- * when the player opens it (`useShareVenue`).
+ * (`rememberShareVenue`, stamped `savedAt`), and a game screen reads it back. When nothing fresh is
+ * remembered (a deep link, a bookmark, or the hub was more than SHARE_VENUE_FRESH_MS ago) the share
+ * sheet reads the one venue row when it opens (`useShareVenue`), so a partner's change always wins
+ * over an old copy (9f.4).
  */
 
 export type ShareVenue = {
@@ -24,10 +25,19 @@ export type ShareVenue = {
   show: { name: boolean; address: boolean; instagram: boolean };
 };
 
+/** Nothing fresh is known about the bar: the picture names no bar (9f.4) — never the screen's own name. */
+export type ShareVenueChoice = ShareVenue | "unknown";
+
+/** What storage knows: the venue and whether it is recent enough to share without re-reading. */
+export type StoredShareVenue = { venue: ShareVenue; fresh: boolean };
+
 type VenueAddressFields = Pick<Venue, "street" | "address" | "city" | "state">;
 
-// v2 (Phase 9e): adds `instagram` + `show`; a v1 entry is ignored and re-read.
-const STORAGE_KEY = "htc_share_venue_v2";
+// v3 (9f.4): adds `savedAt`; a v2 entry (no date, so no way to tell its age) is ignored and re-read.
+const STORAGE_KEY = "htc_share_venue_v3";
+
+/** A remembered venue older than this is re-read when the share sheet opens (Andrew's note, 9f.4). */
+export const SHARE_VENUE_FRESH_MS = 10 * 60 * 1000;
 
 const clean = (value: string | null | undefined): string | null => {
   const text = (value ?? "").replace(/\s+/g, " ").trim();
@@ -79,28 +89,63 @@ const isShareVenue = (value: unknown): value is ShareVenue => {
   );
 };
 
-/** Called by the venue hub with the venue it already has. One small localStorage write. */
-export const rememberShareVenue = (venue: Venue): void => {
+/** Called by the venue hub with the venue it already has, and by the share sheet after its read. One small localStorage write. */
+export const rememberShareVenue = (venue: Venue, now: number = Date.now()): void => {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(toShareVenue(venue)));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...toShareVenue(venue), savedAt: now }));
   } catch {
     // storage unavailable — the share sheet reads the venue when opened instead
   }
 };
 
-/** The remembered venue (or the join list's cache), only if it is this venue. */
-export const readShareVenue = (venueId: string): ShareVenue | null => {
-  if (typeof window === "undefined" || !venueId) return null;
+const readRemembered = (venueId: string): { venue: ShareVenue; savedAt: number } | null => {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : null;
-    if (isShareVenue(parsed) && parsed.id === venueId) return parsed;
+    if (!isShareVenue(parsed) || parsed.id !== venueId) return null;
+    const savedAt = (parsed as { savedAt?: unknown }).savedAt;
+    if (typeof savedAt !== "number" || !Number.isFinite(savedAt)) return null;
+    const { id, name, address, instagram, show } = parsed;
+    return { venue: { id, name, address, instagram, show }, savedAt };
   } catch {
-    // fall through to the join list's cache
+    return null;
   }
+};
+
+/**
+ * What storage knows about this venue. Fresh = remembered under SHARE_VENUE_FRESH_MS ago, or in the
+ * join list's cache (which itself expires after 5 minutes). A stale entry is still returned: it is the
+ * fallback if the sheet's read fails.
+ */
+export const readShareVenue = (venueId: string, now: number = Date.now()): StoredShareVenue | null => {
+  if (typeof window === "undefined" || !venueId) return null;
+  const remembered = readRemembered(venueId);
+  const age = remembered ? now - remembered.savedAt : Infinity;
+  if (remembered && age >= 0 && age < SHARE_VENUE_FRESH_MS) return { venue: remembered.venue, fresh: true };
   const cached = readCachedVenues()?.find((venue) => venue.id === venueId);
-  return cached ? toShareVenue(cached) : null;
+  if (cached) return { venue: toShareVenue(cached), fresh: true };
+  return remembered ? { venue: remembered.venue, fresh: false } : null;
+};
+
+/** The sheet's one venue read: still going, the venue, or failed (error, timeout or no such venue). */
+export type ShareVenueRead = "pending" | ShareVenue | "failed";
+
+/**
+ * The expiry table (9f.4). `read` is null when no read was needed (storage was fresh).
+ * - fresh in storage → it, ready;
+ * - read landed → it, ready;
+ * - read failed → the remembered entry if any, else "unknown" (no bar on the picture), ready;
+ * - read in flight → the remembered entry if any, else "unknown", NOT ready: the pictures draw but
+ *   nothing can be sent until the read settles.
+ */
+export const resolveShareVenue = (
+  stored: StoredShareVenue | null,
+  read: ShareVenueRead | null,
+): { venue: ShareVenueChoice; ready: boolean } => {
+  if (stored?.fresh) return { venue: stored.venue, ready: true };
+  if (read && read !== "pending" && read !== "failed") return { venue: read, ready: true };
+  return { venue: stored?.venue ?? "unknown", ready: read === "failed" };
 };
 
 /**
@@ -112,10 +157,12 @@ export const readShareVenue = (venueId: string): ShareVenue | null => {
  *   name off: no name anywhere (the headline loses " at <bar>", the picture loses the bar line);
  * - address off: no street/city line;
  * - handle on + set: "@handle" on the picture and in the caption.
- * Venue not known yet: the payload as the screen built it (= the defaults, name + address).
+ * "unknown" (nothing fresh and the read failed, or still reading with nothing remembered): the safe
+ * fallback — no bar name, address or handle; the win and the app panel still share (9f.4). Never the
+ * screen's own name: the partner may have turned it off.
  */
-export const applyShareVenue = (payload: StorySharePayload, venue: ShareVenue | null): StorySharePayload => {
-  if (!venue) return { ...payload, venueInstagram: null };
+export const applyShareVenue = (payload: StorySharePayload, venue: ShareVenueChoice): StorySharePayload => {
+  if (venue === "unknown") return { ...payload, venueName: null, subtitle: null, venueAddress: null, venueInstagram: null };
   return {
     ...payload,
     venueName: venue.show.name ? venue.name || payload.venueName : null,

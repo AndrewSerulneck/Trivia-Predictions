@@ -73,6 +73,7 @@ export const SHARE_DETAILS_COPY = {
   cancel: "Cancel",
   saved: "Saved. New shares use this.",
   loadFailed: "Couldn't load this setting.",
+  retry: "Try again",
   saveFailed: "Couldn't save. Try again.",
 } as const;
 

@@ -36,10 +36,18 @@ const isNotInstalled = (error: unknown): boolean => {
   return code === "NOT_INSTALLED" || message.includes("NOT_INSTALLED");
 };
 
+export type InstagramStoryOptions = {
+  /** The caption + link the sheet already copied. On iPhone the picture replaces the whole pasteboard,
+   *  so the plugin puts this back in the same item (Phase 9f.2); Android leaves the clipboard alone and
+   *  ignores it, and so does an app build from before 9f.2. */
+  caption?: string;
+  colors?: { top: string; bottom: string };
+};
+
 /** Opens Instagram's Story editor with the picture as the background. */
 export const shareToInstagramStory = async (
   picture: Blob,
-  colors: { top: string; bottom: string } = { top: "#020617", bottom: "#020617" },
+  { caption = "", colors = { top: "#020617", bottom: "#020617" } }: InstagramStoryOptions = {},
 ): Promise<InstagramStoryOutcome> => {
   if (!hasNativeCapability("InstagramStories")) return "unavailable";
   try {
@@ -47,6 +55,7 @@ export const shareToInstagramStory = async (
       data: await blobToBase64(picture),
       topColor: colors.top,
       bottomColor: colors.bottom,
+      caption,
     });
     return "opened";
   } catch (error) {

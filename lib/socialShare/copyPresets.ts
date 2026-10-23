@@ -193,6 +193,9 @@ export const SHARE_DESTINATION_COPY = {
     label: "Instagram Story",
     direct: "Caption + link copied. Paste the link in a link sticker.",
     viaSheet: "Caption + link copied. Pick Instagram, then Story. Paste the link in a link sticker.",
+    // In the app, when the direct Story shortcut didn't open Instagram. The share sheet can't open
+    // from here (the tap is spent), so the next tap, on More, opens it.
+    directFailed: "Instagram didn't open. Tap More to share the picture.",
   },
   "instagram-post": {
     label: "Instagram post",
@@ -227,4 +230,6 @@ export const SHARE_DESTINATION_COPY = {
 } as const;
 
 export const SHARE_CAPTION_COPIED = "Caption + link copied.";
+/** While the sheet checks what the bar shows on pictures (9f.4): nothing can be sent yet. */
+export const SHARE_VENUE_LOADING = "Getting your picture ready…";
 export const SHARE_CAPTION_COPY_FAILED = "Couldn't copy. Press and hold the caption to copy it.";

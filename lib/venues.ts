@@ -180,13 +180,14 @@ export async function listVenues(): Promise<Venue[]> {
   }
 }
 
-export async function getVenueById(venueId: string): Promise<Venue | null> {
-  if (!venueId) return null;
-
+/**
+ * One venue row, telling a failed read apart from a real answer: `ok: false` on an error, a timeout or
+ * no database (never the built-in fallback list). The share sheet needs that difference (9f.4): a
+ * fallback venue carries default share choices the partner may have turned off.
+ */
+export async function fetchVenueById(venueId: string): Promise<{ ok: true; venue: Venue | null } | { ok: false }> {
   const supabaseClient = supabase;
-  if (!isSupabaseConfigured || !supabaseClient) {
-    return FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
-  }
+  if (!venueId || !isSupabaseConfigured || !supabaseClient) return { ok: false };
 
   try {
     const { data, error } = await selectVenueTiers<VenueRow>((columns, signal) =>
@@ -197,13 +198,16 @@ export async function getVenueById(venueId: string): Promise<Venue | null> {
         .eq("id", venueId)
         .maybeSingle<VenueRow>(),
     );
-
-    if (error) {
-      return FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
-    }
-
-    return data ? mapVenueRow(data) : FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
+    if (error) return { ok: false };
+    return { ok: true, venue: data ? mapVenueRow(data) : null };
   } catch {
-    return FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
+    return { ok: false };
   }
+}
+
+export async function getVenueById(venueId: string): Promise<Venue | null> {
+  if (!venueId) return null;
+  const result = await fetchVenueById(venueId);
+  if (result.ok && result.venue) return result.venue;
+  return FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
 }

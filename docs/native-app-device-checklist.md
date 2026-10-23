@@ -106,6 +106,62 @@ then run from Xcode / Android Studio). The Android shell now needs Android 8 or 
 26. (Optional) Scan a venue link `https://play.hightopchallenge.com/?v=<a real venue id>` → the app opens
     that venue's join step, same as the phone's Camera app does today.
 
+## J. Phase 9 — "Share my win" (9a–9e; added 2026-10-22, plan Phase 9f)
+
+**Best done after fix phases 9f.1 and 9f.3–9f.5 are deployed** (plan, "Phase 9f fix phases"; 9f.2 needs an app
+rebuild): several of these checks fail today for known reasons (items 38, 41 are marked; 35 was fixed in 9f.1; 33 is the 9f.2 check). Do each item on four devices: **iPhone app, Android app,
+iPhone Safari, Android Chrome** — write "app/web" in the Results table. The app needs a rebuild after the web
+deploy for the in-app Instagram Story (9d) and the 9f.2 fix.
+
+**Set up once:** on the Partner Dashboard of a venue you can play at, Game Settings → "On shared pictures" →
+Change → enter your own Instagram handle, leave all three on → Save. Win something there (a Category Blitz round,
+a Pick 'Em pick, or a prize in `/redeem-prizes`).
+
+27. **No camera needed:** tap "Share my win" → the sheet opens on ready-made designs (Spotlight / Card / Night),
+    no camera question. Switch Story ↔ Post → the pictures redraw at the new shape.
+28. **The picture:** headline is "I just won … at <bar>!", the bar's name, street + city, your @handle under the
+    name, a QR, and "hightopchallenge.com/app". Nothing is cut off on a small phone (iPhone SE if you have one).
+29. **The QR:** post (or just save) a Story, then scan the QR on it from ANOTHER phone's camera → it opens
+    `play.hightopchallenge.com` (the player sign-in) today; after the store launch, the right store.
+30. **Copy caption + link:** tap it → "Copied". Paste into Notes → the headline, `@yourhandle`, and
+    "Play on Hightop Challenge: https://hightopchallenge.com/app".
+31. **Each destination:** Instagram Story, Instagram post, Facebook, X, Messages, Save, More. For each, note
+    which app opens (or which share sheet), what hint the sheet shows, and what text arrives in the other app.
+    Expected: every one copies the caption first; X and Messages carry the text with the picture; Save keeps
+    the picture (in the app: the share sheet's "Save Image"). On a computer, X opens x.com in a new tab
+    and the sheet says "Opening X with your caption." (not "Couldn't open X"; fixed in 9f.1).
+32. **In-app Instagram Story (app only, Instagram installed):** Instagram's Story editor opens with the picture
+    already in it. Add a link sticker → Paste → the app link appears.
+33. **Same, iPhone app — the 9f.2 check** (needs the 9f.2 website change deployed AND a new app build on the
+    phone; with only one of them it still fails). In Instagram's Story editor add a link sticker → Paste. Expected:
+    the caption + link pastes (before 9f.2 nothing did). Record exactly what pastes. Two things to watch: (a) if
+    nothing pastes, Instagram cleared the pasteboard when it read the picture → tell Claude to build 9f.2's
+    honest-wording fallback; (b) the whole caption goes into the link field, not just the link — note whether
+    Instagram accepts it or you have to delete the words before the `https://` (same on Android, item 32).
+34. **In-app Instagram Story, Instagram NOT installed:** the button falls back to the share sheet (or, after
+    9f.1, says "Instagram didn't open. Tap More…"). Nothing freezes.
+35. **Double-tap Instagram Story quickly (fixed in 9f.1):** Instagram should open once.
+36. **Selfie (optional extra):** "Take a selfie instead" → camera question → take one → the same destinations
+    share it. Refuse the camera → the ready-made designs still share.
+37. **Back:** Android Back (app) from the selfie → back to the designs; again → the sheet closes.
+38. **Category Blitz finish screen (fixed in 9f.3):** open the sheet while the points count up → the
+    designs draw once and stay (no endless grey placeholders); Share becomes tappable. Also: pick "Take a selfie
+    instead", then "Designs" again → the thumbnails show (not broken pictures).
+39. **Prize:** `/redeem-prizes` → "Share my win" on a won prize → "I just won $15 off my tab at <bar>!" (or "a
+    Free Appetizer"). The picture shows the prize NAME only — no code, no QR to redeem, no card number.
+40. **What a share shows (9e):** on the Partner Dashboard switch each choice and re-share, one at a time:
+    name off → the headline has no " at <bar>" and no bar line; address off → no street/city; handle off → no
+    @handle on the picture or in the caption, the nudge says "Tag <bar>"; all three off → only the win + the
+    app panel.
+41. **A change reaches players (fixed in 9f.4):** after a partner change, wait 10 minutes (or use a phone that
+    hasn't opened that venue's home), then open a share from a game you reached WITHOUT going through the venue
+    home first (a bookmark) → for a moment the sheet says "Getting your picture ready…" and the app buttons are
+    greyed, then the picture shows the NEW choice. With Wi-Fi off on a phone that never visited the venue →
+    the picture names no bar (only the win + the app panel), and still shares.
+42. **Partner box:** the "On shared pictures" box appears on Schedule → Review, the Prize wizard's Confirm screen
+    and Game Settings. Change in one → the others show it. A bad handle ("my bar!") → a plain message, nothing
+    saved. Turn Wi-Fi off, open Game Settings → "Couldn't load this setting" and a "Try again" button (9f.5); turn Wi-Fi on, tap it → the setting loads. Switch venue (if you have two) → the box shows that venue's choices, never the other's half-edited ones.
+
 ## Results
 
 | # | iPhone | Android | Notes |

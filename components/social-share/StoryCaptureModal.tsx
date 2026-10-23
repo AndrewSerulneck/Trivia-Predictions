@@ -31,7 +31,9 @@ import {
   SHARE_CAPTION_COPIED,
   SHARE_CAPTION_COPY_FAILED,
   SHARE_DESIGN_NAMES,
+  SHARE_DESTINATION_COPY,
   SHARE_SIZE_NAMES,
+  SHARE_VENUE_LOADING,
   shareTagNudge,
 } from "@/lib/socialShare/copyPresets";
 import { planShareDestination, xIntentUrl, type ShareDestination } from "@/lib/socialShare/shareDestinations";
@@ -64,6 +66,11 @@ interface StoryCaptureModalProps {
   subtitle?: string;
   preparedStory?: PreparedStorySharePayload;
   onCaptureComplete?: (blob: Blob) => void;
+  /**
+   * False while the launcher is still checking what the bar shows (9f.4): the pictures draw, but no
+   * destination or caption copy runs until it settles.
+   */
+  venueReady?: boolean;
 }
 
 const SCROLL_LOCK_OWNER = "story-capture-modal";
@@ -125,6 +132,13 @@ function getShareToastTone(shareState: StoryNativeShareState, shareResult: Story
   return "idle";
 }
 
+/** A new tab for x.com. `noopener` in the features string makes window.open return null even on success, so sever the opener by hand instead. */
+function openInNewTab(url: string): boolean {
+  const tab = window.open(url, "_blank");
+  if (tab) tab.opener = null;
+  return tab !== null;
+}
+
 function getStoryShareFileName(preparedStory: PreparedStorySharePayload, size: StoryShareSize): string {
   const game = `${storyShareGame(preparedStory.payload.gameType).fileSlug}${size === "post" ? "-post" : ""}`;
   const safeUsername = preparedStory.payload.username
@@ -159,8 +173,10 @@ export function StoryCaptureModal({
   subtitle = "Hightop Challenge",
   preparedStory,
   onCaptureComplete,
+  venueReady = true,
 }: StoryCaptureModalProps) {
   const shareCapturedStoryPendingRef = useRef(false);
+  const destinationBusyRef = useRef(false);
   const captureStoryImagePendingRef = useRef(false);
   const startCameraPendingRef = useRef(false);
   const [state, setState] = useState<CameraViewportState>("idle");
@@ -174,12 +190,14 @@ export function StoryCaptureModal({
   const [nativeShareState, setNativeShareState] = useState<StoryNativeShareState>("idle");
   const [shareResult, setShareResult] = useState<StorySharePipelineResult | null>(null);
   const [fallbackOpen, setFallbackOpen] = useState(false);
-  const [storyShareId, setStoryShareId] = useState(() => createStoryShareAnalyticsId());
+  const [storyShareId] = useState(() => createStoryShareAnalyticsId());
   const [mode, setMode] = useState<StoryShareMode>("designs");
   const [size, setSize] = useState<StoryShareSize>("story");
   const [chosenDesign, setChosenDesign] = useState<StoryShareDesign | null>(null);
   // What the sheet says after a destination or the copy button is tapped (Phase 9d).
   const [destinationHint, setDestinationHint] = useState<string | null>(null);
+  // Mirrors destinationBusyRef so the row and the copy button show disabled while a tap is running.
+  const [destinationBusy, setDestinationBusy] = useState(false);
   // In the app: this build has the Instagram Stories plugin and Instagram is installed. Asked once per open.
   const [instagramStoryDirect, setInstagramStoryDirect] = useState(false);
   const sessionRef = useRef<StoryCameraSession | null>(null);
@@ -411,57 +429,72 @@ export function StoryCaptureModal({
   }, []);
 
   const copyCaption = useCallback(async () => {
+    if (destinationBusyRef.current || !venueReady) return;
     haptic("selection");
     const copied = await copyText(activePreparedStory.shareText);
     setDestinationHint(copied ? SHARE_CAPTION_COPIED : SHARE_CAPTION_COPY_FAILED);
-  }, [activePreparedStory.shareText]);
+  }, [activePreparedStory.shareText, venueReady]);
 
   // One tap per app (Phase 9d; the rules are pure in lib/socialShare/shareDestinations.ts).
+  // A ref, set before anything else: a second tap in the same frame can't see state set by the first.
   const pickDestination = useCallback(async (destination: ShareDestination) => {
-    if (!shareBlob || nativeShareState === "sharing") return;
-    const fileName = getStoryShareFileName(activePreparedStory, size);
-    const file = webStoryPlatform.createShareFile({ blob: shareBlob, fileName });
-    const plan = planShareDestination(destination, {
-      instagramStoryDirect,
-      canSharePicture: webStoryPlatform.canShareFile(file) || canShareImageNatively(),
-      inApp: isNativeApp(),
-    });
-    haptic("selection");
-    // Started inside the tap, before any await: browsers allow a clipboard write (and the share
-    // sheet) only from a tap.
-    const copied = plan.copyCaption ? copyText(activePreparedStory.shareText) : Promise.resolve(true);
-    setDestinationHint(null);
+    if (destinationBusyRef.current || !venueReady || !shareBlob || nativeShareState === "sharing") return;
+    destinationBusyRef.current = true;
+    setDestinationBusy(true);
+    try {
+      const fileName = getStoryShareFileName(activePreparedStory, size);
+      const file = webStoryPlatform.createShareFile({ blob: shareBlob, fileName });
+      const plan = planShareDestination(destination, {
+        instagramStoryDirect,
+        canSharePicture: webStoryPlatform.canShareFile(file) || canShareImageNatively(),
+        inApp: isNativeApp(),
+      });
+      haptic("selection");
+      // Started inside the tap, before any await: browsers allow a clipboard write (and the share
+      // sheet) only from a tap.
+      const copied = plan.copyCaption ? copyText(activePreparedStory.shareText) : Promise.resolve(true);
+      setDestinationHint(null);
 
-    if (plan.action === "download") {
-      const result = webStoryPlatform.saveImage({ blob: shareBlob, fileName });
-      trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "download", resultReason: `${destination}: ${result.reason ?? result.status}` });
-      setDestinationHint(result.status === "saved" ? plan.hint : "Couldn't save the picture. Try More instead.");
-      return;
-    }
-    if (plan.action === "x-intent") {
-      const url = xIntentUrl(activePreparedStory.shareText);
-      const opened = isNativeApp() ? await openInSystemBrowser(url) : window.open(url, "_blank", "noopener") !== null;
-      trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "copy-only", resultReason: `${destination}: ${opened ? "opened" : "blocked"}` });
-      setDestinationHint(opened ? plan.hint : "Couldn't open X. Try More instead.");
-      return;
-    }
-    if (plan.action === "instagram-story-native") {
-      trackStoryShareAttempted(analyticsContext);
-      const outcome = await shareToInstagramStory(shareBlob);
-      trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "deep-link", externalAppTarget: "instagram", resultReason: `${destination}: ${outcome}` });
-      if (outcome === "opened") {
-        setDestinationHint((await copied) ? plan.hint : SHARE_CAPTION_COPY_FAILED);
+      if (plan.action === "download") {
+        const result = webStoryPlatform.saveImage({ blob: shareBlob, fileName });
+        trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "download", resultReason: `${destination}: ${result.reason ?? result.status}` });
+        setDestinationHint(result.status === "saved" ? plan.hint : "Couldn't save the picture. Try More instead.");
         return;
       }
-      // Instagram was removed since the sheet opened, or the plugin failed: the share sheet instead.
-      if (outcome === "unavailable") setInstagramStoryDirect(false);
+      if (plan.action === "x-intent") {
+        const url = xIntentUrl(activePreparedStory.shareText);
+        const opened = isNativeApp() ? await openInSystemBrowser(url) : openInNewTab(url);
+        trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "copy-only", resultReason: `${destination}: ${opened ? "opened" : "blocked"}` });
+        setDestinationHint(opened ? plan.hint : "Couldn't open X. Try More instead.");
+        return;
+      }
+      if (plan.action === "instagram-story-native") {
+        trackStoryShareAttempted(analyticsContext);
+        // Our copy lands first; on iPhone the plugin's picture then replaces the pasteboard and carries
+        // the caption + link along in the same item (9f.2), so Paste in the link sticker still has it.
+        const captionCopied = await copied;
+        const outcome = await shareToInstagramStory(shareBlob, { caption: activePreparedStory.shareText });
+        trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "deep-link", externalAppTarget: "instagram", resultReason: `${destination}: ${outcome}` });
+        if (outcome === "opened") {
+          setDestinationHint(captionCopied ? plan.hint : SHARE_CAPTION_COPY_FAILED);
+          return;
+        }
+        // Instagram was removed since the sheet opened, or the plugin failed. The share sheet can't open
+        // now (the awaits above spent the tap; WKWebView refuses it), so the next tap does, on More.
+        setInstagramStoryDirect(false);
+        setDestinationHint(SHARE_DESTINATION_COPY["instagram-story"].directFailed);
+        return;
+      }
+      const result = await shareCapturedStory(destination);
+      // No share sheet at all (most desktops): the "Share options" panel takes over, so no app hint.
+      if (!result || result.status === "unsupported" || result.status === "failed") return;
+      const sheetPlan = planShareDestination(destination, { instagramStoryDirect: false, canSharePicture: true, inApp: isNativeApp() });
+      setDestinationHint(plan.copyCaption && !(await copied) ? SHARE_CAPTION_COPY_FAILED : sheetPlan.hint);
+    } finally {
+      destinationBusyRef.current = false;
+      setDestinationBusy(false);
     }
-    const result = await shareCapturedStory(destination);
-    // No share sheet at all (most desktops): the "Share options" panel takes over, so no app hint.
-    if (!result || result.status === "unsupported" || result.status === "failed") return;
-    const sheetPlan = planShareDestination(destination, { instagramStoryDirect: false, canSharePicture: true, inApp: isNativeApp() });
-    setDestinationHint(plan.copyCaption && !(await copied) ? SHARE_CAPTION_COPY_FAILED : sheetPlan.hint);
-  }, [activePreparedStory, analyticsContext, instagramStoryDirect, nativeShareState, shareBlob, shareCapturedStory, size]);
+  }, [activePreparedStory, analyticsContext, instagramStoryDirect, nativeShareState, shareBlob, shareCapturedStory, size, venueReady]);
 
   const chooseDesign = useCallback((next: StoryShareDesign) => {
     setChosenDesign(next);
@@ -523,32 +556,13 @@ export function StoryCaptureModal({
     };
   }, []);
 
+  // The launcher mounts this sheet only while it is open, so every open starts from fresh state and a new
+  // analytics id; closing unmounts it (the effects below release the camera, the picture and the scroll lock).
   useEffect(() => {
-    if (!isOpen) {
-      requestIdRef.current += 1;
-      const shouldResetStoryShareId = wasOpenRef.current;
-      wasOpenRef.current = false;
-      Promise.resolve().then(() => {
-        stopSession();
-        setState("idle");
-        setError(null);
-        resetCapturedImage();
-        setMode("designs");
-        setSize("story");
-        setChosenDesign(null);
-        setDestinationHint(null);
-        if (shouldResetStoryShareId) {
-          setStoryShareId(createStoryShareAnalyticsId());
-        }
-      });
-      return;
-    }
-
-    if (!wasOpenRef.current) {
-      wasOpenRef.current = true;
-      trackStoryShareOpened(analyticsContextRef.current);
-    }
-  }, [isOpen, resetCapturedImage, stopSession]);
+    if (!isOpen || wasOpenRef.current) return;
+    wasOpenRef.current = true;
+    trackStoryShareOpened(analyticsContextRef.current);
+  }, [isOpen]);
 
   // In the app only (zero work on the website): one bridge call per open — is Instagram installed?
   useEffect(() => {
@@ -645,10 +659,11 @@ export function StoryCaptureModal({
   const inCamera = mode === "camera";
   const canStart = state !== "requesting" && state !== "active";
   const canCapture = state === "active" && captureState !== "capturing";
-  const canShare = shareBlob !== null && nativeShareState !== "sharing";
+  const canShare = venueReady && shareBlob !== null && nativeShareState !== "sharing" && !destinationBusy;
+  const canCopyCaption = venueReady && !destinationBusy;
   const shareStatusCopy = getShareStatusCopy(nativeShareState, shareResult);
   const captureStatusCopy = getCaptureStatusCopy(captureState, captureError);
-  const statusCopy = destinationHint ?? (inCamera
+  const statusCopy = destinationHint ?? (!venueReady ? SHARE_VENUE_LOADING : null) ?? (inCamera
     ? shareStatusCopy ?? captureStatusCopy ?? getStatusCopy(state, error)
     : shareStatusCopy ?? getDesignStatusCopy(designPicture !== null, picturesFailed));
   const captureButtonLabel = captureState === "capturing" ? "Capturing" : captureState === "captured" ? "Retake" : "Capture";
@@ -789,11 +804,11 @@ export function StoryCaptureModal({
                   );
                 })}
               </div>
-              <ShareCaption caption={activePreparedStory.shareText} onCopy={() => void copyCaption()} />
+              <ShareCaption caption={activePreparedStory.shareText} onCopy={() => void copyCaption()} disabled={!canCopyCaption} />
             </>
           )}
           {inCamera && capturedBlob ? (
-            <ShareCaption caption={activePreparedStory.shareText} onCopy={() => void copyCaption()} />
+            <ShareCaption caption={activePreparedStory.shareText} onCopy={() => void copyCaption()} disabled={!canCopyCaption} />
           ) : null}
           {showFallbackActions ? (
             <ShareActionsSheet

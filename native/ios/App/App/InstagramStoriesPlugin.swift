@@ -6,6 +6,9 @@ import Capacitor
 /// `instagram-stories://share?source_application=<Meta App ID>` opens the Story editor with it.
 /// The App ID is public (plugins.InstagramStories.facebookAppId in capacitor.config.json);
 /// `instagram-stories` must be in LSApplicationQueriesSchemes (Info.plist) or canOpenURL is false.
+/// Writing the picture replaces the whole pasteboard, so the caption + link the share sheet copied
+/// a moment earlier travels in the SAME item as plain text (Phase 9f.2): Paste in Instagram's link
+/// sticker still finds it.
 /// Read by lib/nativeInstagramStories.ts; same plugin and methods on Android
 /// (InstagramStoriesPlugin.java). Registered in HightopBridgeViewController.capacitorDidLoad.
 @objc(InstagramStoriesPlugin)
@@ -37,17 +40,21 @@ public class InstagramStoriesPlugin: CAPPlugin, CAPBridgedPlugin {
         }
         let topColor = call.getString("topColor") ?? "#020617"
         let bottomColor = call.getString("bottomColor") ?? "#020617"
+        let caption = call.getString("caption") ?? ""
         DispatchQueue.main.async {
             guard let url = self.storyURL, UIApplication.shared.canOpenURL(url) else {
                 call.reject("Instagram is not installed.", "NOT_INSTALLED")
                 return
             }
-            let items: [[String: Any]] = [[
+            var item: [String: Any] = [
                 "com.instagram.sharedSticker.backgroundImage": image,
                 "com.instagram.sharedSticker.backgroundTopColor": topColor,
                 "com.instagram.sharedSticker.backgroundBottomColor": bottomColor
-            ]]
-            UIPasteboard.general.setItems(items, options: [.expirationDate: Date().addingTimeInterval(60 * 5)])
+            ]
+            if !caption.isEmpty {
+                item["public.utf8-plain-text"] = caption
+            }
+            UIPasteboard.general.setItems([item], options: [.expirationDate: Date().addingTimeInterval(60 * 5)])
             UIApplication.shared.open(url, options: [:]) { opened in
                 if opened {
                     call.resolve()

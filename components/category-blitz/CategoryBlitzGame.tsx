@@ -37,6 +37,7 @@ import { RankBadge } from "@/components/trivia/RankBadge";
 import { ShareLinkButton } from "@/components/social-share/ShareLinkButton";
 import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
 import { INVITE_FRIEND_PAYLOAD } from "@/lib/nativeShare";
+import type { StorySharePayload } from "@/lib/socialShare/contracts";
 import { buildCategoryBlitzStorySharePayload } from "@/lib/socialShare/storyPayloads";
 import { GAME_THEME } from "@/lib/themeTokens";
 import { MODE_CONFIG, getModeFlipTakeoverVariant, type CategoryBlitzThemeKey } from "@/lib/categoryBlitzModes";
@@ -920,6 +921,44 @@ function NextGameStatus({ info }: { info: { nextWindowAtMs: number | null } | nu
   );
 }
 
+/**
+ * The finish screen's share payload, built once per set of inputs. The share sheet keys its pictures on
+ * this payload, and a fresh object (with a fresh timestamp) every render would restart them (Phase 9f.3, R5).
+ */
+function useCategoryBlitzSharePayload({
+  venueId,
+  userId,
+  username,
+  viewerRank,
+  viewerPoints,
+  correctRate,
+}: {
+  venueId: string;
+  userId: string;
+  username: string;
+  /** Zero-based index in the standings; -1 when the viewer isn't listed. */
+  viewerRank: number;
+  viewerPoints: number | null;
+  correctRate: number | null;
+}): StorySharePayload | null {
+  return useMemo(
+    () =>
+      viewerPoints === null
+        ? null
+        : buildCategoryBlitzStorySharePayload({
+            venueId: venueId || "unknown-venue",
+            venueName: null,
+            userId: userId || "unknown-user",
+            username,
+            finalRank: viewerRank + 1,
+            finalPoints: viewerPoints,
+            correctRate,
+            isChampion: viewerRank === 0,
+          }),
+    [venueId, userId, username, viewerRank, viewerPoints, correctRate]
+  );
+}
+
 function CompleteScreen({
   results,
   userId,
@@ -952,6 +991,21 @@ function CompleteScreen({
   const totalPointsGain =
     venuePointsBefore !== null && venuePointsAfter !== null ? venuePointsAfter - venuePointsBefore : null;
   const standings = (results?.totals ?? []).slice().sort((a, b) => b.points - a.points);
+  const viewerRank = standings.findIndex((t) => t.userId === userId);
+  const viewerEntry = viewerRank > -1 ? standings[viewerRank] : null;
+  const viewerAnswers = (results?.results ?? [])
+    .map((category) => category.answers.find((answer) => answer.userId === userId) ?? null)
+    .filter((answer): answer is NonNullable<typeof answer> => answer !== null);
+  const correctAnswers = viewerAnswers.filter((answer) => answer.reason === "correct").length;
+  const correctRate = viewerAnswers.length > 0 ? Math.round((correctAnswers / viewerAnswers.length) * 100) : null;
+  const storySharePayload = useCategoryBlitzSharePayload({
+    venueId,
+    userId,
+    username: viewerEntry?.username || username || "Player",
+    viewerRank,
+    viewerPoints: viewerEntry?.points ?? null,
+    correctRate,
+  });
 
   if (!results || standings.length === 0) {
     return (
@@ -967,28 +1021,9 @@ function CompleteScreen({
     );
   }
 
-  const viewerRank = standings.findIndex((t) => t.userId === userId);
-  const viewerEntry = viewerRank > -1 ? standings[viewerRank] : null;
   const viewerInPodium = viewerRank > -1 && viewerRank < 3;
   const podium = standings.slice(0, 3).map((entry, i) => ({ ...entry, rank: i + 1 }));
   const podiumOrder = [podium[1], podium[0], podium[2]];
-  const viewerAnswers = results.results
-    .map((category) => category.answers.find((answer) => answer.userId === userId) ?? null)
-    .filter((answer): answer is NonNullable<typeof answer> => answer !== null);
-  const correctAnswers = viewerAnswers.filter((answer) => answer.reason === "correct").length;
-  const correctRate = viewerAnswers.length > 0 ? Math.round((correctAnswers / viewerAnswers.length) * 100) : null;
-  const storySharePayload = viewerEntry
-    ? buildCategoryBlitzStorySharePayload({
-        venueId: venueId || "unknown-venue",
-        venueName: null,
-        userId: userId || "unknown-user",
-        username: viewerEntry.username || username || "Player",
-        finalRank: viewerRank + 1,
-        finalPoints: viewerEntry.points,
-        correctRate,
-        isChampion: viewerRank === 0,
-      })
-    : null;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-6">
