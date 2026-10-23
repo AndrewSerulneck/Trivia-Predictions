@@ -200,6 +200,7 @@ describe("R1 — the audited popups are wired", () => {
     ["app/trivia/live/page.tsx", 'useNativeBackHandler("overlay", popupAd ?'],
     ["components/join/JoinFlow.tsx", 'useNativeBackHandler("overlay", onSkip)'],
     ["components/squares/SquaresCellSheet.tsx", 'useNativeBackHandler("overlay", open ? onClose : null)'],
+    ["components/push/PushWelcomeScreen.tsx", 'useNativeBackHandler("overlay", open && !busy ? close : null)'],
   ];
 
   it.each(OVERLAYS)("%s registers its close", (file, registration) => {

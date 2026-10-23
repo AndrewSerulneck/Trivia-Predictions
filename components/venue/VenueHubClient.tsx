@@ -9,6 +9,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { AccountDrawer } from "@/components/navigation/AccountDrawer";
+import { PushWelcomeScreen } from "@/components/push/PushWelcomeScreen";
 import { AccountMenuList } from "@/components/navigation/AccountMenuList";
 import { getAccountId, getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
 import { clearLoginInProgress } from "@/lib/authFastPath";
@@ -1658,6 +1659,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         />
         </div>
       </div>
+
+      <PushWelcomeScreen ready={contentReady} />
 
       <AccountDrawer open={isMenuOpen} onClose={() => setIsMenuOpen(false)} scrollLockId="venue-hub-menu">
         <div className="mb-5 rounded-ht-lg border border-ht-accent/45 bg-ht-accent/10 px-4 py-3.5">

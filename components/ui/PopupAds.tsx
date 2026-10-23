@@ -11,6 +11,7 @@ import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { incrementAdCounter } from "@/lib/adFrequency";
 import { trackAdClick, trackAdView } from "@/lib/analytics";
 import { lookupSlotId } from "@/lib/adSlotRegistry";
+import { pushWelcomeHoldsPopupAds } from "@/lib/nativePush";
 import type { Advertisement, AdPageKey } from "@/types";
 
 type PopupTrigger = "popup-on-entry" | "popup-on-scroll" | "popup-round-end";
@@ -294,6 +295,11 @@ export function PopupAds() {
       syncPopupPending();
 
       try {
+        // In the app, the push welcome comes first and a popup never shares its visit (native app plan
+        // Phase 5.3). False at once on the website.
+        if (await pushWelcomeHoldsPopupAds()) {
+          return false;
+        }
         const slot = trigger === "popup-on-scroll" ? "popup-on-scroll" : "popup-on-entry";
         const ad = await loadSlotAd(slot, options);
         if (!ad) {

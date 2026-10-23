@@ -22,8 +22,12 @@ import {
   disablePushForSignOut,
   enablePush,
   isPushAvailable,
+  markPushWelcomeShown,
   pushPathFromTap,
+  pushWelcomeHoldsPopupAds,
+  resetPushWelcomeForTests,
   shouldAskForPush,
+  shouldShowPushWelcome,
   syncPushRegistration,
   toPushPermission,
 } from "@/lib/nativePush";
@@ -254,20 +258,29 @@ describe("Live Trivia starts soon", () => {
 
 describe("app-side client (lib/nativePush.ts)", () => {
   type Store = Record<string, string>;
-  const stubApp = (nativePromise: ReturnType<typeof vi.fn>, plugins = ["FirebaseMessaging"], store: Store = {}) => {
-    const localStorage = {
-      getItem: (k: string) => (k in store ? store[k] : null),
-      setItem: (k: string, v: string) => {
-        store[k] = v;
-      },
-      removeItem: (k: string) => {
-        delete store[k];
-      },
-    };
+  const storageOver = (store: Store) => ({
+    getItem: (k: string) => (k in store ? store[k] : null),
+    setItem: (k: string, v: string) => {
+      store[k] = v;
+    },
+    removeItem: (k: string) => {
+      delete store[k];
+    },
+  });
+  /** The welcome already had its turn on this phone (Phase 5.3), so the Venue Home card may ask. */
+  const WELCOME_DONE: Store = { "htc:push-welcome-seen-at": "1" };
+  const stubApp = (
+    nativePromise: ReturnType<typeof vi.fn>,
+    plugins = ["FirebaseMessaging"],
+    store: Store = {},
+    session: Store = {},
+  ) => {
+    resetPushWelcomeForTests();
     const win = {
       navigator: { userAgent: "Mozilla HightopChallengeApp/1.0.0 (android)" },
       Capacitor: { isNativePlatform: () => true, isPluginAvailable: (n: string) => plugins.includes(n), nativePromise },
-      localStorage,
+      localStorage: storageOver(store),
+      sessionStorage: storageOver(session),
     };
     vi.stubGlobal("window", win);
     vi.stubGlobal("navigator", win.navigator);
@@ -284,6 +297,8 @@ describe("app-side client (lib/nativePush.ts)", () => {
     await disablePushForSignOut();
     await syncPushRegistration();
     expect(await shouldAskForPush()).toBe(false);
+    expect(await shouldShowPushWelcome()).toBe(false);
+    expect(await pushWelcomeHoldsPopupAds()).toBe(false);
     expect((await enablePush()).ok).toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -307,7 +322,7 @@ describe("app-side client (lib/nativePush.ts)", () => {
       if (method === "getToken") return { token: TOKEN(9) };
       return {};
     });
-    const store = stubApp(nativePromise);
+    const store = stubApp(nativePromise, undefined, { ...WELCOME_DONE });
     const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) =>
       jsonResponse(200, { ok: true, preferences: { games: true, prizes: true, results: true } }),
     );
@@ -335,11 +350,66 @@ describe("app-side client (lib/nativePush.ts)", () => {
 
   it("a phone that says no stays unregistered", async () => {
     const nativePromise = vi.fn(async () => ({ receive: "denied" }));
-    stubApp(nativePromise);
+    stubApp(nativePromise, undefined, { ...WELCOME_DONE });
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     expect(await enablePush()).toEqual({ ok: false, reason: "denied" });
     expect(await shouldAskForPush()).toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  describe("the first ask is our own screen (Phase 5.3)", () => {
+    const askablePhone = () => vi.fn(async (_plugin: string, _method: string) => ({ receive: "prompt" }));
+
+    it("a new phone gets the welcome, not the card; popup ads wait for it", async () => {
+      const nativePromise = askablePhone();
+      stubApp(nativePromise);
+      expect(await shouldShowPushWelcome()).toBe(true);
+      expect(await shouldAskForPush()).toBe(false);
+      expect(await pushWelcomeHoldsPopupAds()).toBe(true);
+      // Deciding never shows the phone's own prompt: that waits for "Turn on".
+      expect(nativePromise).not.toHaveBeenCalledWith("FirebaseMessaging", "requestPermissions", expect.anything());
+    });
+
+    it("once shown: never again on this phone, no popup ad and no card for the rest of the visit", async () => {
+      const store: Record<string, string> = {};
+      const session: Record<string, string> = {};
+      stubApp(askablePhone(), undefined, store, session);
+      markPushWelcomeShown(1_000);
+      expect(store["htc:push-welcome-seen-at"]).toBe("1000");
+      expect(session["htc:push-welcome-this-visit"]).toBe("1");
+      expect(await shouldShowPushWelcome()).toBe(false);
+      expect(await pushWelcomeHoldsPopupAds()).toBe(true);
+      expect(await shouldAskForPush()).toBe(false);
+
+      // Next launch (new visit): ads come back and "Not now" left the card free to ask.
+      stubApp(askablePhone(), undefined, store, {});
+      expect(await pushWelcomeHoldsPopupAds()).toBe(false);
+      expect(await shouldAskForPush()).toBe(true);
+    });
+
+    it("no welcome (and no held ads) when the phone has blocked notifications or push is already on", async () => {
+      stubApp(vi.fn(async () => ({ receive: "denied" })));
+      expect(await shouldShowPushWelcome()).toBe(false);
+      expect(await pushWelcomeHoldsPopupAds()).toBe(false);
+
+      stubApp(askablePhone(), undefined, { "htc:push-opt-in": "1" });
+      expect(await shouldShowPushWelcome()).toBe(false);
+      expect(await pushWelcomeHoldsPopupAds()).toBe(false);
+    });
+
+    it("a 'Not now' on the card before 5.3 counts as the first ask", async () => {
+      stubApp(askablePhone(), undefined, { "htc:push-ask-dismissed-at": String(Date.now()) });
+      expect(await shouldShowPushWelcome()).toBe(false);
+    });
+
+    it("the ad check reads the phone's permission once per page, not on every retry", async () => {
+      const nativePromise = askablePhone();
+      stubApp(nativePromise);
+      await pushWelcomeHoldsPopupAds();
+      await pushWelcomeHoldsPopupAds();
+      await pushWelcomeHoldsPopupAds();
+      expect(nativePromise.mock.calls.filter(([, method]) => method === "checkPermissions")).toHaveLength(1);
+    });
   });
 });

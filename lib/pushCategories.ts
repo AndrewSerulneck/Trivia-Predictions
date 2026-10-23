@@ -43,10 +43,21 @@ export const safePushPath = (url: unknown): string | null => {
   return path;
 };
 
-/** Words on screen for the permission card and the account-menu settings. Edit copy here. */
+/**
+ * Words on screen for the welcome ask, the Venue Home card and the account-menu settings. Edit copy here.
+ * Promise ONLY pushes the server really sends (the three categories above): Apple rejects an ask that
+ * promises more. "When this bar schedules games or adds prizes" waits for Phase 5.4, which sends them.
+ */
 export const PUSH_COPY = {
-  askTitle: "Get a heads-up?",
-  askBody: "We'll tell you when a live game is about to start here, when you win a prize, and your results.",
+  welcomeTitle: "Want to know the moment you win?",
+  welcomeBenefits: {
+    prizes: "When you win a prize, and before it expires",
+    results: "When your Bingo, Pick 'Em and prediction results are in",
+    games: "When Live Trivia is about to start at your bar",
+  } satisfies Record<PushCategory, string>,
+  welcomeFootnote: "You can change this any time in the menu.",
+  askTitle: "Want to know when you win?",
+  askBody: "Turn on notifications for your prizes, your results and Live Trivia starting here.",
   askAccept: "Turn on",
   askDecline: "Not now",
   settingsTitle: "Notifications",

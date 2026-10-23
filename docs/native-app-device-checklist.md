@@ -167,9 +167,9 @@ a Pick 'Em pick, or a prize in `/redeem-prizes`).
 Needs the web deploy of Phase 5.1 AND an app rebuilt from `main` after it (the old app has no push plugin, so
 it simply never asks). Use a normal player account, not God Mode.
 
-43. **Never at launch:** a brand-new install, sign in, open a venue where you have 0 points → no "Get a
-    heads-up?" card. Play any game until you have points, come back to Venue Home → the card appears under the
-    Live Trivia box.
+43. **(Changed by 5.3 — the first ask is now the full-screen welcome, section L.)** After the welcome's **Not
+    now**, a venue where you have 0 points → no "Want to know when you win?" card. Play any game until you have
+    points, come back to Venue Home on a LATER launch → the card appears under the Live Trivia box.
 44. **The ask:** tap **Turn on** → the phone asks "Allow Hightop Challenge to send you notifications?" → Allow →
     the card disappears with a buzz. **Not now** instead → the card stays away for 30 days.
 45. **Menu:** open the menu → a **Notifications** block with three switches (Live games starting, Prizes,
@@ -185,6 +185,21 @@ it simply never asks). Use a normal player account, not God Mode.
 49. **Sign Out:** sign out from the menu → pushes stop for that account on this phone; the next person to sign
     in here is asked again (after their first points).
 50. **Website untouched:** in Safari/Chrome (not the app) → no card, no Notifications block, Sign Out unchanged.
+
+## L. Phase 5.3 — the welcome ask (rebuild not needed; web deploy only)
+
+Needs the web deploy of 5.3. To see it again on a phone that already had it: delete and reinstall the app.
+
+51. **Our screen first:** a fresh install, sign in, pick a venue → once Venue Home has loaded, a full screen
+    "Want to know the moment you win?" with three lines (prizes, results, Live Trivia) and **Turn on** / **Not
+    now**. Apple's/Android's own question has NOT appeared yet.
+52. **Turn on:** tap it → now the phone's own question appears → Allow → the screen closes with a buzz; the menu's
+    Notifications block shows the three switches on.
+53. **Not now** (on another fresh install): the screen closes, no phone question. Close the app fully and open it
+    again → no welcome; once you have points, the "Want to know when you win?" card appears on Venue Home.
+54. **No ad in the same visit:** on the launch that showed the welcome, no popup ad appears anywhere until you close
+    and reopen the app. (Only checkable once a popup ad is live.)
+55. **Android Back** on the welcome = Not now. **Website** (Safari/Chrome): never a welcome; popup ads unchanged.
 
 ## Results
 

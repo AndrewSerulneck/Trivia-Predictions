@@ -86,7 +86,7 @@ describe("push: the website and old app builds are untouched", () => {
   it("every app-side entry point checks the plugin first", () => {
     const client = read("lib/nativePush.ts");
     expect(client).toMatch(/hasNativeCapability\(PLUGIN\)/);
-    for (const name of ["enablePush", "shouldAskForPush", "disablePushForSignOut"]) {
+    for (const name of ["enablePush", "shouldAskForPush", "disablePushForSignOut", "shouldShowPushWelcome", "pushWelcomeHoldsPopupAds"]) {
       const start = client.indexOf(`export const ${name} = `);
       expect(start, name).toBeGreaterThan(-1);
       expect(client.slice(start, start + 400), name).toMatch(/isPushAvailable\(\)|isPushOptedIn\(\)/);
@@ -95,6 +95,31 @@ describe("push: the website and old app builds are untouched", () => {
 
   it("no marketing switch exists (it would need its own OFF-by-default opt-in, Apple 4.5.4)", () => {
     expect(read("lib/pushCategories.ts")).toMatch(/export type PushCategory = "games" \| "prizes" \| "results";/);
+  });
+});
+
+describe("push: the first ask is our own screen (Phase 5.3)", () => {
+  it("the welcome lives on Venue Home and waits for the home to be ready", () => {
+    expect(read("components/venue/VenueHubClient.tsx")).toContain("<PushWelcomeScreen ready={contentReady} />");
+    expect(filesMatching(/<PushWelcomeScreen\b/)).toEqual(["components/venue/VenueHubClient.tsx"]);
+  });
+
+  it("the phone's own prompt is asked only from a tap (enablePush), never while deciding", () => {
+    const welcome = read("components/push/PushWelcomeScreen.tsx");
+    expect(welcome).not.toMatch(/requestPermissions|callNative/);
+    expect(welcome.indexOf("enablePush()")).toBeGreaterThan(welcome.indexOf("const accept = async"));
+  });
+
+  it("popup ads ask the welcome first, before any ad request", () => {
+    const ads = read("components/ui/PopupAds.tsx");
+    expect(ads.indexOf("await pushWelcomeHoldsPopupAds()")).toBeGreaterThan(-1);
+    expect(ads.indexOf("await pushWelcomeHoldsPopupAds()")).toBeLessThan(ads.indexOf("await loadSlotAd(slot, options)"));
+  });
+
+  it("the ask promises only the pushes the server sends today (the 'schedules games / adds prizes' line waits for 5.4)", () => {
+    const copy = read("lib/pushCategories.ts");
+    const words = copy.slice(copy.indexOf("export const PUSH_COPY"));
+    expect(words).not.toMatch(/schedul|adds? (new )?(games|prizes)|new game|news/i);
   });
 });
 

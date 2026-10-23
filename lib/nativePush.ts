@@ -13,6 +13,12 @@
 // After that, the app refreshes the registration at most once a day per player and token
 // (`syncPushRegistration`), so `last_seen_at` stays current at ~1 request per player per day.
 //
+// The FIRST ask is our own full screen (Phase 5.3, Andrew: "our screen first"): `PushWelcomeScreen` on
+// Venue Home, once per phone, right after the first sign-in in the app. The phone's own prompt appears only
+// when the player taps "Turn on" there; "Not now" keeps it unasked for the Venue Home card later. While the
+// welcome is still due, and for the rest of the visit it was shown in, popup ads wait
+// (`pushWelcomeHoldsPopupAds`): the two never show in one visit.
+//
 // Sign Out (`performSignOut`) calls `disablePushForSignOut` BEFORE the session cookie is cleared: the
 // server removes the phone, the plugin deletes its token, and the opt-in is forgotten, so the next player
 // on this phone is asked again.
@@ -26,6 +32,10 @@ const DEVICES_ENDPOINT = "/api/push/devices";
 const OPT_IN_KEY = "htc:push-opt-in";
 const REGISTERED_KEY = "htc:push-registered";
 const ASK_DISMISSED_KEY = "htc:push-ask-dismissed-at";
+/** localStorage: this phone has been shown the welcome (once per phone, kept across Sign Out). */
+const WELCOME_SEEN_KEY = "htc:push-welcome-seen-at";
+/** sessionStorage: the welcome was shown in THIS visit (an app launch), so no popup ad until the next one. */
+const WELCOME_VISIT_KEY = "htc:push-welcome-this-visit";
 /** "Not now" keeps the card away this long. */
 export const PUSH_ASK_SNOOZE_MS = 30 * 24 * 60 * 60 * 1000;
 /** A native call that hangs (an iPhone build with no APNs setup) must never hang a screen or Sign Out. */
@@ -53,6 +63,22 @@ const writeKey = (key: string, value: string | null): void => {
     else window.localStorage.setItem(key, value);
   } catch {
     // Private storage off: the app just asks again next time.
+  }
+};
+
+const readVisitFlag = (): boolean => {
+  try {
+    return window.sessionStorage.getItem(WELCOME_VISIT_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const writeVisitFlag = (): void => {
+  try {
+    window.sessionStorage.setItem(WELCOME_VISIT_KEY, "1");
+  } catch {
+    // No session storage: the in-memory answer below still holds the ads for this page's life.
   }
 };
 
@@ -189,9 +215,53 @@ export const setPushPreference = async (category: PushCategory, value: boolean):
   return reply.preferences;
 };
 
-/** Should Venue Home show the "Get a heads-up?" card? (App with push, not on yet, not blocked, not snoozed.) */
+/** Has this phone already had its first ask (the welcome, or a "Not now" on the card before 5.3)? */
+const firstAskDone = (): boolean => Boolean(readKey(WELCOME_SEEN_KEY) || readKey(ASK_DISMISSED_KEY));
+
+/**
+ * Should Venue Home show the full-screen welcome ask? App with push, not on yet, this phone never asked,
+ * and the phone hasn't blocked notifications. No request — one native permission read.
+ */
+export const shouldShowPushWelcome = async (): Promise<boolean> => {
+  if (!isPushAvailable() || isPushOptedIn() || firstAskDone()) return false;
+  const permission = await readPushPermission();
+  return permission === "prompt" || permission === "granted";
+};
+
+let welcomeDue: Promise<boolean> | null = null;
+
+/** The welcome is on screen: never again on this phone, and no popup ad for the rest of this visit. */
+export const markPushWelcomeShown = (nowMs: number = Date.now()): void => {
+  writeKey(WELCOME_SEEN_KEY, String(nowMs));
+  writeVisitFlag();
+  welcomeDue = Promise.resolve(true);
+};
+
+/**
+ * PopupAds asks this before every popup. True while the welcome is still due on this phone (it comes
+ * first) and for the rest of the visit it was shown in. On the website (and app builds without push) it
+ * is false at once, with no storage read. The answer is kept for the page's life, so the round-end retry
+ * loop never re-reads the phone's permission.
+ */
+export const pushWelcomeHoldsPopupAds = async (): Promise<boolean> => {
+  if (!isPushAvailable()) return false;
+  if (readVisitFlag()) return true;
+  welcomeDue ??= shouldShowPushWelcome();
+  return welcomeDue;
+};
+
+/** Test-only: forget the kept answer. */
+export const resetPushWelcomeForTests = (): void => {
+  welcomeDue = null;
+};
+
+/**
+ * Should Venue Home show the "Want to know when you win?" card — the reminder after the welcome? (App with
+ * push, not on yet, the welcome already had its turn and not in this visit, not blocked, not snoozed.)
+ */
 export const shouldAskForPush = async (nowMs: number = Date.now()): Promise<boolean> => {
   if (!isPushAvailable() || isPushOptedIn()) return false;
+  if (!firstAskDone() || readVisitFlag()) return false;
   const dismissedAt = Number(readKey(ASK_DISMISSED_KEY) ?? "");
   if (Number.isFinite(dismissedAt) && dismissedAt > 0 && nowMs - dismissedAt < PUSH_ASK_SNOOZE_MS) return false;
   const permission = await readPushPermission();

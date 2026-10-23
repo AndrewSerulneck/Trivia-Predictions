@@ -132,7 +132,10 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   No new cron. `push_devices` is written only by `lib/push/devices.ts` (route `POST /api/push/devices`, session-bound,
   503 without `SESSION_SECRET`). App side: `lib/nativePush.ts` is the only caller of the `FirebaseMessaging` plugin;
   the ask is `PushPermissionCard` on Venue Home only once the player has points (never at launch), switches are
-  `PushNotificationSettings` in the menu, Sign Out unregisters first. Categories: `games`/`prizes`/`results` only
+  `PushNotificationSettings` in the menu, Sign Out unregisters first. **5.3 (2026-10-23): the FIRST ask is our own
+  full screen, `PushWelcomeScreen` on Venue Home (once per phone, `htc:push-welcome-seen-at`); the OS prompt only on its
+  Turn on; the card is the later reminder. `PopupAds` asks `pushWelcomeHoldsPopupAds()` before every popup — the welcome
+  and a popup ad never share a visit. Words in `PUSH_COPY` promise only pushes the server sends (contract test).** Categories: `games`/`prizes`/`results` only
   (`lib/pushCategories.ts`) — a marketing push needs its own OFF-by-default switch (Apple 4.5.4).
   `tests/push-notifications-contract.test.ts`, `npm run test:push-sql`. iPhone half = Phase 5.2 (signed by the
   paid team as `com.hightopchallenge.app` 2026-10-23; waits on Andrew's APNs key — `…_PHASE_5_2_HANDOFF.md`). Firebase Analytics must stay unlinked.
