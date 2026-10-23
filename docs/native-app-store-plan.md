@@ -940,7 +940,29 @@ the permission moment can all be built and proven before Apple approves the paid
   plugin needs; Andrew creates the APNs `.p8` key in the Apple Developer account and uploads it to Firebase
   (the one step no agent can do). Proven on Andrew's iPhone.
 
-**Partner-sent pushes — NOT in this design yet (open question §6 item 4).** Everything above is
+**Phases 5.3–5.5 (Andrew, 2026-10-23, after his first iPhone push test). Opus 5.5, high.**
+- **Location fix (done in the 5.2 session, 2026-10-23):** "Location took too long" on sign-in and on a venue tap.
+  `lib/geolocation.ts`: in the iPhone app the permission prompt is asked first, untimed
+  (`ensureNativeLocationPermission`), so reading the prompt no longer eats the 8 s budget; `getCurrentLocation`
+  falls back to a quick low-accuracy fix after a precise-fix timeout/unavailable (a denial stays final).
+  Tests: `tests/lib.native-location-budget.test.ts`.
+- **5.3 — the first ask + new wording.** Andrew: "our screen first". After the first sign-in in the app, one
+  full screen of our own ("Want to know the moment you win?" + the benefits) with Turn on / Not now; Apple's
+  popup only on Turn on, so "Not now" keeps it for the in-game card. The Venue Home card stays as the reminder
+  (benefit-led wording, e.g. "Want to know when you win?"). **Ads:** Andrew plans popup ads on the home page next —
+  the welcome screen and a popup ad must never show in the same visit (welcome first; `PopupAds` waits). The
+  wording that promises "when this bar schedules games and adds prizes" ships WITH 5.4, never before (Apple
+  rejects asks that promise pushes the app doesn't send).
+- **5.4 — automatic "new at your bar" pushes.** Andrew: automatic, sent when a partner saves a new game or prize,
+  to players of that bar who leave a new switch on ("News from your bars" — a 4th category in
+  `lib/pushCategories.ts`, explicit consent language on the ask, Apple 4.5.4). Cap: **5 per bar per day**
+  (Andrew: "let partners send up to 5 push notifications per day" — confirm whether that 5 is the automatic
+  game/prize pushes, see 5.5). One bounded audience read + one batched FCM send per event; no new cron.
+- **5.5 (was "5b") — partner-written messages.** Andrew: build with limits, **2 per bar per day**, short
+  (≈150 characters), sent only to that bar's players with "News from your bars" on. Compose box on the Partner
+  Dashboard (website only — never in the app). Needs review/abuse rules (words filter, report, admin kill switch).
+
+**Partner-sent pushes — superseded by 5.5 above (was open question §6 item 4).** Everything above is
 system pushes (game starting, prizes, results). A partner composing a message to "their regulars" (the
 Reel ad's line, `docs/reel-video-assets-plan.md`) is a separate feature: a compose screen on the Partner
 Dashboard (website, never the app), sent only to players of that venue who opted in to marketing pushes

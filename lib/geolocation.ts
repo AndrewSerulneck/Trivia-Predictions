@@ -63,9 +63,31 @@ const withNativeDeadline = <T>(promise: Promise<T>, ms: number): Promise<T> =>
     );
   });
 
+// The plugin asks "Allow location?" inside getCurrentPosition, so a timer started
+// before the answer counts the player's reading time: a slow tap on Allow failed
+// as "took too long" (2026-10-23). Ask first, untimed; the fix gets the full budget.
+const ensureNativeLocationPermission = async (): Promise<void> => {
+  const read = (status: unknown) => String((status as { location?: unknown } | null)?.location ?? "");
+  let state = "";
+  try {
+    state = read(await callNative("Geolocation", "checkPermissions"));
+  } catch {
+    return;
+  }
+  if (!state.startsWith("prompt")) return;
+  let answer = "";
+  try {
+    answer = read(await callNative("Geolocation", "requestPermissions", { permissions: ["location"] }));
+  } catch {
+    return;
+  }
+  if (answer === "denied") throw Object.assign(new Error("Location denied."), { code: "OS-PLUG-GLOC-0003" });
+};
+
 const getNativePosition = async (options: PositionOptions): Promise<Coordinates> => {
   const timeout = options.timeout ?? 10000;
   try {
+    await ensureNativeLocationPermission();
     const position = (await withNativeDeadline(
       callNative("Geolocation", "getCurrentPosition", {
         enableHighAccuracy: options.enableHighAccuracy ?? false,
@@ -140,8 +162,18 @@ function getCurrentPositionWithOptions(options: PositionOptions): Promise<Coordi
   });
 }
 
+const isLocationDenied = (error: unknown): boolean => (error as { code?: unknown } | null)?.code === 1;
+
+// GPS often can't get a precise fix in 8 s indoors (a bar), so a timeout or
+// "unavailable" falls back to the quick Wi-Fi/cell fix before failing. A denial
+// is final. Callers already re-sample when the accuracy is poor.
 export async function getCurrentLocation(): Promise<Coordinates> {
-  return getCurrentPositionWithOptions({ enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
+  try {
+    return await getCurrentPositionWithOptions({ enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
+  } catch (error) {
+    if (isLocationDenied(error)) throw error;
+    return getCurrentPositionWithOptions({ enableHighAccuracy: false, timeout: 8000, maximumAge: 120000 });
+  }
 }
 
 const NATIVE_FALLBACK_MIN_MS = 3000;

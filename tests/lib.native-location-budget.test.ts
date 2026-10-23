@@ -5,16 +5,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // low-accuracy fallback what is left of timeoutMs (at least 3 s).
 
 const callNative = vi.fn();
+// checkPermissions / requestPermissions go here, so callNative only sees location fixes.
+const permissionCall = vi.fn();
 
 vi.mock("@/lib/nativeApp", () => ({
-  callNative: (...args: unknown[]) => callNative(...args),
+  callNative: (plugin: string, method: string, options?: unknown) =>
+    method === "getCurrentPosition" ? callNative(plugin, method, options) : permissionCall(method, options),
   hasNativeCapability: () => true,
   nativePlatform: () => "ios",
 }));
 
 vi.mock("@/lib/googleMapsKeys", () => ({ serverGoogleMapsKey: () => "" }));
 
-const { getBestCurrentLocation } = await import("@/lib/geolocation");
+const { getBestCurrentLocation, getCurrentLocation } = await import("@/lib/geolocation");
 
 type NativeCallOptions = { enableHighAccuracy: boolean; timeout: number; maximumAge: number };
 
@@ -37,6 +40,8 @@ const optionsOfCall = (index: number): NativeCallOptions => callNative.mock.call
 beforeEach(() => {
   vi.useFakeTimers();
   callNative.mockReset();
+  permissionCall.mockReset();
+  permissionCall.mockResolvedValue({ location: "granted" });
 });
 
 afterEach(() => {
@@ -95,5 +100,47 @@ describe("getBestCurrentLocation in the iPhone app", () => {
     // 2800 + 1000 grace, then max(3000, 5500 - 3800) + 1000 grace.
     await vi.advanceTimersByTimeAsync(3800 + 4000);
     await expect(settled).resolves.toBe(3);
+  });
+});
+
+describe("the iPhone app's location permission prompt is not timed (2026-10-23)", () => {
+  it("asks first and starts the fix's clock only after the player answers", async () => {
+    let answer: (value: unknown) => void = () => undefined;
+    permissionCall.mockImplementation((method: string) =>
+      method === "checkPermissions"
+        ? Promise.resolve({ location: "prompt" })
+        : new Promise((resolve) => { answer = resolve; })
+    );
+    callNative.mockImplementation(pluginAnswering(1000, 40.3));
+    const result = getCurrentLocation();
+    // The player reads the prompt for 30 s: no fix asked for yet, nothing times out.
+    await vi.advanceTimersByTimeAsync(30000);
+    expect(callNative).not.toHaveBeenCalled();
+    answer({ location: "granted" });
+    await vi.advanceTimersByTimeAsync(1000);
+    await expect(result).resolves.toMatchObject({ latitude: 40.3 });
+    expect(permissionCall.mock.calls.map((call) => call[0])).toEqual(["checkPermissions", "requestPermissions"]);
+  });
+
+  it("a denial at the prompt fails as denied (code 1), with no fallback fix", async () => {
+    permissionCall.mockImplementation((method: string) =>
+      Promise.resolve({ location: method === "checkPermissions" ? "prompt" : "denied" })
+    );
+    const settled = getCurrentLocation().catch((error: { code?: number }) => error.code);
+    await vi.advanceTimersByTimeAsync(0);
+    await expect(settled).resolves.toBe(1);
+    expect(callNative).not.toHaveBeenCalled();
+  });
+});
+
+describe("getCurrentLocation falls back to a quick fix indoors (2026-10-23)", () => {
+  it("a precise-fix timeout is followed by a low-accuracy fix, not an error", async () => {
+    callNative.mockImplementationOnce(pluginAnswering(null, 0)).mockImplementationOnce(pluginAnswering(700, 40.4));
+    const result = getCurrentLocation();
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(optionsOfCall(0)).toEqual({ enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 });
+    expect(optionsOfCall(1)).toEqual({ enableHighAccuracy: false, timeout: 8000, maximumAge: 120000 });
+    await vi.advanceTimersByTimeAsync(700);
+    await expect(result).resolves.toMatchObject({ latitude: 40.4 });
   });
 });
