@@ -26,12 +26,20 @@ export const STORE_URLS: StoreUrls = { ios: IOS_APP_STORE_URL, android: ANDROID_
 
 export type AppLinkDestination =
   | { kind: "external"; url: string }
-  | { kind: "site"; path: string; host: "play" | "apex" };
+  | { kind: "site"; path: string; host: "play" | "apex" }
+  // Phase 9g: a phone with a live listing sees one small page first. `ipad-maybe` is a
+  // Mac-looking Safari that might be an iPad (iPadOS sends a Mac User-Agent).
+  | { kind: "ask"; device: "ios" | "android" | "ipad-maybe"; storeUrl: string };
+
+/** Safari on a Mac UA: no other browser token. iPadOS 13+ Safari looks exactly like this. */
+const looksLikeMacSafari = (ua: string): boolean =>
+  /Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome|CriOS|Firefox|FxiOS|Edg/.test(ua);
 
 /**
  * Where a tap on /app goes. Never dead-ends:
  * - inside the app: its front door (the player sign-in), never a store;
- * - iPhone/iPad → App Store, Android → Google Play, once that store URL is set;
+ * - iPhone/iPad → the "Get the app?" page (App Store), Android → the same page (Google Play),
+ *   once that store URL is set; a Mac-looking Safari gets the "maybe iPad" form of it;
  * - a store URL still unset → the player sign-in, so a share made today still works;
  * - anything else (desktop, unknown) → `/info#app`, or the sign-in while no listing is live.
  */
@@ -44,10 +52,15 @@ export const decideAppLinkDestination = (
 
   const anyLive = Boolean(stores.ios || stores.android);
   if (/iPhone|iPad|iPod/i.test(ua)) {
-    return stores.ios ? { kind: "external", url: stores.ios } : { kind: "external", url: JOIN_QR_URL };
+    return stores.ios
+      ? { kind: "ask", device: "ios", storeUrl: stores.ios }
+      : { kind: "external", url: JOIN_QR_URL };
   }
   if (/Android/i.test(ua)) {
-    return stores.android ? { kind: "external", url: stores.android } : { kind: "external", url: JOIN_QR_URL };
+    return stores.android
+      ? { kind: "ask", device: "android", storeUrl: stores.android }
+      : { kind: "external", url: JOIN_QR_URL };
   }
+  if (stores.ios && looksLikeMacSafari(ua)) return { kind: "ask", device: "ipad-maybe", storeUrl: stores.ios };
   return anyLive ? { kind: "site", path: "/info#app", host: "apex" } : { kind: "external", url: JOIN_QR_URL };
 };

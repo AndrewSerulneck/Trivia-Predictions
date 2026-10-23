@@ -88,7 +88,8 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
 - **App download link `hightopchallenge.com/app` (Phase 9a, 2026-10-22).** `app/app/route.ts` 302s by User-Agent via
   `decideAppLinkDestination` (`lib/appDownloadLink.ts`): iPhone → App Store, Android → Play, else `/info#app`; store URLs are
   EMPTY constants there until the listings are live (until then everyone lands on the player sign-in); inside the app → the
-  front door. The PATH is permanent (printed on shared pictures; literal, never env). Share cards (9b) print `APP_DOWNLOAD_URL`.
+  front door. **9g (2026-10-23):** once a store URL is set, a phone first sees a tiny page (`lib/appDownloadPage.ts`: "Get the app" /
+  "No thanks, play in the browser"; `decideAppLinkDestination` returns `kind: "ask"`); a Mac-looking Safari = maybe an iPad. The PATH is permanent (printed on shared pictures; literal, never env). Share cards (9b) print `APP_DOWNLOAD_URL`.
 - **Share pictures v2 (Phase 9b, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** "Create story" opens
   READY-MADE designs first (Spotlight / Card / Night, no camera), Story 1080×1920 or Post 1080×1350; "Add a selfie" is the
   old camera flow. A game is a registry entry (`lib/socialShare/shareGames.ts`; no share component/layout branches on a game id,
