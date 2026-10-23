@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ShareWinButton } from "@/components/social-share/ShareWinButton";
 import type { BracketStandingView } from "@/lib/bracketsEntries";
 import type { BracketKind } from "@/lib/brackets/tree";
 import { filterBracketStandings } from "@/lib/bracketsView";
@@ -17,10 +18,13 @@ export function BracketStandings({
   identity,
   tournamentId,
   kind,
+  isComplete,
 }: {
   identity: { userId: string; venueId: string };
   tournamentId: string;
   kind: BracketKind;
+  /** The bracket has finished (phase "complete"): only then is a podium place a result worth sharing. */
+  isComplete: boolean;
 }) {
   const [rows, setRows] = useState<BracketStandingView[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -100,6 +104,10 @@ export function BracketStandings({
           {loading ? "Refreshing…" : "Refresh"}
         </button>
       </div>
+
+      {isComplete && me && me.rank >= 1 && me.rank <= 3 ? (
+        <ShareWinButton gameType="bracket" result={{ finalRank: me.rank, finalPoints: me.score }} />
+      ) : null}
 
       {rows.length > 0 ? (
         <>

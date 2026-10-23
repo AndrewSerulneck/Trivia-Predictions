@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronDown, Trophy } from "lucide-react";
+import { ShareWinButton } from "@/components/social-share/ShareWinButton";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { describeRewardPrize } from "@/lib/rewardDefinitions";
 import type { RewardDiscountKind, RewardMenuItem, RewardPrizeKind } from "@/types";
@@ -320,6 +321,14 @@ export function NFLPickEmLeaderboard({
     Boolean(currentWeekId) &&
     weekId !== currentWeekId;
 
+  // Phase 9c: a decided week where the viewer finished on the podium. Rank and picks are the
+  // server's own standings row (no new request); the live week is never offered.
+  const myRow = mode === "week" ? entries.find((entry) => entry.isCurrentUser) : undefined;
+  const shareableRow =
+    myRow && Boolean(currentWeekId) && weekId !== currentWeekId && myRow.rank >= 1 && myRow.rank <= 3 && myRow.correctPicks > 0
+      ? myRow
+      : null;
+
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
@@ -360,6 +369,13 @@ export function NFLPickEmLeaderboard({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {shareableRow ? (
+        <ShareWinButton
+          gameType="nfl-pickem"
+          result={{ finalRank: shareableRow.rank, finalPoints: shareableRow.correctPicks }}
+        />
+      ) : null}
 
       {showNoRewardNote && (
         <p className="px-1 text-caption font-semibold text-ht-fg-faint">

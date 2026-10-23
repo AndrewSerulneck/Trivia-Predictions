@@ -34,6 +34,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         // Our own plugin must be registered before the bridge is created.
         registerPlugin(HightopShellPlugin.class);
+        registerPlugin(InstagramStoriesPlugin.class); // Phase 9d
         super.onCreate(savedInstanceState);
         // Phase 2E: offline page only for real network failures, "Try again" reloads the
         // failed page, link-out pages open in the browser (HightopWebViewClient).

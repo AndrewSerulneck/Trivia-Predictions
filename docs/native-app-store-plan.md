@@ -8,9 +8,8 @@ through 4b plus review fixes R1–R5 is committed AND pushed to `origin/main` (`
 still blank); (2) Andrew — rebuild the shell from `main` and run 3B.3 + section I of
 `docs/native-app-device-checklist.md`; (3) Phase 4d (no account needed); (4) Phase 5 Android half (needs
 only Firebase — see Phase 5); then, once the paid Apple account exists: Part B (2B), 4c, Phase 5 iOS half,
-6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT (2026-10-22, uncommitted — handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT (2026-10-22, uncommitted — handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** Next: 9c. **Sharing Phases 9a–9f (added
-2026-10-22)** need no Apple account except 9d's in-app Instagram direct-share. **9a can start now** (all of
-Andrew's sharing answers are in; 9e dropped).
+6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** **Phase 9c is BUILT (2026-10-22, uncommitted — handoff `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`).** **Phase 9d is BUILT (2026-10-22, uncommitted — handoff `docs/native-app-store-plan_PHASE_9D_HANDOFF.md`).** Next: 9e (venue Instagram handle + the partner's choice of what a share shows — revived 2026-10-22), then 9g (`/app` "Get the app?" page for phones, added 2026-10-22), then 9f. **Sharing Phases 9a–9g (added
+2026-10-22)** need no Apple account except 9d's in-app Instagram direct-share.
 **Phases 1a and 1b are DONE and deployed (2026-10-08)** — latest handoff
 `docs/native-app-store-plan_PHASE_1B_HANDOFF.md` (1a: `…_PHASE_1A_HANDOFF.md`). Migration
 `20261008044524_player_account_deletion.sql` is applied to production. Phase 0 is Andrew's, in
@@ -240,8 +239,9 @@ Model rule (Andrew): **never more capable than Opus 5.5.** Models: `claude-opus-
 | 9b | Share card v2: ready-made designs (camera never required), "I just won … at <bar>!", bar name + address + QR + app, Story and feed-post sizes | **Opus 5.5** | high | 1–2 sessions |
 | 9c | "Share my win" on every win: prizes, Bingo, Pick 'Em, NFL Pick 'Em, Fantasy, Squares, Bracket | Sonnet 5.5 | medium | 1–2 sessions |
 | 9d | The share sheet: ready-made picks, caption + link, one tap per app; Instagram Stories direct from the app | **Opus 5.5** | high | 1 session |
-| ~~9e~~ | ~~Venue Instagram handle~~ — dropped 2026-10-22 (Andrew: players tag the bar themselves; the share sheet nudges them) | — | — | — |
-| 9f | Review + Andrew's phone pass of every share path | **Opus 5.5** (review) + Andrew | high | 1 session |
+| 9e | Venue Instagram handle (revived 2026-10-22) + the partner picks what a share shows: handle, name, address — all, none or any mix — asked when they set up a Prize or schedule a game; the @handle goes in the caption | **Opus 5.5** | high | 1–2 sessions |
+| 9g | `/app` on a phone asks "Get the app?" first ("Get the app" / "No thanks, play in the browser") instead of jumping straight to a store | Sonnet 5.5 | medium | 1 session |
+| 9f | Review + Andrew's phone pass of every share path (9a–9e, 9g) | **Opus 5.5** (review) + Andrew | high | 1 session |
 
 Phases 0 and 1 run in parallel; Phase 0 is mostly waiting on paperwork. Phase 2 can start once
 Xcode is installed. Free Apple provisioning can put a test build on Andrew's own iPhone before the
@@ -1025,8 +1025,20 @@ whoever sees them to (1) the venue where the player won and (2) the Hightop Chal
    **app download link** `hightopchallenge.com/app` (Phase 9a). The bar is named on the picture and in
    the text only.
 8. **Tagging the bar is left to the player.** The share sheet shows one nudge line, "Tag <bar> in your
-   post". There's no Instagram-handle field and no auto-tag (old Phase 9e dropped).
+   post". There's no auto-tag. **Superseded in part by decision 10.**
 9. **The two wording variants in item 4 are approved** (Andrew, 2026-10-22).
+10. **The venue's Instagram handle goes in the caption (Andrew, 2026-10-22, fourth round: "Let's do the
+    caption").** Instagram and Facebook don't let any app pre-tag an account on a shared picture, and an
+    Instagram Story can't be pre-tagged by any means. What works: the copied caption carries "@thepourhouse",
+    which is a real mention in an Instagram post caption, on X and on Facebook. The handle can also be printed on
+    the picture (not tappable). Phase 9e builds this.
+11. **The partner chooses what a share shows (Andrew, 2026-10-22): "When partners offer prizes and schedule
+    games, let's give them the option to have their instagram handle, name, address (all 3, none or some
+    combination) appear on the social media shareable content."** Three independent on/off choices: handle,
+    name, address. This supersedes decision 3's "every design shows the bar's name and address": that is now
+    the default, not a rule. Phase 9e builds it.
+12. **`/app` may ask "Get the app?" on a phone (Andrew, 2026-10-22: "Plan the above feature").** A small page
+    with "Get the app" and "No thanks, play in the browser" instead of an immediate store redirect. Phase 9g.
 
 **What exists today (verified 2026-10-22).** Built from `docs/bar-victory-story-share-master-plan.md`
 (July 2026) + Phase 4a.1:
@@ -1112,6 +1124,7 @@ Banner and the sign-in pointer.
   existing caption presets stay. Add a "venue" line per category ("Champion at [Venue]").
 
 #### Phase 9c — "Share my win" on every win (Sonnet 5.5, medium)
+**Status: built 2026-10-22, uncommitted. As-built + traps: `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`.**
 - One `ShareWinButton` (wrapping the launcher) placed on: the prize-won moment and each won card in
   `/redeem-prizes` (the gift-card design is the share picture, `PrizeCard` + `prizeCardFace`, no
   second card); Bingo win; Pick 'Em and NFL Pick 'Em weekly results; Fantasy; Squares quarter win;
@@ -1126,17 +1139,25 @@ Banner and the sign-in pointer.
   `tests/native-back-review-fixes.test.ts`.
 
 #### Phase 9d — The share sheet (Opus 5.5, high)
-- After a win: one sheet showing the ready-made designs as tappable thumbnails (Story/Post toggle),
-  the pre-written caption with the venue link (one "Copy caption + link" button), then one row of
-  destinations: **Instagram Story, Instagram post, Facebook, X, Messages/WhatsApp, Save, More**.
-  The Instagram choices copy the caption + link first and say "Paste the link in a link sticker".
-- **Tag nudge (Andrew, 2026-10-22):** one quiet line under the destinations: "Tag <bar> in your post".
-  It's text only: no handle lookup, no auto-tag. The copied caption also ends with the bar's name.
-- **In the app:** Instagram Story = Meta's Sharing to Stories (opens the Story editor with the
-  picture; needs the Meta App ID; capability-checked through `hasNativeCapability`, old app builds
-  fall back to the share sheet). This is a small native plugin in `native/` plus a bridge call.
+**Status: built 2026-10-22, uncommitted. As-built + traps: `docs/native-app-store-plan_PHASE_9D_HANDOFF.md`.**
+- After a win: one sheet (`StoryCaptureModal`, extended — not forked) showing the ready-made designs as
+  tappable thumbnails (Story/Post toggle), the pre-written caption with the app link (one "Copy caption + link"
+  button), then one row of destinations: **Instagram Story, Instagram post, Facebook, X, Messages, Save, More**.
+  Every destination copies the caption + link first; the Instagram ones say "Paste the link in a link sticker"
+  (Story) or "Paste the caption" (post).
+- **What a web page can and can't do (verified 2026-10-22):** a browser can't send a picture to one chosen app.
+  So on the website each destination copies the caption and opens the phone's share sheet with the picture, and
+  says which app to pick. X and Messages keep the text that travels with the picture. Where the browser can't
+  share a picture at all (most desktops): X opens `x.com/intent/post` with the text + link, Save downloads the
+  picture, and the old "Share options" panel (save + open Instagram/Facebook) stays as the last fallback.
+- **Tag nudge (Andrew, 2026-10-22):** one quiet line under the destinations: "Tag <bar> in your post". Text
+  only. Phase 9e turns it into "Tag @handle" and puts the handle in the caption (decision 10).
+- **In the app:** Instagram Story = Meta's Sharing to Stories (opens the Story editor with the picture; needs the
+  Meta App ID, §7). Our own small plugin `InstagramStories` in `native/` (iOS + Android), capability-checked
+  through `hasNativeCapability("InstagramStories")`; old app builds, or a phone without Instagram, fall back to
+  the share sheet. Save in the app = the share sheet ("Save Image"), because the app's web view can't download.
 - Default selection: the first ready-made design (no photo). "Take a selfie instead" is one secondary
-  button in the sheet.
+  button in the sheet; after a selfie is captured the same destinations share it.
 - **Andrew's step — create the Meta App ID (free, ~15 min, before the native half of this phase).**
   Meta renames these screens often; the 9d agent re-checks Meta's "Sharing to Stories" developer doc at
   the start and corrects these steps if they've moved.
@@ -1160,28 +1181,81 @@ Banner and the sign-in pointer.
   7. Copy the **App ID** (a long number at the top of the page) into §7 of this plan. The App ID is
      public and safe to share. **Never copy the App Secret anywhere**: this feature doesn't use it.
      If it's ever pasted somewhere by mistake, reset it on that same page.
-- Native half: the App ID goes in the native shell config (not a secret). iOS needs
-  `instagram-stories` in `LSApplicationQueriesSchemes`; Android uses the
-  `com.instagram.share.ADD_TO_STORY` intent with the Facebook App ID extra. A small plugin in `native/`,
-  capability-checked through `hasNativeCapability`; old app builds fall back to the share sheet.
+- Native half: the App ID goes in `native/capacitor.config.json` `plugins.InstagramStories.facebookAppId` (public,
+  not a secret). iOS needs `instagram-stories` in `LSApplicationQueriesSchemes`, puts the picture on the pasteboard
+  (`com.instagram.sharedSticker.backgroundImage`, 5-minute expiry) and opens
+  `instagram-stories://share?source_application=<App ID>`. Android writes the picture to the app cache, shares it
+  through the existing FileProvider (`${applicationId}.fileprovider`) with the `com.instagram.share.ADD_TO_STORY`
+  intent + the `source_application` extra, and declares `<queries><package android:name="com.instagram.android"/>`
+  (Android 11+ can't see Instagram otherwise). Both need a shell rebuild, and a new app build in the stores.
 - Haptics through `haptic()` only. Native Back closes the sheet (`useNativeBackHandler("overlay", …)`
   and add it to `tests/native-back-review-fixes.test.ts`).
-- Analytics: reuse `lib/analytics.ts` events already wired to the share flow. No new table, no new
-  route.
+- Analytics: reuse `lib/analytics.ts` events already wired to the share flow (the destination goes in
+  `resultReason`). No new table, no new route, no migration.
 
-#### ~~Phase 9e — Venue Instagram handle~~ — DROPPED 2026-10-22
-Andrew: players will tag the bar themselves. The share sheet (9d) shows one nudge line instead. Revive
-this (a `venues.instagram_handle` column + a Partner Dashboard field) only if Andrew asks.
+#### Phase 9e — Venue Instagram handle + what a share shows (Opus 5.5, high) — REVIVED 2026-10-22
+Andrew (decisions 10 and 11): the @handle goes in the caption, and the partner picks which of handle, name and
+address appear on share content (all three, none, or any mix), offered when they set up a Prize or schedule a game.
+- **One setting per venue, asked in both places** (my recommendation, recorded so it isn't re-asked; Andrew can
+  overrule — see §6): a share picture can come from games that are never scheduled and carry no prize (Bingo,
+  Pick 'Em, Fantasy…), so the choice must live on the venue, not on one Prize or one game. The Prize wizard (owner
+  variant only) and the Schedule flow each show the same small "On shared pictures" step/section, pre-filled from
+  the venue's current choice; saving it in either place changes it for the venue. Also editable later from the
+  Partner Dashboard (wherever the venue's details are edited). If Andrew wants it per Prize / per game instead:
+  the Prize's/game's own choice wins on its share, the venue's choice everywhere else.
+- **Data (new migration, `supabase migration new venue_share_details`; `db push` only with Andrew's go-ahead):**
+  `venues.instagram_handle text null` (stored without the "@"; CHECK `^[A-Za-z0-9._]{1,30}$`),
+  `venues.share_show_name boolean not null default true`, `share_show_address boolean not null default true`,
+  `share_show_instagram boolean not null default true`. Defaults = today's pictures unchanged. Altering a table
+  needs no new grant; still follow `supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md`.
+- **Handle input:** accept "@thepourhouse", "thepourhouse" or an `instagram.com/thepourhouse` URL; store the bare
+  handle; refuse anything else with a plain message. We can't verify the partner owns it; that's accepted.
+- **Write path:** one owner route through `withOwnerVenue` (owner auth + the venue is theirs before any write),
+  e.g. `PATCH /api/owner/venues/share-details`; both flows call it. Admin can see/edit it on the venue row.
+- **What each choice does:** name off → the headline drops " at <bar>" ("I just won $15 off my tab!") and the
+  picture's bar line goes; address off → no street/city line; handle on + set → "@thepourhouse" printed under the
+  bar name on the picture and added to the caption ("… at The Pour House! @thepourhouse Play on Hightop Challenge:
+  <link>"), and the share sheet's nudge says "Tag @thepourhouse". All three off → the picture shows only the win +
+  the app panel. The wording stays in `lib/socialShare/copyPresets.ts`; the choice is applied in ONE place (the
+  share payload builder), never per screen or per design.
+- **Players' side, zero new requests:** the columns ride on the venue reads the hub and join list already make
+  (`rememberShareVenue` / `toShareVenue` carry them; bump the localStorage key to `htc_share_venue_v2` so an old
+  cached entry without the choice is re-read). Never fetch the venue just to build a share.
+- Tests: handle parsing table; the choice → headline/picture/caption table (all 8 combinations); every design
+  honours it (`npm run share-card:render -- --sheet` with a handle case); the route's owner-auth; the wizard's
+  admin snapshots unchanged.
+
+#### Phase 9g — `/app` asks "Get the app?" on a phone (Sonnet 5.5, medium) — added 2026-10-22
+Andrew (decision 12). Today `/app` 302s a phone straight to its store (or, until the listings are live, to the player
+sign-in). Change it so a phone sees one small page first:
+- **iPhone / Android, store listing live:** a page with the logo, one line ("Hightop Challenge is better in the
+  app"), a **"Get the app"** button (that phone's store URL) and a **"No thanks, play in the browser"** link to
+  `https://play.hightopchallenge.com` (the player sign-in). **Store URL still empty:** no page — straight to the
+  sign-in exactly as today. **Desktop / unknown:** `/info#app` as today. **Inside the app:** the front door as
+  today. iPad counts as iPhone. No "remember my choice" (one tap either way; no cookie).
+- **The path `/app` never changes** (it's printed in QR codes). The decision stays in `decideAppLinkDestination`
+  (`lib/appDownloadLink.ts`), which gains an "ask" outcome; `app/app/route.ts` returns the small page as HTML
+  (`Cache-Control: private, no-store`, same as today) or redirects. Keep the page tiny and self-contained (no
+  player runtime, no fonts download beyond what next/font already serves, text ≥ 12 px, minimal design). Both
+  choices are plain links, so they work without JavaScript.
+- **Cost:** unchanged — one function call per scan/tap, no DB read. "Get the app" is one extra tap for a phone.
+- Tests: extend the UA → destination table (ask vs redirect vs sign-in, store URLs set/unset); the page's two
+  links; the QR value is still `APP_DOWNLOAD_URL`. Ship it any time; it only shows once Phase 6/7 fill the store
+  URLs.
 
 #### Phase 9f — Review + phone pass (Opus 5.5 review, high + Andrew)
-- `/code-review` of 9a–9d. A device checklist section: every share path on the iPhone app, the
+- `/code-review` of 9a–9e and 9g. A device checklist section: every share path on the iPhone app, the
   Android app, iPhone Safari and Android Chrome. Instagram Story, Instagram post, Facebook,
   Messages, the camera-denied path (ready-made designs still share), and the QR on a posted Story
-  scanned from another phone (lands on the right store, or `play.` before launch).
+  scanned from another phone (lands on the right store, or `play.` before launch). 9d: each destination on each
+  device (which app the share sheet offers, what text arrives), the in-app Instagram Story editor (iPhone and Android,
+  with and without Instagram installed), "Copy caption + link". 9e: a venue with a handle and each show/hide choice.
+  9g: the "Get the app?" page on both phones once the listings are live.
 
 **Order and dependencies:** 9a first (every picture prints its link). 9b and 9c can follow before the store
 listings are live: the badges switch on with Phase 7's flag. 9d's Instagram direct-share needs the
-app build + the Meta App ID; its web half doesn't. **Cost:** $0 recurring: one redirect call per tap on
+app build + the Meta App ID; its web half doesn't. 9e needs a migration (Andrew's `db push` OK). 9g needs nothing,
+but only shows once the store URLs are filled (Phase 6/7). **Cost:** $0 recurring: one redirect call per tap on
 `/app`, no DB reads. All pictures are drawn on the player's phone, with no server
 rendering, no storage and no new cron.
 
@@ -1221,8 +1295,11 @@ rendering, no storage and no new cron.
 6. **Sharing (Phases 9a–9f, 2026-10-22):** answered — no camera required, ready-made content, bar
    name + physical address on every design, no directions, prize named with Andrew's "I just won … off
    my tab at …" line, feed-post size, Andrew creates the Meta App ID (decisions at the top of Phases 9a–9f).
-   All answered 2026-10-22: no public venue page (shares → `/app`), players tag the bar themselves
-   (9e dropped), both wording variants approved.
+   All answered 2026-10-22: no public venue page (shares → `/app`), both wording variants approved, the @handle
+   goes in the caption and the partner picks handle/name/address (9e revived), `/app` asks first on phones (9g).
+7. **Share details per venue or per Prize/game? (9e, 2026-10-22)** The plan makes it ONE choice per venue, offered in
+   both the Prize and Schedule flows, because Bingo/Pick 'Em/Fantasy shares have no Prize or scheduled game. Say if
+   you want each Prize/game to carry its own choice instead.
 
 Answered 2026-10-08 and moved to §2: US-only, remove deleted accounts, retire the PWA prompt and
 keep the browser path, Andrew does the legal review, Android testing on the emulator (no phone). Answered in

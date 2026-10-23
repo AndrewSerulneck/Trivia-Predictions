@@ -160,3 +160,56 @@ export const SHARE_DESIGN_NAMES = {
 
 /** The size toggle. */
 export const SHARE_SIZE_NAMES = { story: "Story", post: "Post" } as const;
+
+// ── The share sheet (Phase 9d) ──
+
+/** The caption box's button. */
+export const SHARE_COPY_CAPTION_LABEL = "Copy caption + link";
+
+/** The one quiet line under the destinations (Andrew, 2026-10-22). Null when the bar isn't known. */
+export const shareTagNudge = (venueName: string | null | undefined): string | null => {
+  const name = venueName?.trim();
+  return name ? `Tag ${name} in your post` : null;
+};
+
+/** What each destination is called, and what the sheet says once it has been tapped. */
+export const SHARE_DESTINATION_COPY = {
+  "instagram-story": {
+    label: "Instagram Story",
+    direct: "Caption + link copied. Paste the link in a link sticker.",
+    viaSheet: "Caption + link copied. Pick Instagram, then Story. Paste the link in a link sticker.",
+  },
+  "instagram-post": {
+    label: "Instagram post",
+    direct: "Caption copied. Pick Instagram, then Feed, and paste the caption.",
+    viaSheet: "Caption copied. Pick Instagram, then Feed, and paste the caption.",
+  },
+  facebook: {
+    label: "Facebook",
+    direct: "Caption copied. Pick Facebook and paste the caption.",
+    viaSheet: "Caption copied. Pick Facebook and paste the caption.",
+  },
+  x: {
+    label: "X",
+    direct: "Opening X with your caption.",
+    viaSheet: "Pick X. Your caption goes with the picture.",
+  },
+  messages: {
+    label: "Messages",
+    direct: "Pick Messages or WhatsApp. Your caption goes with the picture.",
+    viaSheet: "Pick Messages or WhatsApp. Your caption goes with the picture.",
+  },
+  save: {
+    label: "Save",
+    direct: "Picture saved.",
+    viaSheet: "Choose Save Image.",
+  },
+  more: {
+    label: "More",
+    direct: "Pick an app. Your caption goes with the picture.",
+    viaSheet: "Pick an app. Your caption goes with the picture.",
+  },
+} as const;
+
+export const SHARE_CAPTION_COPIED = "Caption + link copied.";
+export const SHARE_CAPTION_COPY_FAILED = "Couldn't copy. Press and hold the caption to copy it.";

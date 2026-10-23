@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { STORY_SHARE_GAME_TYPES } from "@/lib/socialShare/shareGames";
 
 type AnalyticsEvent = {
   requestId?: string;
@@ -126,7 +127,6 @@ const STORY_SHARE_EVENT_TYPES = [
   "story_share_fallback_used",
 ] as const;
 
-const STORY_SHARE_GAME_TYPES = ["live-trivia", "category-blitz"] as const;
 const STORY_TEMPLATE_VARIANTS = ["default", "champion", "top3", "funny", "minimal"] as const;
 const STORY_FALLBACK_MODES = ["web-share", "download", "deep-link", "copy-only"] as const;
 const STORY_EXTERNAL_APP_TARGETS = ["instagram", "facebook"] as const;

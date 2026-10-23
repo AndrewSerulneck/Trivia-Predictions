@@ -27,6 +27,9 @@
     "SystemBars": {
       "style": "DARK"
     },
+    "InstagramStories": {
+      "facebookAppId": "1413553567605243"
+    },
     "HightopShell": {
       "offlinePage": "offline.html",
       "openInBrowser": {

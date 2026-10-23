@@ -45,6 +45,7 @@ class HightopBridgeViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(HightopShellPlugin())
+        bridge?.registerPluginInstance(InstagramStoriesPlugin()) // Phase 9d
         // Registered here (inside loadView), before Capacitor delivers a cold-launch
         // link on its first viewDidAppear, so no link is missed.
         universalLinkObserver = NotificationCenter.default.addObserver(

@@ -97,6 +97,19 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   `public/share/app-download-qr-v1.png` = `APP_DOWNLOAD_URL` (`npm run share:qr`; new value = new file name). Canvas text ≥ 34px
   (= 12px on a phone). The hub remembers its venue for the games (`rememberShareVenue`, zero requests). Visual check:
   `npm run share-card:render -- --sheet` (also decodes every QR).
+- **"Share my win" (Phase 9c, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`).** ONE button,
+  `components/social-share/ShareWinButton.tsx` (wraps `StoryShareLauncher variant="button"`; reads the player from storage, makes
+  no request). A new win screen adds it and is listed in `tests/share-win-button.test.ts`. It only appears on a result the screen
+  already loaded; a prize shares `prizeCardFace` (name only — never a code/QR/card number, tested). Share analytics accept every
+  registry game (`story_share_events_game_type_valid`, migration `20261023004047`, applied).
+- **The share sheet (Phase 9d, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9D_HANDOFF.md`).** Still ONE sheet,
+  `StoryCaptureModal` (never fork it): designs + Story/Post + caption box ("Copy caption + link") + a destinations row
+  (`components/social-share/ShareDestinations.tsx`). What a tap does is pure in `lib/socialShare/shareDestinations.ts`
+  (`planShareDestination`); words in `copyPresets.ts`. The clipboard write starts inside the tap before any await (browsers
+  allow it only then; `lib/copyText.ts`), and the picture still goes with NO `url` field. In the app, Instagram Story uses
+  our plugin `InstagramStories` (`native/…/InstagramStoriesPlugin.{swift,java}`, Meta App ID in
+  `native/capacitor.config.json`; web side `lib/nativeInstagramStories.ts`, capability-checked; old builds → share sheet).
+  Next: 9e (venue @handle + the partner's handle/name/address choice), 9g (`/app` "Get the app?" page), then 9f.
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
   `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
   `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep

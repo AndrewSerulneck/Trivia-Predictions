@@ -14,6 +14,7 @@ import { getUserId, getVenueId } from "@/lib/storage";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
 import { PickEmCollectAnimation } from "@/components/animations/PickEmCollectAnimation";
+import { ShareWinButton } from "@/components/social-share/ShareWinButton";
 import type { AdSlot } from "@/types";
 
 // Historical regular Pick 'Em rows can still be NFL rows from before the
@@ -480,6 +481,16 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt)),
     [pickHistory, selectedDate, toLocalDateKey]
   );
+
+  // Phase 9c: the points of the picks already graded correct on the screen (no new request).
+  const historyWinPoints = useMemo(
+    () =>
+      historicalPicks
+        .filter((pick) => pick.status === "won")
+        .reduce((sum, pick) => sum + Math.max(0, pick.rewardPoints || 10), 0),
+    [historicalPicks]
+  );
+  const todayWinPoints = useMemo(() => games.filter((game) => game.userPickStatus === "won").length * 10, [games]);
 
   useEffect(() => {
     if (!selectedSportSlug || historicalPicks.length === 0) return;
@@ -1002,6 +1013,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                 <h3 className="text-caption font-black uppercase tracking-[0.16em] text-ht-pickem-accent">Your Picks</h3>
                 <span className="text-caption font-bold tracking-[0.03em] text-ht-fg-faint">{historicalPicks.length} picks</span>
               </div>
+              {historyWinPoints > 0 ? (
+                <ShareWinButton gameType="pickem" result={{ finalPoints: historyWinPoints, isChampion: true }} />
+              ) : null}
               <ul className="space-y-2.5">
                 {historicalPicks.map((pick) => {
                   const statusClass =
@@ -1048,6 +1062,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           </div>
         ) : (
           <div className="space-y-4 pb-1">
+            {todayWinPoints > 0 ? (
+              <ShareWinButton gameType="pickem" result={{ finalPoints: todayWinPoints, isChampion: true }} />
+            ) : null}
             {grouped.map(([league, leagueGames]) => (
               <section key={league}>
                 <div className="mb-2 flex items-end justify-between">

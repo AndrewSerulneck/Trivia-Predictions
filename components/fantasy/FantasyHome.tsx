@@ -21,6 +21,7 @@ import type { FantasyEntry, FantasyGame, FantasyLeaderboardEntry, FantasyPlayerP
 import type { FantasyLineupPlayer } from "@/lib/fantasy";
 import type { FantasyPlayerPoolEmptyReason } from "@/lib/fantasy";
 import { FantasySettledCollectAnimation } from "@/components/animations/FantasySettledCollectAnimation";
+import { ShareWinButton } from "@/components/social-share/ShareWinButton";
 
 type GamesPayload = {
   ok: boolean;
@@ -2630,6 +2631,14 @@ export function FantasyHome({ defaultSport = "nba", initialDate = "", initialEnt
                 </div>
               </div>
             </div>
+
+            {/* Phase 9c: a finished game where the venue leaderboard (already loaded) has the viewer on the podium. */}
+            {trackedEntry?.status === "final" && myLeaderboardEntry && myLeaderboardEntry.rank >= 1 && myLeaderboardEntry.rank <= 3 ? (
+              <ShareWinButton
+                gameType="fantasy"
+                result={{ finalRank: myLeaderboardEntry.rank, finalPoints: Math.round(liveTrackedEntryPoints * 10) / 10 }}
+              />
+            ) : null}
 
             {/* Geofence status banner */}
             {!isGeofencePaused && !venuePresence.isInteractionBlocked && hasLiveEntry ? (

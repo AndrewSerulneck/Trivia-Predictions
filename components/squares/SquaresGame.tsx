@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GameAppBar } from "@/components/venue/AppBar";
 import { HightopLoader } from "@/components/ui/HightopLoader";
+import { ShareWinButton } from "@/components/social-share/ShareWinButton";
 import { SquaresCellSheet } from "@/components/squares/SquaresCellSheet";
 import { SquaresGrid } from "@/components/squares/SquaresGrid";
 import { useSquaresData } from "@/components/squares/useSquaresData";
@@ -78,6 +79,8 @@ export function SquaresGame({ onBack }: { /** Injected by GameLandingExperience 
     ? { col: board.event.colTeam.abbreviation, row: board.event.rowTeam.abbreviation }
     : { col: "", row: "" };
   const headline = board && state ? squaresHeadline({ board, state, nowMs }) : null;
+  // Phase 9c: the quarters the board already says are mine (no new request). The picture names the game, not the square.
+  const myWinPoints = rows.filter((row) => row.winner?.mine).reduce((sum, row) => sum + row.points, 0);
 
   return (
     <div className="min-h-[60vh] text-white">
@@ -140,6 +143,10 @@ export function SquaresGame({ onBack }: { /** Injected by GameLandingExperience 
                 ))}
               </ul>
             </section>
+
+            {myWinPoints > 0 ? (
+              <ShareWinButton gameType="squares" result={{ finalPoints: myWinPoints, isChampion: true }} className="px-1" />
+            ) : null}
           </>
         )}
       </div>

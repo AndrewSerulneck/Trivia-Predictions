@@ -299,7 +299,13 @@ export function BracketGame({ onBack }: { /** Injected by GameLandingExperience 
 
             {selected.phase !== "open" && effectiveMode === "bracket" ? <BracketReview key={selected.key} option={selected} seatTeams={seatTeams} /> : null}
             {selected.phase !== "open" && effectiveMode === "standings" && identity ? (
-              <BracketStandings key={selected.key} identity={identity} tournamentId={selected.tournament.id} kind={selected.kind} />
+              <BracketStandings
+                key={selected.key}
+                identity={identity}
+                tournamentId={selected.tournament.id}
+                kind={selected.kind}
+                isComplete={selected.phase === "complete"}
+              />
             ) : null}
           </>
         )}

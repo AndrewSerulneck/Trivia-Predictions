@@ -16,6 +16,7 @@ import { SquareGiftCardPanel } from "@/components/prizes/SquareGiftCardPanel";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { isScannableGiftCardPrize } from "@/lib/pos/prizeDelivery";
 import { PrizeCard } from "@/components/prizes/PrizeCard";
+import { ShareWinButton } from "@/components/social-share/ShareWinButton";
 import {
   prizeCardBack,
   prizeCardFace,
@@ -108,6 +109,8 @@ function WalletPrizeCard({ win, venueName, onRedeem }: WalletPrizeCardProps) {
 
   return (
     // A div, not an <article>: phones pad every .tp-page-main article/section by 0.625rem !important.
+    // The share button (Phase 9c) sits OUTSIDE the item: the item's only button is the card's own action.
+    <div className="space-y-2.5">
     <div data-prize-wallet-item className="space-y-2.5">
       <PrizeCard
         face={walletFaceOf(win, venueName)}
@@ -126,6 +129,9 @@ function WalletPrizeCard({ win, venueName, onRedeem }: WalletPrizeCardProps) {
         </p>
         {scannableLine ? <p className="font-semibold">{SCANNABLE_COUPON_LINE}</p> : null}
       </div>
+    </div>
+      {/* The picture names the prize only, never the code (the face has none). */}
+      <ShareWinButton prize={prizeCardFace(win, venueName)} venueName={venueName} />
     </div>
   );
 }

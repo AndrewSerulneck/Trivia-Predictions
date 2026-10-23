@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+import { ShareWinButton, type ShareWinResult } from "@/components/social-share/ShareWinButton";
 import { LiveDot } from "@/components/venue/GameChrome";
 import { getLeagueDisplay, toMascotMatchup } from "@/lib/sportsBingoLeagues";
 import {
@@ -23,6 +24,9 @@ import {
 //
 // The landscape carousel (`isLandscapeGameView` in `SportsBingoHome.tsx`) is a separate render
 // tree by design and does NOT use this component — see decision 2 in the plan.
+
+/** A Bingo has no ranking: the win is the headline ("I just won Prop Bingo at …"). */
+const BINGO_WIN: ShareWinResult = { isChampion: true };
 
 export type BingoBoardCardProps = {
   card: BingoCard;
@@ -276,6 +280,8 @@ const BingoBoardCardImpl = ({
           </button>
         )}
       </div>
+      {/* Phase 9c: a won board can be shared. The button reads the player from storage, so no prop (the memo is untouched). */}
+      {isWon ? <ShareWinButton gameType="bingo" result={BINGO_WIN} className="mt-2.5" /> : null}
     </article>
   );
 };

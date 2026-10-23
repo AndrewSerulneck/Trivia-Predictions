@@ -3,13 +3,14 @@
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Aperture, Camera, Check, Image as ImageIcon, LayoutTemplate, RotateCcw, Share2, X } from "lucide-react";
+import { Aperture, Camera, Check, LayoutTemplate, RotateCcw, X } from "lucide-react";
 import {
   createStoryShareAnalyticsId,
   trackStoryCameraPermissionResult,
   trackStoryCaptureCompleted,
   trackStoryShareAttempted,
   trackStoryShareCompleted,
+  trackStoryShareFallbackUsed,
   trackStoryShareOpened,
   type StoryShareAnalyticsContext,
 } from "@/lib/analytics";
@@ -21,7 +22,19 @@ import {
 import { setScrollLock } from "@/lib/scrollLock";
 import { StoryCanvasRenderError } from "@/lib/socialShare/storyCanvas";
 import { APP_DOWNLOAD_URL } from "@/lib/appDownloadLink";
-import { SHARE_DESIGN_NAMES, SHARE_SIZE_NAMES } from "@/lib/socialShare/copyPresets";
+import { copyText } from "@/lib/copyText";
+import { haptic } from "@/lib/haptics";
+import { isNativeApp, openInSystemBrowser } from "@/lib/nativeApp";
+import { canShareImageNatively } from "@/lib/nativeImageShare";
+import { canShareToInstagramStory, shareToInstagramStory } from "@/lib/nativeInstagramStories";
+import {
+  SHARE_CAPTION_COPIED,
+  SHARE_CAPTION_COPY_FAILED,
+  SHARE_DESIGN_NAMES,
+  SHARE_SIZE_NAMES,
+  shareTagNudge,
+} from "@/lib/socialShare/copyPresets";
+import { planShareDestination, xIntentUrl, type ShareDestination } from "@/lib/socialShare/shareDestinations";
 import {
   STORY_SHARE_SIZE_ORDER,
   STORY_SHARE_SIZES,
@@ -39,6 +52,7 @@ import {
 import { CameraViewport, type CameraViewportState } from "./CameraViewport";
 import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { ShareActionsSheet } from "./ShareActionsSheet";
+import { ShareCaption, ShareDestinationRow } from "./ShareDestinations";
 import { StoryOverlayEditor, StoryOverlayPreview } from "./StoryOverlayEditor";
 import { StoryShareStatusToast, type StoryShareStatusTone } from "./StoryShareStatusToast";
 import { useSharePictures } from "./useSharePictures";
@@ -97,7 +111,7 @@ function getDesignStatusCopy(ready: boolean, failed: boolean): string {
 function getShareStatusCopy(shareState: StoryNativeShareState, shareResult: StorySharePipelineResult | null): string | null {
   if (shareState === "sharing") return "Opening share sheet.";
   if (shareResult?.status === "shared") return "Shared successfully.";
-  if (shareResult?.status === "canceled") return "Share canceled. Fallbacks are ready.";
+  if (shareResult?.status === "canceled") return "Share canceled.";
   if (shareResult?.status === "unsupported") return "Share sheet unavailable. Fallbacks are ready.";
   if (shareResult?.status === "failed") return "Share failed. Fallbacks are ready.";
   return null;
@@ -164,6 +178,10 @@ export function StoryCaptureModal({
   const [mode, setMode] = useState<StoryShareMode>("designs");
   const [size, setSize] = useState<StoryShareSize>("story");
   const [chosenDesign, setChosenDesign] = useState<StoryShareDesign | null>(null);
+  // What the sheet says after a destination or the copy button is tapped (Phase 9d).
+  const [destinationHint, setDestinationHint] = useState<string | null>(null);
+  // In the app: this build has the Instagram Stories plugin and Instagram is installed. Asked once per open.
+  const [instagramStoryDirect, setInstagramStoryDirect] = useState(false);
   const sessionRef = useRef<StoryCameraSession | null>(null);
   const requestIdRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -343,12 +361,12 @@ export function StoryCaptureModal({
     }
   }, [activePreparedStory.renderSpec, analyticsContext, onCaptureComplete, state]);
 
-  const shareCapturedStory = useCallback(async () => {
-    if (shareCapturedStoryPendingRef.current) return;
+  const shareCapturedStory = useCallback(async (destination: ShareDestination = "more"): Promise<StorySharePipelineResult | null> => {
+    if (shareCapturedStoryPendingRef.current) return null;
     shareCapturedStoryPendingRef.current = true;
     try {
       if (!shareBlob || nativeShareState === "sharing") {
-        return;
+        return null;
       }
 
       setNativeShareState("sharing");
@@ -367,16 +385,18 @@ export function StoryCaptureModal({
         ...analyticsContext,
         shareStatus: result.status,
         fallbackRecommended: result.fallbackRecommended,
-        resultReason: result.reason ?? null,
+        resultReason: result.reason ? `${destination}: ${result.reason}` : destination,
       });
       if (result.status === "shared") {
         setNativeShareState("shared");
         setFallbackOpen(false);
-        return;
+        return result;
       }
 
       setNativeShareState("fallback");
-      setFallbackOpen(true);
+      // A dismissed share sheet needs no rescue panel: the destinations row is still right there.
+      setFallbackOpen(result.status !== "canceled");
+      return result;
 
     } finally {
       shareCapturedStoryPendingRef.current = false;
@@ -387,7 +407,61 @@ export function StoryCaptureModal({
     setNativeShareState("idle");
     setShareResult(null);
     setFallbackOpen(false);
+    setDestinationHint(null);
   }, []);
+
+  const copyCaption = useCallback(async () => {
+    haptic("selection");
+    const copied = await copyText(activePreparedStory.shareText);
+    setDestinationHint(copied ? SHARE_CAPTION_COPIED : SHARE_CAPTION_COPY_FAILED);
+  }, [activePreparedStory.shareText]);
+
+  // One tap per app (Phase 9d; the rules are pure in lib/socialShare/shareDestinations.ts).
+  const pickDestination = useCallback(async (destination: ShareDestination) => {
+    if (!shareBlob || nativeShareState === "sharing") return;
+    const fileName = getStoryShareFileName(activePreparedStory, size);
+    const file = webStoryPlatform.createShareFile({ blob: shareBlob, fileName });
+    const plan = planShareDestination(destination, {
+      instagramStoryDirect,
+      canSharePicture: webStoryPlatform.canShareFile(file) || canShareImageNatively(),
+      inApp: isNativeApp(),
+    });
+    haptic("selection");
+    // Started inside the tap, before any await: browsers allow a clipboard write (and the share
+    // sheet) only from a tap.
+    const copied = plan.copyCaption ? copyText(activePreparedStory.shareText) : Promise.resolve(true);
+    setDestinationHint(null);
+
+    if (plan.action === "download") {
+      const result = webStoryPlatform.saveImage({ blob: shareBlob, fileName });
+      trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "download", resultReason: `${destination}: ${result.reason ?? result.status}` });
+      setDestinationHint(result.status === "saved" ? plan.hint : "Couldn't save the picture. Try More instead.");
+      return;
+    }
+    if (plan.action === "x-intent") {
+      const url = xIntentUrl(activePreparedStory.shareText);
+      const opened = isNativeApp() ? await openInSystemBrowser(url) : window.open(url, "_blank", "noopener") !== null;
+      trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "copy-only", resultReason: `${destination}: ${opened ? "opened" : "blocked"}` });
+      setDestinationHint(opened ? plan.hint : "Couldn't open X. Try More instead.");
+      return;
+    }
+    if (plan.action === "instagram-story-native") {
+      trackStoryShareAttempted(analyticsContext);
+      const outcome = await shareToInstagramStory(shareBlob);
+      trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "deep-link", externalAppTarget: "instagram", resultReason: `${destination}: ${outcome}` });
+      if (outcome === "opened") {
+        setDestinationHint((await copied) ? plan.hint : SHARE_CAPTION_COPY_FAILED);
+        return;
+      }
+      // Instagram was removed since the sheet opened, or the plugin failed: the share sheet instead.
+      if (outcome === "unavailable") setInstagramStoryDirect(false);
+    }
+    const result = await shareCapturedStory(destination);
+    // No share sheet at all (most desktops): the "Share options" panel takes over, so no app hint.
+    if (!result || result.status === "unsupported" || result.status === "failed") return;
+    const sheetPlan = planShareDestination(destination, { instagramStoryDirect: false, canSharePicture: true, inApp: isNativeApp() });
+    setDestinationHint(plan.copyCaption && !(await copied) ? SHARE_CAPTION_COPY_FAILED : sheetPlan.hint);
+  }, [activePreparedStory, analyticsContext, instagramStoryDirect, nativeShareState, shareBlob, shareCapturedStory, size]);
 
   const chooseDesign = useCallback((next: StoryShareDesign) => {
     setChosenDesign(next);
@@ -462,6 +536,7 @@ export function StoryCaptureModal({
         setMode("designs");
         setSize("story");
         setChosenDesign(null);
+        setDestinationHint(null);
         if (shouldResetStoryShareId) {
           setStoryShareId(createStoryShareAnalyticsId());
         }
@@ -474,6 +549,18 @@ export function StoryCaptureModal({
       trackStoryShareOpened(analyticsContextRef.current);
     }
   }, [isOpen, resetCapturedImage, stopSession]);
+
+  // In the app only (zero work on the website): one bridge call per open — is Instagram installed?
+  useEffect(() => {
+    if (!isOpen || !isNativeApp()) return;
+    let canceled = false;
+    void canShareToInstagramStory().then((available) => {
+      if (!canceled) setInstagramStoryDirect(available);
+    });
+    return () => {
+      canceled = true;
+    };
+  }, [isOpen]);
 
   // The camera's permission state is read only once the player asks for a selfie.
   useEffect(() => {
@@ -561,11 +648,11 @@ export function StoryCaptureModal({
   const canShare = shareBlob !== null && nativeShareState !== "sharing";
   const shareStatusCopy = getShareStatusCopy(nativeShareState, shareResult);
   const captureStatusCopy = getCaptureStatusCopy(captureState, captureError);
-  const statusCopy = inCamera
+  const statusCopy = destinationHint ?? (inCamera
     ? shareStatusCopy ?? captureStatusCopy ?? getStatusCopy(state, error)
-    : shareStatusCopy ?? getDesignStatusCopy(designPicture !== null, picturesFailed);
+    : shareStatusCopy ?? getDesignStatusCopy(designPicture !== null, picturesFailed));
   const captureButtonLabel = captureState === "capturing" ? "Capturing" : captureState === "captured" ? "Retake" : "Capture";
-  const shareButtonLabel = nativeShareState === "sharing" ? "Sharing" : nativeShareState === "shared" ? "Shared" : "Share";
+  const tagNudge = shareTagNudge(activePreparedStory.payload.venueName);
   const showFallbackActions = fallbackOpen && shareBlob !== null;
   const sizeSpec = STORY_SHARE_SIZES[size];
   const statusIsAlert = Boolean(
@@ -653,7 +740,8 @@ export function StoryCaptureModal({
             </>
           ) : (
             <>
-              <div className="flex min-h-0 flex-1 items-center justify-center">
+              {/* Never collapses on a short phone (iPhone SE): the sheet scrolls instead. */}
+              <div className="flex min-h-[14rem] flex-1 items-center justify-center">
                 {designPicture ? (
                   <img
                     src={designPicture.url}
@@ -701,15 +789,19 @@ export function StoryCaptureModal({
                   );
                 })}
               </div>
+              <ShareCaption caption={activePreparedStory.shareText} onCopy={() => void copyCaption()} />
             </>
           )}
+          {inCamera && capturedBlob ? (
+            <ShareCaption caption={activePreparedStory.shareText} onCopy={() => void copyCaption()} />
+          ) : null}
           {showFallbackActions ? (
             <ShareActionsSheet
               imageBlob={shareBlob}
               fileName={getStoryShareFileName(activePreparedStory, size)}
               shareResult={shareResult}
               analyticsContext={analyticsContext}
-              onRetryNativeShare={shareCapturedStory}
+              onRetryNativeShare={() => void shareCapturedStory()}
               sharing={nativeShareState === "sharing"}
               onClose={() => setFallbackOpen(false)}
               linkShare={{
@@ -726,25 +818,19 @@ export function StoryCaptureModal({
           <div className="mt-2">
             <StoryShareStatusToast tone={getShareToastTone(nativeShareState, shareResult)} message={shareStatusCopy} />
           </div>
-          {inCamera && capturedBlob ? (
-            <div className="mt-2 flex items-center justify-center gap-2 text-caption font-black uppercase tracking-[0.12em] text-emerald-300">
-              <ImageIcon className="h-4 w-4" aria-hidden="true" />
-              PNG ready
-            </div>
-          ) : null}
           {inCamera ? (
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="mt-3 grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={startCamera}
                 disabled={!canStart}
                 aria-busy={state === "requesting"}
-                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(34,211,238,0.22)] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-1.5 rounded-full border border-cyan-200/40 bg-cyan-300 px-3 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(34,211,238,0.22)] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
               >
                 {state === "denied" || state === "unsupported" || state === "error" ? (
-                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                  <RotateCcw className="h-4 w-4 shrink-0" aria-hidden="true" />
                 ) : (
-                  <Camera className="h-4 w-4" aria-hidden="true" />
+                  <Camera className="h-4 w-4 shrink-0" aria-hidden="true" />
                 )}
                 {getPrimaryButtonLabel(state)}
               </button>
@@ -753,56 +839,40 @@ export function StoryCaptureModal({
                 onClick={captureStoryImage}
                 disabled={!canCapture || nativeShareState === "sharing"}
                 aria-busy={captureState === "capturing"}
-                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-emerald-200/40 bg-emerald-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(52,211,153,0.18)] transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-1.5 rounded-full border border-emerald-200/40 bg-emerald-300 px-3 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(52,211,153,0.18)] transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
               >
                 {captureState === "captured" ? (
-                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                  <RotateCcw className="h-4 w-4 shrink-0" aria-hidden="true" />
                 ) : (
-                  <Aperture className="h-4 w-4" aria-hidden="true" />
+                  <Aperture className="h-4 w-4 shrink-0" aria-hidden="true" />
                 )}
                 {captureState === "capturing" ? <ButtonSpinner /> : null}{captureButtonLabel}
               </button>
               <button
                 type="button"
-                onClick={shareCapturedStory}
-                disabled={!canShare}
-                aria-busy={nativeShareState === "sharing"}
-                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-amber-200/40 bg-amber-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(251,191,36,0.16)] transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
-              >
-                <Share2 className="h-4 w-4" aria-hidden="true" />
-                {nativeShareState === "sharing" ? <ButtonSpinner /> : null}{shareButtonLabel}
-              </button>
-              <button
-                type="button"
                 onClick={backToDesigns}
-                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.08] px-5 text-sm font-black text-white transition hover:bg-white/[0.12] "
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.08] px-3 text-sm font-black text-white transition hover:bg-white/[0.12] "
               >
-                <LayoutTemplate className="h-4 w-4" aria-hidden="true" />
+                <LayoutTemplate className="h-4 w-4 shrink-0" aria-hidden="true" />
                 Designs
               </button>
             </div>
-          ) : (
-            <div className="mt-3 grid grid-cols-[1fr_auto] gap-3">
-              <button
-                type="button"
-                onClick={shareCapturedStory}
-                disabled={!canShare}
-                aria-busy={nativeShareState === "sharing"}
-                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-amber-200/40 bg-amber-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(251,191,36,0.16)] transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
-              >
-                <Share2 className="h-4 w-4" aria-hidden="true" />
-                {nativeShareState === "sharing" ? <ButtonSpinner /> : null}{shareButtonLabel}
-              </button>
-              <button
-                type="button"
-                onClick={openCamera}
-                disabled={nativeShareState === "sharing"}
-                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.08] px-5 text-sm font-black text-white transition hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-60 "
-              >
-                <Camera className="h-4 w-4" aria-hidden="true" />
-                Add a selfie
-              </button>
+          ) : null}
+          {!inCamera || capturedBlob ? (
+            <div className="mt-3">
+              <ShareDestinationRow onPick={(destination) => void pickDestination(destination)} disabled={!canShare} nudge={tagNudge} />
             </div>
+          ) : null}
+          {inCamera ? null : (
+            <button
+              type="button"
+              onClick={openCamera}
+              disabled={nativeShareState === "sharing"}
+              className="tp-player-pressable tp-clean-button mx-auto mt-2 flex h-10 items-center justify-center gap-2 rounded-full px-4 text-sm font-black text-slate-300 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Camera className="h-4 w-4" aria-hidden="true" />
+              Take a selfie instead
+            </button>
           )}
         </footer>
       </div>

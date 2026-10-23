@@ -53,6 +53,8 @@ export type NativePlatform = "ios" | "android";
  *   light theme — lib/nativeStatusBar.ts).
  * - `SystemBars`: Capacitor's own core plugin; it re-applies its icon style when an Android phone
  *   rotates, so a style change goes to it too (lib/nativeStatusBar.ts).
+ * - `InstagramStories`: our own plugin (native/…/InstagramStoriesPlugin) — opens Instagram's Story
+ *   editor with a share picture (Phase 9d, lib/nativeInstagramStories.ts).
  */
 export type NativeCapability =
   | "App"
@@ -63,7 +65,8 @@ export type NativeCapability =
   | "Filesystem"
   | "CapacitorBarcodeScanner"
   | "StatusBar"
-  | "SystemBars";
+  | "SystemBars"
+  | "InstagramStories";
 
 const UA_TOKEN_PATTERN = /HightopChallengeApp\/(\d+(?:\.\d+){0,2})\s*\((ios|android)\)/;
 

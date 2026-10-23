@@ -48,6 +48,12 @@
         </provider>
     </application>
 
+    <!-- Phase 9d: Android 11+ hides other apps unless they are declared here. Lets the
+         InstagramStories plugin find Instagram's "Add to Story" screen. -->
+    <queries>
+        <package android:name="com.instagram.android" />
+    </queries>
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
