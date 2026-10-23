@@ -52,7 +52,10 @@ export default function PrivacyPage() {
             </>,
             <>
               <strong>Notifications.</strong> In-app notifications about prizes and games are saved to your account. If
-              we offer phone push notifications, we will ask first, and we will store a device token to deliver them.
+              you turn on phone notifications in the app, we store your phone&apos;s notification token, the app version,
+              the venue you last played at and your notification choices, and use them only to send you those
+              notifications. Signing out or deleting your account removes them; you can also switch each kind off in
+              the app&apos;s menu or in your phone&apos;s settings.
             </>,
             <>
               <strong>Camera.</strong> If a version of the app offers a QR scanner, the camera is used only to read the
@@ -92,8 +95,9 @@ export default function PrivacyPage() {
           and Anthropic (to judge whether a Category Blitz answer fits its category and to screen answers for hateful
           or explicit content before they appear on a venue screen; only the answers and their categories are sent,
           never your username or account details). Venue partners who connect Square or Clover share
-          prize and redemption information with that provider. If we add phone push notifications we will also use
-          Google Firebase Cloud Messaging and Apple&apos;s notification service.
+          prize and redemption information with that provider. Phone notifications are delivered through Google Firebase
+          Cloud Messaging and Apple&apos;s notification service, which receive your phone&apos;s notification token and
+          the message text.
         </p>
         <p>
           We show the venue where you play your username, points and prize redemptions so it can run the competition

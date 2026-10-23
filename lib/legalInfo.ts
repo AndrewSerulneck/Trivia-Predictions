@@ -14,7 +14,7 @@ export const GOVERNING_LAW_STATE = "New Jersey";
 export const SUPPORT_EMAIL = "support@hightopchallenge.com";
 
 /** "Last updated" date printed on each legal page. Bump when its text changes. */
-export const LEGAL_LAST_UPDATED = "October 21, 2026";
+export const LEGAL_LAST_UPDATED = "October 23, 2026";
 
 export type LegalLink = { label: string; href: string };
 

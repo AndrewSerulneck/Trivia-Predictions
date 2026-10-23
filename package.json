@@ -14,6 +14,7 @@
     "test:owner-history-sql": "node scripts/test-owner-history-sql.cjs",
     "test:account-deletion-sql": "PLAYER_DELETE_PGLITE_MODULE=../tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite node scripts/test-player-account-deletion.cjs",
     "test:seasonal-points-sql": "node scripts/test-seasonal-points-sql.cjs",
+    "test:push-sql": "node scripts/test-push-sql.cjs",
     "test:squares-sql": "node scripts/test-squares-sql.cjs",
     "test:brackets-sql": "node scripts/test-brackets-sql.cjs",
     "test:multi-venue-billing-sql": "MULTI_VENUE_PGLITE_MODULE=${MULTI_VENUE_PGLITE_MODULE:-../tmp/bingo-phase4-pg/node_modules/@electric-sql/pglite} node scripts/test-multi-venue-billing-sql.cjs",

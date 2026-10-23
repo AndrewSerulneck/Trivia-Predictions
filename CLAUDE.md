@@ -123,6 +123,19 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   = no bar at all, never the screen's own name. Partners edit it in ONE panel, `components/owner/share/ShareDetailsPanel.tsx` (Schedule Review, the
   owner wizard's `confirmExtra`, Game Settings; admin venue form with `host="admin"`), saved on its own via
   `PATCH /api/owner/venues/share-details` (owner auth + venue check first) or `/api/admin/venues/share-details`.
+- **Phone push (Phase 5.1, 2026-10-23; handoff `docs/native-app-store-plan_PHASE_5_1_HANDOFF.md`; migration
+  `20261023105750` applied).** Firebase Cloud Messaging, no SDK on the server: `lib/push/fcm.ts` is the only reader
+  of `FCM_SERVICE_ACCOUNT_JSON` (unset → every sweep returns before any read). The hook is the `notifications`
+  TABLE, not `createNotification()` (ten writers incl. two SQL functions): `claim_notification_pushes` stamps
+  `pushed_at` once, run by `lib/push/outbox.ts` at the end of `/api/cron/bingo-progress`; "Live Trivia starts soon"
+  is `lib/push/gameReminders.ts` in `/api/cron/resolve-live-trivia-winners`, once per game via `push_game_reminders`.
+  No new cron. `push_devices` is written only by `lib/push/devices.ts` (route `POST /api/push/devices`, session-bound,
+  503 without `SESSION_SECRET`). App side: `lib/nativePush.ts` is the only caller of the `FirebaseMessaging` plugin;
+  the ask is `PushPermissionCard` on Venue Home only once the player has points (never at launch), switches are
+  `PushNotificationSettings` in the menu, Sign Out unregisters first. Categories: `games`/`prizes`/`results` only
+  (`lib/pushCategories.ts`) — a marketing push needs its own OFF-by-default switch (Apple 4.5.4).
+  `tests/push-notifications-contract.test.ts`, `npm run test:push-sql`. iPhone half = Phase 5.2 (signed by the
+  paid team as `com.hightopchallenge.app` 2026-10-23; waits on Andrew's APNs key — `…_PHASE_5_2_HANDOFF.md`). Firebase Analytics must stay unlinked.
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
   `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
   `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep

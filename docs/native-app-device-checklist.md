@@ -162,6 +162,30 @@ a Pick 'Em pick, or a prize in `/redeem-prizes`).
     and Game Settings. Change in one → the others show it. A bad handle ("my bar!") → a plain message, nothing
     saved. Turn Wi-Fi off, open Game Settings → "Couldn't load this setting" and a "Try again" button (9f.5); turn Wi-Fi on, tap it → the setting loads. Switch venue (if you have two) → the box shows that venue's choices, never the other's half-edited ones.
 
+## K. Phase 5 — push notifications (Android now; iPhone after Phase 5.2)
+
+Needs the web deploy of Phase 5.1 AND an app rebuilt from `main` after it (the old app has no push plugin, so
+it simply never asks). Use a normal player account, not God Mode.
+
+43. **Never at launch:** a brand-new install, sign in, open a venue where you have 0 points → no "Get a
+    heads-up?" card. Play any game until you have points, come back to Venue Home → the card appears under the
+    Live Trivia box.
+44. **The ask:** tap **Turn on** → the phone asks "Allow Hightop Challenge to send you notifications?" → Allow →
+    the card disappears with a buzz. **Not now** instead → the card stays away for 30 days.
+45. **Menu:** open the menu → a **Notifications** block with three switches (Live games starting, Prizes,
+    Results), all on. Turn **Results** off, close and reopen the menu → still off.
+46. **A real push:** win a prize (or have one awarded) with the app in the background → within about a minute a
+    notification with a small "H" icon. Tap it → the app opens on Redeem Prizes. Swipe the app away first and
+    repeat → it still opens on Redeem Prizes.
+47. **Live Trivia reminder:** at a venue whose Live Trivia starts within 30 minutes (the 5-minute check runs
+    then), the last venue you used on this phone → "Live Trivia starts soon — 8:00 PM at <bar>. Tap to play."
+    once, never twice for the same game.
+48. **Blocked in Settings:** turn notifications off for the app in the phone's Settings → the menu says they are
+    turned off in Settings; no card nags.
+49. **Sign Out:** sign out from the menu → pushes stop for that account on this phone; the next person to sign
+    in here is asked again (after their first points).
+50. **Website untouched:** in Safari/Chrome (not the app) → no card, no Notifications block, Sign Out unchanged.
+
 ## Results
 
 | # | iPhone | Android | Notes |

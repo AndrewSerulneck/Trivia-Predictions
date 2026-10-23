@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AppearancePicker } from "@/components/navigation/AppearancePicker";
+import { InviteFriendButton } from "@/components/social-share/InviteFriendButton";
+import { PushNotificationSettings } from "@/components/push/PushNotificationSettings";
 import { SignOutButton } from "@/components/navigation/SignOutButton";
 import { marketingHref } from "@/lib/domainSplit";
 import { PLAYER_DELETE_ACCOUNT_PATH } from "@/lib/accountDeletionShared";
@@ -119,6 +121,15 @@ export function AccountMenuList({ onNavigate, hasUnclaimedPrize = false }: Accou
             <AppearancePicker />
           </li>
         ) : null}
+        {/* Phone push switches (native app plan Phase 5.1). Renders nothing on the website and in
+            app builds without the push plugin. */}
+        <li className="!mt-4 empty:hidden">
+          <PushNotificationSettings />
+        </li>
+        {/* Phase 4d: a quiet permanent invite row, last before the delete/legal/Sign Out block. */}
+        <li className="!mt-4 flex justify-center">
+          <InviteFriendButton />
+        </li>
         {/* Account deletion (Apple 5.1.1(v) / Google Play). Deliberately a quiet text
             link, and kept away from Sign Out: the legal row and the divider sit between
             them. The page behind it asks for typed confirmation. */}

@@ -8,7 +8,7 @@ through 4b plus review fixes R1–R5 is committed AND pushed to `origin/main` (`
 still blank); (2) Andrew — rebuild the shell from `main` and run 3B.3 + section I of
 `docs/native-app-device-checklist.md`; (3) Phase 4d (no account needed); (4) Phase 5 Android half (needs
 only Firebase — see Phase 5); then, once the paid Apple account exists: Part B (2B), 4c, Phase 5 iOS half,
-6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** **Phases 9c + 9d are BUILT and pushed (`678e680`; handoffs `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`, `…_PHASE_9D_HANDOFF.md`).** **Phase 9e is BUILT and pushed (`20a97e2`, 2026-10-22; migration `20261023011500` applied to production 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** **Phase 9f review is DONE (2026-10-22; handoff `docs/native-app-store-plan_PHASE_9F_HANDOFF.md`): 16 fixes scheduled as 9f.1–9f.6 + an iPad fix folded into 9g; Andrew's phone pass = section J of `docs/native-app-device-checklist.md`.** **Phase 9f.1 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_1_HANDOFF.md`).** **Phase 9f.2 is BUILT (2026-10-22, not committed; iPhone check pending; handoff `docs/native-app-store-plan_PHASE_9F_2_HANDOFF.md`).** **Phase 9f.3 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_3_HANDOFF.md`).** **Phase 9f.4 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_4_HANDOFF.md`).** **Phase 9f.5 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_5_HANDOFF.md`).** **Phase 9f.6 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_6_HANDOFF.md`).** 9f.1–9f.6 are DEPLOYED (`6047f68`, 2026-10-23) and the build is installed on his iPhone. **Phase 9g is BUILT (2026-10-23; handoff `docs/native-app-store-plan_PHASE_9G_HANDOFF.md`).** Next: Andrew's section J (item 33 = the 9f.2 iPhone check). **Sharing Phases 9a–9g (added
+6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** **Phases 9c + 9d are BUILT and pushed (`678e680`; handoffs `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`, `…_PHASE_9D_HANDOFF.md`).** **Phase 9e is BUILT and pushed (`20a97e2`, 2026-10-22; migration `20261023011500` applied to production 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** **Phase 9f review is DONE (2026-10-22; handoff `docs/native-app-store-plan_PHASE_9F_HANDOFF.md`): 16 fixes scheduled as 9f.1–9f.6 + an iPad fix folded into 9g; Andrew's phone pass = section J of `docs/native-app-device-checklist.md`.** **Phase 9f.1 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_1_HANDOFF.md`).** **Phase 9f.2 is BUILT (2026-10-22, not committed; iPhone check pending; handoff `docs/native-app-store-plan_PHASE_9F_2_HANDOFF.md`).** **Phase 9f.3 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_3_HANDOFF.md`).** **Phase 9f.4 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_4_HANDOFF.md`).** **Phase 9f.5 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_5_HANDOFF.md`).** **Phase 9f.6 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_6_HANDOFF.md`).** 9f.1–9f.6 are DEPLOYED (`6047f68`, 2026-10-23) and the build is installed on his iPhone. **Phase 9g is BUILT (2026-10-23; handoff `docs/native-app-store-plan_PHASE_9G_HANDOFF.md`).** Next: Andrew's section J (item 33 = the 9f.2 iPhone check). **Phase 5.1 (push: server, website, Android) is BUILT and verified end to end on the Android emulator (2026-10-23, not committed, not deployed; migration `20261023105750` applied to production; `FCM_SERVICE_ACCOUNT_JSON` set in Vercel Production + Preview; handoff `docs/native-app-store-plan_PHASE_5_1_HANDOFF.md`). **Phase 5.2 (iPhone) is BUILT AND SIGNED (2026-10-23): the Part B signing switch is done (paid team `2U7HMXGQM3`, bundle `com.hightopchallenge.app`, push + associated-domains entitlements wired) and the build is installed on Andrew's iPhone; 4d + 5.1 + 5.2 committed and pushed. It waits on Andrew's APNs key upload, then the section K iPhone test — handoff `docs/native-app-store-plan_PHASE_5_2_HANDOFF.md`.** **Sharing Phases 9a–9g (added
 2026-10-22)** need no Apple account except 9d's in-app Instagram direct-share.
 **Phases 1a and 1b are DONE and deployed (2026-10-08)** — latest handoff
 `docs/native-app-store-plan_PHASE_1B_HANDOFF.md` (1a: `…_PHASE_1A_HANDOFF.md`). Migration
@@ -229,9 +229,9 @@ Model rule (Andrew): **never more capable than Opus 5.5.** Models: `claude-opus-
 | 3B.3 | Rebuild the shell, Andrew's device + phone-browser check | Andrew (+ Sonnet 5.5, low) | low | ~15 min |
 | 4a | Native share + haptics | Sonnet 5.5 | medium | 1 session |
 | 4b | In-app QR scanner | Sonnet 5.5 | high | 1 session |
-| 4d | "Invite a friend" on the venue home, after a win, short leaderboards, account drawer (placement list in the 4B handoff) | Sonnet 5.5 | low–medium | short |
+| 4d | "Invite a friend" on the venue home, after a win, short leaderboards, account drawer (placement list in the 4B handoff) | Sonnet 5.5 | low–medium | short | **built 2026-10-23, uncommitted** — `docs/native-app-store-plan_PHASE_4D_HANDOFF.md` |
 | 4c | Face ID passkeys in the app (based on the Phase 2 result) | **Opus 5.5** | **xhigh** | 1–2 sessions |
-| 5 | Push notifications (device registry, sending, preferences) | **Opus 5.5** | high | 2 sessions |
+| 5 | Push notifications (device registry, sending, preferences) — 5.1 server/website/Android **built 2026-10-23** (`…_PHASE_5_1_HANDOFF.md`); 5.2 iPhone **signed + installed 2026-10-23, waits on the APNs key + device test** (`…_PHASE_5_2_HANDOFF.md`) | **Opus 5.5** | high | 2 sessions |
 | 6 | Store listings, privacy labels, reviewer account, TestFlight/internal test, submit | Sonnet 5.5 (copy) + Andrew (clicks) | medium | 1 session + review wait |
 | 7 | App Store / Google Play badges on `/info` and the player sign-in, Smart App Banner, `/app` redirect link | Sonnet 5.5 | medium | 1 session |
 | 8 | Release process doc + first native update dry run | Haiku 4.5 | low | short |
@@ -921,6 +921,24 @@ After 3B.1 and 3B.2 are deployed and the shell rebuilt:
 project (Phase 0 item 6), not the Google Play account, so the device registry, sending, preferences and
 the permission moment can all be built and proven before Apple approves the paid account. The iOS half
 (APNs `.p8` key uploaded to Firebase, the Push Notifications capability) follows on the same code.
+
+**The two sessions (split 2026-10-23, Opus 5.5, high; handoffs `…_PHASE_5_1_HANDOFF.md`, `…_PHASE_5_2_HANDOFF.md`).**
+- **5.1 — server, website and Android.** Migration (`push_devices`, `push_game_reminders`,
+  `notifications.pushed_at`, `claim_notification_pushes` RPC) + SQL proof; `lib/push/*` (FCM HTTP v1
+  sender with no SDK, the notification outbox, the game-starting sweep); `POST /api/push/devices`
+  (register / preferences / unregister, bound to the signed session); the app-only permission card after
+  the player's first points at a venue, the Notifications settings in the account drawer, tap-to-open,
+  unregister in `performSignOut`; `@capacitor-firebase/messaging` in the shell, the Firebase Android app
+  and `google-services.json`; the FCM sender credential (`FCM_SERVICE_ACCOUNT_JSON`, Andrew approved
+  2026-10-23) and applying the migration (approved 2026-10-23). Proven end to end on the Android emulator.
+  **The outbox hook is the `notifications` table itself, not `createNotification()`:** eight TypeScript
+  files and two SQL functions (Bingo grading, prediction settlement) insert notifications directly, so a
+  per-minute claim of new rows (inside the existing `/api/cron/bingo-progress`, after the Bingo refresh)
+  is the only hook that catches every writer. No new cron.
+- **5.2 — iPhone.** Firebase iOS app + `GoogleService-Info.plist`, the Push Notifications capability and
+  `aps-environment` entitlement, Background Modes → Remote notifications, the AppDelegate APNs hand-off the
+  plugin needs; Andrew creates the APNs `.p8` key in the Apple Developer account and uploads it to Firebase
+  (the one step no agent can do). Proven on Andrew's iPhone.
 
 **Partner-sent pushes — NOT in this design yet (open question §6 item 4).** Everything above is
 system pushes (game starting, prizes, results). A partner composing a message to "their regulars" (the

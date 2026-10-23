@@ -37,6 +37,15 @@
 
         </activity>
 
+        <!-- Push notifications (Phase 5.1, @capacitor-firebase/messaging): the small status-bar icon and
+             its tint for pushes Firebase draws while the app is in the background. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_notify" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/htc_notify_accent" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

@@ -2,4 +2,6 @@
 <resources>
     <!-- The site's dark navy canvas (Tailwind slate-950), used behind the system bars. -->
     <color name="htc_canvas">#020617</color>
+    <!-- Push notification accent (Phase 5.1): the site's light-theme cyan, readable on a light shade. -->
+    <color name="htc_notify_accent">#0E7490</color>
 </resources>

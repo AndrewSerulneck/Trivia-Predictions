@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "256711123965",
+    "project_id": "hightop-challenge-fdca1",
+    "storage_bucket": "hightop-challenge-fdca1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:256711123965:android:363e1937afd172e4056f94",
+        "android_client_info": {
+          "package_name": "com.hightopchallenge.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfSL6Kd9x9QgmpsQFqwuCZFmzUSVrHOiE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

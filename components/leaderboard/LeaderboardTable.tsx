@@ -5,8 +5,12 @@ import { ChevronDown } from "lucide-react";
 import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { getUserId } from "@/lib/storage";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { InviteFriendButton } from "@/components/social-share/InviteFriendButton";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import type { AdSlot, LeaderboardEntry } from "@/types";
+
+/** A board this short gets an "Invite a friend" prompt (Phase 4d). */
+const SHORT_BOARD_MAX = 3;
 
 type LeaderboardTimeframe = "today" | "week" | "month" | "year" | "all-time";
 type LeaderboardGameFilter =
@@ -470,6 +474,9 @@ export function LeaderboardTable({
       ) : entries.length === 0 ? (
         <div className="rounded-ht-md border border-ht-border-hairline bg-ht-elevated p-4 text-sm text-ht-fg-muted">
           {emptyMessage}
+          <div className="mt-3 flex justify-center">
+            <InviteFriendButton />
+          </div>
         </div>
       ) : (
         <>
@@ -579,6 +586,12 @@ export function LeaderboardTable({
               </tbody>
             </table>
           </div>
+          {entries.length <= SHORT_BOARD_MAX ? (
+            <div className="mt-3 flex flex-col items-center gap-1 text-center">
+              <p className="text-sm text-ht-fg-muted">Not many players yet.</p>
+              <InviteFriendButton />
+            </div>
+          ) : null}
         </>
       )}
       {mobileBottomSpacer ? <div aria-hidden="true" className="h-[50svh] min-h-[14rem] md:hidden" /> : null}

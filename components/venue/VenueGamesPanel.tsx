@@ -4,6 +4,8 @@ import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import React from "react";
 import Image from "next/image";
+import { InviteFriendButton } from "@/components/social-share/InviteFriendButton";
+import { PushPermissionCard } from "@/components/push/PushPermissionCard";
 import type { VenueGameCardConfig, VenueGameKey } from "@/lib/venueGameCards";
 import {
   formatBadgeCount,
@@ -76,6 +78,8 @@ type VenueGamesPanelProps = {
   categoryBlitzSessionActive?: boolean;
   onGoTo: (dest: VenueGameKey, sourceElement: HTMLElement | null) => void;
   onRetryBadges: () => void;
+  /** The player has points here (has played a game): the app may ask about push now (Phase 5.1). */
+  pushAskEligible?: boolean;
 };
 
 function VenueGamesPanelInner({
@@ -96,6 +100,7 @@ function VenueGamesPanelInner({
   categoryBlitzSessionActive = false,
   onGoTo,
   onRetryBadges,
+  pushAskEligible = false,
 }: VenueGamesPanelProps) {
   return (
     <section className="venue-screen relative m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
@@ -168,6 +173,8 @@ function VenueGamesPanelInner({
               </button>
             </div>
           </div>
+
+          <PushPermissionCard eligible={pushAskEligible} />
 
           <div className="space-y-3">
             {orderedHomeCards.map((card) => {
@@ -258,6 +265,10 @@ function VenueGamesPanelInner({
               );
             })}
           </div>
+        </div>
+
+        <div className="mt-3 flex justify-center">
+          <InviteFriendButton />
         </div>
 
         {badgeError ? (

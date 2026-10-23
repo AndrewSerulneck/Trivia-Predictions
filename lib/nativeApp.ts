@@ -55,6 +55,8 @@ export type NativePlatform = "ios" | "android";
  *   rotates, so a style change goes to it too (lib/nativeStatusBar.ts).
  * - `InstagramStories`: our own plugin (native/…/InstagramStoriesPlugin) — opens Instagram's Story
  *   editor with a share picture (Phase 9d, lib/nativeInstagramStories.ts).
+ * - `FirebaseMessaging`: @capacitor-firebase/messaging — phone push notifications (Phase 5,
+ *   lib/nativePush.ts is its only caller).
  */
 export type NativeCapability =
   | "App"
@@ -66,7 +68,8 @@ export type NativeCapability =
   | "CapacitorBarcodeScanner"
   | "StatusBar"
   | "SystemBars"
-  | "InstagramStories";
+  | "InstagramStories"
+  | "FirebaseMessaging";
 
 const UA_TOKEN_PATTERN = /HightopChallengeApp\/(\d+(?:\.\d+){0,2})\s*\((ios|android)\)/;
 

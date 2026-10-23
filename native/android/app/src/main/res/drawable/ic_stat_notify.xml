@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Push notification status-bar icon (docs/native-app-store-plan.md Phase 5.1). Android draws small
+     icons as a white silhouette, so a full-colour launcher icon would show as a white square. A bold
+     "H" until a designed silhouette of the logo replaces it (same file name, same shape rules). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M5,3h4.25v7h5.5V3H19v18h-4.25v-7.25h-5.5V21H5z" />
+</vector>

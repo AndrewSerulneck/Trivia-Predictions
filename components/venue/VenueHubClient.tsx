@@ -1634,6 +1634,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           categoryBlitzSessionActive={categoryBlitzSessionActive}
           onGoTo={handleGoTo}
           onRetryBadges={retryBadges}
+          pushAskEligible={menuPoints > 0}
         />
 
         <VenueLeaderboardPanel

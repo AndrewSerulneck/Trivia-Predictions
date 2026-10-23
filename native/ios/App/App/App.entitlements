@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Associated Domains for the PAID Apple team only (docs/native-app-store-plan.md Phase 3 / Part B).
-  NOT referenced by the Xcode project yet: a free Personal Team cannot sign this entitlement,
-  so wiring it now would break every device build. When the Organization team is approved,
-  in the same change: PRODUCT_BUNDLE_IDENTIFIER = com.hightopchallenge.app, DEVELOPMENT_TEAM =
-  the new Team ID, CODE_SIGN_ENTITLEMENTS = App/App.entitlements (both configs), and set
-  APPLE_TEAM_ID in Vercel so /.well-known/apple-app-site-association names this app.
+  Signed by the PAID Apple team 2U7HMXGQM3 (Hightop Challenge LLC). Wired 2026-10-23 (Phase 5.2 / Part B):
+  PRODUCT_BUNDLE_IDENTIFIER = com.hightopchallenge.app, DEVELOPMENT_TEAM = 2U7HMXGQM3 and
+  CODE_SIGN_ENTITLEMENTS = App/App.entitlements in both configs. A free Personal Team cannot sign these
+  entitlements. APPLE_TEAM_ID in Vercel makes /.well-known/apple-app-site-association name this app.
   - applinks:play.hightopchallenge.com  → the join QR and shared game links open the app.
     (Never the apex: marketing pages there are sent OUT of the app.)
   - webcredentials:hightopchallenge.com → passkeys (RP ID hightopchallenge.com, lib/webauthn.ts).
+  - aps-environment → push notifications (Phase 5.2). "development" here; an App Store / TestFlight export
+    re-signs it as "production" from the distribution profile. The paid team's App ID needs the Push
+    Notifications capability (Xcode adds it with automatic signing).
 -->
 <plist version="1.0">
 <dict>
@@ -18,5 +19,7 @@
 		<string>applinks:play.hightopchallenge.com</string>
 		<string>webcredentials:hightopchallenge.com</string>
 	</array>
+	<key>aps-environment</key>
+	<string>development</string>
 </dict>
 </plist>

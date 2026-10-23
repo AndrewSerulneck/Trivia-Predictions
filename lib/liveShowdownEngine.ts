@@ -1540,6 +1540,44 @@ export async function findOccurrencesToSeed(
   return targets;
 }
 
+/**
+ * Every occurrence that has NOT started yet and starts within `aheadMs` — for the "Live Trivia starts
+ * soon" push (lib/push/gameReminders.ts). Same source of truth as the seeder and the winner resolver
+ * (enumerateScheduleOccurrences), plus the schedule's timezone so the push can say the local start time.
+ */
+export async function findStartingOccurrences(
+  nowMs: number,
+  aheadMs: number
+): Promise<Array<LiveOccurrenceSeedTarget & { timezone: string }>> {
+  const rows = await loadScheduleRows();
+  const targets: Array<LiveOccurrenceSeedTarget & { timezone: string }> = [];
+
+  for (const row of rows) {
+    const venueId = toSafeVenueId(String(row.venue_id ?? ""));
+    if (!venueId) continue;
+
+    const rounds = clampRounds(Number(row.num_rounds));
+    const timezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
+    const seenOccurrenceDates = new Set<string>();
+    for (const occurrence of enumerateScheduleOccurrences(row, nowMs)) {
+      if (occurrence.startMs <= nowMs || occurrence.startMs - nowMs > aheadMs) continue;
+      if (seenOccurrenceDates.has(occurrence.occurrenceDate)) continue;
+      seenOccurrenceDates.add(occurrence.occurrenceDate);
+      targets.push({
+        scheduleId: row.id,
+        occurrenceDate: occurrence.occurrenceDate,
+        venueId,
+        numRounds: rounds,
+        startMs: occurrence.startMs,
+        endMs: occurrence.endMs,
+        timezone,
+      });
+    }
+  }
+
+  return targets;
+}
+
 // How far back the winner-resolver sweep looks for games that have finished but
 // not yet been resolved. Generous relative to the cron's cadence so a few missed
 // runs (deploy, outage) still get picked up — resolution is idempotent, so

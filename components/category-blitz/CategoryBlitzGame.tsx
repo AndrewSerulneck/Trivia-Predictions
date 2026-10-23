@@ -34,6 +34,7 @@ import { useAnimationTrigger } from "@/components/animations/AnimationTriggerPro
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import DevAnimationPanel from "@/components/category-blitz/DevAnimationPanel";
 import { RankBadge } from "@/components/trivia/RankBadge";
+import { InviteFriendButton } from "@/components/social-share/InviteFriendButton";
 import { ShareLinkButton } from "@/components/social-share/ShareLinkButton";
 import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
 import { INVITE_FRIEND_PAYLOAD } from "@/lib/nativeShare";
@@ -1145,6 +1146,7 @@ function CompleteScreen({
           className="border-emerald-300/30 bg-emerald-300/[0.08]"
         />
       ) : null}
+      {storySharePayload ? <InviteFriendButton tone="game" /> : null}
 
       {!isContinuous && <NextGameStatus info={nextWindowInfo} />}
 

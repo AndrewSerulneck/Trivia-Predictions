@@ -99,4 +99,20 @@ describe("wiring", () => {
       expect(read(file)).not.toMatch(/callNative\(/);
     }
   });
+
+  it("\"Invite a friend\" is one component, placed on the four player surfaces and nowhere partner-side (Phase 4d)", () => {
+    for (const file of [
+      "components/venue/VenueGamesPanel.tsx",
+      "components/leaderboard/LeaderboardTable.tsx",
+      "components/navigation/AccountMenuList.tsx",
+      "components/category-blitz/CategoryBlitzGame.tsx",
+      "app/trivia/live/page.tsx",
+    ]) {
+      expect(read(file)).toContain("<InviteFriendButton");
+    }
+    expect(read("components/social-share/InviteFriendButton.tsx")).toContain("INVITE_FRIEND_PAYLOAD");
+    for (const file of ["app/owner/dashboard/page.tsx", "components/venue-screen/SquaresTvScreen.tsx", "components/join/JoinFlow.tsx"]) {
+      expect(read(file)).not.toContain("InviteFriendButton");
+    }
+  });
 });

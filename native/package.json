@@ -9,6 +9,7 @@
     "android": "cap open android"
   },
   "dependencies": {
+    "@capacitor-firebase/messaging": "^8.5.2",
     "@capacitor/android": "8.5.3",
     "@capacitor/app": "^8.1.2",
     "@capacitor/barcode-scanner": "^3.1.3",

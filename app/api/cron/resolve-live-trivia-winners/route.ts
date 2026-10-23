@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isCronAuthorized } from "@/lib/cronAuth";
 import { resolveRankedPlaceRewards } from "@/lib/liveTriviaRankedRewards";
 import { resolveGameWinnerRewards } from "@/lib/liveTriviaWinnerRewards";
+import { sendLiveGameStartPushes } from "@/lib/push/gameReminders";
 
 // Awards "winner of the game" rewards for Live Trivia occurrences that have
 // finished, then settles weekly 1st/2nd/3rd ("ranked_places") rewards whose week's
@@ -9,6 +10,9 @@ import { resolveGameWinnerRewards } from "@/lib/liveTriviaWinnerRewards";
 // what closes out a game and a week. Both are idempotent (see
 // lib/liveTriviaWinnerRewards.ts and lib/liveTriviaRankedRewards.ts), so running
 // every few minutes is safe and a missed run self-heals on the next sweep.
+//
+// It also sends the "Live Trivia starts soon" phone pushes (docs/native-app-store-plan.md Phase 5.1,
+// lib/push/gameReminders.ts; once per game, nothing at all while push is not configured).
 //
 // Each sweep runs in its own try/catch: one throwing never stops the other. The
 // game-winner report stays at the top level of the response (its shape before the
@@ -43,13 +47,23 @@ export async function POST(request: Request) {
     console.error("[RankedReward] sweep-failed", { message: rankedPlacesError });
   }
 
-  const ok = gameWinnerError === null && rankedPlacesError === null;
+  let gameStartPushes: Awaited<ReturnType<typeof sendLiveGameStartPushes>> | null = null;
+  let gameStartPushesError: string | null = null;
+  try {
+    gameStartPushes = await sendLiveGameStartPushes(nowMs);
+  } catch (error) {
+    gameStartPushesError = errorMessage(error, "Failed to send game-start pushes.");
+    console.error("[Push] game-reminders-failed", { message: gameStartPushesError });
+  }
+
+  const ok = gameWinnerError === null && rankedPlacesError === null && gameStartPushesError === null;
   return NextResponse.json(
     {
       ok,
       ...(gameWinner ?? {}),
       ...(gameWinnerError !== null ? { error: gameWinnerError } : {}),
       rankedPlaces: rankedPlaces ?? { error: rankedPlacesError },
+      gameStartPushes: gameStartPushes ?? { error: gameStartPushesError },
     },
     { status: ok ? 200 : 500 },
   );

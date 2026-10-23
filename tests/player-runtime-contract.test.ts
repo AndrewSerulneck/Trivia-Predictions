@@ -28,6 +28,9 @@ const DEFERRED = [
   "MobileAdhesionAd",
 ] as const;
 
+/** Deferred AND rendered only inside the native app (phone push, native app plan Phase 5.1). */
+const APP_ONLY = ["NativePushRuntime"] as const;
+
 describe("isPlayerRuntimePath", () => {
   it("is true for player surfaces", () => {
     for (const path of ["/", "/join", "/venue/abc", "/trivia/live", "/bingo", "/pickem", "/info", "/tv"]) {
@@ -102,8 +105,15 @@ describe("PlayerRuntime loads each runtime in its own chunk", () => {
     // All five render null on the server today, so nothing leaves the markup.
     const dynamicCalls = RUNTIME_CODE.match(/dynamic\(/g) ?? [];
     const ssrFalse = RUNTIME_CODE.match(/ssr: false/g) ?? [];
-    expect(dynamicCalls.length).toBe(DEFERRED.length);
-    expect(ssrFalse.length).toBe(DEFERRED.length);
+    expect(dynamicCalls.length).toBe(DEFERRED.length + APP_ONLY.length);
+    expect(ssrFalse.length).toBe(DEFERRED.length + APP_ONLY.length);
+  });
+
+  it("renders the app-only runtimes only inside the app, so browsers never fetch their chunk", () => {
+    for (const name of APP_ONLY) {
+      expect(RUNTIME, name).toMatch(new RegExp(`const ${name} = dynamic\\(`));
+      expect(RUNTIME_CODE, name).toMatch(new RegExp(`\\{isApp \\? <${name} /> : null\\}`));
+    }
   });
 
   it("gates on the shared predicate, never a hand-rolled prefix check", () => {

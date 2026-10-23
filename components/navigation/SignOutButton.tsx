@@ -6,6 +6,7 @@ import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/lib/auth";
 import { hardClearAuthAndCache } from "@/lib/authFastPath";
+import { disablePushForSignOut } from "@/lib/nativePush";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SignOutButton — "leave your account".
@@ -52,6 +53,7 @@ const DEFAULT_REDIRECT: Record<SignOutVariant, string | null> = {
  * needs the sequence without this button's markup — prefer the component.
  *
  * Player teardown, in order:
+ *   0. disablePushForSignOut() — app only, capped (see PUSH_UNREGISTER_CEILING_MS).
  *   1. POST /api/join/logout   — the ONLY way to expire the HttpOnly `tp_sess`
  *      cookie (JS cannot clear it). `keepalive` so it survives the redirect.
  *   2. hardClearAuthAndCache() — aborts in-flight auth requests, then
@@ -70,7 +72,21 @@ const DEFAULT_REDIRECT: Record<SignOutVariant, string | null> = {
  */
 const LOGOUT_WAIT_CEILING_MS = 4000;
 
+/**
+ * Player, in the app only: the phone leaves push (docs/native-app-store-plan.md Phase 5.1) BEFORE the
+ * logout POST, because removing it needs the session the logout expires. Resolves at once on the
+ * website; capped in the app so a dead network never holds Sign Out.
+ */
+const PUSH_UNREGISTER_CEILING_MS = 2500;
+
 export async function performSignOut(variant: SignOutVariant): Promise<void> {
+  if (variant === "player") {
+    await Promise.race([
+      disablePushForSignOut().catch(() => {}),
+      new Promise((resolve) => setTimeout(resolve, PUSH_UNREGISTER_CEILING_MS)),
+    ]);
+  }
+
   const logout = fetch(LOGOUT_ENDPOINT[variant], { method: "POST", keepalive: true }).catch(() => {});
 
   if (variant === "player") {

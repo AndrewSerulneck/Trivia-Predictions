@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { isPlayerRuntimePath } from "@/lib/playerRuntimePaths";
+import { useIsNativeApp } from "@/lib/useIsNativeApp";
 
 /**
  * The five browser-only runtimes that belong to PLAYER surfaces, loaded on
@@ -57,6 +58,12 @@ const MobileAdhesionAd = dynamic(
   { ssr: false }
 );
 
+// Phone push (native app plan Phase 5.1): rendered only inside the app, so browsers never fetch it.
+const NativePushRuntime = dynamic(
+  () => import("@/components/push/NativePushRuntime").then((m) => m.NativePushRuntime),
+  { ssr: false }
+);
+
 /**
  * Mounts the player-only runtime, and only on player paths.
  *
@@ -66,6 +73,7 @@ const MobileAdhesionAd = dynamic(
  */
 export const PlayerRuntime = (): React.ReactElement | null => {
   const pathname = usePathname();
+  const isApp = useIsNativeApp();
 
   if (!isPlayerRuntimePath(pathname)) {
     return null;
@@ -78,6 +86,7 @@ export const PlayerRuntime = (): React.ReactElement | null => {
       <AnalyticsRuntime />
       <PopupAds />
       <MobileAdhesionAd />
+      {isApp ? <NativePushRuntime /> : null}
     </>
   );
 };

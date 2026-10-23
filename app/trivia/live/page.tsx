@@ -27,6 +27,7 @@ import { ReadyPrompt } from "@/components/trivia/ReadyPrompt";
 import { RoundStartCountdownOverlay } from "@/components/animations/RoundStartCountdownOverlay";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
+import { InviteFriendButton } from "@/components/social-share/InviteFriendButton";
 import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
 import { VenuePresenceBoundary, useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { buildLiveTriviaStorySharePayload } from "@/lib/socialShare/storyPayloads";
@@ -1458,6 +1459,7 @@ function LiveShowdownPageContent() {
                         buttonLabel="Create story"
                       />
                     ) : null}
+                    {liveTriviaStorySharePayload ? <InviteFriendButton tone="game" /> : null}
 
                     {/* Section 5 — Back to venue */}
                     <button
@@ -1578,6 +1580,7 @@ function LiveShowdownPageContent() {
                         buttonLabel="Create story"
                       />
                     ) : null}
+                    {liveTriviaStorySharePayload ? <InviteFriendButton tone="game" /> : null}
 
                     {/* Back to venue */}
                     <button
