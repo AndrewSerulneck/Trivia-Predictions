@@ -1,11 +1,13 @@
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { readCachedVenues } from "@/lib/venues";
+import { DEFAULT_VENUE_SHARE_DETAILS, parseInstagramHandle } from "@/lib/venueShareDetails";
 import type { Venue } from "@/types";
-import type { StoryShareVenueAddress } from "./contracts";
+import type { StorySharePayload, StoryShareVenueAddress } from "./contracts";
 
 /**
- * The bar on a share picture: its name and physical address (street + city), never
- * directions (docs/native-app-store-plan.md Phases 9a–9f decision 3).
+ * The bar on a share picture: its name, physical address (street + city, never directions —
+ * docs/native-app-store-plan.md Phases 9a–9f decision 3) and Instagram handle, each shown only
+ * if the venue's partner chose it (Phase 9e, one choice per venue).
  *
  * Zero requests in the usual case: the venue hub remembers the venue it already loaded
  * (`rememberShareVenue`), and a game screen reads it back. Only when nothing is remembered
@@ -17,11 +19,15 @@ export type ShareVenue = {
   id: string;
   name: string;
   address: StoryShareVenueAddress | null;
+  /** Without the "@"; null = none set. */
+  instagram: string | null;
+  show: { name: boolean; address: boolean; instagram: boolean };
 };
 
 type VenueAddressFields = Pick<Venue, "street" | "address" | "city" | "state">;
 
-const STORAGE_KEY = "htc_share_venue_v1";
+// v2 (Phase 9e): adds `instagram` + `show`; a v1 entry is ignored and re-read.
+const STORAGE_KEY = "htc_share_venue_v2";
 
 const clean = (value: string | null | undefined): string | null => {
   const text = (value ?? "").replace(/\s+/g, " ").trim();
@@ -43,16 +49,34 @@ export const formatShareVenueAddress = (venue: VenueAddressFields): StoryShareVe
   return { street, locality };
 };
 
-export const toShareVenue = (venue: Venue): ShareVenue => ({
-  id: venue.id,
-  name: getVenueDisplayName(venue),
-  address: formatShareVenueAddress(venue),
-});
+export const toShareVenue = (venue: Venue): ShareVenue => {
+  const handle = parseInstagramHandle(venue.instagramHandle);
+  return {
+    id: venue.id,
+    name: getVenueDisplayName(venue),
+    address: formatShareVenueAddress(venue),
+    instagram: handle.ok ? handle.handle : null,
+    show: {
+      name: venue.shareShowName ?? DEFAULT_VENUE_SHARE_DETAILS.showName,
+      address: venue.shareShowAddress ?? DEFAULT_VENUE_SHARE_DETAILS.showAddress,
+      instagram: venue.shareShowInstagram ?? DEFAULT_VENUE_SHARE_DETAILS.showInstagram,
+    },
+  };
+};
 
 const isShareVenue = (value: unknown): value is ShareVenue => {
   if (!value || typeof value !== "object") return false;
   const record = value as Record<string, unknown>;
-  return typeof record.id === "string" && typeof record.name === "string";
+  const show = record.show as Record<string, unknown> | null | undefined;
+  return (
+    typeof record.id === "string" &&
+    typeof record.name === "string" &&
+    (record.instagram === null || typeof record.instagram === "string") &&
+    !!show &&
+    typeof show.name === "boolean" &&
+    typeof show.address === "boolean" &&
+    typeof show.instagram === "boolean"
+  );
 };
 
 /** Called by the venue hub with the venue it already has. One small localStorage write. */
@@ -77,4 +101,27 @@ export const readShareVenue = (venueId: string): ShareVenue | null => {
   }
   const cached = readCachedVenues()?.find((venue) => venue.id === venueId);
   return cached ? toShareVenue(cached) : null;
+};
+
+/**
+ * THE one place a venue's share choice is applied (Phase 9e). Every share — every game and every
+ * prize, including ones added later — goes through StoryShareLauncher, which calls this before the
+ * picture, headline and caption are built, so no screen or design decides it on its own.
+ *
+ * - name on: the bar's display name (a screen's own name is used only when none is known);
+ *   name off: no name anywhere (the headline loses " at <bar>", the picture loses the bar line);
+ * - address off: no street/city line;
+ * - handle on + set: "@handle" on the picture and in the caption.
+ * Venue not known yet: the payload as the screen built it (= the defaults, name + address).
+ */
+export const applyShareVenue = (payload: StorySharePayload, venue: ShareVenue | null): StorySharePayload => {
+  if (!venue) return { ...payload, venueInstagram: null };
+  return {
+    ...payload,
+    venueName: venue.show.name ? venue.name || payload.venueName : null,
+    // A screen-built subtitle names the bar ("Live Trivia at …"); dropped so the game name alone is used.
+    subtitle: venue.show.name ? payload.subtitle : null,
+    venueAddress: venue.show.address ? (payload.venueAddress ?? venue.address) : null,
+    venueInstagram: venue.show.instagram ? venue.instagram : null,
+  };
 };

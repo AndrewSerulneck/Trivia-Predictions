@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import { Image as ImageIcon, Share2 } from "lucide-react";
 import type { StorySharePayload } from "@/lib/socialShare/contracts";
+import { applyShareVenue } from "@/lib/socialShare/shareVenue";
 import { prepareStorySharePayload } from "@/lib/socialShare/storyPayloads";
 import { StoryCaptureModal } from "./StoryCaptureModal";
-import { useShareVenue, withShareVenue } from "./useShareVenue";
+import { useShareVenue } from "./useShareVenue";
 
 interface StoryShareLauncherProps {
   payload: StorySharePayload;
@@ -31,7 +32,7 @@ export function StoryShareLauncher({
 }: StoryShareLauncherProps) {
   const [isOpen, setIsOpen] = useState(false);
   const venue = useShareVenue(payload.venueId, isOpen);
-  const preparedStory = useMemo(() => prepareStorySharePayload(withShareVenue(payload, venue)), [payload, venue]);
+  const preparedStory = useMemo(() => prepareStorySharePayload(applyShareVenue(payload, venue)), [payload, venue]);
   const launcherTitle = title ?? getDefaultLauncherTitle(payload);
 
   const openButton = (

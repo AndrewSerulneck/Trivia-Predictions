@@ -13,6 +13,7 @@ import {
   type ScheduleFormChange,
   type ScheduleGames,
 } from "@/components/owner/schedule/ScheduleStepScreens";
+import { ShareDetailsPanel } from "@/components/owner/share/ShareDetailsPanel";
 import { useDiscardGuard } from "@/components/owner/sheet/DiscardGuard";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
@@ -273,14 +274,18 @@ export const ScheduleGameFlow = ({
         return <RepeatStep form={form} onChange={change} error={repeatError(form)} />;
       case "review":
         return (
-          <ReviewStep
-            form={form}
-            onChange={change}
-            steps={steps}
-            isEditing={isEditing}
-            onChangeStep={changeStep}
-            error={error}
-          />
+          <div className="space-y-4">
+            <ReviewStep
+              form={form}
+              onChange={change}
+              steps={steps}
+              isEditing={isEditing}
+              onChangeStep={changeStep}
+              error={error}
+            />
+            {/* A venue setting, saved on its own (Phase 9e): asked here and in the Prize wizard. */}
+            <ShareDetailsPanel venueId={venueId} />
+          </div>
         );
       case "all":
         return (

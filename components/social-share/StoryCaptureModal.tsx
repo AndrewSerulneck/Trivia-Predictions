@@ -652,7 +652,7 @@ export function StoryCaptureModal({
     ? shareStatusCopy ?? captureStatusCopy ?? getStatusCopy(state, error)
     : shareStatusCopy ?? getDesignStatusCopy(designPicture !== null, picturesFailed));
   const captureButtonLabel = captureState === "capturing" ? "Capturing" : captureState === "captured" ? "Retake" : "Capture";
-  const tagNudge = shareTagNudge(activePreparedStory.payload.venueName);
+  const tagNudge = shareTagNudge(activePreparedStory.payload.venueName, activePreparedStory.payload.venueInstagram);
   const showFallbackActions = fallbackOpen && shareBlob !== null;
   const sizeSpec = STORY_SHARE_SIZES[size];
   const statusIsAlert = Boolean(

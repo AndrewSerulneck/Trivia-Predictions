@@ -147,8 +147,18 @@ export const shareWinHeadline = (
   return `I just played ${game}${at}!`;
 };
 
-/** The text that travels with the picture (where the target keeps it): the headline + the app link. */
-export const shareWinText = (headline: string): string => `${headline} ${SHARE_PLAY_LINE}: ${APP_DOWNLOAD_URL}`;
+/** "@thepourhouse" — a handle as the picture and the caption print it. */
+export const shareInstagramMention = (handle: string): string => `@${handle.replace(/^@+/, "")}`;
+
+/**
+ * The text that travels with the picture (where the target keeps it): the headline, the bar's
+ * @handle when the venue shows one (a real mention in an Instagram/Facebook/X caption — Phase 9e,
+ * decision 10), then the app link: "… at The Pour House! @thepourhouse Play on Hightop Challenge: <link>".
+ */
+export const shareWinText = (headline: string, instagram?: string | null): string => {
+  const mention = instagram?.trim() ? ` ${shareInstagramMention(instagram.trim())}` : "";
+  return `${headline}${mention} ${SHARE_PLAY_LINE}: ${APP_DOWNLOAD_URL}`;
+};
 
 /** The design picker's names for the designs (screen copy). */
 export const SHARE_DESIGN_NAMES = {
@@ -166,8 +176,13 @@ export const SHARE_SIZE_NAMES = { story: "Story", post: "Post" } as const;
 /** The caption box's button. */
 export const SHARE_COPY_CAPTION_LABEL = "Copy caption + link";
 
-/** The one quiet line under the destinations (Andrew, 2026-10-22). Null when the bar isn't known. */
-export const shareTagNudge = (venueName: string | null | undefined): string | null => {
+/**
+ * The one quiet line under the destinations (Andrew, 2026-10-22): "Tag @thepourhouse in your post"
+ * when the venue shows its handle (Phase 9e), else "Tag The Pour House in your post", else nothing.
+ */
+export const shareTagNudge = (venueName: string | null | undefined, instagram?: string | null): string | null => {
+  const handle = instagram?.trim();
+  if (handle) return `Tag ${shareInstagramMention(handle)} in your post`;
   const name = venueName?.trim();
   return name ? `Tag ${name} in your post` : null;
 };

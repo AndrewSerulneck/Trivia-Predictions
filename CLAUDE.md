@@ -109,7 +109,15 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   allow it only then; `lib/copyText.ts`), and the picture still goes with NO `url` field. In the app, Instagram Story uses
   our plugin `InstagramStories` (`native/…/InstagramStoriesPlugin.{swift,java}`, Meta App ID in
   `native/capacitor.config.json`; web side `lib/nativeInstagramStories.ts`, capability-checked; old builds → share sheet).
-  Next: 9e (venue @handle + the partner's handle/name/address choice), 9g (`/app` "Get the app?" page), then 9f.
+  Next: 9g (`/app` "Get the app?" page), then 9f.
+- **What a share shows (Phase 9e, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** ONE choice per venue
+  (Andrew): `venues.instagram_handle` (bare, CHECK = `parseInstagramHandle` in `lib/venueShareDetails.ts`) + `share_show_name /
+  _address / _instagram` (default true; migration `20261023011500`, applied 2026-10-22). Applied in ONE place, `applyShareVenue` (`lib/socialShare/shareVenue.ts`), called only by
+  `StoryShareLauncher` — so every game/prize, including new ones, honours it; no screen sets `venueInstagram` (contract test). Players
+  read it on the venue rows they already load (`lib/venues.ts` select tiers step down if the columns are missing; localStorage
+  `htc_share_venue_v2`). Partners edit it in ONE panel, `components/owner/share/ShareDetailsPanel.tsx` (Schedule Review, the
+  owner wizard's `confirmExtra`, Game Settings; admin venue form with `host="admin"`), saved on its own via
+  `PATCH /api/owner/venues/share-details` (owner auth + venue check first) or `/api/admin/venues/share-details`.
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
   `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
   `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep

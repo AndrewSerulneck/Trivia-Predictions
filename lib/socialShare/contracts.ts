@@ -118,6 +118,11 @@ export interface StorySharePayload {
   venueName: string | null;
   /** "1010 Pacific St" / "Brooklyn, NY" (shareVenue.ts); null = the picture shows the name only. */
   venueAddress?: StoryShareVenueAddress | null;
+  /**
+   * The bar's Instagram handle without the "@", only when the venue shows it (Phase 9e). Set by
+   * `applyShareVenue` alone — never by a screen.
+   */
+  venueInstagram?: string | null;
   /** Set only for a prize win: the picture leads with the prize (Andrew's "off my tab" line). */
   prize?: StorySharePrize | null;
   userId: string;

@@ -231,6 +231,12 @@ type CreateRewardWizardProps = {
    */
   step?: RewardWizardStep;
   onStepChange?: (step: RewardWizardStep, change: RewardWizardStepChange) => void;
+  /**
+   * OPT-IN. Shown on the Confirm step above the Create button — the Partner Dashboard passes its
+   * "On shared pictures" panel (docs/native-app-store-plan.md Phase 9e). Left out (the admin
+   * host), the Confirm markup is unchanged.
+   */
+  confirmExtra?: ReactNode;
 };
 
 /** The one definition whose terms step replaces the period sentence with a
@@ -350,6 +356,7 @@ export function CreateRewardWizard({
   onRequestSchedule,
   step: controlledStep,
   onStepChange,
+  confirmExtra,
 }: CreateRewardWizardProps) {
   const s = VARIANT_STYLES[variant];
   // The admin host is a light, non-player surface (navigation-unification-plan
@@ -1996,6 +2003,8 @@ export function CreateRewardWizard({
                 ? describeGameWinnerSlots(selectedSlots)
                 : renderTermsSentence(effectiveQuantity, period, winCondition)}
           </p>
+
+          {confirmExtra}
 
           {submitError ? <div className={s.error}>{submitError}</div> : null}
 

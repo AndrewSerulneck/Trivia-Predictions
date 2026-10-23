@@ -128,6 +128,10 @@ const heading = () => document.body.querySelector<HTMLElement>("[data-step-headi
 const button = (name: string | RegExp) => screen.getByRole("button", { name });
 
 const fetchMock = vi.fn();
+// The schedule calls only: Review also shows the venue's "On shared pictures" panel (Phase 9e),
+// which reads its own setting once.
+const scheduleCalls = () =>
+  fetchMock.mock.calls.filter(([url]) => !String(url).startsWith("/api/owner/venues/share-details"));
 
 describe("ScheduleGameFlow", () => {
   beforeEach(() => {
@@ -174,8 +178,8 @@ describe("ScheduleGameFlow", () => {
     fireEvent.click(button("Schedule game"));
 
     await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as [string, { method: string; body: string }];
+    expect(scheduleCalls()).toHaveLength(1);
+    const [url, init] = scheduleCalls()[0] as [string, { method: string; body: string }];
     expect(url).toBe("/api/owner/schedule");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body)).toMatchObject({
@@ -248,7 +252,7 @@ describe("ScheduleGameFlow", () => {
     fireEvent.click(button("Save changes"));
     await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
 
-    const [url, init] = fetchMock.mock.calls[0] as [string, { method: string; body: string }];
+    const [url, init] = scheduleCalls()[0] as [string, { method: string; body: string }];
     expect(url).toBe("/api/owner/schedule/sched-1");
     expect(init.method).toBe("PATCH");
     const body = JSON.parse(init.body) as Record<string, unknown>;

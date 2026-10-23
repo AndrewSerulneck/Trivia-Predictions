@@ -10,6 +10,7 @@ import {
   RewardsListScreen,
   type RewardsLoad,
 } from "@/components/owner/rewards/RewardStepScreens";
+import { ShareDetailsPanel } from "@/components/owner/share/ShareDetailsPanel";
 import { useDiscardGuard } from "@/components/owner/sheet/DiscardGuard";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
@@ -224,6 +225,8 @@ export const RewardsFlow = ({
             onRequestSchedule={() => closeWithoutAsking(onRequestSchedule)}
             step={wizardStep}
             onStepChange={handleWizardStep}
+            // A venue setting, saved on its own (Phase 9e): asked here and in the Schedule sheet.
+            confirmExtra={<ShareDetailsPanel venueId={venueId} />}
           />
         );
     }

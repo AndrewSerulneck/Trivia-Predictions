@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { ShareDetailsPanel } from "@/components/owner/share/ShareDetailsPanel";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
@@ -165,7 +166,7 @@ const OwnerGameSettingsPage = () => {
   return (
     <OwnerShell
       title="Game Settings"
-      subtitle="Choose how NFL Pick 'Em works at your venue"
+      subtitle="How games are scored and shared at your venue"
       maxWidth="lg"
       variant="dark"
       backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
@@ -277,6 +278,9 @@ const OwnerGameSettingsPage = () => {
                 {loadingSettings ? "Loading…" : saving ? "Saving…" : hasChanges ? "Save NFL Pick 'Em Setting" : "Saved"}
               </button>
             </div>
+
+            {/* What players' share pictures show (Phase 9e); also asked in Schedule and Prizes. */}
+            <ShareDetailsPanel key={selectedVenueId} venueId={selectedVenueId} />
           </>
         )}
       </div>

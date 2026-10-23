@@ -46,7 +46,7 @@ export const OWNER_MENU_ITEMS: readonly OwnerMenuItem[] = [
   {
     id: "game-settings",
     label: "Game Settings",
-    hint: "How games are scored",
+    hint: "Scoring & shared pictures",
     icon: SlidersHorizontal,
     href: "/owner/game-settings",
   },

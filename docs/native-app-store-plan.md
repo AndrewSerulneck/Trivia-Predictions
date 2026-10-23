@@ -8,7 +8,7 @@ through 4b plus review fixes R1–R5 is committed AND pushed to `origin/main` (`
 still blank); (2) Andrew — rebuild the shell from `main` and run 3B.3 + section I of
 `docs/native-app-device-checklist.md`; (3) Phase 4d (no account needed); (4) Phase 5 Android half (needs
 only Firebase — see Phase 5); then, once the paid Apple account exists: Part B (2B), 4c, Phase 5 iOS half,
-6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** **Phase 9c is BUILT (2026-10-22, uncommitted — handoff `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`).** **Phase 9d is BUILT (2026-10-22, uncommitted — handoff `docs/native-app-store-plan_PHASE_9D_HANDOFF.md`).** Next: 9e (venue Instagram handle + the partner's choice of what a share shows — revived 2026-10-22), then 9g (`/app` "Get the app?" page for phones, added 2026-10-22), then 9f. **Sharing Phases 9a–9g (added
+6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** **Phases 9c + 9d are BUILT and pushed (`678e680`; handoffs `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`, `…_PHASE_9D_HANDOFF.md`).** **Phase 9e is BUILT and pushed (2026-10-22; migration `20261023011500` applied to production 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** Next: 9g (`/app` "Get the app?" page for phones, added 2026-10-22), then 9f. **Sharing Phases 9a–9g (added
 2026-10-22)** need no Apple account except 9d's in-app Instagram direct-share.
 **Phases 1a and 1b are DONE and deployed (2026-10-08)** — latest handoff
 `docs/native-app-store-plan_PHASE_1B_HANDOFF.md` (1a: `…_PHASE_1A_HANDOFF.md`). Migration
@@ -1194,6 +1194,7 @@ Banner and the sign-in pointer.
   `resultReason`). No new table, no new route, no migration.
 
 #### Phase 9e — Venue Instagram handle + what a share shows (Opus 5.5, high) — REVIVED 2026-10-22
+**Status: built 2026-10-22, committed + pushed; migration `20261023011500_venue_share_details.sql` applied to production 2026-10-22 (verified: 16 venues, all defaults, no handles). Andrew chose PER VENUE (2026-10-22: "If new games or prizes are added, they should have the same info as the others"). As-built + traps: `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`.**
 Andrew (decisions 10 and 11): the @handle goes in the caption, and the partner picks which of handle, name and
 address appear on share content (all three, none, or any mix), offered when they set up a Prize or schedule a game.
 - **One setting per venue, asked in both places** (my recommendation, recorded so it isn't re-asked; Andrew can
@@ -1297,9 +1298,8 @@ rendering, no storage and no new cron.
    my tab at …" line, feed-post size, Andrew creates the Meta App ID (decisions at the top of Phases 9a–9f).
    All answered 2026-10-22: no public venue page (shares → `/app`), both wording variants approved, the @handle
    goes in the caption and the partner picks handle/name/address (9e revived), `/app` asks first on phones (9g).
-7. **Share details per venue or per Prize/game? (9e, 2026-10-22)** The plan makes it ONE choice per venue, offered in
-   both the Prize and Schedule flows, because Bingo/Pick 'Em/Fantasy shares have no Prize or scheduled game. Say if
-   you want each Prize/game to carry its own choice instead.
+7. **Share details per venue or per Prize/game? (9e)** Answered 2026-10-22: **per venue**; new games and prizes get the
+   same info as the others.
 
 Answered 2026-10-08 and moved to §2: US-only, remove deleted accounts, retire the PWA prompt and
 keep the browser path, Andrew does the legal review, Android testing on the emulator (no phone). Answered in

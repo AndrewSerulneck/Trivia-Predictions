@@ -261,7 +261,7 @@ export function prepareStorySharePayload(
     headline: normalizeString(payload.title) ?? getDefaultTitle(payload.gameType, payload.isChampion),
     subheadline: normalizeString(payload.subtitle) ?? getDefaultSubtitle(payload.gameType, payload.venueName),
     winLine,
-    shareText: shareWinText(winLine),
+    shareText: shareWinText(winLine, payload.venueInstagram),
     displayUsername: displayUsername(payload.username),
     caption: buildCaption(payload),
     stats: buildStats(payload),

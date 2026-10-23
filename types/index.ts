@@ -60,6 +60,11 @@ export interface Venue {
   screenBrandPrimary?: string;
   screenBrandSecondary?: string;
   screenSponsorRotationEnabled?: boolean;
+  /** What share pictures show (Phase 9e, lib/venueShareDetails.ts). Absent = the defaults. */
+  instagramHandle?: string;
+  shareShowName?: boolean;
+  shareShowAddress?: boolean;
+  shareShowInstagram?: boolean;
 }
 
 export interface User {

@@ -54,6 +54,11 @@ const everySpec = () => {
     gamePayload({ venueName: "Seven Sirens Brewing Company of the Greater Lehigh Valley", venueAddress: null }),
     prizePayload({ headline: "$15", headlineKind: "amount", label: "GIFT CARD" }),
     prizePayload({ headline: "50% Off Appetizer", headlineKind: "phrase", label: "PRIZE" }, null),
+    // Phase 9e: the venue's @handle under the name (the tallest venue panel), and a handle with no name.
+    gamePayload({ venueInstagram: "thepourhouse" }),
+    gamePayload({ venueName: "Seven Sirens Brewing Company of the Greater Lehigh Valley", venueInstagram: "sevensirensbrewingcompany_lv" }),
+    { ...prizePayload({ headline: "$15", headlineKind: "amount", label: "GIFT CARD" }), venueInstagram: "thepourhouse" },
+    gamePayload({ venueName: null, venueAddress: null, venueInstagram: "thepourhouse" }),
   ];
   return payloads.flatMap((payload) =>
     STORY_SHARE_SIZE_ORDER.flatMap((size) => {
@@ -110,10 +115,10 @@ describe("share picture layout", () => {
   });
 
   it("every design names the bar (name + street + city) and the app", () => {
-    for (const { design, size, spec } of everySpec().filter(({ payload }) => payload.venueAddress && payload.venueName)) {
+    for (const { payload, design, size, spec } of everySpec().filter(({ payload }) => payload.venueAddress && payload.venueName)) {
       const texts = spec.textBlocks.map((block) => block.text);
       expect(texts, `${design} ${size}`).toEqual(expect.arrayContaining([
-        "The Pour House", "1010 Pacific St", "Brooklyn, NY", SHARE_PLAY_LINE, APP_DOWNLOAD_DISPLAY_URL,
+        payload.venueName, "1010 Pacific St", "Brooklyn, NY", SHARE_PLAY_LINE, APP_DOWNLOAD_DISPLAY_URL,
       ]));
     }
   });

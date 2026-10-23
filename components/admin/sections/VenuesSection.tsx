@@ -7,6 +7,7 @@ import { GeofenceEditor } from "@/components/admin/GeofenceEditor";
 import { DeleteVenueModal, useVenueDeletion } from "@/components/admin/DeleteVenueModal";
 import { HiddenVenuesPanel } from "@/components/admin/sections/HiddenVenuesPanel";
 import { PosStuckClaimsPanel } from "@/components/admin/sections/PosStuckClaimsPanel";
+import { ShareDetailsPanel } from "@/components/owner/share/ShareDetailsPanel";
 import { useAddressLookup, type AddressPrediction } from "@/components/admin/useAddressLookup";
 import { adminField, adminLabel, adminFieldReadOnly } from "@/lib/adminStyles";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
@@ -744,6 +745,13 @@ function VenueForm({ title, venueId, form, onChange, onSubmit, onCancel, busy, e
       {venueId ? (
         <div className="mt-6">
           <VenueScreenSponsorManager venueId={venueId} sponsorsEnabled={form.screenSponsorRotationEnabled} />
+        </div>
+      ) : null}
+
+      {venueId ? (
+        <div className="mt-6">
+          {/* The partner's "On shared pictures" choice (Phase 9e); saved on its own, not with the form. */}
+          <ShareDetailsPanel venueId={venueId} host="admin" tone="light" />
         </div>
       ) : null}
     </div>

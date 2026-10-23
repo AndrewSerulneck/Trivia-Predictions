@@ -36,6 +36,10 @@ const CASES = {
   "bingo-no-address": buildStorySharePayload("bingo", { venueId: "v", venueName: "Garden State Bar", userId: "u", username: "bingoqueen", isChampion: true }),
   "prize-gift-card": buildPrizeStorySharePayload({ venueId: "v", venueName: "The Pour House", venueAddress: address, userId: "u", username: "ace", prize: { headline: "$15", headlineKind: "amount", label: "GIFT CARD" } }),
   "prize-appetizer": buildPrizeStorySharePayload({ venueId: "v", venueName: "Carrabba's Italian Grill", venueAddress: { street: "335 New Jersey 18", locality: "East Brunswick, NJ" }, userId: "u", username: "ace", prize: { headline: "50% Off Appetizer", headlineKind: "phrase", label: "PRIZE" } }),
+  // Phase 9e: what applyShareVenue (lib/socialShare/shareVenue.ts) hands the designs for each venue choice.
+  "handle-all": { ...buildPrizeStorySharePayload({ venueId: "v", venueName: "The Pour House", venueAddress: address, userId: "u", username: "ace", prize: { headline: "$15", headlineKind: "amount", label: "GIFT CARD" } }), venueInstagram: "thepourhouse" },
+  "handle-only": { ...buildStorySharePayload("live-trivia", { venueId: "v", venueName: null, userId: "u", username: "ace", finalRank: 1, finalPoints: 120, correctRate: 80 }), venueInstagram: "thepourhouse" },
+  "nothing-shown": buildStorySharePayload("pickem", { venueId: "v", venueName: null, userId: "u", username: "ace", finalRank: 1, finalPoints: 30, isChampion: true }),
 };
 
 const toDataUrl = (blob) => new Promise((resolve) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.readAsDataURL(blob); });

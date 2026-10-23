@@ -1,6 +1,6 @@
 import { APP_DOWNLOAD_DISPLAY_URL } from "@/lib/appDownloadLink";
 import { PRIZE_CARD_PICTURE } from "@/lib/themeTokens";
-import { SHARE_PLAY_LINE, SHARE_SCAN_LINE } from "./copyPresets";
+import { SHARE_PLAY_LINE, SHARE_SCAN_LINE, shareInstagramMention } from "./copyPresets";
 import type {
   StoryFill,
   StoryImageBlock,
@@ -21,7 +21,8 @@ type PreparedStorySharePayload = Omit<PreparedPayload, "renderSpec">;
  * designs that need no camera, plus the optional selfie, each at Story (1080×1920) and feed
  * post (1080×1350) size. One spec builder, drawn by the one renderer (storyCanvas.ts).
  *
- * Every design carries the bar (name + street + city, no directions) and the app (a QR to
+ * Every design carries the bar (name + @handle + street + city, each as the venue chose —
+ * applyShareVenue, Phase 9e; never directions) and the app (a QR to
  * `hightopchallenge.com/app` + "Play on Hightop Challenge"). On a Story the QR and venue
  * panel stay inside Instagram's safe zone (clear of the top 250 and bottom 340 px).
  * No text is smaller than STORY_TEXT_FLOOR_PX (the app's 12px floor at phone width).
@@ -116,11 +117,20 @@ const venuePanel = (
 ): VenuePanel => {
   const venueName = prepared.payload.venueName?.trim() || null;
   const address = prepared.payload.venueAddress ?? null;
-  const addressLines = [address?.street, address?.locality].filter((line): line is string => Boolean(line?.trim()));
+  const instagram = prepared.payload.venueInstagram?.trim() || null;
+  // Under the name: the @handle (accent), then street, then city — each only if the venue shows it
+  // (applyShareVenue, Phase 9e). Nothing shown → the panel is just the app.
+  const detailLines: Array<{ text: string; accent: boolean }> = [
+    ...(instagram ? [{ text: shareInstagramMention(instagram), accent: true }] : []),
+    ...[address?.street, address?.locality]
+      .filter((line): line is string => Boolean(line?.trim()))
+      .map((line) => ({ text: line, accent: false })),
+  ];
 
   // Text column, top to bottom (baselines measured from the panel top).
   const nameBaseline = 100;
-  const addressBaselines = addressLines.map((_, index) => nameBaseline + 56 + index * 50);
+  const firstDetailBaseline = venueName ? nameBaseline + 56 : nameBaseline - 4;
+  const addressBaselines = detailLines.map((_, index) => firstDetailBaseline + index * 50);
   const lastAbove = addressBaselines.at(-1) ?? (venueName ? nameBaseline : 30);
   const playBaseline = lastAbove + 68;
   const urlBaseline = playBaseline + 50;
@@ -153,15 +163,15 @@ const venuePanel = (
       ...readable,
     }));
   }
-  addressLines.forEach((line, index) => {
+  detailLines.forEach((line, index) => {
     textBlocks.push(text({
-      text: line,
+      text: line.text,
       x: textX,
       y: textTop + addressBaselines[index],
       maxWidth: textWidth,
-      font: bodyFont(600, 38),
+      font: bodyFont(line.accent ? 800 : 600, 38),
       fitMinPx: STORY_TEXT_FLOOR_PX,
-      color: SOFT_WHITE,
+      color: line.accent ? options.accent : SOFT_WHITE,
       ...readable,
     }));
   });

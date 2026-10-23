@@ -59,12 +59,22 @@ type VenueRow = {
   screen_brand_primary?: string | null;
   screen_brand_secondary?: string | null;
   screen_sponsor_rotation_enabled?: boolean | null;
+  instagram_handle?: string | null;
+  share_show_name?: boolean | null;
+  share_show_address?: boolean | null;
+  share_show_instagram?: boolean | null;
 };
 
 const VENUE_SELECT_WITH_PARSED_ADDRESS =
   "id, name, display_name, logo_text, icon_emoji, street, address, city, state, zip_code, country, county, region, latitude, longitude, radius, screen_enabled, screen_brand_image_url, screen_brand_primary, screen_brand_secondary, screen_sponsor_rotation_enabled";
 const VENUE_SELECT_LEGACY =
   "id, name, display_name, logo_text, icon_emoji, address, city, state, zip_code, county, region, latitude, longitude, radius";
+// What share pictures show (Phase 9e). Rides on the venue reads players already make, so a share
+// never fetches the venue just for this (lib/socialShare/shareVenue.ts).
+const VENUE_SELECT_WITH_SHARE_DETAILS = `${VENUE_SELECT_WITH_PARSED_ADDRESS}, instagram_handle, share_show_name, share_show_address, share_show_instagram`;
+
+/** Widest first; a "column does not exist" error steps down one (a database a migration behind). */
+const VENUE_SELECT_TIERS = [VENUE_SELECT_WITH_SHARE_DETAILS, VENUE_SELECT_WITH_PARSED_ADDRESS, VENUE_SELECT_LEGACY] as const;
 
 function mapVenueRow(row: VenueRow): Venue {
   return {
@@ -90,12 +100,17 @@ function mapVenueRow(row: VenueRow): Venue {
     screenBrandSecondary: row.screen_brand_secondary ?? undefined,
     screenSponsorRotationEnabled:
       typeof row.screen_sponsor_rotation_enabled === "boolean" ? row.screen_sponsor_rotation_enabled : undefined,
+    instagramHandle: row.instagram_handle ?? undefined,
+    shareShowName: typeof row.share_show_name === "boolean" ? row.share_show_name : undefined,
+    shareShowAddress: typeof row.share_show_address === "boolean" ? row.share_show_address : undefined,
+    shareShowInstagram: typeof row.share_show_instagram === "boolean" ? row.share_show_instagram : undefined,
   };
 }
 
-function isMissingParsedAddressColumns(errorMessage: string | undefined): boolean {
+function isMissingVenueColumn(errorMessage: string | undefined): boolean {
   const normalized = String(errorMessage ?? "").toLowerCase();
   return (
+    /column venues\.(instagram_handle|share_show_name|share_show_address|share_show_instagram) does not exist/.test(normalized) ||
     normalized.includes("column venues.street does not exist") ||
     normalized.includes("column venues.country does not exist") ||
     normalized.includes("column venues.screen_enabled does not exist") ||
@@ -119,6 +134,20 @@ async function withTimedVenueQuery<T>(runQuery: (signal: AbortSignal) => Promise
   }
 }
 
+type VenueQueryResult<T> = { data: T | null; error: { message: string } | null };
+
+/** Runs `run` with the widest column list the database has (see VENUE_SELECT_TIERS). */
+async function selectVenueTiers<T>(
+  run: (columns: string, signal: AbortSignal) => PromiseLike<VenueQueryResult<T>>,
+): Promise<VenueQueryResult<T>> {
+  let result: VenueQueryResult<T> = { data: null, error: null };
+  for (const columns of VENUE_SELECT_TIERS) {
+    result = await withTimedVenueQuery((signal) => run(columns, signal));
+    if (!result.error || !isMissingVenueColumn(result.error.message)) return result;
+  }
+  return result;
+}
+
 export async function listVenues(): Promise<Venue[]> {
   const cached = readCachedVenues();
   if (cached) return cached;
@@ -129,30 +158,15 @@ export async function listVenues(): Promise<Venue[]> {
   }
 
   try {
-    const parsedResult = await withTimedVenueQuery(async (signal) => {
-      return await supabaseClient
+    const { data, error } = await selectVenueTiers<VenueRow[]>((columns, signal) =>
+      supabaseClient
         .from("venues")
-        .select(VENUE_SELECT_WITH_PARSED_ADDRESS)
+        .select(columns)
         .abortSignal(signal)
         .or("hidden.is.null,hidden.eq.false")
-        .order("name", { ascending: true });
-    });
-
-    let data: VenueRow[] | null = (parsedResult.data as VenueRow[] | null) ?? null;
-    let error = parsedResult.error;
-
-    if (error && isMissingParsedAddressColumns(error.message)) {
-      const legacyResult = await withTimedVenueQuery(async (signal) => {
-        return await supabaseClient
-          .from("venues")
-          .select(VENUE_SELECT_LEGACY)
-          .abortSignal(signal)
-          .or("hidden.is.null,hidden.eq.false")
-          .order("name", { ascending: true });
-      });
-      data = (legacyResult.data as VenueRow[] | null) ?? null;
-      error = legacyResult.error;
-    }
+        .order("name", { ascending: true })
+        .returns<VenueRow[]>(),
+    );
 
     if (error || !data || data.length === 0) {
       return FALLBACK_VENUES;
@@ -175,30 +189,14 @@ export async function getVenueById(venueId: string): Promise<Venue | null> {
   }
 
   try {
-    const parsedResult = await withTimedVenueQuery(async (signal) => {
-      return await supabaseClient
+    const { data, error } = await selectVenueTiers<VenueRow>((columns, signal) =>
+      supabaseClient
         .from("venues")
-        .select(VENUE_SELECT_WITH_PARSED_ADDRESS)
+        .select(columns)
         .abortSignal(signal)
         .eq("id", venueId)
-        .maybeSingle<VenueRow>();
-    });
-
-    let data: VenueRow | null = (parsedResult.data as VenueRow | null) ?? null;
-    let error = parsedResult.error;
-
-    if (error && isMissingParsedAddressColumns(error.message)) {
-      const legacyResult = await withTimedVenueQuery(async (signal) => {
-        return await supabaseClient
-          .from("venues")
-          .select(VENUE_SELECT_LEGACY)
-          .abortSignal(signal)
-          .eq("id", venueId)
-          .maybeSingle<VenueRow>();
-      });
-      data = (legacyResult.data as VenueRow | null) ?? null;
-      error = legacyResult.error;
-    }
+        .maybeSingle<VenueRow>(),
+    );
 
     if (error) {
       return FALLBACK_VENUES.find((venue) => venue.id === venueId) ?? null;
