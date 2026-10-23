@@ -28,6 +28,11 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/faqs" || pathname.startsWith("/faqs/")) {
     return true;
   }
+  // App download short link (Phase 9a): a 302 from the User-Agent, opened by people
+  // who are not signed in. Exact match only.
+  if (pathname === "/app") {
+    return true;
+  }
   // Public legal/support pages (docs/native-app-store-plan.md Phase 1a).
   if (LEGAL_PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
     return true;

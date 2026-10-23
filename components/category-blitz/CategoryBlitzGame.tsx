@@ -1106,7 +1106,6 @@ function CompleteScreen({
       {storySharePayload ? (
         <StoryShareLauncher
           payload={storySharePayload}
-          title={viewerRank === 0 ? "Share the champion shot" : "Share your blitz run"}
           buttonLabel="Create story"
           className="border-emerald-300/30 bg-emerald-300/[0.08]"
         />

@@ -85,6 +85,18 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   `lib/joinVenueList.ts`, R2) — a QR never bypasses the geofence. Plugin is
   `@capacitor/barcode-scanner` (the MLKit one has no Swift Package Manager support — don't swap it in);
   Android minSdk is 26 because of it. Camera is asked for only on tap. No partner surface (player-only app).
+- **App download link `hightopchallenge.com/app` (Phase 9a, 2026-10-22).** `app/app/route.ts` 302s by User-Agent via
+  `decideAppLinkDestination` (`lib/appDownloadLink.ts`): iPhone → App Store, Android → Play, else `/info#app`; store URLs are
+  EMPTY constants there until the listings are live (until then everyone lands on the player sign-in); inside the app → the
+  front door. The PATH is permanent (printed on shared pictures; literal, never env). Share cards (9b) print `APP_DOWNLOAD_URL`.
+- **Share pictures v2 (Phase 9b, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** "Create story" opens
+  READY-MADE designs first (Spotlight / Card / Night, no camera), Story 1080×1920 or Post 1080×1350; "Add a selfie" is the
+  old camera flow. A game is a registry entry (`lib/socialShare/shareGames.ts`; no share component/layout branches on a game id,
+  test). Layouts: `lib/socialShare/shareDesigns.ts`; one renderer `storyCanvas.ts`. Headline = Andrew's line, ONLY via
+  `shareWinHeadline` (`copyPresets.ts`). Every picture carries the bar (name + street + city, no directions) and the QR file
+  `public/share/app-download-qr-v1.png` = `APP_DOWNLOAD_URL` (`npm run share:qr`; new value = new file name). Canvas text ≥ 34px
+  (= 12px on a phone). The hub remembers its venue for the games (`rememberShareVenue`, zero requests). Visual check:
+  `npm run share-card:render -- --sheet` (also decodes every QR).
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
   `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
   `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep

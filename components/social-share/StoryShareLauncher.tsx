@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Camera, Share2 } from "lucide-react";
+import { Image as ImageIcon, Share2 } from "lucide-react";
 import type { StorySharePayload } from "@/lib/socialShare/contracts";
 import { prepareStorySharePayload } from "@/lib/socialShare/storyPayloads";
 import { StoryCaptureModal } from "./StoryCaptureModal";
+import { useShareVenue, withShareVenue } from "./useShareVenue";
 
 interface StoryShareLauncherProps {
   payload: StorySharePayload;
@@ -15,10 +16,7 @@ interface StoryShareLauncherProps {
 }
 
 function getDefaultLauncherTitle(payload: StorySharePayload): string {
-  if (payload.isChampion) {
-    return payload.gameType === "live-trivia" ? "Share the champion shot" : "Share the blitz win";
-  }
-  return payload.gameType === "live-trivia" ? "Share your trivia run" : "Share your blitz run";
+  return payload.isChampion ? "Share your win" : "Share your result";
 }
 
 export function StoryShareLauncher({
@@ -29,7 +27,8 @@ export function StoryShareLauncher({
   className = "",
 }: StoryShareLauncherProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const preparedStory = useMemo(() => prepareStorySharePayload(payload), [payload]);
+  const venue = useShareVenue(payload.venueId, isOpen);
+  const preparedStory = useMemo(() => prepareStorySharePayload(withShareVenue(payload, venue)), [payload, venue]);
   const launcherTitle = title ?? getDefaultLauncherTitle(payload);
 
   return (
@@ -37,7 +36,7 @@ export function StoryShareLauncher({
       <section className={`rounded-2xl border border-cyan-300/30 bg-cyan-300/[0.08] px-4 py-4 ${className}`}>
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-200/30 bg-cyan-300/15 text-cyan-200">
-            <Camera className="h-5 w-5" aria-hidden="true" />
+            <ImageIcon className="h-5 w-5" aria-hidden="true" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-caption font-black uppercase leading-none tracking-[0.14em] text-cyan-300">{eyebrow}</p>

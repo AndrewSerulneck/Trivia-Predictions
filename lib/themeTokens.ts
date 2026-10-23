@@ -305,6 +305,23 @@ export const PRIZE_CARD = {
   soonText: "font-semibold text-amber-700",
 } as const;
 
+/**
+ * The same card as raw colours, for the share picture drawn on a canvas
+ * (lib/socialShare/shareDesigns.ts, docs/native-app-store-plan.md Phase 9b). Mirrors PRIZE_CARD
+ * above (white → slate-100, the cyan→violet glow, slate-950/500/600 text) — change both together.
+ */
+export const PRIZE_CARD_PICTURE = {
+  baseFrom: "#FFFFFF",
+  baseTo: "#F1F5F9",
+  glowInner: "rgba(34, 211, 238, 0.22)",
+  glowMid: "rgba(139, 92, 246, 0.14)",
+  glowOuter: "rgba(139, 92, 246, 0)",
+  shadow: "rgba(0, 0, 0, 0.55)",
+  text: "#020617",
+  labelText: "#64748B",
+  venueText: "#475569",
+} as const;
+
 /** Inline email colours, mapped from colors_and_type.css; email clients cannot use CSS variables. */
 export const PARTNER_EMAIL_THEME = {
   canvas: "#020617",

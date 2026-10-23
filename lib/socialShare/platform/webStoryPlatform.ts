@@ -120,6 +120,7 @@ export const webStoryPlatform: StorySharePlatformAdapter<CanvasImageSource, Stor
   getCameraPermissionState,
   requestFrontCameraSession,
   captureFrame: (input: StoryShareFrameCaptureInput<CanvasImageSource>) => renderStoryImage(input),
+  renderDesign: (spec) => renderStoryImage({ spec }),
   createShareFile: createStoryShareFile,
   canShareFile: canShareStoryFile,
   shareImage: shareStoryImage,

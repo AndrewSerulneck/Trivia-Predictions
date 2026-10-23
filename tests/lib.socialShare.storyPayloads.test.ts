@@ -56,7 +56,8 @@ describe("story share copy presets", () => {
   });
 
   it("fills venue placeholders and truncates captions for story readability", () => {
-    expect(resolveStoryCaptionPreset(basePayload)).toBe("Undisputed. Unbothered. Unstoppable.");
+    expect(resolveStoryCaptionPreset(basePayload)).toBe("Started at the bar, ended on top");
+    expect(resolveStoryCaptionPreset({ ...basePayload, userId: "user-13" })).toBe("Undefeated at The High Top");
     expect(truncateStoryCaption("This caption is intentionally much longer than the visual story limit for a compact mobile export")).toBe(
       "This caption is intentionally much longer than the visual..."
     );
@@ -115,11 +116,12 @@ describe("story share payload builders", () => {
     expect(prepared.templateVariant).toBe("champion");
     expect(prepared.frameAssetUrl).toBe("/story-frames/live-trivia/champion.png");
     expect(prepared.stats).toEqual([
-      { label: "Rank", value: "1st" },
-      { label: "Score", value: "120 pts" },
-      { label: "Correct", value: "80%" },
+      { field: "rank", label: "Rank", value: "1st" },
+      { field: "points", label: "Score", value: "120 pts" },
+      { field: "correct", label: "Correct", value: "80%" },
     ]);
-    expect(prepared.caption).toBe("Undisputed. Unbothered. Unstoppable.");
+    expect(prepared.caption).toBe("Started at the bar, ended on top");
+    expect(prepared.winLine).toBe("I just won Live Trivia at The High Top!");
     expect(prepared.visual).toMatchObject({
       primaryColor: "#8B5CF6",
       badgeLabel: "Trivia Champion",
@@ -132,7 +134,7 @@ describe("story share payload builders", () => {
       frameAssetUrl: "/story-frames/live-trivia/champion.png",
     });
     expect(prepared.renderSpec.textBlocks.length).toBeGreaterThanOrEqual(4);
-    expect(prepared.renderSpec.textBlocks.some((block) => block.text === "HIGHTOP")).toBe(true);
+    expect(prepared.renderSpec.textBlocks.some((block) => block.text === prepared.winLine)).toBe(true);
   });
 
   it("respects custom captions, template overrides, and export dimensions", () => {
@@ -145,8 +147,7 @@ describe("story share payload builders", () => {
       },
       {
         templateVariant: "funny",
-        width: 720,
-        height: 1280,
+        size: "post",
         mirrorPreview: false,
       }
     );
@@ -154,9 +155,10 @@ describe("story share payload builders", () => {
     expect(prepared.templateVariant).toBe("funny");
     expect(prepared.caption).toBe("I knew exactly three answers and vibes handled the rest.");
     expect(prepared.renderSpec).toMatchObject({
-      width: 720,
-      height: 1280,
+      width: 1080,
+      height: 1350,
       mirrorPreview: false,
+      frameAssetUrl: null,
     });
   });
 });

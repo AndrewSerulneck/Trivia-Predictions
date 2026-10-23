@@ -1455,7 +1455,6 @@ function LiveShowdownPageContent() {
                     {liveTriviaStorySharePayload ? (
                       <StoryShareLauncher
                         payload={liveTriviaStorySharePayload}
-                        title={postGameLeaderboard.isChampion ? "Share the champion shot" : "Share your trivia run"}
                         buttonLabel="Create story"
                       />
                     ) : null}

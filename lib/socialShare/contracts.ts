@@ -1,4 +1,6 @@
-export type StoryShareGameType = "live-trivia" | "category-blitz";
+import type { StoryShareGameType } from "./shareGames";
+
+export type { StoryShareGameType } from "./shareGames";
 
 export type StoryShareTemplateVariant =
   | "default"
@@ -100,10 +102,24 @@ export interface StoryExternalAppOpenResult {
   error?: unknown;
 }
 
+/**
+ * A prize won, as the share picture shows it — the fields of `PrizeCardFace`
+ * (lib/prizeCardFace.ts) the picture needs, never a coupon code, QR or card number.
+ */
+export interface StorySharePrize {
+  headline: string;
+  headlineKind: "amount" | "phrase";
+  label: "GIFT CARD" | "PRIZE";
+}
+
 export interface StorySharePayload {
   gameType: StoryShareGameType;
   venueId: string;
   venueName: string | null;
+  /** "1010 Pacific St" / "Brooklyn, NY" (shareVenue.ts); null = the picture shows the name only. */
+  venueAddress?: StoryShareVenueAddress | null;
+  /** Set only for a prize win: the picture leads with the prize (Andrew's "off my tab" line). */
+  prize?: StorySharePrize | null;
   userId: string;
   username: string;
   title: string;
@@ -145,13 +161,67 @@ export interface StoryTextBlock {
   shadowOffsetY?: number;
   lineHeight?: number;
   maxLines?: number;
+  /** Shrink the font (in 4px steps, never below this) until the text fits `maxLines` untruncated. */
+  fitMinPx?: number;
+  /** Centre the wrapped lines vertically on this y instead of starting at `y`. */
+  centerY?: number;
 }
 
+export interface StoryShareVenueAddress {
+  /** "1010 Pacific St" — the street only, never the full formatted address. */
+  street: string | null;
+  /** "Brooklyn, NY". */
+  locality: string | null;
+}
+
+export interface StoryGradientStop {
+  offset: number;
+  color: string;
+}
+
+export type StoryFill =
+  | { kind: "solid"; color: string }
+  | { kind: "linear"; x0: number; y0: number; x1: number; y1: number; stops: StoryGradientStop[] }
+  | { kind: "radial"; cx: number; cy: number; r: number; stops: StoryGradientStop[] };
+
+export interface StoryShapeBlock {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  radius?: number;
+  fill: StoryFill;
+  shadowColor?: string;
+  shadowBlur?: number;
+  shadowOffsetY?: number;
+}
+
+export interface StoryImageBlock {
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** Rounded-corner clip. */
+  radius?: number;
+  /** false for the QR code: whole-module scaling, never blurred. */
+  smoothing?: boolean;
+}
+
+/**
+ * One picture. Drawn in this order: the photo (or `background`), the frame, shapes, images,
+ * then text — one renderer for every design and size (lib/socialShare/storyCanvas.ts).
+ */
 export interface StoryRenderSpec {
   width: number;
   height: number;
   mirrorPreview: boolean;
-  frameAssetUrl: string;
+  /** The selfie frame artwork; null on the ready-made designs. */
+  frameAssetUrl: string | null;
+  /** Painted when there is no photo (the ready-made designs). */
+  background?: StoryFill | null;
+  shapes?: StoryShapeBlock[];
+  images?: StoryImageBlock[];
   textBlocks: StoryTextBlock[];
 }
 
@@ -172,6 +242,8 @@ export interface StorySharePlatformAdapter<
   getCameraPermissionState: () => Promise<CameraPermissionState>;
   requestFrontCameraSession: () => Promise<CameraSession>;
   captureFrame: (input: StoryShareFrameCaptureInput<FrameSource>) => Promise<Blob>;
+  /** A ready-made design: no photo, the spec's own background. */
+  renderDesign: (spec: StoryRenderSpec) => Promise<Blob>;
   createShareFile: (input: StoryShareFileInput) => File;
   canShareFile: (file: File) => boolean;
   shareImage: (request: StoryShareRequest) => Promise<StorySharePipelineResult>;

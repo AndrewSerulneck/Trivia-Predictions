@@ -3,7 +3,7 @@
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Aperture, Camera, Check, Image as ImageIcon, RotateCcw, Share2, X } from "lucide-react";
+import { Aperture, Camera, Check, Image as ImageIcon, LayoutTemplate, RotateCcw, Share2, X } from "lucide-react";
 import {
   createStoryShareAnalyticsId,
   trackStoryCameraPermissionResult,
@@ -20,7 +20,16 @@ import {
 } from "@/lib/socialShare/cameraSession";
 import { setScrollLock } from "@/lib/scrollLock";
 import { StoryCanvasRenderError } from "@/lib/socialShare/storyCanvas";
-import { JOIN_QR_URL } from "@/lib/joinQr";
+import { APP_DOWNLOAD_URL } from "@/lib/appDownloadLink";
+import { SHARE_DESIGN_NAMES, SHARE_SIZE_NAMES } from "@/lib/socialShare/copyPresets";
+import {
+  STORY_SHARE_SIZE_ORDER,
+  STORY_SHARE_SIZES,
+  readyMadeDesignsFor,
+  type StoryShareDesign,
+  type StoryShareSize,
+} from "@/lib/socialShare/shareDesigns";
+import { STORY_SHARE_GAME_TYPES, storyShareGame } from "@/lib/socialShare/shareGames";
 import { webStoryPlatform } from "@/lib/socialShare/platform/webStoryPlatform";
 import type { StorySharePipelineResult } from "@/lib/socialShare/sharePipeline";
 import {
@@ -32,6 +41,7 @@ import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { ShareActionsSheet } from "./ShareActionsSheet";
 import { StoryOverlayEditor, StoryOverlayPreview } from "./StoryOverlayEditor";
 import { StoryShareStatusToast, type StoryShareStatusTone } from "./StoryShareStatusToast";
+import { useSharePictures } from "./useSharePictures";
 
 interface StoryCaptureModalProps {
   isOpen: boolean;
@@ -46,6 +56,8 @@ const SCROLL_LOCK_OWNER = "story-capture-modal";
 const FALLBACK_PAYLOAD_DATE = "2026-07-11T00:00:00.000Z";
 
 type StoryCaptureState = "idle" | "capturing" | "captured" | "failed";
+/** Ready-made designs first (Andrew: the camera is never required); the selfie is an extra. */
+type StoryShareMode = "designs" | "camera";
 type StoryNativeShareState = "idle" | "sharing" | "shared" | "fallback";
 
 function cameraErrorToState(error: StoryCameraSessionError): CameraViewportState {
@@ -77,6 +89,11 @@ function getCaptureStatusCopy(captureState: StoryCaptureState, captureError: str
   return null;
 }
 
+function getDesignStatusCopy(ready: boolean, failed: boolean): string {
+  if (failed && !ready) return "This picture couldn't be drawn. Try another design or a selfie.";
+  return ready ? "No camera needed. Pick a design and share." : "Drawing your picture.";
+}
+
 function getShareStatusCopy(shareState: StoryNativeShareState, shareResult: StorySharePipelineResult | null): string | null {
   if (shareState === "sharing") return "Opening share sheet.";
   if (shareResult?.status === "shared") return "Shared successfully.";
@@ -94,8 +111,8 @@ function getShareToastTone(shareState: StoryNativeShareState, shareResult: Story
   return "idle";
 }
 
-function getStoryShareFileName(preparedStory: PreparedStorySharePayload): string {
-  const game = preparedStory.payload.gameType === "live-trivia" ? "live-trivia" : "category-blitz";
+function getStoryShareFileName(preparedStory: PreparedStorySharePayload, size: StoryShareSize): string {
+  const game = `${storyShareGame(preparedStory.payload.gameType).fileSlug}${size === "post" ? "-post" : ""}`;
   const safeUsername = preparedStory.payload.username
     .trim()
     .toLowerCase()
@@ -144,13 +161,16 @@ export function StoryCaptureModal({
   const [shareResult, setShareResult] = useState<StorySharePipelineResult | null>(null);
   const [fallbackOpen, setFallbackOpen] = useState(false);
   const [storyShareId, setStoryShareId] = useState(() => createStoryShareAnalyticsId());
+  const [mode, setMode] = useState<StoryShareMode>("designs");
+  const [size, setSize] = useState<StoryShareSize>("story");
+  const [chosenDesign, setChosenDesign] = useState<StoryShareDesign | null>(null);
   const sessionRef = useRef<StoryCameraSession | null>(null);
   const requestIdRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const wasOpenRef = useRef(false);
 
   const fallbackPreparedStory = useMemo(() => prepareStorySharePayload({
-    gameType: "live-trivia",
+    gameType: STORY_SHARE_GAME_TYPES[0],
     venueId: "local-preview",
     venueName: null,
     userId: "local-user",
@@ -174,11 +194,16 @@ export function StoryCaptureModal({
     },
     {
       templateVariant: basePreparedStory.templateVariant,
-      width: basePreparedStory.renderSpec.width,
-      height: basePreparedStory.renderSpec.height,
+      size,
       mirrorPreview: basePreparedStory.renderSpec.mirrorPreview,
     }
-  ), [basePreparedStory, caption]);
+  ), [basePreparedStory, caption, size]);
+  const readyMadeDesigns = readyMadeDesignsFor(basePreparedStory);
+  const design = chosenDesign && readyMadeDesigns.includes(chosenDesign) ? chosenDesign : readyMadeDesigns[0];
+  const { pictures, failed: picturesFailed } = useSharePictures(basePreparedStory, size, design, isOpen && mode === "designs");
+  const designPicture = pictures[design] ?? null;
+  // What Share hands over: the chosen ready-made picture, or the captured selfie.
+  const shareBlob = mode === "designs" ? designPicture?.blob ?? null : capturedBlob;
   const analyticsContext = useMemo(
     () => buildStoryShareAnalyticsContext(activePreparedStory, storyShareId),
     [activePreparedStory, storyShareId]
@@ -322,7 +347,7 @@ export function StoryCaptureModal({
     if (shareCapturedStoryPendingRef.current) return;
     shareCapturedStoryPendingRef.current = true;
     try {
-      if (!capturedBlob || nativeShareState === "sharing") {
+      if (!shareBlob || nativeShareState === "sharing") {
         return;
       }
 
@@ -331,10 +356,10 @@ export function StoryCaptureModal({
       trackStoryShareAttempted(analyticsContext);
 
       const result = await webStoryPlatform.shareImage({
-        blob: capturedBlob,
-        fileName: getStoryShareFileName(activePreparedStory),
+        blob: shareBlob,
+        fileName: getStoryShareFileName(activePreparedStory, size),
         title: activePreparedStory.headline,
-        text: activePreparedStory.caption ?? activePreparedStory.subheadline,
+        text: activePreparedStory.shareText,
       });
 
       setShareResult(result);
@@ -356,7 +381,37 @@ export function StoryCaptureModal({
     } finally {
       shareCapturedStoryPendingRef.current = false;
     }
-  }, [activePreparedStory, analyticsContext, capturedBlob, nativeShareState]);
+  }, [activePreparedStory, analyticsContext, nativeShareState, shareBlob, size]);
+
+  const resetShareState = useCallback(() => {
+    setNativeShareState("idle");
+    setShareResult(null);
+    setFallbackOpen(false);
+  }, []);
+
+  const chooseDesign = useCallback((next: StoryShareDesign) => {
+    setChosenDesign(next);
+    resetShareState();
+  }, [resetShareState]);
+
+  const chooseSize = useCallback((next: StoryShareSize) => {
+    setSize(next);
+    resetCapturedImage();
+  }, [resetCapturedImage]);
+
+  const openCamera = useCallback(() => {
+    resetShareState();
+    setMode("camera");
+  }, [resetShareState]);
+
+  const backToDesigns = useCallback(() => {
+    stopSession();
+    requestIdRef.current += 1;
+    setState("idle");
+    setError(null);
+    resetCapturedImage();
+    setMode("designs");
+  }, [resetCapturedImage, stopSession]);
 
   useEffect(() => {
     setScrollLock(SCROLL_LOCK_OWNER, isOpen, "modal");
@@ -365,6 +420,8 @@ export function StoryCaptureModal({
 
   // Android's Back inside the app closes the camera, the same as Escape.
   useNativeBackHandler("overlay", isOpen ? closeModal : null);
+  // …and from the selfie it steps back to the ready-made designs first (registered later, so it wins).
+  useNativeBackHandler("overlay", isOpen && mode === "camera" ? backToDesigns : null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -402,6 +459,9 @@ export function StoryCaptureModal({
         setState("idle");
         setError(null);
         resetCapturedImage();
+        setMode("designs");
+        setSize("story");
+        setChosenDesign(null);
         if (shouldResetStoryShareId) {
           setStoryShareId(createStoryShareAnalyticsId());
         }
@@ -409,9 +469,18 @@ export function StoryCaptureModal({
       return;
     }
 
-    wasOpenRef.current = true;
+    if (!wasOpenRef.current) {
+      wasOpenRef.current = true;
+      trackStoryShareOpened(analyticsContextRef.current);
+    }
+  }, [isOpen, resetCapturedImage, stopSession]);
+
+  // The camera's permission state is read only once the player asks for a selfie.
+  useEffect(() => {
+    if (!isOpen || mode !== "camera") {
+      return;
+    }
     const openedAnalyticsContext = analyticsContextRef.current;
-    trackStoryShareOpened(openedAnalyticsContext);
 
     const capabilities = webStoryPlatform.detectCapabilities();
     if (!capabilities.hasMediaDevices) {
@@ -480,29 +549,57 @@ export function StoryCaptureModal({
       canceled = true;
       stopSession();
     };
-  }, [isOpen, resetCapturedImage, stopSession]);
+  }, [isOpen, mode, stopSession]);
 
   if (!isOpen) {
     return null;
   }
 
+  const inCamera = mode === "camera";
   const canStart = state !== "requesting" && state !== "active";
   const canCapture = state === "active" && captureState !== "capturing";
-  const canShare = capturedBlob !== null && nativeShareState !== "sharing";
+  const canShare = shareBlob !== null && nativeShareState !== "sharing";
   const shareStatusCopy = getShareStatusCopy(nativeShareState, shareResult);
   const captureStatusCopy = getCaptureStatusCopy(captureState, captureError);
-  const statusCopy = shareStatusCopy ?? captureStatusCopy ?? getStatusCopy(state, error);
+  const statusCopy = inCamera
+    ? shareStatusCopy ?? captureStatusCopy ?? getStatusCopy(state, error)
+    : shareStatusCopy ?? getDesignStatusCopy(designPicture !== null, picturesFailed);
   const captureButtonLabel = captureState === "capturing" ? "Capturing" : captureState === "captured" ? "Retake" : "Capture";
   const shareButtonLabel = nativeShareState === "sharing" ? "Sharing" : nativeShareState === "shared" ? "Shared" : "Share";
-  const showFallbackActions = fallbackOpen && capturedBlob !== null;
+  const showFallbackActions = fallbackOpen && shareBlob !== null;
+  const sizeSpec = STORY_SHARE_SIZES[size];
+  const statusIsAlert = Boolean(
+    captureError || (inCamera && error) || shareResult?.status === "failed" || (!inCamera && picturesFailed && !designPicture)
+  );
+
+  const sizeToggle = (
+    <div className="flex shrink-0 justify-center" role="group" aria-label="Picture size">
+      <div className="inline-flex rounded-full bg-white/[0.08] p-1">
+        {STORY_SHARE_SIZE_ORDER.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => chooseSize(option)}
+            aria-pressed={size === option}
+            disabled={nativeShareState === "sharing" || captureState === "capturing"}
+            className={`tp-player-pressable tp-clean-button h-9 min-w-[5.5rem] rounded-full px-4 text-sm font-black transition ${
+              size === option ? "bg-white text-slate-950" : "text-slate-300 hover:text-white"
+            }`}
+          >
+            {SHARE_SIZE_NAMES[option]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="tp-story-capture-modal fixed inset-0 z-[6200] bg-slate-950 text-white" role="dialog" aria-modal="true" aria-label="Story camera capture">
+    <div className="tp-story-capture-modal fixed inset-0 z-[6200] bg-slate-950 text-white" role="dialog" aria-modal="true" aria-label="Share your win">
       <div className="tp-story-capture-shell mx-auto flex h-full min-h-0 w-full max-w-[30rem] flex-col">
         <header className="flex shrink-0 items-center justify-between gap-3 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)]">
           <div className="min-w-0">
             <p className="text-caption font-black uppercase leading-none tracking-[0.14em] text-cyan-100/80">
-              Story capture
+              {inCamera ? "Selfie" : "Share your win"}
             </p>
             <h1 className="mt-1 truncate text-xl font-black leading-tight text-white">{title}</h1>
           </div>
@@ -510,7 +607,7 @@ export function StoryCaptureModal({
             type="button"
             onClick={closeModal}
             className="tp-player-hit-target tp-player-pressable tp-clean-button flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.08] text-white shadow-[0_8px_22px_rgba(0,0,0,0.32)] transition hover:bg-white/[0.12] "
-            aria-label="Close story capture"
+            aria-label="Close sharing"
             title="Close"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -518,42 +615,98 @@ export function StoryCaptureModal({
         </header>
 
         <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-3 pb-3">
-          <div className="relative flex min-h-0 flex-1">
-            <CameraViewport
-              stream={stream}
-              state={state}
-              title={activePreparedStory.headline}
-              subtitle={activePreparedStory.subheadline}
-              errorMessage={error?.message}
-              className={activePreparedStory.visual.previewClassName}
-              videoRef={videoRef}
-            >
-              <StoryOverlayPreview preparedStory={activePreparedStory} caption={caption} />
-            </CameraViewport>
-            {capturedImageUrl ? (
-              <div className="absolute inset-0 z-[5] overflow-hidden rounded-[32px] border border-emerald-200/40 bg-slate-950">
-                <img
-                  src={capturedImageUrl}
-                  alt="Captured story preview"
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-emerald-200/30 bg-emerald-400 px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em] text-slate-950">
-                  <Check className="h-4 w-4" aria-hidden="true" />
-                  Captured
-                </div>
+          {inCamera ? (
+            <>
+              <div className="relative flex min-h-0 flex-1">
+                <CameraViewport
+                  stream={stream}
+                  state={state}
+                  title={activePreparedStory.headline}
+                  subtitle={activePreparedStory.subheadline}
+                  errorMessage={error?.message}
+                  className={activePreparedStory.visual.previewClassName}
+                  videoRef={videoRef}
+                >
+                  <StoryOverlayPreview preparedStory={activePreparedStory} caption={caption} />
+                </CameraViewport>
+                {capturedImageUrl ? (
+                  <div className="absolute inset-0 z-[5] overflow-hidden rounded-[32px] border border-emerald-200/40 bg-slate-950">
+                    <img
+                      src={capturedImageUrl}
+                      alt="Captured story preview"
+                      className="h-full w-full object-contain"
+                    />
+                    <div className="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-emerald-200/30 bg-emerald-400 px-3 py-1.5 text-caption font-black uppercase tracking-[0.12em] text-slate-950">
+                      <Check className="h-4 w-4" aria-hidden="true" />
+                      Captured
+                    </div>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
-          <StoryOverlayEditor
-            preparedStory={activePreparedStory}
-            caption={caption}
-            onCaptionChange={handleCaptionChange}
-            disabled={captureState === "capturing" || nativeShareState === "sharing"}
-          />
+              {sizeToggle}
+              <StoryOverlayEditor
+                preparedStory={activePreparedStory}
+                caption={caption}
+                onCaptionChange={handleCaptionChange}
+                disabled={captureState === "capturing" || nativeShareState === "sharing"}
+              />
+            </>
+          ) : (
+            <>
+              <div className="flex min-h-0 flex-1 items-center justify-center">
+                {designPicture ? (
+                  <img
+                    src={designPicture.url}
+                    alt={activePreparedStory.winLine}
+                    width={sizeSpec.width}
+                    height={sizeSpec.height}
+                    className="h-full max-h-full w-auto max-w-full rounded-2xl object-contain shadow-[0_18px_44px_rgba(0,0,0,0.5)]"
+                  />
+                ) : (
+                  <div
+                    className={`h-full max-h-full max-w-full animate-pulse rounded-2xl bg-white/[0.06] ${
+                      size === "story" ? "aspect-[9/16]" : "aspect-[4/5]"
+                    }`}
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
+              {sizeToggle}
+              <div className="flex shrink-0 justify-center gap-3" role="radiogroup" aria-label="Design">
+                {readyMadeDesigns.map((option) => {
+                  const picture = pictures[option];
+                  const selected = option === design;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={SHARE_DESIGN_NAMES[option]}
+                      onClick={() => chooseDesign(option)}
+                      disabled={nativeShareState === "sharing"}
+                      className={`tp-player-pressable tp-clean-button flex flex-col items-center gap-1 rounded-xl [&:not(:disabled)]:!min-h-0 [&:not(:disabled)]:!p-1 transition ${
+                        selected ? "bg-white/[0.12] ring-2 ring-cyan-300" : "opacity-80 hover:opacity-100"
+                      }`}
+                    >
+                      <span
+                        className={`block h-20 overflow-hidden rounded-lg bg-white/[0.06] ${
+                          size === "story" ? "aspect-[9/16]" : "aspect-[4/5]"
+                        }`}
+                      >
+                        {picture ? <img src={picture.url} alt="" className="h-full w-full object-cover" /> : null}
+                      </span>
+                      <span className="text-caption font-black text-slate-200">{SHARE_DESIGN_NAMES[option]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
           {showFallbackActions ? (
             <ShareActionsSheet
-              imageBlob={capturedBlob}
-              fileName={getStoryShareFileName(activePreparedStory)}
+              imageBlob={shareBlob}
+              fileName={getStoryShareFileName(activePreparedStory, size)}
               shareResult={shareResult}
               analyticsContext={analyticsContext}
               onRetryNativeShare={shareCapturedStory}
@@ -561,71 +714,96 @@ export function StoryCaptureModal({
               onClose={() => setFallbackOpen(false)}
               linkShare={{
                 title: activePreparedStory.headline,
-                text: activePreparedStory.caption ?? activePreparedStory.subheadline,
-                url: JOIN_QR_URL,
+                text: activePreparedStory.winLine,
+                url: APP_DOWNLOAD_URL,
               }}
             />
           ) : null}
         </main>
 
         <footer className="shrink-0 border-t border-white/10 bg-slate-950/[0.92] px-4 pb-[max(env(safe-area-inset-bottom),14px)] pt-3 backdrop-blur">
-          <p className="min-h-[1.25rem] text-center text-sm font-bold leading-snug text-slate-300"><span role={captureError || error || shareResult?.status === "failed" ? "alert" : "status"}>{statusCopy}</span></p>
+          <p className="min-h-[1.25rem] text-center text-sm font-bold leading-snug text-slate-300"><span role={statusIsAlert ? "alert" : "status"}>{statusCopy}</span></p>
           <div className="mt-2">
             <StoryShareStatusToast tone={getShareToastTone(nativeShareState, shareResult)} message={shareStatusCopy} />
           </div>
-          {capturedBlob ? (
-            <div className="mt-2 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.12em] text-emerald-300">
+          {inCamera && capturedBlob ? (
+            <div className="mt-2 flex items-center justify-center gap-2 text-caption font-black uppercase tracking-[0.12em] text-emerald-300">
               <ImageIcon className="h-4 w-4" aria-hidden="true" />
               PNG ready
             </div>
           ) : null}
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={startCamera}
-              disabled={!canStart}
-              aria-busy={state === "requesting"}
-              className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(34,211,238,0.22)] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
-            >
-              {state === "denied" || state === "unsupported" || state === "error" ? (
-                <RotateCcw className="h-4 w-4" aria-hidden="true" />
-              ) : (
+          {inCamera ? (
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={startCamera}
+                disabled={!canStart}
+                aria-busy={state === "requesting"}
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(34,211,238,0.22)] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
+              >
+                {state === "denied" || state === "unsupported" || state === "error" ? (
+                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Camera className="h-4 w-4" aria-hidden="true" />
+                )}
+                {getPrimaryButtonLabel(state)}
+              </button>
+              <button
+                type="button"
+                onClick={captureStoryImage}
+                disabled={!canCapture || nativeShareState === "sharing"}
+                aria-busy={captureState === "capturing"}
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-emerald-200/40 bg-emerald-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(52,211,153,0.18)] transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
+              >
+                {captureState === "captured" ? (
+                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Aperture className="h-4 w-4" aria-hidden="true" />
+                )}
+                {captureState === "capturing" ? <ButtonSpinner /> : null}{captureButtonLabel}
+              </button>
+              <button
+                type="button"
+                onClick={shareCapturedStory}
+                disabled={!canShare}
+                aria-busy={nativeShareState === "sharing"}
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-amber-200/40 bg-amber-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(251,191,36,0.16)] transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
+              >
+                <Share2 className="h-4 w-4" aria-hidden="true" />
+                {nativeShareState === "sharing" ? <ButtonSpinner /> : null}{shareButtonLabel}
+              </button>
+              <button
+                type="button"
+                onClick={backToDesigns}
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.08] px-5 text-sm font-black text-white transition hover:bg-white/[0.12] "
+              >
+                <LayoutTemplate className="h-4 w-4" aria-hidden="true" />
+                Designs
+              </button>
+            </div>
+          ) : (
+            <div className="mt-3 grid grid-cols-[1fr_auto] gap-3">
+              <button
+                type="button"
+                onClick={shareCapturedStory}
+                disabled={!canShare}
+                aria-busy={nativeShareState === "sharing"}
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-amber-200/40 bg-amber-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(251,191,36,0.16)] transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
+              >
+                <Share2 className="h-4 w-4" aria-hidden="true" />
+                {nativeShareState === "sharing" ? <ButtonSpinner /> : null}{shareButtonLabel}
+              </button>
+              <button
+                type="button"
+                onClick={openCamera}
+                disabled={nativeShareState === "sharing"}
+                className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.08] px-5 text-sm font-black text-white transition hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-60 "
+              >
                 <Camera className="h-4 w-4" aria-hidden="true" />
-              )}
-              {getPrimaryButtonLabel(state)}
-            </button>
-            <button
-              type="button"
-              onClick={captureStoryImage}
-              disabled={!canCapture || nativeShareState === "sharing"}
-              aria-busy={captureState === "capturing"}
-              className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-emerald-200/40 bg-emerald-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(52,211,153,0.18)] transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
-            >
-              {captureState === "captured" ? (
-                <RotateCcw className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Aperture className="h-4 w-4" aria-hidden="true" />
-              )}
-              {captureState === "capturing" ? <ButtonSpinner /> : null}{captureButtonLabel}
-            </button>
-            <button
-              type="button"
-              onClick={shareCapturedStory}
-              disabled={!canShare}
-              aria-busy={nativeShareState === "sharing"}
-              className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-12 items-center justify-center gap-2 rounded-full border border-amber-200/40 bg-amber-300 px-5 text-sm font-black text-slate-950 shadow-[0_12px_28px_rgba(251,191,36,0.16)] transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
-            >
-              <Share2 className="h-4 w-4" aria-hidden="true" />
-              {nativeShareState === "sharing" ? <ButtonSpinner /> : null}{shareButtonLabel}
-            </button>
-            <button
-              type="button"
-              onClick={closeModal}
-              className="tp-player-hit-target tp-player-pressable tp-clean-button h-12 rounded-full border border-white/[0.12] bg-white/[0.08] px-5 text-sm font-black text-white transition hover:bg-white/[0.12] "
-            >
-              Done
-            </button>
-          </div>
+                Add a selfie
+              </button>
+            </div>
+          )}
         </footer>
       </div>
     </div>

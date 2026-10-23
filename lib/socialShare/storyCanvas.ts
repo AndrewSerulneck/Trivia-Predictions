@@ -1,4 +1,4 @@
-import type { StoryRenderSpec, StoryTextBlock } from "./contracts";
+import type { StoryFill, StoryImageBlock, StoryRenderSpec, StoryShapeBlock, StoryTextBlock } from "./contracts";
 
 export type StoryCanvasErrorCode =
   | "missing-video-dimensions"
@@ -27,7 +27,8 @@ export interface CoverCropRect {
 }
 
 export interface RenderStoryImageInput {
-  source: CanvasImageSource;
+  /** The selfie; absent for a ready-made design (the spec's `background` is painted instead). */
+  source?: CanvasImageSource | null;
   spec: StoryRenderSpec;
   exportMirrored?: boolean;
   outputType?: string;
@@ -155,7 +156,7 @@ function getCanvasContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D {
   return context;
 }
 
-function loadFrameAsset(src: string): Promise<HTMLImageElement> {
+function loadImageAsset(src: string): Promise<HTMLImageElement> {
   if (typeof Image === "undefined") {
     return Promise.reject(new StoryCanvasRenderError({
       code: "asset-load-failed",
@@ -169,7 +170,7 @@ function loadFrameAsset(src: string): Promise<HTMLImageElement> {
     image.onload = () => resolve(image);
     image.onerror = () => reject(new StoryCanvasRenderError({
       code: "asset-load-failed",
-      message: `Failed to load story frame asset: ${src}`,
+      message: `Failed to load story image asset: ${src}`,
     }));
     image.src = src;
   });
@@ -212,7 +213,14 @@ function estimateTextWidth(context: CanvasRenderingContext2D, text: string): num
 function wrapTextBlockLines(context: CanvasRenderingContext2D, block: StoryTextBlock): string[] {
   const maxLines = block.maxLines ?? 1;
   if (maxLines <= 1) return [block.text];
+  return wrapWords(context, block, maxLines).lines;
+}
 
+function wrapWords(
+  context: CanvasRenderingContext2D,
+  block: StoryTextBlock,
+  maxLines: number
+): { lines: string[]; truncated: boolean } {
   const words = block.text.trim().split(/\s+/);
   const lines: string[] = [];
   let currentLine = "";
@@ -233,18 +241,55 @@ function wrapTextBlockLines(context: CanvasRenderingContext2D, block: StoryTextB
     lines.push(currentLine);
   }
 
+  let truncated = false;
   if (lines.length === maxLines && words.length > 0) {
     const consumed = lines.join(" ").split(/\s+/).length;
     if (consumed < words.length) {
+      truncated = true;
       lines[maxLines - 1] = `${lines[maxLines - 1].replace(/[.,!?;:]+$/, "")}...`;
     }
   }
 
-  return lines.length > 0 ? lines : [block.text];
+  return { lines: lines.length > 0 ? lines : [block.text], truncated };
 }
 
-function drawTextBlock(context: CanvasRenderingContext2D, block: StoryTextBlock): void {
+const FONT_PX = /(\d+(?:\.\d+)?)px/;
+
+function fontPx(font: string): number | null {
+  const match = font.match(FONT_PX);
+  return match ? Number.parseFloat(match[1]) : null;
+}
+
+/**
+ * `fitMinPx`: step the font down 4px at a time (never below the floor) until the text fits —
+ * every word within `maxLines`, and a one-line block within `maxWidth`. Below the floor the
+ * last line ends in "..." / fillText squeezes it, which beats text too small to read.
+ */
+function fitTextBlock(context: CanvasRenderingContext2D, block: StoryTextBlock): StoryTextBlock {
+  const startPx = fontPx(block.font);
+  const minPx = block.fitMinPx;
+  if (minPx == null || startPx == null) return block;
+  const maxLines = block.maxLines ?? 1;
+  let px = startPx;
+  let font = block.font;
+  for (;;) {
+    context.font = font;
+    const fits = maxLines <= 1
+      ? estimateTextWidth(context, block.text) <= block.maxWidth
+      : !wrapWords(context, block, maxLines).truncated;
+    const next = px - 4;
+    if (fits || next < minPx) break;
+    const scale = next / px;
+    px = next;
+    font = block.font.replace(FONT_PX, `${px}px`);
+    block = { ...block, lineHeight: block.lineHeight ? block.lineHeight * scale : block.lineHeight };
+  }
+  return { ...block, font };
+}
+
+function drawTextBlock(context: CanvasRenderingContext2D, sourceBlock: StoryTextBlock): void {
   context.save();
+  const block = fitTextBlock(context, sourceBlock);
   context.font = block.font;
   context.fillStyle = block.color;
   context.textAlign = block.align ?? "left";
@@ -258,18 +303,22 @@ function drawTextBlock(context: CanvasRenderingContext2D, block: StoryTextBlock)
 
   const lines = wrapTextBlockLines(context, block);
   const lineHeight = block.lineHeight ?? 0;
+  // centerY: the block's lines sit centred on it (alphabetic baselines, ~0.35em below centre).
+  const startY = block.centerY == null
+    ? block.y
+    : block.centerY - (lineHeight * (lines.length - 1)) / 2 + (fontPx(block.font) ?? 0) * 0.35;
 
   if (block.strokeColor && block.strokeWidth && block.strokeWidth > 0) {
     context.strokeStyle = block.strokeColor;
     context.lineWidth = block.strokeWidth;
     context.lineJoin = "round";
     lines.forEach((line, index) => {
-      context.strokeText(line, block.x, block.y + lineHeight * index, block.maxWidth);
+      context.strokeText(line, block.x, startY + lineHeight * index, block.maxWidth);
     });
   }
 
   lines.forEach((line, index) => {
-    context.fillText(line, block.x, block.y + lineHeight * index, block.maxWidth);
+    context.fillText(line, block.x, startY + lineHeight * index, block.maxWidth);
   });
   context.restore();
 }
@@ -289,6 +338,86 @@ function exportCanvasBlob(canvas: HTMLCanvasElement, outputType: string, quality
   });
 }
 
+function roundedRectPath(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+): void {
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.arcTo(x + width, y, x + width, y + height, r);
+  context.arcTo(x + width, y + height, x, y + height, r);
+  context.arcTo(x, y + height, x, y, r);
+  context.arcTo(x, y, x + width, y, r);
+  context.closePath();
+}
+
+function fillStyleOf(context: CanvasRenderingContext2D, fill: StoryFill): string | CanvasGradient {
+  if (fill.kind === "solid") return fill.color;
+  const gradient = fill.kind === "linear"
+    ? context.createLinearGradient(fill.x0, fill.y0, fill.x1, fill.y1)
+    : context.createRadialGradient(fill.cx, fill.cy, 0, fill.cx, fill.cy, fill.r);
+  for (const stop of fill.stops) gradient.addColorStop(stop.offset, stop.color);
+  return gradient;
+}
+
+function drawShape(context: CanvasRenderingContext2D, shape: StoryShapeBlock): void {
+  context.save();
+  if (shape.shadowColor) {
+    context.shadowColor = shape.shadowColor;
+    context.shadowBlur = shape.shadowBlur ?? 0;
+    context.shadowOffsetY = shape.shadowOffsetY ?? 0;
+  }
+  context.fillStyle = fillStyleOf(context, shape.fill);
+  roundedRectPath(context, shape.x, shape.y, shape.width, shape.height, shape.radius ?? 0);
+  context.fill();
+  context.restore();
+}
+
+function drawImageBlock(context: CanvasRenderingContext2D, block: StoryImageBlock, image: HTMLImageElement): void {
+  context.save();
+  if (block.radius) {
+    roundedRectPath(context, block.x, block.y, block.width, block.height, block.radius);
+    context.clip();
+  }
+  context.imageSmoothingEnabled = block.smoothing !== false;
+  context.drawImage(image, block.x, block.y, block.width, block.height);
+  context.restore();
+}
+
+/**
+ * A font may name the app's next/font families as `var(--ht-font-display)` /
+ * `var(--ht-font-body)` (never a literal family name — CLAUDE.md "Fonts"). Canvas can't read
+ * CSS variables, so they are swapped for the computed value on <html>, which carries the
+ * metric-matched fallback too. Outside the app (no variable set) the font's own fallback list wins.
+ */
+function resolveCanvasFont(font: string): string {
+  if (!font.includes("var(")) return font;
+  const root = typeof document !== "undefined" ? document.documentElement : null;
+  const style = root && typeof getComputedStyle === "function" ? getComputedStyle(root) : null;
+  return font
+    .replace(/var\((--[\w-]+)\)\s*,?\s*/g, (_match, name: string) => {
+      const value = style?.getPropertyValue(name).trim();
+      return value ? `${value}, ` : "";
+    })
+    .replace(/,\s*$/, "");
+}
+
+/** Waits (bounded) for the webfonts the text needs, so the first picture isn't in a fallback face. */
+async function loadCanvasFonts(fonts: string[]): Promise<void> {
+  const faces = typeof document !== "undefined" ? (document as Document & { fonts?: FontFaceSet }).fonts : undefined;
+  if (!faces || typeof faces.load !== "function") return;
+  const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2500));
+  await Promise.race([
+    Promise.all([...new Set(fonts)].map((font) => faces.load(font).catch(() => []))).then(() => undefined),
+    timeout,
+  ]);
+}
+
 export async function renderStoryImage({
   source,
   spec,
@@ -298,14 +427,40 @@ export async function renderStoryImage({
 }: RenderStoryImageInput): Promise<Blob> {
   const canvas = createExportCanvas(spec.width, spec.height);
   const context = getCanvasContext(canvas);
-  const dimensions = getSourceDimensions(source);
-  const crop = calculateCoverCrop(dimensions.width, dimensions.height, spec.width, spec.height);
-  const frameImage = await loadFrameAsset(spec.frameAssetUrl);
+  const crop = source
+    ? (() => {
+        const dimensions = getSourceDimensions(source);
+        return calculateCoverCrop(dimensions.width, dimensions.height, spec.width, spec.height);
+      })()
+    : null;
+  const textBlocks = spec.textBlocks.map((block) => ({ ...block, font: resolveCanvasFont(block.font) }));
+  const imageBlocks = spec.images ?? [];
+  const sources = [...new Set([...(spec.frameAssetUrl ? [spec.frameAssetUrl] : []), ...imageBlocks.map((block) => block.src)])];
+  const [loaded] = await Promise.all([
+    Promise.all(sources.map(async (src) => [src, await loadImageAsset(src)] as const)),
+    loadCanvasFonts(textBlocks.map((block) => block.font)),
+  ]);
+  const images = new Map(loaded);
 
   context.clearRect(0, 0, spec.width, spec.height);
-  drawCoverSource(context, source, crop, exportMirrored);
-  context.drawImage(frameImage, 0, 0, spec.width, spec.height);
-  for (const textBlock of spec.textBlocks) {
+  if (source && crop) {
+    drawCoverSource(context, source, crop, exportMirrored);
+  } else if (spec.background) {
+    context.fillStyle = fillStyleOf(context, spec.background);
+    context.fillRect(0, 0, spec.width, spec.height);
+  }
+  if (spec.frameAssetUrl) {
+    const frameImage = images.get(spec.frameAssetUrl);
+    if (frameImage) context.drawImage(frameImage, 0, 0, spec.width, spec.height);
+  }
+  for (const shape of spec.shapes ?? []) {
+    drawShape(context, shape);
+  }
+  for (const block of imageBlocks) {
+    const image = images.get(block.src);
+    if (image) drawImageBlock(context, block, image);
+  }
+  for (const textBlock of textBlocks) {
     drawTextBlock(context, textBlock);
   }
 

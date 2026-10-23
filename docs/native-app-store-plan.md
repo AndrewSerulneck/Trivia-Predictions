@@ -1,6 +1,16 @@
 # Native App Store Plan — Hightop Challenge on the App Store and Google Play
 
 **Status:** Plan written 2026-10-08; Andrew's answers folded in the same day (§2 items 4–11).
+**Current state (checked 2026-10-22; supersedes the "Next:" and "uncommitted" notes below):** every phase
+through 4b plus review fixes R1–R5 is committed AND pushed to `origin/main` (`87303ae` R4–R5, `52c63df`
+`.vercelignore` fix); the Vercel deployment was not separately checked. **Remaining, in order:**
+(1) Andrew — Phase 0: Apple Developer + Google Play Organization enrolment and the Firebase project (§7 is
+still blank); (2) Andrew — rebuild the shell from `main` and run 3B.3 + section I of
+`docs/native-app-device-checklist.md`; (3) Phase 4d (no account needed); (4) Phase 5 Android half (needs
+only Firebase — see Phase 5); then, once the paid Apple account exists: Part B (2B), 4c, Phase 5 iOS half,
+6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT (2026-10-22, uncommitted — handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT (2026-10-22, uncommitted — handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** Next: 9c. **Sharing Phases 9a–9f (added
+2026-10-22)** need no Apple account except 9d's in-app Instagram direct-share. **9a can start now** (all of
+Andrew's sharing answers are in; 9e dropped).
 **Phases 1a and 1b are DONE and deployed (2026-10-08)** — latest handoff
 `docs/native-app-store-plan_PHASE_1B_HANDOFF.md` (1a: `…_PHASE_1A_HANDOFF.md`). Migration
 `20261008044524_player_account_deletion.sql` is applied to production. Phase 0 is Andrew's, in
@@ -224,8 +234,14 @@ Model rule (Andrew): **never more capable than Opus 5.5.** Models: `claude-opus-
 | 4c | Face ID passkeys in the app (based on the Phase 2 result) | **Opus 5.5** | **xhigh** | 1–2 sessions |
 | 5 | Push notifications (device registry, sending, preferences) | **Opus 5.5** | high | 2 sessions |
 | 6 | Store listings, privacy labels, reviewer account, TestFlight/internal test, submit | Sonnet 5.5 (copy) + Andrew (clicks) | medium | 1 session + review wait |
-| 7 | App Store / Google Play badges on `/info`, Smart App Banner, `/app` redirect link | Sonnet 5.5 | medium | 1 session |
+| 7 | App Store / Google Play badges on `/info` and the player sign-in, Smart App Banner, `/app` redirect link | Sonnet 5.5 | medium | 1 session |
 | 8 | Release process doc + first native update dry run | Haiku 4.5 | low | short |
+| 9a | The app download link `hightopchallenge.com/app` (built early, ahead of Phase 7) that every share points to | Sonnet 5.5 | medium | 1 session |
+| 9b | Share card v2: ready-made designs (camera never required), "I just won … at <bar>!", bar name + address + QR + app, Story and feed-post sizes | **Opus 5.5** | high | 1–2 sessions |
+| 9c | "Share my win" on every win: prizes, Bingo, Pick 'Em, NFL Pick 'Em, Fantasy, Squares, Bracket | Sonnet 5.5 | medium | 1–2 sessions |
+| 9d | The share sheet: ready-made picks, caption + link, one tap per app; Instagram Stories direct from the app | **Opus 5.5** | high | 1 session |
+| ~~9e~~ | ~~Venue Instagram handle~~ — dropped 2026-10-22 (Andrew: players tag the bar themselves; the share sheet nudges them) | — | — | — |
+| 9f | Review + Andrew's phone pass of every share path | **Opus 5.5** (review) + Andrew | high | 1 session |
 
 Phases 0 and 1 run in parallel; Phase 0 is mostly waiting on paperwork. Phase 2 can start once
 Xcode is installed. Free Apple provisioning can put a test build on Andrew's own iPhone before the
@@ -900,6 +916,18 @@ After 3B.1 and 3B.2 are deployed and the shell rebuilt:
   meaningful moment, after the first game, not at launch.
 - Dead tokens returned by FCM get disabled immediately (no retry storms).
 
+**Order (2026-10-22): build Android first.** FCM to the Android emulator needs only the free Firebase
+project (Phase 0 item 6), not the Google Play account, so the device registry, sending, preferences and
+the permission moment can all be built and proven before Apple approves the paid account. The iOS half
+(APNs `.p8` key uploaded to Firebase, the Push Notifications capability) follows on the same code.
+
+**Partner-sent pushes — NOT in this design yet (open question §6 item 4).** Everything above is
+system pushes (game starting, prizes, results). A partner composing a message to "their regulars" (the
+Reel ad's line, `docs/reel-video-assets-plan.md`) is a separate feature: a compose screen on the Partner
+Dashboard (website, never the app), sent only to players of that venue who opted in to marketing pushes
+(Apple 4.5.4), a per-venue cap (for example 2 per week), review/abuse controls, and one batched FCM send
+per message. If Andrew wants it, it becomes **Phase 5b** (Opus 5.5, high) after Phase 5.
+
 **Cost estimate to confirm in-phase:** FCM is $0. For 1,000 active players, 3 pushes/day ≈ 3,000
 sends/day spread across a handful of batched calls per cron run: well under 1,000 extra function
 invocations/day, and a few thousand small DB reads/writes per day. That is negligible at current
@@ -935,6 +963,14 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
 - An Apple Smart App Banner (`<meta name="apple-itunes-app" content="app-id=…">`) on `play.` pages.
   It shows only in iOS Safari, never inside the app. On Android, a small dismissible "Get the app"
   bar, hidden inside the app.
+- **The player sign-in points to the app (Andrew, 2026-10-22).** On `play.` in a phone browser, the
+  `JoinFlow` entry screen (`auth-method-selection`, "How do you want to continue?") shows one quiet line
+  — "Get the app" + the one store badge for that device (both on desktop) — below the sign-in choices,
+  never in front of them, never blocking sign-in. **Never inside the app** (`isNativeApp()` /
+  `nativeAppRequest`, which `app/page.tsx` already passes). **Players only:** nothing on `/owner/*` or
+  `/info`'s partner area ever points a partner at the stores. Built behind the same flag as the `/info`
+  badges, switched on only once both listings are live. Run `npm run test:god-mode-join` (it touches
+  `JoinFlow`) and keep the "minimal and simple" rule: one line, no popup.
 - A new short link **`/app`** that sends iPhones to the App Store, Android to Google Play, and
   desktops to `/info#app`. It is for future printed material. **The existing printed QR stays
   `play.hightopchallenge.com`**; it already opens the app through Universal Links.
@@ -963,6 +999,194 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
 
 ---
 
+### Phases 9a–9f — "Share my win" that sends people to the bar and to the app (added 2026-10-22)
+
+**Andrew (2026-10-22):** finish win-sharing and give players ready-made social posts that send
+whoever sees them to (1) the venue where the player won and (2) the Hightop Challenge app.
+
+**Andrew's decisions (2026-10-22, second round). Don't re-ask:**
+1. **The camera is never required.** Every win gets ready-made content to share with no photo. A selfie
+   is an optional extra for those who want one.
+2. **What gets packaged:** game wins and prizes won.
+3. **Every design shows the bar's name and its physical address** (street + city, from the address
+   the partner gave at signup: `venues.address` / `venues.city`). **No directions**: no Maps button,
+   no Maps link.
+4. **A prize win names the prize.** Andrew's wording: **"I just won [value of the prize] off my tab at
+   [name of the business]!"** Exact text for each prize kind (the value comes from `prizeCardFace`):
+   - gift card with an amount: **"I just won $15 off my tab at The Pour House!"** (Andrew's wording exactly);
+   - any other prize, where "off my tab" would be untrue (a free appetizer, "50% off an Appetizer",
+     a bottle of wine, a gift card with no amount): **"I just won a Free Appetizer at The Pour House!"**
+     (approved by Andrew 2026-10-22; edit it in the one copy file);
+   - a game win with no prize: **"I just won Live Trivia at The Pour House!"** (approved by Andrew 2026-10-22).
+   The business name is the venue's display name (`getVenueDisplayName` / `venues.displayName`, else `name`).
+5. **Two sizes:** Story (1080×1920) and feed post (1080×1350).
+6. **Meta App ID:** Andrew creates it (steps in Phase 9d).
+7. **No public venue page (Andrew, 2026-10-22, third round).** Every share's link and QR point to the
+   **app download link** `hightopchallenge.com/app` (Phase 9a). The bar is named on the picture and in
+   the text only.
+8. **Tagging the bar is left to the player.** The share sheet shows one nudge line, "Tag <bar> in your
+   post". There's no Instagram-handle field and no auto-tag (old Phase 9e dropped).
+9. **The two wording variants in item 4 are approved** (Andrew, 2026-10-22).
+
+**What exists today (verified 2026-10-22).** Built from `docs/bar-victory-story-share-master-plan.md`
+(July 2026) + Phase 4a.1:
+- "Create story" (`components/social-share/StoryShareLauncher.tsx` → `StoryCaptureModal.tsx`): a
+  **front-camera selfie** under a branded frame (`public/story-frames/{live-trivia,category-blitz}/`),
+  with rank, score, % correct, username, venue name, a caption preset (`lib/socialShare/copyPresets.ts`)
+  and a "Play at Hightop" / "Play Category Blitz" line, drawn on canvas (`lib/socialShare/storyCanvas.ts`,
+  layout in `storyPayloads.ts`) at 1080×1920.
+- Share: the phone's share sheet with the picture (`sharePipeline.ts`; native on Android via
+  `lib/nativeImageShare.ts`). Fallback sheet (`ShareActionsSheet.tsx`): save the picture, "Open
+  Instagram/Facebook" (camera roll, no link attached, `deepLinks.ts`), or share a link.
+- **Only two places:** Live Trivia post-game (`app/trivia/live/page.tsx`) and Category Blitz completion
+  (`components/category-blitz/CategoryBlitzGame.tsx`). `StoryShareGameType` = those two only.
+
+**Gaps this finishes:**
+1. **Nobody can find the bar from the post.** The picture has the venue *name* only: no city, no
+   address, no link, no QR. The shared link is the generic `JOIN_QR_URL`
+   (`play.hightopchallenge.com`), not the venue. There's no public page for a venue at all
+   (`/venue/[venueId]` is the signed-in hub behind `proxy.ts`).
+2. **Nothing points to the app.** No "Get the app" on the picture or in the link.
+3. **The camera is required.** Camera denied, a dark bar, or a shy player all mean no post. There's
+   no ready-made design without a photo.
+4. **Most wins can't be shared:** a prize won, Bingo, Pick 'Em, NFL Pick 'Em, Fantasy, Squares and
+   Bracket have no share at all.
+5. **Story size only.** There's no 4:5 feed-post size, and no ready caption that names the bar or tags it.
+
+**Facts that shape the design (don't re-research):**
+- A web page **can't put a clickable link into an Instagram Story or post**. Instagram strips it, and
+  only the user can add a link sticker. So **the picture itself must say where** (venue
+  name + city and a QR code), and the copied caption carries the link for the user's link sticker or
+  bio. On Facebook, X, Messages and WhatsApp the link travels with the share text.
+- Inside the native app, Instagram's "Sharing to Stories" (iOS `instagram-stories://share` with the
+  image on the pasteboard; Android `com.instagram.share.ADD_TO_STORY` intent) opens the Story editor
+  with the picture already in it. It needs a **Meta (Facebook) App ID**, which is free (Andrew creates
+  it; record it in §7). The website keeps the share-sheet path.
+- `qrcode.react` is already a dependency (QR on the picture, drawn client-side).
+- Store badges on the picture: the official artwork only, and **only once both listings are live**
+  (same rule as Phase 7). Until then the picture says "hightopchallenge.com".
+
+#### Phase 9a — The app download link, built early (Sonnet 5.5, medium)
+
+Andrew (2026-10-22): **no public venue page.** Shares point to the app download. This pulls Phase 7's
+`/app` link forward so 9b can print it on every picture. Phase 7 keeps the badges, the Smart App
+Banner and the sign-in pointer.
+- **`hightopchallenge.com/app`** (apex, short enough to read off a Story). An iPhone goes to the App
+  Store listing, an Android to Google Play, and anything else to `/info#app`, which never dead-ends.
+  **Until the store listings are live** (store URL constants empty), every device goes to
+  `play.hightopchallenge.com`, so a share made today still works and upgrades by itself on launch day.
+- **The path is permanent once a picture is posted** (a QR in someone's camera roll can't be
+  updated, same as the printed join QR). Never rename it, never make it depend on an env var for its
+  *path*. Store URLs live in one constants file (Phase 7's rule), read only by this route and the
+  badge components.
+- A route handler (`app/app/route.ts`, a 302 decided from the `User-Agent`), `Cache-Control: private,
+  no-store` (the answer depends on the device). Cost: one tiny function call per tap, no DB read. At
+  a viral 10,000 taps/day that's 10,000 invocations, which is negligible. Add a narrow `proxy.ts`
+  public allow only if the gate catches it (check first, don't change the default).
+- Inside the native app the link should never be needed. If tapped there, send it to the app's
+  front door, not a store.
+- Tests: the UA → destination table (iPhone, iPad, Android, desktop, unknown, store URLs unset), plus
+  a contract test that the QR value used by the share cards is this one constant.
+
+#### Phase 9b — Share card v2 (Opus 5.5, high)
+**Status: built 2026-10-22, uncommitted. As-built + traps: `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`.**
+- **Ready-made designs first, photo optional (Andrew: never require the camera).** Every win
+  offers 2–3 finished designs with no camera (game gradient, or the prize gift card for a prize; the
+  headline line; username). "Add a selfie" is an optional extra on top of the existing camera flow.
+  A denied or missing camera still leaves the ready-made designs shareable. The current "Create
+  story" button opens the ready-made designs first, not the camera.
+- **The headline is Andrew's line** (decision 4 above): "I just won $15 off my tab at The Pour
+  House!" (or the prize/game variant), built by one function in the copy file from `prizeCardFace`,
+  never re-derived per screen.
+- **Every design carries the bar and the app:** the bar's name + physical address (street, city;
+  **no directions**), a QR to **`hightopchallenge.com/app`** (9a), and "Play on Hightop
+  Challenge" + the store badges (or "hightopchallenge.com" until the listings are live). A venue
+  with no address on file shows the name only. Respect Instagram's story safe zones (keep the QR and venue line out of the top ~250
+  and bottom ~340 px) and the 12 px text floor.
+- **Two sizes:** Story 1080×1920 and feed post 1080×1350 (4:5), from the same layout spec in
+  `storyPayloads.ts`. The canvas engine (`storyCanvas.ts`) gains QR + image-block drawing. One
+  renderer, never a second one.
+- Generalise `StoryShareGameType` into a registry, like Results: one entry per game with its label,
+  gradient, frames and result fields. Category Blitz and Live Trivia move onto it unchanged.
+- Copy lives in one file (extend `copyPresets.ts`). Use **Prize** on screen, never "Reward". The
+  existing caption presets stay. Add a "venue" line per category ("Champion at [Venue]").
+
+#### Phase 9c — "Share my win" on every win (Sonnet 5.5, medium)
+- One `ShareWinButton` (wrapping the launcher) placed on: the prize-won moment and each won card in
+  `/redeem-prizes` (the gift-card design is the share picture, `PrizeCard` + `prizeCardFace`, no
+  second card); Bingo win; Pick 'Em and NFL Pick 'Em weekly results; Fantasy; Squares quarter win;
+  Bracket results. Live Trivia and Category Blitz keep theirs. Phase 4d's "Invite a friend" sits
+  next to it where 4d already planned (post-game).
+- **Share only what the server already said.** A button appears only on a result the screen already
+  loaded (rank, prize). No new request to build a share card, and no new polling. A seasonal game
+  appears only while its flag/date gate is on.
+- Shows the prize *name* only ("Won a $15 Off Tab"), never a coupon code, QR, gift card number or
+  redeem button (a shared redemption QR could be scanned by a stranger). Contract test.
+- Tripwire test listing every win screen that must have the button, like
+  `tests/native-back-review-fixes.test.ts`.
+
+#### Phase 9d — The share sheet (Opus 5.5, high)
+- After a win: one sheet showing the ready-made designs as tappable thumbnails (Story/Post toggle),
+  the pre-written caption with the venue link (one "Copy caption + link" button), then one row of
+  destinations: **Instagram Story, Instagram post, Facebook, X, Messages/WhatsApp, Save, More**.
+  The Instagram choices copy the caption + link first and say "Paste the link in a link sticker".
+- **Tag nudge (Andrew, 2026-10-22):** one quiet line under the destinations: "Tag <bar> in your post".
+  It's text only: no handle lookup, no auto-tag. The copied caption also ends with the bar's name.
+- **In the app:** Instagram Story = Meta's Sharing to Stories (opens the Story editor with the
+  picture; needs the Meta App ID; capability-checked through `hasNativeCapability`, old app builds
+  fall back to the share sheet). This is a small native plugin in `native/` plus a bridge call.
+- Default selection: the first ready-made design (no photo). "Take a selfie instead" is one secondary
+  button in the sheet.
+- **Andrew's step — create the Meta App ID (free, ~15 min, before the native half of this phase).**
+  Meta renames these screens often; the 9d agent re-checks Meta's "Sharing to Stories" developer doc at
+  the start and corrects these steps if they've moved.
+  1. Sign in to Facebook with your own account and go to **https://developers.facebook.com**. Click
+     **Get Started** / **My Apps**. If asked, register as a developer (accept the terms, confirm your
+     phone or email).
+  2. **My Apps → Create App.** App name **"Hightop Challenge"**, contact email
+     **support@hightopchallenge.com**.
+  3. When asked what the app should do, choose the plain option with no Facebook Login, ads or
+     business permissions (currently **"Other"**, then app type **"Consumer"** or **"None"**). Sharing
+     to Stories needs no permissions and no App Review.
+  4. If asked for a business portfolio, you may link **Hightop Challenge LLC** or skip it; it isn't
+     required for this.
+  5. **App settings → Basic:** add Privacy Policy URL **https://hightopchallenge.com/privacy**, Terms URL
+     **https://hightopchallenge.com/terms**, category **Games** (or Entertainment) and the app icon
+     (`public/brand/web/htc-logo-512.webp` converted to PNG, or the store icon). If it offers
+     **Add platform**, add **iOS** (bundle id `com.hightopchallenge.app`) and **Android** (package
+     `com.hightopchallenge.app`).
+  6. Switch the app from **Development** to **Live** (the toggle at the top; it needs the privacy URL
+     from step 5).
+  7. Copy the **App ID** (a long number at the top of the page) into §7 of this plan. The App ID is
+     public and safe to share. **Never copy the App Secret anywhere**: this feature doesn't use it.
+     If it's ever pasted somewhere by mistake, reset it on that same page.
+- Native half: the App ID goes in the native shell config (not a secret). iOS needs
+  `instagram-stories` in `LSApplicationQueriesSchemes`; Android uses the
+  `com.instagram.share.ADD_TO_STORY` intent with the Facebook App ID extra. A small plugin in `native/`,
+  capability-checked through `hasNativeCapability`; old app builds fall back to the share sheet.
+- Haptics through `haptic()` only. Native Back closes the sheet (`useNativeBackHandler("overlay", …)`
+  and add it to `tests/native-back-review-fixes.test.ts`).
+- Analytics: reuse `lib/analytics.ts` events already wired to the share flow. No new table, no new
+  route.
+
+#### ~~Phase 9e — Venue Instagram handle~~ — DROPPED 2026-10-22
+Andrew: players will tag the bar themselves. The share sheet (9d) shows one nudge line instead. Revive
+this (a `venues.instagram_handle` column + a Partner Dashboard field) only if Andrew asks.
+
+#### Phase 9f — Review + phone pass (Opus 5.5 review, high + Andrew)
+- `/code-review` of 9a–9d. A device checklist section: every share path on the iPhone app, the
+  Android app, iPhone Safari and Android Chrome. Instagram Story, Instagram post, Facebook,
+  Messages, the camera-denied path (ready-made designs still share), and the QR on a posted Story
+  scanned from another phone (lands on the right store, or `play.` before launch).
+
+**Order and dependencies:** 9a first (every picture prints its link). 9b and 9c can follow before the store
+listings are live: the badges switch on with Phase 7's flag. 9d's Instagram direct-share needs the
+app build + the Meta App ID; its web half doesn't. **Cost:** $0 recurring: one redirect call per tap on
+`/app`, no DB reads. All pictures are drawn on the player's phone, with no server
+rendering, no storage and no new cron.
+
+---
+
 ## 5. Hard rules for every phase
 
 - Everything in `CLAUDE.md` still applies: the `.env.local` append-only rule, migrations as new
@@ -988,6 +1212,17 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
 2. ~~Square logo (Phase 3B.2)~~ — answered 2026-10-09: Andrew supplied Square's "Built with Square"
    badge and its guidelines (Phase 3B.2 "Andrew's inputs").
 3. ~~Phase 3B.2 copy~~ — answered 2026-10-09: approved as written.
+4. **Partner-sent pushes (2026-10-22):** should partners be able to send their own push messages to
+   their venue's opted-in players (Phase 5b, see Phase 5)? The Reel ad says "send push notifications to
+   your regulars", so the ad can't run with that line until 5b ships.
+5. **App Store rating prompt (suggested 2026-10-22):** add the native "Rate this app" prompt (Apple's
+   `SKStoreReviewController` / Google's In-App Review) after a player's first win? Ratings help the
+   listing rank. Small; would sit in Phase 6.
+6. **Sharing (Phases 9a–9f, 2026-10-22):** answered — no camera required, ready-made content, bar
+   name + physical address on every design, no directions, prize named with Andrew's "I just won … off
+   my tab at …" line, feed-post size, Andrew creates the Meta App ID (decisions at the top of Phases 9a–9f).
+   All answered 2026-10-22: no public venue page (shares → `/app`), players tag the bar themselves
+   (9e dropped), both wording variants approved.
 
 Answered 2026-10-08 and moved to §2: US-only, remove deleted accounts, retire the PWA prompt and
 keep the browser path, Andrew does the legal review, Android testing on the emulator (no phone). Answered in
@@ -999,8 +1234,9 @@ dollar cap.
 
 - Legal business name: Hightop Challenge LLC (New Jersey) — `LEGAL_ENTITY_NAME` in `lib/legalInfo.ts`
 - D-U-N-S number: 14-998-5585 (received 2026-10-17)
-- Apple Team ID:
-- Google Play developer account name:
-- Firebase project id:
+- Apple Team ID: 2U7HMXGQM3 (given by Andrew 2026-10-22; public, not a secret) — server env `APPLE_TEAM_ID`
+- Google Play developer account name: Hightop Challenge (given by Andrew 2026-10-22)
+- Firebase project id: hightop-challenge-fdca1 (from `.firebaserc`, untracked)
+- Meta (Facebook) App ID, for Instagram Story direct-share (Phase 9d): 1413553567605243 (given by Andrew 2026-10-22; an App ID is public, not a secret)
 - Support email: support@hightopchallenge.com — `SUPPORT_EMAIL` in `lib/legalInfo.ts`
 - Where the signing keys and APNs key are stored (location only):

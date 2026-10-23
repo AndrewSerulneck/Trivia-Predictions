@@ -54,6 +54,7 @@ import {
 } from "@/components/venue/venueHubShared";
 import { RewardProgressGauge } from "@/components/venue/RewardProgressGauge";
 import { formatCalendarDate } from "@/lib/formatCalendarDate";
+import { rememberShareVenue } from "@/lib/socialShare/shareVenue";
 
 type BingoBadgePayload = {
   ok: boolean;
@@ -531,6 +532,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   }, [hasUserTokenInCookie, venue.id]);
 
   const venueDisplayName = getVenueDisplayName(venue as any);
+
+  // Share pictures name the bar and its address; the games read it back from here (no request).
+  useEffect(() => {
+    rememberShareVenue(venue);
+  }, [venue]);
 
   useEffect(() => {
     if (venueReadyDispatchedRef.current || typeof window === "undefined" || !homeRevealComplete) {

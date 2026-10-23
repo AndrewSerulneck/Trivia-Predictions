@@ -67,7 +67,8 @@ type QueuedEvent = {
   sessionId?: string;
   userSessionId?: string | null;
   gameSessionId?: string;
-  gameType?: GameAnalyticsType;
+  /** A game session's type, or (story_share_* events) the share registry's game id. */
+  gameType?: GameAnalyticsType | StoryShareGameType;
   outcome?: GameOutcome;
   interactionId?: string;
   interactionType?: "view" | "click" | "convert";
