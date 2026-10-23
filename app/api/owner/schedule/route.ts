@@ -13,6 +13,7 @@ import {
   listOwnerSchedules,
   ownsVenue,
 } from "@/lib/ownerSchedule";
+import { announceAfterResponse, announceNewGame } from "@/lib/push/venueNews";
 import type { OwnerScheduleGameType } from "@/types";
 
 function isTimeValidationError(message: string): boolean {
@@ -142,6 +143,8 @@ export async function POST(request: Request) {
       recurringType,
       recurringDays,
     });
+    // "News from your bars" (Phase 5.4): one push to this bar's players, after the reply is sent.
+    announceAfterResponse(() => announceNewGame(schedule));
     return NextResponse.json({ ok: true, schedule });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create schedule.";

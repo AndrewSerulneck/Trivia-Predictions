@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { announceAfterResponse, announceNewPrize } from "@/lib/push/venueNews";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import {
   REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE,
@@ -90,6 +91,8 @@ export async function POST(request: Request) {
       bracketKeys: Array.isArray(body.bracketKeys) ? body.bracketKeys : null,
       createdByOwnerId: auth.ownerId,
     });
+    // "News from your bars" (Phase 5.4): one push to this bar's players, after the reply is sent.
+    announceAfterResponse(() => announceNewPrize(venueId, reward));
     return NextResponse.json({ ok: true, reward });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to create prize.";

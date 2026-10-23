@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { Clock, ListChecks, Trophy, type LucideIcon } from "lucide-react";
+import { CalendarPlus, Clock, ListChecks, Trophy, type LucideIcon } from "lucide-react";
 import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { haptic } from "@/lib/haptics";
@@ -20,6 +20,7 @@ const BENEFITS: { category: PushCategory; Icon: LucideIcon }[] = [
   { category: "prizes", Icon: Trophy },
   { category: "results", Icon: ListChecks },
   { category: "games", Icon: Clock },
+  { category: "news", Icon: CalendarPlus },
 ];
 
 export const PushWelcomeScreen = ({ ready }: { ready: boolean }) => {

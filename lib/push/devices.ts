@@ -19,6 +19,7 @@ type DeviceRow = {
   notify_games: boolean;
   notify_prizes: boolean;
   notify_results: boolean;
+  notify_news: boolean;
 };
 
 type Owner = { userId: string; accountId: string | null; venueId: string | null };
@@ -27,24 +28,27 @@ export type PushDeviceResult =
   | { ok: true; preferences: PushPreferences }
   | { ok: false; error: "unavailable" | "user_not_found" | "not_found" | "write_failed" };
 
-const PREFERENCE_COLUMN: Record<PushCategory, "notify_games" | "notify_prizes" | "notify_results"> = {
+const PREFERENCE_COLUMN: Record<PushCategory, "notify_games" | "notify_prizes" | "notify_results" | "notify_news"> = {
   games: "notify_games",
   prizes: "notify_prizes",
   results: "notify_results",
+  news: "notify_news",
 };
 
 const defaultPreferenceColumns = (): Record<(typeof PREFERENCE_COLUMN)[PushCategory], boolean> => ({
   notify_games: DEFAULT_PUSH_PREFERENCES.games,
   notify_prizes: DEFAULT_PUSH_PREFERENCES.prizes,
   notify_results: DEFAULT_PUSH_PREFERENCES.results,
+  notify_news: DEFAULT_PUSH_PREFERENCES.news,
 });
 
-const DEVICE_COLUMNS = "id, user_id, account_id, notify_games, notify_prizes, notify_results";
+const DEVICE_COLUMNS = "id, user_id, account_id, notify_games, notify_prizes, notify_results, notify_news";
 
 const preferencesOf = (row: DeviceRow): PushPreferences => ({
   games: row.notify_games,
   prizes: row.notify_prizes,
   results: row.notify_results,
+  news: row.notify_news,
 });
 
 /** A FCM registration token as the app sends it: printable, no spaces, 20–4096 characters. */

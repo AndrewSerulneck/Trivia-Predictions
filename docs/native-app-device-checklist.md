@@ -191,15 +191,29 @@ it simply never asks). Use a normal player account, not God Mode.
 Needs the web deploy of 5.3. To see it again on a phone that already had it: delete and reinstall the app.
 
 51. **Our screen first:** a fresh install, sign in, pick a venue → once Venue Home has loaded, a full screen
-    "Want to know the moment you win?" with three lines (prizes, results, Live Trivia) and **Turn on** / **Not
-    now**. Apple's/Android's own question has NOT appeared yet.
-52. **Turn on:** tap it → now the phone's own question appears → Allow → the screen closes with a buzz; the menu's
-    Notifications block shows the three switches on.
+    "Want to know the moment you win?" with four lines (prizes, results, Live Trivia, and — since 5.4 — new
+    games and prizes at your bars) and **Turn on** / **Not now**. Apple's/Android's own question has NOT appeared yet.
+52. **Turn on:** tap it → now the phone's own question appears → Allow → the screen closes with a buzz; open the
+    menu right away (same launch) → the Notifications block shows the four switches on.
 53. **Not now** (on another fresh install): the screen closes, no phone question. Close the app fully and open it
     again → no welcome; once you have points, the "Want to know when you win?" card appears on Venue Home.
 54. **No ad in the same visit:** on the launch that showed the welcome, no popup ad appears anywhere until you close
     and reopen the app. (Only checkable once a popup ad is live.)
 55. **Android Back** on the welcome = Not now. **Website** (Safari/Chrome): never a welcome; popup ads unchanged.
+
+## M. Phase 5.4 — "News from your bars" (web deploy only; no rebuild)
+
+Needs the web deploy of 5.4. Use a bar where your player account has played (Pacific Street). The partner steps
+are on the website's Partner Dashboard (never in the app).
+
+56. **The switch:** in the app, open the menu → Notifications has a 4th switch, **News from your bars**, on.
+57. **New game:** on the Partner Dashboard, schedule a new Live Trivia game at that bar → within a few seconds the
+    phone shows "New game at Pacific Street" / "Live Trivia Thu, Oct 30 at 8:00 PM. Tap to see it." (or "every
+    Thursday at 8:00 PM" for a weekly game). Tap it → the app opens that bar's Venue Home.
+58. **New prize:** create a new prize there → "New prize at Pacific Street" / "Win a $25 gift card. Tap to see how."
+59. **Only new things:** edit or delete an existing game or prize → no push.
+60. **The switch works:** turn News from your bars off → create another game → no push. Turn it back on.
+61. **Daily cap:** the 6th new game or prize at one bar on the same day → no push (5 a day per bar).
 
 ## Results
 

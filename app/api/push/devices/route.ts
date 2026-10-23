@@ -13,7 +13,7 @@ import { isSessionEnforced, resolveRequestUserId } from "@/lib/serverSession";
 // Body: { action: "register" | "preferences" | "unregister", token, userId?, preferences? }.
 //   register    — this phone, for the signed-in player; returns its switches. App only: the platform
 //                 and version come from the app's User-Agent, never the body.
-//   preferences — changes some of { games, prizes, results } on this phone; returns them all.
+//   preferences — changes some of { games, prizes, results, news } on this phone; returns them all.
 //   unregister  — removes this phone (Sign Out, before the session cookie is cleared).
 //
 // The player is the SIGNED tp_sess session's (resolveRequestUserId; a different body userId is 403),

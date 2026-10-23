@@ -135,8 +135,12 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   `PushNotificationSettings` in the menu, Sign Out unregisters first. **5.3 (2026-10-23): the FIRST ask is our own
   full screen, `PushWelcomeScreen` on Venue Home (once per phone, `htc:push-welcome-seen-at`); the OS prompt only on its
   Turn on; the card is the later reminder. `PopupAds` asks `pushWelcomeHoldsPopupAds()` before every popup — the welcome
-  and a popup ad never share a visit. Words in `PUSH_COPY` promise only pushes the server sends (contract test).** Categories: `games`/`prizes`/`results` only
-  (`lib/pushCategories.ts`) — a marketing push needs its own OFF-by-default switch (Apple 4.5.4).
+  and a popup ad never share a visit. Words in `PUSH_COPY` promise only pushes the server sends (contract test).** Categories: `games`/`prizes`/`results`/`news`
+  (`lib/pushCategories.ts`). **5.4 (2026-10-23, migration `20261023141109` applied): `news` = "News from your bars", the ONE
+  promotional switch (Apple 4.5.4; default on, stated on the welcome before Turn on).** A partner's NEW game or prize
+  (`POST /api/owner/schedule`, `POST /api/owner/rewards` only) → `lib/push/venueNews.ts` after the reply (`after`) → RPC
+  `claim_venue_news_push` (once per game/prize, cap `VENUE_NEWS_DAILY_CAP` = 5 per bar per local day, audience = phones of
+  players with a profile at the bar). 5.5's partner messages ride on `news` with their own cap.
   `tests/push-notifications-contract.test.ts`, `npm run test:push-sql`. iPhone half = Phase 5.2 (signed by the
   paid team as `com.hightopchallenge.app` 2026-10-23; waits on Andrew's APNs key — `…_PHASE_5_2_HANDOFF.md`). Firebase Analytics must stay unlinked.
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from

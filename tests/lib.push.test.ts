@@ -17,6 +17,15 @@ vi.mock("@/lib/venueDisplayName", () => ({ getVenueDisplayName: mocks.getVenueDi
 import { buildFcmMessage, classifyFcmError, resetFcmCacheForTests, sendPushMessages } from "@/lib/push/fcm";
 import { pushesFromClaimedRows, sendPendingNotificationPushes } from "@/lib/push/outbox";
 import { gameReminderBody, sendLiveGameStartPushes, GAME_REMINDER_TITLE } from "@/lib/push/gameReminders";
+import {
+  announceNewGame,
+  announceNewPrize,
+  newGamePush,
+  newPrizePush,
+  VENUE_NEWS_DAILY_CAP,
+  VENUE_NEWS_MAX_IDLE_DAYS,
+} from "@/lib/push/venueNews";
+import type { OwnerSchedule } from "@/types";
 import { pushCategoryForNotification, safePushPath } from "@/lib/pushCategories";
 import {
   disablePushForSignOut,
@@ -256,6 +265,105 @@ describe("Live Trivia starts soon", () => {
   });
 });
 
+describe("News from your bars (Phase 5.4)", () => {
+  const START = "2026-10-30T00:00:00.000Z"; // Thu Oct 29, 8:00 PM in New York
+  const schedule = (over: Partial<OwnerSchedule> = {}): OwnerSchedule => ({
+    id: "sched-1",
+    venueId: "v1",
+    title: "Trivia night",
+    startTime: START,
+    endTime: "2026-10-30T01:00:00.000Z",
+    timezone: "America/New_York",
+    recurringType: "none",
+    recurringDays: [],
+    windowMinutes: 60,
+    isActive: true,
+    createdAt: START,
+    updatedAt: START,
+    gameType: "live_trivia",
+    ...over,
+  });
+  const claimed = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ outcome: "claimed", device_id: `d${i + 1}`, token: TOKEN(i + 1) }));
+
+  it("says what is new, when, and where", () => {
+    expect(newGamePush(schedule(), "Pacific Street")).toEqual({
+      title: "New game at Pacific Street",
+      body: "Live Trivia Thu, Oct 29 at 8:00 PM. Tap to see it.",
+    });
+    expect(newGamePush(schedule({ recurringType: "weekly", recurringDays: ["thu", "tue"] }), null)).toEqual({
+      title: "New game at your bar",
+      body: "Live Trivia every Tuesday and Thursday at 8:00 PM. Tap to see it.",
+    });
+    expect(newGamePush(schedule({ recurringType: "daily", gameType: "category_blitz" }), "X").body).toBe(
+      "Category Blitz every day at 8:00 PM. Tap to see it.",
+    );
+    expect(newPrizePush({ prizeKind: "gift_card", prizeGiftCertificateAmount: 25 }, "Pacific Street")).toEqual({
+      title: "New prize at Pacific Street",
+      body: "Win a $25 gift card. Tap to see how.",
+    });
+    const place = { prizeKind: "gift_card" as const, prizeGiftCertificateAmount: 10 };
+    expect(newPrizePush({ placePrizes: [place, place, place] }, null).body).toBe("Prizes for the top 3. Tap to see how to win.");
+    expect(newPrizePush({ placePrizes: [place] }, null).body).toBe("Win a $10 gift card. Tap to see how.");
+  });
+
+  it("claims through the RPC with the one cap, then sends once to every claimed phone", async () => {
+    mocks.rpc.mockResolvedValue({ data: claimed(2), error: null });
+    mocks.getVenueDisplayName.mockResolvedValue("Pacific Street");
+    const fetchMock = stubGoogle(() => jsonResponse(200, {}));
+
+    const report = await announceNewGame(schedule(), Date.parse(START) - 86_400_000);
+    expect(report).toMatchObject({ kind: "game", outcome: "claimed", sent: 2, failed: 0 });
+    expect(VENUE_NEWS_DAILY_CAP).toBe(5);
+    expect(mocks.rpc).toHaveBeenCalledWith("claim_venue_news_push", {
+      p_venue_id: "v1",
+      p_kind: "game",
+      p_source_id: "sched-1",
+      p_daily_cap: VENUE_NEWS_DAILY_CAP,
+      p_max_idle_days: VENUE_NEWS_MAX_IDLE_DAYS,
+    });
+    const sends = fetchMock.mock.calls.filter(([url]) => String(url).includes("fcm.googleapis.com"));
+    expect(sends).toHaveLength(2);
+    expect(JSON.parse(String(sends[0][1]?.body))).toMatchObject({
+      message: { notification: { title: "New game at Pacific Street" }, data: { path: "/venue/v1" } },
+    });
+  });
+
+  it("sends nothing (and reads no venue name) when the bar is capped or it was already announced", async () => {
+    for (const outcome of ["capped", "duplicate", "no_audience"]) {
+      mocks.rpc.mockResolvedValue({ data: [{ outcome, device_id: null, token: null }], error: null });
+      const fetchMock = stubGoogle(() => jsonResponse(200, {}));
+      const report = await announceNewPrize("v1", { id: "camp-1", prizeKind: "gift_card", prizeGiftCertificateAmount: 25 });
+      expect(report).toMatchObject({ outcome, sent: 0 });
+      expect(fetchMock).not.toHaveBeenCalled();
+    }
+    expect(mocks.getVenueDisplayName).not.toHaveBeenCalled();
+  });
+
+  it("disables dead phones and never throws, even when the claim fails", async () => {
+    mocks.rpc.mockResolvedValue({ data: claimed(2), error: null });
+    const update = vi.fn(() => ({ in: vi.fn().mockResolvedValue({ error: null }) }));
+    mocks.from.mockReturnValue({ update });
+    stubGoogle((tok) =>
+      tok === TOKEN(2)
+        ? jsonResponse(404, { error: { status: "NOT_FOUND", details: [{ errorCode: "UNREGISTERED" }] } })
+        : jsonResponse(200, {}),
+    );
+    expect(await announceNewPrize("v1", { id: "camp-2" })).toMatchObject({ sent: 1, failed: 1, disabledDevices: 1 });
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ disabled_reason: "fcm-dead-token" }));
+
+    mocks.rpc.mockResolvedValue({ data: null, error: { message: "function missing" } });
+    expect(await announceNewPrize("v1", { id: "camp-3" })).toMatchObject({ skipped: "failed", sent: 0 });
+  });
+
+  it("does nothing while push isn't configured, or for a one-off game already over", async () => {
+    expect(await announceNewGame(schedule(), Date.parse("2026-11-01T00:00:00Z"))).toMatchObject({ skipped: "past" });
+    delete process.env.FCM_SERVICE_ACCOUNT_JSON;
+    expect(await announceNewGame(schedule(), 0)).toMatchObject({ skipped: "not-configured" });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+});
+
 describe("app-side client (lib/nativePush.ts)", () => {
   type Store = Record<string, string>;
   const storageOver = (store: Store) => ({
@@ -281,6 +389,7 @@ describe("app-side client (lib/nativePush.ts)", () => {
       Capacitor: { isNativePlatform: () => true, isPluginAvailable: (n: string) => plugins.includes(n), nativePromise },
       localStorage: storageOver(store),
       sessionStorage: storageOver(session),
+      dispatchEvent: vi.fn(),
     };
     vi.stubGlobal("window", win);
     vi.stubGlobal("navigator", win.navigator);
@@ -332,6 +441,11 @@ describe("app-side client (lib/nativePush.ts)", () => {
     const result = await enablePush();
     expect(result).toEqual({ ok: true, preferences: { games: true, prizes: true, results: true } });
     expect(store["htc:push-opt-in"]).toBe("1");
+    // The menu's already-mounted switches hear about it (Phase 5.4 fix).
+    const fired = (window.dispatchEvent as ReturnType<typeof vi.fn>).mock.calls.map(([event]) => event as CustomEvent);
+    expect(fired.map((event) => [event.type, event.detail])).toEqual([
+      ["htc:push-enabled", { games: true, prizes: true, results: true }],
+    ]);
     const registerBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
     expect(registerBody).toMatchObject({ action: "register", token: TOKEN(9), userId: "user-1" });
     expect(await shouldAskForPush()).toBe(false);

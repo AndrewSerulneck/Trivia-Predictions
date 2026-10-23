@@ -1,21 +1,23 @@
 // Push notifications (docs/native-app-store-plan.md Phase 5.1) — the rules both the server and the
 // app's screens share. Pure and dependency-free: no `server-only`, no React.
 //
-// A phone push is one of three kinds, each with its own on/off switch in the account menu:
+// A phone push is one of four kinds, each with its own on/off switch in the account menu:
 //   games   — "Live Trivia starts soon" at the venue the player last used on that phone;
 //   prizes  — a prize won, about to expire or taken back (any notification that links to the wallet);
 //   results — everything else the app already tells players in its notification list (Bingo, Pick 'Em,
-//             predictions, fantasy, challenges).
-// Marketing pushes don't exist. If they are ever added they need their own switch, OFF until the player
-// turns it on (Apple 4.5.4) — never fold them into one of these three.
+//             predictions, fantasy, challenges);
+//   news    — "News from your bars" (Phase 5.4): a bar the player belongs to saved a new game or prize
+//             (lib/push/venueNews.ts). Promotional, so it is its own switch (Apple 4.5.4): the ask
+//             states it before Turn on, and the menu turns it off. Partner-written messages (5.5) will
+//             ride on this same switch — never fold either into the other three.
 
-export type PushCategory = "games" | "prizes" | "results";
+export type PushCategory = "games" | "prizes" | "results" | "news";
 
 export type PushPreferences = Record<PushCategory, boolean>;
 
-export const DEFAULT_PUSH_PREFERENCES: PushPreferences = { games: true, prizes: true, results: true };
+export const DEFAULT_PUSH_PREFERENCES: PushPreferences = { games: true, prizes: true, results: true, news: true };
 
-export const PUSH_CATEGORIES: readonly PushCategory[] = ["games", "prizes", "results"];
+export const PUSH_CATEGORIES: readonly PushCategory[] = ["games", "prizes", "results", "news"];
 
 /** The path every prize notification links to (lib/challengeCampaigns.ts, the expiry cron, Squares). */
 const PRIZE_WALLET_PATH = "/redeem-prizes";
@@ -45,8 +47,8 @@ export const safePushPath = (url: unknown): string | null => {
 
 /**
  * Words on screen for the welcome ask, the Venue Home card and the account-menu settings. Edit copy here.
- * Promise ONLY pushes the server really sends (the three categories above): Apple rejects an ask that
- * promises more. "When this bar schedules games or adds prizes" waits for Phase 5.4, which sends them.
+ * Promise ONLY pushes the server really sends (the four categories above): Apple rejects an ask that
+ * promises more. The "news" line is the explicit consent for the promotional pushes (Apple 4.5.4).
  */
 export const PUSH_COPY = {
   welcomeTitle: "Want to know the moment you win?",
@@ -54,14 +56,15 @@ export const PUSH_COPY = {
     prizes: "When you win a prize, and before it expires",
     results: "When your Bingo, Pick 'Em and prediction results are in",
     games: "When Live Trivia is about to start at your bar",
+    news: "When your bars schedule new games and add prizes",
   } satisfies Record<PushCategory, string>,
   welcomeFootnote: "You can change this any time in the menu.",
   askTitle: "Want to know when you win?",
-  askBody: "Turn on notifications for your prizes, your results and Live Trivia starting here.",
+  askBody: "Turn on notifications for your prizes, your results, Live Trivia starting here, and new games and prizes at your bars.",
   askAccept: "Turn on",
   askDecline: "Not now",
   settingsTitle: "Notifications",
-  settingsOff: "Off on this phone.",
+  settingsOff: "Off on this phone. Turn on for prizes, results, Live Trivia and news from your bars.",
   settingsTurnOn: "Turn on",
   settingsBlocked: "Notifications are turned off for Hightop Challenge in your phone's Settings.",
   settingsFailed: "Couldn't save that. Try again.",
@@ -69,5 +72,6 @@ export const PUSH_COPY = {
     games: "Live games starting",
     prizes: "Prizes",
     results: "Results",
+    news: "News from your bars",
   } satisfies Record<PushCategory, string>,
 } as const;

@@ -7,14 +7,15 @@ import {
   isPushAvailable,
   isPushOptedIn,
   loadPushPreferences,
+  PUSH_ENABLED_EVENT,
   readPushPermission,
   setPushPreference,
 } from "@/lib/nativePush";
 import { PUSH_CATEGORIES, PUSH_COPY, type PushCategory, type PushPreferences } from "@/lib/pushCategories";
 import { useIsNativeApp } from "@/lib/useIsNativeApp";
 
-// The Notifications row of the player menu (docs/native-app-store-plan.md Phase 5.1): this phone's three
-// switches (live games starting, prizes, results), or a Turn on button. App only, and only in a build
+// The Notifications row of the player menu (docs/native-app-store-plan.md Phase 5.1): this phone's four
+// switches (live games starting, prizes, results, news from your bars), or a Turn on button. App only, and only in a build
 // with the push plugin — the website and older app builds render nothing. Words live in PUSH_COPY.
 
 type Status = "loading" | "off" | "blocked" | "on";
@@ -46,6 +47,19 @@ export const PushNotificationSettings = () => {
     return () => {
       cancelled = true;
     };
+  }, [available]);
+
+  // Turned on elsewhere in this visit (the welcome or the Venue Home card): show the switches.
+  useEffect(() => {
+    if (!available) return;
+    const onEnabled = (event: Event) => {
+      const saved = (event as CustomEvent<PushPreferences>).detail;
+      if (!saved) return;
+      setPreferences(saved);
+      setStatus("on");
+    };
+    window.addEventListener(PUSH_ENABLED_EVENT, onEnabled);
+    return () => window.removeEventListener(PUSH_ENABLED_EVENT, onEnabled);
   }, [available]);
 
   if (!available) return null;

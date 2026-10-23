@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Isolated PostgreSQL check for supabase/migrations/20261023105750_push_notifications.sql
-// (docs/native-app-store-plan.md Phase 5.1). No network, no application imports, never touches
+// (docs/native-app-store-plan.md Phase 5.1) and 20261023141109_push_venue_news.sql (Phase 5.4). No network, no application imports, never touches
 // Supabase. Runs on PGlite (devDependency):
 //   npm run test:push-sql
 //
@@ -8,17 +8,21 @@
 // a notification is claimed once, reaches the phones of its venue profile AND of the same account,
 // never a disabled phone or another player's; old rows are never claimed; rows with no phone are
 // still stamped; phones go with an account deletion; tokens are unique; the reminder ledger claims
-// once; and only service_role may run the claim.
+// once; and only service_role may run the claim. 5.4: a bar's news reaches the phones of its players
+// (profile or same account) with the switch on, once per game/prize, at most the cap per local day.
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { PGlite } = require(process.env.PUSH_PGLITE_MODULE || "@electric-sql/pglite");
 
-const MIGRATION = "supabase/migrations/20261023105750_push_notifications.sql";
+const MIGRATIONS = [
+  "supabase/migrations/20261023105750_push_notifications.sql",
+  "supabase/migrations/20261023141109_push_venue_news.sql",
+];
 
 const SCHEMA = `
   create role anon; create role authenticated; create role service_role;
   create table accounts(id uuid primary key);
-  create table venues(id text primary key);
+  create table venues(id text primary key, timezone text not null default 'America/New_York');
   create table users(id uuid primary key, account_id uuid references accounts(id) on delete cascade, venue_id text);
   create table trivia_schedules(id uuid primary key);
   create table notifications(
@@ -58,7 +62,7 @@ async function run() {
 
   try {
     await db.exec(SCHEMA);
-    await db.exec(fs.readFileSync(MIGRATION, "utf8"));
+    for (const migration of MIGRATIONS) await db.exec(fs.readFileSync(migration, "utf8"));
     await db.exec(`
       insert into accounts(id) values ('${ACCOUNT}'), ('${OTHER_ACCOUNT}');
       insert into venues(id) values ('v1'), ('v2');
@@ -139,6 +143,51 @@ async function run() {
       /occurrence_date_format/,
     );
 
+    // ── 5.4: "News from your bars" ────────────────────────────────────────────────────────────
+    const news = (venueId, kind, sourceId, cap = 5) =>
+      rows(`select * from claim_venue_news_push($1, $2, $3, $4, 60)`, [venueId, kind, sourceId, cap]);
+    const newsTokens = (out) => out.map((r) => r.token).sort();
+    // The column defaults ON for every phone, including the ones registered before 5.4.
+    assert.equal((await one(`select bool_and(notify_news) as ok from push_devices`)).ok, true, "existing phones default on");
+    // v1's players: profile A (both of the account's phones), the stranger and the legacy profile.
+    // Phone B was registered at v2 but belongs to the same account as profile A at v1, so it hears v1.
+    await addDevice(token("stranger-2"), STRANGER, OTHER_ACCOUNT, "v1");
+    await db.query(`update push_devices set notify_news = false where token = $1`, [token("legacy")]);
+    let newsOut = await news("v1", "game", "sched-1");
+    assert.ok(newsOut.every((r) => r.outcome === "claimed"));
+    assert.deepEqual(
+      newsTokens(newsOut),
+      [token("phone-a"), token("phone-b"), token("stranger-2")].sort(),
+      "players of the bar with the switch on; never a disabled phone or one with news off",
+    );
+    // A v2 announcement reaches only the account with a v2 profile.
+    assert.deepEqual(newsTokens(await news("v2", "prize", "camp-1")), [token("phone-a"), token("phone-b")].sort());
+    // Each game/prize is announced once, ever.
+    assert.deepEqual((await news("v1", "game", "sched-1")).map((r) => [r.outcome, r.token]), [["duplicate", null]]);
+    // The cap counts the bar's announcements today: sched-1 was #1; four more fit, the sixth is refused.
+    for (let i = 2; i <= 5; i += 1) assert.equal((await news("v1", "prize", `cap-${i}`))[0].outcome, "claimed");
+    assert.deepEqual((await news("v1", "game", "cap-6")).map((r) => [r.outcome, r.token]), [["capped", null]]);
+    // A refused one leaves no row, so it isn't a "duplicate" later; v2 has its own count.
+    assert.equal(Number((await one(`select count(*)::int as n from push_venue_news where source_id = 'cap-6'`)).n), 0);
+    assert.equal((await news("v2", "game", "v2-game"))[0].outcome, "claimed");
+    // Yesterday's announcements don't count against today.
+    await db.query(`update push_venue_news set local_date = '2000-01-01' where venue_id = 'v1'`);
+    assert.equal((await news("v1", "game", "next-day"))[0].outcome, "claimed");
+    // No phone → nothing recorded; unknown bar; bad kind; a bad timezone falls back to New York.
+    await db.exec(`insert into venues(id, timezone) values ('v3', 'Not/AZone')`);
+    assert.deepEqual((await news("v3", "game", "lonely")).map((r) => r.outcome), ["no_audience"]);
+    assert.equal(Number((await one(`select count(*)::int as n from push_venue_news where venue_id = 'v3'`)).n), 0);
+    assert.deepEqual((await news("nope", "game", "x")).map((r) => r.outcome), ["unknown_venue"]);
+    await assert.rejects(() => news("v1", "ad", "x"), /unknown kind/);
+    // A phone not seen for longer than the idle window is left out.
+    await db.query(`update push_devices set last_seen_at = now() - interval '90 days' where token = $1`, [token("stranger-2")]);
+    assert.deepEqual(newsTokens(await news("v1", "prize", "idle-check")), [token("phone-a"), token("phone-b")].sort());
+    assert.equal(
+      (await one(`select devices from push_venue_news where source_id = 'idle-check'`)).devices,
+      2,
+      "the ledger records how many phones it went to",
+    );
+
     // ── Account deletion takes the phones with it ────────────────────────────────────────────
     await db.query(`delete from users where account_id = $1`, [ACCOUNT]);
     await db.query(`delete from accounts where id = $1`, [ACCOUNT]);
@@ -154,7 +203,12 @@ async function run() {
     assert.equal(await can("service_role"), true);
     assert.equal(await can("anon"), false);
     assert.equal(await can("authenticated"), false);
-    for (const table of ["push_devices", "push_game_reminders"]) {
+    const canNews = async (role) =>
+      (await one(`select has_function_privilege($1, 'public.claim_venue_news_push(text, text, text, integer, integer)', 'execute') as ok`, [role])).ok;
+    assert.equal(await canNews("service_role"), true);
+    assert.equal(await canNews("anon"), false);
+    assert.equal(await canNews("authenticated"), false);
+    for (const table of ["push_devices", "push_game_reminders", "push_venue_news"]) {
       const priv = async (role, verb) =>
         (await one(`select has_table_privilege($1, $2, $3) as ok`, [role, `public.${table}`, verb])).ok;
       assert.equal(await priv("service_role", "select"), true, `${table}: service_role select`);

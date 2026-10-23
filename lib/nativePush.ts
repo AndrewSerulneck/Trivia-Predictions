@@ -158,6 +158,9 @@ const register = async (userId: string, token: string): Promise<PushPreferences 
  * The player said yes ("Turn on"). Asks the phone for permission (the system prompt appears only on an
  * iPhone or Android 13+, only the first time), then registers this phone.
  */
+/** Fired on window when push was turned on on this phone (welcome, card or menu); detail = the switches. */
+export const PUSH_ENABLED_EVENT = "htc:push-enabled";
+
 export const enablePush = async (): Promise<EnablePushResult> => {
   if (!isPushAvailable()) return { ok: false, reason: "unavailable" };
   const userId = getUserId();
@@ -175,6 +178,10 @@ export const enablePush = async (): Promise<EnablePushResult> => {
   if (!preferences) return { ok: false, reason: "failed" };
   writeKey(OPT_IN_KEY, "1");
   writeKey(ASK_DISMISSED_KEY, null);
+  // The menu's switches are already mounted (the drawer is), so tell them push is on now.
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent<PushPreferences>(PUSH_ENABLED_EVENT, { detail: preferences }));
+  }
   return { ok: true, preferences };
 };
 
@@ -193,7 +200,7 @@ export const syncPushRegistration = async (options: { force?: boolean } = {}): P
   await register(userId, token);
 };
 
-/** This phone's three switches, for the account menu. Null when push is off here or can't be read. */
+/** This phone's four switches, for the account menu. Null when push is off here or can't be read. */
 export const loadPushPreferences = async (): Promise<PushPreferences | null> => {
   if (!isPushOptedIn()) return null;
   const userId = getUserId();
@@ -204,7 +211,7 @@ export const loadPushPreferences = async (): Promise<PushPreferences | null> => 
   return register(userId, token);
 };
 
-/** Flips one switch. Returns all three as saved, or null when it couldn't be saved. */
+/** Flips one switch. Returns all four as saved, or null when it couldn't be saved. */
 export const setPushPreference = async (category: PushCategory, value: boolean): Promise<PushPreferences | null> => {
   if (!isPushOptedIn()) return null;
   const token = registeredToken() ?? (await readToken());

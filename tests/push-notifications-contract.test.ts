@@ -93,8 +93,8 @@ describe("push: the website and old app builds are untouched", () => {
     }
   });
 
-  it("no marketing switch exists (it would need its own OFF-by-default opt-in, Apple 4.5.4)", () => {
-    expect(read("lib/pushCategories.ts")).toMatch(/export type PushCategory = "games" \| "prizes" \| "results";/);
+  it("promotional pushes have exactly one switch of their own, 'news' (Apple 4.5.4) — no other category", () => {
+    expect(read("lib/pushCategories.ts")).toMatch(/export type PushCategory = "games" \| "prizes" \| "results" \| "news";/);
   });
 });
 
@@ -116,10 +116,50 @@ describe("push: the first ask is our own screen (Phase 5.3)", () => {
     expect(ads.indexOf("await pushWelcomeHoldsPopupAds()")).toBeLessThan(ads.indexOf("await loadSlotAd(slot, options)"));
   });
 
-  it("the ask promises only the pushes the server sends today (the 'schedules games / adds prizes' line waits for 5.4)", () => {
+  it("the ask promises only the pushes the server sends (5.4: the 'new games and prizes' line needs its sender)", () => {
     const copy = read("lib/pushCategories.ts");
     const words = copy.slice(copy.indexOf("export const PUSH_COPY"));
-    expect(words).not.toMatch(/schedul|adds? (new )?(games|prizes)|new game|news/i);
+    // Loosened deliberately in 5.4 (it was "never promise new games/prizes"): the promise is allowed only
+    // while both partner create routes really send it. Remove a hook and this fails until the words go too.
+    if (/schedul|adds? (new )?(games|prizes)|new games?|news/i.test(words)) {
+      expect(read("app/api/owner/schedule/route.ts")).toMatch(/announceAfterResponse\(\(\) => announceNewGame\(schedule\)\)/);
+      expect(read("app/api/owner/rewards/route.ts")).toMatch(/announceAfterResponse\(\(\) => announceNewPrize\(venueId, reward\)\)/);
+    }
+    // The welcome lists one line per switch, so every promise has an off switch in the menu.
+    expect(read("components/push/PushWelcomeScreen.tsx")).toMatch(/category: "news"/);
+  });
+});
+
+describe("push: News from your bars (Phase 5.4)", () => {
+  it("only lib/push/venueNews.ts claims an announcement, and the cap is one named constant", () => {
+    expect(filesMatching(/["']claim_venue_news_push["']/)).toEqual(["lib/push/venueNews.ts"]);
+    const news = read("lib/push/venueNews.ts");
+    expect(news).toMatch(/export const VENUE_NEWS_DAILY_CAP = 5;/);
+    expect(news.match(/p_daily_cap: [^,\n]+/g)).toEqual(["p_daily_cap: VENUE_NEWS_DAILY_CAP"]);
+  });
+
+  it("is sent only from the two partner create routes, after the save succeeded", () => {
+    expect(filesMatching(/announceNew(Game|Prize)\(/).filter((file) => file !== "lib/push/venueNews.ts")).toEqual([
+      "app/api/owner/rewards/route.ts",
+      "app/api/owner/schedule/route.ts",
+    ]);
+    const schedule = read("app/api/owner/schedule/route.ts");
+    expect(schedule.indexOf("announceNewGame(schedule)")).toBeGreaterThan(schedule.indexOf("await createOwnerSchedule({"));
+    const rewards = read("app/api/owner/rewards/route.ts");
+    expect(rewards.indexOf("announceNewPrize(venueId, reward)")).toBeGreaterThan(rewards.indexOf("await createReward({"));
+  });
+
+  it("every way to turn push on states the news pushes first (Apple 4.5.4 consent)", async () => {
+    const { PUSH_COPY } = await import("@/lib/pushCategories");
+    expect(PUSH_COPY.welcomeBenefits.news).toMatch(/new games and add prizes/);
+    expect(PUSH_COPY.askBody).toMatch(/new games and prizes at your bars/);
+    expect(PUSH_COPY.settingsOff).toMatch(/news from your bars/);
+  });
+
+  it("never holds up the partner's reply (Next's after)", () => {
+    const news = read("lib/push/venueNews.ts");
+    expect(news).toMatch(/import \{ after \} from "next\/server";/);
+    expect(news).toMatch(/after\(run\)/);
   });
 });
 
