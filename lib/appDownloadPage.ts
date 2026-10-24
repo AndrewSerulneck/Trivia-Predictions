@@ -1,5 +1,5 @@
 // The small "Get the app?" page behind hightopchallenge.com/app (docs/native-app-store-plan.md
-// Phase 9g). Pure: returns one self-contained HTML string (no player runtime, no scripts
+// Phase 9g). Pure: returns small HTML with a local Nunito stylesheet (no player runtime, no scripts
 // except the iPad check). Both choices are plain links, so it works without JavaScript.
 
 import { JOIN_QR_URL } from "@/lib/joinQr";
@@ -26,8 +26,9 @@ export const buildAppAskPage = (device: AppAskDevice, storeUrl: string): string 
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><meta name="theme-color" content="#020617">
 <title>Get the Hightop Challenge app</title>
+<link rel="stylesheet" href="/fonts/nunito-v1.css">
 <style>
-html,body{margin:0;background:#020617;color:#f8fafc;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html,body{margin:0;background:#020617;color:#f8fafc;font-family:var(--ht-font-body)}
 main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px 16px;text-align:center;box-sizing:border-box}
 img{width:96px;height:96px}
 p{margin:0;font-size:20px;line-height:1.3;max-width:20em}

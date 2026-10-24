@@ -9,6 +9,12 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Legacy family utilities remain valid, with Nunito used throughout.
+      fontFamily: {
+        sans: ["var(--ht-font-body)"],
+        serif: ["var(--ht-font-body)"],
+        mono: ["var(--ht-font-body)"],
+      },
       // Text-size floor (lib/textSizeFloor.ts). `xs`/`sm` keep Tailwind's rem sizes but never
       // drop below a readable px size on the 13px-root small-phone layout.
       fontSize: {
@@ -16,6 +22,7 @@ const config: Config = {
         sm: [`max(0.875rem, ${FIXED_TEXT_SIZES.footnote})`, { lineHeight: "1.25rem" }],
         caption: FIXED_TEXT_SIZES.caption,
         footnote: FIXED_TEXT_SIZES.footnote,
+        "dashboard-heading": ["var(--ht-text-dashboard-heading)", { lineHeight: "1.2" }],
       },
       keyframes: {
         shake: {

@@ -1,0 +1,18 @@
+/* Standalone website pages share the app's variable Nunito Latin font. */
+@font-face {
+  font-family: "Hightop Nunito";
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url("/fonts/nunito-latin-v1.woff2") format("woff2");
+}
+
+:root {
+  --ht-font-body: var(--font-nunito, "Hightop Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif);
+  --ht-font-display: var(--ht-font-body);
+  --ht-font-mono: var(--ht-font-body);
+}
+
+body {
+  font-family: var(--ht-font-body);
+}

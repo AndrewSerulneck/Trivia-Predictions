@@ -186,16 +186,12 @@
   /* -----------------------------------------------------------
      TYPOGRAPHY — primitives
      ----------------------------------------------------------- */
-  /* Self-hosted by `next/font` in app/layout.tsx. These two variables carry the
-     real family PLUS the metric-matched fallback face next/font generates
-     ("Bree Serif Fallback" / "Nunito Fallback"), which is what keeps text from
-     shifting as the webfont swaps in. A hand-written `font-family: "Bree Serif"`
-     still resolves but loses that fallback, so these tokens are the only
-     supported way to reach either family
-     (tests/fonts-contract.test.ts enforces it). */
-  --ht-font-display: var(--font-bree-serif), Georgia, serif;
+  /* One self-hosted family, including next/font's metric-matched fallback.
+     Display/mono are compatibility aliases; all website text uses Nunito.
+     Changing numbers keep tabular-nums rather than a separate typeface. */
   --ht-font-body:    var(--font-nunito), "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --ht-font-mono:    ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", monospace;
+  --ht-font-display: var(--ht-font-body);
+  --ht-font-mono:    var(--ht-font-body);
 
   /* Type scale — mobile-first */
   --ht-text-xs:   12px;
@@ -205,6 +201,7 @@
   --ht-text-lg:   20px;
   --ht-text-xl:   24px;
   --ht-text-2xl:  30px;
+  --ht-text-dashboard-heading: clamp(18px, 5.6vw, 22px);
   --ht-text-3xl:  36px;
   --ht-text-4xl:  44px;
   --ht-text-5xl:  56px;
@@ -1206,8 +1203,8 @@ body.tp-popup-open {
   --story-text-muted: rgba(255, 255, 255, 0.8);
   --story-overlay-vignette: rgba(0, 0, 0, 0.2);
   --story-text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --story-font-display: "Inter", "Geist", system-ui, sans-serif;
-  --story-font-mono: "SF Mono", "Monaco", "Inconsolata", monospace;
+  --story-font-display: var(--ht-font-body);
+  --story-font-mono: var(--ht-font-body);
 }
 
 .tp-story-capture-modal {

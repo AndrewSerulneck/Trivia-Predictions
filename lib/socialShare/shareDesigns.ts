@@ -63,7 +63,7 @@ const SOFT_WHITE = "rgba(255, 255, 255, 0.82)";
 const NIGHT_BACKGROUND = "#020617";
 const CARD_BACKGROUND = ["#0B1022", "#111827"] as const;
 
-const DISPLAY = "var(--ht-font-display), Georgia, serif";
+const DISPLAY = "var(--ht-font-display), Arial, sans-serif";
 const BODY = "var(--ht-font-body), Arial, sans-serif";
 
 const displayFont = (px: number): string => `400 ${px}px ${DISPLAY}`;

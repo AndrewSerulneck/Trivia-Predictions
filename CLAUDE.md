@@ -1059,15 +1059,18 @@ Partner Dashboard **2,056 KB → 352 KB** and **10.4 s → 2.1 s** to the load e
   re-adopts a payload from the start of the session **and** suppresses both refetches — a game
   scheduled for A earlier would silently vanish. Pinned by P5 in
   `tests/app.owner-dashboard-one-round-trip.test.ts`.
-- **Fonts are self-hosted through `next/font/google`** in `app/layout.tsx` (Bree Serif 400;
-  Nunito variable, no `weight`), exposed as `--ht-font-display` / `--ht-font-body` on `<html>`.
-  The Google Fonts `@import` is gone from `app/globals.css`. **Never write a literal
-  `"Bree Serif"` / `"Nunito"` family name anywhere** — not because the generated name is hashed
-  (in Next 16 it is not), but because only the `.variable` value carries `next/font`'s
-  **metric-matched fallback face**, which is what stops text jumping when the webfont swaps in.
-  A literal silently drops that. Use `[font-family:var(--ht-font-display)]`, never the
-  `font-['Bree_Serif']` shorthand (Tailwind can't tell family from weight there). Tripwire:
-  `tests/fonts-contract.test.ts`.
+- **Nunito is the only website font (Andrew, 2026-10-24).** `app/layout.tsx` self-hosts its
+  variable face through `next/font/google`; never add a separate heading or monospace face.
+  `--ht-font-body` carries the generated metric-matched fallback, while `--ht-font-display`,
+  `--ht-font-mono`, story font tokens and Tailwind sans/serif/mono utilities resolve to it.
+  Use the tokens, not literal family overrides; `tabular-nums` keeps scores aligned. Partner
+  Dashboard section headings use `--ht-text-dashboard-heading` (18–22 px). Canonical typography:
+  `design-system/hightop-challenge-design-system/project/colors_and_type.css` (mirrored in
+  `design-system/project/colors_and_type.css`). Standalone app-download/global-error pages
+  use the versioned `/fonts/nunito-v1.css` and Latin WOFF2 with its OFL license; new bytes get
+  new filenames because `/fonts/*` is immutable-cached. Email clients and text in existing
+  artwork/historical exports are outside this website rule. Tripwire: `tests/fonts-contract.test.ts`.
+
 - **`/owner/*` and `/admin` do not download the player runtime.**
   `components/ui/PlayerRuntime.tsx` loads `AnimationOverlay`, `GlobalTransitionOverlay`,
   `AnalyticsRuntime`, `PopupAds` and `MobileAdhesionAd` through `next/dynamic` (`ssr: false`)

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bree_Serif, Nunito } from "next/font/google";
+import { Nunito } from "next/font/google";
 import { Suspense } from "react";
 import { PlayerRuntime } from "@/components/ui/PlayerRuntime";
 import { NativeAppRuntime } from "@/components/native/NativeAppRuntime";
@@ -28,21 +28,10 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://hightopchallenge.c
 // settled; see finding F3 in
 // docs/partner-dashboard-merch-button-loader-speed-plan.md.
 //
-// Next 16 keeps the REAL family names here ("Bree Serif", "Nunito"), so a bare
-// `font-family: "Bree Serif"` would still resolve. The reason every call site
-// was moved onto the --ht-font-display / --ht-font-body tokens in globals.css
-// anyway is that `next/font` also emits a metric-matched fallback face
-// ("Bree Serif Fallback" / "Nunito Fallback") whose ascent/descent/width are
-// adjusted to the real font. Only the `.variable` value below carries that
-// fallback, so a hand-written literal family silently gives up the
-// layout-shift protection it exists to provide. Go through the tokens.
+// Nunito is the single website family (Andrew, 2026-10-24). Its generated
+// variable carries the metric-matched fallback too; shared body/display/mono
+// tokens and Tailwind family utilities all resolve to it.
 // tests/fonts-contract.test.ts fails the build if a literal comes back.
-const breeSerif = Bree_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-  variable: "--font-bree-serif",
-});
 
 // Nunito is a variable font: one file covers the 400/600/700/800/900 weights the
 // old @import listed separately, so this is also fewer bytes than before.
@@ -130,7 +119,7 @@ export default async function RootLayout({
 
   return (
     // suppressHydrationWarning: the theme script may add data-theme to <html> before React hydrates.
-    <html lang="en" className={`m-0 p-0 ${breeSerif.variable} ${nunito.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`m-0 p-0 ${nunito.variable}`} suppressHydrationWarning>
       <head>
         {lightThemeEnabled ? (
           // Sets data-theme="light" before the first paint on a light-capable screen (lib/theme.ts).

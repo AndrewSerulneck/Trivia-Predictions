@@ -197,7 +197,7 @@ const BingoBoardCardImpl = ({
             Starts {formatLocalDateTime(card.startsAt)}
           </span>
         )}
-        <span className="inline-flex items-center rounded-full border border-sky-300/30 bg-sky-300/10 px-2.5 py-1 text-caption font-bold text-sky-300 [font-family:ui-monospace,monospace]">
+        <span className="inline-flex items-center rounded-full border border-sky-300/30 bg-sky-300/10 px-2.5 py-1 text-caption font-bold text-sky-300 [font-family:var(--ht-font-body)]">
           {progress.hitCount}/25 marked
         </span>
       </div>
@@ -233,7 +233,7 @@ const BingoBoardCardImpl = ({
             {isSettled ? "Points" : "Closest line"}
           </p>
           <p
-            className={`mt-0.5 text-footnote font-black [font-family:ui-monospace,monospace] ${
+            className={`mt-0.5 text-footnote font-black [font-family:var(--ht-font-body)] ${
               isSettled ? (isWon ? "text-emerald-300" : "text-slate-600") : "text-amber-400"
             }`}
           >

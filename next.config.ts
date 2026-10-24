@@ -21,6 +21,16 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Versioned font/CSS/license assets; replacements use new filenames.
+        source: "/fonts/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         source: "/info",
         headers: [
           {

@@ -50,7 +50,7 @@ the codebase and your job is to push everything toward language #2:
 | Card | `.tp-comic-card` / `.tp-hud-card` (cream gradient + 8px ink offset shadow) | `.tp-dark-card` — `#0f172a` w/ `1px rgba(255,255,255,0.08)` border |
 | Borders | `border-slate-200`, `border-[#3b2412]` ink | accent‑colored at 50‑60% alpha (`border-cyan-400/60`) |
 | Body text | `text-slate-700/600` | `text-slate-100/200`, with accent‑colored eyebrows |
-| Typography | Kalam (handwritten) | Nunito 600‑900, Bree Serif for game titles |
+| Typography | Kalam (handwritten) | Nunito throughout, with weight and size for hierarchy |
 | Backgrounds | `.bg-stadium-turf` repeating green | flat dark surface, accent gradients only |
 
 `app/trivia/live/page.tsx` (the Live Showdown screen) is the **canonical
@@ -95,16 +95,16 @@ ui_kits/web/              ← the player-facing web app UI kit (7 surfaces)
 
 ## Fonts
 
-Hightop loads **Bree Serif** (game titles, section headlines) and **Nunito**
-(everything else, weights 400/600/700/800/900) directly from Google Fonts —
-there are no font files in the original repo, so the `fonts/` folder is empty
-on purpose and `colors_and_type.css` `@import`s them from the Google CDN.
+Hightop uses **Nunito for all website text** (Andrew, 2026-10-24), including
+headings, game titles, scores, controls, partner and admin screens. The variable font is
+self-hosted through `next/font/google` in `app/layout.tsx`; there is no runtime Google Fonts
+request. Use `--ht-font-body`; the display and mono tokens and Tailwind's font-family
+utilities resolve to that same family for compatibility. Use `tabular-nums` for changing scores.
 
-**Substitution note:** The legacy stack also referenced **Kalam** (handwritten,
-used in the bingo turf / leaderboard "scoreboard" look). It is *intentionally
-omitted* here — Kalam belongs to the comic era and should not appear on any
-player‑facing surface in the dark‑native rebuild. If you need a handwritten
-look for an internal/admin tool, load it separately.
+The standalone app-download and global-error pages load `/fonts/nunito-v1.css` and the
+versioned Latin font under `public/fonts/` (with its OFL license). They do not load the app shell.
+The design previews import only Nunito. Never restore Bree Serif, Kalam or a monospace face.
+Text embedded in existing artwork and historical exports is not a website font declaration.
 
 ---
 
@@ -227,12 +227,10 @@ high-contrast, but restrained: **one glow, not five.**
 
 ### Type
 
-- **Bree Serif** (slab) for game titles and the big rules card display
-  copy — always `text-shadow: 0 1px 0 rgba(12,18,28,0.8), 0 3px 0
-  rgba(12,18,28,0.58), 0 0 12px rgba(255,255,255,0.5)` for the embossed
-  scoreboard feel.
-- **Nunito** 400/600/700/800/900 for everything else. UI weight is **600**;
-  buttons and feedback states are **900**.
+- **Nunito** is the only website text family, including titles and numbers. Use 400/600/700/800/900
+  weights for hierarchy; default UI weight is **600**, headings **700/800**, emphasis **900**.
+- Partner Dashboard section headings use `--ht-text-dashboard-heading` (18–22 px) so
+  Active Group Games fits on one line at normal phone widths alongside its add control.
 - **Scale** is mobile‑first; root font‑size drops to **14px** below 430px
   and **13px** below 380px (iPhone SE), with a `.tp-game-page` modifier that
   multiplies all `text-*` utilities by 1.6 inside live game surfaces.
@@ -278,7 +276,7 @@ card) is drawn as the same **digital gift card**. Plan:
 - **Face:** only three things: the prize ("$25", "Free Appetizer"), the venue
   name, and a small "GIFT CARD" / "REWARD" label. Logo top-left. What it was
   won for and the expiry go in one muted line under the card.
-- **Type:** Nunito only (no Bree Serif); title case for the prize, uppercase
+- **Type:** Nunito only; title case for the prize, uppercase
   only for the small label.
 - **Motion:** the logo bounces when tapped (`logo-tap-bounce`); Reduce Motion
   swaps the travel for a brief opacity dip.

@@ -3,8 +3,8 @@
  * Draws the share pictures (docs/native-app-store-plan.md Phase 9b) with the REAL renderer —
  * lib/socialShare/storyCanvas.ts, bundled by esbuild — in Playwright's Chromium, with no dev
  * server and nothing touching proxy.ts. Public files (logo, QR, frames) are served from
- * public/; the page loads the two brand fonts from Google Fonts and sets the same
- * --ht-font-* variables next/font sets in the app. Every picture's QR is then decoded (jsQR)
+ * public/; the page loads the local Nunito face and the same --ht-font-* aliases
+ * used in the app. Every picture's QR is then decoded (jsQR)
  * and must equal APP_DOWNLOAD_URL, so this is also an end-to-end check of the QR.
  *
  * Usage:
@@ -63,7 +63,7 @@ window.renderAll = async () => {
 };
 `;
 
-const MIME = { ".png": "image/png", ".webp": "image/webp", ".js": "text/javascript" };
+const MIME = { ".png": "image/png", ".webp": "image/webp", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2" };
 
 (async () => {
   mkdirSync(OUT, { recursive: true });
@@ -79,8 +79,7 @@ const MIME = { ".png": "image/png", ".webp": "image/webp", ".js": "text/javascri
   });
   const script = bundle.outputFiles[0].text;
   const html = `<!doctype html><html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@400..1000&display=block" rel="stylesheet">
-<style>:root{--ht-font-display:"Bree Serif";--ht-font-body:"Nunito"}</style>
+<link href="/fonts/nunito-v1.css" rel="stylesheet">
 </head><body><script src="/bundle.js"></script></body></html>`;
 
   const browser = await chromium.launch();

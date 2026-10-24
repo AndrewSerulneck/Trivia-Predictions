@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import "@/public/fonts/nunito-v1.css";
 
 type GlobalErrorProps = {
   error: Error & { digest?: string };

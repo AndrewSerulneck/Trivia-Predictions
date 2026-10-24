@@ -3,11 +3,11 @@
    The single source of truth for foundations. Import this first.
    ============================================================= */
 
-/* Web fonts — Google Fonts (Bree Serif, Nunito).
+/* Web font — Nunito only (Andrew, 2026-10-24).
    Kalam is INTENTIONALLY excluded: it belongs to the legacy "comic" era
    and should not appear on any player-facing surface in the dark-native rebuild.
    ------------------------------------------------------------- */
-@import url("https://fonts.googleapis.com/css2?family=Bree+Serif&family=Nunito:wght@400;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap");
 
 :root {
   color-scheme: dark;
@@ -210,13 +210,12 @@
 
   /* -----------------------------------------------------------
      TYPOGRAPHY — primitives
-     Display: Bree Serif (slab, headlines, game titles)
-     Body:    Nunito (UI, paragraphs, buttons)
-     Mono:    ui-monospace (countdowns, score tickers)
+     Nunito is the only text family: headings, body, controls and numerals.
+     Display/mono tokens remain compatibility aliases; use tabular numerals for scores.
      ----------------------------------------------------------- */
-  --ht-font-display: "Bree Serif", "Nunito", Georgia, serif;
   --ht-font-body:    "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --ht-font-mono:    ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", monospace;
+  --ht-font-display: var(--ht-font-body);
+  --ht-font-mono:    var(--ht-font-body);
 
   /* Type scale — mobile-first (designed at 14px root on <430px) */
   --ht-text-xs:   12px;
@@ -226,6 +225,7 @@
   --ht-text-lg:   20px;
   --ht-text-xl:   24px;
   --ht-text-2xl:  30px;
+  --ht-text-dashboard-heading: clamp(18px, 5.6vw, 22px);
   --ht-text-3xl:  36px;
   --ht-text-4xl:  44px;
   --ht-text-5xl:  56px;
@@ -628,7 +628,7 @@
 /* Hero / game title — used on landing rules card */
 .ht-display {
   font-family: var(--ht-font-display);
-  font-weight: 400;            /* Bree Serif has only 400 */
+  font-weight: 700;            /* Nunito heading weight */
   font-size: clamp(2rem, 6.2vw, 3.35rem);
   line-height: 1.02;
   letter-spacing: var(--ht-track-title);

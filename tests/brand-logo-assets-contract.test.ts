@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import nextConfig from "@/next.config";
 
 const ROOT = process.cwd();
 const walk = (dir: string): string[] =>
@@ -31,9 +32,11 @@ describe("brand logo assets (speed plan Phase 2)", () => {
     expect(readFileSync(join(ROOT, "app/layout.tsx"), "utf8")).not.toMatch(/rel="preload"[^>]*brand\//);
   });
 
-  it("/brand/web/* is cached immutably, and only that path", () => {
+  it("only versioned brand and font assets are cached immutably", async () => {
     const cfg = readFileSync(join(ROOT, "next.config.ts"), "utf8");
     expect(cfg).toMatch(/source: "\/brand\/web\/:path\*"[\s\S]*?public, max-age=31536000, immutable/);
-    expect(cfg.match(/max-age=31536000/g)).toHaveLength(1);
+    const rules = await nextConfig.headers?.();
+    expect(rules?.filter((rule) => rule.headers.some((header) => header.value.includes("immutable"))).map((rule) => rule.source))
+      .toEqual(["/brand/web/:path*", "/fonts/:path*"]);
   });
 });
