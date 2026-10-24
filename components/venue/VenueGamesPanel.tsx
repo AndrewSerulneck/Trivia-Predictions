@@ -197,49 +197,45 @@ function VenueGamesPanelInner({
                   style={{ background: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }} aria-busy={isOpening}
                 >
                   {isOpening ? <span role="status" className="absolute bottom-2 right-3 z-10 inline-flex items-center gap-2 text-sm font-black"><ButtonSpinner /> Opening…</span> : null}
-                  <div className="relative flex min-h-[190px] flex-col gap-3 p-4">
-                    {/* Keep the icon in flow: long titles wrap, and the art yields width on small phones. */}
-                    <div className={`grid items-start gap-3 ${GAME_CARD_ICON_BY_KEY[card.key] ? "grid-cols-[minmax(min-content,1fr)_minmax(0,5.5rem)]" : "grid-cols-1"}`}>
-                      <div
-                        className="text-[2rem] font-black uppercase leading-[0.95] text-white"
-                        style={{
-                          fontFamily: "var(--ht-font-display)",
-                          letterSpacing: "0.045em",
-                          textShadow: "0 1px 0 rgba(12,18,28,.8), 0 3px 0 rgba(12,18,28,.58)",
-                        }}
-                      >
-                        {GAME_TITLE_LINES_BY_KEY[card.key][0]}
-                        <br />
-                        {GAME_TITLE_LINES_BY_KEY[card.key][1]}
-                      </div>
-                      {(() => {
-                        const icon = GAME_CARD_ICON_BY_KEY[card.key];
-                        if (!icon) return null;
-                        return (
-                          <Image
-                            src={icon.src}
-                            alt=""
-                            width={icon.width}
-                            height={icon.height}
-                            className="pointer-events-none aspect-square h-auto w-full object-contain drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]"
-                          />
-                        );
-                      })()}
+                  <div className="relative flow-root min-h-[190px] p-4">
+                    {/* One text flow wraps beside the artwork, then uses the full width below it. */}
+                    {(() => {
+                      const icon = GAME_CARD_ICON_BY_KEY[card.key];
+                      if (!icon) return null;
+                      return (
+                        <Image
+                          src={icon.src}
+                          alt=""
+                          width={icon.width}
+                          height={icon.height}
+                          className="pointer-events-none float-right mb-2 ml-3 aspect-square h-auto w-1/4 max-w-[5.5rem] object-contain drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]"
+                        />
+                      );
+                    })()}
+                    <div
+                      className="text-[2rem] font-black uppercase leading-[0.95] text-white"
+                      style={{
+                        fontFamily: "var(--ht-font-display)",
+                        letterSpacing: "0.045em",
+                        textShadow: "0 1px 0 rgba(12,18,28,.8), 0 3px 0 rgba(12,18,28,.58)",
+                      }}
+                    >
+                      {GAME_TITLE_LINES_BY_KEY[card.key][0]}
+                      <br />
+                      {GAME_TITLE_LINES_BY_KEY[card.key][1]}
                     </div>
 
                     {isCategoryBlitzLive ? (
-                      <div className="flex flex-col gap-2">
-                        <div>
-                          <p className="text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
-                            Group game in progress!
-                          </p>
-                          <p className="mt-1 text-[19px] font-semibold leading-snug text-amber-50/90">
-                            {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
-                          </p>
-                        </div>
+                      <div className="mt-3">
+                        <p className="text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
+                          Group game in progress!
+                        </p>
+                        <p className="mt-1 text-[19px] font-semibold leading-snug text-amber-50/90">
+                          {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+                        </p>
                       </div>
                     ) : (
-                      <div className="text-[19px] font-bold leading-snug text-white/95">
+                      <div className="mt-3 text-[19px] font-bold leading-snug text-white/95">
                         {subtitle}
                       </div>
                     )}

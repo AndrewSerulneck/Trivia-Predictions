@@ -3,7 +3,7 @@
 The website now uses Nunito for headings, body text, controls, scores and newly rendered share
 pictures. The Partner Dashboard headings are smaller: Active Group Games fits on one line beside
 its add button at 320/350/390/1280 px, matching Active Prizes. Venue Home game buttons also
-reserve separate space for the 3D artwork so it cannot cover titles or descriptions. These changes are locally verified and prepared in an isolated release commit; they are not live.
+let the titles and descriptions flow closely around the 3D artwork without overlap. These changes are locally verified and prepared in an isolated release commit; they are not live.
 Publishing is waiting for Andrew’s approval after automatic review rejected the production push. No data, questions,
 prize eligibility, game behavior or notification delivery changes.
 
@@ -147,38 +147,47 @@ text declarations. Existing email-layout exceptions/full-bank trivia sync failur
 this task and remain unchanged. Implementation and local validation are complete. Publishing requires Andrew’s explicit approval
 for this follow-up; the prior approval covered the earlier batch according to automatic review.
 
-## Follow-up: Venue Home icon clearance (2026-10-24)
+## Follow-up: Venue Home text flowing around icons (2026-10-24)
 
 Andrew spotted Category Blitz and Fantasy Sports artwork overlapping the new Nunito text and
-requested that it be fixed before publication. The first typography commit is
-`85a73788df7b2d05333840a801629e6b1e04b7f5`; this correction is a separate local commit on the
-same `release/nunito-unification-2026-10-24` branch. Root `main` remains at the base `d450d9a`;
-neither typography commit has been pushed or deployed. The earlier approval-review rejection
-still applies; this follow-up does not attempt publication.
+requested that it be fixed before publication. After reviewing the first correction, Andrew
+requested that descriptions hug the icons and stay close to titles. The final layout uses one
+continuous text flow around a real floated image. This supersedes the separate grid header in
+local commit `80287ff4`; do not restore that grid, which pushed descriptions below the tallest
+header element. The initial font commit is `85a73788df7b2d05333840a801629e6b1e04b7f5`.
+All typography/layout commits remain local on `release/nunito-unification-2026-10-24`; root
+`main` remains at `d450d9a702929ef29e77fa9dcfdb2fca94d9c02f`. Nothing has been pushed/deployed.
+The prior approval-review rejection still applies; these refinements do not attempt publication.
 
-`components/venue/VenueGamesPanel.tsx` previously placed an absolute-positioned 5.5rem icon on
-top of a full-width title. A fixed floated subtitle spacer could not protect the title, and the
-live Category Blitz description had no such spacer. The shared header now uses two grid tracks:
-`minmax(min-content,1fr)` for the title and `minmax(0,5.5rem)` for the icon, with the existing
-`gap-3`. Artwork participates in normal flow, yields width on narrow phones, and stays at most
-its existing 5.5rem size. Titles keep their existing size/weight and wrap at word boundaries.
-Descriptions and the group-game status follow beneath the full header. The obsolete subtitle
-float and live-status right padding were removed. Games without artwork use a single column.
-All venue game buttons use the same layout, so the correction also prevents the Speed Trivia
-and other titles from running under their icons. Game copy, colors, routing, event handlers,
-badges, opening state, card minimum height and press behavior remain unchanged.
+**Final implementation:** `components/venue/VenueGamesPanel.tsx` has one `flow-root` card-content
+container instead of a flex column/header grid. Its actual icon floats right before the title,
+using `w-1/4 max-w-[5.5rem]`, `ml-3 mb-2` and automatic square height. The 25% width leaves enough
+room for the longest title word at phone widths; the cap preserves the existing desktop maximum.
+The title, description and live Category Blitz status are normal block flows: their inline text
+wraps beside the artwork, and subsequent lines regain full width below it. Descriptions use
+`mt-3` (9.75–12 px with existing responsive root sizes), measured from the title itself, so they
+do not wait for the icon's bottom. Text size, weight, copy and card minimum height stay the same.
+There is no absolute icon, fake spacer, forced title break, truncation or extra wrapper that
+creates a formatting context between the float and its text. Do not put a flex/grid/flow-root
+on the title or description: that would stop them flowing around this float. The outer
+`flow-root` contains the icon and keeps it from escaping into the next card.
 
-**Validation:** the isolated candidate passes the 217-page production build, TypeScript check,
-component ESLint and 28 focused tests in `tests/seasonal-games.test.ts` and
-`tests/fonts-contract.test.ts`. A Chromium geometry check renders all seven enabled game tiles
-at **320/350/375/390/430/768/1280 px**, in dark/light and Category Blitz live/idle states:
+The layout is shared by every venue game button. Colors, navigation, click handlers, badges,
+opening state and press behavior remain unchanged. No `VenueHubClient.tsx` change is included;
+the root's separate partner-messaging edits in that file must remain unpublished.
+
+**Final validation:** the isolated candidate passes the 217-page production build, TypeScript
+check, component ESLint and 28 focused tests in `tests/seasonal-games.test.ts` and
+`tests/fonts-contract.test.ts`. Chromium measures all seven enabled game tiles at
+**320/350/375/390/430/768/1280 px**, in dark/light and Category Blitz live/idle states:
 **28 views / 196 game buttons**, zero title/description glyph intersections with image bounds,
-zero horizontal text overflow and no page errors or external requests. Both affected cards were
-also visually inspected at 320 px; their full titles and descriptions remain visible.
-The 5,507-test full-suite result above belongs to the first font revision; it was not repeated
-for this small layout-only follow-up. Physical-device observations remain optional/unverified.
+zero horizontal text overflow, and no page errors or external requests. Every title-to-description
+block gap is at most 12 px. Both affected cards were visually reviewed at 320 px and Fantasy at
+390 px; the text sits close to titles and flows into the space beside the artwork.
+The 5,507-test full-suite result above belongs to the initial font revision; it was not repeated
+for these small layout-only refinements. Physical-device observations remain optional/unverified.
 
-Exact follow-up commands, from the isolated review checkout unless specified:
+Exact final commands, from the isolated review checkout unless specified:
 
 ```sh
 npx vitest run tests/seasonal-games.test.ts tests/fonts-contract.test.ts
@@ -186,23 +195,23 @@ npx eslint components/venue/VenueGamesPanel.tsx
 npx tsc --noEmit
 env -i PATH="$PATH" HOME="$HOME" TMPDIR="$TMPDIR" NEXT_TELEMETRY_DISABLED=1 npm run build
 # From the root, while the isolated server described above is running:
-node tmp/nunito-unification-2026-10-24/tile-check.cjs
+node tmp/nunito-unification-2026-10-24/flow-check.cjs
 ```
 
-The browser runner waits for the asynchronous live-status response before measuring it, mocks
-all API routes and blocks external origins. No production credentials/data were used. Evidence
-is in `tile-build.log`, `tile-tests.log`, `tile-lint.log`, `tile-typecheck.log`, `tile-check.log`
-and `tile-fix/report.json` plus per-card PNGs under the existing ignored evidence directory.
-The local server is stopped when checks finish. No database/provider calls, new assets, timers,
-retries or fan-out were introduced, so per-visit and daily/monthly recurring operation counts
-are unchanged; only the small JSX/CSS layout changes. Existing font transfer measurements remain
-applicable because font declarations and bytes are unchanged.
+The final browser runner waits for hydration and the asynchronous live-status response before
+measuring the settled card list, mocks all API routes and blocks external origins. No production
+credentials/data were used. Final evidence is in `flow-build.log`, `flow-tests.log`,
+`flow-lint.log`, `flow-typecheck.log`, `flow-check.log` and `flow-fix/report.json` plus per-card
+PNGs in the existing ignored evidence directory. Earlier `tile-*` results describe the previous
+grid revision, not the current layout. The local server is stopped when checks finish.
+No database/provider calls, new assets, timers, retries or fan-out were introduced: per-visit and
+daily/monthly recurring operation counts are unchanged. Existing font transfer measurements
+remain applicable because font declarations and bytes are unchanged.
 
-For the next agent: publish both local commits together only after approval, using the isolated
-release worktree and publication steps below. Inspect this branch's `git log -2 --format='%H %s'`
-for exact commit IDs. Do not rebuild from the dirty root or include its unpublished
-`components/venue/VenueHubClient.tsx` partner-messaging edits. No new implementation phase or
-developer design answer is needed for the overlap correction.
+For the next agent: publish the final branch tip, including all three local commits, only after
+approval, using the isolated release worktree and publication steps below. Inspect
+`git log -3 --format='%H %s'` for exact IDs. Do not rebuild from the dirty root. No new
+implementation phase, design question or particular model/effort is required for this correction.
 
 ## Publication and handoff
 
