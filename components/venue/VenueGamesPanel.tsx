@@ -198,7 +198,8 @@ function VenueGamesPanelInner({
                 >
                   {isOpening ? <span role="status" className="absolute bottom-2 right-3 z-10 inline-flex items-center gap-2 text-sm font-black"><ButtonSpinner /> Opening…</span> : null}
                   <div className="relative flex min-h-[190px] flex-col gap-3 p-4">
-                    <div className="flex items-start justify-between gap-3">
+                    {/* Keep the icon in flow: long titles wrap, and the art yields width on small phones. */}
+                    <div className={`grid items-start gap-3 ${GAME_CARD_ICON_BY_KEY[card.key] ? "grid-cols-[minmax(min-content,1fr)_minmax(0,5.5rem)]" : "grid-cols-1"}`}>
                       <div
                         className="text-[2rem] font-black uppercase leading-[0.95] text-white"
                         style={{
@@ -211,12 +212,25 @@ function VenueGamesPanelInner({
                         <br />
                         {GAME_TITLE_LINES_BY_KEY[card.key][1]}
                       </div>
+                      {(() => {
+                        const icon = GAME_CARD_ICON_BY_KEY[card.key];
+                        if (!icon) return null;
+                        return (
+                          <Image
+                            src={icon.src}
+                            alt=""
+                            width={icon.width}
+                            height={icon.height}
+                            className="pointer-events-none aspect-square h-auto w-full object-contain drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]"
+                          />
+                        );
+                      })()}
                     </div>
 
                     {isCategoryBlitzLive ? (
                       <div className="flex flex-col gap-2">
                         <div>
-                          <p className="pr-[5.5rem] text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
+                          <p className="text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
                             Group game in progress!
                           </p>
                           <p className="mt-1 text-[19px] font-semibold leading-snug text-amber-50/90">
@@ -226,27 +240,9 @@ function VenueGamesPanelInner({
                       </div>
                     ) : (
                       <div className="text-[19px] font-bold leading-snug text-white/95">
-                        {/* Floated spacer covering the corner icon's footprint: only the lines
-                            that would run under the icon wrap early, the rest use full width. */}
-                        <span aria-hidden="true" className="float-right h-10 w-[5.5rem]" />
                         {subtitle}
                       </div>
                     )}
-
-                  {(() => {
-                    const icon = GAME_CARD_ICON_BY_KEY[card.key];
-                    if (!icon) return null;
-                    return (
-                      <Image
-                        src={icon.src}
-                        alt=""
-                        width={icon.width}
-                        height={icon.height}
-                        className="pointer-events-none absolute right-2 top-2 h-[5.5rem] w-[5.5rem] object-contain drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]"
-                      />
-                    );
-                  })()}
-
                   </div>
 
                   {statusLabel ? (
