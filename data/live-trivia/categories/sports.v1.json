@@ -4845,6 +4845,49 @@
       "difficulty": "hard",
       "subcategory": "football",
       "answer_format": "write_in"
+    },
+    {
+      "slug": "dwayne-johnson-college-football-team",
+      "question": "Before becoming a professional wrestler and actor, Dwayne \"The Rock\" Johnson played college football for which NCAA team?",
+      "answer": "Miami Hurricanes",
+      "acceptableAnswers": [
+        "Miami",
+        "University of Miami",
+        "Hurricanes",
+        "University of Miami Hurricanes"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "football",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "terry-crews-professional-sport",
+      "question": "Before starring in White Chicks and Brooklyn Nine-Nine, Terry Crews played which sport professionally?",
+      "answer": "Football",
+      "acceptableAnswers": [
+        "American football",
+        "NFL football",
+        "Football (NFL)",
+        "NFL"
+      ],
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "football",
+      "answer_format": "write_in"
+    },
+    {
+      "slug": "ed-oneill-nfl-team",
+      "question": "Before starring in Married... with Children and Modern Family, actor Ed O'Neill signed with which NFL team?",
+      "answer": "Pittsburgh Steelers",
+      "acceptableAnswers": [
+        "Steelers",
+        "Pittsburgh"
+      ],
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "football",
+      "answer_format": "write_in"
     }
   ]
 }
