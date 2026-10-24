@@ -1,7 +1,7 @@
 # Group Games terminology and Partner Dashboard labels
 
-> **Status (2026-10-24):** **Phases 1–4 complete locally; ready for separately requested publication, not committed/pushed/deployed.** Final isolated candidate: 5,505 passing tests / 13 environment skips, typecheck/lint/218-page build pass. Real fixture browser review covers 350/390/1280 px (60 distinct views); the new Category Blitz status/art overlap is fixed. Existing email overflow and one unrelated randomized root Bingo-test failure are documented with baseline evidence. [Validation and scoped release patches](group-games-terminology-release-record-2026-10-24.md); [reviewed inventory](group-games-terminology-inventory.md). Latest/final handoff: [Phase 4](group-games-terminology-plan_PHASE_4_HANDOFF.md).
-> **Owner:** Andrew. Phase 4 executed on request. No push, merge, deployment or external publication under this plan. There is no Phase 5; a future publication request is separate.
+> **Status (2026-10-24): Phases 1–4 complete/live.** Andrew explicitly requested publication with the `/info` copy and three trivia questions. Application `e095b546b264fb02350666b430337b3a4df0a767`, READY `dpl_963x3ij1uoLwvUYdT9zETpcrjAkF`, both domains/exact source verified. Final combined gates: 5,504 tests / 13 environment skips, typecheck/lint/217-page build and 350/390/1280 px browser checks. [Publication, question data and undo record](copy-and-trivia-publication-2026-10-24.md); [Phase 4 handoff](group-games-terminology-plan_PHASE_4_HANDOFF.md); [original candidate evidence](group-games-terminology-release-record-2026-10-24.md).
+> **Owner:** Andrew. Publication authorization is resolved; all wording shipped together. No next implementation phase. Preserve unrelated dirty work. The pre-existing full-bank trivia sync failure is documented separately from the successful three-row data publication.
 
 
 ## Developer summary
@@ -111,9 +111,9 @@ still unverified for Phase 4. No assets, delivery behavior, data or internal ide
 ### Phase 4 — Review, verify and prepare one release
 
 
-**Complete locally (2026-10-24).** [Final handoff](group-games-terminology-plan_PHASE_4_HANDOFF.md);
+**Complete/live (2026-10-24).** [Publication record](copy-and-trivia-publication-2026-10-24.md). The local review evidence below is the pre-publication snapshot. [Final handoff](group-games-terminology-plan_PHASE_4_HANDOFF.md);
 [exact validation/release record](group-games-terminology-release-record-2026-10-24.md).
-All final isolated-candidate gates pass (5,505 tests / 13 skips, typecheck/lint/218-page build).
+All final isolated-candidate gates pass (5,505 tests / 13 skips, typecheck/lint/217-page build).
 60 browser views cover 350/390/1280 px, including all dashboard states, schedule views, legacy
 routes/rewards alias, admin, players, settings and both email previews. Category Blitz's longer
 status gets existing-artwork-width spacing; measured glyph/icon overlap is now zero. Existing

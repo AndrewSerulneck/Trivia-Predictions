@@ -3,6 +3,10 @@
 Reviewed **2026-10-24**, branch `main`, HEAD `bb5af579a2bf4a049f3dcca9cc8c5c6c4ea5112a`.
 This freezes copy decisions for Phases 2–3; no application copy has changed in Phase 1.
 
+## Publication update — 2026-10-24
+
+Andrew explicitly requested publication of this rename together with `/info` copy and three trivia additions. It is live; current commit/deployment, final gates and data/undo facts are in [the publication record](copy-and-trivia-publication-2026-10-24.md). The dated inventory and phase evidence below retain their historical scope.
+
 ## Terminology contract
 
 **Group Games** is the umbrella for shared-room, simultaneous play: currently **Live Trivia** and
@@ -133,7 +137,7 @@ the existing artwork width. Glyph bounds now show zero intersections at all thre
 No new typography/color token, gameplay logic or request was introduced.
 
 Final scoped candidate passes **5,505 tests / 13 environment skips**, typecheck/lint and a
-**218-page build**. Root gates had one unchanged randomized Bingo-test failure; its immediate
+**217-page build**. Root gates had one unchanged randomized Bingo-test failure; its immediate
 rerun and both candidate full runs pass. Email browser widths are unchanged from exact old-copy
 baselines: welcome 370 px at 350; added-venue 560 px at 350/390. These existing layout limits and
 unverified physical-device/email-client rendering are explicit exceptions, not rename fixes.

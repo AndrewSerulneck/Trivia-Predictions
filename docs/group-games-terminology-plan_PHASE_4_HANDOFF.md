@@ -1,6 +1,14 @@
 # Group Games terminology — Phase 4 handoff
 
-## For Andrew
+## Publication update for Andrew and the next agent — 2026-10-24
+
+Andrew subsequently explicitly requested batching/committing/publishing the Group Games plan, `/info`/dashboard copy and three Sports questions. **That publication is complete/live**: application `e095b546b264fb02350666b430337b3a4df0a767`, READY `dpl_963x3ij1uoLwvUYdT9zETpcrjAkF`, both domains/exact source verified. Final combined local gates: 5,504 pass / 13 skips, typecheck/lint/217-page build and 350/390/1280 px local/live copy checks. The reduced test count reflects the requested removal of one old `/info` copy assertion.
+
+All three requested questions were imported as active using the existing file importer; no pruning, migration or Speed question change. The 4,537 existing Live Trivia catalog rows are unchanged in the verified fields. Full-bank automatic sync remains blocked by the pre-existing duplicate `sun-tzu-art-of-war`; do not reimport the full bank or bring in its unrelated missing backlog. The new canonical data, exact IDs, accepted-answer/source metadata verification, preflight backup, measured cost and undo ledger locations are fully recorded in [the publication handoff](copy-and-trivia-publication-2026-10-24.md).
+
+Publication permission is resolved. There is no next implementation phase. Preserve unrelated root work, including unpublished partner messaging, native/POS work, moved assets and ignored backups. The older publication prohibition/uncommitted state below describes the Phase 4 snapshot **before this later explicit instruction** and no longer blocks this completed release. The patch/manifest remain frozen base-relative artifacts; marketing and trivia commits extend that original candidate. The original scoped build log has 217 pages; references to 218 for that candidate were transcription errors (root build: 218).
+
+## For Andrew — original Phase 4 review snapshot
 
 Phase 4 is complete locally. The final isolated candidate passes 5,505 tests (13 environment
 skips), typecheck, lint and a production build. Browser review covered 350/390/1280 px and found
@@ -169,7 +177,7 @@ npm run email:preview
 Root results: **5,524 pass / 1 fail / 13 skip** in **28.38 s**; Bingo suite rerun **12/12** in
 **3.39 s**; typecheck/lint/build pass (**218** static pages). Final isolated candidate after the
 spacing fix: **5,505 pass / 13 skip / zero failures**, **445 passing suites / 1 skipped**,
-**27.32 s**, clean typecheck/lint and a **218-page production build**. Root/candidate totals
+**27.32 s**, clean typecheck/lint and a **217-page production build**. Root/candidate totals
 differ because unrelated unpublished code/tests are deliberately absent from the candidate.
 
 The credential-free sandbox build initially failed DNS fetching Bree Serif/Nunito. An approved

@@ -10,17 +10,19 @@ them; it documents recurring processes and active implementation-plan pointers b
 
 ## Phase handoffs and planned Bingo / Pick ’Em work
 
-Group Games terminology: `docs/group-games-terminology-plan.md`; **Phases 1–4 complete locally
-(2026-10-24), not committed/pushed/deployed.** Final handoff:
-`docs/group-games-terminology-plan_PHASE_4_HANDOFF.md`; validation/release preparation:
-`docs/group-games-terminology-release-record-2026-10-24.md`. Scoped candidate passes 5,505 tests /
-13 environment skips, typecheck/lint/build; fixture browser review covers 350/390/1280 px.
-Category Blitz status spacing prevents new copy overlapping its icon. Existing email narrow-width
-limits and a randomized root Bingo-test failure are documented, not silently fixed.
-Group Games is the umbrella for Live Trivia and Category Blitz; dashboard headings are Active
-Group Games / Active Prizes. Keep game names, timing statuses, identifiers, routes, filters and
-push delivery unchanged. Publication is separate; use the isolated patches/manifest in the release
-record, never deploy this dirty root. Preserve unrelated work.
+Group Games terminology: `docs/group-games-terminology-plan.md`; **Phases 1–4 complete/live
+(2026-10-24).** Application source `e095b546b264fb02350666b430337b3a4df0a767`, READY
+`dpl_963x3ij1uoLwvUYdT9zETpcrjAkF`, both domains/exact source verified. Publication explicitly
+requested with the `/info` copy and three Sports questions; no further approval is pending.
+Release facts/data/undo state: `docs/copy-and-trivia-publication-2026-10-24.md`; implementation
+handoff: `docs/group-games-terminology-plan_PHASE_4_HANDOFF.md`. Final combined local gates:
+5,504 tests / 13 environment skips, typecheck/lint/217-page build; rendered 350/390/1280 px checks.
+All three questions are active; existing 4,537 Live Trivia catalog rows preserved. Automatic full-bank
+sync still fails on pre-existing duplicate `sun-tzu-art-of-war`; exact three-row file import succeeded,
+no pruning or backlog import. Preserve ignored evidence `tmp/group-games-publication-2026-10-24/`.
+Group Games is Live Trivia + Category Blitz; headings Active Group Games / Active Prizes.
+Keep names/statuses/identifiers/routes/filters/push delivery unchanged. Preserve unrelated dirty
+messaging/native/POS/assets work. Do not reimport or repair the duplicate bank under this plan.
 
 Current plan: `docs/bingo-pickem-reliability-plan.md` (2026-09-12). **Complete and
 developer-accepted (2026-09-19): Andrew confirmed authenticated Prop Bingo works after the

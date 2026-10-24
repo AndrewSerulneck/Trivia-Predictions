@@ -1,6 +1,8 @@
 # Group Games terminology — local release candidate, 2026-10-24
 
-The terminology update is ready as one isolated candidate. The dashboard, schedule flow,
+**Publication update:** the candidate was published on Andrew's explicit request. Current source/deployment, combined `/info` copy and three-question data facts are in [the publication record](copy-and-trivia-publication-2026-10-24.md). The remaining sections preserve the original local-candidate evidence and its then-unpublished state. The original scoped build page count is corrected to 217 from its saved log; the root build had 218.
+
+The terminology update was prepared as one isolated candidate. The dashboard, schedule flow,
 player status, notification settings, manual and new email copy agree. A small spacing fix keeps
 the longer Category Blitz status clear of its artwork. Nothing is committed, pushed or deployed.
 Existing email layouts still exceed narrow browser widths; this rename does not enlarge them.
@@ -42,7 +44,7 @@ Node **v24.19.0**; Next **16.1.6**; Chromium through the installed Playwright **
 | **Final candidate `npx --no-install vitest run`** | **5,505 pass / 13 skip, 445 suites pass / 1 skip; 27.32 s** |
 | **Final candidate `npx --no-install tsc --noEmit`** | **Pass** |
 | **Final candidate `npm run lint`** | **Pass** |
-| **Final candidate `npm run build`** | **Pass, 218 static pages; credential-free environment** |
+| **Final candidate `npm run build`** | **Pass, 217 static pages; credential-free environment** |
 | `npm run email:preview` | Pass; sample data, no sending |
 | Semantic review | 32 remaining old-phrase lines, all inventoried exclusions; admin metadata unchanged/component-free |
 | Candidate patch whitespace/application | Checked against the exact base; no unrelated whitespace included |
