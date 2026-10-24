@@ -1070,6 +1070,7 @@ Partner Dashboard **2,056 KB → 352 KB** and **10.4 s → 2.1 s** to the load e
   use the versioned `/fonts/nunito-v1.css` and Latin WOFF2 with its OFL license; new bytes get
   new filenames because `/fonts/*` is immutable-cached. Email clients and text in existing
   artwork/historical exports are outside this website rule. Tripwire: `tests/fonts-contract.test.ts`.
+  Live release and final Venue Home text-flow rules: `docs/nunito-typography-update-2026-10-24.md`.
 
 - **`/owner/*` and `/admin` do not download the player runtime.**
   `components/ui/PlayerRuntime.tsx` loads `AnimationOverlay`, `GlobalTransitionOverlay`,

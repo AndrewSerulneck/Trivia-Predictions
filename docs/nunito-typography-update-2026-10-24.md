@@ -3,9 +3,10 @@
 The website now uses Nunito for headings, body text, controls, scores and newly rendered share
 pictures. The Partner Dashboard headings are smaller: Active Group Games fits on one line beside
 its add button at 320/350/390/1280 px, matching Active Prizes. Venue Home game buttons also
-let the titles and descriptions flow closely around the 3D artwork without overlap. These changes are locally verified and prepared in an isolated release commit; they are not live.
-Publishing is waiting for Andrew’s approval after automatic review rejected the production push. No data, questions,
-prize eligibility, game behavior or notification delivery changes.
+let the titles and descriptions flow closely around the 3D artwork without overlap. These changes
+are live on both public domains, verified on 2026-10-24 at 21:22–21:23 UTC. Andrew explicitly approved publication after accepting the final
+text flow around icons. No data, questions, prize eligibility, game behavior or notification
+delivery changes.
 
 ## Decisions and implementation
 
@@ -155,9 +156,9 @@ requested that descriptions hug the icons and stay close to titles. The final la
 continuous text flow around a real floated image. This supersedes the separate grid header in
 local commit `80287ff4`; do not restore that grid, which pushed descriptions below the tallest
 header element. The initial font commit is `85a73788df7b2d05333840a801629e6b1e04b7f5`.
-All typography/layout commits remain local on `release/nunito-unification-2026-10-24`; root
-`main` remains at `d450d9a702929ef29e77fa9dcfdb2fca94d9c02f`. Nothing has been pushed/deployed.
-The prior approval-review rejection still applies; these refinements do not attempt publication.
+Final application commit **`fbbc2e06b6b5a618f00868be37f0bcb5251e1453`** and its two predecessors
+are now pushed to `origin/main` and deployed. Andrew explicitly approved publication after
+accepting the final refinement; the earlier automatic-review publishing block is resolved.
 
 **Final implementation:** `components/venue/VenueGamesPanel.tsx` has one `flow-root` card-content
 container instead of a flex column/header grid. Its actual icon floats right before the title,
@@ -184,8 +185,9 @@ check, component ESLint and 28 focused tests in `tests/seasonal-games.test.ts` a
 zero horizontal text overflow, and no page errors or external requests. Every title-to-description
 block gap is at most 12 px. Both affected cards were visually reviewed at 320 px and Fantasy at
 390 px; the text sits close to titles and flows into the space beside the artwork.
-The 5,507-test full-suite result above belongs to the initial font revision; it was not repeated
-for these small layout-only refinements. Physical-device observations remain optional/unverified.
+The final application CI subsequently reran the full suite on the final float refinement:
+5,507 pass / 13 skips, lint and the 217-page build pass. Physical-device observations remain
+optional/unverified.
 
 Exact final commands, from the isolated review checkout unless specified:
 
@@ -208,46 +210,70 @@ No database/provider calls, new assets, timers, retries or fan-out were introduc
 daily/monthly recurring operation counts are unchanged. Existing font transfer measurements
 remain applicable because font declarations and bytes are unchanged.
 
-For the next agent: publish the final branch tip, including all three local commits, only after
-approval, using the isolated release worktree and publication steps below. Inspect
-`git log -3 --format='%H %s'` for exact IDs. Do not rebuild from the dirty root. No new
-implementation phase, design question or particular model/effort is required for this correction.
+For the next agent: this correction is live. Preserve the final float layout and the unrelated
+dirty root; use the isolated release source for any release follow-up. No new implementation
+phase, design answer or particular model/effort is required.
 
 ## Publication and handoff
 
-**Built, tested and committed locally; not pushed or deployed.** Root `main` remains at
-`d450d9a702929ef29e77fa9dcfdb2fca94d9c02f`; live production remains the earlier Group Games/copy
-release. The implementation commit is on `release/nunito-unification-2026-10-24` in the isolated
-release worktree and contains this note. Obtain its exact SHA with:
+**Complete/live, 2026-10-24.** Andrew said, “Perfect. Now we're ready to push all the changes and
+go live!” after accepting the final text wrapping. This explicitly resolved the earlier automatic
+approval-review refusal, which had considered the original publishing permission limited to the
+previous Group Games/copy batch. The approved push succeeded; no approval question remains.
 
-```sh
-git -C /private/tmp/hightop-nunito-release-2026-10-24 log -1 --format='%H %s'
-```
+Application commits pushed together from the isolated release worktree:
 
-Automatic approval review rejected the combined commit/push shell command **before execution**
-because pushing this new follow-up directly to production `main` was not explicitly authorized;
-it judged Andrew’s earlier publishing request to cover the previous batch only. The local commit
-was then completed separately. No workaround or indirect publication was attempted. The only
-open question is approval to push **this typography update** live. Do not retry publication until
-Andrew approves it. No secrets or data are involved, but pushing triggers a production deployment.
+- `85a73788df7b2d05333840a801629e6b1e04b7f5`: Nunito, smaller dashboard headings and font assets.
+- `80287ff4f0209a0b907eed08f588aaa330369bc9`: initial icon-clearance layout (superseded by the next).
+- **`fbbc2e06b6b5a618f00868be37f0bcb5251e1453`**: final continuous text flow around the icons.
 
-Recommended next steps after approval (no particular model/effort is required):
+Production deployment **`dpl_4NZgZkgVw121mLs7XBTJnzmDJiH2`** is **READY**, exact GitHub source
+`fbbc2e06b6b5a618f00868be37f0bcb5251e1453`, URL
+`https://hightop-challenge-cm9wo9rx2-andrewserulnecks-projects.vercel.app`.
+Both `https://hightopchallenge.com` and `https://play.hightopchallenge.com` were independently
+inspected and resolve to this deployment. The deployment API supplies the exact source SHA;
+Vercel alias inspection supplies the matching deployment ID. These are dated application-release
+facts; later documentation-only deployments have their own source/deployment IDs.
 
-1. Confirm the release branch’s clean state and that `origin/main` has not advanced; if it has,
-   integrate the reviewed changes without discarding newer work. Use this isolated worktree,
-   never the unrelated dirty root.
-2. Push the reviewed commit with `git push origin HEAD:main` from that worktree. No force push.
-3. Verify push-triggered GitHub CI, the Vercel deployment’s exact source SHA and READY state,
-   and both `hightopchallenge.com` / `play.hightopchallenge.com` aliases. Verify real `/info`
-   computed fonts/transfer and dashboard heading fit using intercepted fake API responses.
-4. Record exact application/deployment IDs, checks and public font-transfer observations here.
-   The local baseline saves 10,360 bytes per cold normal visit; compare actual live transfer.
-5. Preserve all root dirty files byte-for-byte if aligning root `main` to the published commit.
-   A mixed reset only after proving an empty index and recording/verifying working-file hashes
-   is the established method; never reset hard. Publish any release-record follow-up separately.
+Application CI **[40133758205](https://github.com/AndrewSerulneck/Trivia-Predictions/actions/runs/40133758205)**
+is **SUCCESS** on the exact final application SHA: **5,507 tests pass / 13 skips**, 445 passing
+suites / one skip; lint and the **217-page production build** pass on GitHub's Node 20 runner.
+This reruns the full suite after the final float refinement and confirms the local focused checks.
 
-Unverified: production deployment/CI for this update, actual live font savings and physical devices.
-The local browser server was stopped after validation; rerun the exact command above if needed.
+Live Chromium checks at 320/350/390/1280 px passed **20 views**: four dashboard views on the
+apex and 16 venue views on `play.` (both themes × live/idle Category Blitz × four widths),
+**112 game buttons**. Both dashboard headings share the smaller rule; Active Group Games
+has one line at all four widths. All checked visible dashboard text computes to Nunito.
+Every venue title/description clears the artwork, has no horizontal overflow and has a
+9.75–12 px title-to-description gap. No page errors or external requests occurred. Browser game
+and owner APIs were intercepted with fixtures, so these are live-code layout checks, not real
+partner/player operations or proof of live game timing. No real data was read or mutated.
+
+Live public `/info` independently loads **one Nunito WOFF2 / 39,152 bytes**; both its body and
+heading compute to Nunito with Next's metric-matched fallback. Against the live baseline of two
+fonts / 49,512 bytes this confirms the expected **10,360-byte / 20.9% reduction**. The CSS (495
+bytes), WOFF2 (39,152) and OFL (4,384) each return 200 and
+`Cache-Control: public, max-age=31536000, immutable`. Invoice/long-term traffic are unmeasured;
+no database/provider/jobs/retry or fan-out costs were added.
+
+Starting state for future work: isolated branch `release/nunito-unification-2026-10-24`, worktree
+`/private/tmp/hightop-nunito-release-2026-10-24`; application tip above is pushed/deployed. This
+release record is a documentation-only follow-up. Root `main` was still at base `d450d9a` during
+live verification; after this record is pushed it is aligned to the published branch using a
+mixed reset with an empty index and before/after working-file hashes. That updates the branch
+and index only; unrelated dirty files are preserved. Do not reset hard, deploy the dirty root,
+include partner messaging/native/POS changes or repeat any three-question import.
+
+No database migrations, backups, imports, paid generation, message/email/push sends or data undo
+steps were needed. No new implementation phase or developer answer is outstanding. Optional
+physical-device checks and observations of real game timing remain unverified. The local
+fixture server is stopped; the exact local rebuild/review commands remain above.
+
+Final release evidence is ignored under `tmp/nunito-unification-2026-10-24/`:
+`application-deployment.json`, `application-apex.json`, `application-play.json`,
+`application-ci-detail.json`, `live-check.log`, `live-flow/report.json` and PNGs,
+`live-font-transfer.json`, `live-font-assets.json`. A documentation-only push is verified
+separately; those later facts are available in local final-deployment/CI files and Git history.
 
 For future typography work, keep Nunito/its fallback centralized. Do not restore Bree Serif or a
 monospace typeface to fix spacing; use weight/size and `tabular-nums`. Keep both design foundation
