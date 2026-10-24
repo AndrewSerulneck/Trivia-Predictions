@@ -18,12 +18,6 @@ describe("/info Partner Login and Square badge (Phase 3B.2)", () => {
     expect(page).not.toContain("Already a partner? Sign in");
   });
 
-  it("tells partners the dashboard is browser-based, with the approved copy", () => {
-    expect(page).toContain(
-      "Venue partners: schedule games, set prizes and manage billing from any web browser — no app needed.",
-    );
-  });
-
   it("shows Square's badge whole, with alt text, 40 px clear space and a small optimized file", () => {
     expect(page).toContain('src="/brand/partners/built-with-square-badge.webp"');
     expect(page).toContain('alt="Built with Square"');

@@ -423,7 +423,7 @@ export default function InfoPage() {
                 href={SIGNUP_HREF}
                 className="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-black text-slate-950 htm-btn-glow whitespace-nowrap"
               >
-                Get Started
+                Sign Up
               </a>
             </div>
             <a
@@ -554,16 +554,10 @@ export default function InfoPage() {
                   Partner Login
                 </a>
               </div>
-              <p className="mx-auto max-w-md text-footnote text-slate-400 leading-relaxed">
-                Venue partners: schedule games, set prizes and manage billing from any web browser — no app needed.
-              </p>
             </div>
             <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-4 leading-relaxed">
               Digital games that can only be accessed at your bar, played on your guests&apos; phones.
              
-            </p>
-            <p className="text-sm font-bold text-slate-300 mb-4">
-              Works with your Square register!
             </p>
             {/* Square's official badge, shown whole (never cropped/recoloured/re-worded) with >= 40 px clear space (my-10 = 40 px). */}
             <div className="my-10 flex justify-center">
@@ -578,12 +572,15 @@ export default function InfoPage() {
 
           </div>
 
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-slate-600 text-xs">
-            <span>Scroll</span>
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <a
+            href="#overview"
+            className="absolute bottom-8 inset-x-0 mx-auto flex w-fit max-w-full flex-col items-center gap-2 px-5 text-center text-sm font-semibold text-slate-300 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-400"
+          >
+            <span>Explore what you can do with Hightop Challenge</span>
+            <svg aria-hidden="true" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M12 5v14M5 12l7 7 7-7" />
             </svg>
-          </div>
+          </a>
         </section>
 
         {/* ── SEMANTIC QA ── */}
@@ -663,7 +660,7 @@ export default function InfoPage() {
         <CollapsibleSection
           id="features"
           eyebrow="Why Bars Love Hightop Challenge"
-          title={<>A customer loyalty program to <span className="htm-grad">grow your business.</span></>}
+          title={<>Designed to help <span className="htm-grad">grow your business.</span></>}
           className="bg-slate-900/40"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -737,12 +734,12 @@ export default function InfoPage() {
               </div>
               <ul className="flex flex-col gap-4 text-sm text-slate-300">
                 {[
-                  "Full game library — Live Trivia, Speed Trivia, Sports Bingo, Pick'Em, Fantasy Sports",
-                  "Players use their own phones — no hardware, no app download",
+                  "Schedule games to attract customers during your slowest business hours",
+                  "Full game library — Trivia games, Sports Bingo, Pick'Em, Fantasy Leagues, and more",
+                  "Players use their own phones — no hardware required",
                   "Real-time leaderboards and venue-scoped competition",
                   "Challenge campaigns and prize tools",
                   "Custom promotions and sponsor opportunities available",
-                  "Schedule games around your business hours",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-3">
                     <span className="text-cyan-400 mt-0.5 flex-shrink-0">✓</span>
@@ -754,7 +751,7 @@ export default function InfoPage() {
                 href={SIGNUP_HREF}
                 className="rounded-xl bg-cyan-400 px-6 py-4 text-center text-base font-black text-slate-950 htm-btn-glow"
               >
-                Get Started
+                Sign Up
               </a>
               <p className="text-center text-xs text-slate-500">
                 Prefer to talk first?{" "}
