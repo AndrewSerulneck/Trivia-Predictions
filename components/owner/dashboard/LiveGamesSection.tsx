@@ -44,15 +44,15 @@ export const LiveGamesSection = ({
     <DashboardSectionCard
       glyph="🎮"
       accentClassName="bg-ht-game-live"
-      title="Live Games"
-      addLabel={ready && upcoming.length > 0 ? "Schedule a live game" : undefined}
+      title="Active Group Games"
+      addLabel={ready && upcoming.length > 0 ? "Schedule a group game" : undefined}
       onAdd={onAdd}
     >
-      {load.status === "loading" ? <SectionSkeleton label="Loading live games" /> : null}
+      {load.status === "loading" ? <SectionSkeleton label="Loading group games" /> : null}
       {load.status === "error" ? <SectionError message={load.message} onRetry={onRetry} /> : null}
       {ready && upcoming.length === 0 ? (
         <SectionEmpty
-          title="Schedule a live game"
+          title="Schedule a group game"
           hint="Pick a game and a time. Your whole room plays together."
           onAdd={onAdd}
         />

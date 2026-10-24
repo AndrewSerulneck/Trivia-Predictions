@@ -34,7 +34,7 @@ type ScheduleTiming = Pick<
 // ── Game-type contract ────────────────────────────────────────────────────────
 // The owner scheduling surface is game-type-agnostic so the UI is future-proof.
 // KNOWN types are valid on the wire; SUPPORTED types can actually be scheduled
-// today. As of Phase 4b BOTH live games are supported — Category Blitz and Live
+// today. As of Phase 4b BOTH group games are supported — Category Blitz and Live
 // Trivia — each backed by its own engine (category_blitz_schedules vs.
 // trivia_schedules) but merged into one owner-facing calendar here.
 export const KNOWN_OWNER_SCHEDULE_GAME_TYPES: readonly OwnerScheduleGameType[] = [
@@ -225,7 +225,7 @@ async function listOwnerCategoryBlitzSchedules(venueId: string): Promise<OwnerSc
  * List a venue's active schedules for the owner surface, tagged with game type.
  * With no `gameType` filter this MERGES both engines (Category Blitz + Live
  * Trivia) into one time-ordered calendar — the dashboard shows the venue's whole
- * live-game schedule in one place. Pass a specific gameType to scope to one
+ * group-game schedule in one place. Pass a specific gameType to scope to one
  * engine.
  */
 export async function listOwnerSchedules(

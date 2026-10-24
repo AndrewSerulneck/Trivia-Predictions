@@ -1,0 +1,443 @@
+--- a/components/owner/dashboard/DashboardSectionCard.tsx
++++ b/components/owner/dashboard/DashboardSectionCard.tsx
+@@ -32,7 +32,7 @@
+       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${accentClassName}`}>
+         {glyph}
+       </div>
+-      <h2 className="ht-h2 min-w-0 flex-1 truncate">{title}</h2>
++      <h2 className="ht-h2 min-w-0 flex-1">{title}</h2>
+       {addLabel && onAdd ? (
+         <button
+           type="button"
+--- a/components/owner/dashboard/LiveGamesSection.tsx
++++ b/components/owner/dashboard/LiveGamesSection.tsx
+@@ -44,15 +44,15 @@
+     <DashboardSectionCard
+       glyph="🎮"
+       accentClassName="bg-ht-game-live"
+-      title="Live Games"
+-      addLabel={ready && upcoming.length > 0 ? "Schedule a live game" : undefined}
++      title="Active Group Games"
++      addLabel={ready && upcoming.length > 0 ? "Schedule a group game" : undefined}
+       onAdd={onAdd}
+     >
+-      {load.status === "loading" ? <SectionSkeleton label="Loading live games" /> : null}
++      {load.status === "loading" ? <SectionSkeleton label="Loading group games" /> : null}
+       {load.status === "error" ? <SectionError message={load.message} onRetry={onRetry} /> : null}
+       {ready && upcoming.length === 0 ? (
+         <SectionEmpty
+-          title="Schedule a live game"
++          title="Schedule a group game"
+           hint="Pick a game and a time. Your whole room plays together."
+           onAdd={onAdd}
+         />
+--- a/components/owner/dashboard/RewardsSection.tsx
++++ b/components/owner/dashboard/RewardsSection.tsx
+@@ -34,7 +34,7 @@
+     <DashboardSectionCard
+       glyph="🏆"
+       accentClassName="bg-ht-game-pickem"
+-      title="Offer Prizes"
++      title="Active Prizes"
+       addLabel={ready && active.length > 0 ? "Offer a prize" : undefined}
+       onAdd={onAdd}
+     >
+--- a/components/owner/schedule/ScheduleGameFlow.tsx
++++ b/components/owner/schedule/ScheduleGameFlow.tsx
+@@ -37,7 +37,7 @@
+ import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
+ import type { OwnerSchedule } from "@/types";
+ 
+-// The Schedule Live Games sheet (docs/partner-dashboard-app-redesign-plan.md §4e):
++// The Group Games sheet (docs/partner-dashboard-app-redesign-plan.md §4e):
+ // Game → When → Repeat → Review & name, plus the upcoming list, past games and a
+ // game's edit/cancel screen. Hosted by the dashboard, which owns the URL state
+ // (`useOwnerSheet`) and the games list; this owns the form.
+@@ -354,10 +354,10 @@
+   })();
+ 
+   const title = current === "all" || current === "history" || current === "detail"
+-    ? "Live Games"
++    ? "Group Games"
+     : isEditing
+       ? "Edit game"
+-      : "Schedule a live game";
++      : "Schedule a group game";
+ 
+   const resetIfFinished = () => {
+     if (!finished) return;
+--- a/components/owner/schedule/ScheduleGameRow.tsx
++++ b/components/owner/schedule/ScheduleGameRow.tsx
+@@ -4,7 +4,7 @@
+ 
+ // One game as a list row: date chip, title, and one muted line (time range ·
+ // repeats · game name when the title doesn't say it).
+-// Shared by the dashboard's Live Games card and the schedule sheet's upcoming /
++// Shared by the dashboard's Active Group Games card and the schedule sheet's upcoming /
+ // past lists. A button when `onClick` is given (chevron shown), otherwise a
+ // static row — past games are read-only.
+ 
+--- a/components/owner/schedule/ScheduleStepScreens.tsx
++++ b/components/owner/schedule/ScheduleStepScreens.tsx
+@@ -28,7 +28,7 @@
+ } from "@/lib/ownerScheduleDisplay";
+ import type { OwnerSchedule } from "@/types";
+ 
+-// The screens inside the Schedule Live Games sheet (docs/partner-dashboard-app-redesign-plan.md §4e).
++// The screens inside the Group Games sheet (docs/partner-dashboard-app-redesign-plan.md §4e).
+ // Presentational: every value and handler comes from ScheduleGameFlow, which keeps
+ // the form state (SlideSteps remounts a step on every change).
+ 
+--- a/lib/ownerScheduleDisplay.ts
++++ b/lib/ownerScheduleDisplay.ts
+@@ -1,7 +1,7 @@
+ import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
+ import type { OwnerSchedule, OwnerScheduleGameType } from "@/types";
+ 
+-// Display helpers for owner schedules, shared by the dashboard's Live Games
++// Display helpers for owner schedules, shared by the dashboard's Active Group Games
+ // section and the Schedule page / sheet. Pure: no React, no DOM.
+ 
+ export const GAME_LABELS: Record<OwnerScheduleGameType, string> = {
+--- a/tests/owner-dashboard-contract.test.ts
++++ b/tests/owner-dashboard-contract.test.ts
+@@ -70,7 +70,7 @@
+   it("uses the plan's empty-state copy", () => {
+     const live = read("components/owner/dashboard/LiveGamesSection.tsx");
+     const rewards = read("components/owner/dashboard/RewardsSection.tsx");
+-    expect(live).toContain("Schedule a live game");
++    expect(live).toContain("Schedule a group game");
+     expect(live).toContain("Pick a game and a time. Your whole room plays together.");
+     expect(rewards).toContain("Offer your guests a prize");
+     expect(rewards).toContain("+ Offer another prize");
+@@ -154,7 +154,7 @@
+   it("Phase 6: the Partner Manual describes the new navigation, not the old buttons", () => {
+     const manual = read("lib/partnerManual.ts");
+     expect(manual).toContain("tap the arrow in the top-left");
+-    expect(manual).toContain("Tap Offer Prizes on your dashboard");
++    expect(manual).toContain("Tap Active Prizes on your dashboard");
+     expect(manual).not.toMatch(/[Cc]lick/);
+   });
+ });
+--- a/tests/app.owner-dashboard-one-round-trip.test.ts
++++ b/tests/app.owner-dashboard-one-round-trip.test.ts
+@@ -105,8 +105,8 @@
+ const openDashboard = async () => {
+   render(createElement(OwnerDashboardPage));
+   await waitFor(() => {
+-    expect(screen.getByRole("region", { name: "Live Games" })).toBeTruthy();
+-    expect(screen.getByRole("region", { name: "Offer Prizes" })).toBeTruthy();
++    expect(screen.getByRole("region", { name: "Active Group Games" })).toBeTruthy();
++    expect(screen.getByRole("region", { name: "Active Prizes" })).toBeTruthy();
+   });
+   // Let the loader's minimum-visible timer and any trailing effect settle.
+   await act(async () => {
+@@ -149,7 +149,7 @@
+     // Both sections are READY (their empty states), not skeletons: the seed landed.
+     expect(screen.getByText("Pick a game and a time. Your whole room plays together.")).toBeTruthy();
+     expect(screen.getByRole("button", { name: /Offer your guests a prize/ })).toBeTruthy();
+-    expect(screen.queryByRole("status", { name: "Loading live games" })).toBeNull();
++    expect(screen.queryByRole("status", { name: "Loading group games" })).toBeNull();
+     expect(screen.queryByRole("status", { name: "Loading prizes" })).toBeNull();
+   });
+ 
+--- a/tests/app.owner-dashboard-merch.test.ts
++++ b/tests/app.owner-dashboard-merch.test.ts
+@@ -105,7 +105,7 @@
+  */
+ const awaitDashboardMounted = async () => {
+   await screen.findByRole("button", { name: "Select venue" });
+-  await screen.findByRole("heading", { name: "Offer Prizes" });
++  await screen.findByRole("heading", { name: "Active Prizes" });
+ };
+ 
+ const store = () => screen.getByRole("dialog", { name: "Order Join Merch" });
+--- a/tests/components.owner-sheet.test.ts
++++ b/tests/components.owner-sheet.test.ts
+@@ -15,7 +15,7 @@
+ type SheetProps = ComponentProps<typeof OwnerSheet>;
+ 
+ const sheetProps = (overrides: Partial<SheetProps>): SheetProps =>
+-  ({ open: true, onRequestClose: () => {}, title: "Schedule a live game", ...overrides }) as SheetProps;
++  ({ open: true, onRequestClose: () => {}, title: "Schedule a group game", ...overrides }) as SheetProps;
+ 
+ const dialog = () => document.body.querySelector<HTMLElement>('[role="dialog"]');
+ 
+@@ -42,7 +42,7 @@
+     expect(panel).not.toBeNull();
+     expect(container.contains(panel)).toBe(false);
+     expect(panel?.getAttribute("aria-modal")).toBe("true");
+-    expect(screen.getByRole("dialog", { name: "Schedule a live game" })).toBe(panel);
++    expect(screen.getByRole("dialog", { name: "Schedule a group game" })).toBe(panel);
+     expect(document.activeElement).toBe(panel);
+     expect(panel?.className).toContain("animate-tp-popup-sheet-up");
+   });
+@@ -295,7 +295,7 @@
+     for (const dark of ["ht-hairline", "bg-ht-elevated", "text-ht-primary", "text-ht-cyan-300"]) {
+       expect(html).not.toContain(dark);
+     }
+-    expect(screen.getByRole("heading", { name: "Schedule a live game" }).className).toContain("!text-slate-900");
++    expect(screen.getByRole("heading", { name: "Schedule a group game" }).className).toContain("!text-slate-900");
+     expect(screen.getByText("Hightop Challenge Store").className).toContain("text-cyan-700");
+     const close = screen.getByRole("button", { name: "Close" });
+     expect(close.className).toContain("bg-white");
+--- a/tests/__snapshots__/components.owner-sheet.test.ts.snap
++++ b/tests/__snapshots__/components.owner-sheet.test.ts.snap
+@@ -1,7 +1,7 @@
+ // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+ 
+-exports[`OwnerSheet tones (join-merch-store-plan Phase 2) > dark (default) markup is pinned: card + eyebrow 1`] = `"<div data-tp-scroll-lock="active" class="fixed inset-0 z-[5000] flex justify-center bg-slate-950/70 items-end p-4 sm:items-center animate-tp-fade-in"><section role="dialog" aria-modal="true" aria-labelledby="t" tabindex="-1" class="tp-sheet-offset-screen max-h-[90svh] rounded-2xl flex w-full max-w-2xl flex-col overflow-hidden border border-ht-hairline bg-ht-surface shadow-ht-modal outline-none animate-tp-popup-sheet-up"><header class="flex shrink-0 items-start justify-between gap-4 border-b border-ht-hairline p-5"><div class="min-w-0"><p class="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Hightop Challenge</p><h2 id="t" class="ht-h2 mt-1">Schedule a live game</h2></div><button type="button" class="shrink-0 rounded-lg border border-ht-elevated-2 bg-ht-elevated px-3 py-2 text-sm font-black text-ht-primary">Close</button></header><div class="min-h-0  overflow-y-auto overscroll-contain p-5 ">Body</div></section></div>"`;
++exports[`OwnerSheet tones (join-merch-store-plan Phase 2) > dark (default) markup is pinned: card + eyebrow 1`] = `"<div data-tp-scroll-lock="active" class="fixed inset-0 z-[5000] flex justify-center bg-slate-950/70 items-end p-4 sm:items-center animate-tp-fade-in"><section role="dialog" aria-modal="true" aria-labelledby="t" tabindex="-1" class="tp-sheet-offset-screen max-h-[90svh] rounded-2xl flex w-full max-w-2xl flex-col overflow-hidden border border-ht-hairline bg-ht-surface shadow-ht-modal outline-none animate-tp-popup-sheet-up"><header class="flex shrink-0 items-start justify-between gap-4 border-b border-ht-hairline p-5"><div class="min-w-0"><p class="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Hightop Challenge</p><h2 id="t" class="ht-h2 mt-1">Schedule a group game</h2></div><button type="button" class="shrink-0 rounded-lg border border-ht-elevated-2 bg-ht-elevated px-3 py-2 text-sm font-black text-ht-primary">Close</button></header><div class="min-h-0  overflow-y-auto overscroll-contain p-5 ">Body</div></section></div>"`;
+ 
+-exports[`OwnerSheet tones (join-merch-store-plan Phase 2) > dark (default) markup is pinned: tall + eyebrow + footer 1`] = `"<div data-tp-scroll-lock="active" class="fixed inset-0 z-[5000] flex justify-center bg-slate-950/70 items-end sm:items-center sm:p-4 animate-tp-fade-in"><section role="dialog" aria-modal="true" aria-labelledby="t" tabindex="-1" class="h-[92svh] rounded-t-2xl sm:h-auto sm:max-h-[90svh] sm:rounded-2xl flex w-full max-w-2xl flex-col overflow-hidden border border-ht-hairline bg-ht-surface shadow-ht-modal outline-none animate-tp-popup-sheet-up"><div aria-hidden="true" class="flex shrink-0 justify-center pt-2 sm:hidden"><span class="h-1.5 w-10 rounded-full bg-ht-elevated-2"></span></div><header class="flex shrink-0 items-start justify-between gap-4 border-b border-ht-hairline px-5 pb-4 pt-3 sm:pt-5"><div class="min-w-0"><p class="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Hightop Challenge</p><h2 id="t" class="ht-h2 mt-1">Schedule a live game</h2></div><button type="button" class="shrink-0 rounded-lg border border-ht-elevated-2 bg-ht-elevated px-3 py-2 text-sm font-black text-ht-primary">Close</button></header><div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 ">Body</div><div class="shrink-0 border-t border-ht-hairline px-5 pb-[max(env(safe-area-inset-bottom),12px)] pt-3"><span>Footer</span></div></section></div>"`;
++exports[`OwnerSheet tones (join-merch-store-plan Phase 2) > dark (default) markup is pinned: tall + eyebrow + footer 1`] = `"<div data-tp-scroll-lock="active" class="fixed inset-0 z-[5000] flex justify-center bg-slate-950/70 items-end sm:items-center sm:p-4 animate-tp-fade-in"><section role="dialog" aria-modal="true" aria-labelledby="t" tabindex="-1" class="h-[92svh] rounded-t-2xl sm:h-auto sm:max-h-[90svh] sm:rounded-2xl flex w-full max-w-2xl flex-col overflow-hidden border border-ht-hairline bg-ht-surface shadow-ht-modal outline-none animate-tp-popup-sheet-up"><div aria-hidden="true" class="flex shrink-0 justify-center pt-2 sm:hidden"><span class="h-1.5 w-10 rounded-full bg-ht-elevated-2"></span></div><header class="flex shrink-0 items-start justify-between gap-4 border-b border-ht-hairline px-5 pb-4 pt-3 sm:pt-5"><div class="min-w-0"><p class="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Hightop Challenge</p><h2 id="t" class="ht-h2 mt-1">Schedule a group game</h2></div><button type="button" class="shrink-0 rounded-lg border border-ht-elevated-2 bg-ht-elevated px-3 py-2 text-sm font-black text-ht-primary">Close</button></header><div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 ">Body</div><div class="shrink-0 border-t border-ht-hairline px-5 pb-[max(env(safe-area-inset-bottom),12px)] pt-3"><span>Footer</span></div></section></div>"`;
+ 
+-exports[`OwnerSheet tones (join-merch-store-plan Phase 2) > dark (default) markup is pinned: tall, no footer 1`] = `"<div data-tp-scroll-lock="active" class="fixed inset-0 z-[5000] flex justify-center bg-slate-950/70 items-end sm:items-center sm:p-4 animate-tp-fade-in"><section role="dialog" aria-modal="true" aria-labelledby="t" tabindex="-1" class="h-[92svh] rounded-t-2xl sm:h-auto sm:max-h-[90svh] sm:rounded-2xl flex w-full max-w-2xl flex-col overflow-hidden border border-ht-hairline bg-ht-surface shadow-ht-modal outline-none animate-tp-popup-sheet-up"><div aria-hidden="true" class="flex shrink-0 justify-center pt-2 sm:hidden"><span class="h-1.5 w-10 rounded-full bg-ht-elevated-2"></span></div><header class="flex shrink-0 items-start justify-between gap-4 border-b border-ht-hairline px-5 pb-4 pt-3 sm:pt-5"><div class="min-w-0"><h2 id="t" class="ht-h2 ">Schedule a live game</h2></div><button type="button" class="shrink-0 rounded-lg border border-ht-elevated-2 bg-ht-elevated px-3 py-2 text-sm font-black text-ht-primary">Close</button></header><div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 pb-[max(env(safe-area-inset-bottom),20px)]">Body</div></section></div>"`;
++exports[`OwnerSheet tones (join-merch-store-plan Phase 2) > dark (default) markup is pinned: tall, no footer 1`] = `"<div data-tp-scroll-lock="active" class="fixed inset-0 z-[5000] flex justify-center bg-slate-950/70 items-end sm:items-center sm:p-4 animate-tp-fade-in"><section role="dialog" aria-modal="true" aria-labelledby="t" tabindex="-1" class="h-[92svh] rounded-t-2xl sm:h-auto sm:max-h-[90svh] sm:rounded-2xl flex w-full max-w-2xl flex-col overflow-hidden border border-ht-hairline bg-ht-surface shadow-ht-modal outline-none animate-tp-popup-sheet-up"><div aria-hidden="true" class="flex shrink-0 justify-center pt-2 sm:hidden"><span class="h-1.5 w-10 rounded-full bg-ht-elevated-2"></span></div><header class="flex shrink-0 items-start justify-between gap-4 border-b border-ht-hairline px-5 pb-4 pt-3 sm:pt-5"><div class="min-w-0"><h2 id="t" class="ht-h2 ">Schedule a group game</h2></div><button type="button" class="shrink-0 rounded-lg border border-ht-elevated-2 bg-ht-elevated px-3 py-2 text-sm font-black text-ht-primary">Close</button></header><div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 pb-[max(env(safe-area-inset-bottom),20px)]">Body</div></section></div>"`;
+--- a/components/venue/VenueGamesPanel.tsx
++++ b/components/venue/VenueGamesPanel.tsx
+@@ -216,8 +216,8 @@
+                     {isCategoryBlitzLive ? (
+                       <div className="flex flex-col gap-2">
+                         <div>
+-                          <p className="text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
+-                            Live game in progress!
++                          <p className="pr-[5.5rem] text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
++                            Group game in progress!
+                           </p>
+                           <p className="mt-1 text-[19px] font-semibold leading-snug text-amber-50/90">
+                             {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+--- a/lib/pushCategories.ts
++++ b/lib/pushCategories.ts
+@@ -69,7 +69,7 @@
+   settingsBlocked: "Notifications are turned off for Hightop Challenge in your phone's Settings.",
+   settingsFailed: "Couldn't save that. Try again.",
+   labels: {
+-    games: "Live games starting",
++    games: "Group games starting",
+     prizes: "Prizes",
+     results: "Results",
+     news: "News from your bars",
+--- a/lib/partnerManual.ts
++++ b/lib/partnerManual.ts
+@@ -33,8 +33,8 @@
+     "Hightop Challenge is a digital gaming and prizes platform designed to drive repeat visits and increase business for our partner venues.",
+   sections: [
+     {
+-      heading: "Schedule Live Games",
+-      body: "Schedule Live games like Live Trivia and Category Blitz using the Partner Dashboard. These are games that the whole room plays together at the same time. They are designed to foster a sense of community through friendly competion and shared experiences. Your users can just play to have fun, or you can offer prizes as an extra incentive to drive up dwell time and repeat visits (more on prizes below). ",
++      heading: "Schedule Group Games",
++      body: "Schedule group games like Live Trivia and Category Blitz using the Partner Dashboard. These are games that the whole room plays together at the same time. They are designed to foster a sense of community through friendly competion and shared experiences. Your users can just play to have fun, or you can offer prizes as an extra incentive to drive up dwell time and repeat visits (more on prizes below). ",
+       subsections: [
+                 {
+           heading: "Live Trivia",
+@@ -48,7 +48,7 @@
+     },
+         {
+       heading: "Other Games",
+-      body: "In addition to our live games, we also offer the following: ",
++      body: "In addition to our group games, we also offer the following: ",
+       subsections: [
+         {
+           heading: "NFL Pick 'Em",
+@@ -74,7 +74,7 @@
+     },
+     {
+       heading: "Offer Prizes",
+-      body: "Incentivize guests to visit by offering prizes for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. NFL Pick 'Em prizes can run every week, all season, or for a single NFL week you choose. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Offer Prizes on your dashboard to get started.",
++      body: "Incentivize guests to visit by offering prizes for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. NFL Pick 'Em prizes can run every week, all season, or for a single NFL week you choose. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Active Prizes on your dashboard to get started.",
+     },
+     {
+       heading: "Where Guests Find Their Prizes",
+--- a/lib/email/partnerEmailCopy.ts
++++ b/lib/email/partnerEmailCopy.ts
+@@ -58,7 +58,7 @@
+   /** The feature tour: one entry per Partner Dashboard feature. Add, remove or reorder freely. */
+   featureTour: [
+     {
+-      title: "Schedule Live Games",
++      title: "Schedule Group Games",
+       body: "Put Category Blitz or Live Trivia on the calendar for game nights — pick a time, we handle the rest.",
+     },
+     {
+@@ -71,7 +71,7 @@
+     },
+     {
+       title: "Promote games and prizes on social media",
+-      body: "When you schedule Live Games or offer Prizes, you're prompted to generate social media content to advertise the promotions you're offering. Share it on your social channels so guests know about the promotion, come play, and spend more of their time and money at your venue.",
++      body: "When you schedule group games or offer Prizes, you're prompted to generate social media content to advertise the promotions you're offering. Share it on your social channels so guests know about the promotion, come play, and spend more of their time and money at your venue.",
+     },
+     {
+       title: "Put it on your TVs",
+@@ -174,7 +174,7 @@
+       body: "Pair the TVs at {venueName} with a code from your Partner Dashboard.",
+     },
+     {
+-      title: "Schedule live games",
++      title: "Schedule Group Games",
+       body: "Pick {venueName} at the top of your Partner Dashboard, then add Live Trivia or Category Blitz to its calendar.",
+     },
+     {
+--- a/lib/ownerSchedule.ts
++++ b/lib/ownerSchedule.ts
+@@ -34,7 +34,7 @@
+ // ── Game-type contract ────────────────────────────────────────────────────────
+ // The owner scheduling surface is game-type-agnostic so the UI is future-proof.
+ // KNOWN types are valid on the wire; SUPPORTED types can actually be scheduled
+-// today. As of Phase 4b BOTH live games are supported — Category Blitz and Live
++// today. As of Phase 4b BOTH group games are supported — Category Blitz and Live
+ // Trivia — each backed by its own engine (category_blitz_schedules vs.
+ // trivia_schedules) but merged into one owner-facing calendar here.
+ export const KNOWN_OWNER_SCHEDULE_GAME_TYPES: readonly OwnerScheduleGameType[] = [
+@@ -225,7 +225,7 @@
+  * List a venue's active schedules for the owner surface, tagged with game type.
+  * With no `gameType` filter this MERGES both engines (Category Blitz + Live
+  * Trivia) into one time-ordered calendar — the dashboard shows the venue's whole
+- * live-game schedule in one place. Pass a specific gameType to scope to one
++ * group-game schedule in one place. Pass a specific gameType to scope to one
+  * engine.
+  */
+ export async function listOwnerSchedules(
+--- a/lib/ownerScheduleForm.ts
++++ b/lib/ownerScheduleForm.ts
+@@ -8,7 +8,7 @@
+ import { resolveStep } from "@/lib/ownerSheetParams";
+ import type { CategoryBlitzRecurringType, OwnerSchedule, OwnerScheduleGameType } from "@/types";
+ 
+-// The Schedule Live Games flow's logic (docs/partner-dashboard-app-redesign-plan.md §4e),
++// The Group Games flow's logic (docs/partner-dashboard-app-redesign-plan.md §4e),
+ // extracted from the old ScheduleForm in app/owner/schedule/page.tsx. Pure: no React,
+ // no DOM, so the step-skip rules and the request body can be unit-tested. The time,
+ // duration and recurrence maths is the old form's, unchanged in meaning — the
+--- a/lib/ownerCompetitionTemplates.ts
++++ b/lib/ownerCompetitionTemplates.ts
+@@ -6,7 +6,7 @@
+ 
+ import type { ChallengeGameType, ChallengeMode } from "@/types";
+ 
+-// The async games a competition can run over. Live games (Category Blitz / Live
++// The async games a competition can run over. Group games (Category Blitz / Live
+ // Trivia) are scheduled via the Phase 4/4b surface, not here.
+ export type CompetitionGameType = Exclude<ChallengeGameType, "trivia">;
+ 
+--- a/lib/rewardDefinitions.ts
++++ b/lib/rewardDefinitions.ts
+@@ -3,10 +3,10 @@
+ // (Phase 5) and the server expansion (lib/rewards.ts), mirroring
+ // lib/ownerCompetitionTemplates.ts. Each definition declares the game whose
+ // points count, the requirement copy, threshold options, and which scheduled
+-// live game (if any) gates its creation.
++// group game (if any) gates its creation.
+ //
+ // Adding a future reward = ONE entry here (+ a schedule lookup in lib/rewards.ts
+-// only if it gates on a live game that isn't already handled). See
++// only if it gates on a group game that isn't already handled). See
+ // docs/rewards-system-plan.md §4/§7.
+ 
+ import type {
+@@ -127,7 +127,7 @@
+   /** Rewards are threshold+quantity (progress) only — leaderboard mode is retired. */
+   challengeMode: ChallengeMode;
+   /**
+-   * The scheduled live game a venue must already run for this reward to be
++   * The scheduled group game a venue must already run for this reward to be
+    * creatable, or null for a reward that gates on nothing. Powers the "schedule
+    * it first" block + cadence derivation in lib/rewards.ts.
+    */
+@@ -137,7 +137,7 @@
+   /**
+    * Whether this reward can be offered to the winner of the game outright,
+    * ignoring any points target. Only meaningful for definitions backed by a
+-   * live game that produces a per-occurrence winner (see
++   * group game that produces a per-occurrence winner (see
+    * lib/liveTriviaWinnerRewards.ts).
+    */
+   supportsGameWinner: boolean;
+--- a/lib/rewards.ts
++++ b/lib/rewards.ts
+@@ -924,7 +924,7 @@
+ /**
+  * Resolve whether a reward definition can be created at a venue and which cadence
+  * options to offer, by reading the venue's schedule for the definition's required
+- * live game. Blocks (empty allowedCadences + scheduled=false) when the game isn't
++ * group game. Blocks (empty allowedCadences + scheduled=false) when the game isn't
+  * scheduled — the UI turns that into the "schedule it first" message + link.
+  */
+ export async function resolveRewardCreationContext(
+--- a/lib/hooks/useScheduleUpdatedBroadcast.ts
++++ b/lib/hooks/useScheduleUpdatedBroadcast.ts
+@@ -4,7 +4,7 @@
+ import { supabase } from "@/lib/supabase";
+ 
+ /**
+- * Subscribes to a venue's live-game channel and calls `onUpdate` the instant
++ * Subscribes to a venue's group-game channel and calls `onUpdate` the instant
+  * an admin creates/edits/deletes a schedule for it (see categoryBlitzBroadcast.ts,
+  * liveTriviaBroadcast.ts — both fire a "schedule_updated" broadcast on save),
+  * instead of waiting out that screen's own fallback poll interval. `channelName`
+--- a/lib/push/gameReminders.ts
++++ b/lib/push/gameReminders.ts
+@@ -9,7 +9,7 @@
+ // "Live Trivia starts soon" (docs/native-app-store-plan.md Phase 5.1). Runs inside the existing 5-minute
+ // /api/cron/resolve-live-trivia-winners. Each game is pushed ONCE: its push_game_reminders row is claimed
+ // (insert … on conflict do nothing) before anything is sent, so overlapping or retried runs stay quiet.
+-// Who hears it: phones whose last-used venue is the game's venue, with "Live games starting" on, seen in
++// Who hears it: phones whose last-used venue is the game's venue, with "Group games starting" on, seen in
+ // the last GAME_REMINDER_MAX_IDLE_DAYS.
+ //
+ // Cost: push off → nothing. On → one trivia_schedules read per run (the same bounded read the winner
+--- a/components/push/PushNotificationSettings.tsx
++++ b/components/push/PushNotificationSettings.tsx
+@@ -15,7 +15,7 @@
+ import { useIsNativeApp } from "@/lib/useIsNativeApp";
+ 
+ // The Notifications row of the player menu (docs/native-app-store-plan.md Phase 5.1): this phone's four
+-// switches (live games starting, prizes, results, news from your bars), or a Turn on button. App only, and only in a build
++// switches (group games starting, prizes, results, news from your bars), or a Turn on button. App only, and only in a build
+ // with the push plugin — the website and older app builds render nothing. Words live in PUSH_COPY.
+ 
+ type Status = "loading" | "off" | "blocked" | "on";
+--- a/lib/ownerRewardFlow.ts
++++ b/lib/ownerRewardFlow.ts
+@@ -1,7 +1,7 @@
+ import { isRewardWizardStep, REWARD_WIZARD_STEPS, type RewardWizardStep } from "@/lib/rewardWizardSteps";
+ import { parseStepParam } from "@/lib/ownerSheetParams";
+ 
+-// The Offer Prizes sheet's screens and request bodies (docs/partner-dashboard-app-redesign-plan.md
++// The Prizes sheet's screens and request bodies (docs/partner-dashboard-app-redesign-plan.md
+ // §4f). Pure: no React, no DOM. The wizard's own steps (definition → terms → prize →
+ // confirm) come from lib/rewardWizardSteps.ts; this adds the screens around it.
+ 
+--- a/tests/components.owner-schedule-flow.test.ts
++++ b/tests/components.owner-schedule-flow.test.ts
+@@ -13,7 +13,7 @@
+   process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT = "true";
+ });
+ 
+-// docs/partner-dashboard-app-redesign-plan.md Phase 4: the Schedule Live Games
++// docs/partner-dashboard-app-redesign-plan.md Phase 4: the Group Games
+ // sheet end to end against a fake history — create, edit, cancel, history.
+ 
+ const stubReducedMotion = () => {
+--- a/app/info/page.tsx
++++ b/app/info/page.tsx
+@@ -167,7 +167,7 @@
+   { icon: "🎯", title: "Use prizes to boost sales", body: "Offer up discounts to guests who score the most trivia points or make the best sports bracket to encourage repeat visits." },
+   { icon: "🍺", title: "Longer stays, higher tabs", body: "Games keep guests engaged longer, encouraging additional food and beverage purchases with every round." },
+   { icon: "📱", title: "No hardware required", body: "Players use their own phones. No devices to buy or downloads required." },
+-  { icon: "📅", title: "Schedule around your business", body: "Schedule live community games (like pub trivia) whenever you need a boost. Target slow periods and turn them into your busiest nights." },
++  { icon: "📅", title: "Schedule around your business", body: "Schedule group games (like pub trivia) whenever you need a boost. Target slow periods and turn them into your busiest nights." },
+   { icon: "💰", title: "Advertise with us!", body: "Subscribe and broadcast your ads to our growing network of partner venues." },
+  
+ ];
+--- a/lib/ownerSheetParams.ts
++++ b/lib/ownerSheetParams.ts
+@@ -22,7 +22,7 @@
+ // "pos" = Point of Sale connections (docs/pos-rewards-integration-plan.md Phase 1), one screen.
+ // "add-venue" = Add a venue to the bill (docs/multi-venue-volume-billing-plan.md Phase 4): address, map, review.
+ // "history" = Results, was Game Results (docs/live-trivia-weekly-places-reward-plan.md §5f): the list, then `step=game|player|prize`.
+-// "prizes" = Offer Prizes, the sheet once called "rewards" (docs/rewards-to-prizes-rename-plan.md Phase 3).
++// "prizes" = Prizes, the sheet once called "rewards" (docs/rewards-to-prizes-rename-plan.md Phase 3).
+ export const OWNER_SHEET_IDS = ["schedule", "prizes", "store", "pos", "add-venue", "history"] as const;
+ 
+ export type OwnerSheetId = (typeof OWNER_SHEET_IDS)[number];

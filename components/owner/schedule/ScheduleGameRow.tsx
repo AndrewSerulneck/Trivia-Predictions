@@ -4,7 +4,7 @@ import type { OwnerSchedule } from "@/types";
 
 // One game as a list row: date chip, title, and one muted line (time range ·
 // repeats · game name when the title doesn't say it).
-// Shared by the dashboard's Live Games card and the schedule sheet's upcoming /
+// Shared by the dashboard's Active Group Games card and the schedule sheet's upcoming /
 // past lists. A button when `onClick` is given (chevron shown), otherwise a
 // static row — past games are read-only.
 

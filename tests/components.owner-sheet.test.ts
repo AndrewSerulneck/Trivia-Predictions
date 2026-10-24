@@ -15,7 +15,7 @@ import { DRAWER_EXIT_MS, SHEET_EXIT_MS } from "@/components/owner/sheet/sheetMot
 type SheetProps = ComponentProps<typeof OwnerSheet>;
 
 const sheetProps = (overrides: Partial<SheetProps>): SheetProps =>
-  ({ open: true, onRequestClose: () => {}, title: "Schedule a live game", ...overrides }) as SheetProps;
+  ({ open: true, onRequestClose: () => {}, title: "Schedule a group game", ...overrides }) as SheetProps;
 
 const dialog = () => document.body.querySelector<HTMLElement>('[role="dialog"]');
 
@@ -42,7 +42,7 @@ describe("OwnerSheet", () => {
     expect(panel).not.toBeNull();
     expect(container.contains(panel)).toBe(false);
     expect(panel?.getAttribute("aria-modal")).toBe("true");
-    expect(screen.getByRole("dialog", { name: "Schedule a live game" })).toBe(panel);
+    expect(screen.getByRole("dialog", { name: "Schedule a group game" })).toBe(panel);
     expect(document.activeElement).toBe(panel);
     expect(panel?.className).toContain("animate-tp-popup-sheet-up");
   });
@@ -295,7 +295,7 @@ describe("OwnerSheet tones (join-merch-store-plan Phase 2)", () => {
     for (const dark of ["ht-hairline", "bg-ht-elevated", "text-ht-primary", "text-ht-cyan-300"]) {
       expect(html).not.toContain(dark);
     }
-    expect(screen.getByRole("heading", { name: "Schedule a live game" }).className).toContain("!text-slate-900");
+    expect(screen.getByRole("heading", { name: "Schedule a group game" }).className).toContain("!text-slate-900");
     expect(screen.getByText("Hightop Challenge Store").className).toContain("text-cyan-700");
     const close = screen.getByRole("button", { name: "Close" });
     expect(close.className).toContain("bg-white");

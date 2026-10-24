@@ -6,7 +6,7 @@
 
 import type { ChallengeGameType, ChallengeMode } from "@/types";
 
-// The async games a competition can run over. Live games (Category Blitz / Live
+// The async games a competition can run over. Group games (Category Blitz / Live
 // Trivia) are scheduled via the Phase 4/4b surface, not here.
 export type CompetitionGameType = Exclude<ChallengeGameType, "trivia">;
 

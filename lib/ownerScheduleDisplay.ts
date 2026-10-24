@@ -1,7 +1,7 @@
 import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
 import type { OwnerSchedule, OwnerScheduleGameType } from "@/types";
 
-// Display helpers for owner schedules, shared by the dashboard's Live Games
+// Display helpers for owner schedules, shared by the dashboard's Active Group Games
 // section and the Schedule page / sheet. Pure: no React, no DOM.
 
 export const GAME_LABELS: Record<OwnerScheduleGameType, string> = {

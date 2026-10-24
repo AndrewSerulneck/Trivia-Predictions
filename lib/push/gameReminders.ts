@@ -9,7 +9,7 @@ import { getVenueDisplayName } from "@/lib/venueDisplayName";
 // "Live Trivia starts soon" (docs/native-app-store-plan.md Phase 5.1). Runs inside the existing 5-minute
 // /api/cron/resolve-live-trivia-winners. Each game is pushed ONCE: its push_game_reminders row is claimed
 // (insert … on conflict do nothing) before anything is sent, so overlapping or retried runs stay quiet.
-// Who hears it: phones whose last-used venue is the game's venue, with "Live games starting" on, seen in
+// Who hears it: phones whose last-used venue is the game's venue, with "Group games starting" on, seen in
 // the last GAME_REMINDER_MAX_IDLE_DAYS.
 //
 // Cost: push off → nothing. On → one trivia_schedules read per run (the same bounded read the winner

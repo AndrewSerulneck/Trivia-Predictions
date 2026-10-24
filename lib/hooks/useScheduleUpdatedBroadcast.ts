@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 /**
- * Subscribes to a venue's live-game channel and calls `onUpdate` the instant
+ * Subscribes to a venue's group-game channel and calls `onUpdate` the instant
  * an admin creates/edits/deletes a schedule for it (see categoryBlitzBroadcast.ts,
  * liveTriviaBroadcast.ts — both fire a "schedule_updated" broadcast on save),
  * instead of waiting out that screen's own fallback poll interval. `channelName`

@@ -8,7 +8,7 @@ import { GAME_LABELS, WEEKDAY_OPTIONS } from "@/lib/ownerScheduleDisplay";
 import { resolveStep } from "@/lib/ownerSheetParams";
 import type { CategoryBlitzRecurringType, OwnerSchedule, OwnerScheduleGameType } from "@/types";
 
-// The Schedule Live Games flow's logic (docs/partner-dashboard-app-redesign-plan.md §4e),
+// The Group Games flow's logic (docs/partner-dashboard-app-redesign-plan.md §4e),
 // extracted from the old ScheduleForm in app/owner/schedule/page.tsx. Pure: no React,
 // no DOM, so the step-skip rules and the request body can be unit-tested. The time,
 // duration and recurrence maths is the old form's, unchanged in meaning — the

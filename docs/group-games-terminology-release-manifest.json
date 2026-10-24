@@ -1,0 +1,155 @@
+{
+  "base": "bb5af579a2bf4a049f3dcca9cc8c5c6c4ea5112a",
+  "application": [
+    {
+      "path": "components/owner/dashboard/DashboardSectionCard.tsx",
+      "sha256": "0a94bafc024b70ea6d2a93a3158511510310d04bbfd422563645eedc7af14b93"
+    },
+    {
+      "path": "components/owner/dashboard/LiveGamesSection.tsx",
+      "sha256": "064915e9f04133027788cbef70d17cc3a340b66cc218305ef2493fc4c20727be"
+    },
+    {
+      "path": "components/owner/dashboard/RewardsSection.tsx",
+      "sha256": "9323c6acc98a148900bbe7bfdcc346a740c47d1b6049a97e69e8762a90da3a05"
+    },
+    {
+      "path": "components/owner/schedule/ScheduleGameFlow.tsx",
+      "sha256": "e9bb213f429290f5ac5819b02a7206c1d8fcdb82b8d85abb2f2471ac5fe6e469"
+    },
+    {
+      "path": "components/owner/schedule/ScheduleGameRow.tsx",
+      "sha256": "69f2b368ffeb1c0ebf7577b150f8ee6e8adf0f52bc655bbc2f2e8b7e06ff8368"
+    },
+    {
+      "path": "components/owner/schedule/ScheduleStepScreens.tsx",
+      "sha256": "c765ecd8eb429c509b0d684cf342871113ddf6d431c35e09b0e3d4471f2702f4"
+    },
+    {
+      "path": "lib/ownerScheduleDisplay.ts",
+      "sha256": "11107c22672e87f6e08d7a8292b33264ab32f160af5b18ece97dbfd9e12b35bc"
+    },
+    {
+      "path": "tests/owner-dashboard-contract.test.ts",
+      "sha256": "5370717cfb0737b6c093753f5a0747ffeb12e7061b080b8b37737f2e44944592"
+    },
+    {
+      "path": "tests/app.owner-dashboard-one-round-trip.test.ts",
+      "sha256": "dbe84f40754482902216fac5c57e561a0712e0ca5d42269711462b6f3eaee397"
+    },
+    {
+      "path": "tests/app.owner-dashboard-merch.test.ts",
+      "sha256": "a799ee6ccc8f2f29ec2391d962c55a08bc7890e0436fefdff7cba254dd0b1f18"
+    },
+    {
+      "path": "tests/components.owner-sheet.test.ts",
+      "sha256": "3508c2e3409defea7b7dd74c00031cc3d3415667789dbaac32da84ec3d682b15"
+    },
+    {
+      "path": "tests/__snapshots__/components.owner-sheet.test.ts.snap",
+      "sha256": "e16478373975dfc2f95eabcf255cad9291d61d5ba8a37991e149d73de01456b8"
+    },
+    {
+      "path": "components/venue/VenueGamesPanel.tsx",
+      "sha256": "a79ae9fdfac1c72a0b38a4925e2e1161b57167442b0102e8ba053cd1cce84a43"
+    },
+    {
+      "path": "lib/pushCategories.ts",
+      "sha256": "6befd322a90c750571220b5e3ab046a56e83040f0e0655170e6cef88a8eb1c14"
+    },
+    {
+      "path": "lib/partnerManual.ts",
+      "sha256": "2a614548e4b248556fec50c9b3699fc7fc941b7be70d10720031962f1bca1c7d"
+    },
+    {
+      "path": "lib/email/partnerEmailCopy.ts",
+      "sha256": "ae034b88dee5ed8e9ec986a9be8d6d7eb9f1089462e3d1ff51fbd56bd20e8eb5"
+    },
+    {
+      "path": "lib/ownerSchedule.ts",
+      "sha256": "a4f382045841ea885ab1b79cbac4447af5e425ca659961335c8c73a2366c3360"
+    },
+    {
+      "path": "lib/ownerScheduleForm.ts",
+      "sha256": "1eebf99490447f4ac9321fba925d92016e55144894b49f4891981478909b1794"
+    },
+    {
+      "path": "lib/ownerCompetitionTemplates.ts",
+      "sha256": "1b0c18c304b30af04bc43aa521fbac66344bf0098487b622996ad9d53a67e2a2"
+    },
+    {
+      "path": "lib/rewardDefinitions.ts",
+      "sha256": "b1ee2183389b97564e73a955b105d74b324a1b4086cda0f738bcdb196aac5b07"
+    },
+    {
+      "path": "lib/rewards.ts",
+      "sha256": "19fbbde5a5a5d213aea8e57581e16febb299844bf25af31cf30afc50955e7077"
+    },
+    {
+      "path": "lib/hooks/useScheduleUpdatedBroadcast.ts",
+      "sha256": "c48d03a3b93a3e635e2cf1060900bcaefa778e2da87fd7c79e919fa5b481d08a"
+    },
+    {
+      "path": "lib/push/gameReminders.ts",
+      "sha256": "5035f979c94cff6bfc05e530f7c6c0b424c29f3bfc76ed4a5e680642e973123e"
+    },
+    {
+      "path": "components/push/PushNotificationSettings.tsx",
+      "sha256": "325a6a1d4f87e9bf0b341ba26be6feb0becff0b920b38bd3ac66e65f90027981"
+    },
+    {
+      "path": "lib/ownerRewardFlow.ts",
+      "sha256": "c15f5374c9ca09c8bdbc81e39ee20385691c42fb784119307f458f324b99f121"
+    },
+    {
+      "path": "tests/components.owner-schedule-flow.test.ts",
+      "sha256": "1831a046c4bf896970109d6df63da8a9887a8d4bb4ef9f50587a70ec3d12d367"
+    },
+    {
+      "path": "app/info/page.tsx",
+      "sha256": "f0b26e8ab2548853fb4968e365a936f7a9d24f71459cf6c5b32ab32140a388ea"
+    },
+    {
+      "path": "lib/ownerSheetParams.ts",
+      "sha256": "f6902497f346392d9b1f33b6084acb298c895e608ad6d59116a9136b6fe9a22a"
+    }
+  ],
+  "documentation": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "080d5a4a30a471279ad0a1e612a9f2f00d17e7af303fc8469505f85df0dc7804"
+    },
+    {
+      "path": "CLAUDE.md",
+      "sha256": "8939e6e82b9ffd08dee9a1a30caee5d634e9ae7eef0cc0034ce2a3dda391e70e"
+    },
+    {
+      "path": "SYSTEM_CONTEXT.md",
+      "sha256": "dda22edc54886e519e00cdc3bf15ae1d682e63db4a3221dc3f5b2a77199cda0f"
+    },
+    {
+      "path": "docs/native-app-device-checklist.md",
+      "sha256": "56a794957bac42143074f2be163a498ad19dec5214c38f4a20c21c2fd2c119da"
+    },
+    {
+      "path": "docs/partner-dashboard-app-redesign-device-checklist.md",
+      "sha256": "6e16dc9b6918b03fef6b9937ab78e08059eefb26acecd558ca3dc52c33083fac"
+    },
+    {
+      "path": "docs/join-merch-store-device-checklist.md",
+      "sha256": "a44a08e605c9aab35cb080c2e7c5637aa907617091b26b21ca122a2006cf4e23"
+    }
+  ],
+  "patches": {
+    "application": {
+      "path": "docs/group-games-terminology-release.patch",
+      "bytes": 31401,
+      "sha256": "22f7a396e39f91361f16c124403c04e2632e73a2f20b20df8d964499cdeb6694"
+    },
+    "documentation": {
+      "path": "docs/group-games-terminology-living-docs.patch",
+      "bytes": 22883,
+      "sha256": "42112eeb46f6331778df7043d860a941b22a6c0c4eabaf39ce842e61a9185bca"
+    }
+  }
+}

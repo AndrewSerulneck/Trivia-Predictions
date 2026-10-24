@@ -33,8 +33,8 @@ export const PARTNER_MANUAL: {
     "Hightop Challenge is a digital gaming and prizes platform designed to drive repeat visits and increase business for our partner venues.",
   sections: [
     {
-      heading: "Schedule Live Games",
-      body: "Schedule Live games like Live Trivia and Category Blitz using the Partner Dashboard. These are games that the whole room plays together at the same time. They are designed to foster a sense of community through friendly competion and shared experiences. Your users can just play to have fun, or you can offer prizes as an extra incentive to drive up dwell time and repeat visits (more on prizes below). ",
+      heading: "Schedule Group Games",
+      body: "Schedule group games like Live Trivia and Category Blitz using the Partner Dashboard. These are games that the whole room plays together at the same time. They are designed to foster a sense of community through friendly competion and shared experiences. Your users can just play to have fun, or you can offer prizes as an extra incentive to drive up dwell time and repeat visits (more on prizes below). ",
       subsections: [
                 {
           heading: "Live Trivia",
@@ -48,7 +48,7 @@ export const PARTNER_MANUAL: {
     },
         {
       heading: "Other Games",
-      body: "In addition to our live games, we also offer the following: ",
+      body: "In addition to our group games, we also offer the following: ",
       subsections: [
         {
           heading: "NFL Pick 'Em",
@@ -74,7 +74,7 @@ export const PARTNER_MANUAL: {
     },
     {
       heading: "Offer Prizes",
-      body: "Incentivize guests to visit by offering prizes for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. NFL Pick 'Em prizes can run every week, all season, or for a single NFL week you choose. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Offer Prizes on your dashboard to get started.",
+      body: "Incentivize guests to visit by offering prizes for playing games and winning points. Using our platform, partners can offer coupons or discounts to guests who perform well in games. Schedule a Live Trivia game and offer a gift card to the winner. Or, offer a free appetizer to the guest who predicts the most NFL winners that week. NFL Pick 'Em prizes can run every week, all season, or for a single NFL week you choose. These are just some ideas! You're free to use our platform however you want to bring guests in the door. Tap Active Prizes on your dashboard to get started.",
     },
     {
       heading: "Where Guests Find Their Prizes",

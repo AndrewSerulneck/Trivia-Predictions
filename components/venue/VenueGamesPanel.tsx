@@ -216,8 +216,8 @@ function VenueGamesPanelInner({
                     {isCategoryBlitzLive ? (
                       <div className="flex flex-col gap-2">
                         <div>
-                          <p className="text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
-                            Live game in progress!
+                          <p className="pr-[5.5rem] text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
+                            Group game in progress!
                           </p>
                           <p className="mt-1 text-[19px] font-semibold leading-snug text-amber-50/90">
                             {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}

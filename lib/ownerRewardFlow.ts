@@ -1,7 +1,7 @@
 import { isRewardWizardStep, REWARD_WIZARD_STEPS, type RewardWizardStep } from "@/lib/rewardWizardSteps";
 import { parseStepParam } from "@/lib/ownerSheetParams";
 
-// The Offer Prizes sheet's screens and request bodies (docs/partner-dashboard-app-redesign-plan.md
+// The Prizes sheet's screens and request bodies (docs/partner-dashboard-app-redesign-plan.md
 // §4f). Pure: no React, no DOM. The wizard's own steps (definition → terms → prize →
 // confirm) come from lib/rewardWizardSteps.ts; this adds the screens around it.
 

@@ -58,7 +58,7 @@ export const WELCOME_EMAIL = {
   /** The feature tour: one entry per Partner Dashboard feature. Add, remove or reorder freely. */
   featureTour: [
     {
-      title: "Schedule Live Games",
+      title: "Schedule Group Games",
       body: "Put Category Blitz or Live Trivia on the calendar for game nights — pick a time, we handle the rest.",
     },
     {
@@ -71,7 +71,7 @@ export const WELCOME_EMAIL = {
     },
     {
       title: "Promote games and prizes on social media",
-      body: "When you schedule Live Games or offer Prizes, you're prompted to generate social media content to advertise the promotions you're offering. Share it on your social channels so guests know about the promotion, come play, and spend more of their time and money at your venue.",
+      body: "When you schedule group games or offer Prizes, you're prompted to generate social media content to advertise the promotions you're offering. Share it on your social channels so guests know about the promotion, come play, and spend more of their time and money at your venue.",
     },
     {
       title: "Put it on your TVs",
@@ -174,7 +174,7 @@ export const VENUE_ADDED_EMAIL = {
       body: "Pair the TVs at {venueName} with a code from your Partner Dashboard.",
     },
     {
-      title: "Schedule live games",
+      title: "Schedule Group Games",
       body: "Pick {venueName} at the top of your Partner Dashboard, then add Live Trivia or Category Blitz to its calendar.",
     },
     {

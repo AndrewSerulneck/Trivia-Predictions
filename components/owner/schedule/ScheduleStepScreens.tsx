@@ -28,7 +28,7 @@ import {
 } from "@/lib/ownerScheduleDisplay";
 import type { OwnerSchedule } from "@/types";
 
-// The screens inside the Schedule Live Games sheet (docs/partner-dashboard-app-redesign-plan.md §4e).
+// The screens inside the Group Games sheet (docs/partner-dashboard-app-redesign-plan.md §4e).
 // Presentational: every value and handler comes from ScheduleGameFlow, which keeps
 // the form state (SlideSteps remounts a step on every change).
 

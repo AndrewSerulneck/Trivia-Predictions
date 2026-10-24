@@ -1,0 +1,152 @@
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -10,12 +10,17 @@
+ 
+ ## Phase handoffs and planned Bingo / Pick ’Em work
+ 
+-For every multi-phase plan, write `<PLAN_NAME>_PHASE_<N>_HANDOFF.md` next to the
+-plan before marking a phase complete; also write one when stopping part-way.
+-Update the plan's status to link it. Open with a plain-English developer summary,
+-then give the next agent the scope, branch/commit/deployment/data state, decisions,
+-changed paths/functions, traps, exact test/run commands and results, open questions,
+-and recommended next steps/model/effort. Assume no conversation context.
++Group Games terminology: `docs/group-games-terminology-plan.md`; **Phases 1–4 complete locally
++(2026-10-24), not committed/pushed/deployed.** Final handoff:
++`docs/group-games-terminology-plan_PHASE_4_HANDOFF.md`; validation/release preparation:
++`docs/group-games-terminology-release-record-2026-10-24.md`. Scoped candidate passes 5,505 tests /
++13 environment skips, typecheck/lint/build; fixture browser review covers 350/390/1280 px.
++Category Blitz status spacing prevents new copy overlapping its icon. Existing email narrow-width
++limits and a randomized root Bingo-test failure are documented, not silently fixed.
++Group Games is the umbrella for Live Trivia and Category Blitz; dashboard headings are Active
++Group Games / Active Prizes. Keep game names, timing statuses, identifiers, routes, filters and
++push delivery unchanged. Publication is separate; use the isolated patches/manifest in the release
++record, never deploy this dirty root. Preserve unrelated work.
+ 
+ Current plan: `docs/bingo-pickem-reliability-plan.md` (2026-09-12). **Complete and
+ developer-accepted (2026-09-19): Andrew confirmed authenticated Prop Bingo works after the
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -6,7 +6,7 @@
+ >
+ > **`/info` IS the home page — on the website.** Any control that means "go to the home page" — a Back button, a nav logo, a marketing link — must target **`/info`**, never `/`: `/` on `play.` is `JoinFlow` (the *player sign-in*), so pointing "home" at `/` silently drops partners and first-time visitors on a login screen. **Inside the native app there is no `/info`**: home is the app's front door (the player sign-in). So use **`homeHref(isNativeApp())`** from `lib/domainSplit.ts` (or the `ExitBackButton` `home` option / `useIsNativeApp()` for rendered links), never a bare `marketingHref("/info")` — `tests/native-app-contract.test.ts` fails on one (Phase 2E, 2026-10-09).
+ >
+-> **Strategic direction (next few weeks):** the player game login is moving to `play.hightopchallenge.com` (which is what finally moves `/` off the apex); and the `/owner/*` payments surface is becoming the mobile-first **Partner Dashboard** (self-serve live-game scheduling, TV display URL, and Stripe billing). See `SYSTEM_CONTEXT.md` §0 and the canonical build plan in `docs/partner-dashboard-plan.md`.
++> **Strategic direction (next few weeks):** the player game login is moving to `play.hightopchallenge.com` (which is what finally moves `/` off the apex); and the `/owner/*` payments surface is becoming the mobile-first **Partner Dashboard** (self-serve group-game scheduling, TV display URL, and Stripe billing). See `SYSTEM_CONTEXT.md` §0 and the canonical build plan in `docs/partner-dashboard-plan.md`.
+ >
+ > **`proxy.ts` is the live edge gate — do NOT add a `middleware.ts`.** In Next.js 16 the middleware convention was renamed to `proxy.ts`; it is auto-detected and runs in production (the build lists it as `Proxy (Middleware)`). Adding `middleware.ts` is a hard build error. Its cookie auth-gate is live — never change its default behavior without an explicit, separately-verified decision.
+ > **Domain split is built, flag-gated off.** The apex→`play.` host routing is layered at the top of `proxy.ts` (via `lib/domainSplit.ts`) behind `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED` (off = today's single origin, fully inert). When ready to switch over, execute **`docs/phase-6-domain-split-runbook.md`** exactly (DNS + envs + `.hightopchallenge.com` cookie domain + smoke tests; reversal is one flag).
+@@ -248,6 +248,7 @@
+   behind the clock on light screens (`html.tp-standalone[data-theme="light"]::after`).
+ 
+ ## Mental Model & Terminology
++- **Group Games (2026-10-24, local wording update; not deployed):** the umbrella for shared-room, simultaneous games, currently **Live Trivia** and **Category Blitz**. Keep those individual game names and timing statuses such as **Live now**. Dashboard lists are **Active Group Games** and **Active Prizes**; the schedule sheet is **Group Games**, creation is **Schedule a group game**. “Active” preserves the existing upcoming-game and active-prize filters. Internal `live*` names, routes, IDs, channels and push category `games` remain stable. Plan: `docs/group-games-terminology-plan.md`; Phases 1–4 are complete locally; not committed/pushed/deployed. Final validation, isolated release patches and baseline exceptions: `docs/group-games-terminology-release-record-2026-10-24.md`; next-agent handoff: `docs/group-games-terminology-plan_PHASE_4_HANDOFF.md`. Publication is separate; preserve unrelated dirty work.
+ - **Core Concept:** Users join a specific physical venue and earn points playing mini-games (Trivia, Pick'em, Bingo, Predictions, Fantasy) scoped strictly to that venue. 
+ - **Data Scoping:** Authentication is global (passkeys/username), but points, leaderboards, and game states are entirely venue-specific. Users can belong to multiple venues with completely independent point totals.
+ - **Naming Rule:** Always use "credit allocation" instead of "credit limit" for recurring game balances.
+@@ -331,7 +332,7 @@
+ - **Reward definitions are a registry, not free-form authoring.** Admins and partners pick
+   from a small slate of pre-built definitions (today: the Live Trivia Challenge) and fill in
+   cadence/prize/quantity. **Adding a new reward = one entry in `lib/rewardDefinitions.ts`** (+
+-  a schedule lookup in `lib/rewards.ts` only if it gates on a live game with no existing
++  a schedule lookup in `lib/rewards.ts` only if it gates on a group game with no existing
+   lookup). See `AGENTS.md` for the exact steps — do not hand-roll a new creation form.
+ - **One shared wizard, two hosts.** `components/rewards/CreateRewardWizard.tsx` is used by
+   both the admin Rewards section (`components/admin/sections/ChallengesSection.tsx`) and the
+--- a/SYSTEM_CONTEXT.md
++++ b/SYSTEM_CONTEXT.md
+@@ -12,12 +12,13 @@
+ - **`/info` IS the home page.** It is the marketing site we want Google to index and the page a first-time visitor sees. **Every internal control that means "go to the home page" — a Back button, a nav logo, a marketing link — must target `/info`, never `/`.** The apex DNS flip is not done yet: until `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED` is on, `hightopchallenge.com/` still serves the player game login (`/` → `JoinFlow`), so a "home" link pointed at `/` silently strands partners and first-time visitors on a *player sign-in* screen. Build home links with `marketingHref("/info")` (`lib/domainSplit.ts`) so they stay relative today and become absolute apex URLs after the split. Regression fixed 2026-09-05: `/owner/login`'s "Back to Home Page" and the `/info` nav logo both pointed at `/`.
+ - **The player game login relocates to `play.hightopchallenge.com`.** (This is the change that finally frees apex `/`.) The current apex login (`/` → `JoinFlow`) and all venue/game routes move under the `play.` subdomain. Apex host → marketing (`/info`); `play.` host → the game. This is enforced at the edge in **`proxy.ts`** (the live Next.js 16 edge gate — the framework renamed `middleware.ts` → `proxy.ts`; do **not** add a `middleware.ts`, it's a build error) via `lib/domainSplit.ts`, **shipped behind `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED` (off = today's single origin, fully inert).** To flip it live without downtime, follow the exact runbook: **`docs/phase-6-domain-split-runbook.md`** (DNS + envs + smoke tests; reversal is one flag). The split layers in front of `proxy.ts`'s existing (live) cookie auth-gate without changing it.
+ - **The old "payments page" is becoming the mobile-first Partner Dashboard.** The `/owner/*` surface (currently owner auth + subscription/billing, reached via the "Partner Login" button on `/info`) is being expanded into a mobile-first **Partner Dashboard** for subscriber venues. A subscriber venue is a venue that pays for our geofenced platform so their guests can play. From their phone, a partner will be able to:
+-  1. **Schedule live games** their whole venue plays together at the same time (Live Trivia, Category Blitz, and future live games). Scheduling is currently **admin-only** (`requireAdminAuth`); it must become **owner-scoped** so partners can self-serve for their own venue(s).
++  1. **Schedule group games** their whole venue plays together at the same time (Live Trivia, Category Blitz, and future group games). Scheduling is currently **admin-only** (`requireAdminAuth`); it must become **owner-scoped** so partners can self-serve for their own venue(s).
+   2. **Put the display/TV URL on their venue's screens.** The public venue screen already exists at `/venue/[venueId]/screen` (a "follow-along" display for guests not playing on their phone). The dashboard will surface this URL/QR for the partner to open on a smart TV or TV-app (Amazon/Google/Apple TV apps do not exist yet — we are browser-only today; those are a future native build).
+   3. **Submit payment / manage subscription.** Billing runs on **Stripe** (`lib/stripe.ts` + the webhook at `/api/webhooks/stripe`); the Partner Dashboard is the surface for subscribe / update card / invoices.
+   4. **Order "join merch"** (built 2026-10-01, look-only): QR-code coasters, table tents and table cards that guests scan to join and play, from a white store sheet behind the menu row **Order Join Merch** (`?sheet=store`, `components/owner/store/`, catalog `lib/merchCatalog.ts`, pricing `lib/merchPricing.ts`, per-venue cart `lib/useVenueMerchCart.ts`). The final button reads "Ordering opens soon": nothing is saved, charged or sent, and there is no server work. The store also offers a free join-QR PNG/SVG download; the QR's URL `https://play.hightopchallenge.com` is **permanent** (printed on merch), single source `lib/joinQr.ts`, files in `public/store/qr/` generated by `npm run store:qr`. Product photos: sources in `assets/store-src/` (not served), optimized WebPs in `public/store/web/` (`npm run store:images`). Real orders/payment and a 3PL (warehouse/shipping) integration are future, unscheduled phases. Plan: **`docs/join-merch-store-plan.md`**; phone pass: `docs/join-merch-store-device-checklist.md`.
+ - **Partner self-serve signup ends the admin-activation prerequisite.** A partner can subscribe end-to-end without an admin pre-creating their venue: the full-screen wizard at `/owner/signup` collects name → email → password → address → geofence → review, creates a hidden `venues` row + owner account, and hands off to Stripe Checkout; the webhook unhides the venue on first paid activation. Flag-gated behind `NEXT_PUBLIC_SELF_SERVE_SIGNUP_ENABLED` (`isSelfServeSignupEnabled()` in `lib/selfServeSignup.ts`) — off = `/owner/register`'s venue-lookup flow, fully inert; on = `/owner/register` redirects to `/owner/signup` and the `/info` partner CTAs point there. **Admin Activate-a-Venue (`components/admin/mobile/ActivateVenueFlow.tsx`) survives** for ops: offline-billed venues, a second venue for an existing owner (self-serve is one venue per email), and support fixes. Plan + as-built: `docs/partner-self-serve-signup-plan.md`; ops cutover + the `GOOGLE_MAPS_API_KEY` referrer restriction: `docs/self-serve-signup-runbook.md`. **Status (2026-09-08):** built, `/code-review`'d, and all 15 findings fixed across `docs/self-serve-signup-review-fixes-plan.md` Phases 1–7 (claim-path privilege escalation, atomic Postgres rate limiter, fail-closed public Maps key, reveal reconciler, and the "delete the second copy" cleanups). The flag is **not yet flipped** — what gates it is Phase 8's ops sequence: set `GOOGLE_MAPS_BROWSER_KEY`, re-verify admin + player Maps, re-run `/code-review`, redeploy, then close the device checklist.
+ - **Terminology:** prefer **"Partner Dashboard"** and **"subscriber venue" / "partner"** in new UI copy. "Owner" persists in code/table names (`venue_owners`, `venue_owner_venues`, `/owner/*`, `requireOwnerAuth`) — do not rename those without a deliberate migration.
++- **Group Games glossary (2026-10-24, local wording update; not deployed):** **Group Games** is the umbrella for shared-room, simultaneous play, currently **Live Trivia** and **Category Blitz**. Those game names and timing statuses such as **Live now** stay. Dashboard lists say **Active Group Games** and **Active Prizes**; the schedule sheet says **Group Games** and creation says **Schedule a group game**. Existing upcoming-schedule / active-prize selection and continuous Category Blitz behavior stay unchanged. Internal `live*` identifiers, routes, schema/RPC/channel names and push category `games` remain stable. Plan: `docs/group-games-terminology-plan.md`; Phases 1–4 are complete locally; not committed/pushed/deployed. Final validation, isolated release patches and baseline exceptions: `docs/group-games-terminology-release-record-2026-10-24.md`; next-agent handoff: `docs/group-games-terminology-plan_PHASE_4_HANDOFF.md`. Publication is separate; preserve unrelated dirty work.
+ 
+ ## 1. Project Essence
+ - Website type:
+@@ -358,7 +359,7 @@
+ - **Rewards:** the dashboard's Offer Rewards sheet (`?sheet=rewards`; `/owner/competitions` redirects there) hosts the shared `CreateRewardWizard` (`variant="owner"`) in place of the old raw-field Competitions template gallery — see §8 and `docs/rewards-system-plan.md`.
+ - **Billing (Stripe only):** `app/api/owner/billing/*` (`route`, `subscription`, `checkout`, `portal`) + the signature-verified webhook at `app/api/webhooks/stripe`, which is the source of truth for status. `billing_subscriptions` mirrors Stripe (`stripe_customer_id`, `stripe_subscription_id`, status, period, plus the additive `discount_*` mirror). `billing_method` splits card-billed (`stripe`) from admin-granted check payers (`offline`); offline rows carry no Stripe ids and are expired by `/api/cron/billing`. That daily cron now has **three** jobs (`lib/venueVisibilitySync.ts`): offline-grant expiry; `repairMissedVenueReveals`, which reveals any self-serve venue that is paying but still `hidden` because the webhook follower missed it; and `reconcileLapsedVenues`, which restores a venue we hid (billing live again), re-hides a lapsed self-serve venue, and reports (count-only) lapsed admin-activated venues. The restore + re-hide jobs are gated on `VENUE_REHIDE_ENABLED` and ship log-only. `?dryRun=1` forces report-only for both reconcilers; a reconciler fault never fails the cron. See §12 and CLAUDE.md's "Venue Visibility" section. The pre-launch **SlimCD** processor was removed entirely on 2026-08-01 (module, session/return/card/subscribe routes, and the cron charge loop); its two columns survive as dead weight and nothing reads them — `tests/billing-slimcd-removed.test.ts` is the tripwire.
+ - **A `billing_subscriptions` row means a partner who paid; an unfinished signup leaves nothing behind.** The webhook only ever *creates* a row (never gates *updates*) when Stripe reports the subscription as paid-for (`active`/`trialing`) — a Checkout session that completes unpaid, or an `incomplete` subscription with no existing row, writes nothing. This makes `past_due` unambiguous: it means an established subscriber's card failed, never an abandoned first attempt. See `docs/billing-code-review-fixes-plan.md` Phase 8 and its run-log write-up before touching webhook row-creation logic — it's easy to "helpfully" persist an in-progress checkout and reintroduce the ambiguity.
+-- **Live-game scheduling (to be owner-scoped):** `app/api/category-blitz/schedules/*` + `lib/categoryBlitzSchedules.ts` currently require **admin** auth. The Partner Dashboard needs owner-scoped create/list/delete restricted to the caller's `venue_owner_venues`.
++- **Group-game scheduling (to be owner-scoped):** `app/api/category-blitz/schedules/*` + `lib/categoryBlitzSchedules.ts` currently require **admin** auth. The Partner Dashboard needs owner-scoped create/list/delete restricted to the caller's `venue_owner_venues`.
+ - **TV display URL:** public venue screen at `app/venue/[venueId]/screen` + `app/api/venue-screen/state`; surfaced (URL + QR) in `app/owner/display/page.tsx`. The URL is built with `gameUrl()` from `lib/domainSplit.ts`, so it automatically points at `play.` once the domain split is enabled.
+ - **Domain split (Phase 6):** host-based routing lives at the top of the live edge gate `proxy.ts` (via `lib/domainSplit.ts`), flag-gated off behind `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED` and inert until enabled. `proxy.ts` is Next 16's renamed middleware file — never add a `middleware.ts`. Cutover steps: **`docs/phase-6-domain-split-runbook.md`**.
+ 
+--- a/docs/native-app-device-checklist.md
++++ b/docs/native-app-device-checklist.md
+@@ -172,7 +172,7 @@
+     points, come back to Venue Home on a LATER launch → the card appears under the Live Trivia box.
+ 44. **The ask:** tap **Turn on** → the phone asks "Allow Hightop Challenge to send you notifications?" → Allow →
+     the card disappears with a buzz. **Not now** instead → the card stays away for 30 days.
+-45. **Menu:** open the menu → a **Notifications** block with three switches (Live games starting, Prizes,
++45. **Menu:** open the menu → a **Notifications** block with three switches (Group games starting, Prizes,
+     Results), all on. Turn **Results** off, close and reopen the menu → still off.
+ 46. **A real push:** win a prize (or have one awarded) with the app in the background → within about a minute a
+     notification with a small "H" icon. Tap it → the app opens on Redeem Prizes. Swipe the app away first and
+--- a/docs/partner-dashboard-app-redesign-device-checklist.md
++++ b/docs/partner-dashboard-app-redesign-device-checklist.md
+@@ -21,13 +21,13 @@
+ - [ ] Tap outside the menu, and the Back gesture: menu closes. The page behind doesn't scroll
+   while the menu is open.
+ - [ ] Partner Manual row: menu closes, the manual slides up. Its text says "tap the logo in the
+-  top-left… then Venue Display" and "Tap Offer Prizes on your dashboard".
++  top-left… then Venue Display" and "Tap Active Prizes on your dashboard".
+ - [ ] Billing, Display, Game Settings, Account Settings each open a page with **Back** top-left
+   (no logo menu, no Sign Out), and Back returns to the dashboard.
+ - [ ] With 2+ venues: tapping the venue name switches venues and both lists reload.
+ 
+-## C. Schedule a live game
+-- [ ] Empty venue: "Schedule a live game" is a big dashed card; the dashed outline is easy to see.
++## C. Schedule a group game
++- [ ] Empty venue: "Schedule a group game" is a big dashed card; the dashed outline is easy to see.
+ - [ ] Tap it: the sheet slides up with the dashboard peeking at the top. Steps slide sideways.
+ - [ ] **Keyboard:** tap the date/time field, the rounds and the name field. The keyboard must not
+   cover the field you are typing in or the Next button.
+@@ -85,7 +85,7 @@
+ The logo drops in spinning, lands, then hops: one full turn clockwise, a beat on the ground,
+ one full turn back. You should never see a grey placeholder box or a bouncing basketball again.
+ - [ ] **Cold open.** Force-quit the browser, then open the Partner Dashboard. You see the logo
+-  animation, then **Live Games and Offer Prizes appear together, in one step** — not the logo,
++  animation, then **Active Group Games and Active Prizes appear together, in one step** — not the logo,
+   then two grey boxes, then the real thing.
+ - [ ] **Sign in.** From the partner login, tap Sign In. The animation covers the form the instant
+   you tap, and stays until the dashboard is ready.
+@@ -136,7 +136,7 @@
+ - [ ] Text is readable at arm's length; nothing is cut off at the edges on the smallest phone you own.
+ 
+ ## K. "How many players must play?" step (new, 2026-10-17 — Create Prize)
+-Menu → **Offer Prizes** → create one prize of each kind below. Do it on a 350 px phone and again on the smallest
++Dashboard → **Active Prizes** → create one prize of each kind below. Do it on a 350 px phone and again on the smallest
+ phone you own (289 px, an iPhone SE).
+ - [ ] **Live Trivia, Winner of the game.** After the rules, the next button says **Next: Minimum Players** and opens
+   its own screen titled "How many players must play?". Neither **No minimum** nor **Set a minimum** is selected and
+@@ -168,10 +168,10 @@
+ - [ ] Player, venue home: the third panel is titled **Prizes**; cards read naturally (no "prize prize" sentences).
+ - [ ] A won prize: the card says **PRIZE** (not REWARD) and the Redeem Prizes page still works.
+ - [ ] NFL Pick 'Em: the banner says "Details in Prizes".
+-- [ ] Partner Dashboard: the menu row and sheet say **Offer Prizes**; create one end to end (Create Prize wizard) and read every screen.
++- [ ] Partner Dashboard: open the **Active Prizes** dashboard card; the sheet says **Prizes** / **Offer a prize**; create one end to end (Create Prize wizard) and read every screen.
+ - [ ] Results: a game card shows "Prizes won at this game"; tap a prize and the detail opens.
+ - [ ] Open an OLD bookmark, `/owner/dashboard?sheet=rewards`: it opens the Prizes sheet. Phone Back closes it.
+-- [ ] Partner email preview (`npm run email:preview`): says "Offer Prizes" and "Redeem Prizes".
++- [ ] Partner email preview (`npm run email:preview`): uses "Schedule Group Games", "Offer Prizes" (a teaching action) and "Redeem Prizes".
+ - [ ] `/rules`: read it once, as the official contest rules (changed sentences are listed in `docs/rewards-to-prizes-rename-plan_PHASE_4_HANDOFF.md`).
+ - [ ] `/rules` also shows the disclaimer wording "contest, prize, challenge".
+ - [ ] Create Prize wizard: if it lets a $0 gift card through, the new invalid-prize message appears (skip if it can't be reached).
+--- a/docs/join-merch-store-device-checklist.md
++++ b/docs/join-merch-store-device-checklist.md
+@@ -96,7 +96,7 @@
+   Escape closes the store; Tab moves through the controls and stays inside the panel.
+ 
+ ## L. Everything else is unchanged
+-- [ ] Schedule a live game and Offer a reward sheets still look dark and as before.
++- [ ] Schedule a group game and Offer a reward sheets still look dark and as before.
+ - [ ] Each step of Schedule and Rewards opens at the top (Phase 4.3 changed this for every sheet).
+ 
+ ## M. Header "Order Join Merch" button (docs/partner-dashboard-merch-button-loader-speed-plan.md Phase 1)

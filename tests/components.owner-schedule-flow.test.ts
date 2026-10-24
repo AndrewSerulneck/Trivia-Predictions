@@ -13,7 +13,7 @@ vi.hoisted(() => {
   process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT = "true";
 });
 
-// docs/partner-dashboard-app-redesign-plan.md Phase 4: the Schedule Live Games
+// docs/partner-dashboard-app-redesign-plan.md Phase 4: the Group Games
 // sheet end to end against a fake history — create, edit, cancel, history.
 
 const stubReducedMotion = () => {

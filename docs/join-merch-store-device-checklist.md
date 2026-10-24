@@ -96,7 +96,7 @@ account with **no** venue (or catch the store while the dashboard is still loadi
   Escape closes the store; Tab moves through the controls and stays inside the panel.
 
 ## L. Everything else is unchanged
-- [ ] Schedule a live game and Offer a reward sheets still look dark and as before.
+- [ ] Schedule a group game and Offer a reward sheets still look dark and as before.
 - [ ] Each step of Schedule and Rewards opens at the top (Phase 4.3 changed this for every sheet).
 
 ## M. Header "Order Join Merch" button (docs/partner-dashboard-merch-button-loader-speed-plan.md Phase 1)

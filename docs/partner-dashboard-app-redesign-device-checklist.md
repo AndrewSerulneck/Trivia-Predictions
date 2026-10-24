@@ -21,13 +21,13 @@ game and one reward; for the "empty" checks use a venue with neither (or a fresh
 - [ ] Tap outside the menu, and the Back gesture: menu closes. The page behind doesn't scroll
   while the menu is open.
 - [ ] Partner Manual row: menu closes, the manual slides up. Its text says "tap the logo in the
-  top-left… then Venue Display" and "Tap Offer Prizes on your dashboard".
+  top-left… then Venue Display" and "Tap Active Prizes on your dashboard".
 - [ ] Billing, Display, Game Settings, Account Settings each open a page with **Back** top-left
   (no logo menu, no Sign Out), and Back returns to the dashboard.
 - [ ] With 2+ venues: tapping the venue name switches venues and both lists reload.
 
-## C. Schedule a live game
-- [ ] Empty venue: "Schedule a live game" is a big dashed card; the dashed outline is easy to see.
+## C. Schedule a group game
+- [ ] Empty venue: "Schedule a group game" is a big dashed card; the dashed outline is easy to see.
 - [ ] Tap it: the sheet slides up with the dashboard peeking at the top. Steps slide sideways.
 - [ ] **Keyboard:** tap the date/time field, the rounds and the name field. The keyboard must not
   cover the field you are typing in or the Next button.
@@ -85,7 +85,7 @@ game and one reward; for the "empty" checks use a venue with neither (or a fresh
 The logo drops in spinning, lands, then hops: one full turn clockwise, a beat on the ground,
 one full turn back. You should never see a grey placeholder box or a bouncing basketball again.
 - [ ] **Cold open.** Force-quit the browser, then open the Partner Dashboard. You see the logo
-  animation, then **Live Games and Offer Prizes appear together, in one step** — not the logo,
+  animation, then **Active Group Games and Active Prizes appear together, in one step** — not the logo,
   then two grey boxes, then the real thing.
 - [ ] **Sign in.** From the partner login, tap Sign In. The animation covers the form the instant
   you tap, and stays until the dashboard is ready.
@@ -136,7 +136,7 @@ Open the menu → **Results**. Use a venue that has run Live Trivia (Garden Stat
 - [ ] Text is readable at arm's length; nothing is cut off at the edges on the smallest phone you own.
 
 ## K. "How many players must play?" step (new, 2026-10-17 — Create Prize)
-Menu → **Offer Prizes** → create one prize of each kind below. Do it on a 350 px phone and again on the smallest
+Dashboard → **Active Prizes** → create one prize of each kind below. Do it on a 350 px phone and again on the smallest
 phone you own (289 px, an iPhone SE).
 - [ ] **Live Trivia, Winner of the game.** After the rules, the next button says **Next: Minimum Players** and opens
   its own screen titled "How many players must play?". Neither **No minimum** nor **Set a minimum** is selected and
@@ -168,10 +168,10 @@ Nothing on any screen should say "Reward" any more. Do this on a normal phone, t
 - [ ] Player, venue home: the third panel is titled **Prizes**; cards read naturally (no "prize prize" sentences).
 - [ ] A won prize: the card says **PRIZE** (not REWARD) and the Redeem Prizes page still works.
 - [ ] NFL Pick 'Em: the banner says "Details in Prizes".
-- [ ] Partner Dashboard: the menu row and sheet say **Offer Prizes**; create one end to end (Create Prize wizard) and read every screen.
+- [ ] Partner Dashboard: open the **Active Prizes** dashboard card; the sheet says **Prizes** / **Offer a prize**; create one end to end (Create Prize wizard) and read every screen.
 - [ ] Results: a game card shows "Prizes won at this game"; tap a prize and the detail opens.
 - [ ] Open an OLD bookmark, `/owner/dashboard?sheet=rewards`: it opens the Prizes sheet. Phone Back closes it.
-- [ ] Partner email preview (`npm run email:preview`): says "Offer Prizes" and "Redeem Prizes".
+- [ ] Partner email preview (`npm run email:preview`): uses "Schedule Group Games", "Offer Prizes" (a teaching action) and "Redeem Prizes".
 - [ ] `/rules`: read it once, as the official contest rules (changed sentences are listed in `docs/rewards-to-prizes-rename-plan_PHASE_4_HANDOFF.md`).
 - [ ] `/rules` also shows the disclaimer wording "contest, prize, challenge".
 - [ ] Create Prize wizard: if it lets a $0 gift card through, the new invalid-prize message appears (skip if it can't be reached).

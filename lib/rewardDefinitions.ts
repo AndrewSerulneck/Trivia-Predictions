@@ -3,10 +3,10 @@
 // (Phase 5) and the server expansion (lib/rewards.ts), mirroring
 // lib/ownerCompetitionTemplates.ts. Each definition declares the game whose
 // points count, the requirement copy, threshold options, and which scheduled
-// live game (if any) gates its creation.
+// group game (if any) gates its creation.
 //
 // Adding a future reward = ONE entry here (+ a schedule lookup in lib/rewards.ts
-// only if it gates on a live game that isn't already handled). See
+// only if it gates on a group game that isn't already handled). See
 // docs/rewards-system-plan.md §4/§7.
 
 import type {
@@ -127,7 +127,7 @@ export type RewardDefinition = {
   /** Rewards are threshold+quantity (progress) only — leaderboard mode is retired. */
   challengeMode: ChallengeMode;
   /**
-   * The scheduled live game a venue must already run for this reward to be
+   * The scheduled group game a venue must already run for this reward to be
    * creatable, or null for a reward that gates on nothing. Powers the "schedule
    * it first" block + cadence derivation in lib/rewards.ts.
    */
@@ -137,7 +137,7 @@ export type RewardDefinition = {
   /**
    * Whether this reward can be offered to the winner of the game outright,
    * ignoring any points target. Only meaningful for definitions backed by a
-   * live game that produces a per-occurrence winner (see
+   * group game that produces a per-occurrence winner (see
    * lib/liveTriviaWinnerRewards.ts).
    */
   supportsGameWinner: boolean;

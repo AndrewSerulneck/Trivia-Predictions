@@ -15,7 +15,7 @@ import { PUSH_CATEGORIES, PUSH_COPY, type PushCategory, type PushPreferences } f
 import { useIsNativeApp } from "@/lib/useIsNativeApp";
 
 // The Notifications row of the player menu (docs/native-app-store-plan.md Phase 5.1): this phone's four
-// switches (live games starting, prizes, results, news from your bars), or a Turn on button. App only, and only in a build
+// switches (group games starting, prizes, results, news from your bars), or a Turn on button. App only, and only in a build
 // with the push plugin — the website and older app builds render nothing. Words live in PUSH_COPY.
 
 type Status = "loading" | "off" | "blocked" | "on";

@@ -69,7 +69,7 @@ export const PUSH_COPY = {
   settingsBlocked: "Notifications are turned off for Hightop Challenge in your phone's Settings.",
   settingsFailed: "Couldn't save that. Try again.",
   labels: {
-    games: "Live games starting",
+    games: "Group games starting",
     prizes: "Prizes",
     results: "Results",
     news: "News from your bars",

@@ -37,7 +37,7 @@ import { nextStep, previousStep } from "@/lib/ownerSheetParams";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 import type { OwnerSchedule } from "@/types";
 
-// The Schedule Live Games sheet (docs/partner-dashboard-app-redesign-plan.md §4e):
+// The Group Games sheet (docs/partner-dashboard-app-redesign-plan.md §4e):
 // Game → When → Repeat → Review & name, plus the upcoming list, past games and a
 // game's edit/cancel screen. Hosted by the dashboard, which owns the URL state
 // (`useOwnerSheet`) and the games list; this owns the form.
@@ -354,10 +354,10 @@ export const ScheduleGameFlow = ({
   })();
 
   const title = current === "all" || current === "history" || current === "detail"
-    ? "Live Games"
+    ? "Group Games"
     : isEditing
       ? "Edit game"
-      : "Schedule a live game";
+      : "Schedule a group game";
 
   const resetIfFinished = () => {
     if (!finished) return;

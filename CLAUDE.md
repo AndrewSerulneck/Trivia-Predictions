@@ -6,7 +6,7 @@
 >
 > **`/info` IS the home page — on the website.** Any control that means "go to the home page" — a Back button, a nav logo, a marketing link — must target **`/info`**, never `/`: `/` on `play.` is `JoinFlow` (the *player sign-in*), so pointing "home" at `/` silently drops partners and first-time visitors on a login screen. **Inside the native app there is no `/info`**: home is the app's front door (the player sign-in). So use **`homeHref(isNativeApp())`** from `lib/domainSplit.ts` (or the `ExitBackButton` `home` option / `useIsNativeApp()` for rendered links), never a bare `marketingHref("/info")` — `tests/native-app-contract.test.ts` fails on one (Phase 2E, 2026-10-09).
 >
-> **Strategic direction (next few weeks):** the player game login is moving to `play.hightopchallenge.com` (which is what finally moves `/` off the apex); and the `/owner/*` payments surface is becoming the mobile-first **Partner Dashboard** (self-serve live-game scheduling, TV display URL, and Stripe billing). See `SYSTEM_CONTEXT.md` §0 and the canonical build plan in `docs/partner-dashboard-plan.md`.
+> **Strategic direction (next few weeks):** the player game login is moving to `play.hightopchallenge.com` (which is what finally moves `/` off the apex); and the `/owner/*` payments surface is becoming the mobile-first **Partner Dashboard** (self-serve group-game scheduling, TV display URL, and Stripe billing). See `SYSTEM_CONTEXT.md` §0 and the canonical build plan in `docs/partner-dashboard-plan.md`.
 >
 > **`proxy.ts` is the live edge gate — do NOT add a `middleware.ts`.** In Next.js 16 the middleware convention was renamed to `proxy.ts`; it is auto-detected and runs in production (the build lists it as `Proxy (Middleware)`). Adding `middleware.ts` is a hard build error. Its cookie auth-gate is live — never change its default behavior without an explicit, separately-verified decision.
 > **Domain split is built, flag-gated off.** The apex→`play.` host routing is layered at the top of `proxy.ts` (via `lib/domainSplit.ts`) behind `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED` (off = today's single origin, fully inert). When ready to switch over, execute **`docs/phase-6-domain-split-runbook.md`** exactly (DNS + envs + `.hightopchallenge.com` cookie domain + smoke tests; reversal is one flag).
@@ -248,6 +248,7 @@ Plan + handoffs: `docs/light-theme-plan.md`; phone pass `docs/light-theme-device
   behind the clock on light screens (`html.tp-standalone[data-theme="light"]::after`).
 
 ## Mental Model & Terminology
+- **Group Games (2026-10-24, local wording update; not deployed):** the umbrella for shared-room, simultaneous games, currently **Live Trivia** and **Category Blitz**. Keep those individual game names and timing statuses such as **Live now**. Dashboard lists are **Active Group Games** and **Active Prizes**; the schedule sheet is **Group Games**, creation is **Schedule a group game**. “Active” preserves the existing upcoming-game and active-prize filters. Internal `live*` names, routes, IDs, channels and push category `games` remain stable. Plan: `docs/group-games-terminology-plan.md`; Phases 1–4 are complete locally; not committed/pushed/deployed. Final validation, isolated release patches and baseline exceptions: `docs/group-games-terminology-release-record-2026-10-24.md`; next-agent handoff: `docs/group-games-terminology-plan_PHASE_4_HANDOFF.md`. Publication is separate; preserve unrelated dirty work.
 - **Core Concept:** Users join a specific physical venue and earn points playing mini-games (Trivia, Pick'em, Bingo, Predictions, Fantasy) scoped strictly to that venue. 
 - **Data Scoping:** Authentication is global (passkeys/username), but points, leaderboards, and game states are entirely venue-specific. Users can belong to multiple venues with completely independent point totals.
 - **Naming Rule:** Always use "credit allocation" instead of "credit limit" for recurring game balances.
@@ -331,7 +332,7 @@ migrations are grandfathered — see `docs/supabase-data-api-grants-plan.md`).
 - **Reward definitions are a registry, not free-form authoring.** Admins and partners pick
   from a small slate of pre-built definitions (today: the Live Trivia Challenge) and fill in
   cadence/prize/quantity. **Adding a new reward = one entry in `lib/rewardDefinitions.ts`** (+
-  a schedule lookup in `lib/rewards.ts` only if it gates on a live game with no existing
+  a schedule lookup in `lib/rewards.ts` only if it gates on a group game with no existing
   lookup). See `AGENTS.md` for the exact steps — do not hand-roll a new creation form.
 - **One shared wizard, two hosts.** `components/rewards/CreateRewardWizard.tsx` is used by
   both the admin Rewards section (`components/admin/sections/ChallengesSection.tsx`) and the

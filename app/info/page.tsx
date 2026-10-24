@@ -167,7 +167,7 @@ const FEATURES = [
   { icon: "🎯", title: "Use prizes to boost sales", body: "Offer up discounts to guests who score the most trivia points or make the best sports bracket to encourage repeat visits." },
   { icon: "🍺", title: "Longer stays, higher tabs", body: "Games keep guests engaged longer, encouraging additional food and beverage purchases with every round." },
   { icon: "📱", title: "No hardware required", body: "Players use their own phones. No devices to buy or downloads required." },
-  { icon: "📅", title: "Schedule around your business", body: "Schedule live community games (like pub trivia) whenever you need a boost. Target slow periods and turn them into your busiest nights." },
+  { icon: "📅", title: "Schedule around your business", body: "Schedule group games (like pub trivia) whenever you need a boost. Target slow periods and turn them into your busiest nights." },
   { icon: "💰", title: "Advertise with us!", body: "Subscribe and broadcast your ads to our growing network of partner venues." },
  
 ];

@@ -34,7 +34,7 @@ export const RewardsSection = ({
     <DashboardSectionCard
       glyph="🏆"
       accentClassName="bg-ht-game-pickem"
-      title="Offer Prizes"
+      title="Active Prizes"
       addLabel={ready && active.length > 0 ? "Offer a prize" : undefined}
       onAdd={onAdd}
     >

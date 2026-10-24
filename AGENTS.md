@@ -10,12 +10,17 @@ them; it documents recurring processes and active implementation-plan pointers b
 
 ## Phase handoffs and planned Bingo / Pick ’Em work
 
-For every multi-phase plan, write `<PLAN_NAME>_PHASE_<N>_HANDOFF.md` next to the
-plan before marking a phase complete; also write one when stopping part-way.
-Update the plan's status to link it. Open with a plain-English developer summary,
-then give the next agent the scope, branch/commit/deployment/data state, decisions,
-changed paths/functions, traps, exact test/run commands and results, open questions,
-and recommended next steps/model/effort. Assume no conversation context.
+Group Games terminology: `docs/group-games-terminology-plan.md`; **Phases 1–4 complete locally
+(2026-10-24), not committed/pushed/deployed.** Final handoff:
+`docs/group-games-terminology-plan_PHASE_4_HANDOFF.md`; validation/release preparation:
+`docs/group-games-terminology-release-record-2026-10-24.md`. Scoped candidate passes 5,505 tests /
+13 environment skips, typecheck/lint/build; fixture browser review covers 350/390/1280 px.
+Category Blitz status spacing prevents new copy overlapping its icon. Existing email narrow-width
+limits and a randomized root Bingo-test failure are documented, not silently fixed.
+Group Games is the umbrella for Live Trivia and Category Blitz; dashboard headings are Active
+Group Games / Active Prizes. Keep game names, timing statuses, identifiers, routes, filters and
+push delivery unchanged. Publication is separate; use the isolated patches/manifest in the release
+record, never deploy this dirty root. Preserve unrelated work.
 
 Current plan: `docs/bingo-pickem-reliability-plan.md` (2026-09-12). **Complete and
 developer-accepted (2026-09-19): Andrew confirmed authenticated Prop Bingo works after the

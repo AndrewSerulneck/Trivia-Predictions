@@ -172,7 +172,7 @@ it simply never asks). Use a normal player account, not God Mode.
     points, come back to Venue Home on a LATER launch → the card appears under the Live Trivia box.
 44. **The ask:** tap **Turn on** → the phone asks "Allow Hightop Challenge to send you notifications?" → Allow →
     the card disappears with a buzz. **Not now** instead → the card stays away for 30 days.
-45. **Menu:** open the menu → a **Notifications** block with three switches (Live games starting, Prizes,
+45. **Menu:** open the menu → a **Notifications** block with three switches (Group games starting, Prizes,
     Results), all on. Turn **Results** off, close and reopen the menu → still off.
 46. **A real push:** win a prize (or have one awarded) with the app in the background → within about a minute a
     notification with a small "H" icon. Tap it → the app opens on Redeem Prizes. Swipe the app away first and

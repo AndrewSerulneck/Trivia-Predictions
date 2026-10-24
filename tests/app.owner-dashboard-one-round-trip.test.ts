@@ -105,8 +105,8 @@ const stubApi = (oneShot: OneShot = {}) => {
 const openDashboard = async () => {
   render(createElement(OwnerDashboardPage));
   await waitFor(() => {
-    expect(screen.getByRole("region", { name: "Live Games" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Offer Prizes" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Active Group Games" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Active Prizes" })).toBeTruthy();
   });
   // Let the loader's minimum-visible timer and any trailing effect settle.
   await act(async () => {
@@ -149,7 +149,7 @@ describe("Partner Dashboard first load (speed plan Phase 5)", () => {
     // Both sections are READY (their empty states), not skeletons: the seed landed.
     expect(screen.getByText("Pick a game and a time. Your whole room plays together.")).toBeTruthy();
     expect(screen.getByRole("button", { name: /Offer your guests a prize/ })).toBeTruthy();
-    expect(screen.queryByRole("status", { name: "Loading live games" })).toBeNull();
+    expect(screen.queryByRole("status", { name: "Loading group games" })).toBeNull();
     expect(screen.queryByRole("status", { name: "Loading prizes" })).toBeNull();
   });
 

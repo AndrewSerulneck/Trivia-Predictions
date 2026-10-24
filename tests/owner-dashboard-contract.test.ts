@@ -70,7 +70,7 @@ describe("owner dashboard body", () => {
   it("uses the plan's empty-state copy", () => {
     const live = read("components/owner/dashboard/LiveGamesSection.tsx");
     const rewards = read("components/owner/dashboard/RewardsSection.tsx");
-    expect(live).toContain("Schedule a live game");
+    expect(live).toContain("Schedule a group game");
     expect(live).toContain("Pick a game and a time. Your whole room plays together.");
     expect(rewards).toContain("Offer your guests a prize");
     expect(rewards).toContain("+ Offer another prize");
@@ -154,7 +154,7 @@ describe("owner dashboard body", () => {
   it("Phase 6: the Partner Manual describes the new navigation, not the old buttons", () => {
     const manual = read("lib/partnerManual.ts");
     expect(manual).toContain("tap the arrow in the top-left");
-    expect(manual).toContain("Tap Offer Prizes on your dashboard");
+    expect(manual).toContain("Tap Active Prizes on your dashboard");
     expect(manual).not.toMatch(/[Cc]lick/);
   });
 });

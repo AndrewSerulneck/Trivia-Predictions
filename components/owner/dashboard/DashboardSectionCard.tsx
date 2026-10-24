@@ -32,7 +32,7 @@ export const DashboardSectionCard = ({
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${accentClassName}`}>
         {glyph}
       </div>
-      <h2 className="ht-h2 min-w-0 flex-1 truncate">{title}</h2>
+      <h2 className="ht-h2 min-w-0 flex-1">{title}</h2>
       {addLabel && onAdd ? (
         <button
           type="button"

@@ -924,7 +924,7 @@ export function rewardScheduleFacts(context: {
 /**
  * Resolve whether a reward definition can be created at a venue and which cadence
  * options to offer, by reading the venue's schedule for the definition's required
- * live game. Blocks (empty allowedCadences + scheduled=false) when the game isn't
+ * group game. Blocks (empty allowedCadences + scheduled=false) when the game isn't
  * scheduled — the UI turns that into the "schedule it first" message + link.
  */
 export async function resolveRewardCreationContext(
