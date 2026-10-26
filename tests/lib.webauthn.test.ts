@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   chooseUserAndVenueFromRequest,
   decodePublicKeyFromBase64Url,
   encodePublicKeyToBase64Url,
   getCredentialTransportList,
+  getExpectedPasskeyOrigins,
   normalizeUsernameForLookup,
   parseBearerToken,
   resolveRpIdForOrigin,
@@ -61,5 +62,64 @@ describe("lib/webauthn helpers", () => {
 
   it("resolves localhost rp id for local origin", () => {
     expect(resolveRpIdForOrigin("http://localhost:3000")).toBe("localhost");
+  });
+});
+
+describe("native WebView passkey origin verification", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  const fingerprint = Array(32).fill("AB").join(":");
+  const challenge = { origin: "https://play.hightopchallenge.com", rp_id: "hightopchallenge.com" };
+  const appOrigin = `android:apk-key-hash:${Buffer.alloc(32, 0xab).toString("base64url")}`;
+  const configure = () => {
+    vi.stubEnv("WEBAUTHN_RP_ID", "hightopchallenge.com");
+    vi.stubEnv("WEBAUTHN_ALLOWED_ORIGINS", "https://hightopchallenge.com,https://play.hightopchallenge.com");
+    vi.stubEnv("ANDROID_APP_CERT_SHA256", fingerprint);
+  };
+
+  it("keeps browser and iOS verification unchanged without a configured certificate", () => {
+    configure();
+    vi.stubEnv("ANDROID_APP_CERT_SHA256", "");
+    expect(getExpectedPasskeyOrigins(challenge)).toBe(challenge.origin);
+  });
+
+  it("accepts only the exact configured app certificate alongside the challenge's web origin", () => {
+    configure();
+    expect(getExpectedPasskeyOrigins(challenge)).toEqual([challenge.origin, appOrigin]);
+    expect(getExpectedPasskeyOrigins(challenge)).not.toContain("android:apk-key-hash:untrusted");
+    expect(getExpectedPasskeyOrigins(challenge)).not.toContain("https://hightopchallenge.com");
+  });
+
+  it("supports a bounded configured signing-key rotation and removes duplicates", () => {
+    configure();
+    vi.stubEnv("ANDROID_APP_CERT_SHA256", `${fingerprint},${fingerprint},${Array(32).fill("CD").join(":")}`);
+    expect(getExpectedPasskeyOrigins(challenge)).toEqual([
+      challenge.origin, appOrigin, `android:apk-key-hash:${Buffer.alloc(32, 0xcd).toString("base64url")}`,
+    ]);
+  });
+
+  it("ignores malformed fingerprints", () => {
+    configure();
+    vi.stubEnv("ANDROID_APP_CERT_SHA256", "AB:CD,*,android:apk-key-hash:anything");
+    expect(getExpectedPasskeyOrigins(challenge)).toBe(challenge.origin);
+  });
+
+  it.each([
+    { origin: "http://localhost:3000", rp_id: "localhost" },
+    { origin: "http://play.hightopchallenge.com", rp_id: "hightopchallenge.com" },
+    { origin: "https://attacker.example", rp_id: "hightopchallenge.com" },
+    { origin: "https://play.hightopchallenge.com", rp_id: "attacker.example" },
+    { origin: "https://hightopchallenge.com.attacker.example", rp_id: "hightopchallenge.com" },
+    { origin: "not-an-origin", rp_id: "hightopchallenge.com" },
+  ])("does not widen verification for $origin / $rp_id", (other) => {
+    configure();
+    expect(getExpectedPasskeyOrigins(other)).toBe(other.origin);
+  });
+
+  it("does not add app origins to an explicitly allowed external web origin", () => {
+    configure();
+    vi.stubEnv("WEBAUTHN_ALLOWED_ORIGINS", "https://external.example");
+    const external = { ...challenge, origin: "https://external.example" };
+    expect(getExpectedPasskeyOrigins(external)).toBe(external.origin);
   });
 });

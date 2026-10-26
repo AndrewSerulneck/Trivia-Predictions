@@ -5,6 +5,7 @@ import type {
 } from "@simplewebauthn/server";
 import { decodeClientDataJSON, isoBase64URL, isoUint8Array } from "@simplewebauthn/server/helpers";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { readAndroidCertFingerprints } from "@/lib/nativeAppLinks";
 
 type DbError = {
   code?: string;
@@ -260,6 +261,26 @@ export function resolveAllowedOriginAndRpId(request: Request): { origin: string;
   }
 
   return { origin, rpId };
+}
+
+// An Android WebView in app mode signs clientDataJSON with the app certificate's
+// origin, while its options request still comes from the https page. Trust only
+// the exact certificates used by our Digital Asset Links, and only for our own
+// production RP and an allowed https page. Browser/iOS origins stay unchanged.
+export function getExpectedPasskeyOrigins(
+  challenge: Pick<WebAuthnChallengeRow, "origin" | "rp_id">
+): string | string[] {
+  const rpId = normalizeEnvValue(process.env.WEBAUTHN_RP_ID) || PROD_RP_ID_DEFAULT;
+  const origin = normalizeOrigin(challenge.origin);
+  if (challenge.rp_id !== rpId || !origin.startsWith("https://") || !isOriginAllowed(origin)) {
+    return challenge.origin;
+  }
+  const hostname = new URL(origin).hostname;
+  if (hostname !== rpId && !hostname.endsWith(`.${rpId}`)) return challenge.origin;
+  const appOrigins = readAndroidCertFingerprints().map((fingerprint) =>
+    `android:apk-key-hash:${Buffer.from(fingerprint.replaceAll(":", ""), "hex").toString("base64url")}`
+  );
+  return appOrigins.length ? [challenge.origin, ...new Set(appOrigins)] : challenge.origin;
 }
 
 export function getSessionHintsFromCookies(request: Request): { userId: string; venueId: string } {

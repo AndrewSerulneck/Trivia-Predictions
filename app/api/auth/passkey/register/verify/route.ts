@@ -9,6 +9,7 @@ import {
   findUserByIdAndVenue,
   getActiveChallengeById,
   getCredentialTransportList,
+  getExpectedPasskeyOrigins,
   isPasskeyFeatureEnabled,
   mapUserForResponse,
   markChallengeUsed,
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
     const verification = await verifyRegistrationResponse({
       response,
       expectedChallenge: challenge.challenge_b64url,
-      expectedOrigin: challenge.origin,
+      expectedOrigin: getExpectedPasskeyOrigins(challenge),
       expectedRPID: challenge.rp_id,
       requireUserVerification: true,
     });

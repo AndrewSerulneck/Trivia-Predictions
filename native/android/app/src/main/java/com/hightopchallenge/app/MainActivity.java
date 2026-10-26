@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.CookieManager;
+import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 import com.getcapacitor.BridgeActivity;
@@ -39,9 +40,23 @@ public class MainActivity extends BridgeActivity {
         // Phase 2E: offline page only for real network failures, "Try again" reloads the
         // failed page, link-out pages open in the browser (HightopWebViewClient).
         if (bridge != null) {
+            enablePasskeys();
             bridge.setWebViewClient(new HightopWebViewClient(bridge));
         }
         injectBridgeOnApex();
+    }
+
+    // Phase 4c: use the WebView's Credential Manager integration with this app's
+    // Digital Asset Link. Older WebViews keep the existing username/PIN fallback.
+    private void enablePasskeys() {
+        if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_AUTHENTICATION)) {
+            Logger.info("Hightop", "WebView passkeys unsupported; username/PIN remains available");
+            return;
+        }
+        WebSettingsCompat.setWebAuthenticationSupport(
+            bridge.getWebView().getSettings(), WebSettingsCompat.WEB_AUTHENTICATION_SUPPORT_FOR_APP);
+        Logger.info("Hightop", "WebView passkey support: "
+            + WebSettingsCompat.getWebAuthenticationSupport(bridge.getWebView().getSettings()));
     }
 
     // Phase 3: App Links (the join QR, a shared game link) open the app ON THAT PAGE.
