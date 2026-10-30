@@ -13,7 +13,7 @@ session-scoped die key, no tumble over a last round, watchdog keeps the Majority
 uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_7_HANDOFF.md`. Phase 8 (the die's cascade rows stay one
 unprojected element for the whole round; no remount of a focused row) done 2026-10-30, uncommitted; handoff
 `docs/category-blitz-letter-die-plan_PHASE_8_HANDOFF.md`. Phase 9 (header raised above the die so Back stays reachable; dev panel controls + one demos record) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_9_HANDOFF.md`. Phase 10 (die component cleanup: face transforms as Tailwind classes, unused `roundNumber` deleted, one `faceViews` per frame) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_10_HANDOFF.md`. Phase 11's re-review ran 2026-10-30 (10 findings);
-the fixes are Phases 11.1–11.4, and the phone pass moved to Phase 12. Phase 11.1 (die timing: a late letter never holds the board, the live schedule window via `scheduleWindowEndAt`, shared `roundFitsWindow` + 15 s drive slack) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_11.1_HANDOFF.md`. Phase 11.2 (the die lives in a `data-category-blitz-stage` wrapper under the header; `raised` and the z-1100/1110 pair deleted; game-over fireworks kept outside the stage) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_11.2_HANDOFF.md`. Phase 11.3 (die component fixes: landing never rewrites a visible letter, dead Reduce Motion buzz deleted, one `freshFillers` helper, memoised die + stable parent callbacks) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_11.3_HANDOFF.md`. Phase 11.4 (cascade rows `inert` until their own fade-in completes, one fallback timer) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_11.4_HANDOFF.md`. Phase 12's re-review ran 2026-10-30 (`/code-review` high, 7 findings); the fixes are Phases 12.1–12.3, and the re-review + phone pass moved to Phase 13; handoff `docs/category-blitz-letter-die-plan_PHASE_12_HANDOFF.md`. Phase 12.1 (the die's "another round follows" uses the earlier of the live window end and the session's frozen `scheduledEndAt`; one `openScheduleWindow` lookup shared by both engines and the sessions API; the cron's fit check is `roundFitsWindow` at the session's own round length) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_12.1_HANDOFF.md`. Phase 12.2 (the sessions reply carries `serverNowMs`; the hook keeps a fastest-reading clock offset used only by the die's late-letter cutoff; overlapping `loadSession` replies are numbered and an older one is dropped whole, a resync's `forceReveal` carried to the winner) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_12.2_HANDOFF.md`. Phase 12.3 (cascade readiness moved into a per-row `CascadeRow` with its own state + one per-row fallback timer, so a row finishing never re-renders the board; one `CB_ROW_CASCADE_REDUCED_DURATION_S` constant, also used by RoundStartReveal's reduced variant) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_12.3_HANDOFF.md`. Next: Phase 13. Prototype:
+the fixes are Phases 11.1–11.4, and the phone pass moved to Phase 12. Phase 11.1 (die timing: a late letter never holds the board, the live schedule window via `scheduleWindowEndAt`, shared `roundFitsWindow` + 15 s drive slack) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_11.1_HANDOFF.md`. Phase 11.2 (the die lives in a `data-category-blitz-stage` wrapper under the header; `raised` and the z-1100/1110 pair deleted; game-over fireworks kept outside the stage) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_11.2_HANDOFF.md`. Phase 11.3 (die component fixes: landing never rewrites a visible letter, dead Reduce Motion buzz deleted, one `freshFillers` helper, memoised die + stable parent callbacks) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_11.3_HANDOFF.md`. Phase 11.4 (cascade rows `inert` until their own fade-in completes, one fallback timer) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_11.4_HANDOFF.md`. Phase 12's re-review ran 2026-10-30 (`/code-review` high, 7 findings); the fixes are Phases 12.1–12.3, and the re-review + phone pass moved to Phase 13; handoff `docs/category-blitz-letter-die-plan_PHASE_12_HANDOFF.md`. Phase 12.1 (the die's "another round follows" uses the earlier of the live window end and the session's frozen `scheduledEndAt`; one `openScheduleWindow` lookup shared by both engines and the sessions API; the cron's fit check is `roundFitsWindow` at the session's own round length) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_12.1_HANDOFF.md`. Phase 12.2 (the sessions reply carries `serverNowMs`; the hook keeps a fastest-reading clock offset used only by the die's late-letter cutoff; overlapping `loadSession` replies are numbered and an older one is dropped whole, a resync's `forceReveal` carried to the winner) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_12.2_HANDOFF.md`. Phase 12.3 (cascade readiness moved into a per-row `CascadeRow` with its own state + one per-row fallback timer, so a row finishing never re-renders the board; one `CB_ROW_CASCADE_REDUCED_DURATION_S` constant, also used by RoundStartReveal's reduced variant) done 2026-10-30, uncommitted; handoff `docs/category-blitz-letter-die-plan_PHASE_12.3_HANDOFF.md`. All of Phases 1–12.3 committed locally on `after-app-review` as `2899a9d6` 2026-10-30 (not pushed). Phase 13's re-review ran 2026-10-30 (`/code-review` high, 10 findings: 7 confirmed, 1 plausible, 1 rejected; 2 are decisions for Andrew); the fixes are Phases 13.1–13.3, and the re-review + phone pass moved to Phase 14; handoff `docs/category-blitz-letter-die-plan_PHASE_13_HANDOFF.md`. Next: Phase 13.1. Prototype:
 https://claude.ai/artifact/Da1TFJzQfn5NBa3oVm7ryG (copy in `docs/prototypes/category-blitz-letter-die.html`);
 handoff `docs/category-blitz-letter-die-plan_PHASE_1_HANDOFF.md`. Branch: `after-app-review` (main is frozen during App Store
 review — never push `main`, never deploy, never change Production env for this work until Andrew confirms Apple approved).
@@ -513,8 +513,97 @@ same time as typecheck). Each sub-phase writes `…_PHASE_11.<N>_HANDOFF.md` and
 known Bingo star-index freshness failures expected); `npm run build`, never at the same time as typecheck. Each
 sub-phase writes `…_PHASE_12.<N>_HANDOFF.md` and updates the status line.
 
-### Phase 13 — Re-review + phone pass
-- Fresh-eyes `/code-review` of the Phase 12.1–12.3 changes only. Any new finding becomes a new sub-phase.
+### Phase 13 — Re-review (done 2026-10-30)
+- All letter-die work (Phases 1–12.3) was first committed locally on `after-app-review` as `2899a9d6` (parent
+  `c3ecdb8a`; not pushed), so this review and every later one has an exact diff. **Commit each later sub-phase on
+  `after-app-review` too** (Andrew asked for the local commit 2026-10-30; never `main`, never push).
+- Fresh-eyes `/code-review` (high) of `c3ecdb8a..2899a9d6`, focused on 12.1–12.3, reported 10 findings ("13-review
+  findings" below, in the review's order). Each was checked against the code: 7 confirmed, 1 plausible (5), 2 not taken:
+  - **Finding 10 rejected:** "Return can't advance into a still-inert cascade row". Row i is ready at
+    0.45 + 0.06·i s, so the next row is ready 60 ms after the one being typed in. Nobody can tap, type and press Return
+    that fast.
+  - **Findings 1 and 3 are for Andrew to decide, not new sub-phases.** Both come from engine and clock behaviour that the
+    plan already put out of scope (12.1a, 12.2a); the letter die only makes them visible. See "Open for Andrew" below.
+- Same rule as Phases 6, 11 and 12: no in-place patches. The fixes are Phases 13.1–13.3; the phone pass moved to
+  Phase 14.
+
+**Open for Andrew (13-review findings 1 and 3):**
+- **Finding 1, engine (`lib/categoryBlitz.ts` ~838 drive, ~2005 cron):** the engine decides whether another round fits
+  against tonight's *live* window end, but closes the session at the end time frozen on the session when it was made
+  (`isStaleAutoSession`). If a partner extends tonight's window mid-game, the engine can start a round at 8:59 and
+  force-score it at 9:00, about 2 minutes early. The die correctly does not tumble for it (12.1a uses the earlier of the
+  two), so players just see a round start late and end early. This started before the letter die (the old code used the
+  live window too). Options: (a) the engine's fit check also uses the earlier of the two times (no extra cost; an
+  extended window then ends at the old time, as today, with no cut-short round); (b) editing a schedule also moves an
+  open session's frozen end (an extension really extends tonight; one extra write per edit). Recommend (a) now, and (b)
+  only if partners ask for mid-game extensions.
+- **Finding 3, phone clock (`CategoryBlitzGame.tsx` ~2467 `showReveal`, ~2608 watchdog):** 12.2a corrected only the
+  die's late-letter check for phone clock skew, as planned. The fallback round-start reveal, the die watchdog's "saw the
+  start" check and so the Majority Rules banner still use the phone's own clock. On a phone more than 3 s fast, if the
+  die is skipped (tab hidden), the reveal and the Majority Rules takeover don't play. This was already true before the
+  letter die. Fix (if wanted): one "round age" helper with the offset, used by all three. Zero extra requests.
+
+### Phase 13.1 — Die clock: lock the late verdict, measure the offset properly (13-review findings 2, 4)
+- **13.1a Decide "late" once (finding 2).** `dieStage` (`lib/categoryBlitzLetterDie.ts` ~142) re-checks
+  `letterArrivedAtMs + serverClockOffsetMs − roundStartedAtMs > DIE_MID_ROUND_CUTOFF_MS` on every frame with the
+  *current* offset, and `LetterDieRoll`'s effect re-runs on an offset change. Scenario: the letter arrives 2.7 s in, the
+  die starts landing, and a poll then brings a faster clock reading that moves the offset by +400 ms. 3.1 s > 3 s, so the
+  die vanishes mid-bounce and the board falls back without a fly. **Fix:** in `LetterDieRoll`, latch the offset when the
+  letter's arrival is latched (next to `latches.current.letterArrivedAtMs`, line ~390), and pass that latched value into
+  `dieStage`. The offset can still change freely *before* the letter arrives. Test: the arrival is on time with offset
+  0, then the offset prop becomes +400 ms during landing → the die still lands and flies.
+- **13.1b NTP-style clock reading (finding 4).** The sessions route stamps `serverNowMs` at the very end, after the
+  drive, schedule reads and the awaited presence upsert. `nextDieClockSample` treats that stamp as the round trip's
+  midpoint, so the offset is biased by about half the server's processing time (e.g. +300 ms with 700 ms of work). That
+  takes 0.3 s off the 3 s late-letter allowance. **Fix:** also return `serverReceivedAtMs` (the route's existing `now`,
+  taken at entry). The client computes `offset = ((serverReceivedAtMs − sentAtMs) + (serverNowMs − receivedAtMs)) / 2` and
+  `rtt = (receivedAtMs − sentAtMs) − (serverNowMs − serverReceivedAtMs)` (network time only, so the 2 s cap and "fastest
+  reading wins" compare network time, not engine work). A reply without `serverReceivedAtMs` (an old server) falls back to
+  today's formula. Tests: 700 ms of server work, clocks equal → offset 0; phone 4 s ahead → −4000; missing field → old
+  formula.
+- **Cost:** zero (one more number on the existing reply).
+
+### Phase 13.2 — Sessions reply ordering, completed (13-review findings 5, 6)
+- **13.2a A failed reply never blocks an older good one (finding 6).** `loadSession` (`lib/categoryBlitzRealtime.ts`
+  ~639 and the catch ~710) moves `appliedLoadSeqRef` forward *before* the `ok` check, so a fast failure on the newest
+  request drops an older request's good reply that lands after it. The error banner stays up until the next 15 s poll.
+  **Fix:** only an `ok` reply moves `appliedLoadSeqRef`. A failure shows its error only if no newer reply has been applied
+  (`seq > appliedLoadSeqRef.current`), and never moves the seq. Test: seq 4 in flight, seq 5 fails fast, seq 4 succeeds →
+  seq 4's session is shown and the error clears.
+- **13.2b Broadcasts and the round fetch join the ordering (finding 5, plausible).** The guard orders replies only against
+  each other. (i) A `session_ended` / `continuous_session_ended` / `session_abandoned` broadcast (~954–979) sets the
+  phase without touching the seq, so a poll sent before it can land after and put the ended session (and its old window
+  end) back for up to 15 s. **Fix:** those handlers bump `loadSeqRef` and set `appliedLoadSeqRef` to it, so any reply
+  already in flight is dropped. (ii) The `await loadCurrentRound(...)` after an accepted reply can finish after a newer
+  reply's own round fetch. **Fix:** pass the seq to `loadCurrentRound` and skip its state writes if a newer reply has been
+  applied since. Tests: poll in flight, `session_ended` broadcast, stale poll lands → phase stays `complete`; two applied
+  replies whose round fetches resolve out of order → the newer round wins.
+- **Cost:** zero.
+
+### Phase 13.3 — Small engine and comment cleanups (13-review findings 7, 8, 9)
+- **13.3a One schedules read per poll (finding 8).** The sessions route reads `listSchedules` in parallel with
+  `driveVenueCategoryBlitz`, which reads it again (line ~788). That was already so before the letter die (for
+  `nextWindowAt`), but now `scheduleWindowEndAt` can also come from a different read than the one the engine decided on.
+  **Fix:** have `driveVenueCategoryBlitz` also return the schedules it read (or the open window). The route uses those
+  for `nextWindowAt` and `scheduleWindowEndAt` and drops its own read. Keep the existing callers' return type working (a
+  new function or an options flag; check every caller, don't assume). **Cost:** one fewer `category_blitz_schedules`
+  read per scheduled-venue poll: about 4 reads a minute per open player tab, less of each.
+- **13.3b Cron timing matches its own fit check (finding 7).** `runCategoryBlitzEngine` (~2005) checks the fit at the
+  session's round length (12.1b) but times the next start with `nextRoundStartAtMs(latest, false)` (~2012). The comment
+  says "exactly like driveVenueCategoryBlitz", but drive passes `existing.testMode`. **Fix:** pass `session.testMode`.
+  This changes only test-mode sessions; real sessions have `testMode = false`, so nothing changes for them. Test: a
+  test-mode cron session starts its next round at the test intermission.
+- **13.3c Stale comment (finding 9).** The `compactChrome` comment (`CategoryBlitzGame.tsx` ~1692) says the die's rows
+  are tappable while they cascade in. Since 11.4/12.3 each row is `inert` until its own fade-in finishes. Reword it.
+
+**Gates for 13.1–13.3** (each sub-phase): `npx tsc --noEmit`; `npx eslint <touched files>`; `npm run test` (only the 4
+known Bingo star-index freshness failures expected); `npm run build`, never at the same time as typecheck. Mutation-check
+each new test. Each sub-phase is committed locally on `after-app-review`, writes `…_PHASE_13.<N>_HANDOFF.md` and updates
+the status line.
+
+### Phase 14 — Re-review + phone pass
+- Fresh-eyes `/code-review` of the 13.1–13.3 commits only (`git diff 2899a9d6..HEAD`). Any new finding becomes a new
+  sub-phase.
 - Then Andrew plays a few rounds on his iPhone (and an Android if available). The pass includes:
   - a Majority Rules round (every 5th);
   - a slow-network round: the die must never hold the board when the letter is several seconds late (11.1a);
