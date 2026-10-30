@@ -57,8 +57,8 @@ describe("decideAppLinkDestination", () => {
   it("inside the app goes to the front door, never a store", () => {
     expect(decideAppLinkDestination(APP, LIVE)).toEqual({ kind: "site", path: "/", host: "play" });
   });
-  it("ships with no store URLs set until the listings are live", () => {
-    expect(STORE_URLS).toEqual({ ios: "", android: "" });
+  it("ships only verified live listings: Google Play (approved 2026-10-30), App Store still empty", () => {
+    expect(STORE_URLS).toEqual({ ios: "", android: "https://play.google.com/store/apps/details?id=com.hightopchallenge.app" });
   });
 });
 

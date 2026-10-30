@@ -18,7 +18,7 @@ export const APP_DOWNLOAD_DISPLAY_URL = "hightopchallenge.com/app";
  * is the only change needed for that store to start receiving /app taps.
  */
 export const IOS_APP_STORE_URL = "";
-export const ANDROID_PLAY_STORE_URL = "";
+export const ANDROID_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.hightopchallenge.app";
 
 export type StoreUrls = { ios: string; android: string };
 

@@ -27,7 +27,7 @@ describe("store launch gate", () => {
   });
 
   it("keeps unverified production URLs empty and the example switch off", () => {
-    expect(STORE_URLS).toEqual({ ios: "", android: "" });
+    expect(STORE_URLS).toEqual({ ios: "", android: "https://play.google.com/store/apps/details?id=com.hightopchallenge.app" });
     expect(readFileSync(".env.example", "utf8")).toContain("NEXT_PUBLIC_APP_STORE_LINKS_ENABLED=false");
   });
 
