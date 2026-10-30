@@ -97,9 +97,12 @@ describe("GET /api/category-blitz/sessions", () => {
       ok: true,
       session: null,
       nextWindowAt: "2026-07-08T23:00:00.000Z",
+      scheduleWindowEndAt: null, // no window open right now
       // Global-room flag off ⇒ room resolves to the venue itself, so the
       // client subscribes to that venue's channel.
       realtimeChannel: categoryBlitzChannelName("venue-1"),
+      // The server's clock as the reply leaves, for the letter die (Phase 12.2a).
+      serverNowMs: Date.parse("2026-07-02T12:00:00.000Z"),
     });
     // Concealment: the channel is a hash, so the raw venue id (and, under
     // pooling, the room id) never appears verbatim in the payload.
@@ -109,6 +112,77 @@ describe("GET /api/category-blitz/sessions", () => {
       new Date("2026-07-02T12:00:00.000Z"),
       false
     );
+  });
+
+  // docs/category-blitz-letter-die-plan.md Phase 11.1b: the letter die reads the
+  // LIVE open window's end, derived from the schedule list the route already reads.
+  describe("scheduleWindowEndAt", () => {
+    const autoSession = {
+      id: "session-1",
+      venueId: "venue-1",
+      status: "active" as const,
+      source: "auto" as const,
+      sessionType: "scheduled" as const,
+      // Frozen at creation; the response must not echo it as the window end.
+      scheduledEndAt: "2026-07-09T00:00:00.000Z",
+      startsAt: "2026-07-08T23:00:00.000Z",
+      testMode: false,
+      createdAt: "2026-07-08T23:00:00.000Z",
+      completedAt: null,
+    };
+    const get = async () => {
+      const response = await GET(new Request("http://localhost/api/category-blitz/sessions?venueId=venue-1"));
+      return (await response.json()) as { scheduleWindowEndAt: string | null };
+    };
+
+    beforeEach(() => {
+      vi.setSystemTime(new Date("2026-07-08T23:30:00.000Z")); // inside Wednesday's window
+    });
+
+    it("is the open window's end, read from the one schedule list (no extra read)", async () => {
+      mocks.driveVenueCategoryBlitz.mockResolvedValue(autoSession);
+      mocks.listSchedules.mockResolvedValue([makeSchedule()]);
+      const body = await get();
+      expect(body.scheduleWindowEndAt).toBe("2026-07-09T00:00:00.000Z");
+      expect(mocks.listSchedules).toHaveBeenCalledTimes(1);
+    });
+
+    it("follows a partner shortening tonight's window", async () => {
+      mocks.driveVenueCategoryBlitz.mockResolvedValue(autoSession);
+      mocks.listSchedules.mockResolvedValue([makeSchedule({ windowMinutes: 45, endTime: "2026-07-01T23:45:00.000Z" })]);
+      const body = await get();
+      expect(body.scheduleWindowEndAt).toBe("2026-07-08T23:45:00.000Z");
+    });
+
+    it("is null when no window is open (tonight's schedule moved or deleted)", async () => {
+      mocks.driveVenueCategoryBlitz.mockResolvedValue(autoSession);
+      mocks.listSchedules.mockResolvedValue([makeSchedule({ recurringDays: ["fri"] })]);
+      expect((await get()).scheduleWindowEndAt).toBeNull();
+      mocks.listSchedules.mockResolvedValue([]);
+      expect((await get()).scheduleWindowEndAt).toBeNull();
+    });
+
+    it("is null for a manual session (the engine never advances one)", async () => {
+      mocks.driveVenueCategoryBlitz.mockResolvedValue({ ...autoSession, source: "manual", scheduledEndAt: null });
+      mocks.listSchedules.mockResolvedValue([makeSchedule()]);
+      const body = await get();
+      expect(body.scheduleWindowEndAt).toBeNull();
+    });
+
+    it("is null for a continuous venue", async () => {
+      mocks.resolveContinuousConfig.mockResolvedValue({
+        isActive: true,
+        roundDurationSeconds: 180,
+        intermissionSeconds: 180,
+        modeSelection: "random" as const,
+        categoryPool: [],
+        minCategoriesPerLetter: 12,
+      });
+      mocks.driveContinuousCategoryBlitz.mockResolvedValue({ session: { ...autoSession, sessionType: "continuous" } });
+      const body = await get();
+      expect(body.scheduleWindowEndAt).toBeNull();
+      expect(mocks.listSchedules).not.toHaveBeenCalled();
+    });
   });
 
   // Sleep when idle (docs/category-blitz-how-to-play-plan.md Phase 5): venue

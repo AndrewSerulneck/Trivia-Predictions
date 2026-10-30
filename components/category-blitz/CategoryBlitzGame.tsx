@@ -4,7 +4,7 @@ import { haptic } from "@/lib/haptics";
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { getUserId, getVenueId, getUsername } from "@/lib/storage";
 import { useScheduleUpdatedFlash } from "@/lib/hooks/useScheduleUpdatedBroadcast";
 import { useDelayedFlag } from "@/lib/hooks/useDelayedFlag";
@@ -12,8 +12,15 @@ import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import ScheduleUpdatedToast from "@/components/ui/ScheduleUpdatedToast";
 import { useCategoryBlitzSession, type CategoryBlitzPhase } from "@/lib/categoryBlitzRealtime";
 import { isCategoryBlitzTestModeEnabled, setCategoryBlitzTestMode } from "@/lib/categoryBlitzTestMode";
-import { answerStartsWithLetter, categoryBlitzChannelName, lobbyDwellSeconds } from "@/lib/categoryBlitzShared";
-import { CB_LETTER_BADGE_LAYOUT_ID, cbCategoryRowLayoutId } from "@/lib/categoryBlitzMotion";
+import { anotherRoundFollows, answerStartsWithLetter, categoryBlitzChannelName, lobbyDwellSeconds } from "@/lib/categoryBlitzShared";
+import {
+  CB_LETTER_BADGE_LAYOUT_ID,
+  CB_ROW_CASCADE_AFTER_DIE_DELAY_S,
+  CB_ROW_CASCADE_DURATION_S,
+  CB_ROW_CASCADE_REDUCED_DURATION_S,
+  CB_ROW_CASCADE_STAGGER_S,
+  cbCategoryRowLayoutId,
+} from "@/lib/categoryBlitzMotion";
 import { EASE_SNAP } from "@/lib/motionEasing";
 import { VENUE_GAME_CARD_BY_KEY } from "@/lib/venueGameCards";
 import { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
@@ -21,6 +28,8 @@ import AlliterationBonusChip from "@/components/category-blitz/AlliterationBonus
 import { alliterationBonus } from "@/lib/categoryBlitzAlliteration";
 import RevealSequence from "@/components/category-blitz/RevealSequence";
 import RoundStartReveal, { ROUND_START_REVEAL_MAX_MS } from "@/components/category-blitz/RoundStartReveal";
+import LetterDieRoll from "@/components/category-blitz/LetterDieRoll";
+import { DIE_ARRIVAL_TO_BADGE_MAX_MS, type DieStage } from "@/lib/categoryBlitzLetterDie";
 import LiveLeaderboard from "@/components/category-blitz/LiveLeaderboard";
 import ValidAnswerGlow from "@/components/category-blitz/ValidAnswerGlow";
 import WrongLetterReject from "@/components/category-blitz/WrongLetterReject";
@@ -72,6 +81,10 @@ const LAYOUT_MORPH_SETTLE_MS = LAYOUT_MORPH_TRANSITION.duration * 1000 + 120;
  *  header label, timer, progress bar) — delayed so it settles in just behind
  *  the badge/row morph instead of popping in the instant the reveal ends. */
 const CHROME_ENTRANCE_TRANSITION = { duration: 0.3, ease: EASE_SNAP, delay: 0.12 } as const;
+
+/** Headroom on top of the die's own worst case before the game gives up on it
+ *  and shows the board anyway (see the die watchdog in CategoryBlitzGame). */
+const DIE_WATCHDOG_SLACK_MS = 1500;
 const LAYOUT_DEBUG_VERSION = "cbz-p4-keyboard-contract";
 
 /**
@@ -1379,6 +1392,48 @@ interface AnswerRowProps {
 }
 
 /**
+ * One answer row cascading in straight out of the letter die. Out of the die a
+ * row mounts at opacity 0, so until its own fade-in ends it is `inert`: a tap
+ * on the empty space below the shown rows must not focus a category the player
+ * never saw (letter-die plan Phase 11.4). The readiness lives HERE, not in
+ * AnsweringScreen, so a row finishing re-renders only itself, never the board
+ * (Phase 12.3a). `children` is the board's own memoized element, so a ready
+ * flip doesn't re-render the AnswerRow either. ONE fallback: a per-row timer
+ * frees the row shortly after its fade-in should have ended, so a missed
+ * `onAnimationComplete` (a tab hidden mid-cascade) can't leave a dead row.
+ */
+const CascadeRow = ({
+  index,
+  reduceMotion,
+  children,
+}: {
+  index: number;
+  reduceMotion: boolean;
+  children: ReactNode;
+}) => {
+  const [ready, setReady] = useState(false);
+  const durationS = reduceMotion ? CB_ROW_CASCADE_REDUCED_DURATION_S : CB_ROW_CASCADE_DURATION_S;
+  const delayS = CB_ROW_CASCADE_AFTER_DIE_DELAY_S + index * CB_ROW_CASCADE_STAGGER_S;
+  useEffect(() => {
+    const id = window.setTimeout(() => setReady(true), (delayS + durationS) * 1000 + 500);
+    return () => window.clearTimeout(id);
+  }, [delayS, durationS]);
+  return (
+    <motion.div
+      initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
+      animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      transition={{ duration: durationS, ease: "easeOut", delay: delayS }}
+      inert={!ready}
+      onAnimationComplete={() => setReady(true)}
+      data-category-blitz-answer-row-wrap={index}
+      data-category-blitz-row-cascade=""
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+/**
  * A single answer row, split out of `AnsweringScreen` and memoized so a
  * once-a-second `timeRemaining` tick (or the root's 4 Hz reveal-timing tick,
  * see `AnsweringScreen`'s own memo wrapper below) re-renders the header, not
@@ -1539,6 +1594,13 @@ interface AnsweringScreenProps {
    *  Defaults to false: a mid-round reload never showed the reveal, so it has
    *  nothing to morph from and should go straight to plain rows. */
   morphFromReveal?: boolean;
+  /** True when this screen is mounting out of the letter die (with
+   *  `morphFromReveal`): the badge FLIPs out of the die's tile, but the rows
+   *  have no reveal partner, so they cascade in instead (RoundStartReveal's
+   *  row timing, docs/category-blitz-letter-die-plan.md Phase 4) and stay
+   *  unprojected motion rows for the whole round (Phase 8; see `cascadeIn`).
+   *  Read once at mount. */
+  cascadeRows?: boolean;
   /** Called with `true` while a row is being typed into, so the root can drop
    *  its own chrome (the Back bar) for the duration. See `compactChrome`. */
   onEditingChange?: (editing: boolean) => void;
@@ -1562,6 +1624,7 @@ export const AnsweringScreen = memo(function AnsweringScreen({
   playerCount,
   mode = "standard",
   morphFromReveal = false,
+  cascadeRows = false,
   onEditingChange,
 }: AnsweringScreenProps) {
   const theme = GAME_THEME[MODE_CONFIG[mode].themeKey];
@@ -1593,7 +1656,19 @@ export const AnsweringScreen = memo(function AnsweringScreen({
   // true only from mount until the morph settles, then permanently false, and
   // while false the rows/badge render as plain elements with no projection
   // node at all. Never flips back on — a round only morphs in once.
+  // It governs only what has a layout partner: the badge always, and the rows
+  // only on the RoundStartReveal path (see `cascadeIn` below).
   const [morphActive, setMorphActive] = useState(morphFromReveal);
+  // Out of the die the rows have no partner (the die only hands over the badge
+  // tile), so they never take a `layoutId`: they cascade in on motion rows
+  // with no `layout`/`layoutId` — a projection node that is never measured, so
+  // the keyboard's resize costs nothing — and stay that SAME element for the
+  // whole round. Swapping them to plain divs when the cascade ends would
+  // remount every AnswerRow, destroying a focused input and closing the
+  // keyboard mid-word (letter-die plan Phase 8). Read once at mount, like
+  // `morphActive`, so the element type can never change under a mounted row.
+  const [cascadeIn] = useState(cascadeRows);
+  const reduceMotion = useReducedMotion() ?? false;
   useEffect(() => {
     if (!morphActive) return;
     const id = window.setTimeout(() => setMorphActive(false), LAYOUT_MORPH_SETTLE_MS);
@@ -1613,8 +1688,9 @@ export const AnsweringScreen = memo(function AnsweringScreen({
   // Gated on `!morphActive` so the round-start FLIP always measures the letter
   // badge at its full size: the badge is a shared-layoutId morph target, and
   // resizing it mid-projection is exactly the kind of stale-rect tear Phase 2
-  // scoped the projection away from. In practice the two never overlap (nothing
-  // is focused during the 570 ms morph window), so this is belt-and-suspenders.
+  // scoped the projection away from. A row tapped inside the 570 ms window (the
+  // die's rows are tappable while they cascade in) keeps the full chrome until
+  // the badge has landed, then compacts.
   const compactChrome = activeAnswerIndex !== null && !morphActive;
 
   // The Back bar lives in the root component, above this screen, so it needs to
@@ -2058,9 +2134,17 @@ export const AnsweringScreen = memo(function AnsweringScreen({
                 onSubmitRow={handleRowSubmit}
               />
             );
-            // Projected only while the reveal morph is running; a plain div for
-            // the rest of the round so the keyboard's viewport resize has no
-            // projection nodes to re-measure. See `morphActive` above.
+            // Out of the die: one unprojected motion row for the whole round
+            // (see `cascadeIn` above). Out of RoundStartReveal: projected only
+            // while the morph runs, then a plain div so the keyboard's viewport
+            // resize has nothing to re-measure (see `morphActive` above).
+            if (cascadeIn) {
+              return (
+                <CascadeRow key={i} index={i} reduceMotion={reduceMotion}>
+                  {rowBody}
+                </CascadeRow>
+              );
+            }
             return morphActive ? (
               <motion.div
                 key={i}
@@ -2186,7 +2270,7 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     return () => window.clearTimeout(hydrateId);
   }, []);
 
-  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, hasLoaded, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete } = useCategoryBlitzSession(
+  const { phase, session, round, results, timeRemaining, nextRoundStartsIn, scheduleWindowEndAt, serverClockOffsetMs, lobbyCountdown, hasLoaded, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete } = useCategoryBlitzSession(
     isHydrated ? venueId : "",
     isHydrated ? userId : ""
   );
@@ -2420,6 +2504,125 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     }
   }, [phase, answeringRoundId, answeringRoundStartedAt, finishedRevealRoundId, revealElapsedMs, markRevealDone]);
 
+  // ── The letter die (docs/category-blitz-letter-die-plan.md, Phase 4) ──────
+  // One LetterDieRoll per break: mounted from the break through the next
+  // round's landing, remounted (React key) for the next break. It tumbles over
+  // the intermission for the last seconds of the countdown, lands on the new
+  // round's letter, and flies it into the board's badge; the board mounts on
+  // `flying` (morph + row cascade). A roll that ends without flying (opened
+  // mid-round, tab hidden, letter later than the cap) hands the round back to
+  // today's RoundStartReveal / plain board.
+  //
+  // The key is the session plus the round the break FOLLOWS, so it stays the
+  // same when the new round arrives: during a break that is `round` itself; once
+  // the new round is in, it is the round this tab saw before it. `roundLineage`
+  // records that (and its mode, for the Majority Rules → standard takeover
+  // below). Updated during render, like `firstRank`, so a stale key is never
+  // committed. The session id keeps every session's lobby/first round
+  // (`…:none`) distinct, so a die skipped in one session (a mid-round reload)
+  // can't suppress the next session's die in the same tab (plan Phase 7.1).
+  const [roundLineage, setRoundLineage] = useState<{
+    id: string | null;
+    mode: CategoryBlitzMode | null;
+    prevId: string | null;
+    prevMode: CategoryBlitzMode | null;
+  }>({ id: null, mode: null, prevId: null, prevMode: null });
+  const lineageRoundId = round?.id ?? null;
+  if (lineageRoundId !== roundLineage.id) {
+    setRoundLineage({ id: lineageRoundId, mode: round?.mode ?? null, prevId: roundLineage.id, prevMode: roundLineage.mode });
+  }
+  const dieSessionId = session?.id ?? "none";
+  const dieKey =
+    phase === "answering" && round
+      ? `after:${dieSessionId}:${roundLineage.prevId ?? "none"}`
+      : phase === "lobby" || phase === "scoring" || phase === "reveal" || phase === "results"
+        ? `after:${dieSessionId}:${lineageRoundId ?? "none"}`
+        : null;
+  // The countdown the die tumbles off. Only the resting intermission (and the
+  // lobby before the first round): never over a grading cascade still playing
+  // ("reveal") or the pre-scoring estimate ("scoring"), and never over the
+  // results of a session's last round — no round follows, so a tumble would
+  // only cover the final standings (plan Phases 7.2, 11.1b/c, 12.1a: read against
+  // the LIVE schedule window, capped by the session's own end). A lobby always
+  // leads to a round. `session.testMode`
+  // is the server's truth, not the local toggle.
+  const dieCountdown =
+    phase === "results"
+      ? session && round && anotherRoundFollows(session, round, scheduleWindowEndAt) ? nextRoundStartsIn : null
+      : phase === "lobby" ? lobbyCountdown : null;
+
+  const [dieOutcome, setDieOutcome] = useState<{ key: string; stage: DieStage; flew: boolean | null } | null>(null);
+  const dieNow = dieKey !== null && dieOutcome?.key === dieKey ? dieOutcome : null;
+  const dieSkipped = dieNow?.stage === "done" && dieNow.flew === false;
+  // The round the die flew into the board for (that board cascades its rows in)…
+  const [dieBoardRoundId, setDieBoardRoundId] = useState<string | null>(null);
+  // …and the round whose start this tab saw end on the board (the die finished
+  // flying, or the watchdog stepped in early enough): the mode-flip takeovers
+  // may play for it.
+  const [modeCueRoundId, setModeCueRoundId] = useState<string | null>(null);
+  // While the die owns the round start, nothing renders under it — in
+  // particular no other element with the badge's layoutId, or the die's tile
+  // would FLIP from it. Includes the one frame before the die first evaluates.
+  const dieHoldsBoard = phase === "answering" && !!round && round.id !== finishedRevealRoundId && !dieSkipped;
+
+  // Both callbacks fire from the die's animation frame (never from a render).
+  // Stable identities (they change only with the die, phase or round id) so the memoised
+  // die is not re-rendered by the parent's clock ticks.
+  const dieRoundId = round?.id ?? null;
+  const handleDieStage = useCallback(
+    (stage: DieStage) => {
+      if (!dieKey || stage === "done") return; // done (with `flew`) comes through handleDieDone
+      setDieOutcome({ key: dieKey, stage, flew: null });
+      if (stage === "flying" && phase === "answering" && dieRoundId) {
+        fallbackMarkedRevealRoundIdRef.current = dieRoundId;
+        setDieBoardRoundId(dieRoundId);
+        setFinishedRevealRoundId(dieRoundId);
+        markRevealDone(dieRoundId);
+      }
+    },
+    [dieKey, phase, dieRoundId, markRevealDone]
+  );
+  const handleDieDone = useCallback(
+    ({ flew }: { flew: boolean }) => {
+      if (!dieKey) return;
+      setDieOutcome({ key: dieKey, stage: "done", flew });
+      if (flew && phase === "answering" && dieRoundId) setModeCueRoundId(dieRoundId);
+    },
+    [dieKey, phase, dieRoundId]
+  );
+
+  // Watchdog: the die reaches `flying` within DIE_ARRIVAL_TO_BADGE_MAX_MS of
+  // the letter arriving, by its own clock. If it somehow doesn't (its frames
+  // never ran — a tab hidden at the moment the round arrived), never leave the
+  // player on an empty screen: count it as skipped, which unmounts it and
+  // hands the round to the normal board. By then RoundStartReveal's window has
+  // passed, so the board shows at once — and if this tab saw the round start
+  // (its age when the watchdog armed is inside that window, the same rule as
+  // `showReveal`), the mode-flip takeover still plays over it, so players
+  // never miss that Majority Rules flipped the scoring (plan Phase 7.3). A
+  // mid-round reload arms it with an old round and never gets a takeover.
+  useEffect(() => {
+    if (!dieHoldsBoard || !dieKey || !answeringRoundId || !answeringRoundStartedAt) return;
+    const key = dieKey;
+    const cueRoundId = answeringRoundId;
+    const sawRoundStart = Date.now() - Date.parse(answeringRoundStartedAt) <= ROUND_START_REVEAL_MAX_MS;
+    const id = window.setTimeout(() => {
+      setDieOutcome((cur) =>
+        cur?.key === key && (cur.stage === "flying" || cur.stage === "done") ? cur : { key, stage: "done", flew: false }
+      );
+      if (sawRoundStart) setModeCueRoundId(cueRoundId);
+    }, DIE_ARRIVAL_TO_BADGE_MAX_MS + DIE_WATCHDOG_SLACK_MS);
+    return () => window.clearTimeout(id);
+  }, [dieHoldsBoard, dieKey, answeringRoundId, answeringRoundStartedAt]);
+
+  // When the mode-flip takeovers may play: once the round's start has ended on
+  // the board (`modeCueRoundId`: the die has flown — never over the badge FLIP,
+  // plan §2 item 4: die, then Majority Rules, then the board — or the watchdog
+  // stepped in), or, when the die was skipped, the moment today's
+  // RoundStartReveal starts.
+  const modeFlipCue =
+    phase === "answering" && !!round && (modeCueRoundId === round.id || (dieSkipped && showReveal));
+
   // The viewer's OWN answers, one row per category they answered — the
   // emotionally relevant set to watch get graded. Memoized so the ~4x/sec
   // timer re-renders don't hand GradingCascade a fresh array and stall its
@@ -2497,45 +2700,40 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   }, [phase, session, isChampion, triggerAnimation]);
 
   // "Blend In!" mode-flip takeover (docs/category-blitz-mode-b-plan.md §4b):
-  // fires exactly once per round, the moment a freshly-started reverse round
-  // is detected (the same `showReveal` window RoundStartReveal uses). Keyed
-  // on round.id so a reload mid-round (showReveal already false by then)
-  // never replays it.
+  // fires exactly once per round, once a freshly-started reverse round's
+  // letter die has flown into the badge (`modeFlipCue`; or with the skipped-die
+  // fallback, the moment RoundStartReveal starts). Keyed on round.id so a
+  // reload mid-round (no die, no reveal) never replays it.
   const modeFlipFiredRoundRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!showReveal || !round || round.mode !== "reverse") return;
+    if (!modeFlipCue || !round || round.mode !== "reverse") return;
     if (modeFlipFiredRoundRef.current === round.id) return;
     modeFlipFiredRoundRef.current = round.id;
     triggerAnimation("CATEGORY_BLITZ_MODE_FLIP", { modeFlipVariant: getModeFlipTakeoverVariant() });
-  }, [showReveal, round, triggerAnimation]);
+  }, [modeFlipCue, round, triggerAnimation]);
 
   // Mirror-image green takeover for the reverse → standard reversion
   // (docs/category-blitz-mode-flip-reverse-transition-plan.md, Phase 2).
   // Supersedes the old plan of relying on the ModeSign flip + ambient board
   // theme shift alone. Needs the *previous* round's mode (not just the
   // current one) to tell "returning from reverse" apart from "the session's
-  // very first standard round", so it tracks that separately from the
-  // dedupe-by-round-id ref above — the two direction trackers must not
-  // collide, since a single round transition should only ever fire one of
-  // the two colors.
-  const prevRoundModeRef = useRef<CategoryBlitzMode | null>(null);
+  // very first standard round" — `roundLineage.prevMode`, recorded when the
+  // round changed, because the cue now comes a few seconds after the round
+  // arrives (after the die), by which time "the last round this effect saw"
+  // would already be the new one. Its own dedupe ref, separate from the one
+  // above, since a single round transition should only ever fire one of the
+  // two colors.
   const modeFlipStandardFiredRoundRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!round) return;
-    if (
-      showReveal &&
-      round.mode === "standard" &&
-      prevRoundModeRef.current === "reverse" &&
-      modeFlipStandardFiredRoundRef.current !== round.id
-    ) {
-      modeFlipStandardFiredRoundRef.current = round.id;
-      triggerAnimation("CATEGORY_BLITZ_MODE_FLIP", {
-        modeFlipVariant: getModeFlipTakeoverVariant(),
-        modeFlipDirection: "toStandard",
-      });
-    }
-    prevRoundModeRef.current = round.mode;
-  }, [showReveal, round, triggerAnimation]);
+    if (!modeFlipCue || !round || round.mode !== "standard") return;
+    if (roundLineage.id !== round.id || roundLineage.prevMode !== "reverse") return;
+    if (modeFlipStandardFiredRoundRef.current === round.id) return;
+    modeFlipStandardFiredRoundRef.current = round.id;
+    triggerAnimation("CATEGORY_BLITZ_MODE_FLIP", {
+      modeFlipVariant: getModeFlipTakeoverVariant(),
+      modeFlipDirection: "toStandard",
+    });
+  }, [modeFlipCue, round, roundLineage, triggerAnimation]);
 
   // Game-over celebration: SessionCompleteFireworks holds itself on screen
   // briefly (see its own onDone timer) then reports back so it can be
@@ -2612,7 +2810,13 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     <CategoryBlitzFrame
       className={`flex flex-col text-white transition-colors duration-700 ${pageTheme.pageBg}`}
     >
-      <Header phase={phase} error={error} onBack={onBack} isContinuous={isContinuous} compact={answerEditing} />
+      <Header
+        phase={phase}
+        error={error}
+        onBack={onBack}
+        isContinuous={isContinuous}
+        compact={answerEditing}
+      />
       <CategoryBlitzLayoutDebugPanel phase={phase} />
       {/* Dev-only test-mode UI: hidden on the live site (NODE_ENV === "production")
           so real players never see it, but still fully functional when running
@@ -2646,95 +2850,96 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
         </>
       )}
 
-      {/* Phase content. Continuous sessions never show the scheduled engine's
-          LobbyScreen — the game is always running, so the only pre-round beat
-          is a brief intermission-style countdown (ContinuousWaitScreen). The
-          "idle" phase (no session at all) keeps LobbyScreen: scheduled venues
-          genuinely idle there, and for continuous venues it's a sub-second
-          transient while the first poll self-heals the session. */}
-      {(phase === "idle" || phase === "lobby") && !hasLoaded && !error && (
-        <div className="flex min-h-0 flex-1 items-center justify-center">
-          <HightopLoader variant="plain" size="lg" delayMs={0} label="Loading Category Blitz" showLabel />
-        </div>
-      )}
-      {(phase === "idle" || phase === "lobby") && (hasLoaded || error) &&
-        (isContinuous ? (
-          <ContinuousWaitScreen lobbyCountdown={lobbyCountdown} playerCount={session?.playerCount} />
-        ) : (
-          <LobbyScreen
-            phase={phase}
-            venueId={venueId}
-            username={username}
-            lobbyCountdown={lobbyCountdown}
-            playerCount={session?.playerCount}
-            testMode={testMode}
-          />
-        ))}
-      {phase === "answering" && round && (
-        showReveal ? (
-          <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto overscroll-contain">
-            <RoundStartReveal
+      {/* The stage: every phase screen, plus the letter die as its last child.
+          The die fills this box (`absolute inset-0 z-10`), so it covers the
+          content below the header but never the header (Back) or the fixed dev
+          buttons above; `isolate` keeps its z-index local to the stage
+          (docs/category-blitz-letter-die-plan.md, Phase 11.2). */}
+      <div data-category-blitz-stage className="relative isolate flex min-h-0 flex-1 flex-col">
+        {/* Phase content. Continuous sessions never show the scheduled engine's
+            LobbyScreen — the game is always running, so the only pre-round beat
+            is a brief intermission-style countdown (ContinuousWaitScreen). The
+            "idle" phase (no session at all) keeps LobbyScreen: scheduled venues
+            genuinely idle there, and for continuous venues it's a sub-second
+            transient while the first poll self-heals the session. */}
+        {(phase === "idle" || phase === "lobby") && !hasLoaded && !error && (
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            <HightopLoader variant="plain" size="lg" delayMs={0} label="Loading Category Blitz" showLabel />
+          </div>
+        )}
+        {(phase === "idle" || phase === "lobby") && (hasLoaded || error) &&
+          (isContinuous ? (
+            <ContinuousWaitScreen lobbyCountdown={lobbyCountdown} playerCount={session?.playerCount} />
+          ) : (
+            <LobbyScreen
+              phase={phase}
+              venueId={venueId}
+              username={username}
+              lobbyCountdown={lobbyCountdown}
+              playerCount={session?.playerCount}
+              testMode={testMode}
+            />
+          ))}
+        {phase === "answering" && round && (
+          dieHoldsBoard ? (
+            // The letter die covers the stage; the board mounts when it flies.
+            <div className="min-h-0 flex-1" aria-hidden />
+          ) : showReveal ? (
+            <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto overscroll-contain">
+              <RoundStartReveal
+                letter={round.letter}
+                categories={round.categories}
+                onDone={() => {
+                  fallbackMarkedRevealRoundIdRef.current = round.id;
+                  setFinishedRevealRoundId(round.id);
+                  markRevealDone(round.id);
+                }}
+              />
+            </div>
+          ) : (
+            <AnsweringScreen
               letter={round.letter}
               categories={round.categories}
-              onDone={() => {
-                fallbackMarkedRevealRoundIdRef.current = round.id;
-                setFinishedRevealRoundId(round.id);
-                markRevealDone(round.id);
-              }}
+              roundId={round.id}
+              timeRemaining={timeRemaining}
+              venueId={venueId}
+              userId={userId}
+              playerCount={session?.playerCount}
+              mode={round.mode}
+              morphFromReveal={morphFromReveal}
+              cascadeRows={morphFromReveal && dieBoardRoundId === round.id}
+              onEditingChange={setAnswerEditing}
             />
-          </div>
-        ) : (
-          <AnsweringScreen
-            letter={round.letter}
-            categories={round.categories}
-            roundId={round.id}
-            timeRemaining={timeRemaining}
-            venueId={venueId}
+          )
+        )}
+        {phase === "scoring" && <ScoringScreen mode={activeMode} />}
+        {/* Reveal phase: play the full-screen reveal journey (cascade → guided
+            scroll → leaderboard), or hold a loading beat while the viewer's
+            graded answers are still in flight (never skip it). */}
+        {phase === "reveal" && (
+          showCascade && results ? (
+            <RevealSequence
+              answers={gradingAnswers}
+              leaderboardEntries={results.totals}
+              meId={userId}
+              roundId={results.roundId}
+              onSettled={handleRevealSettled}
+              nextRoundStartsIn={nextRoundStartsIn}
+            />
+          ) : (
+            <ScoringScreen mode={activeMode} />
+          )
+        )}
+        {phase === "results" && results && userId && (
+          <ResultsScreen
+            results={results}
             userId={userId}
-            playerCount={session?.playerCount}
-            mode={round.mode}
-            morphFromReveal={morphFromReveal}
-            onEditingChange={setAnswerEditing}
-          />
-        )
-      )}
-      {phase === "scoring" && <ScoringScreen mode={activeMode} />}
-      {/* Reveal phase: play the full-screen reveal journey (cascade → guided
-          scroll → leaderboard), or hold a loading beat while the viewer's
-          graded answers are still in flight (never skip it). */}
-      {phase === "reveal" && (
-        showCascade && results ? (
-          <RevealSequence
-            answers={gradingAnswers}
-            leaderboardEntries={results.totals}
-            meId={userId}
-            roundId={results.roundId}
-            onSettled={handleRevealSettled}
             nextRoundStartsIn={nextRoundStartsIn}
+            playerCount={session?.playerCount}
+            leaderboardExiting={leaderboardExiting}
           />
-        ) : (
-          <ScoringScreen mode={activeMode} />
-        )
-      )}
-      {phase === "results" && results && userId && (
-        <ResultsScreen
-          results={results}
-          userId={userId}
-          nextRoundStartsIn={nextRoundStartsIn}
-          playerCount={session?.playerCount}
-          leaderboardExiting={leaderboardExiting}
-        />
-      )}
-      {phase === "complete" && (
-        <>
-          <AnimatePresence>
-            {!fireworksDone && !isChampion && results && results.totals.length > 0 && (
-              <SessionCompleteFireworks
-                finalStandings={results.totals}
-                onDone={() => setFireworksDoneSessionId(session?.id ?? null)}
-              />
-            )}
-          </AnimatePresence>
+        )}
+        {phase === "complete" && (
           <CompleteScreen
             results={results}
             userId={userId}
@@ -2750,7 +2955,35 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
             }
             isContinuous={isContinuous}
           />
-        </>
+        )}
+
+        {/* The letter die (Phase 4): renders nothing until the tumble lead and
+            after its roll; a skipped roll is unmounted for the rest of its key. */}
+        {dieKey !== null && !dieSkipped && (
+          <LetterDieRoll
+            key={dieKey}
+            letter={phase === "answering" && round ? round.letter : null}
+            nextRoundStartsIn={dieCountdown}
+            roundStartedAtMs={phase === "answering" && round ? Date.parse(round.startedAt) : null}
+            serverClockOffsetMs={serverClockOffsetMs}
+            reverse={phase === "answering" && round?.mode === "reverse"}
+            onStageChange={handleDieStage}
+            onDone={handleDieDone}
+          />
+        )}
+      </div>
+
+      {/* Game-over fireworks stay outside the stage: they are `absolute inset-0`
+          over the whole frame, header included, as before the stage existed. */}
+      {phase === "complete" && (
+        <AnimatePresence>
+          {!fireworksDone && !isChampion && results && results.totals.length > 0 && (
+            <SessionCompleteFireworks
+              finalStandings={results.totals}
+              onDone={() => setFireworksDoneSessionId(session?.id ?? null)}
+            />
+          )}
+        </AnimatePresence>
       )}
     </CategoryBlitzFrame>
   );

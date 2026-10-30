@@ -7,6 +7,7 @@ import {
   nextRoundStartAtMs,
   type CategoryBlitzContinuousTiming,
 } from "@/lib/categoryBlitzShared";
+import { nextDieClockSample, type DieClockSample } from "@/lib/categoryBlitzLetterDie";
 import { isCategoryBlitzTestModeEnabled } from "@/lib/categoryBlitzTestMode";
 import type {
   CategoryBlitzRound,
@@ -66,6 +67,20 @@ export interface CategoryBlitzSessionState {
   results:         CategoryBlitzRoundResults | null;
   timeRemaining:   number;        // seconds remaining in current round (0 when not answering)
   nextRoundStartsIn: number | null;
+  /**
+   * When tonight's open schedule window ends (ISO), from the latest sessions
+   * response: the live window, so a partner's mid-game edit shows up (a
+   * `schedule_updated` broadcast reloads the session, else the 15 s poll).
+   * Null with no open window, a manual session, a continuous venue, an older
+   * server, or before the first response. Read by `anotherRoundFollows`.
+   */
+  scheduleWindowEndAt: string | null;
+  /**
+   * Server time minus this phone's time (ms), from the sessions responses'
+   * `serverNowMs` (`nextDieClockSample`); 0 until a usable reading. Only the
+   * letter die's late-letter cutoff reads it (plan Phase 12.2a).
+   */
+  serverClockOffsetMs: number;
   /** Seconds until the lobby's round starts, or null when there's no known start time (e.g. a manual session). */
   lobbyCountdown:  number | null;
   isConnected:     boolean;
@@ -201,8 +216,21 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
    *  covers that brief gap). With pooling off it equals this venue's own
    *  channel, so behavior is unchanged. */
   const [realtimeChannel, setRealtimeChannel] = useState<string | null>(null);
+  const [scheduleWindowEndAt, setScheduleWindowEndAt] = useState<string | null>(null);
+  const [serverClockOffsetMs, setServerClockOffsetMs] = useState(0);
+  const clockSampleRef    = useRef<DieClockSample | null>(null);
 
   const mountedRef        = useRef(true);
+  /** loadSession calls overlap (the 15 s poll, realtime reloads, the
+   *  visibility resync). Each takes the next number; a response older than
+   *  the newest one already applied is dropped whole, so a slow poll that read
+   *  the schedules before a partner's edit can't restore the old window end or
+   *  an older session (plan Phase 12.2b). */
+  const loadSeqRef        = useRef(0);
+  const appliedLoadSeqRef = useRef(0);
+  /** A visibility resync's `forceReveal`, kept until a response is applied,
+   *  so a newer poll that wins the race still carries it. */
+  const forceRevealPendingRef = useRef(false);
   const errorStreakRef    = useRef(0);       // consecutive loadSession failures
   const scoringCalledRef  = useRef(false);  // prevent double-trigger per round
   const currentRoundIdRef = useRef<string | null>(null);
@@ -582,12 +610,33 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
 
   const loadSession = useCallback(async (opts?: { forceReveal?: boolean }) => {
     if (!venueId) return;
+    const seq = ++loadSeqRef.current;
+    if (opts?.forceReveal) forceRevealPendingRef.current = true;
     try {
       const userIdParam = userIdRef.current ? `&userId=${encodeURIComponent(userIdRef.current)}` : "";
       const testModeParam = isCategoryBlitzTestModeEnabled() ? "&testMode=1" : "";
+      const sentAtMs = Date.now();
       const res = await fetch(`/api/category-blitz/sessions?venueId=${encodeURIComponent(venueId)}${userIdParam}${testModeParam}`);
-      const json = (await res.json()) as { ok: boolean; session?: CategoryBlitzSession | null; error?: string; realtimeChannel?: string };
+      const receivedAtMs = Date.now();
+      const json = (await res.json()) as {
+        ok: boolean;
+        session?: CategoryBlitzSession | null;
+        error?: string;
+        realtimeChannel?: string;
+        scheduleWindowEndAt?: string | null;
+        serverNowMs?: number;
+      };
       if (!mountedRef.current) return;
+
+      // A clock reading is good whatever order the replies land in.
+      const sample = nextDieClockSample(clockSampleRef.current, { serverNowMs: json.serverNowMs, sentAtMs, receivedAtMs });
+      if (sample && sample !== clockSampleRef.current) {
+        clockSampleRef.current = sample;
+        setServerClockOffsetMs(sample.offsetMs);
+      }
+
+      if (seq < appliedLoadSeqRef.current) return; // a newer reply is already on screen
+      appliedLoadSeqRef.current = seq;
 
       if (!json.ok) {
         errorStreakRef.current += 1;
@@ -597,10 +646,14 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       }
 
       if (json.realtimeChannel) setRealtimeChannel(json.realtimeChannel);
+      // Missing (an older server) counts as unknown, which keeps the die off.
+      setScheduleWindowEndAt(json.scheduleWindowEndAt ?? null);
 
       errorStreakRef.current = 0;
       setError(null);
       setErrorEscalated(false);
+      const forceReveal = forceRevealPendingRef.current;
+      forceRevealPendingRef.current = false;
       const s = json.session ?? null;
       setSession(s);
       setHasLoaded(true);
@@ -651,9 +704,10 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       }
       // Session is active/scoring — load the current round.
       lobbyStartsAtRef.current = null;
-      await loadCurrentRound(s.id, opts);
+      await loadCurrentRound(s.id, forceReveal ? { forceReveal: true } : undefined);
     } catch {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || seq < appliedLoadSeqRef.current) return;
+      appliedLoadSeqRef.current = seq;
       errorStreakRef.current += 1;
       setError("Failed to connect to game.");
       setErrorEscalated(errorStreakRef.current >= ESCALATE_AFTER_FAILURES);
@@ -1030,5 +1084,5 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   // public shape.
   const nextRoundStartsIn = nextRoundCountdown?.secondsRemaining ?? null;
 
-  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, lobbyCountdown, isConnected, hasLoaded, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete };
+  return { phase, session, round, results, timeRemaining, nextRoundStartsIn, scheduleWindowEndAt, serverClockOffsetMs, lobbyCountdown, isConnected, hasLoaded, error, errorEscalated, retry, markRevealDone, markResultsRevealDone, dismissComplete };
 }

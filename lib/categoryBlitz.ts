@@ -5,9 +5,8 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { broadcastCategoryBlitz } from "@/lib/categoryBlitzBroadcast";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { trackAnthropicUsage } from "@/lib/llmCostTracker";
-import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
 import { isCategoryBlitzSoloScoringEnabled } from "@/lib/categoryBlitzTestMode";
-import { ROUND_DURATION_SECONDS, SUBMISSION_GRACE_MS, isContinuousDefaultEnabled, isContinuousGameAwake, roundDurationSeconds, roundIntervalSeconds, intermissionSeconds, lobbyDwellSeconds, answerStartsWithLetter } from "@/lib/categoryBlitzShared";
+import { SUBMISSION_GRACE_MS, isContinuousDefaultEnabled, isContinuousGameAwake, roundDurationSeconds, roundIntervalSeconds, intermissionSeconds, lobbyDwellSeconds, answerStartsWithLetter, roundFitsWindow } from "@/lib/categoryBlitzShared";
 import { POINTS_PER_UNIQUE_ANSWER, isReverseRound, minPlayersToScoreFor, reverseRoundPoints } from "@/lib/categoryBlitzModes";
 import { alliterationBonus } from "@/lib/categoryBlitzAlliteration";
 import {
@@ -27,8 +26,7 @@ import type {
 import {
   listAllActiveSchedules,
   listSchedules,
-  isWindowOpen,
-  nextOccurrence,
+  openScheduleWindow,
 } from "@/lib/categoryBlitzSchedules";
 import letterIndexData from "@/data/category-blitz/category-letter-index.json";
 
@@ -788,7 +786,7 @@ export async function driveVenueCategoryBlitz(
   await scoreExpiredRoundForVenue(venueId, now);
 
   const schedules = await listSchedules(venueId);
-  const openSchedule = schedules.find((schedule) => isWindowOpen(schedule, now));
+  const openWindow = openScheduleWindow(schedules, now);
 
   if (!existing) {
     // Give a client that missed the "session_ended" broadcast (dropped
@@ -800,16 +798,11 @@ export async function driveVenueCategoryBlitz(
       return withPlayerCount(recentlyCompleted);
     }
 
-    if (!openSchedule) {
+    if (!openWindow) {
       debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): no session, no open schedule window — no-op`);
       return null;
     }
-
-    const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
-    if (!occurrence || occurrence.windowStart > now || now >= occurrence.windowEnd) {
-      debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): no session, schedule window not currently open — no-op`);
-      return null;
-    }
+    const { occurrence } = openWindow;
 
     try {
       await createSession(venueId, {
@@ -840,36 +833,34 @@ export async function driveVenueCategoryBlitz(
         debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): lobby dwell elapsed, starting first round`);
         await startRound(existing.id);
       }
-    } else if (openSchedule) {
-      const occurrence = getCurrentOrNextScheduleWindow(openSchedule, now);
-      if (occurrence) {
-        const canFitAnother = now.getTime() + roundDurationSeconds(existing.testMode) * 1000 <= occurrence.windowEnd.getTime();
-        if (canFitAnother) {
-          const latest = await getLatestRound(existing.id);
-          if (latest && latest.status === "complete") {
-            if (now.getTime() >= nextRoundStartAtMs(latest, existing.testMode)) {
-              debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): advancing to next round`);
-              await startRound(existing.id);
-            } else {
-              debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): last round complete, intermission not elapsed yet`);
-            }
+    } else if (openWindow) {
+      const { occurrence } = openWindow;
+      const canFitAnother = roundFitsWindow(now.getTime(), occurrence.windowEnd.getTime(), existing.testMode);
+      if (canFitAnother) {
+        const latest = await getLatestRound(existing.id);
+        if (latest && latest.status === "complete") {
+          if (now.getTime() >= nextRoundStartAtMs(latest, existing.testMode)) {
+            debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): advancing to next round`);
+            await startRound(existing.id);
           } else {
-            debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): existing session, round in progress or not yet scored — no-op`);
+            debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): last round complete, intermission not elapsed yet`);
           }
         } else {
-          // No time left in the window for another round. If the last round
-          // has already been scored, this session is done — end it now
-          // instead of leaving it "active" until scheduledEndAt actually
-          // elapses (or the idle timeout / cron eventually catches it),
-          // which otherwise strands connected clients on the reveal/results
-          // screen for the last round instead of advancing to Game Over.
-          const latest = await getLatestRound(existing.id);
-          if (latest && latest.status === "complete") {
-            debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): last round complete, no time for another — ending session`);
-            await endSession(existing.id);
-          } else {
-            debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): not enough time left in window for another round — no-op`);
-          }
+          debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): existing session, round in progress or not yet scored — no-op`);
+        }
+      } else {
+        // No time left in the window for another round. If the last round
+        // has already been scored, this session is done — end it now
+        // instead of leaving it "active" until scheduledEndAt actually
+        // elapses (or the idle timeout / cron eventually catches it),
+        // which otherwise strands connected clients on the reveal/results
+        // screen for the last round instead of advancing to Game Over.
+        const latest = await getLatestRound(existing.id);
+        if (latest && latest.status === "complete") {
+          debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): last round complete, no time for another — ending session`);
+          await endSession(existing.id);
+        } else {
+          debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): not enough time left in window for another round — no-op`);
         }
       }
     }
@@ -1976,12 +1967,12 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
       // can't compete for the venue's single open-session slot.
       if (await standDownScheduledIfContinuous(venueId)) continue;
 
-      const openSchedule = schedules.find((s) => s.venueId === venueId && isWindowOpen(s, now));
-      if (!openSchedule) continue;
-
-      const windowStart = nextOccurrence(openSchedule, now); // current window start (open ⇒ non-null)
-      if (!windowStart) continue;
-      const windowEnd = new Date(windowStart.getTime() + openSchedule.windowMinutes * 60_000);
+      // The same lookup as driveVenueCategoryBlitz. For every stored schedule
+      // its end equals the old `nextOccurrence + windowMinutes` (window_minutes
+      // is an int >= 1): tests/lib.category-blitz-schedule-time.test.ts.
+      const openWindow = openScheduleWindow(schedules.filter((s) => s.venueId === venueId), now);
+      if (!openWindow) continue;
+      const { windowStart, windowEnd } = openWindow.occurrence;
 
       const session = await getActiveSession(venueId);
 
@@ -2008,9 +1999,10 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
         continue;
       }
 
-      // Only fire another round if a full one can finish inside the window.
-      const canFitAnother = now.getTime() + ROUND_DURATION_SECONDS * 1000 <= windowEnd.getTime();
-      if (!canFitAnother) continue;
+      // Only fire another round if a full one can finish inside the window, at
+      // the session's own round length (test mode is shorter), exactly like
+      // driveVenueCategoryBlitz.
+      if (!roundFitsWindow(now.getTime(), windowEnd.getTime(), session.testMode)) continue;
 
       const latest = await getLatestRound(session.id);
       if (!latest) continue; // status is 'active' only once a round exists — defensive guard

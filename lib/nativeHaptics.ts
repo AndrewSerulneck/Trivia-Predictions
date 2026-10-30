@@ -3,9 +3,9 @@
 // existed, every call is a silent no-op. Respects the phone's Reduce Motion setting.
 
 import { callNative, hasNativeCapability } from "@/lib/nativeApp";
-import type { AnimationType } from "@/types/animation";
+import type { AnimationType, HapticOnlyAnimationType } from "@/types/animation";
 
-export type HapticKind = "tap" | "success" | "warning" | "celebrate";
+export type HapticKind = "tap" | "thud" | "success" | "warning" | "celebrate";
 
 const reduceMotionRequested = (): boolean => {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
@@ -28,7 +28,19 @@ const HAPTIC_BY_ANIMATION: Partial<Record<AnimationType, HapticKind>> = {
   LIVE_TRIVIA_CHAMPION: "celebrate",
   CATEGORY_BLITZ_CHAMPION: "celebrate",
   FANTASY_SCORE_UP: "tap",
+  // Category Blitz letter die (docs/category-blitz-letter-die-plan.md): light on each bounce, strong on landing.
+  CATEGORY_BLITZ_DIE_BOUNCE: "tap",
+  CATEGORY_BLITZ_DIE_LAND: "thud",
 };
+
+const HAPTIC_ONLY_ANIMATIONS: Record<HapticOnlyAnimationType, true> = {
+  CATEGORY_BLITZ_DIE_BOUNCE: true,
+  CATEGORY_BLITZ_DIE_LAND: true,
+};
+
+/** True for a buzz with no overlay picture: triggerAnimation plays the haptic and queues nothing. */
+export const isHapticOnlyAnimation = (type: AnimationType): type is HapticOnlyAnimationType =>
+  Object.prototype.hasOwnProperty.call(HAPTIC_ONLY_ANIMATIONS, type);
 
 export const hapticForAnimation = (type: AnimationType): HapticKind | null => HAPTIC_BY_ANIMATION[type] ?? null;
 
@@ -37,6 +49,7 @@ export const playHaptic = (kind: HapticKind): void => {
   if (!hasNativeCapability("Haptics") || reduceMotionRequested()) return;
   const run = async (): Promise<void> => {
     if (kind === "tap") await callNative("Haptics", "impact", { style: "LIGHT" });
+    else if (kind === "thud") await callNative("Haptics", "impact", { style: "HEAVY" });
     else if (kind === "success") await callNative("Haptics", "notification", { type: "SUCCESS" });
     else if (kind === "warning") await callNative("Haptics", "notification", { type: "WARNING" });
     else {

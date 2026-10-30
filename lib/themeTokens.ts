@@ -211,6 +211,10 @@ export const GAME_THEME = {
     borderSoft:    "border-emerald-400/20",
     textSoft:      "text-emerald-100/70",
     textAccentSoft:"text-emerald-300/70",
+    /** Letter die (components/category-blitz/LetterDieRoll.tsx): stage glow, inner core, landing ring. */
+    dieGlow:       "bg-[radial-gradient(120%_70%_at_50%_46%,rgba(16,185,129,0.20),transparent_60%)]",
+    dieCore:       "bg-emerald-800",
+    dieRing:       "border-emerald-400/60",
   },
   /**
    * Category Blitz "Blend In!" round — the reverse/consensus scoring world
@@ -240,6 +244,9 @@ export const GAME_THEME = {
     borderSoft:    "border-fuchsia-400/20",
     textSoft:      "text-fuchsia-100/70",
     textAccentSoft:"text-fuchsia-300/70",
+    dieGlow:       "bg-[radial-gradient(120%_70%_at_50%_46%,rgba(217,70,239,0.24),transparent_60%)]",
+    dieCore:       "bg-fuchsia-800",
+    dieRing:       "border-fuchsia-400/70",
   },
   /** Predictions — "The Oracle": slate-950→deep navy→sky */
   predictions: {

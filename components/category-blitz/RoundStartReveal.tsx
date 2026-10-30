@@ -8,6 +8,9 @@ import {
 import { useEffect, useRef } from "react";
 import {
   CB_LETTER_BADGE_LAYOUT_ID,
+  CB_ROW_CASCADE_DURATION_S,
+  CB_ROW_CASCADE_REDUCED_DURATION_S,
+  CB_ROW_CASCADE_STAGGER_S,
   cbCategoryRowLayoutId,
 } from "@/lib/categoryBlitzMotion";
 import { EASE_SNAP } from "@/lib/motionEasing";
@@ -38,18 +41,18 @@ export const ROUND_START_REVEAL_MAX_MS = 3000;
 const list: Variants = {
   hidden: {},
   show: {
-    transition: { delayChildren: LETTER_LAND_MS, staggerChildren: 0.06 },
+    transition: { delayChildren: LETTER_LAND_MS, staggerChildren: CB_ROW_CASCADE_STAGGER_S },
   },
 };
 
 const row: Variants = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: CB_ROW_CASCADE_DURATION_S, ease: "easeOut" } },
 };
 
 const rowReduced: Variants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { duration: 0.2 } },
+  show: { opacity: 1, transition: { duration: CB_ROW_CASCADE_REDUCED_DURATION_S } },
 };
 
 const RoundStartReveal = ({

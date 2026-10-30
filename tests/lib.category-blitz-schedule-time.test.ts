@@ -17,6 +17,8 @@ import {
   getNextScheduleOccurrence,
   isWindowOpen,
   nextOccurrence,
+  openScheduleWindow,
+  openScheduleWindowEnd,
 } from "@/lib/categoryBlitzSchedules";
 import type { CategoryBlitzSchedule } from "@/types";
 
@@ -183,5 +185,90 @@ describe("Category Blitz schedule windows", () => {
     expect(isWindowOpen(schedule, now)).toBe(isScheduleWindowOpen(schedule, now));
     expect(next?.windowStart.toISOString()).toBe(occurrence?.windowStart.toISOString());
     expect(next?.windowEnd.toISOString()).toBe(occurrence?.windowEnd.toISOString());
+  });
+});
+
+// docs/category-blitz-letter-die-plan.md Phase 12.1b/c: both scheduled engines and
+// the sessions API read tonight's window through openScheduleWindow. Before 12.1
+// the cron derived its end as `nextOccurrence + windowMinutes`; these schedules
+// prove that equals the shared lookup for any stored row (window_minutes is an
+// int >= 1, migration 20260701041000; a one-off's endTime is derived from it by
+// toSchedule, so fixtures keep the two consistent), so the switch changes no
+// real session.
+describe("openScheduleWindow (one open-window lookup)", () => {
+  const MIN = 60_000;
+  const cases: Array<{ name: string; schedule: CategoryBlitzSchedule; start: string }> = [
+    {
+      name: "one-off evening window",
+      schedule: makeSchedule({ startTime: "2026-07-01T23:00:00.000Z", endTime: "2026-07-02T00:00:00.000Z", windowMinutes: 60 }),
+      start: "2026-07-01T23:00:00.000Z",
+    },
+    {
+      name: "daily window crossing local midnight (10 pm–1 am New York)",
+      schedule: makeSchedule({
+        startTime: "2026-07-01T02:00:00.000Z",
+        endTime: "2026-07-01T05:00:00.000Z",
+        recurringType: "daily",
+        windowMinutes: 180,
+      }),
+      start: "2026-07-03T02:00:00.000Z",
+    },
+    {
+      name: "weekly window crossing midnight in Los Angeles",
+      schedule: makeSchedule({
+        startTime: "2026-07-03T06:30:00.000Z",
+        endTime: "2026-07-03T08:30:00.000Z",
+        timezone: "America/Los_Angeles",
+        recurringType: "weekly",
+        recurringDays: ["thu"],
+        windowMinutes: 120,
+      }),
+      start: "2026-07-10T06:30:00.000Z",
+    },
+    {
+      name: "daily window across the autumn clock change (Nov 1 2026, New York)",
+      schedule: makeSchedule({
+        startTime: "2026-10-01T04:30:00.000Z",
+        endTime: "2026-10-01T08:30:00.000Z",
+        recurringType: "daily",
+        windowMinutes: 240,
+      }),
+      start: "2026-11-01T04:30:00.000Z",
+    },
+  ];
+
+  for (const { name, schedule, start } of cases) {
+    it(`${name}: same window as the cron's old nextOccurrence + windowMinutes`, () => {
+      const startMs = Date.parse(start);
+      const probes = [0, 1, schedule.windowMinutes * MIN / 2, schedule.windowMinutes * MIN - 1];
+      for (const offset of probes) {
+        const now = new Date(startMs + offset);
+        expect(isWindowOpen(schedule, now)).toBe(true);
+        const open = openScheduleWindow([schedule], now);
+        const oldStart = nextOccurrence(schedule, now);
+        expect(open?.schedule).toBe(schedule);
+        expect(open?.occurrence.windowStart.toISOString()).toBe(start);
+        expect(oldStart?.toISOString()).toBe(start);
+        expect(open?.occurrence.windowEnd.getTime()).toBe(oldStart!.getTime() + schedule.windowMinutes * MIN);
+        expect(openScheduleWindowEnd([schedule], now)?.getTime()).toBe(open?.occurrence.windowEnd.getTime());
+      }
+    });
+  }
+
+  it("null when no window is open, including at the exact end", () => {
+    const schedule = cases[0].schedule;
+    expect(openScheduleWindow([schedule], new Date("2026-07-01T22:59:59.999Z"))).toBeNull();
+    expect(openScheduleWindow([schedule], new Date("2026-07-02T00:00:00.000Z"))).toBeNull();
+    expect(openScheduleWindowEnd([schedule], new Date("2026-07-02T00:00:00.000Z"))).toBeNull();
+    expect(openScheduleWindow([], new Date("2026-07-01T23:30:00.000Z"))).toBeNull();
+  });
+
+  it("the first open schedule wins, as the engine's old schedules.find(isWindowOpen) did", () => {
+    const closed = makeSchedule({ id: "closed", startTime: "2026-07-05T23:00:00.000Z", endTime: "2026-07-06T00:00:00.000Z", windowMinutes: 60 });
+    const first = makeSchedule({ id: "first", startTime: "2026-07-01T23:00:00.000Z", endTime: "2026-07-02T00:00:00.000Z", windowMinutes: 60 });
+    const second = makeSchedule({ id: "second", startTime: "2026-07-01T22:30:00.000Z", endTime: "2026-07-02T00:30:00.000Z", windowMinutes: 120 });
+    const now = new Date("2026-07-01T23:30:00.000Z");
+    expect(openScheduleWindow([closed, first, second], now)?.schedule.id).toBe("first");
+    expect(openScheduleWindow([closed, second, first], now)?.schedule.id).toBe("second");
   });
 });

@@ -1,4 +1,5 @@
-export type AnimationType =
+/** Animations with a picture: AnimationOverlay plays them from ANIMATION_REGISTRY, one at a time. */
+export type GameplayAnimationType =
   | "BINGO_SQUARE"
   | "BINGO_WIN"
   | "BINGO_NEAR_WIN"
@@ -15,6 +16,15 @@ export type AnimationType =
   | "LIVE_TRIVIA_CHAMPION"
   | "CATEGORY_BLITZ_CHAMPION"
   | "CATEGORY_BLITZ_MODE_FLIP";
+
+/**
+ * A buzz with no overlay picture: the moment is drawn by its own component
+ * (the Category Blitz letter die), so triggerAnimation plays the haptic and
+ * queues nothing. List them in HAPTIC_ONLY_ANIMATIONS (lib/nativeHaptics.ts) too.
+ */
+export type HapticOnlyAnimationType = "CATEGORY_BLITZ_DIE_BOUNCE" | "CATEGORY_BLITZ_DIE_LAND";
+
+export type AnimationType = GameplayAnimationType | HapticOnlyAnimationType;
 
 export interface AnimationPayload {
   inputRect?: DOMRect | null;

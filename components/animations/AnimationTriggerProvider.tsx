@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useReducer } from "react";
-import { hapticForAnimation, playHaptic } from "@/lib/nativeHaptics";
+import { hapticForAnimation, isHapticOnlyAnimation, playHaptic } from "@/lib/nativeHaptics";
 import type { AnimationPayload, AnimationType } from "@/types/animation";
 
 type QueuedAnimation = {
@@ -102,6 +102,8 @@ export function AnimationTriggerProvider({ children }: { children: React.ReactNo
     const haptic = hapticForAnimation(type);
     if (haptic) playHaptic(haptic);
     const id = nextAnimationId();
+    // A buzz with no picture: nothing to queue, and no re-render of every consumer per bounce.
+    if (isHapticOnlyAnimation(type)) return id;
     dispatch({
       type: "TRIGGER",
       payload: { id, type, payload },

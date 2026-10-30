@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, LayoutGroup } from "framer-motion";
 import RoundStartReveal from "@/components/category-blitz/RoundStartReveal";
+import LetterDieRoll from "@/components/category-blitz/LetterDieRoll";
 import { AnsweringScreen } from "@/components/category-blitz/CategoryBlitzGame";
 import GradingCascade, { type GradingAnswer } from "@/components/category-blitz/GradingCascade";
 import LiveLeaderboard from "@/components/category-blitz/LiveLeaderboard";
@@ -31,6 +32,9 @@ const MODE_FLIP_VARIANT_LABELS: Record<ModeFlipVariant, string> = {
 type DemoKey =
   | "reveal"
   | "revealMorph"
+  | "letterDie"
+  | "letterDieLate"
+  | "letterDieMajority"
   | "cascade"
   | "leaderboard"
   | "fireworks"
@@ -47,9 +51,25 @@ type DemoKey =
   | "modeFlipSplitFlapStandard"
   | "modeFlipOverspinStandard";
 
+/** The letter-die demos: one entry each (a fourth demo is one more line). */
+const LETTER_DIE_DEMOS = {
+  letterDie: { late: false, reverse: false },
+  letterDieLate: { late: true, reverse: false },
+  letterDieMajority: { late: false, reverse: true },
+} as const satisfies Record<string, { late: boolean; reverse: boolean }>;
+
+const isLetterDieDemo = (demo: DemoKey | null): demo is keyof typeof LETTER_DIE_DEMOS =>
+  demo !== null && demo in LETTER_DIE_DEMOS;
+
+/** Demo controls sit one step above the die (its root is `z-10` in the panel's stacking context). */
+const DEMO_CONTROL_Z = "z-20";
+
 const DEMO_LABELS: Record<DemoKey, string> = {
   reveal: "Round start reveal",
   revealMorph: "Reveal → gameplay morph",
+  letterDie: "Letter die roll",
+  letterDieLate: "Letter die — letter 3 s late",
+  letterDieMajority: "Letter die — Majority Rules",
   cascade: "Grading cascade",
   leaderboard: "Live leaderboard",
   fireworks: "Session complete fireworks",
@@ -130,8 +150,71 @@ const RevealMorphDemo = () => {
   );
 };
 
+const DIE_DEMO_CATEGORIES = ["Fruits", "Countries", "Animals", "Movies", "Sports", "Colors"];
+const DIE_DEMO_BREAK_MS = 7000;
+const DIE_DEMO_LATE_MS = 3000;
+
+/** The letter die over a mock break (docs/category-blitz-letter-die-plan.md, Phase 3):
+ *  a 7 s countdown, the die tumbles for the last 5 s, the letter "arrives" when the
+ *  countdown ends (or 3 s later), and the die flies into a mock AnsweringScreen badge
+ *  through the shared layoutId — no venue session needed. Replay remounts it. */
+const LetterDieDemo = ({ late, reverse }: { late: boolean; reverse: boolean }) => {
+  const [startedAt] = useState(() => Date.now());
+  const [now, setNow] = useState(startedAt);
+  const [showBoard, setShowBoard] = useState(false);
+  const breakEndsAt = startedAt + DIE_DEMO_BREAK_MS;
+  const letterAt = breakEndsAt + (late ? DIE_DEMO_LATE_MS : 0);
+  const arrived = now >= letterAt;
+
+  useEffect(() => {
+    if (arrived) return;
+    const id = window.setInterval(() => setNow(Date.now()), 250);
+    return () => window.clearInterval(id);
+  }, [arrived]);
+
+  const nextRoundStartsIn = now < breakEndsAt ? Math.ceil((breakEndsAt - now) / 1000) : 0;
+
+  return (
+    <LayoutGroup>
+      {showBoard ? (
+        <AnsweringScreen
+          letter="M"
+          categories={DIE_DEMO_CATEGORIES}
+          roundId="demo-die-round"
+          timeRemaining={175}
+          venueId="demo-venue"
+          userId="demo-user"
+          playerCount={3}
+          mode={reverse ? "reverse" : "standard"}
+          morphFromReveal
+          cascadeRows
+        />
+      ) : (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
+          <p className="text-lg font-black text-white">Round {reverse ? 4 : 3} results</p>
+          <p className="text-footnote font-bold text-slate-400">Next round in</p>
+          <p className="text-4xl font-black tabular-nums text-white">{nextRoundStartsIn}</p>
+        </div>
+      )}
+      <LetterDieRoll
+        letter={arrived ? "M" : null}
+        nextRoundStartsIn={nextRoundStartsIn}
+        roundStartedAtMs={arrived ? letterAt : null}
+        reverse={reverse && arrived}
+        onStageChange={(stage) => {
+          if (stage === "flying") setShowBoard(true);
+        }}
+        onDone={({ flew }) => {
+          if (!flew) setShowBoard(true);
+        }}
+      />
+    </LayoutGroup>
+  );
+};
+
 const DevAnimationPanel = () => {
   const [demo, setDemo] = useState<DemoKey | null>(null);
+  const [demoRun, setDemoRun] = useState(0);
   const [open, setOpen] = useState(false);
   // Which variant CategoryBlitzGame's real trigger site actually plays for a
   // live "Blend In!" round — independent of whichever variant is being
@@ -175,7 +258,10 @@ const DevAnimationPanel = () => {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setDemo(key)}
+                  onClick={() => {
+                    setDemo(key);
+                    setDemoRun((n) => n + 1);
+                  }}
                   className="rounded bg-slate-800 px-2 py-1 text-left text-white hover:bg-slate-700"
                 >
                   {DEMO_LABELS[key]}
@@ -191,7 +277,7 @@ const DevAnimationPanel = () => {
           <button
             type="button"
             onClick={() => setDemo(null)}
-            className="absolute right-4 top-4 z-[1001] rounded-full bg-slate-800 px-3 py-1 text-xs font-black uppercase text-white"
+            className={`absolute right-4 top-4 ${DEMO_CONTROL_Z} rounded-full bg-slate-800 px-3 py-1 text-xs font-black uppercase text-white`}
           >
             Close
           </button>
@@ -206,7 +292,24 @@ const DevAnimationPanel = () => {
             </div>
           )}
 
-          {demo !== "revealMorph" && (
+          {isLetterDieDemo(demo) && (
+            <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+              <LetterDieDemo
+                key={demoRun}
+                late={LETTER_DIE_DEMOS[demo].late}
+                reverse={LETTER_DIE_DEMOS[demo].reverse}
+              />
+              <button
+                type="button"
+                onClick={() => setDemoRun((n) => n + 1)}
+                className={`absolute bottom-4 left-4 ${DEMO_CONTROL_Z} rounded-full bg-slate-800 px-3 py-1 text-caption font-black uppercase text-white`}
+              >
+                Replay
+              </button>
+            </div>
+          )}
+
+          {demo !== "revealMorph" && !isLetterDieDemo(demo) && (
           <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto p-6">
             {demo === "reveal" && (
               <RoundStartReveal

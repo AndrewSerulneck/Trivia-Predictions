@@ -20,6 +20,8 @@ const mocks = vi.hoisted(() => ({
   activeSessionsByVenue: new Map<string, SessionRow | null>(),
   closableRows: [] as SessionRow[],
   sessionIdCounter: 1,
+  latestRound: null as Record<string, unknown> | null,
+  latestRoundReads: 0,
 }));
 
 vi.mock("server-only", () => ({}));
@@ -93,7 +95,17 @@ function installSupabaseMock() {
       return {
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
+            // scoreExpiredRounds
             lt: vi.fn(async () => ({ data: [], error: null })),
+            // getLatestRound — reached only once the window-fit check passes
+            order: vi.fn(() => ({
+              limit: vi.fn(() => ({
+                maybeSingle: vi.fn(async () => {
+                  mocks.latestRoundReads += 1;
+                  return { data: mocks.latestRound, error: null };
+                }),
+              })),
+            })),
           })),
         })),
       };
@@ -164,6 +176,8 @@ describe("Category Blitz recurring schedule engine", () => {
     mocks.activeSessionsByVenue = new Map();
     mocks.closableRows = [];
     mocks.sessionIdCounter = 1;
+    mocks.latestRound = null;
+    mocks.latestRoundReads = 0;
     installSupabaseMock();
   });
 
@@ -243,5 +257,34 @@ describe("Category Blitz recurring schedule engine", () => {
     expect(result.started).toEqual([]);
     expect(result.errors).toEqual([]);
     expect(mocks.insertedSessions).toHaveLength(0);
+  });
+
+  // docs/category-blitz-letter-die-plan.md Phase 12.1b: the cron's "does another
+  // round fit?" is the shared roundFitsWindow at the session's own round length,
+  // like driveVenueCategoryBlitz. Two minutes before the window ends (00:00Z), a
+  // 30 s test-mode round fits and a 180 s round doesn't. A round still in play
+  // means the engine stops right after reading it, so the latest-round read is
+  // the sign the fit check passed.
+  it("12.1b a test-mode session is judged at the test-mode round length", async () => {
+    mocks.listAllActiveSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.activeSessionsByVenue.set("venue-1", makeSession({ status: "active", test_mode: true }));
+    mocks.latestRound = { status: "active", started_at: "2026-07-01T23:57:50.000Z", scored_at: null };
+
+    const result = await runCategoryBlitzEngine(new Date("2026-07-01T23:58:00.000Z"));
+
+    expect(result.errors).toEqual([]);
+    expect(mocks.latestRoundReads).toBe(1);
+  });
+
+  it("12.1b a real session two minutes before the end: no room for a 180 s round", async () => {
+    mocks.listAllActiveSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.activeSessionsByVenue.set("venue-1", makeSession({ status: "active", test_mode: false }));
+    mocks.latestRound = { status: "active", started_at: "2026-07-01T23:57:50.000Z", scored_at: null };
+
+    const result = await runCategoryBlitzEngine(new Date("2026-07-01T23:58:00.000Z"));
+
+    expect(result.errors).toEqual([]);
+    expect(result.started).toEqual([]);
+    expect(mocks.latestRoundReads).toBe(0);
   });
 });

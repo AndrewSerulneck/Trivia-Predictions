@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import type { AnimationType, GameplayAnimationProps } from "@/types/animation";
+import type { GameplayAnimationProps, GameplayAnimationType } from "@/types/animation";
 import { BingoSquareAnimation } from "@/components/animations/BingoSquareAnimation";
 import { BingoWinAnimation } from "@/components/animations/BingoWinAnimation";
 import { BingoNearWinAnimation } from "@/components/animations/BingoNearWinAnimation";
@@ -23,7 +23,7 @@ export type AnimationComponent = ComponentType<GameplayAnimationProps>;
  * Add new gameplay animations by creating a file in /components/animations
  * and registering it here — AnimationOverlay picks them up automatically.
  */
-export const ANIMATION_REGISTRY: Record<AnimationType, AnimationComponent> = {
+export const ANIMATION_REGISTRY: Record<GameplayAnimationType, AnimationComponent> = {
   BINGO_SQUARE: BingoSquareAnimation,
   BINGO_WIN: BingoWinAnimation,
   BINGO_NEAR_WIN: BingoNearWinAnimation,

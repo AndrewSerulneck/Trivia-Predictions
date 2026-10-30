@@ -14,3 +14,13 @@ export const CB_LETTER_BADGE_LAYOUT_ID = "cb-letter-badge";
 
 /** layoutId for a category row at a given index, shared by reveal + gameplay. */
 export const cbCategoryRowLayoutId = (index: number): string => `cb-cat-row-${index}`;
+
+/** The category cascade's timing (seconds), shared by RoundStartReveal's rows
+ *  and AnsweringScreen's rows when they cascade in straight out of the letter
+ *  die (docs/category-blitz-letter-die-plan.md, Phase 4). */
+export const CB_ROW_CASCADE_STAGGER_S = 0.06;
+export const CB_ROW_CASCADE_DURATION_S = 0.3;
+/** The same row fade under Reduce Motion: opacity only, no travel. */
+export const CB_ROW_CASCADE_REDUCED_DURATION_S = 0.2;
+/** Out of the die the rows start while the letter is still flying to the badge. */
+export const CB_ROW_CASCADE_AFTER_DIE_DELAY_S = 0.15;

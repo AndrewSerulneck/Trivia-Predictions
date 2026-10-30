@@ -4,13 +4,20 @@ import { createSession, driveContinuousCategoryBlitz, driveVenueCategoryBlitz, p
 import { resolveContinuousConfig } from "@/lib/categoryBlitzPool";
 import { categoryBlitzChannelName } from "@/lib/categoryBlitzShared";
 import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
-import { listSchedules, getNextScheduleOccurrence } from "@/lib/categoryBlitzSchedules";
+import { listSchedules, getNextScheduleOccurrence, openScheduleWindowEnd } from "@/lib/categoryBlitzSchedules";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
 
 /**
  * GET /api/category-blitz/sessions?venueId=...
  * Returns the active session (or null) plus the next scheduled window open time.
- * nextWindowAt is null when no future window exists.
+ * nextWindowAt is null when no future window exists. scheduleWindowEndAt is when
+ * tonight's open window ends, read from the same schedule list the engine uses
+ * (so it follows a partner's mid-game edit); null with no open window, for a
+ * manual session (the engine never advances one) and for continuous venues.
+ * The letter die reads it to know whether another round follows
+ * (anotherRoundFollows, docs/category-blitz-letter-die-plan.md Phase 11.1b).
+ * serverNowMs is the server's clock as the reply leaves (ms epoch), so the die
+ * can measure a late letter on the server's clock, not a phone's (Phase 12.2a).
  *
  * Always routes through driveVenueCategoryBlitz (not a raw getActiveSession
  * lookup) so it self-heals a stale session AND advances/fires rounds on
@@ -80,6 +87,7 @@ export async function GET(request: Request) {
 
     let session: Awaited<ReturnType<typeof driveVenueCategoryBlitz>> = null;
     let nextWindowAt: string | null = null;
+    let scheduleWindowEndAt: string | null = null;
 
     if (continuousConfig) {
       const continuous = await driveContinuousCategoryBlitz(roomId, now);
@@ -102,6 +110,9 @@ export async function GET(request: Request) {
       session = scheduledSession;
       const nextOcc = getNextScheduleOccurrence(schedules, now);
       nextWindowAt = nextOcc ? nextOcc.windowStart.toISOString() : null;
+      if (session?.source === "auto") {
+        scheduleWindowEndAt = openScheduleWindowEnd(schedules, now)?.toISOString() ?? null;
+      }
     }
 
     // Best-effort presence registration: records that this user's client is
@@ -137,7 +148,7 @@ export async function GET(request: Request) {
     // nothing in the response payload exposes that venues share a session.
     if (session) session = { ...session, venueId };
 
-    return NextResponse.json({ ok: true, session, nextWindowAt, realtimeChannel });
+    return NextResponse.json({ ok: true, session, nextWindowAt, scheduleWindowEndAt, realtimeChannel, serverNowMs: Date.now() });
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to load session." },

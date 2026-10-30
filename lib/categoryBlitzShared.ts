@@ -145,6 +145,59 @@ export const nextRoundStartAtMs = (
 };
 
 /**
+ * Whether a round that starts at `startAtMs` finishes inside a schedule window
+ * ending at `windowEndMs`. Shared so the client can't drift from the engine:
+ * both scheduled engines (`canFitAnother` in driveVenueCategoryBlitz and the
+ * cron's runCategoryBlitzEngine, lib/categoryBlitz.ts) call it with their drive
+ * time, and `anotherRoundFollows` below with the next round's realistic start.
+ */
+export const roundFitsWindow = (startAtMs: number, windowEndMs: number, testMode: boolean): boolean =>
+  startAtMs + roundDurationSeconds(testMode) * 1000 <= windowEndMs;
+
+/**
+ * How late a scheduled round realistically starts after it is due. Only the
+ * open game page starts one (docs/category-blitz-how-to-play-plan.md Phase 5):
+ * its round-boundary kick fires 0–3 s after the countdown hits zero
+ * (`kickJitterMs`, lib/categoryBlitzRealtime.ts) and retries 1.2 + 3 + 6 s
+ * later (≈ 13 s worst case), after which the 15 s fallback poll
+ * (`POLL_INTERVAL_MS`) takes over. So 15 s. The engine checks the fit at that
+ * later moment, so the client must too (docs/category-blitz-letter-die-plan.md
+ * Phase 11.1c).
+ */
+export const ROUND_START_DRIVE_SLACK_MS = 15_000;
+
+/**
+ * Whether another round will follow `latestRound` in this session — the client's
+ * read of the engine's decision, so the letter die (CategoryBlitzGame) never
+ * tumbles over a session's final standings (docs/category-blitz-letter-die-plan.md
+ * Phases 7.2, 11.1b/c, 12.1a). Continuous sessions loop until stopped (a stop
+ * arrives as `complete`). A scheduled session ends at the EARLIER of two times:
+ * the LIVE open window's end that the sessions API derives from tonight's
+ * schedules (`scheduleWindowEndAt`, which catches a partner shortening the
+ * window mid-game), and the session's own `scheduledEndAt`, frozen at creation,
+ * because the engine still closes the session then even if the window was
+ * extended (`isStaleAutoSession`, lib/categoryBlitz.ts). Null live window (no
+ * open window, or a manual session the engine never advances) or missing (an
+ * older server) → false: skipping a tumble beats covering the final standings.
+ * The fit is checked at the round's due time plus ROUND_START_DRIVE_SLACK_MS,
+ * because that is when the engine actually checks it.
+ */
+export const anotherRoundFollows = (
+  session: { sessionType: "scheduled" | "continuous"; testMode: boolean; scheduledEndAt: string | null },
+  latestRound: { scoredAt: string | null; startedAt: string },
+  scheduleWindowEndAt: string | null | undefined,
+): boolean => {
+  if (session.sessionType === "continuous") return true;
+  if (!scheduleWindowEndAt) return false;
+  const liveEndMs = Date.parse(scheduleWindowEndAt);
+  if (Number.isNaN(liveEndMs)) return false;
+  const frozenEndMs = session.scheduledEndAt ? Date.parse(session.scheduledEndAt) : Number.NaN;
+  const windowEndMs = Number.isNaN(frozenEndMs) ? liveEndMs : Math.min(liveEndMs, frozenEndMs);
+  const startAtMs = nextRoundStartAtMs(latestRound, session.testMode) + ROUND_START_DRIVE_SLACK_MS;
+  return roundFitsWindow(startAtMs, windowEndMs, session.testMode);
+};
+
+/**
  * How long past a continuous round's next-round instant the game still counts
  * as awake. Only the open game page starts rounds (docs/category-blitz-how-to-play-plan.md
  * Phase 5, "sleep when idle"): its boundary kick lands within ~0–10s and its

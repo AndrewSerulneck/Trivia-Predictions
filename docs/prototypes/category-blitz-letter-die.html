@@ -1,0 +1,655 @@
+<title>Letter Die Roll</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap">
+<style>
+/* Layout: one phone screen, three stacked layers — answering screen (base),
+   intermission card, full-screen die stage — plus a small control bar. */
+:root {
+  --bg: #020617;            /* slate-950, the game's canvas */
+  --panel: #0f172a;         /* slate-900 */
+  --line: #334155;          /* slate-700 */
+  --muted: #94a3b8;         /* slate-400 */
+  --dim: #64748b;           /* slate-500 */
+  --fg: #e2e8f0;            /* slate-200 */
+  --ink: #020617;           /* letter ink on the die */
+  --em-a: #10b981; --em-b: #22c55e; --em-c: #14b8a6;   /* blitzStandard letterGradient */
+  --em-core: #065f46;
+  --mr-a: #d946ef; --mr-b: #ec4899; --mr-c: #f59e0b;   /* blitzReverse letterGradient */
+  --mr-bg: #1a0b2e;
+  --glow: rgba(16,185,129,0.35);
+  --font: "Nunito", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); overflow: hidden;
+  -webkit-tap-highlight-color: transparent; }
+button, input, select { font-family: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--em-b); outline-offset: 2px; }
+
+.layer { position: fixed; inset: 0; }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* ---------- answering screen (base) ---------- */
+#answer { padding-top: calc(env(safe-area-inset-top, 0px) + 12px); opacity: 0; transition: background-color .4s; background: var(--bg); }
+#answer.mr { background: var(--mr-bg); }
+.hdr { display: flex; align-items: center; gap: 12px; }
+#slot { width: 60px; height: 60px; border-radius: 16px; flex-shrink: 0; display: grid; place-items: center;
+  font-weight: 900; font-size: 44px; line-height: 1; color: var(--ink); }
+#slot.on { background: linear-gradient(132deg, var(--em-a), var(--em-b) 50%, var(--em-c)); box-shadow: 0 0 18px var(--glow); }
+#slot.on.mr { background: linear-gradient(132deg, var(--mr-a), var(--mr-b) 50%, var(--mr-c)); box-shadow: 0 0 18px rgba(217,70,239,.45); }
+.hdr-mid { flex: 1; min-width: 0; }
+.eyebrow { font-size: 12px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #6ee7b7; }
+#answer.mr .eyebrow { color: #f0abfc; }
+.hdr-rule { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.timer { font-weight: 900; font-size: 22px; font-variant-numeric: tabular-nums; }
+#rows { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+#rows li { display: flex; align-items: center; gap: 8px; border: 1px solid rgba(51,65,85,.6); background: rgba(15,23,42,.4);
+  border-radius: 12px; padding: 8px 12px; opacity: 0; transform: translateY(12px); }
+#rows .n { width: 20px; text-align: center; font-size: 12px; font-weight: 900; color: var(--dim); flex-shrink: 0; }
+#rows .c { font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#rows .p { font-size: 14px; font-weight: 700; color: #475569; }
+
+/* ---------- intermission ---------- */
+#inter { display: grid; place-items: center; background: var(--bg); transition: opacity .3s; }
+.inter-card { width: min(100%, 360px); display: flex; flex-direction: column; gap: 14px; }
+.inter-card h2 { margin: 0; font-size: 20px; font-weight: 900; text-wrap: balance; }
+.lb { display: flex; flex-direction: column; gap: 6px; }
+.lb div { display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 12px; background: var(--panel); font-weight: 800; font-size: 15px; }
+.lb span:last-child { color: #6ee7b7; font-variant-numeric: tabular-nums; }
+.next { text-align: center; color: var(--muted); font-weight: 800; font-size: 14px; }
+.next b { display: block; color: var(--fg); font-size: 44px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.1; }
+
+/* ---------- die stage ---------- */
+#stage { opacity: 0; pointer-events: none; perspective: 900px; perspective-origin: 50% 42%; overflow: hidden;
+  background: radial-gradient(120% 70% at 50% 46%, rgba(16,185,129,.20), transparent 60%), var(--bg); }
+#stage.mr { background: radial-gradient(120% 70% at 50% 46%, rgba(217,70,239,.24), transparent 60%), var(--mr-bg); transition: background .5s; }
+#stageTop { position: absolute; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + 28px); text-align: center; }
+#stageTop .eyebrow { font-size: 13px; }
+#stageCount { position: absolute; left: 0; right: 0; text-align: center; font-weight: 900; font-size: 15px; color: var(--muted);
+  font-variant-numeric: tabular-nums; transition: opacity .25s; }
+#stageCount b { color: var(--fg); font-size: 28px; display: block; }
+#shadow { position: absolute; left: 50%; height: 22px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.6), transparent); transform: translate(-50%, -50%); }
+#ring { position: absolute; left: 50%; border-radius: 50%; border: 2px solid rgba(52,211,153,.6); opacity: 0; transform: translate(-50%,-50%); pointer-events: none; }
+#stage.mr #ring { border-color: rgba(232,121,249,.7); }
+#dieWrap { position: absolute; left: 50%; top: 0; transform-style: preserve-3d; transform-origin: 50% 100%; will-change: transform; }
+#cube { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
+.face, .core { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.core { background: var(--em-core); }
+#cube.mr .core { background: #86198f; transition: background .4s; }
+.face { border-radius: 16%; overflow: hidden; display: grid; place-items: center;
+  background: linear-gradient(132deg, var(--em-a), var(--em-b) 50%, var(--em-c)); }
+.face .mrl { position: absolute; inset: 0; background: linear-gradient(132deg, var(--mr-a), var(--mr-b) 50%, var(--mr-c)); opacity: 0; transition: opacity .45s; }
+#cube.mr .face .mrl { opacity: 1; }
+.face .g { position: relative; font-weight: 900; color: var(--ink); line-height: 1; }
+.face .sh { position: absolute; inset: 0; background: #000; opacity: 0; }
+
+#tile, #rmTile { position: fixed; left: 0; top: 0; display: grid; place-items: center; font-weight: 900; color: var(--ink); line-height: 1;
+  background: linear-gradient(132deg, var(--em-a), var(--em-b) 50%, var(--em-c)); transform-origin: 0 0; will-change: transform; }
+#tile.mr, #rmTile.mr { background: linear-gradient(132deg, var(--mr-a), var(--mr-b) 50%, var(--mr-c)); }
+#rmTile { transform-origin: 50% 50%; box-shadow: 0 0 40px var(--glow); }
+
+/* ---------- Majority Rules mock announcement ---------- */
+#mrCard { display: grid; place-items: center; background: rgba(26,11,46,.92); opacity: 0; pointer-events: none; }
+#mrCard div { text-align: center; transform: rotateX(90deg); }
+#mrCard h3 { margin: 0; font-size: 34px; font-weight: 900; background: linear-gradient(90deg, var(--mr-a), var(--mr-b), var(--mr-c));
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+#mrCard p { margin: 6px 0 0; color: #f5d0fe; font-weight: 800; font-size: 15px; }
+
+/* ---------- haptic indicator ---------- */
+#buzz { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 10px); right: max(16px, env(safe-area-inset-right, 0px));
+  padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+  background: #1e293b; color: var(--muted); opacity: 0; transition: opacity .25s; z-index: 30; }
+#buzz.strong { background: #fbbf24; color: var(--ink); }
+
+/* ---------- controls ---------- */
+#bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding-top: 10px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  background: linear-gradient(transparent, rgba(2,6,23,.92) 35%); }
+.btn { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--fg);
+  font-weight: 800; font-size: 14px; cursor: pointer; }
+.btn.primary { background: var(--em-b); border-color: var(--em-b); color: var(--ink); }
+.btn.send { background: #fbbf24; border-color: #fbbf24; color: var(--ink); }
+#stageName { margin-left: auto; font-size: 12px; font-weight: 800; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; }
+
+#sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-height: 78%; overflow-y: auto;
+  background: #0b1222; border-top: 1px solid var(--line); border-radius: 20px 20px 0 0;
+  padding-top: 16px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
+#sheet h4 { margin: 0 0 4px; font-size: 16px; font-weight: 900; }
+.sec { font-size: 12px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; color: #6ee7b7; margin: 18px 0 8px; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; margin-bottom: 10px; }
+.row label { font-size: 14px; font-weight: 700; }
+.row output { font-size: 13px; font-weight: 800; color: var(--muted); font-variant-numeric: tabular-nums; }
+.row input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--em-b); }
+.hint { grid-column: 1 / -1; font-size: 12px; color: var(--dim); }
+.seg { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.seg button { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); font-weight: 800; font-size: 13px; cursor: pointer; }
+.seg button[aria-pressed=true] { background: #064e3b; border-color: var(--em-a); color: #a7f3d0; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#readout { width: 100%; box-sizing: border-box; margin-top: 8px; font: 600 12px/1.5 ui-monospace, Menlo, monospace; color: var(--muted);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; resize: none; height: 96px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+</style>
+
+<!-- base: answering screen -->
+<div id="answer" class="layer gutter">
+  <div class="hdr">
+    <div id="slot"></div>
+    <div class="hdr-mid">
+      <div class="eyebrow" id="ansEyebrow">Round 4</div>
+      <div class="hdr-rule" id="ansRule">Answers must start with the letter</div>
+    </div>
+    <div class="timer">1:30</div>
+  </div>
+  <ul id="rows"></ul>
+</div>
+
+<!-- intermission -->
+<div id="inter" class="layer gutter">
+  <div class="inter-card">
+    <h2>Round 3 results</h2>
+    <div class="lb">
+      <div><span>1 · trivia_tom</span><span>14</span></div>
+      <div><span>2 · maddie.k</span><span>11</span></div>
+      <div><span>3 · bigsal</span><span>9</span></div>
+    </div>
+    <div class="next">Next round in<b id="interCount">0:05</b></div>
+  </div>
+</div>
+
+<!-- die stage -->
+<div id="stage" class="layer" aria-hidden="true">
+  <div id="stageTop"><div class="eyebrow" id="stageEyebrow">Round 4</div></div>
+  <div id="shadow"></div>
+  <div id="ring"></div>
+  <div id="dieWrap"><div id="cube"></div></div>
+  <div id="stageCount">Rolling the letter<b id="stageCountN">5</b></div>
+</div>
+
+<div id="mrCard" class="layer"><div><h3>Majority Rules</h3><p>Match the crowd to score</p></div></div>
+<div id="tile" hidden></div>
+<div id="rmTile" hidden>?</div>
+<div id="buzz">buzz</div>
+
+<div id="bar" class="gutter">
+  <button class="btn primary" id="bReplay" type="button">Replay</button>
+  <button class="btn" id="bLate" type="button">Late letter</button>
+  <button class="btn send" id="bSend" type="button" hidden>Send letter</button>
+  <button class="btn" id="bTune" type="button" aria-expanded="false" aria-controls="sheet">Tune</button>
+  <span id="stageName">ready</span>
+</div>
+
+<div id="sheet" class="gutter" hidden>
+  <div class="sheet-head"><h4>Tune the roll</h4><button class="btn" id="bClose" type="button">Done</button></div>
+
+  <div class="sec">Round</div>
+  <div class="seg" id="segArrive" role="group" aria-label="When the letter arrives">
+    <button type="button" data-v="ontime">Letter on time</button>
+    <button type="button" data-v="late">Letter late</button>
+    <button type="button" data-v="tap">Wait for my tap</button>
+  </div>
+  <div class="seg" id="segMode" role="group" aria-label="Round type">
+    <button type="button" data-v="std">Standard round</button>
+    <button type="button" data-v="mr">Majority Rules round</button>
+  </div>
+  <div class="seg" id="segMotion" role="group" aria-label="Motion">
+    <button type="button" data-v="full">Full motion</button>
+    <button type="button" data-v="reduced">Reduce Motion</button>
+  </div>
+  <div class="seg" id="segFlicker" role="group" aria-label="Letter flicker">
+    <button type="button" data-v="hidden">Swap letters on hidden faces</button>
+    <button type="button" data-v="all">Swap on every face</button>
+    <button type="button" data-v="off">Fixed letters</button>
+  </div>
+  <div class="seg" id="segCount" role="group" aria-label="Countdown under the die">
+    <button type="button" data-v="on">Countdown under die</button>
+    <button type="button" data-v="off">No countdown</button>
+  </div>
+  <div id="sliders"></div>
+
+  <div class="sec">Your numbers</div>
+  <textarea id="readout" readonly aria-label="Current settings"></textarea>
+  <div class="actions">
+    <button class="btn primary" id="bCopy" type="button">Copy numbers</button>
+    <button class="btn" id="bReset" type="button">Back to defaults</button>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const LETTERS = ["A","B","C","D","E","F","G","H","I","L","M","N","O","P","R","S","T","W"]; // usableLetters
+const CATS = {"A":["A metal","A tool","A garden plant","A type of military rank or title","An animal commonly found in a zoo","An item found in a car","A recyclable item","A city in California","A disease","A medical procedure or surgery","A sweet food","A type of building or structure"],"B":["An item sold in a delicatessen","An item sold in a sporting goods store","A baseball term","A color","A piece of dinnerware","A toy","An African country","An Olympic sporting event","An item sold in a jewelry store","Something that is green","An element on the periodic table","A music term"],"C":["A spice or seasoning","A US city","Something that is red","Something that uses batteries","A frozen food","A school subject","A breakfast food","A garden plant","An Indian dish","A type of vehicle","An item found in a bank","A food made with flour"],"D":["Something with teeth","A wild mammal","A country","An adjective","A fictional character from literature","Something that is brown","A video game franchise or series","A part of a meal","A holiday tradition","A herbivore","A cartoon character","A professional athlete"],"E":["An item sold in a beauty supply store","A business term","A part of a train","An animal with horns or antlers","A school subject","A key on a computer keyboard","An animal that swims","An emotion or feeling","A boy's name","A tree","An animal native to Australia","Something with legs"],"F":["A kitchen utensil","An item found in a restaurant","A shrub or bush","A girl's name","A cooking ingredient","A songbird","A US city","An actor or actress","A dish you would order at a restaurant","A type of seed or grain","A basketball term","A bone in the human body"],"G":["A herd animal","A texture","A fictional place","An adjective","A warm-blooded animal","An item sold in a toy store","A part of a park","A species of primate","Something that is fragile","A clothing brand","A type of scientist","A type of musician"],"H":["An adjective","A part of a garden","A school subject","A sound","An item found in a fire station","A herbivore","An outdoor activity","A potato dish","A mode of transportation","An item sold in a gift shop","A sport","A hoofed animal"],"I":["An airline","A part of a song","A type of document","A business term","A science term","A metal","A geographic feature or landform","A type of lizard","An item sold in a pharmacy","A baseball term","A personality trait","A medical term"],"L":["A character from a Shakespeare play","A type of road or street","A type of coffee drink","A noodle dish","An item sold in a department store","Something that is yellow","A city in Texas","A type of building or structure","An animal commonly found in a zoo","A candy or sweet treat","A cold-blooded animal","A part of a tree"],"M":["Something that is green","A type of vehicle","A genre of film or television","A household chore","A fruit tree","An item sold in a beauty supply store","A type of house or home","A historical time period or era","A European country","A literary term","A type of dance","A genre of book or literature"],"N":["A river","A family member or relative","A part of an animal's body","An adjective","A science term","A clothing brand","A TV network or channel","A symptom of illness","A job that requires a uniform","A girl's name","An amphibian","An item sold in a beauty supply store"],"O":["A geometric shape","A city in Florida","An omnivore","A musical instrument","A breakfast food","A capital city","A Canadian city","A cooking ingredient","A character from a Shakespeare play","A fictional place","A gemstone","A type of bird of prey"],"P":["A capital city","A predator","A type of hat","A video game franchise or series","An item sold in a jewelry store","Something that is red","A golf term","A part of a bicycle","A baked good","A video game character","Something with a screen","A holiday or celebration"],"R":["A mountain or mountain range","Something with legs","A job done outdoors","Something that is red","A baseball term","A piece of cookware or bakeware","An alcoholic beverage","A scavenger","A part of an airport","A part of a song","A sailing or nautical term","A salad ingredient"],"S":["A part of a meal","An item found in a fire station","A holiday food","A disease","A type of mushroom or fungus","A piece of camping gear","A medical term","An article of clothing","A part of an engine","A carnivore","A part of a church","An internet term"],"T":["An amphibian","An item found in a pantry","An animal commonly found in a zoo","A saltwater fish","A character in a fairy tale","A fictional place","A soccer term","A cold-blooded animal","An item sold in a fabric store","A US city","A toy","A common surname"],"W":["An alcoholic beverage","A shark species","An item sold in a grocery store","An item found in a car","Something made of leather","Something made of glass","A college or university","A fictional place","A skilled trade","An item found on a boat","A liquid","A band or music group"]};
+
+const DEFAULTS = {
+  breakS: 7, leadS: 5, lateS: 3,
+  size: 168, hopH: 0.55, hopMs: 520, spin: 620, flickerMs: 110,
+  landMs: 760, landH: 1.4, settle: 2, holdMs: 700, flyMs: 450, mrMs: 1600,
+  arrive: "ontime", mode: "std", motion: "full", flicker: "hidden", count: "on",
+};
+const SLIDERS = [
+  { sec: "Timing" },
+  { k: "breakS", label: "Break shown before the round", min: 3, max: 15, step: 1, unit: "s", hint: "How long the mock intermission runs in total." },
+  { k: "leadS", label: "Tumble starts before the round", min: 1, max: 8, step: 0.5, unit: "s" },
+  { k: "lateS", label: "“Letter late” delay", min: 0.5, max: 8, step: 0.5, unit: "s" },
+  { sec: "The roll" },
+  { k: "size", label: "Die size", min: 110, max: 240, step: 2, unit: "px" },
+  { k: "hopH", label: "Bounce height", min: 0.15, max: 1.2, step: 0.05, unit: "× die" },
+  { k: "hopMs", label: "Time per bounce", min: 300, max: 900, step: 10, unit: "ms" },
+  { k: "spin", label: "Spin speed", min: 120, max: 1400, step: 20, unit: "°/s" },
+  { k: "flickerMs", label: "Letter swap every", min: 50, max: 400, step: 10, unit: "ms" },
+  { sec: "The landing" },
+  { k: "landMs", label: "Landing hop", min: 350, max: 1400, step: 10, unit: "ms" },
+  { k: "landH", label: "Landing hop height", min: 0.6, max: 2.5, step: 0.05, unit: "× bounce" },
+  { k: "settle", label: "Settle bounces after landing", min: 0, max: 3, step: 1, unit: "" },
+  { k: "holdMs", label: "Letter holds in the middle", min: 0, max: 2000, step: 50, unit: "ms" },
+  { k: "flyMs", label: "Fly into the badge", min: 200, max: 1000, step: 10, unit: "ms", hint: "Today’s badge morph is 450 ms." },
+  { k: "mrMs", label: "Majority Rules card", min: 600, max: 3000, step: 100, unit: "ms" },
+];
+
+let P = { ...DEFAULTS };
+try { const s = JSON.parse(localStorage.getItem("cbz-die-proto") || "null"); if (s) P = { ...DEFAULTS, ...s }; } catch (e) {}
+try { if (!localStorage.getItem("cbz-die-proto") && matchMedia("(prefers-reduced-motion: reduce)").matches) P.motion = "reduced"; } catch (e) {}
+const save = () => { try { localStorage.setItem("cbz-die-proto", JSON.stringify(P)); } catch (e) {} };
+
+const $ = (id) => document.getElementById(id);
+const el = { answer: $("answer"), slot: $("slot"), rows: $("rows"), inter: $("inter"), interCount: $("interCount"),
+  stage: $("stage"), shadow: $("shadow"), ring: $("ring"), wrap: $("dieWrap"), cube: $("cube"), stageCount: $("stageCount"),
+  stageCountN: $("stageCountN"), tile: $("tile"), rmTile: $("rmTile"), buzz: $("buzz"), mrCard: $("mrCard"),
+  stageName: $("stageName"), bSend: $("bSend"), sheet: $("sheet"), readout: $("readout"),
+  ansEyebrow: $("ansEyebrow"), ansRule: $("ansRule") };
+
+/* ---------- quaternions (w, x, y, z); CSS axes: x right, y down, z toward viewer ---------- */
+const qMul = (a, b) => [
+  a[0]*b[0] - a[1]*b[1] - a[2]*b[2] - a[3]*b[3],
+  a[0]*b[1] + a[1]*b[0] + a[2]*b[3] - a[3]*b[2],
+  a[0]*b[2] - a[1]*b[3] + a[2]*b[0] + a[3]*b[1],
+  a[0]*b[3] + a[1]*b[2] - a[2]*b[1] + a[3]*b[0]];
+const qAxis = (x, y, z, ang) => { const l = Math.hypot(x, y, z) || 1, s = Math.sin(ang / 2); return [Math.cos(ang / 2), x/l*s, y/l*s, z/l*s]; };
+const qNorm = (q) => { const l = Math.hypot(...q) || 1; return q.map((v) => v / l); };
+const qConj = (q) => [q[0], -q[1], -q[2], -q[3]];
+const qSlerp = (a, b, t) => {
+  let d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
+  if (d < 0) { b = b.map((v) => -v); d = -d; }
+  if (d > 0.9995) return qNorm(a.map((v, i) => v + (b[i] - v) * t));
+  const th = Math.acos(d), s = Math.sin(th);
+  const wa = Math.sin((1 - t) * th) / s, wb = Math.sin(t * th) / s;
+  return a.map((v, i) => v * wa + b[i] * wb);
+};
+const qMat = ([w, x, y, z]) => [
+  [1 - 2*(y*y + z*z), 2*(x*y - w*z), 2*(x*z + w*y)],
+  [2*(x*y + w*z), 1 - 2*(x*x + z*z), 2*(y*z - w*x)],
+  [2*(x*z - w*y), 2*(y*z + w*x), 1 - 2*(x*x + y*y)]];
+const cssMat = (R) => `matrix3d(${R[0][0]},${R[1][0]},${R[2][0]},0,${R[0][1]},${R[1][1]},${R[2][1]},0,${R[0][2]},${R[1][2]},${R[2][2]},0,0,0,0,1)`;
+const rotN = (R, n) => [R[0][0]*n[0] + R[0][1]*n[1] + R[0][2]*n[2], R[1][0]*n[0] + R[1][1]*n[1] + R[1][2]*n[2], R[2][0]*n[0] + R[2][1]*n[1] + R[2][2]*n[2]];
+
+const H = Math.PI / 2;
+const FACE_Q = [qAxis(0,1,0,0), qAxis(0,1,0,Math.PI), qAxis(0,1,0,H), qAxis(0,1,0,-H), qAxis(1,0,0,H), qAxis(1,0,0,-H)];
+const FACE_N = FACE_Q.map((q) => rotN(qMat(q), [0, 0, 1]));
+const LIGHT = (() => { const v = [-0.35, -0.65, 0.68], l = Math.hypot(...v); return v.map((c) => c / l); })();
+
+/* ---------- build the cube ---------- */
+const faces = [];
+const buildCube = () => {
+  el.cube.innerHTML = "";
+  faces.length = 0;
+  const s = P.size, half = s / 2, core = s * 0.94;
+  el.wrap.style.width = el.wrap.style.height = s + "px";
+  FACE_Q.forEach((q) => {
+    const c = document.createElement("div");
+    c.className = "core";
+    c.style.cssText = `inset:auto;width:${core}px;height:${core}px;left:${(s - core) / 2}px;top:${(s - core) / 2}px;transform:${cssMat(qMat(q))} translateZ(${core / 2 - 0.5}px)`;
+    el.cube.appendChild(c);
+  });
+  FACE_Q.forEach((q, i) => {
+    const f = document.createElement("div");
+    f.className = "face";
+    f.style.transform = `${cssMat(qMat(q))} translateZ(${half}px)`;
+    f.innerHTML = `<div class="mrl"></div><span class="g" style="font-size:${Math.round(s * 0.62)}px"></span><div class="sh"></div>`;
+    el.cube.appendChild(f);
+    faces.push({ el: f, g: f.querySelector(".g"), sh: f.querySelector(".sh"), letter: "" });
+  });
+  shuffleFillers(true);
+};
+const setFace = (i, L) => { faces[i].letter = L; faces[i].g.textContent = L; };
+const shuffleFillers = (all, hiddenMask) => {
+  faces.forEach((f, i) => {
+    if (S && S.targetFace === i) return;
+    if (!all && hiddenMask && !hiddenMask[i]) return;
+    const used = new Set(faces.map((x) => x.letter));
+    if (S && S.letter && S.targetFace != null) used.add(S.letter);
+    let L, guard = 0;
+    do { L = LETTERS[(Math.random() * LETTERS.length) | 0]; } while (used.has(L) && guard++ < 30);
+    setFace(i, L);
+  });
+};
+
+/* ---------- haptics (shown on screen; also tries navigator.vibrate on Android) ---------- */
+let buzzT = 0;
+const buzz = (kind) => {
+  el.buzz.textContent = kind === "strong" ? "strong buzz" : "light buzz";
+  el.buzz.className = kind === "strong" ? "strong" : "";
+  el.buzz.style.opacity = "1";
+  clearTimeout(buzzT);
+  buzzT = setTimeout(() => { el.buzz.style.opacity = "0"; }, kind === "strong" ? 380 : 180);
+  try { navigator.vibrate && navigator.vibrate(kind === "strong" ? 30 : 8); } catch (e) {}
+};
+
+/* ---------- state ---------- */
+let S = null, raf = 0;
+const geom = () => {
+  const vh = window.innerHeight;
+  const floor = Math.round(vh * 0.44 + P.size / 2);
+  return { vh, floor };
+};
+
+const reset = (arriveMode) => {
+  cancelAnimationFrame(raf);
+  document.getAnimations?.().forEach((a) => a.cancel());
+  const letter = LETTERS[(Math.random() * LETTERS.length) | 0];
+  S = { t0: performance.now(), stage: "break", letter, arrive: arriveMode || P.arrive, arrived: false, targetFace: null,
+    q: qNorm([1, 0.3, 0.5, 0.2]), axis: [0.8, 0.5, 0.3], y: 0, lastT: performance.now(), lastImpact: -1e9, impactK: 0,
+    lastFlick: 0, mr: P.mode === "mr", reduced: P.motion === "reduced" };
+  buildCube();
+  el.cube.classList.remove("mr"); el.stage.classList.remove("mr"); el.answer.classList.remove("mr");
+  el.tile.classList.remove("mr"); el.rmTile.classList.remove("mr"); el.slot.classList.remove("mr");
+  el.slot.className = ""; el.slot.textContent = "";
+  el.answer.style.opacity = "0"; el.inter.style.opacity = "1"; el.stage.style.opacity = "0";
+  el.stage.style.transition = ""; el.wrap.style.opacity = "1"; el.shadow.style.opacity = "1";
+  el.tile.hidden = true; el.rmTile.hidden = true; el.mrCard.style.opacity = "0";
+  el.stageCount.style.opacity = P.count === "on" ? "1" : "0";
+  el.ansEyebrow.textContent = S.mr ? "Round 5 · Majority Rules" : "Round 4";
+  el.ansRule.textContent = S.mr ? "Score by matching the crowd" : "Answers must start with the letter";
+  $("stageEyebrow").textContent = S.mr ? "Round 5" : "Round 4";
+  el.rows.innerHTML = CATS[letter].map((c, i) =>
+    `<li><span class="n">${i + 1}</span><div style="min-width:0;flex:1"><div class="c">${c}</div><div class="p">${letter}…</div></div></li>`).join("");
+  el.bSend.hidden = true;
+  el.wrap.style.transform = "translate3d(-50%, -200vh, 0)";
+  layoutStage();
+  raf = requestAnimationFrame(frame);
+};
+const layoutStage = () => {
+  const { floor } = geom();
+  el.shadow.style.top = floor + "px";
+  el.shadow.style.width = P.size * 0.95 + "px";
+  el.ring.style.top = (floor - P.size / 2) + "px";
+  el.ring.style.width = el.ring.style.height = P.size * 0.9 + "px";
+  el.stageCount.style.top = (floor + 30) + "px";
+};
+const setStage = (name) => { S.stage = name; el.stageName.textContent = name; };
+
+const startTumble = (now) => {
+  el.stage.style.transition = "opacity .28s ease-out";
+  el.stage.style.opacity = "1";
+  setTimeout(() => { if (S.stage !== "break") el.inter.style.opacity = "0"; }, 300);
+  if (S.reduced) {
+    setStage("waiting");
+    const s = P.size;
+    Object.assign(el.rmTile.style, { width: s + "px", height: s + "px", borderRadius: "16%", fontSize: Math.round(s * 0.62) + "px",
+      transform: `translate3d(${(innerWidth - s) / 2}px, ${geom().floor - s}px, 0)`, opacity: "0", transition: "opacity .25s" });
+    el.rmTile.textContent = "?"; el.rmTile.hidden = false;
+    requestAnimationFrame(() => { el.rmTile.style.opacity = "1"; });
+    el.shadow.style.opacity = "0"; el.wrap.style.opacity = "0";
+    return;
+  }
+  setStage("tumbling");
+  const { floor } = geom();
+  S.h = P.hopH * P.size;
+  S.g = 8 * S.h / Math.pow(P.hopMs / 1000, 2);
+  S.y0 = floor + P.size * 0.2;
+  S.dropStart = now; S.dropping = true;
+};
+
+const impact = (now, k, kind) => { S.lastImpact = now; S.impactK = k; if (kind) buzz(kind); };
+const kickSpin = () => {
+  const a = S.axis.map((v) => v + (Math.random() - 0.5) * 1.1);
+  const l = Math.hypot(...a) || 1; S.axis = a.map((v) => v / l);
+};
+
+const arrive = () => {
+  if (S.arrived) return;
+  S.arrived = true; el.bSend.hidden = true;
+  el.stageCount.style.opacity = "0";
+  if (S.reduced) {
+    el.rmTile.style.transition = "opacity .12s";
+    el.rmTile.style.opacity = "0";
+    setTimeout(() => {
+      el.rmTile.textContent = S.letter;
+      if (S.mr) el.rmTile.classList.add("mr");
+      el.rmTile.style.transition = "opacity .25s"; el.rmTile.style.opacity = "1";
+      buzz("strong"); setStage("holding");
+      setTimeout(reducedFinish, Math.max(250, P.holdMs));
+    }, 120);
+  }
+};
+
+const beginLand = (now) => {
+  setStage("landing");
+  const R = qMat(S.q);
+  let best = 0, bestZ = 2;
+  FACE_N.forEach((n, i) => { const z = rotN(R, n)[2]; if (z < bestZ) { bestZ = z; best = i; } });
+  S.targetFace = best;
+  setFace(best, S.letter);
+  faces.forEach((f, i) => { if (i !== best && f.letter === S.letter) { let L; do { L = LETTERS[(Math.random() * LETTERS.length) | 0]; } while (L === S.letter || faces.some((x) => x.letter === L)); setFace(i, L); } });
+  S.qT = qConj(FACE_Q[best]);
+  S.landStart = now; S.hL = S.h * P.landH;
+  S.mrApplied = false;
+};
+
+const easeInOut = (u) => u < 0.5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3) / 2;
+
+const frame = (now) => {
+  const dt = Math.min(0.05, (now - S.lastT) / 1000); S.lastT = now;
+  const t = (now - S.t0) / 1000;
+  const breakS = Math.max(P.breakS, P.leadS);
+  const remain = breakS - t;
+  const shown = Math.max(0, Math.ceil(remain));
+  el.interCount.textContent = "0:" + String(shown).padStart(2, "0");
+  el.stageCountN.textContent = shown > 0 ? String(shown) : "…";
+
+  if (S.stage === "break" && remain <= P.leadS) startTumble(now);
+  if (!S.arrived && S.stage !== "break") {
+    if (S.arrive === "tap") { if (remain <= 0) { el.bSend.hidden = false; el.stageCountN.textContent = "…"; } }
+    else if (t >= breakS + (S.arrive === "late" ? P.lateS : 0)) arrive();
+  }
+  if (S.reduced || S.stage === "break") { raf = requestAnimationFrame(frame); return; }
+
+  let spinMul = 1, q = null, scale = 1;
+  if (S.stage === "tumbling") {
+    if (S.dropping) {
+      const d = (now - S.dropStart) / 1000;
+      S.y = S.y0 - 0.5 * S.g * d * d;
+      if (S.y <= 0) { S.y = 0; S.dropping = false; S.hopStart = now; impact(now, 1, "light"); kickSpin(); if (S.arrived) beginLand(now); }
+    } else {
+      const u = (now - S.hopStart) / P.hopMs;
+      if (u >= 1) {
+        S.hopStart = now; S.y = 0; impact(now, 0.7, "light"); kickSpin();
+        if (S.arrived) beginLand(now);
+      } else S.y = 4 * S.h * u * (1 - u);
+    }
+  }
+  if (S.stage === "landing") {
+    const u = Math.min(1, (now - S.landStart) / P.landMs);
+    S.y = 4 * S.hL * u * (1 - u);
+    spinMul = Math.pow(1 - u, 1.5);
+    if (S.mr && !S.mrApplied && u > 0.35) { S.mrApplied = true; el.cube.classList.add("mr"); el.stage.classList.add("mr"); }
+    if (u >= 1) {
+      S.y = 0; impact(now, 1.25, "strong"); fireRing();
+      S.q = S.qT; S.settleK = 0; S.settleStart = now;
+      setStage(P.settle > 0 ? "settling" : "holding");
+      if (P.settle === 0) S.holdStart = now;
+    }
+  }
+  if (S.stage === "settling") {
+    const ratio = Math.pow(0.18, S.settleK + 1);
+    const dur = P.landMs * Math.sqrt(ratio) * 0.9;
+    const u = (now - S.settleStart) / dur;
+    if (u >= 1) {
+      S.y = 0; impact(now, 0.35 * Math.sqrt(ratio / 0.18), null);
+      S.settleK++; S.settleStart = now;
+      if (S.settleK >= P.settle) { setStage("holding"); S.holdStart = now; }
+    } else S.y = 4 * S.hL * ratio * u * (1 - u);
+  }
+  if (S.stage === "holding") {
+    S.y = 0;
+    const u = Math.min(1, (now - S.holdStart) / 220);
+    scale = 1 + 0.06 * easeInOut(u);
+    if (now - S.holdStart >= P.holdMs) { scale = 1.06; startFly(scale); }
+  }
+
+  // orientation
+  if (S.stage === "tumbling" || S.stage === "landing") {
+    const w = (P.spin * Math.PI / 180) * dt * spinMul;
+    S.qSpin = qNorm(qMul(qAxis(...S.axis, w), S.qSpin || S.q));
+    if (S.stage === "landing") {
+      const u = Math.min(1, (now - S.landStart) / P.landMs);
+      q = qSlerp(S.qSpin, S.qT, easeInOut(Math.min(1, u / 0.88)));
+    } else q = S.qSpin;
+    S.q = q;
+  }
+  if (S.stage === "landing" && (now - S.landStart) >= P.landMs) S.q = S.qT;
+  const R = qMat(S.q);
+  el.cube.style.transform = cssMat(R);
+
+  // lighting + letter swaps
+  const hidden = [];
+  faces.forEach((f, i) => {
+    const n = rotN(R, FACE_N[i]);
+    hidden[i] = n[2] < -0.15;
+    const lit = Math.max(0, n[0]*LIGHT[0] + n[1]*LIGHT[1] + n[2]*LIGHT[2]);
+    f.sh.style.opacity = (0.5 * (1 - lit)).toFixed(3);
+  });
+  if (S.stage === "tumbling" && P.flicker !== "off" && now - S.lastFlick > P.flickerMs) {
+    S.lastFlick = now;
+    shuffleFillers(P.flicker === "all", hidden);
+  }
+
+  // squash + position
+  const since = now - S.lastImpact;
+  let sx = 1, sy = 1;
+  if (since < 170) { const k = S.impactK * Math.sin(Math.PI * since / 170); sy = 1 - 0.16 * k; sx = 1 + 0.11 * k; }
+  const { floor } = geom();
+  el.wrap.style.transform = `translate3d(-50%, ${floor - P.size - S.y}px, 0) scale(${sx * scale}, ${sy * scale})`;
+  const hRel = Math.min(1, S.y / (P.size * 1.4));
+  el.shadow.style.transform = `translate(-50%, -50%) scale(${1 - 0.55 * hRel})`;
+  el.shadow.style.opacity = String(1 - 0.7 * hRel);
+
+  if (S.stage !== "flying" && S.stage !== "done") raf = requestAnimationFrame(frame);
+};
+
+const fireRing = () => {
+  el.ring.animate([{ transform: "translate(-50%,-50%) scale(.5)", opacity: .7 }, { transform: "translate(-50%,-50%) scale(2.6)", opacity: 0 }],
+    { duration: 550, easing: "ease-out" });
+};
+
+const EASE_SNAP = "cubic-bezier(0.22, 1, 0.36, 1)";
+const startFly = () => {
+  setStage("flying");
+  const f = faces[S.targetFace].el;
+  const a = f.getBoundingClientRect();
+  Object.assign(el.tile.style, { width: a.width + "px", height: a.height + "px", borderRadius: a.width * 0.16 + "px",
+    fontSize: Math.round(a.width * 0.62) + "px", transform: `translate3d(${a.left}px, ${a.top}px, 0)`, boxShadow: "0 0 40px rgba(16,185,129,.35)" });
+  el.tile.textContent = S.letter;
+  el.tile.classList.toggle("mr", S.mr);
+  el.tile.hidden = false;
+  el.wrap.style.opacity = "0"; el.shadow.style.opacity = "0";
+  el.answer.classList.toggle("mr", S.mr);
+  el.answer.style.opacity = "1";
+  el.inter.style.opacity = "0";
+  const b = el.slot.getBoundingClientRect();
+  const k = b.width / a.width;
+  el.tile.animate([
+    { transform: `translate3d(${a.left}px, ${a.top}px, 0) scale(1)`, borderRadius: a.width * 0.16 + "px" },
+    { transform: `translate3d(${b.left}px, ${b.top}px, 0) scale(${k})`, borderRadius: (16 / k) + "px" },
+  ], { duration: P.flyMs, easing: EASE_SNAP, fill: "forwards" }).onfinish = landedInBadge;
+  el.stage.style.transition = `opacity ${Math.round(P.flyMs * 0.8)}ms ease-out`;
+  el.stage.style.opacity = "0";
+};
+
+const landedInBadge = () => {
+  el.slot.textContent = S.letter;
+  el.slot.className = "on" + (S.mr ? " mr" : "");
+  el.tile.hidden = true;
+  if (S.mr) showMrCard(cascade); else cascade();
+};
+
+const showMrCard = (next) => {
+  setStage("majority rules");
+  const card = el.mrCard, inner = card.firstElementChild;
+  const fade = S.reduced ? 1 : 220;
+  card.animate([{ opacity: 0 }, { opacity: 1 }], { duration: fade, fill: "forwards" });
+  if (!S.reduced) inner.animate([{ transform: "rotateX(90deg)" }, { transform: "rotateX(0deg)" }], { duration: 420, easing: EASE_SNAP, fill: "forwards" });
+  else inner.style.transform = "none";
+  setTimeout(() => {
+    card.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: "forwards" }).onfinish = next;
+  }, P.mrMs);
+};
+
+const cascade = () => {
+  setStage("categories");
+  [...el.rows.children].forEach((li, i) => {
+    li.animate(S.reduced ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "translateY(0)" }],
+      { duration: S.reduced ? 200 : 300, delay: S.reduced ? 0 : i * 60, easing: "ease-out", fill: "forwards" });
+  });
+  setTimeout(() => setStage("done"), S.reduced ? 220 : 12 * 60 + 320);
+};
+
+const reducedFinish = () => {
+  setStage("flying");
+  el.answer.classList.toggle("mr", S.mr);
+  el.slot.textContent = S.letter; el.slot.className = "on" + (S.mr ? " mr" : "");
+  el.slot.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, fill: "forwards" });
+  el.answer.style.opacity = "1"; el.inter.style.opacity = "0";
+  el.stage.style.transition = "opacity .25s"; el.stage.style.opacity = "0";
+  el.rmTile.style.opacity = "0";
+  setTimeout(() => { el.rmTile.hidden = true; if (S.mr) showMrCard(cascade); else cascade(); }, 260);
+};
+
+/* ---------- controls ---------- */
+const sliderBox = $("sliders");
+SLIDERS.forEach((s) => {
+  if (s.sec) { const d = document.createElement("div"); d.className = "sec"; d.textContent = s.sec; sliderBox.appendChild(d); return; }
+  const row = document.createElement("div"); row.className = "row";
+  row.innerHTML = `<label for="r-${s.k}">${s.label}</label><output id="o-${s.k}" for="r-${s.k}"></output>
+    <input type="range" id="r-${s.k}" min="${s.min}" max="${s.max}" step="${s.step}">${s.hint ? `<div class="hint">${s.hint}</div>` : ""}`;
+  sliderBox.appendChild(row);
+  const inp = row.querySelector("input"), out = row.querySelector("output");
+  const show = () => { out.textContent = `${P[s.k]}${s.unit ? " " + s.unit : ""}`; };
+  inp.value = P[s.k]; show();
+  inp.addEventListener("input", () => { P[s.k] = Number(inp.value); show(); save(); readout(); if (s.k === "size") layoutStage(); });
+  s.sync = () => { inp.value = P[s.k]; show(); };
+});
+const SEGS = { segArrive: "arrive", segMode: "mode", segMotion: "motion", segFlicker: "flicker", segCount: "count" };
+const syncSegs = () => Object.entries(SEGS).forEach(([id, k]) =>
+  $(id).querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === P[k]))));
+Object.entries(SEGS).forEach(([id, k]) => $(id).addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  P[k] = b.dataset.v; save(); syncSegs(); readout();
+}));
+const readout = () => {
+  const o = {}; Object.keys(DEFAULTS).forEach((k) => { o[k] = P[k]; });
+  el.readout.value = JSON.stringify(o).replace(/,/g, ", ");
+};
+syncSegs(); readout();
+
+const openSheet = (open) => { el.sheet.hidden = !open; $("bTune").setAttribute("aria-expanded", String(open)); };
+$("bTune").addEventListener("click", () => openSheet(el.sheet.hidden));
+$("bClose").addEventListener("click", () => { openSheet(false); reset(); });
+$("bReplay").addEventListener("click", () => { openSheet(false); reset(); });
+$("bLate").addEventListener("click", () => { openSheet(false); reset("late"); });
+$("bSend").addEventListener("click", () => arrive());
+$("bReset").addEventListener("click", () => { P = { ...DEFAULTS }; save(); SLIDERS.forEach((s) => s.sync && s.sync()); syncSegs(); readout(); layoutStage(); });
+$("bCopy").addEventListener("click", () => {
+  const btn = $("bCopy");
+  const done = () => { btn.textContent = "Copied"; setTimeout(() => { btn.textContent = "Copy numbers"; }, 1400); };
+  try {
+    navigator.clipboard.writeText(el.readout.value).then(done, () => { el.readout.focus(); el.readout.select(); btn.textContent = "Selected — copy it"; });
+  } catch (e) { el.readout.focus(); el.readout.select(); }
+});
+addEventListener("resize", layoutStage);
+
+reset();
+})();
+</script>

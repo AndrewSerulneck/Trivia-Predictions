@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useReducedMotion } from "framer-motion";
 import { ANIMATION_REGISTRY } from "@/components/animations/animationRegistry";
 import { useAnimationOverlayState } from "@/components/animations/AnimationTriggerProvider";
+import { isHapticOnlyAnimation } from "@/lib/nativeHaptics";
 
 export function AnimationOverlay() {
   const { active, completeAnimation } = useAnimationOverlayState();
@@ -13,7 +14,8 @@ export function AnimationOverlay() {
     if (reducedMotion && active) completeAnimation(active.id);
   }, [active, completeAnimation, reducedMotion]);
 
-  if (!active || reducedMotion) {
+  // Haptic-only types are never queued (AnimationTriggerProvider); this only narrows the type.
+  if (!active || reducedMotion || isHapticOnlyAnimation(active.type)) {
     return null;
   }
 

@@ -5,6 +5,7 @@ import {
   deriveEndTimeIso,
   getCurrentOrNextScheduleWindow,
   isScheduleWindowOpen,
+  type CategoryBlitzWindowOccurrence,
 } from "@/lib/categoryBlitzScheduleTime";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { broadcastCategoryBlitz } from "@/lib/categoryBlitzBroadcast";
@@ -263,4 +264,34 @@ export function getNextScheduleOccurrence(
 /** Whether a window is currently open for the given schedule (at `now`). */
 export function isWindowOpen(schedule: CategoryBlitzSchedule, now: Date = new Date()): boolean {
   return isScheduleWindowOpen(schedule, now);
+}
+
+/**
+ * The first schedule whose window is open at `now`, with that open occurrence —
+ * the one lookup both scheduled engines (driveVenueCategoryBlitz and the cron's
+ * runCategoryBlitzEngine, lib/categoryBlitz.ts) and the sessions API share, so
+ * they can't disagree about tonight's window (docs/category-blitz-letter-die-plan.md
+ * Phase 12.1c). Null when no window is open.
+ */
+export function openScheduleWindow(
+  schedules: CategoryBlitzSchedule[],
+  now: Date = new Date(),
+): { schedule: CategoryBlitzSchedule; occurrence: CategoryBlitzWindowOccurrence } | null {
+  for (const schedule of schedules) {
+    const occurrence = getCurrentOrNextScheduleWindow(schedule, now);
+    if (occurrence && occurrence.windowStart <= now && now < occurrence.windowEnd) {
+      return { schedule, occurrence };
+    }
+  }
+  return null;
+}
+
+/**
+ * When tonight's open window ends (`openScheduleWindow`). Null when no window
+ * is open. Derived from the live schedules, so a partner shortening or closing
+ * tonight's window shows up at once — unlike a session's `scheduledEndAt`,
+ * which is frozen at creation.
+ */
+export function openScheduleWindowEnd(schedules: CategoryBlitzSchedule[], now: Date = new Date()): Date | null {
+  return openScheduleWindow(schedules, now)?.occurrence.windowEnd ?? null;
 }
