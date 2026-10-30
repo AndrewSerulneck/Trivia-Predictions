@@ -173,12 +173,14 @@ export const dieStage = (input: DieTimingInput): DieTiming => {
 
 /**
  * The phone's clock against the server's (plan Phase 12.2a), from the sessions
- * response the game already polls: `serverNowMs` is stamped just before the
- * reply, so the offset is measured at the request's midpoint and is off by at
- * most half the round trip. The fastest reading wins; a slow one (over
- * DIE_CLOCK_MAX_RTT_MS) is never used; the kept reading is replaced once it is
- * older than DIE_CLOCK_SAMPLE_MAX_AGE_MS (either way: the phone's clock may be
- * changed mid-game).
+ * response the game already polls. The reply carries `serverReceivedAtMs` (the
+ * server's clock as the request came in) and `serverNowMs` (as the reply left),
+ * so the offset is measured NTP-style and the server's own work never biases it
+ * (Phase 13.1b); `rttMs` is network time only. A reply without
+ * `serverReceivedAtMs` (an older server) is read as one stamp at the request's
+ * midpoint. The fastest reading wins; a slow one (over DIE_CLOCK_MAX_RTT_MS) is
+ * never used; the kept reading is replaced once it is older than
+ * DIE_CLOCK_SAMPLE_MAX_AGE_MS (either way: the phone's clock may be changed mid-game).
  */
 export interface DieClockSample {
   /** Server time minus phone time, ms. */
@@ -192,15 +194,31 @@ export const DIE_CLOCK_MAX_RTT_MS = 2000;
 /** About four 15 s polls. */
 export const DIE_CLOCK_SAMPLE_MAX_AGE_MS = 60_000;
 
+const isFiniteNumber = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+
 export const nextDieClockSample = (
   prev: DieClockSample | null,
-  reading: { serverNowMs: unknown; sentAtMs: number; receivedAtMs: number }
+  reading: { serverReceivedAtMs?: unknown; serverNowMs: unknown; sentAtMs: number; receivedAtMs: number }
 ): DieClockSample | null => {
-  const { serverNowMs, sentAtMs, receivedAtMs } = reading;
-  if (typeof serverNowMs !== "number" || !Number.isFinite(serverNowMs)) return prev;
-  const rttMs = receivedAtMs - sentAtMs;
-  if (!(rttMs >= 0 && rttMs <= DIE_CLOCK_MAX_RTT_MS)) return prev;
-  const sample = { offsetMs: Math.round(serverNowMs - (sentAtMs + receivedAtMs) / 2), rttMs, takenAtMs: receivedAtMs };
+  const { serverReceivedAtMs, serverNowMs, sentAtMs, receivedAtMs } = reading;
+  if (!isFiniteNumber(serverNowMs)) return prev;
+  const roundTripMs = receivedAtMs - sentAtMs;
+  if (!(roundTripMs >= 0)) return prev;
+  // Stamps that can't be true (the server worked longer than the whole round
+  // trip, or backwards) fall back to the one-stamp reading.
+  const serverIn =
+    isFiniteNumber(serverReceivedAtMs) &&
+    serverReceivedAtMs <= serverNowMs &&
+    serverNowMs - serverReceivedAtMs <= roundTripMs
+      ? serverReceivedAtMs
+      : null;
+  const rttMs = serverIn === null ? roundTripMs : roundTripMs - (serverNowMs - serverIn);
+  if (rttMs > DIE_CLOCK_MAX_RTT_MS) return prev;
+  const offsetMs =
+    serverIn === null
+      ? serverNowMs - (sentAtMs + receivedAtMs) / 2
+      : (serverIn - sentAtMs + (serverNowMs - receivedAtMs)) / 2;
+  const sample = { offsetMs: Math.round(offsetMs), rttMs, takenAtMs: receivedAtMs };
   if (prev === null || rttMs <= prev.rttMs) return sample;
   return Math.abs(receivedAtMs - prev.takenAtMs) > DIE_CLOCK_SAMPLE_MAX_AGE_MS ? sample : prev;
 };

@@ -16,8 +16,10 @@ import { isSessionEnforced, readSession } from "@/lib/serverSession";
  * manual session (the engine never advances one) and for continuous venues.
  * The letter die reads it to know whether another round follows
  * (anotherRoundFollows, docs/category-blitz-letter-die-plan.md Phase 11.1b).
- * serverNowMs is the server's clock as the reply leaves (ms epoch), so the die
- * can measure a late letter on the server's clock, not a phone's (Phase 12.2a).
+ * serverReceivedAtMs / serverNowMs are the server's clock as the request came in
+ * and as the reply leaves (ms epoch), so the die can measure a late letter on the
+ * server's clock, not a phone's, without the engine's work skewing the reading
+ * (Phases 12.2a, 13.1b).
  *
  * Always routes through driveVenueCategoryBlitz (not a raw getActiveSession
  * lookup) so it self-heals a stale session AND advances/fires rounds on
@@ -148,7 +150,15 @@ export async function GET(request: Request) {
     // nothing in the response payload exposes that venues share a session.
     if (session) session = { ...session, venueId };
 
-    return NextResponse.json({ ok: true, session, nextWindowAt, scheduleWindowEndAt, realtimeChannel, serverNowMs: Date.now() });
+    return NextResponse.json({
+      ok: true,
+      session,
+      nextWindowAt,
+      scheduleWindowEndAt,
+      realtimeChannel,
+      serverReceivedAtMs: now.getTime(),
+      serverNowMs: Date.now(),
+    });
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to load session." },

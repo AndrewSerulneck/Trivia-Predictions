@@ -192,6 +192,38 @@ describe("Phase 11.3", () => {
   });
 });
 
+// Plan Phase 13.1a: "was the letter late?" is decided once, with the offset at arrival.
+describe("Phase 13.1a", () => {
+  it("a better clock reading during the landing never makes the die vanish", async () => {
+    const stages: DieStage[] = [];
+    const onDone = vi.fn();
+    const base = { onStageChange: (s: DieStage) => stages.push(s), onDone };
+    const view = render(die({ ...base, letter: null, nextRoundStartsIn: 4, roundStartedAtMs: null, serverClockOffsetMs: 0 }));
+    await advance(1000);
+    // The letter shows up 2.7 s into the round (allowance 3 s), offset 0.
+    const roundStartedAtMs = Date.now() - 2700;
+    view.rerender(die({ ...base, letter: "m", nextRoundStartsIn: 0, roundStartedAtMs, serverClockOffsetMs: 0 }));
+    await advance(600);
+    expect(stages).toContain("landing");
+    // A faster poll moves the offset +400 ms: 2.7 + 0.4 > 3 s if it were re-checked.
+    view.rerender(die({ ...base, letter: "m", nextRoundStartsIn: 0, roundStartedAtMs, serverClockOffsetMs: 400 }));
+    await advance(4000);
+    expect(stages).toEqual(["tumbling", "landing", "holding", "flying", "done"]);
+    expect(onDone).toHaveBeenCalledWith({ flew: true });
+  });
+
+  it("the offset at arrival still decides: a letter late on the server's clock is skipped", async () => {
+    const onDone = vi.fn();
+    const view = render(die({ letter: null, nextRoundStartsIn: 4, roundStartedAtMs: null, serverClockOffsetMs: 0, onDone }));
+    await advance(1000);
+    const roundStartedAtMs = Date.now() - 2700;
+    view.rerender(die({ letter: "m", nextRoundStartsIn: 0, roundStartedAtMs, serverClockOffsetMs: 400, onDone }));
+    await advance(100);
+    expect(overlay()).toBeNull();
+    expect(onDone).toHaveBeenCalledWith({ flew: false });
+  });
+});
+
 describe("haptic-only animation types", () => {
   it("map to a light and a strong buzz", () => {
     expect(hapticForAnimation("CATEGORY_BLITZ_DIE_BOUNCE")).toBe("tap");

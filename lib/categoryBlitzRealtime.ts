@@ -77,8 +77,8 @@ export interface CategoryBlitzSessionState {
   scheduleWindowEndAt: string | null;
   /**
    * Server time minus this phone's time (ms), from the sessions responses'
-   * `serverNowMs` (`nextDieClockSample`); 0 until a usable reading. Only the
-   * letter die's late-letter cutoff reads it (plan Phase 12.2a).
+   * `serverReceivedAtMs` / `serverNowMs` (`nextDieClockSample`); 0 until a usable
+   * reading. Only the letter die's late-letter cutoff reads it (plan Phases 12.2a, 13.1b).
    */
   serverClockOffsetMs: number;
   /** Seconds until the lobby's round starts, or null when there's no known start time (e.g. a manual session). */
@@ -624,12 +624,18 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         error?: string;
         realtimeChannel?: string;
         scheduleWindowEndAt?: string | null;
+        serverReceivedAtMs?: number;
         serverNowMs?: number;
       };
       if (!mountedRef.current) return;
 
       // A clock reading is good whatever order the replies land in.
-      const sample = nextDieClockSample(clockSampleRef.current, { serverNowMs: json.serverNowMs, sentAtMs, receivedAtMs });
+      const sample = nextDieClockSample(clockSampleRef.current, {
+        serverReceivedAtMs: json.serverReceivedAtMs,
+        serverNowMs: json.serverNowMs,
+        sentAtMs,
+        receivedAtMs,
+      });
       if (sample && sample !== clockSampleRef.current) {
         clockSampleRef.current = sample;
         setServerClockOffsetMs(sample.offsetMs);

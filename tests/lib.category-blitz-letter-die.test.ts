@@ -220,6 +220,35 @@ describe("nextDieClockSample", () => {
     const faster = nextDieClockSample(fast, read(T0 + 2000, T0 + 1000, T0 + 1050));
     expect(faster?.rttMs).toBe(50);
   });
+  // Plan Phase 13.1b: the request's arrival on the server is stamped too.
+  const ntp = (serverReceivedAtMs: unknown, serverNowMs: unknown, sentAtMs: number, receivedAtMs: number) => ({
+    serverReceivedAtMs,
+    serverNowMs,
+    sentAtMs,
+    receivedAtMs,
+  });
+  it("NTP: 700 ms of server work and equal clocks → offset 0, rtt is network time only", () => {
+    // 100 ms out, 700 ms of engine work, 100 ms back.
+    expect(nextDieClockSample(null, ntp(T0 + 100, T0 + 800, T0, T0 + 900))).toEqual({ offsetMs: 0, rttMs: 200, takenAtMs: T0 + 900 });
+  });
+  it("NTP: a phone 4 s ahead → −4000", () => {
+    // Phone stamps run 4 s ahead of the server's.
+    expect(nextDieClockSample(null, ntp(T0 + 100, T0 + 800, T0 + 4000, T0 + 4900))?.offsetMs).toBe(-4000);
+  });
+  it("NTP: slow engine work never trips the network-time cap", () => {
+    const work = DIE_CLOCK_MAX_RTT_MS + 500;
+    expect(nextDieClockSample(null, ntp(T0 + 100, T0 + 100 + work, T0, T0 + 200 + work))?.rttMs).toBe(200);
+  });
+  it("no serverReceivedAtMs (an older server) → the one-stamp midpoint formula", () => {
+    expect(nextDieClockSample(null, ntp(undefined, T0 + 5100, T0, T0 + 200))).toEqual({ offsetMs: 5000, rttMs: 200, takenAtMs: T0 + 200 });
+    expect(nextDieClockSample(null, ntp("x", T0 + 5100, T0, T0 + 200))?.offsetMs).toBe(5000);
+  });
+  it("impossible server stamps fall back to the one-stamp formula", () => {
+    // Received after it replied.
+    expect(nextDieClockSample(null, ntp(T0 + 5200, T0 + 5100, T0, T0 + 200))?.offsetMs).toBe(5000);
+    // Worked longer than the whole round trip.
+    expect(nextDieClockSample(null, ntp(T0 + 4000, T0 + 5100, T0, T0 + 200))?.offsetMs).toBe(5000);
+  });
   it("replaces a kept reading once it is old, either way (the phone's clock was changed)", () => {
     const fast = nextDieClockSample(null, read(T0 + 1000, T0, T0 + 100));
     const later = T0 + 100 + DIE_CLOCK_SAMPLE_MAX_AGE_MS + 1;

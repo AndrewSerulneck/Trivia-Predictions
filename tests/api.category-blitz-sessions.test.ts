@@ -101,7 +101,9 @@ describe("GET /api/category-blitz/sessions", () => {
       // Global-room flag off ⇒ room resolves to the venue itself, so the
       // client subscribes to that venue's channel.
       realtimeChannel: categoryBlitzChannelName("venue-1"),
-      // The server's clock as the reply leaves, for the letter die (Phase 12.2a).
+      // The server's clock as the request came in and as the reply leaves, for
+      // the letter die (Phases 12.2a, 13.1b).
+      serverReceivedAtMs: Date.parse("2026-07-02T12:00:00.000Z"),
       serverNowMs: Date.parse("2026-07-02T12:00:00.000Z"),
     });
     // Concealment: the channel is a hash, so the raw venue id (and, under

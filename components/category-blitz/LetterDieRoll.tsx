@@ -68,7 +68,10 @@ export interface LetterDieRollProps {
   nextRoundStartsIn: number | null;
   /** The round's start (ms epoch, server clock); null before the round exists. */
   roundStartedAtMs: number | null;
-  /** Server time minus this phone's time, for the late-letter cutoff only (plan Phase 12.2a); 0 = unknown. */
+  /**
+   * Server time minus this phone's time, for the late-letter cutoff only (plan Phase 12.2a); 0 = unknown.
+   * Read once, when the letter arrives (Phase 13.1a); a later change never re-decides "late".
+   */
   serverClockOffsetMs?: number;
   /** Majority Rules round: the die turns magenta/gold during the landing hop. */
   reverse?: boolean;
@@ -88,6 +91,12 @@ const isRolling = (stage: DieStage): boolean => stage !== "idle" && stage !== "d
 interface Latches {
   tumbleStartedAtMs: number | null;
   letterArrivedAtMs: number | null;
+  /**
+   * The clock offset when the letter arrived. "Was the letter late?" is decided
+   * once, with this: a better clock reading mid-landing must not make the die
+   * vanish mid-bounce (plan Phase 13.1a).
+   */
+  arrivalClockOffsetMs: number | null;
   hiddenDuringRoll: boolean;
 }
 
@@ -168,7 +177,12 @@ const LetterDieRollInner = ({
     callbacks.current = { onStageChange, onDone };
   });
 
-  const latches = useRef<Latches>({ tumbleStartedAtMs: null, letterArrivedAtMs: null, hiddenDuringRoll: false });
+  const latches = useRef<Latches>({
+    tumbleStartedAtMs: null,
+    letterArrivedAtMs: null,
+    arrivalClockOffsetMs: null,
+    hiddenDuringRoll: false,
+  });
   const motionRef = useRef<DieMotion>(newMotion());
   const stageRef = useRef<DieStage>("idle");
   const flewRef = useRef(false);
@@ -358,7 +372,7 @@ const LetterDieRollInner = ({
         letterArrivedAtMs: l.letterArrivedAtMs,
         tumbleStartedAtMs: l.tumbleStartedAtMs,
         roundStartedAtMs: p.roundStartedAtMs,
-        serverClockOffsetMs: p.serverClockOffsetMs,
+        serverClockOffsetMs: l.arrivalClockOffsetMs ?? p.serverClockOffsetMs,
         nowMs: now,
         reducedMotion: p.reduced,
         hiddenDuringRoll: l.hiddenDuringRoll,
@@ -387,10 +401,13 @@ const LetterDieRollInner = ({
 
   // Props moved (the countdown ticks, the letter arrives): evaluate on the next frame.
   useEffect(() => {
-    if (letter && latches.current.letterArrivedAtMs === null) latches.current.letterArrivedAtMs = Date.now();
+    if (letter && latches.current.letterArrivedAtMs === null) {
+      latches.current.letterArrivedAtMs = Date.now();
+      latches.current.arrivalClockOffsetMs = live.current.serverClockOffsetMs;
+    }
     const id = window.requestAnimationFrame(() => step(Date.now()));
     return () => window.cancelAnimationFrame(id);
-  }, [letter, nextRoundStartsIn, roundStartedAtMs, serverClockOffsetMs, reduced, step]);
+  }, [letter, nextRoundStartsIn, roundStartedAtMs, reduced, step]);
 
   // While rolling: the frame loop, and "tab hidden during the roll → skip to done".
   const rolling = isRolling(stage);
