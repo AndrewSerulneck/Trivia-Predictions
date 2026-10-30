@@ -25,6 +25,17 @@ the live site, for **PLAYERS ONLY** (Andrew, plan §2 item 12): every `/owner/*`
 `/admin` open in the system browser, never in-app — no partner link, sign-in, dashboard or billing
 screen anywhere in the app. Partners use the website. Read the plan before any native/app-store work.
 
+- **Native passkeys (Phase 4c / Part B, 2026-10-25).** Paid-team signing was already done in 5.2 and is verified
+  in the signed app (`2U7HMXGQM3.com.hightopchallenge.app`, profile expires 2027-10-23). Andrew verified iPhone
+  passkey creation, native Face ID sign-in and Safari sign-in with that same passkey. Approved migration
+  `20261025150000_native_discoverable_passkeys.sql` is applied: discoverable authentication must allow an unknown
+  account on the challenge; registration still requires an account/profile. Never reintroduce `account_id NOT NULL`
+  on every challenge. Android WebView/Credential Manager integration is built locally; exact app-certificate origins
+  are derived by `getExpectedPasskeyOrigins` in `lib/webauthn.ts` from the same certificate reader as Digital Asset
+  Links. Android association/verifier are live at `7aacf153` (2026-10-25); Google DAL verifies both hosts' credential
+  trust and play.'s App Links with the supplied Play signing SHA-256. Real Play-installed passkey testing is still
+  open; never substitute debug/upload certificates or claim Android end-to-end ready. Handoffs `docs/native-app-store-plan_PHASE_4C_HANDOFF.md`
+  and `docs/native-app-store-plan_PHASE_2B_HANDOFF.md`; 7+ day persistence remains unverified.
 - **Player account deletion is live (Phase 1b, 2026-10-08).** One all-or-nothing RPC,
   `delete_player_account` (migration `20261008044524`), called only by `lib/playerAccountDeletion.ts`
   from `POST /api/account/delete` (signed session only; 503 without `SESSION_SECRET`, because dev
@@ -140,9 +151,24 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   promotional switch (Apple 4.5.4; default on, stated on the welcome before Turn on).** A partner's NEW game or prize
   (`POST /api/owner/schedule`, `POST /api/owner/rewards` only) → `lib/push/venueNews.ts` after the reply (`after`) → RPC
   `claim_venue_news_push` (once per game/prize, cap `VENUE_NEWS_DAILY_CAP` = 5 per bar per local day, audience = phones of
-  players with a profile at the bar). 5.5's partner messages ride on `news` with their own cap.
+  players with a profile at the bar). **5.5 (2026-10-23, migration `20261023145024` NOT yet applied; flag
+  `NEXT_PUBLIC_PARTNER_MESSAGES_ENABLED`, off): partner-written messages** on the same `news` switch and audience. Rules +
+  copy + caps (`PARTNER_MESSAGES_DAILY_CAP` = 2, `PARTNER_MESSAGE_REPORTS_TO_PAUSE` = 3, 150 chars, no links, word list)
+  in `lib/partnerMessageRules.ts` (also the flag's one reader); the ONLY caller of `claim_venue_message_push` /
+  `read_venue_message` / `report_venue_message` and writer of `push_venue_message_pauses` is `lib/push/venueMessages.ts`.
+  Compose box `components/owner/messages/PartnerMessagesSheet.tsx` (`?sheet=messages`, website only) → `/api/owner/messages`;
+  a tapped push opens `/venue/{id}?message={id}` → `components/push/PartnerMessageSheet.tsx` (Report) → `/api/push/messages/[id]`
+  (signed session; popup ads wait while `?message=` is in the URL); admin pause/un-pause in Venues → `PartnerMessagesPanel`.
+  `tests/partner-messages.test.ts`. **10.1 (2026-10-26, migration `20261026173304` applied 2026-10-26):** a reporter is a
+  PERSON (`venue_message_reporter` = account, else profile; SQL only); admin un-pause ONLY via `unpause_venue_messages`
+  (also stamps `reports_reviewed_at`; missing RPC → 503, never a plain delete).
   `tests/push-notifications-contract.test.ts`, `npm run test:push-sql`. iPhone half = Phase 5.2 (signed by the
-  paid team as `com.hightopchallenge.app` 2026-10-23; waits on Andrew's APNs key — `…_PHASE_5_2_HANDOFF.md`). Firebase Analytics must stay unlinked.
+  paid team as `com.hightopchallenge.app` 2026-10-23; Andrew confirmed APNs key uploaded 2026-10-25;
+  real iPhone push delivery remains unverified — `…_PHASE_5_2_HANDOFF.md`). Firebase Analytics must stay unlinked.
+- **"Get the app" promotion hosts (Phase 10.3, 2026-10-26).** `promotionHosts()` / `isPromotionHost()` in `lib/appStorePromotion.ts`
+  are the one home of which hosts show the banner, the sign-in line and the Safari tag: `playHost()`, plus the apex and `www.` while
+  the domain split is OFF (Andrew). Never type the game host in those files (test). `/info#app` renders on the server in desktop form
+  (snapshot `"pending"`), and `/app` sends a desktop there only when `appStorePromotionReady()` (`desktopSectionLive`).
 - **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
   `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
   `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep
@@ -1102,7 +1128,11 @@ Partner Dashboard **2,056 KB → 352 KB** and **10.4 s → 2.1 s** to the load e
 - **The PWA is for PLAYERS ONLY.** `/owner/*` and `/admin` stay an ordinary website — they are better with an address bar, tabs and a real keyboard. No install promotion on those surfaces.
 - **NO SERVICE WORKER, in any phase.** Do not add `next-pwa`, `workbox`, or any caching library. Offline caching is what breaks Next.js apps (stale HTML, cached auth redirects, mismatched RSC payloads); iOS does not need one to install.
 - **`start_url`/`scope` in `app/manifest.ts` must stay `/`, and `orientation` must stay absent.** An installed app has its own cookie jar, so it cold-launches with no cookies and `proxy.ts` bounces any gated route; `/` (the join flow) is the only route that survives. `start_url` is baked into every install at install time — a bad value is unfixable for users who already installed. An `orientation` lock would kill the landscape board outright.
-- **Install *promotion* is gated by `NEXT_PUBLIC_PWA_INSTALL_PROMPT_ENABLED`** (`isInstallPromptEnabled()` in `lib/pwa.ts`, its one reader). Off = no prompt UX anywhere. **Must not be flipped before the domain split** — see `docs/pwa-install-rollout-runbook.md`.
+- **PWA install promotion is retired in the Phase 7 working tree (2026-10-25).** No old flag reader,
+  install listener/button or coach card remains. Native store promotion uses one default-off switch,
+  `NEXT_PUBLIC_APP_STORE_LINKS_ENABLED`, plus both verified live listing URLs in `lib/appDownloadLink.ts`.
+  Do not enable before both stores are live. `docs/pwa-install-rollout-runbook.md` is superseded;
+  current release state is `docs/native-app-store-plan_PHASE_7_HANDOFF.md`. Manifest/standalone behavior stays.
 - **Installability itself is NOT flag-gated.** `app/manifest.ts` and the `apple-mobile-web-app-capable` meta in `app/layout.tsx` ship on every deploy, so a player can Add to Home Screen from the apex today and bake the apex `start_url` in permanently. That standing exposure is accepted (nothing advertises it; the domain split closes it) — don't describe the PWA track as "fully inert."
 - **Headless browsers cannot verify this surface.** They have no browser chrome at all, so a headless pass reports success on a bug that is still there. Automated coverage stops at build/typecheck/lint/tests + `npm run test:pwa-contract`; everything visual goes on `docs/bingo-fullscreen-pwa-device-checklist.md`, which only Andrew can close.
 - **Run `npm run test:pwa-contract` after touching the manifest, `lib/pwa.ts`, `StandalonePwaRuntime`, or the `.tp-bingo-landscape-*` CSS.** It also guards Phase 1's landscape CSS against leaking into portrait — the same failure mode as commit 35115fc.

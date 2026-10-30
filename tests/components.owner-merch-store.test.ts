@@ -11,6 +11,7 @@ import {
   resolveMerchStoreStep,
   type MerchStoreSheetProps,
 } from "@/components/owner/store/MerchStoreSheet";
+import { BRAND_LOGO_DOWNLOAD } from "@/lib/brandLogoDownload";
 import { JOIN_QR_DISPLAY_URL, JOIN_QR_FILES } from "@/lib/joinQr";
 import { MERCH_CATALOG, MERCH_MAX_UNIT_QTY } from "@/lib/merchCatalog";
 import type { MerchCart } from "@/lib/merchPricing";
@@ -247,6 +248,18 @@ describe("MerchStoreSheet Shop", () => {
     // After the products, never between them.
     const lastProduct = [...document.querySelectorAll("li[data-product]")].at(-1);
     expect(lastProduct?.compareDocumentPosition(card)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it("offers the logo as a free transparent PNG, after the QR card", () => {
+    openShop();
+    const card = document.querySelector<HTMLElement>("[data-free-logo]");
+    if (!card) throw new Error("no free logo card");
+    expect(within(card).getByRole("heading", { name: "Download our logo" })).not.toBeNull();
+    const link = within(card).getByRole("link", { name: /Download logo/ });
+    expect(link.getAttribute("href")).toBe(BRAND_LOGO_DOWNLOAD.src);
+    expect(link.getAttribute("download")).toBe(BRAND_LOGO_DOWNLOAD.download);
+    const qrCard = document.querySelector("[data-free-qr]");
+    expect(qrCard?.compareDocumentPosition(card)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it("a stray ?step=shop is rewritten to the bare Shop URL", () => {

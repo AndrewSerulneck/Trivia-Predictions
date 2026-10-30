@@ -6,14 +6,13 @@ import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, Download, ListChecks, Maximize2, Minimize2, Plus, Share, Trophy, X } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ListChecks, Maximize2, Minimize2, Plus, Trophy, X } from "lucide-react";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import type { CSSProperties, TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { getUserId } from "@/lib/storage";
 import { getVenueId } from "@/lib/storage";
 import { supabase } from "@/lib/supabase";
-import { isIOSSafari, shouldOfferInstallPrompt, useIsRunningAsInstalledPwa, usePwaInstallPrompt } from "@/lib/pwa";
 import { navigateBackToVenue } from "@/lib/venueGameTransition";
 import { consumeBingoPrefetchCache } from "@/lib/bingoPrefetchCache";
 import { forceRecoverDocumentScroll } from "@/lib/scrollLock";
@@ -100,7 +99,6 @@ const DEFAULT_LANDSCAPE_VIEWPORT_STYLE = {
   "--bingo-landscape-top": "0px",
 } as CSSProperties;
 const FULLSCREEN_HINT_STORAGE_KEY = "hightop-bingo-fullscreen-hint-seen";
-const INSTALL_COACH_CARD_STORAGE_KEY = "hightop-bingo-install-coach-seen";
 
 function getFullscreenElement(): Element | null {
   const fullscreenDocument = document as FullscreenCapableDocument;
@@ -524,7 +522,6 @@ export function SportsBingoHome({
   const [isLandscapeFullscreen, setIsLandscapeFullscreen] = useState(false);
   const [fullscreenFeedback, setFullscreenFeedback] = useState("");
   const [showFullscreenHint, setShowFullscreenHint] = useState(false);
-  const [showInstallCoachCard, setShowInstallCoachCard] = useState(false);
   const [landscapeBoardMode, setLandscapeBoardMode] = useState<LandscapeBoardMode>("active");
   const [landscapeActiveBoardIndex, setLandscapeActiveBoardIndex] = useState(0);
   const [landscapeScoredBoardIndex, setLandscapeScoredBoardIndex] = useState(0);
@@ -548,8 +545,6 @@ export function SportsBingoHome({
   const boardPopTimersRef = useRef<Map<string, number>>(new Map());
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
-  const isInstalledPwa = useIsRunningAsInstalledPwa();
-  const { canInstallOnDevice, promptInstall } = usePwaInstallPrompt();
 
   useEffect(() => {
     setUserId(getUserId() ?? "");
@@ -800,33 +795,6 @@ export function SportsBingoHome({
     };
   }, [isFullscreenSupported, isLandscapeFullscreen, isLandscapeGameView]);
 
-  // This is exactly the slot the fullscreen button leaves empty on iPhone
-  // (Fullscreen API absent, see `isFullscreenSupported` above) — the single
-  // most persuasive moment to offer the PWA install path. Flag-gated inert;
-  // see docs/bingo-fullscreen-pwa-phase5.md.
-  useEffect(() => {
-    if (
-      !isLandscapeGameView ||
-      isFullscreenSupported ||
-      isInstalledPwa ||
-      !shouldOfferInstallPrompt() ||
-      !isIOSSafari()
-    ) {
-      setShowInstallCoachCard(false);
-      return;
-    }
-
-    try {
-      if (window.localStorage.getItem(INSTALL_COACH_CARD_STORAGE_KEY) === "true") {
-        return;
-      }
-      window.localStorage.setItem(INSTALL_COACH_CARD_STORAGE_KEY, "true");
-    } catch {
-      // Storage can be unavailable in private browsing; the card still works for this session.
-    }
-
-    setShowInstallCoachCard(true);
-  }, [isFullscreenSupported, isInstalledPwa, isLandscapeGameView]);
 
   useEffect(() => {
     if (isLandscapeGameView || !isLandscapeFullscreen) {
@@ -2222,32 +2190,8 @@ export function SportsBingoHome({
                         {isLandscapeFullscreen ? <Minimize2 aria-hidden="true" className="h-4 w-4" /> : <Maximize2 aria-hidden="true" className="h-4 w-4" />}
                       </button>
                     </div>
-                  ) : showInstallCoachCard ? (
-                    <div className="tp-bingo-install-coach-card inline-flex items-center gap-1.5 rounded-full border border-sky-300/45 bg-slate-950/95 px-3 py-1.5 text-caption font-black uppercase tracking-[0.08em] text-sky-100 shadow-[0_0_18px_rgba(125,211,252,0.18)]">
-                      <Share aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
-                      <span>Add to Home Screen for full screen</span>
-                      <button
-                        type="button"
-                        onClick={() => setShowInstallCoachCard(false)}
-                        aria-label="Dismiss add to Home Screen tip"
-                        className="tp-clean-button flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-sky-200/80 hover:text-sky-100"
-                      >
-                        <X aria-hidden="true" className="h-3 w-3" />
-                      </button>
-                    </div>
                   ) : null}
-                  {canInstallOnDevice ? (
-                    <button
-                      type="button"
-                      onClick={promptInstall}
-                      className="tp-clean-button tp-bingo-landscape-tab inline-flex h-8 items-center gap-1.5 rounded-full border border-sky-300/45 bg-sky-300/10 px-3 text-caption font-black uppercase tracking-[0.1em] text-sky-200 transition"
-                      aria-label="Install app"
-                      title="Install app"
-                    >
-                      <Download aria-hidden="true" className="h-3.5 w-3.5" />
-                      <span className="tp-bingo-landscape-control-label">Install</span>
-                    </button>
-                  ) : null}
+
                 </div>
                 {/* `fullscreenFeedback` is only ever set by a failed
                     `toggleLandscapeFullscreen()` and is cleared on the next

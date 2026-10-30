@@ -23,7 +23,8 @@
 // "add-venue" = Add a venue to the bill (docs/multi-venue-volume-billing-plan.md Phase 4): address, map, review.
 // "history" = Results, was Game Results (docs/live-trivia-weekly-places-reward-plan.md §5f): the list, then `step=game|player|prize`.
 // "prizes" = Prizes, the sheet once called "rewards" (docs/rewards-to-prizes-rename-plan.md Phase 3).
-export const OWNER_SHEET_IDS = ["schedule", "prizes", "store", "pos", "add-venue", "history"] as const;
+// "messages" = Message your players (docs/native-app-store-plan.md Phase 5.5), one screen.
+export const OWNER_SHEET_IDS = ["schedule", "prizes", "store", "pos", "add-venue", "history", "messages"] as const;
 
 export type OwnerSheetId = (typeof OWNER_SHEET_IDS)[number];
 

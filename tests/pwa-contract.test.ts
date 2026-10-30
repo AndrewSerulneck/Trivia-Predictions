@@ -203,98 +203,17 @@ describe("PWA service-worker prohibition", () => {
   });
 });
 
-describe("PWA install prompt inertness", () => {
-  const setFlag = (value: string | undefined): void => {
-    if (value === undefined) {
-      delete process.env.NEXT_PUBLIC_PWA_INSTALL_PROMPT_ENABLED;
-      return;
-    }
-    process.env.NEXT_PUBLIC_PWA_INSTALL_PROMPT_ENABLED = value;
-  };
-
-  it("resolves false when the flag is unset, empty, or explicitly off", async () => {
-    const { isInstallPromptEnabled } = await import("@/lib/pwa");
-    const original = process.env.NEXT_PUBLIC_PWA_INSTALL_PROMPT_ENABLED;
-
-    try {
-      for (const value of [undefined, "", "false", "0", "off", "no"]) {
-        setFlag(value);
-        expect(isInstallPromptEnabled()).toBe(false);
-      }
-      for (const value of ["1", "true", "TRUE", " yes ", "on"]) {
-        setFlag(value);
-        expect(isInstallPromptEnabled()).toBe(true);
-      }
-    } finally {
-      setFlag(original);
-    }
+describe("PWA install promotion is retired", () => {
+  it("has no prompt hooks, listeners, coach card or old flag reader", () => {
+    expect(filesMatching(/beforeinstallprompt|usePwaInstallPrompt|NEXT_PUBLIC_PWA_INSTALL_PROMPT_ENABLED/)).toEqual([]);
+    expect(bingoSource).not.toContain("Add to Home Screen for full screen");
+    expect(bingoSource).not.toContain("showInstallCoachCard");
+    expect(bingoSource).not.toContain('aria-label="Install app"');
   });
 
-  it("is read through exactly one resolver, so the flag has a single indirection point", () => {
-    // Same reversible convention as NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED /
-    // NEXT_PUBLIC_CATEGORY_BLITZ_GLOBAL_ROOM: one reader, so flipping the flag
-    // is provably all-or-nothing.
-    expect(filesMatching(/process\.env\.NEXT_PUBLIC_PWA_INSTALL_PROMPT_ENABLED/)).toEqual([
-      "lib/pwa.ts",
-    ]);
-  });
-
-  it("registers no beforeinstallprompt listener while the flag is off", () => {
-    // Asserted structurally rather than by rendering: the vitest environment is
-    // `node` (no DOM), and a headless DOM could not host a real install prompt
-    // anyway. The contract is that the flag check short-circuits the effect
-    // BEFORE any listener is attached, so an off flag costs zero listeners.
-    const effect = sourceBetween(
-      pwaLibSource,
-      "export function usePwaInstallPrompt()",
-      "const promptInstall = useCallback("
-    );
-    const guardIndex = effect.indexOf("if (!shouldOfferInstallPrompt() || isRunningAsInstalledPwa()) {");
-    const firstListenerIndex = effect.indexOf("window.addEventListener(");
-
-    expect(guardIndex).toBeGreaterThanOrEqual(0);
-    expect(firstListenerIndex).toBeGreaterThan(guardIndex);
-    expect(effect.slice(guardIndex, firstListenerIndex)).toContain("return;");
-
-    // The guard is the flag AND "not inside the App Store / Google Play app"
-    // (docs/native-app-store-plan.md Phase 3): the app has nothing to install.
-    expect(sourceBetween(pwaLibSource, "export function shouldOfferInstallPrompt()", "}")).toContain(
-      "return isInstallPromptEnabled() && !isNativeApp();"
-    );
-
-    // `canInstallOnDevice` is derived purely from the deferred event, which the
-    // guarded effect is the only writer of — so an off flag pins it false.
-    expect(pwaLibSource).toContain("canInstallOnDevice: deferredEvent !== null");
-  });
-
-  it("renders no install UI while the flag is off", () => {
-    // Both install surfaces live in one slot in the Bingo landscape headline
-    // (Phase 5). The Android button is gated on `canInstallOnDevice`, pinned
-    // false above; the iOS coach card is gated on `showInstallCoachCard`, whose
-    // only enabling effect bails on the same flag.
-    const coachCardEffect = sourceBetween(
-      bingoSource,
-      "      !shouldOfferInstallPrompt() ||",
-      "setShowInstallCoachCard(true);"
-    );
-    expect(coachCardEffect).toContain("setShowInstallCoachCard(false);");
-    expect(coachCardEffect).toContain("return;");
-
-    expect(bingoSource).toContain("{canInstallOnDevice ? (");
-    expect(bingoSource).toContain("showInstallCoachCard ? (");
-
-    // Players only (master plan §2): no install promotion on partner/admin
-    // surfaces, and no global banner. This component is the only host.
-    expect(filesMatching(/usePwaInstallPrompt|isInstallPromptEnabled/)).toEqual(
-      expect.arrayContaining(["lib/pwa.ts", "components/bingo/SportsBingoHome.tsx"])
-    );
-    expect(filesMatching(/usePwaInstallPrompt|isInstallPromptEnabled/)).toHaveLength(2);
-  });
-
-  it("keeps the flag documented as off in .env.example", () => {
-    // .env.local is off limits (CLAUDE.md); .env.example is the checked-in
-    // record and must never ship the flag pre-flipped.
-    expect(read(".env.example")).toContain("NEXT_PUBLIC_PWA_INSTALL_PROMPT_ENABLED=false");
+  it("keeps installed-mode detection for existing home-screen players", () => {
+    expect(pwaLibSource).toContain("export function isRunningAsInstalledPwa()");
+    expect(pwaLibSource).toContain("export function useIsRunningAsInstalledPwa()");
   });
 });
 

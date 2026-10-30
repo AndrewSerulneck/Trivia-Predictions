@@ -10,6 +10,7 @@ import { LiveGamesSection, type SectionLoad } from "@/components/owner/dashboard
 import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
 import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/RewardsFlow";
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
+import { PartnerMessagesSheet } from "@/components/owner/messages/PartnerMessagesSheet";
 import { PosConnectionsSheet } from "@/components/owner/pos/PosConnectionsSheet";
 import { ResultsSheet } from "@/components/owner/results/ResultsSheet";
 import { AddVenueSheet, type AddedVenue } from "@/components/owner/add-venue/AddVenueSheet";
@@ -22,6 +23,7 @@ import { fetchOwnerVenues } from "@/lib/ownerVenuesClient";
 import { pushSheet } from "@/lib/ownerSheetParams";
 import type { MerchCart, MerchVenueRef } from "@/lib/merchPricing";
 import { knownItemIds, resolvePendingHighlight, type PendingHighlight } from "@/lib/ownerDashboardHighlight";
+import { isPartnerMessagesEnabled } from "@/lib/partnerMessageRules";
 import { isPosIntegrationsEnabled } from "@/lib/pos/providers";
 import type { OwnerCompetition } from "@/lib/ownerRewardDisplay";
 import { useLoaderVisible } from "@/lib/useLoaderVisible";
@@ -390,6 +392,14 @@ const PosSheetHost = ({ venue }: { venue: Venue | null }) => {
   return <PosConnectionsSheet nav={sheet} venue={venue} posResult={posResult} />;
 };
 
+// Message your players (?sheet=messages), hosted by the page like Point of Sale and mounted only while
+// NEXT_PUBLIC_PARTNER_MESSAGES_ENABLED is on (docs/native-app-store-plan.md Phase 5.5). Keyed by venue,
+// so a venue switch never carries a draft to another bar.
+const MessagesSheetHost = ({ venue }: { venue: Venue | null }) => {
+  const sheet = useOwnerSheet();
+  return <PartnerMessagesSheet nav={sheet} venue={venue} />;
+};
+
 // Results (?sheet=history), hosted by the page like the store so the menu row opens it while venues
 // load (docs/partner-results-page-plan.md). Keyed by venue at the call site, so a venue switch starts
 // from an empty timeline. Requests only while open.
@@ -600,6 +610,11 @@ const OwnerDashboardPage = () => {
       {isPosIntegrationsEnabled() ? (
         <Suspense fallback={null}>
           <PosSheetHost venue={selectedVenue ?? null} />
+        </Suspense>
+      ) : null}
+      {isPartnerMessagesEnabled() ? (
+        <Suspense fallback={null}>
+          <MessagesSheetHost key={selectedVenue?.id ?? "none"} venue={selectedVenue ?? null} />
         </Suspense>
       ) : null}
       {addVenueEnabled && selectedVenueId ? (

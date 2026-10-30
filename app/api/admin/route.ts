@@ -53,6 +53,8 @@ import {
 } from "@/lib/admin";
 import type { PlaceholderAdTemplateInput } from "@/lib/admin";
 import { requireAdminAuth } from "@/lib/adminAuth";
+import { isPartnerMessagesEnabled } from "@/lib/partnerMessageRules";
+import { listVenueMessagesForAdmin, setVenueMessagesPaused, VenueMessagesUnavailableError } from "@/lib/push/venueMessages";
 import {
   RETIRED_BINGO_INLINE_AD_MESSAGE,
   isRetiredBingoInlinePlacement,
@@ -332,6 +334,18 @@ export async function GET(request: Request) {
     if (resource === "pos-stuck-claims") {
       const { claims, needsAction } = await listStuckSquareClaims();
       return NextResponse.json({ ok: true, claims, needsAction });
+    }
+
+    // Partner-written push messages + paused bars (native app plan Phase 5.5). On demand only.
+    if (resource === "partner-messages") {
+      if (!isPartnerMessagesEnabled()) return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
+      try {
+        const { messages, pauses } = await listVenueMessagesForAdmin();
+        return NextResponse.json({ ok: true, messages, pauses });
+      } catch (error) {
+        if (!(error instanceof VenueMessagesUnavailableError)) throw error;
+        return NextResponse.json({ ok: false, error: error.message }, { status: 503 });
+      }
     }
 
     if (resource === "challenge-campaigns") {
@@ -729,7 +743,32 @@ export async function POST(request: Request) {
           resource: "pos-stuck-claims";
           action: "retry";
           redemptionId: string;
+        }
+      | {
+          resource: "partner-messages";
+          action: "pause" | "unpause";
+          venueId: string;
         };
+
+    if (body.resource === "partner-messages") {
+      if (!isPartnerMessagesEnabled()) return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
+      const pauseBody = body as { resource: "partner-messages"; action: string; venueId?: string };
+      const venueId = String(pauseBody.venueId ?? "").trim();
+      if (pauseBody.action !== "pause" && pauseBody.action !== "unpause") {
+        return NextResponse.json({ ok: false, error: "Unknown partner-messages action." }, { status: 400 });
+      }
+      if (!venueId) {
+        return NextResponse.json({ ok: false, error: "venueId is required." }, { status: 400 });
+      }
+      try {
+        await setVenueMessagesPaused(venueId, pauseBody.action === "pause");
+      } catch (error) {
+        // A missing un-pause RPC lands here too: fail closed, never a plain delete (Phase 10.1).
+        if (!(error instanceof VenueMessagesUnavailableError)) throw error;
+        return NextResponse.json({ ok: false, error: error.message }, { status: 503 });
+      }
+      return NextResponse.json({ ok: true });
+    }
 
     if (body.resource === "pos-stuck-claims") {
       const retryBody = body as { resource: "pos-stuck-claims"; action: string; redemptionId?: string };

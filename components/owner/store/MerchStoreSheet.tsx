@@ -3,6 +3,7 @@
 import { useEffect, type Dispatch, type ReactNode, type SetStateAction } from "react";
 import { WizardFooter } from "@/components/navigation/WizardFooter";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
+import { FreeLogoDownload } from "@/components/owner/store/FreeLogoDownload";
 import { FreeQrDownload } from "@/components/owner/store/FreeQrDownload";
 import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
 import { MerchOrderBar } from "@/components/owner/store/MerchOrderBar";
@@ -117,6 +118,7 @@ export const MerchStoreSheet = ({ nav, venue, venueLoading = false, cart, onCart
           ))}
         </ul>
         <FreeQrDownload />
+        <FreeLogoDownload />
       </>
     );
 

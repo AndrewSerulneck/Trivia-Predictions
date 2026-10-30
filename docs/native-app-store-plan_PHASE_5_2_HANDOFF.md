@@ -1,11 +1,18 @@
 # Native App Store Plan — Phase 5.2 Handoff (push notifications: iPhone)
 
+**Latest checkpoint, 2026-10-25:** Andrew explicitly confirmed the APNs authentication key **is uploaded
+to Firebase**. Do not repeat the upload request. Real iPhone push/token/tap checks in section K remain
+unverified; private `.p8` backup location is unrecorded. The paid-team signing switch and iPhone/Safari
+passkeys have since been verified. Current source/deployment and next steps are in
+`docs/native-app-store-plan_PHASE_6_HANDOFF.md`. The dated October 23 instructions below are historical
+where they say the key upload is pending.
+
 **Date:** 2026-10-23 (two sessions). **Phase:** 5.2 of `docs/native-app-store-plan.md` (Opus 5.5, high). Follows
 `docs/native-app-store-plan_PHASE_5_1_HANDOFF.md` (server, website, Android — read that first).
 **State: BUILT, SIGNED, INSTALLED — device test NOT done.** The app is now signed by the paid team as
 `com.hightopchallenge.app` with the push + associated-domains entitlements and is installed on Andrew's iPhone. 5.1 +
-5.2 + 4d are committed and pushed to `main` (Vercel deploys it). What's left: Andrew uploads the APNs key to Firebase,
-then the section K device test on the iPhone.
+5.2 + 4d are committed and pushed to `main` (Vercel deploys it). What's left: the section K device test
+on the iPhone; APNs upload was confirmed by Andrew on 2026-10-25.
 
 ---
 

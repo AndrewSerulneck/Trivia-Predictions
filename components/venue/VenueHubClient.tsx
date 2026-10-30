@@ -3,12 +3,13 @@
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import { readPlayerPanel, savePlayerPanel } from "@/lib/playerViewState";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from "@simplewebauthn/browser";
 import type { Venue, LeaderboardEntry } from "@/types";
 import { AccountDrawer } from "@/components/navigation/AccountDrawer";
+import { PartnerMessageSheet } from "@/components/push/PartnerMessageSheet";
 import { PushWelcomeScreen } from "@/components/push/PushWelcomeScreen";
 import { AccountMenuList } from "@/components/navigation/AccountMenuList";
 import { getAccountId, getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
@@ -1661,6 +1662,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       </div>
 
       <PushWelcomeScreen ready={contentReady} />
+
+      {/* A partner's message opened from its push (?message=, native app plan Phase 5.5). */}
+      <Suspense fallback={null}>
+        <PartnerMessageSheet />
+      </Suspense>
 
       <AccountDrawer open={isMenuOpen} onClose={() => setIsMenuOpen(false)} scrollLockId="venue-hub-menu">
         <div className="mb-5 rounded-ht-lg border border-ht-accent/45 bg-ht-accent/10 px-4 py-3.5">

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Isolated PostgreSQL check for supabase/migrations/20261023105750_push_notifications.sql
-// (docs/native-app-store-plan.md Phase 5.1) and 20261023141109_push_venue_news.sql (Phase 5.4). No network, no application imports, never touches
+// (docs/native-app-store-plan.md Phase 5.1), 20261023141109_push_venue_news.sql (Phase 5.4) and
+// 20261023145024_push_venue_messages.sql (Phase 5.5) and 20261026173304_partner_message_report_rules.sql
+// (Phase 10.1). No network, no application imports, never touches
 // Supabase. Runs on PGlite (devDependency):
 //   npm run test:push-sql
 //
@@ -10,6 +12,10 @@
 // still stamped; phones go with an account deletion; tokens are unique; the reminder ledger claims
 // once; and only service_role may run the claim. 5.4: a bar's news reaches the phones of its players
 // (profile or same account) with the switch on, once per game/prize, at most the cap per local day.
+// 5.5: a partner message reaches the same audience, at most its own cap per day, never from a paused
+// bar; only a player of the bar can read or report it; enough distinct reports pause the bar.
+// 10.1: a reporter is a person (account, or profile with none), so two profiles of one account are one
+// report; an admin un-pause marks the reports reviewed and sticks; only later reports count again.
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { PGlite } = require(process.env.PUSH_PGLITE_MODULE || "@electric-sql/pglite");
@@ -17,6 +23,8 @@ const { PGlite } = require(process.env.PUSH_PGLITE_MODULE || "@electric-sql/pgli
 const MIGRATIONS = [
   "supabase/migrations/20261023105750_push_notifications.sql",
   "supabase/migrations/20261023141109_push_venue_news.sql",
+  "supabase/migrations/20261023145024_push_venue_messages.sql",
+  "supabase/migrations/20261026173304_partner_message_report_rules.sql",
 ];
 
 const SCHEMA = `
@@ -188,6 +196,104 @@ async function run() {
       "the ledger records how many phones it went to",
     );
 
+    // ── 5.5: partner-written messages ────────────────────────────────────────────────────────
+    await db.query(`update push_devices set last_seen_at = now() where token = $1`, [token("stranger-2")]);
+    const OWNER = id(300);
+    const say = (venueId, body, cap = 2) =>
+      rows(`select * from claim_venue_message_push($1, $2, $3, $4, 60)`, [venueId, OWNER, body, cap]);
+    let said = await say("v1", "Half-price wings tonight!");
+    assert.ok(said.every((r) => r.outcome === "claimed"));
+    assert.deepEqual(
+      newsTokens(said),
+      newsTokens(await news("v1", "game", "same-audience")),
+      "a message reaches exactly the 5.4 news audience",
+    );
+    const messageId = said[0].message_id;
+    assert.ok(said.every((r) => r.message_id === messageId), "one message id for every phone");
+    const stored = await one(`select body, devices, owner_id from push_venue_messages where id = $1`, [messageId]);
+    assert.deepEqual([stored.body, stored.devices, stored.owner_id], ["Half-price wings tonight!", 3, OWNER]);
+    // Its own cap (2), not shared with the news ledger (v1 already has 5.4 claims today).
+    assert.equal((await say("v1", "Second one"))[0].outcome, "claimed");
+    assert.deepEqual((await say("v1", "Third one")).map((r) => [r.outcome, r.message_id, r.token]), [["capped", null, null]]);
+    assert.equal(Number((await one(`select count(*)::int as n from push_venue_messages where venue_id = 'v1'`)).n), 2);
+    await db.query(`update push_venue_messages set local_date = '2000-01-01' where venue_id = 'v1'`);
+    assert.equal((await say("v1", "Next day"))[0].outcome, "claimed", "yesterday's messages don't count");
+    assert.deepEqual((await say("v3", "Anyone?")).map((r) => r.outcome), ["no_audience"]);
+    assert.equal(Number((await one(`select count(*)::int as n from push_venue_messages where venue_id = 'v3'`)).n), 0);
+    assert.deepEqual((await say("nope", "Hi")).map((r) => r.outcome), ["unknown_venue"]);
+    await assert.rejects(() => say("v1", "x".repeat(151)), /1-150 character/);
+    await assert.rejects(() => say("v1", ""), /1-150 character/);
+
+    // Reading and reporting: a player of the bar (profile there, or same account) only.
+    const read = (messageId, userId) => rows(`select * from read_venue_message($1, $2)`, [messageId, userId]);
+    const report = async (messageId, userId) =>
+      one(`select * from report_venue_message($1, $2, 3)`, [messageId, userId]);
+    const OUTSIDER_ACCOUNT = id(102);
+    const OUTSIDER = id(5); // a profile at v3 only
+    const STRANGER_V3 = id(6); // the stranger's account also at v3
+    await db.exec(`
+      insert into accounts(id) values ('${OUTSIDER_ACCOUNT}');
+      insert into users(id, account_id, venue_id) values ('${OUTSIDER}', '${OUTSIDER_ACCOUNT}', 'v3'), ('${STRANGER_V3}', '${OTHER_ACCOUNT}', 'v3');
+    `);
+    assert.equal((await read(messageId, PROFILE_A))[0].body, "Half-price wings tonight!");
+    assert.equal((await read(messageId, PROFILE_B)).length, 1, "same account, profile at another bar");
+    assert.equal((await read(messageId, OUTSIDER)).length, 0, "not a player of the bar");
+    assert.equal((await read(id(999), PROFILE_A)).length, 0, "no such message");
+    assert.deepEqual(await report(messageId, OUTSIDER), { outcome: "not_found", paused: false });
+    const reportCount = async (messageId) =>
+      Number((await one(`select reports from venue_message_report_counts($1::uuid[])`, [[messageId]])).reports);
+    assert.deepEqual(await report(messageId, PROFILE_A), { outcome: "reported", paused: false });
+    assert.equal((await read(messageId, PROFILE_A))[0].reported, true);
+    assert.deepEqual(await report(messageId, PROFILE_A), { outcome: "already_reported", paused: false }, "one report per player");
+    // 10.1 F1: profile B is the same person (same account, a profile at another bar): one report, not two.
+    assert.equal((await read(messageId, PROFILE_B))[0].reported, true, "the same person sees it as reported");
+    assert.deepEqual(await report(messageId, PROFILE_B), { outcome: "already_reported", paused: false }, "one report per person");
+    assert.equal(Number((await one(`select count(*)::int as n from push_venue_message_reports where message_id = $1`, [messageId])).n), 1);
+    assert.equal(await reportCount(messageId), 1, "the distinct count stays 1");
+    assert.deepEqual(await report(messageId, LEGACY), { outcome: "reported", paused: false });
+    assert.equal(await reportCount(messageId), 2, "a profile with no account counts as its own person");
+    // The third distinct person pauses the bar; a paused bar can't send.
+    assert.deepEqual(await report(messageId, STRANGER_V3), { outcome: "reported", paused: true });
+    const pause = await one(`select reason, message_id from push_venue_message_pauses where venue_id = 'v1'`);
+    assert.deepEqual([pause.reason, pause.message_id], ["reports", messageId]);
+    assert.deepEqual((await say("v1", "Still here?")).map((r) => r.outcome), ["paused"]);
+    // An already-reported call on a paused bar still says paused, and adds nothing.
+    assert.deepEqual(await report(messageId, STRANGER), { outcome: "already_reported", paused: true }, "stranger = STRANGER_V3's account");
+
+    // 10.1 F2: an admin un-pause deletes the pause AND marks v1's reports reviewed, in one call.
+    const v2Message = (await say("v2", "Hello v2"))[0].message_id;
+    assert.equal((await one(`select unpause_venue_messages('v1') as was`)).was, true);
+    assert.equal((await one(`select unpause_venue_messages('v1') as was`)).was, false, "nothing left to un-pause");
+    assert.equal(Number((await one(`select count(*)::int as n from push_venue_message_pauses where venue_id = 'v1'`)).n), 0);
+    assert.equal(
+      Number((await one(`select count(*)::int as n from push_venue_messages where venue_id = 'v1' and reports_reviewed_at is null`)).n),
+      0,
+      "every v1 message is marked reviewed",
+    );
+    assert.equal((await one(`select reports_reviewed_at from push_venue_messages where id = $1`, [v2Message])).reports_reviewed_at, null, "other bars untouched");
+    assert.equal(await reportCount(messageId), 0, "the admin panel shows 0 since the review");
+    await assert.rejects(() => db.query(`select unpause_venue_messages(null)`), /venue is required/);
+    // Earlier reporters can't re-pause it: every one of them is already_reported, and the bar stays open.
+    for (const earlier of [PROFILE_A, PROFILE_B, LEGACY, STRANGER_V3]) {
+      assert.deepEqual(await report(messageId, earlier), { outcome: "already_reported", paused: false }, `${earlier} again`);
+    }
+    // New people after the review: the 1st and 2nd don't pause; the 3rd does.
+    const fresh3 = [id(103), id(104), id(105)];
+    const freshProfiles = [id(7), id(8), id(9)];
+    for (let i = 0; i < 3; i += 1) {
+      await db.query(`insert into accounts(id) values ($1)`, [fresh3[i]]);
+      await db.query(`insert into users(id, account_id, venue_id) values ($1, $2, 'v1')`, [freshProfiles[i], fresh3[i]]);
+    }
+    assert.deepEqual(await report(messageId, freshProfiles[0]), { outcome: "reported", paused: false }, "4th person: 1 since review");
+    assert.deepEqual(await report(messageId, PROFILE_A), { outcome: "already_reported", paused: false }, "an earlier reporter again");
+    assert.deepEqual(await report(messageId, freshProfiles[1]), { outcome: "reported", paused: false }, "2 since review");
+    assert.equal(await reportCount(messageId), 2);
+    assert.deepEqual(await report(messageId, freshProfiles[2]), { outcome: "reported", paused: true }, "3 new people pause again");
+    assert.deepEqual((await say("v1", "Still here?")).map((r) => r.outcome), ["paused"]);
+    // Un-pausing lets the bar send again.
+    await db.query(`select unpause_venue_messages('v1')`);
+    assert.equal((await say("v1", "Back again"))[0].outcome, "claimed");
+
     // ── Account deletion takes the phones with it ────────────────────────────────────────────
     await db.query(`delete from users where account_id = $1`, [ACCOUNT]);
     await db.query(`delete from accounts where id = $1`, [ACCOUNT]);
@@ -208,7 +314,30 @@ async function run() {
     assert.equal(await canNews("service_role"), true);
     assert.equal(await canNews("anon"), false);
     assert.equal(await canNews("authenticated"), false);
-    for (const table of ["push_devices", "push_game_reminders", "push_venue_news"]) {
+    for (const signature of [
+      "claim_venue_message_push(text, uuid, text, integer, integer)",
+      "is_venue_message_reader(text, uuid)",
+      "read_venue_message(uuid, uuid)",
+      "report_venue_message(uuid, uuid, integer)",
+      "venue_message_reporter(uuid)",
+      "venue_message_report_count(uuid)",
+      "venue_message_report_counts(uuid[])",
+      "unpause_venue_messages(text)",
+    ]) {
+      const canRun = async (role) =>
+        (await one(`select has_function_privilege($1, $2, 'execute') as ok`, [role, `public.${signature}`])).ok;
+      assert.equal(await canRun("service_role"), true, `${signature}: service_role`);
+      assert.equal(await canRun("anon"), false, `${signature}: anon`);
+      assert.equal(await canRun("authenticated"), false, `${signature}: authenticated`);
+    }
+    for (const table of [
+      "push_devices",
+      "push_game_reminders",
+      "push_venue_news",
+      "push_venue_messages",
+      "push_venue_message_reports",
+      "push_venue_message_pauses",
+    ]) {
       const priv = async (role, verb) =>
         (await one(`select has_table_privilege($1, $2, $3) as ok`, [role, `public.${table}`, verb])).ok;
       assert.equal(await priv("service_role", "select"), true, `${table}: service_role select`);

@@ -1,5 +1,53 @@
 # Native App Store Plan — Phase 4c handoff
 
+**PUBLISHED / VERIFIED Android server association, 2026-10-25 — supersedes pending-publication notes:**
+The supplied Play app-signing certificate is configured and the selected Android passkey work is committed/pushed
+at **7aacf153cd8707b6d3f3644051a96614703ecaba**. Production **READY dpl_2Y9ixHxGcj5ijT5P5pNfSSkjYxvx**,
+URL `hightop-challenge-fmdlgxknk-andrewserulnecks-projects.vercel.app`, exact GitHub source SHA and both public aliases
+independently verified through Vercel API. Google Play build 2 remains In review by Andrew's report; no new native
+bundle, Console change, upload or resubmission in this step. Android hardware ceremonies are still OPEN.
+
+Canonical `/.well-known/assetlinks.json`: **HTTP 200 / application/json** on apex (**267 bytes**, get_login_creds only)
+and play. (**312 bytes**, get_login_creds + handle_all_urls), exact supplied certificate and com.hightopchallenge.app.
+Google Digital Asset Links API **linked=true / HTTP 200** for all three intended relationships. Both Apple AASA
+endpoints still HTTP 200 and retain 2U7HMXGQM3.com.hightopchallenge.app. Cached follow-up reads **HIT** on both hosts
+(age 199/198 seconds, 164/81 ms observed; no comparative latency claim). These checks validate public association
+statements, not an independently downloaded Play APK certificate or a real credential ceremony.
+One normal anonymous native-UA `POST /api/auth/passkey/authenticate/options` with Origin play. returned **200 / ok**,
+rpId hightopchallenge.com. It created one normal expiring identity-less challenge; no cookie/challenge value was
+printed or saved, no player/passkey/account row changed, and no migration ran. Synthetic ES256/COSE verification
+covers native/browser origins, untrusted certificate, removed certificate, wrong RP/challenge, missing verification
+and tampered signatures. Wider browser/device matrix and 7+ day persistence remain unverified.
+
+Release gates: **5,530 passed / 13 environment skips**, typecheck/lint/**217-page build**; GitHub CI
+**40252657482 SUCCESS**, https://github.com/AndrewSerulneck/Trivia-Predictions/actions/runs/40252657482.
+Local main was safely fast-forwarded to the published commit **after** asserting all 12 release files matched it
+byte-for-byte and no prior staged work existed. Unrelated dirty root files were preserved; isolated checkout remains
+`/private/tmp/hightop-android-passkeys-release-2026-10-25`, branch `release/android-passkeys-2026-10-25`.
+This post-release documentation/context update remains uncommitted; do not redeploy the dirty root to publish it.
+The approved 20261025150000 migration record is now tracked in main, **already applied and immutable**; never rerun,
+edit or down-migrate it. The unrelated Phase 5.5 migration/source/flag cutover was not performed.
+
+Public certificate/config, exact deployment, checks and CI evidence:
+`tmp/native-passkeys-2026-10-25/android-activation-release.json` (ignored, mode 0600, no secrets).
+Local gate logs `/private/tmp/hightop-android-passkeys-{tests,typecheck,lint,build}.log`;
+canonical checks `/private/tmp/hightop-android-association-live.json`, Google checks
+`/private/tmp/hightop-google-dal-verification.json`. No .env.local access or TinyFish use. No new DB read per passkey
+verification, cron, polling, fan-out, paid provider or native binary. Actual association response payload agrees with
+the prior 267/312-byte estimate and CDN caching is verified; dollar billing/real OS retrieval frequency unmeasured.
+Rollback only if requested: redeploy prior application source for the three verifier/helper files, preserving the
+applied migration record/data; changing production certificate config must follow the existing env rules. Never
+revoke signing keys or alter the in-review store release as a routine rollback.
+
+Next: use a **Google Play-installed** Android build for passkey creation, sign-out/sign-in, native↔browser reuse,
+PIN fallback/cancellation and App Link checks; do not use the upload/debug cert. iPhone native/Safari checks already
+passed and are not to be rerun merely to recreate evidence. For the other store, the verified distribution IPA is
+ready at `/Users/andrewserulneck/Downloads/Hightop-Challenge-iOS-1.0.0-1.ipa`; create/confirm the Apple app record,
+upload to TestFlight using Xcode/Transporter, confirm APNs key/delivery, capture iPhone+iPad screenshots, complete
+legal review before Apple Submit. Keep download URLs/badges disabled while stores are not live. No new permission
+question is pending for the certificate/server release. Device testing, Apple Console steps and key backup need Andrew.
+
+
 **Android activation follow-up, 2026-10-25 (latest):** Andrew requested the next plan work and supplied the public
 **Play app-signing** certificate SHA-256:
 **D6:3F:6E:3E:B3:E3:BA:49:7E:A7:3B:AE:19:A3:56:3D:86:D7:8F:4A:9D:59:E6:16:2B:FD:22:99:06:ED:8C:4E**.

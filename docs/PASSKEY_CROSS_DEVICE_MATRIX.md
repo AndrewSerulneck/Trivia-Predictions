@@ -65,3 +65,28 @@ Track and alert on:
 - Passkey setup success rate >= 90% on supported browsers.
 - PIN fallback success rate >= 99% for returning users.
 - No unexplained “dead button” reports in QA.
+
+
+## Native app verification — 2026-10-25 (Phase 4c / Part B)
+
+RP ID stays **hightopchallenge.com** for the browser and both native apps. No native passkey plugin was added.
+
+| Platform / scenario | Result | Evidence / limit |
+|---|---|---|
+| iPhone 16 Pro, iOS 26.6.1, paid-team native app: save passkey | PASS | Andrew confirmed; appreview passkey created 2026-10-25T14:32:18Z |
+| Same native app: sign out, Face ID / Touch ID sign-in | PASS after fix | Failed before the prompt on DB account_id NOT NULL; approved migration 20261025150000 applied; Andrew confirmed successful sign-in |
+| iPhone Safari: sign in with the passkey created in the app | PASS | Andrew confirmed; last_used_at advanced to 2026-10-25T14:42:43.933Z |
+| iOS paid-team signing / associated domain | PASS | Actual signed app: 2U7HMXGQM3.com.hightopchallenge.app; webcredentials:hightopchallenge.com; Apple CDN association matches; profile expires 2027-10-23T12:00:55Z |
+| Android API 36 emulator, rebuilt debug app: WebView capability and sign-in control | PASS | WebView app-mode support level 1; PublicKeyCredential exposed; Face ID/Touch ID control has its accessibility label |
+| Android association + server verifier | LIVE / VERIFIED | Commit 7aacf153, READY dpl_2Y9ixHxGcj5ijT5P5pNfSSkjYxvx; both assetlinks.json URLs 200 with supplied Play cert; Google's DAL API confirms both credential links and play. App Link; native discoverable-options HTTP 200 |
+| Android release: save passkey, sign in, browser/native interchange | NOT RUN | Server/association prerequisites done; still needs a Play-installed build and Android tester. Synthetic verification and Google DAL do not prove an actual credential ceremony |
+| Browser-created passkey first used in the native app | NOT RUN in this session | Native-created passkey -> Safari is verified; do not claim the opposite enrollment direction was separately tested |
+| Cancel prompt, biometrics disabled, no-key device, iPad native UI | NOT RUN in this session | Existing PIN route remains; full device scenarios above still need their own observations |
+| 7+ day signed-in persistence | NOT YET OBSERVED | Paid profile validity is proven; time-based cookie/session retention is separate |
+| Other browsers / Windows / Samsung matrix above | NOT RUN in this session | Synthetic cryptographic regressions do not replace device observations |
+
+Tests: full suite **5,551 passed / 13 environment skips**; real PostgreSQL constraint regressions; real verifier
+regressions for trusted/untrusted certificate origins, browser origins, challenge, RP hash, user verification and
+signature tampering. These verifier fixtures are synthetic, not physical-device captures.
+
+Current handoffs: `docs/native-app-store-plan_PHASE_4C_HANDOFF.md` and `docs/native-app-store-plan_PHASE_2B_HANDOFF.md`.

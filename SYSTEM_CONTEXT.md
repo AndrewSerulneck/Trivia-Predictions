@@ -1,5 +1,11 @@
 # Technical System Context (Single Source of Truth)
 
+**Native Phase 7 prepared locally, 2026-10-25:** player store section/sign-in pointer, Android banner and
+Apple Smart App Banner support behind `NEXT_PUBLIC_APP_STORE_LINKS_ENABLED` (default off) plus both live
+URLs in `lib/appDownloadLink.ts` (still empty). Uncommitted/not deployed/not enabled. Old PWA install
+promotion removed in working tree; manifest/standalone behavior retained. Activation/Safari device
+verification wait for store availability. Handoff `docs/native-app-store-plan_PHASE_7_HANDOFF.md`.
+
 - **Project Name:** Hightop Challenge
 - **Project Essence:**
   - A mobile-first, venue-based social gaming platform where users join a specific physical venue and compete in game experiences: Live Trivia, Speed Trivia, Sports Bingo, Pick'em, and Fantasy Sports.
@@ -408,6 +414,17 @@ original incident. Calibrate variety/win rates separately from grading correctne
   - Vitest, ESLint, PostCSS, TypeScript compiler.
 
 ## 12. Known Constraints and Architectural Rules
+
+- **Native passkeys, 2026-10-25:** the paid-team iOS signing switch is verified in the actual signed app
+  (`2U7HMXGQM3.com.hightopchallenge.app`; development profile expires 2027-10-23). Andrew verified native passkey
+  creation, native Face ID sign-in and Safari sign-in using that same passkey. Migration **20261025150000** is
+  explicitly approved/applied: authentication may start with no account on the challenge (credential discovery),
+  while registration requires an account or legacy profile. Existing passkey rows were preserved. Android's missing
+  WebView/Credential Manager integration is built/tested; association and selected verifier are now live at `7aacf153`
+  (2026-10-25), with Google's DAL API confirming the supplied Play signing certificate on both hosts. Actual
+  Play-installed passkey creation/sign-in and browser interchange remain unverified. Signing-switch completion
+  does not prove 7+ day session persistence. Current handoffs: `docs/native-app-store-plan_PHASE_4C_HANDOFF.md` and
+  `docs/native-app-store-plan_PHASE_2B_HANDOFF.md`. Applied migrations are immutable; do not reapply or down-migrate.
 - **Speed Trivia source-of-truth rule:** Speed Trivia (`question_pool='anytime_blitz'`, `answer_format='multiple_choice'`) is canonical in the Admin UI / Supabase `trivia_questions` table. Files under `data/trivia/categories/` are export artifacts for approved Speed Trivia rows.
 - **Live Trivia source-of-truth rule:** Files under `data/live-trivia/categories/` are the canonical source of truth for Live Trivia question content, answers, and acceptable answers.
 - **No reverse sync into Live Trivia JSON:** Supabase, local dev database state, production database state, or other remote sources must never overwrite or regenerate `data/live-trivia/categories/`.

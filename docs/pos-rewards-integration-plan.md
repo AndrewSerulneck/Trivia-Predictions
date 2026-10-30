@@ -1,12 +1,25 @@
-# POS Rewards Integration — Plan C (Square and Clover; Toast deferred)
+# POS Rewards Integration — Plan C (Square live; Toast is the priority; Clover alongside)
 
-**Status:** Phases 1–2 **committed (`27f5eea`) and deployed to production 2026-10-05 with the switch OFF**
+**PRIORITY CHANGE 2026-10-18 (Andrew):** *"Let's move forward getting integrated with Toast… make getting
+integrated with Toast a priority. Let's make both Toast and Clover available for Hightop Challenge partners."*
+**Toast is no longer deferred. It is the top priority** (§1b, Phase 4 sub-phases **4a–4f**). **Clover resumes in
+parallel** (Phase 3, which needs a Clover Dev Kit, §6 item 8). Done = Toast **and** Clover both show "Connect" in the
+Partner Dashboard's Point of Sale sheet for every partner (`lib/pos/providers.ts` `availability: "available"`).
+State on 2026-10-18 (read from production): Square is ON in production; two production Square connections are
+active (`venue-pacific-street`, `venue-hightop-test`); **no real-money Square redemption yet** (the only ledger row is
+the 2026-10-06 sandbox test), so Phase 2h step 1 is still open. Toast: no application filed, no access, no code.
+**Next steps:** Andrew starts **4a** (Toast access: two routes in parallel, long lead time) and decides §6 items 8,
+16 and 17; the agent can start **4b** (Toast endpoint built to Toast's public spec, flag-gated, no Toast access
+needed) at once. Handoffs: `docs/pos-rewards-integration-plan_PHASE_4<x>_HANDOFF.md`.
+
+**Status (history, before 2026-10-18):** Phases 1–2 **committed (`27f5eea`) and deployed to production 2026-10-05 with the switch OFF**
 (`NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED` unset in Vercel, so nobody sees it). Square sandbox app keys verified
 2026-10-05; the browser run (connect → gift card → spend → webhook) still needs Andrew at the keyboard.
 **Phase 3 (Clover) re-planned 2026-10-05 as a Clover register app** (Andrew: "Build the Clover register app now. A
 scannable code on the coupon is OK."): sub-phases **3a–3f** below. **Phase 3a partly done 2026-10-06** (toolchain, test app, server-side token proof via
 `billing_info` ✓); device checks **blocked** by Clover's broken GDE emulator sign-in → Dev Kit / Clover support
-(handoff: `docs/pos-rewards-integration-plan_PHASE_3a_HANDOFF.md`). A throwaway $25 gift-card test coupon exists at `venue-pacific-street`
+(handoff: `docs/pos-rewards-integration-plan_PHASE_3a_HANDOFF.md`). **Retried 2026-10-27** with Clover's Key-icon token + Engine 2474:
+still 404 — the sandbox sign-in endpoint doesn't exist (handoff "Update 2026-10-27"); waiting on Clover (DJ Shin). A throwaway $25 gift-card test coupon exists at `venue-pacific-street`
 (§6 note). Clover handoff: `docs/pos-rewards-integration-plan_PHASE_3a_HANDOFF.md`.
 **Square review fixes R1–R4 committed `12bfa6b`, pushed and deployed to production 2026-10-06** (`dpl_6ngtBVrxU4PGScpA1nYB21hGXRqp`,
 flag still off). **R5** (a refused reconnect retires the old connection; Andrew asked for it) is built and tested,
@@ -44,7 +57,7 @@ The three systems are very different, so "apply to the check" means something di
 
 | POS | What we can really do | Guest / staff experience | Main blocker |
 |---|---|---|---|
-| **Toast** (deferred, §1a) | Plug into Toast's built-in **Rewards button** (Toast's loyalty integration). Toast asks *our* server what rewards a guest has; staff tap Redeem; it shows on the check as a discount. | Best of the three. Staff press Rewards on the Toast screen, scan the guest's live QR, tap Redeem. | **Toast must approve us as an integration partner** — an application and certification, prioritized by how many Toast restaurants ask for us. Can take months. |
+| **Toast** (**priority**, §1b) | Plug into Toast's built-in **Rewards button** (Toast's loyalty integration). Toast asks *our* server what rewards a guest has; staff tap Redeem; it shows on the check as a discount. | Best of the three. Staff press Rewards on the Toast screen, scan the guest's live QR, tap Redeem. | **Toast must approve us as an integration partner** — an application and certification, prioritized by how many Toast restaurants ask for us. Can take months. |
 | **Clover** | Our own small app on the Clover register adds a discount to the **open order** (re-planned 2026-10-05, Phase 3). | Staff open the guest's order, tap our app, scan the coupon's QR or type its code, tap Apply; the discount appears on the Clover check. No staff phones, no staff logins. | Clover must **approve our app** for the Clover App Market (demo video + review) before other merchants can install it. |
 | **Square** | Square's API **cannot edit an open ticket rung up on the Square register.** It *can* create real **Square gift cards**. So gift-card prizes become real Square eGift cards the register accepts like any gift card. | Guest's coupon shows a Square gift card barcode; staff scan it as payment. Balance and redemption are automatic. Menu-item prizes (free appetizer) keep today's coupon flow. | Each partner must have Square Gift Cards turned on. Gift cards are a liability on the partner's books (they fund the prize anyway). |
 
@@ -59,9 +72,48 @@ Things to know up front:
   works. Nothing gets worse.
 - **Order:** Square (no approval gate, fastest) → Clover. If most partners use Clover, swap them —
   tell the agent in Phase 0. **2026-10-06: Square is finished to production first (Phases 2b–2h), then Clover
-  resumes at 3a, then Toast.**
+  resumes at 3a, then Toast.** **2026-10-18 (superseded): Toast first (4a–4f), Clover in parallel (3a–3f); Square's
+  2h pilot keeps going because its numbers are Toast's application evidence (§1b).**
 
-## 1a. Why Toast is deferred (Andrew, 2026-10-03 — decided, don't re-ask)
+## 1b. Toast is the priority; Toast and Clover both ship (Andrew, 2026-10-18 — decided, don't re-ask)
+
+This replaces §1a. Toast is now the first thing to work on, and both Toast and Clover are to become available to
+every Hightop Challenge partner. §1a's facts still hold: Toast's loyalty API can't be used without Toast granting
+access. Being a priority means **starting that access process now and building everything we can before it
+arrives**, not waiting for Square and Clover to finish first.
+
+**There are two ways to get Toast access. Start both now (4a):**
+1. **Integration partner application** (`pos.toasttab.com/partners/integration-partner-application`): accept the API
+   Documentation License Agreement → Toast emails instructions + doc access → fill in the application → vetting
+   and a discovery call → compliance/security/legal review + a signed partner agreement → an assigned Toast
+   integration rep, sandbox access, build, **certification**, then production. Toast says it gets more applications
+   than it can take and ranks them partly by **customer demand**, so the application must name the Toast
+   restaurants asking for us. No published timeline; assume months.
+2. **A friendly Toast restaurant's "custom integration"** (likely faster): a Toast restaurant (a current or soon
+   Hightop partner) asks **its Toast account rep** for custom API access for its own integration, with us as its
+   "trusted technology partner". Toast's docs list the loyalty integration as open to custom integrations, and a
+   custom integration gets a sandbox (Toast's integrations team gives the sandbox host; sandbox open 9 am–6 pm ET).
+   It is scoped to that one restaurant group, so it proves the build and becomes the pilot (4e), but other
+   restaurants still need route 1.
+
+**What we can build before access (4b):** Toast's loyalty integration is *outbound*: Toast calls one HTTPS endpoint
+of ours (`Toast-Transaction-Type` header: `LOYALTY_SEARCH`, `LOYALTY_INQUIRE`, `LOYALTY_REDEEM`, `LOYALTY_REVERSE`,
+`LOYALTY_ACCRUE`, plus `LOYALTY_SIGNUP` / `LOYALTY_TRANSFER`, which we refuse). The request/response shapes are
+public (`doc.toasttab.com/openapi/loyalty/overview/`). So the endpoint, the guest code and the once-only/undo
+plumbing can be built and tested against a local fake Toast, flag-gated, before Toast says yes. Request
+authentication and the restaurant→venue link are the two parts that need Toast's private docs or sandbox, and 4c
+confirms them.
+
+**What "Clover available" still needs:** a Clover Dev Kit (Clover's emulator sign-in is broken for our account,
+Phase 3a handoff), then 3a's device checks, 3b–3f and Clover App Market approval. Andrew said "no Dev Kit for now"
+on 2026-10-06; making Clover available reverses that, so §6 item 8 is re-asked (it costs money).
+
+**Shared work, built once:** Clover's coupon code (`redeem_code`, QR + typed code) and the 5-minute undo RPC
+(`release_challenge_prize`) are exactly what Toast needs too (staff scan or type the guest's code at the Toast
+Rewards screen; Toast's `LOYALTY_REVERSE` un-redeems). They move out of 3b into **4b**, so whichever POS ships
+first, they are already there.
+
+## 1a. Why Toast was deferred (Andrew, 2026-10-03) — SUPERSEDED 2026-10-18 by §1b; kept as history
 
 Toast can't realistically be built or tested without either passing its partner application or
 working alongside a friendly Toast restaurant that grants developer access through its own
@@ -96,6 +148,21 @@ agent should start it, and no Toast application is part of Phase 0.
   Partner Integrations program (application → certification → scoped API access; demand-prioritized).
   Sources: doc.toasttab.com/doc/devguide/apiLoyaltyProgramIntegrationOverview.html,
   pos.toasttab.com/partners/integration-partner-application.
+  **Re-checked 2026-10-18 (public docs; Toast's private pages answer 403 without access):** one endpoint for all
+  loyalty calls, type in the `Toast-Transaction-Type` header; types `LOYALTY_SEARCH` (accounts matching what staff
+  typed), `LOYALTY_INQUIRE` (offers available to the account, and re-checking offers already on the check),
+  `LOYALTY_REDEEM` (redeem the offers on the check), `LOYALTY_REVERSE` (undo a redeem/accrue; no response body),
+  `LOYALTY_ACCRUE`, `LOYALTY_SIGNUP`, `LOYALTY_TRANSFER`. **Latency: 500 ms average expected, 5 s maximum; past
+  that Toast may close the socket and SEND THE REQUEST AGAIN** — so every call must be idempotent on Toast's
+  transaction id (doc page "Network failure and idempotence"). Access tiers: *partner* and *custom* integrations
+  get read/write and the loyalty API; *Standard API access* (restaurant self-service) is read-only and has no
+  loyalty — it can't do this. Custom integration access is requested by the restaurant through its Toast account
+  rep; sandbox access via Toast Developer Relations. Sources: doc.toasttab.com/doc/devguide/apiOverview.html,
+  …/apiLoyaltyIntegrationOverview.html, …/apiLoyaltyLatencyRequirements.html, …/apiCustomIntegrationOverview.html,
+  …/integrationDevProcess.html, …/apiEnvironments.html, …/apiLoyaltyTransactionDescriptions.html.
+  **Not yet known (4c):** how Toast authenticates its calls to us ("Loyalty integration authentication" page), and
+  how a restaurant is identified on each call and enabled for us (Toast Partner Connect is turned on per location
+  in the Toast Shop by an Account Admin, per a third-party guide).
 - Our side today: prizes are `challenge_campaign_redemptions` rows (prize snapshot columns:
   `prize_kind`, `prize_menu_item`, `prize_discount_kind`, `prize_discount_value`,
   `prize_gift_certificate_amount`). Redemption becomes atomic in Plan B Phase 1
@@ -133,8 +200,8 @@ agent should start it, and no Toast application is part of Phase 0.
 
 ### Phase 0 — Business setup (Andrew; start now, no agent)
 1. List which POS each current and near-term partner uses → decides provider order.
-2. **Toast:** nothing now (deferred, §1a). Do keep a list of Toast venues that ask for this — Toast
-   prioritizes applications by customer demand, so that list is the future application's evidence.
+2. **Toast:** ~~nothing now~~ **superseded 2026-10-18: see Phase 4a** (apply now + find a friendly Toast
+   restaurant). The list of Toast venues that want this is the application's main evidence.
 3. **Clover:** create a Clover developer account (sandbox is free); later Phase 3 needs a demo video.
 4. **Square:** create a Square developer account + sandbox app (instant).
 5. Decide (§6): who funds prizes (partner — recommended, it's their promotion), dollar caps for
@@ -367,7 +434,11 @@ secret steps. Handoff: `docs/pos-rewards-integration-plan_PHASE_2h_HANDOFF.md`.
 ### Phase 3 — Clover register app (decided 2026-10-05; sub-phases 3a–3f)
 
 **PAUSED 2026-10-06** (Andrew: no Clover Dev Kit for now; Square first). 3a stopped part-way: see its handoff.
-Resume only after Phase 2h's exit; re-ask §6 item 8 then.
+~~Resume only after Phase 2h's exit; re-ask §6 item 8 then.~~ **RESUMES 2026-10-18 in parallel with Toast** (§1b:
+Clover must become available too). It no longer waits for 2h's exit. First step: Andrew answers §6 item 8 (order a
+Dev Kit) and sends Clover the emulator email in the 3a handoff; the agent then finishes 3a. Toast work comes first
+whenever the two compete for the same session. **The coupon code and the release RPC (listed in 3b below) are now
+built in 4b**, shared with Toast; 3b reuses them.
 
 **Andrew, 2026-10-05:** "Build the Clover register app now. A scannable code on the coupon is OK." This replaces
 the original Phase 3 (a web "apply to check" page on the Partner Dashboard), which Andrew rejected because staff
@@ -451,7 +522,8 @@ show the server's name); (2) decide test hardware (§6 item 8). Barcode scanning
 #### Phase 3b — Website side (flag OFF; deployable on its own)
 **Model / effort:** Opus 5.5, **high**.
 - Migrations (grants per `supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md`; `supabase db push` asks Andrew):
-  `redeem_code` column + unique index + backfill; `release_challenge_prize` RPC (service role only);
+  ~~`redeem_code` column + unique index + backfill; `release_challenge_prize` RPC (service role only);~~ (moved to
+  4b on 2026-10-18 — reuse them, and add `'pos_clover'` to the release RPC's allowed methods if 4b didn't);
   `pos_device_pairings` (venue_id, owner id, code **hash**, expires_at, used_at). Check whether `pos_connections`'
   token columns are NOT NULL; a Clover link stores none. Never edit an existing migration.
 - `lib/pos/cloverDevice.ts`: `verifyCloverDeviceToken` (the 3a call + 10-minute in-memory cache),
@@ -463,7 +535,7 @@ show the server's name); (2) decide test hardware (§6 item 8). Barcode scanning
 - Partner Dashboard Point of Sale sheet: Clover row → "Link a Clover register" (pairing code + countdown + install
   steps), linked merchant name, **Unlink**. Owner routes stay behind `requireOwnerAuth`.
 - Live coupon: QR (`qrcode.react`, already installed) + grouped code, only when the coupon's venue has an active
-  Clover link and the flag is on. Lives inside `LiveCouponFrame`; the wallet list stays calm. Guest-side
+  Clover link and the flag is on (4b already shows it for a Toast-linked venue; widen that check to Clover). Lives inside `LiveCouponFrame`; the wallet list stays calm. Guest-side
   "Confirm Redemption" stays as the fallback; both paths go through the same RPC.
 - Tests: route contract (no `requireOwnerAuth`, flag-gated, token and full code never logged, rate-limited),
   code generator, RPC race tests in the style of `scripts/test-reward-redeem-once.cjs` (two claims at once; release
@@ -500,24 +572,134 @@ show the server's name); (2) decide test hardware (§6 item 8). Barcode scanning
 **Model / effort:** Opus 5.5, **medium**.
 - Production env vars + redeploy (`NEXT_PUBLIC_*` is build-time). One partner bar links its register; watch the
   ledger and `[CloverDevice]` logs for two weeks; compare usage with the cost estimate; fix what staff hit.
+- **Exit = Clover available to every partner** (§1b): once Clover approves the App Market listing (3e), flip `clover`
+  to `available` in `lib/pos/providers.ts` with its registry adapter in the same change; Partner Manual section
+  "How Staff Take a Prize (Clover)"; staff sheet copy in `lib/posStaffInstructions.ts`.
 
-### Phase 4 — Toast (native Rewards button) — DEFERRED (§1a); do not start
-Start only after (a) Square/Clover redemptions are live at real partners, (b) Andrew has applied to
-the Toast partner program with that proof and been accepted, or a Toast restaurant has granted
-developer access. Re-plan this phase then; the sketch below is a starting point only.
-**Model / effort:** Opus 5.5, **high** (security- and contract-heavy).
-- Implement Toast's loyalty integration endpoints per their spec at approval time (lookup /
-  inquire, redeem, reverse, accrue-as-no-op). Guest identifier = the Plan B live QR payload (so a
-  screenshot still fails) with a fallback to username search if Toast's flow requires it.
-- Map our prizes to Toast check- or item-level discounts; enforce once-only via the Plan B RPC
-  (`redeemed_method='pos_toast'`); reverse un-redeems.
-- Pass Toast certification; per-restaurant enablement through Toast.
+### Phase 4 — Toast (native Rewards button) — PRIORITY since 2026-10-18 (§1b); sub-phases 4a–4f
+
+~~DEFERRED (§1a); do not start.~~ The old gate ("start only after Square/Clover are live and Toast accepts us") is
+lifted: 4a and 4b start now; 4c onward wait only on Toast access.
+
+**How it works (target design; 4c confirms the parts marked unverified)**
+1. **Once per bar (manager):** the partner turns on Hightop Challenge for its location in Toast (unverified: Toast
+   Shop / Partner Connect for a partner integration; Toast's team for a custom integration), then links that Toast
+   restaurant to its Hightop venue from the Partner Dashboard's Point of Sale sheet (Toast row). That link is a
+   `pos_connections` row (`provider 'toast'`, `merchant_id` = Toast restaurant GUID); no Toast tokens are stored for
+   the loyalty calls, because Toast calls us.
+2. **The coupon:** at a Toast-linked venue, the guest's live coupon shows the same QR + typed code as Clover's
+   (`redeem_code`, built in 4b). Other venues' coupons are unchanged.
+3. **At the register (staff):** staff press **Rewards** on the Toast screen and scan the coupon's QR or type its
+   code (or the guest types it on a Toast guest display). Toast asks us (`LOYALTY_SEARCH` / `LOYALTY_INQUIRE`); we
+   return that one prize as an offer ("Hightop prize: $25 gift card"). Staff tap Redeem; Toast sends
+   `LOYALTY_REDEEM`; we claim the coupon through `redeem_challenge_prize(p_method 'pos_toast')` (already an allowed
+   method in migration `20261005123950`) and the discount appears on the Toast check.
+4. **Who decides:** our server, as with Clover: the code must belong to an unredeemed, unexpired coupon at the venue
+   this Toast restaurant is linked to. A used code is refused, so a screenshot is worthless after use. A wrong-venue
+   code gets the same "not found" as a made-up one.
+5. **Undo:** Toast's `LOYALTY_REVERSE` releases the claim through `release_challenge_prize(…, 'pos_toast')` (4b).
+   `LOYALTY_ACCRUE` is answered as a successful no-op (we don't award points for spend; §5). `LOYALTY_SIGNUP` /
+   `LOYALTY_TRANSFER` are refused with Toast's "not supported" response.
+
+**Design rules**
+- **One route, `POST /api/pos/toast/loyalty`**, not under `/api/owner/*`, never `requireOwnerAuth` (Toast is the
+  caller). Check `proxy.ts` lets it through like `/api/webhooks/square`. Flag-gated (`isPosIntegrationsEnabled()`)
+  AND fails closed (503) without Toast's verification config. Rate-limited per Toast restaurant through `rateLimit()`.
+- **Idempotent on Toast's transaction id.** Toast retries after 5 s, so every `REDEEM` / `REVERSE` writes a
+  `pos_reward_applications` row whose UNIQUE `idempotency_key` is Toast's transaction id **before** claiming; a
+  retry returns the stored answer and never claims twice.
+- **Fast:** target < 500 ms average. One indexed lookup by `redeem_code`, no per-request full-table reads, no
+  outbound call to Toast on the hot path, no heavy imports in the route module.
+- **The code is a secret like a Square GAN:** shown only to its winner, never logged in full (last 3 characters
+  only), never in an error body. Never log a raw Toast request body (it carries guest and check data).
+- **Offer amount:** from `prizePosValueCents()` (`lib/pos/prizeValue.ts`); gift card = its amount; %-off follows
+  the prize's cap; a null cap = no cap (§6 item 3). A prize bigger than the check follows §6 item 9 (shared with
+  Clover). Check-level vs item-level discount: decide in 4c from Toast's offer model.
+- One file reads Toast config/env (`lib/pos/toastConfig.ts`, like `lib/pos/squareConfig.ts`); the protocol in
+  `lib/pos/toastLoyalty.ts`; register a `toast` adapter in `lib/pos/registry.ts` and flip `toast` to `available` in
+  `lib/pos/providers.ts` **in the same change** (4f), never earlier.
+
+**Cost (estimate; measure in 4e).** Per redemption Toast calls us about 3–4 times (search/inquire, inquire again when
+applied, redeem; plus an accrue after payment), each ~2–4 small DB operations; Hightop makes **zero** calls to Toast
+on this path. At 100 venues × 20 redemptions/week ≈ 8,000 redemptions/month ≈ 32,000 function invocations and
+~100,000 small DB operations/month: negligible on current plans. No crons, no polling. Unknown until 4a: whether
+Toast charges partners a fee (ask in the application; tell Andrew before signing anything that does).
+
+**Handoff files:** `docs/pos-rewards-integration-plan_PHASE_4a_HANDOFF.md`, `…_PHASE_4b_HANDOFF.md`, and so on.
+
+#### Phase 4a — Get Toast access (Andrew + agent; START NOW, longest lead time)
+**Model / effort:** Sonnet 5.5, **medium** (writing). **Needs Andrew** for every submission and every conversation
+with Toast or a restaurant.
+- **Agent first:** write `docs/toast-access-kit.md`: (1) the partner application answers (what Hightop is, the
+  integration — loyalty only, outbound endpoint, no menu or payment writes, our security posture: encrypted POS
+  tokens, signed webhooks, once-only redemption in Postgres; evidence: Square live in production since 2026-10-06,
+  partner count, redemption numbers from 2h); (2) a one-page email Andrew sends to a Toast restaurant asking it to
+  request custom loyalty API access from its Toast account rep, with the exact words to use ("custom integration,
+  Loyalty integration API, with Hightop Challenge as our technology partner"); (3) a short demo script/video outline
+  (the Square flow today, the Toast flow mocked).
+- **Andrew, route 1:** submit the integration partner application (accept the API Documentation License Agreement →
+  follow the emailed instructions → complete the form), using the kit.
+- **Andrew, route 2 (likely faster):** pick a friendly Toast restaurant (§6 item 16) and send it the email.
+- **Andrew:** keep the Toast demand list (venue names that use Toast and want this) and add it to the application.
+- Ask Toast (in the application / discovery call) and record: fees, certification steps and timeline, how loyalty
+  calls are authenticated, how a restaurant enables us, whether QR scanning at the Rewards screen is supported on
+  their hardware.
+- Exit: either route grants sandbox access → 4c. 4b does not wait for this.
+
+#### Phase 4b — Toast endpoint + shared coupon code, built to the public spec (flag OFF; deployable alone)
+**Model / effort:** Opus 5.5, **high** (money path, public unauthenticated caller). Starts now; needs no Toast access.
+- **Shared with Clover (moved here from 3b):** migration adding `challenge_campaign_redemptions.redeem_code` (10 chars
+  Crockford base32, UNIQUE, database-generated default so existing rows backfill in the same migration) and the
+  service-only `release_challenge_prize(p_redemption_id, p_method)` RPC (un-redeems only when `redeemed_method =
+  p_method` and redeemed under 5 minutes ago; single guarded UPDATE in the style of `redeem_challenge_prize`; allow
+  `pos_toast` and `pos_clover`). Grants per `supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md`; never edit an existing
+  migration; `supabase db push` asks Andrew. QR payload `HTC1:<code>`.
+- `lib/pos/toastLoyalty.ts`: parse/answer each transaction type from the public OpenAPI schema; the decision logic
+  as pure functions (unit-testable). `lib/pos/toastConfig.ts`. Route `app/api/pos/toast/loyalty/route.ts`.
+- **Request authentication: build it as an interface with a fail-closed stub** (every request refused until 4c fills
+  in Toast's real scheme). Never ship a "trust the header" fallback.
+- Toast row in the Point of Sale sheet stays "Coming soon"; the coupon QR/code shows only for a venue with an active
+  Toast (or, later, Clover) link, so nothing changes on screen while no link exists.
+- `scripts/fake-toast-loyalty.cjs`: replays search → inquire → redeem → reverse, a retried redeem (same transaction
+  id → same answer, one claim), two registers redeeming the same code at once (one wins), wrong venue, used, expired.
+- Tests: route contract (flag-gated, no `requireOwnerAuth`, fails closed without config, code/body never logged,
+  rate-limited, idempotent), RPC race tests in the style of `scripts/test-reward-redeem-once.cjs`, code generator,
+  coupon render. Full gate: `npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run build` (not concurrently),
+  `npm run test:pwa-contract`.
+
+#### Phase 4c — Toast sandbox proof (blocked on 4a)
+**Model / effort:** Opus 5.5, **high**.
+- With Toast's private docs + sandbox: implement the real request authentication; confirm how the restaurant is
+  identified on each call and build the restaurant → venue link (Point of Sale sheet, Toast row: link / unlink,
+  behind `requireOwnerAuth` + venue access); confirm check- vs item-level offers; confirm QR scanning at the Rewards
+  screen (or typing). Preview deploy with Preview env vars only; the sandbox talks only to a preview.
+- Run the 4b fake-Toast cases for real against the sandbox; measure latency (must meet 500 ms average). Record each
+  check with evidence in the handoff. **Stop and report to Andrew** if Toast's model can't carry a per-coupon code.
+
+#### Phase 4d — Review + Toast certification (Andrew + agent)
+**Model / effort:** Opus 5.5, **high** for `/code-review high` + `/security-review` on the Toast diff; Sonnet 5.5
+**medium** for certification paperwork. Andrew handles Toast's compliance/legal review and the partner agreement
+(route 1); the agent answers technical questions and fixes findings. Privacy policy: add Toast to the POS line if
+needed (Andrew approves wording).
+
+#### Phase 4e — First real Toast bar (pilot)
+**Model / effort:** Opus 5.5, **medium**.
+- Production env vars (`vercel env add … production`, Andrew pastes secrets) + redeploy. The friendly restaurant
+  links its Toast; staff sheet + Partner Manual section "How Staff Take a Prize (Toast)" (copy in
+  `lib/posStaffInstructions.ts`). Watch the ledger and `[PosToast]` logs for two weeks; compare calls and DB
+  operations with the estimate above; fix what staff hit.
+
+#### Phase 4f — Toast available to every partner
+**Model / effort:** Sonnet 5.5, **medium**.
+- After certification (route 1): flip `toast` to `available` in `lib/pos/providers.ts` with its registry adapter in
+  the same change; Partner Manual + `/info` line (no Toast logo or branding unless Toast's partner terms allow it).
+- If only route 2 exists so far: Toast stays "Coming soon" for everyone else; the pilot restaurant keeps working.
 
 ### Phase 5 — Partner reporting + review
 **Model / effort:** Sonnet 5.5, **medium**, then Opus 5.5 **medium** for `/code-review high` and
 `/security-review`.
-- Partner Dashboard: "Rewards redeemed" list (date, guest, prize, how redeemed, POS reference). **The list itself
-  is built in Phase 2f for Square; here, add Clover/Toast rows to it.**
+- ~~Partner Dashboard: "Rewards redeemed" list … add Clover/Toast rows to it.~~ **Dropped:** the list was removed on
+  2026-10-07 (partners see redemptions in their own POS). Don't rebuild it for Clover/Toast unless Andrew asks.
 - Device checklist per provider (`docs/pos-rewards-integration-device-checklist.md`), using each
   sandbox and, when available, one real partner. Compare actual provider-call counts and webhook
   volume with §3's estimate and report differences.
@@ -525,11 +707,12 @@ developer access. Re-plan this phase then; the sketch below is a starting point 
 ---
 
 ## 5. Out of scope
-Toast (deferred, §1a). Earning points from purchases (spend-based loyalty), selling gift cards, menu
-sync, any other POS.
+~~Toast (deferred, §1a).~~ (Toast is in scope since 2026-10-18, §1b.) Earning points from purchases (spend-based
+loyalty; Toast's `LOYALTY_ACCRUE` is a no-op), Toast sign-up/transfer, selling gift cards, menu sync, any other POS.
 
 ## 6. Andrew's decisions (Phase 0)
-0. **Toast deferred; Square + Clover first** — decided 2026-10-03 (§1a).
+0. ~~**Toast deferred; Square + Clover first** — decided 2026-10-03 (§1a).~~ **Superseded 2026-10-18 (Andrew): Toast
+   is the priority, and Toast and Clover both become available to partners** (§1b).
 1. Square first or Clover first? **Square first** (Andrew, 2026-10-03).
 2. Who funds a prize applied at the POS? **The partner** (Andrew, 2026-10-06). Hightop never moves money.
 3. For menu-item prizes, require a dollar cap when a POS is connected? **Optional** (Andrew, 2026-10-06; the
@@ -543,6 +726,9 @@ sync, any other POS.
    repo. _pending — ask at Phase 3c start._
 8. Test hardware: a Clover Dev Kit device (needed to test scanning and the real Register screen) or emulator only.
    Recommendation: a Dev Kit. **Andrew, 2026-10-06: no Dev Kit for now** — Clover paused; re-ask when Clover resumes.
+   **Re-asked 2026-10-18** (Clover must become available, §1b; the emulator can't sign in, so there is no path
+   without a Dev Kit). _pending — Andrew: order one (Global Developer Dashboard → Dev Kits; price is on the order
+   page)?_
 9. A prize bigger than the check (a $25 prize on a $15 tab): apply up to the check total with a warning to staff,
    the rest is forfeited (recommended), or refuse. _pending — ask at Phase 3b start._ (Square gift cards keep a
    balance; a Clover discount can't.)
@@ -558,6 +744,12 @@ sync, any other POS.
     for simple next steps; he can override).
 15. Scannable prizes at Square venues: **Andrew, 2026-10-06:** Option 1 (dollar-off prizes as Square gift cards), keeping the
     preset discount too; **the partner picks per prize** in the wizard. Plan: `docs/square-scannable-prizes-plan.md`.
+16. Toast access route (2026-10-18): apply as an integration partner **and** ask a friendly Toast restaurant to
+    request custom integration access (recommended: both, in parallel). Which restaurant? _pending — Andrew, 4a._
+17. Build the Toast endpoint to Toast's public spec before Toast grants access (4b)? Recommended **yes**: it is
+    flag-gated, fails closed, needs no Toast access, and the coupon code + undo RPC are shared with Clover. Risk:
+    Toast's private docs may change the authentication and restaurant-link parts (4c owns those). _pending —
+    Andrew; the agent may start the shared migration work meanwhile only with his OK._
 
 **Test coupon (seeded 2026-10-05 with Andrew's OK, "Ok to create a test coupon"):** campaign
 `da65ec0f-ad34-4e01-8a0c-6666e00c4ca0` ("TEST — POS gift card / Clover check (delete me)", `is_active=false`,

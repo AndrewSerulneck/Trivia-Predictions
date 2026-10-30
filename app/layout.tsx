@@ -3,6 +3,8 @@ import { Nunito } from "next/font/google";
 import { Suspense } from "react";
 import { PlayerRuntime } from "@/components/ui/PlayerRuntime";
 import { NativeAppRuntime } from "@/components/native/NativeAppRuntime";
+import { PlayerAppStoreBanner } from "@/components/native/AppStorePromotion";
+import { appStorePromotionReady, smartAppBannerScript } from "@/lib/appStorePromotion";
 import { ScrollRecoverySentinel } from "@/components/ui/ScrollRecoverySentinel";
 import { ScrollRescueGuard } from "@/components/ui/ScrollRescueGuard";
 import { StandalonePwaRuntime } from "@/components/ui/StandalonePwaRuntime";
@@ -116,11 +118,13 @@ export default async function RootLayout({
   // Light theme (docs/light-theme-plan.md): a build-time flag, never a cookie/header read here —
   // that would make every static page a per-visit render. Off = neither is rendered.
   const lightThemeEnabled = isLightThemeEnabled();
+  const appBannerScript = smartAppBannerScript();
 
   return (
     // suppressHydrationWarning: the theme script may add data-theme to <html> before React hydrates.
     <html lang="en" className={`m-0 p-0 ${nunito.variable}`} suppressHydrationWarning>
       <head>
+        {appBannerScript ? <script dangerouslySetInnerHTML={{ __html: appBannerScript }} /> : null}
         {lightThemeEnabled ? (
           // Sets data-theme="light" before the first paint on a light-capable screen (lib/theme.ts).
           <script dangerouslySetInnerHTML={{ __html: themePrePaintScript() }} />
@@ -135,6 +139,9 @@ export default async function RootLayout({
         <AuthSessionProvider>
           <AnimationTriggerProvider>
             <OwnerRecoveryRedirectGuard />
+            {appStorePromotionReady() ? (
+              <Suspense fallback={null}><PlayerAppStoreBanner /></Suspense>
+            ) : null}
             <AppShell>{children}</AppShell>
             <Suspense fallback={null}>
               <AuthNavigationGuard />

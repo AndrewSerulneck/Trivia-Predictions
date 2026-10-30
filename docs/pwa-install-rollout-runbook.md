@@ -1,5 +1,13 @@
 # PWA Install-Prompt Rollout Runbook
 
+**SUPERSEDED — 2026-10-25, native-app plan Phase 7.** The PWA promotion flag reader, Android
+install listener/button and Safari coach card have been removed from the working tree. Do not
+execute the historical activation steps below. Native store promotion now uses
+`NEXT_PUBLIC_APP_STORE_LINKS_ENABLED`, default off, plus two verified live URLs in
+`lib/appDownloadLink.ts`. See `docs/native-app-store-plan_PHASE_7_HANDOFF.md` for release state.
+The manifest, legacy Apple metadata, standalone detection and Bingo landscape behavior remain;
+existing home-screen players and browser play still work. No production flag was changed by this work.
+
 **Purpose:** exact, ordered steps to turn on the "Add to Home Screen" install prompt
 (`NEXT_PUBLIC_PWA_INSTALL_PROMPT_ENABLED`) built in Phase 5 of
 `docs/bingo-fullscreen-pwa-plan.md`, without repeating the domain-split mistake this flag

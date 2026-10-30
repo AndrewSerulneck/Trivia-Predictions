@@ -215,8 +215,51 @@ are on the website's Partner Dashboard (never in the app).
 60. **The switch works:** turn News from your bars off → create another game → no push. Turn it back on.
 61. **Daily cap:** the 6th new game or prize at one bar on the same day → no push (5 a day per bar).
 
+## N. Phase 5.5 — partner messages (web deploy only; no rebuild)
+
+Needs the web deploy of 5.5, migration `20261023145024` applied, and `NEXT_PUBLIC_PARTNER_MESSAGES_ENABLED=true` in
+Vercel Production followed by a Redeploy (it is off until then). Use the bar where your player account has played.
+The compose box is on the website's Partner Dashboard (never in the app).
+
+62. **The row:** Partner Dashboard → menu → **Message Your Players** (after Results). It says "2 messages left today."
+63. **The filter:** type a web address (e.g. "see pacificstreet.com") → "Messages can't include links…"; a swear word →
+    "That message has words we can't send…". Send stays refused in both cases.
+64. **Send:** type a short message → Send → "Send this to your players?" → Yes, send it → "Sent to N phones." and the
+    message appears under **Sent**; "1 message left today."
+65. **The phone:** within a few seconds the phone shows a push titled with the bar's name and your message. Tap it →
+    the app opens that bar's Venue Home with the message on top ("Message from …") and no popup ad.
+66. **Report:** tap **Report this message** → **Report it?** → "Thanks. We'll take a look." Close → Venue Home as usual.
+67. **The admin:** admin → Venues → **Partner messages** lists the message with its phones and 1 report. **Pause
+    venue** → the dashboard says messages are paused; **Un-pause** → it can send again.
+68. **The cap:** a 3rd message the same day is refused ("No messages left today…").
+69. **The switch:** turn News from your bars off on the phone → send a message the next day → no push.
+
 ## Results
 
 | # | iPhone | Android | Notes |
 |---|---|---|---|
 | | | | |
+
+
+## O. Phase 4c / Part B — passkeys and paid signing (2026-10-25)
+
+The paid-team app is **com.hightopchallenge.app** (team **2U7HMXGQM3**), not the old spike. Its actual development
+profile expires **2027-10-23T12:00:55Z**; the free-build warning at the top is historical for the spike.
+
+70. **iPhone native setup — PASS:** Andrew signed in as appreview, menu -> Set Up Passkey, approved Apple prompt;
+    server records one backed-up passkey created 2026-10-25T14:32:18Z.
+71. **iPhone native login — PASS after fix:** sign out -> Face ID / Touch ID -> approve -> appreview signed in.
+    Originally falsely said no passkey saved because the DB rejected an account-less authentication challenge.
+    Andrew approved migration 20261025150000; it is applied. No app rebuild needed for this correction.
+72. **iPhone Safari — PASS:** https://play.hightopchallenge.com -> Face ID / Touch ID -> same native-created passkey
+    signs in. Andrew confirmed; last_used_at advanced to 2026-10-25T14:42:43.933Z.
+73. **Android capability — PASS; release flow OPEN:** rebuilt emulator app enables WebView app-mode passkeys and
+    shows the sign-in control. Play signing fingerprint + association + selected verifier are now live (7aacf153;
+    Google DAL checks pass). Still need a Play-installed build's setup/sign-in and cross-browser checks. Do not treat an API/capability check as a
+    completed native authentication ceremony.
+74. **Still OPEN:** prompt cancellation, biometrics-disabled/PIN fallback, iPad native passkeys, browser-first
+    enrollment -> native sign-in, and the rest of docs/PASSKEY_CROSS_DEVICE_MATRIX.md.
+75. **Still OPEN:** stay signed in across 7+ days without reinstalling, clearing storage or signing out. The annual
+    provisioning profile only removes the old free-build expiry problem; it does not prove session persistence.
+
+Handoffs: `docs/native-app-store-plan_PHASE_4C_HANDOFF.md`, `docs/native-app-store-plan_PHASE_2B_HANDOFF.md`.

@@ -9,6 +9,7 @@ import { GameShowcaseBlock, type GameShowcase } from "@/components/info/Annotate
 import { gameHref } from "@/lib/domainSplit";
 import { LEGAL_LINKS } from "@/lib/legalInfo";
 import { signupEntryPath } from "@/lib/selfServeSignup";
+import { AppStoreDownloadSection } from "@/components/native/AppStorePromotion";
 
 // Game CTAs point at the player game, which moves to `play.` under the domain
 // split — gameHref stays relative while the split is off. The apex is marketing,
@@ -763,6 +764,8 @@ export default function InfoPage() {
             </div>
           </div>
         </section>
+
+        <AppStoreDownloadSection />
 
         {/* ── CONTACT ── */}
         <section id="contact" className="py-24 px-5">

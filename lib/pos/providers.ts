@@ -18,8 +18,8 @@ export type PosProviderId = (typeof POS_PROVIDER_IDS)[number];
  * "coming_soon" = listed, not connectable yet.
  *
  * Square became "available" in Phase 2 together with app/api/owner/pos/square/connect and
- * its registry adapter. Phase 3 does the same for Clover. Toast stays coming_soon (deferred,
- * plan §1a). "available" here means BUILT; a server without the Square app's env vars still
+ * its registry adapter. Phase 3 (Clover) and Phase 4 (Toast, the priority since 2026-10-18, plan §1b)
+ * do the same; each stays coming_soon until its phase flips it (3f / 4f). "available" here means BUILT; a server without the Square app's env vars still
  * shows Square as coming soon (lib/pos/connections.ts asks lib/pos/squareConfig.ts).
  */
 export type PosProviderAvailability = "available" | "coming_soon";

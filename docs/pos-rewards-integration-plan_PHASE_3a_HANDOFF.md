@@ -176,3 +176,109 @@ or token path, retry the emulator (it's all set up). Otherwise associate the Dev
 evidence here (or a `_PHASE_3a_HANDOFF` update section), and **stop and tell Andrew if fact 1's device half
 or fact 4 fails**. Then 3b. If Andrew wants progress before hardware, 3b's website side (flag off) can
 start using the billing_info design above, leaving only the device-token wiring to confirm.
+
+---
+
+## Update 2026-10-27 — retried with Clover's advice; still blocked on Clover's side
+
+**For Andrew (plain English):** Clover (DJ Shin) said to use the token from the **Key icon** next to the test merchant
+instead of our app's token. We did exactly that, twice, with a fresh key each time, and also installed Clover's newest
+emulator software (Clover Engine **2474**, App Updater 1262). The emulator still can't sign in: the address it sends the key
+to **does not exist on Clover's sandbox server** (it answers "404 Not Found" to anything, even made-up data). That is
+Clover's to fix. Nothing in our code or the plan changes. Send DJ the reply in §U3, then start a new session with
+"Finish Phase 3a" when he answers (or when a Dev Kit arrives).
+
+**For the next agent:**
+
+### U1. What was tried (2026-10-27)
+- Andrew got the key from the sandbox Global Developer portal:
+  `https://www.clover.com/global-developer-home/NA/sb/dashboard/tmc` (`/sb/` = sandbox) → Test Merchants →
+  **Key icon** on `E6K34ED22MSN1`. (The **gear** on a test-merchant row says "Merchant Account does not support this
+  feature. Please create a new test merchant" — that's a different feature; Andrew had first looked at the wrong page.
+  The Key icon exists for `E6K34ED22MSN1`; no new merchant needed.) The key is **8 characters**, `[A-Za-z0-9]`.
+- Emulator sign-in flow (Engine 2466 and 2474 identical): Settings → Add account → Clover → email
+  `andrew@hightopchallenge.com` → `GET /v3/developers/account_type?filter=email…` **200** → "Temporary token (from GDE
+  dashboard)" → Login → `POST https://apisandbox.dev.clover.com/globaldeveloperexperience/developers/device_emulators`
+  **404** (empty body), ~1–2 minutes after the key was copied. `dumpsys account` → `Accounts: 0`.
+- Engine 2474 (downloaded by Andrew from sandbox dev-apks 2026-10-27, `~/Downloads/com.clover.engine-2474.apk`) is
+  installed on AVD `clover_mini3_api29` (`adb install -r`, Success). It still has no "Sign in with GDE Account" browser
+  button, which Clover's setup doc describes (docs.clover.com/dev/docs/setting-up-an-android-emulator).
+- **Control probe (no credentials):** `curl -X POST` with dummy JSON to `.../globaldeveloperexperience/developers/device_emulators`
+  → 404, and to `.../globaldeveloperexperience/` → 404, while `.../v3/developers/account_type` → 405 (route exists). So the
+  endpoint is absent on the sandbox host, independent of the key. Conclusion: Clover-side; not fixable by us.
+
+### U2. Traps found today
+- **The emulator's "Paste from clipboard" does NOT see the Mac clipboard.** Workaround that keeps the key out of the
+  transcript: `pbpaste | tr -d ' \r\n\t' > <scratchpad>/tok.txt` (umask 077), print only its length, tap the field,
+  `adb shell input text "$(cat tok.txt)"`, `rm` the file, then Back (hide keyboard) and tap Login. Don't screenshot while
+  the key is visible in the field.
+- Screen coordinates (1280×800): Clover account row in Add-account list (136,224). Engine 2474 layout: email field
+  (640,232), Next (640,363), token field (640,252), Login (640,383). (2466 was ~46 px lower.)
+- Emulator start command unchanged (§5). `adb` needed a fresh daemon start; boot takes ~1 min.
+
+### U3. Reply for Andrew to send DJ (copy-paste)
+> Hi DJ, thanks — I found the Key icon next to test merchant E6K34ED22MSN1 in the sandbox Global Developer portal and used
+> that token (not an OAuth token), twice, each within a minute or two of copying it. I also updated to Clover Engine 2474
+> and App Updater 1262 from the sandbox dev-apks page. The emulator (Clover Mini 3rd gen profile, API 29 arm64) still
+> fails: Login POSTs to https://apisandbox.dev.clover.com/globaldeveloperexperience/developers/device_emulators and gets
+> HTTP 404 with an empty body. That URL returns 404 for any request, even with no token, so it looks like the endpoint
+> isn't deployed in sandbox. Also, Engine 2474 doesn't show the "Sign in with GDE Account" browser button your setup doc
+> describes. Is there a different Engine build or environment I should use, or something to enable on my account
+> (andrew@hightopchallenge.com, app ID 1K69BPS2GDK3W)? Thanks, Andrew
+
+### U4. State and next steps
+- Nothing committed, deployed, or changed in the database/Vercel. Only this file and the plan's status line changed.
+  APK upload of the spike (`~/Downloads/hightop-clover-spike-v1.apk`) still not done — needed only after sign-in works.
+- When DJ replies: if he gives a new Engine build or URL, install it (`adb install -r`), and retry with a fresh key using
+  U2's method. If sign-in succeeds, continue at §6 "Device run" (facts 1, 2, 4, 5; fact 3 needs real hardware).
+- If Clover can't fix the emulator, the only path to facts 2–4 is a **Dev Kit** (plan §6 item 8, Andrew's call, costs
+  money). 3b's website side can start before then (flag off) using the `billing_info` design (§3).
+
+### U5. Rules for 3c from Clover's "Development basics – Android" page (read 2026-10-27)
+Source: docs.clover.com/dev/docs/clover-development-basics-android. It does not address the emulator sign-in (it only
+links the emulator setup page, and lists "associate your sandbox developer account with your Clover Dev Kits").
+- **No Google Mobile Services:** no `com.google.android.gms` / `com.google.firebase` (so no ML Kit barcode scanning, no
+  Firebase). Scanning must use Clover's `BarcodeScanner` / `BarcodeResult` broadcast (already the plan).
+- **Never use the word "PIN" in the app** (Clover rule). Our "pairing code" wording is fine.
+- **Orientation:** Mini / Station 2018 / Station Pro are landscape and locked; Flex / Compact are portrait and locked;
+  Station swivels. Don't use sensor orientation modes; build each screen to work in BOTH landscape and portrait.
+- Permissions are granted at install time (no runtime prompts) — request exactly what we need in the manifest.
+- Google's targetSdk rules don't apply (consistent with targetSdk ≤ 25, §3).
+- Network/token work off the main thread (Kotlin coroutines); `CloverAuth.authenticate()` can take up to 60 s.
+- Clover recommends English, French, German, Spanish and Dutch. Recommendation: ship English only for the US pilot;
+  ask Andrew before 3e whether to add others (listing review may ask).
+- Never commit app tokens; never ask staff for card data.
+
+### U6. Production-endpoint experiment (2026-10-27, Andrew approved) — key accepted, merchant lookup fails
+- Probe: `POST /globaldeveloperexperience/developers/device_emulators` with dummy JSON → **404 on `apisandbox.dev.clover.com`
+  and `sandbox.dev.clover.com`**, but **401 `{"message":"Invalid tempToken provided or the token has expired : null"}` on
+  `www.clover.com` and `api.clover.com`** — the GDE key-exchange service exists only on production hosts. (The GDE portal
+  itself is on `www.clover.com/global-developer-home/NA/sb/…` even for sandbox.)
+- Experiment: `adb root`; `settings put secure clover_cloud_url https://www.clover.com`; `settings put secure clover_target
+  prod_us`; `pm clear com.clover.engine com.clover.appupdater`; sign in with a fresh Key-icon token (Andrew typed it into
+  the emulator window himself). Result, from logcat:
+  - `POST https://api.clover.com/cos/v1/create_device` → 200 (on settings change; registers an emulator device on prod)
+  - `POST https://api.clover.com/globaldeveloperexperience/developers/device_emulators` → **200 (key accepted)**
+  - `POST https://c.clover.com/cos/v1/merchant/config` → **401** → `MerchantFactory: Failed to get merchant properties` →
+    UI "Failed to create merchant account". Also logged: `java.lang.SecurityException: Caller com.clover.engine is not
+    Clover or System` (from `LoginViewModel.authenticateGde` → `MerchantFactory.createMerchant`).
+  - Reading: the token exchange succeeds on prod but the merchant (sandbox `E6K34ED22MSN1`) isn't on prod, and the sandbox
+    has no exchange endpoint. The engine is the sandbox build (2474 from sandbox dev-apks) — a prod Engine build wasn't tried
+    (no prod dev-apks page for US in the docs; US prod emulator + a sandbox merchant wouldn't match anyway).
+- **Reverted:** `settings delete secure clover_cloud_url / clover_target`, `pm clear` both Clover apps. Emulator is back on
+  sandbox defaults. Possible side effect: one emulator device record on Clover production under Andrew's developer account.
+- This is the evidence for DJ (Andrew's reply in the chat of 2026-10-27, see U7).
+
+### U7. Updated reply for DJ (supersedes U3)
+> Hi DJ, thanks. I used the Key-icon token for sandbox test merchant E6K34ED22MSN1 (from
+> www.clover.com/global-developer-home/NA/sb/dashboard/tmc) on Clover Engine 2474 / App Updater 1262 from the sandbox
+> dev-apks page (Clover Mini 3rd gen emulator, API 29 arm64). With default (sandbox) settings, Login POSTs to
+> https://apisandbox.dev.clover.com/globaldeveloperexperience/developers/device_emulators and gets HTTP 404 — that path
+> doesn't exist on apisandbox or sandbox.dev (404 for any request), while on api.clover.com it answers "Invalid tempToken".
+> As a test I pointed the emulator at production (clover_cloud_url=https://www.clover.com, clover_target=prod_us): the
+> token was accepted (device_emulators → 200) but the next call, POST https://c.clover.com/cos/v1/merchant/config, returned
+> 401 and the emulator showed "Failed to create merchant account" (logcat also shows "SecurityException: Caller
+> com.clover.engine is not Clover or System" in LoginViewModel.authenticateGde). So the GDE token exchange seems to exist
+> only on production, while my test merchant is in sandbox. How should a GDE developer provision a sandbox emulator —
+> is there a sandbox endpoint/Engine build I'm missing, or can you enable it for my account (andrew@hightopchallenge.com,
+> app ID 1K69BPS2GDK3W)? Thanks, Andrew

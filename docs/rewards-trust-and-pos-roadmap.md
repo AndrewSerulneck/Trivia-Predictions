@@ -9,7 +9,7 @@ status line and per-phase handoff notes.
 |---|---|---|---|---|
 | A | `docs/reward-descriptions-plan.md` | Reward cards say when, how often, what to do, and what you win | nothing | 4 phases, ~1 week |
 | B | `docs/reward-live-redemption-plan.md` | A moving, tap-reactive coupon so a screenshot looks obviously fake; fixes two redemption security bugs | nothing (A first; both edit the coupon) | 3 phases, a few days |
-| C | `docs/pos-rewards-integration-plan.md` | Rewards come off the bill inside Square, then Clover (Toast deferred until we have proof from these two) | B Phase 1 | 4 active phases; Toast later |
+| C | `docs/pos-rewards-integration-plan.md` | Rewards come off the bill inside Square (live), Toast (**priority since 2026-10-18**) and Clover (in parallel) | B Phase 1 | Square live; Toast 4a–4f; Clover 3a–3f |
 
 A and B touch different files and could run at the same time, but run them **one after the other**
 so each `/code-review` sees one change. Start Plan C **Phase 0 (business setup) today** — creating
@@ -17,7 +17,7 @@ the Square and Clover developer accounts is free and instant, and Clover's app a
 slowest remaining step.
 
 **Decisions so far (all 2026-10-03):** Plan A copy approved as written; the prize wallet coupon says what the guest won it for. Plan B is motion-only — no PIN, staff scan or rotating code. Square before Clover. Toast deferred — build Square
-and Clover first, apply to Toast later with real results (2026-10-03, Plan C §1a).
+and Clover first, apply to Toast later with real results (2026-10-03, Plan C §1a). **Superseded 2026-10-18 (Andrew): Toast is the priority; Toast and Clover both become available to partners (Plan C §1b).**
 
 ## Phase-by-phase, with model and effort
 
@@ -35,7 +35,7 @@ and Clover first, apply to Toast later with real results (2026-10-03, Plan C §1
 | C1 POS foundation — **done 2026-10-04** (committed `27f5eea`, deployed 2026-10-05 behind the off switch; `docs/pos-rewards-integration-plan_PHASE_1_HANDOFF.md`) | agent | Opus 5.5 · high |
 | C2 Square gift cards — **built 2026-10-05** (committed `27f5eea`, deployed with the switch off; sandbox keys verified 2026-10-05; the browser connect → card → spend run still needs Andrew at the keyboard; `docs/pos-rewards-integration-plan_PHASE_2_HANDOFF.md`) | agent | Opus 5.5 · high |
 | C3 Clover — **re-planned 2026-10-05 as a Clover register app** (Andrew: build it now; a scannable code on the coupon is OK). Staff scan or type the coupon in our app on the Clover register; no staff phones or logins. Sub-phases 3a–3f in the plan §4 Phase 3; next is **3a** (spike + toolchain), which needs Andrew to create the Clover Android app in the sandbox dashboard and pick test hardware first | Andrew (two setup items), then agent | Opus 5.5 · high |
-| C4 Toast — **deferred**; re-plan after Square/Clover are live and Toast accepts us | — | — |
+| C4 Toast — **PRIORITY since 2026-10-18** (Plan C §1b, sub-phases 4a–4f): 4a get Toast access (apply + a friendly Toast restaurant), 4b endpoint built to the public spec (flag off), 4c sandbox proof, 4d review + certification, 4e pilot, 4f available | Andrew (4a), then agent | Sonnet 5.5 · medium (4a); Opus 5.5 · high (4b–4d) |
 | C5 partner reporting + review | agent | Sonnet 5.5 · medium, then Opus 5.5 · medium |
 
 ## How to run each phase

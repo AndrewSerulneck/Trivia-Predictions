@@ -1,5 +1,83 @@
 # Native App Store Plan — Hightop Challenge on the App Store and Google Play
 
+**Apple creative assets prepared locally, 2026-10-26:** header `assets/app-store/apple-product-page-header-v1.png`
+(3840×1646) and search results `assets/app-store/apple-search-results-v1.png` (3840×2560), opaque RGB PNGs.
+Existing logo and one-line “It's game time.” design retained. Not uploaded or submitted; Phase 6 remains in progress.
+Asset preparation/verification handoff: `docs/native-app-store-plan_PHASE_6_HANDOFF.md`, opening Oct 26 addendum.
+
+**Current status — 2026-10-25, latest checkpoint:** Phase 6 remains in progress. Google Production build
+`1.0.0` / code **2** is **In review** (Andrew's report). The iOS `1.0.0` / build **1** archive is ready,
+and Andrew has now created App Store Connect record **6826962606**. The first upload failed before that
+record existed; the retry **succeeded at 2026-10-26T01:29:30Z** (Oct 25 in New York). Apple reported
+the uploaded package processing, and Andrew confirmed **Processing** in TestFlight. No App Review submission
+was performed. **APNs key upload is
+confirmed by Andrew**; real iPhone notification delivery is still unverified. Latest submission handoff:
+`docs/native-app-store-plan_PHASE_6_HANDOFF.md`. Phase 8's runbook is now prepared at
+`docs/native-app-release-runbook.md`; its end-to-end update rehearsal is **not done**. Partial Phase 8
+handoff: `docs/native-app-store-plan_PHASE_8_HANDOFF.md`.
+
+**Phase 7 prepared locally (2026-10-25):** official store badges, player download section, sign-in pointer,
+Android dismissal and Apple Smart App Banner support built behind default-off
+`NEXT_PUBLIC_APP_STORE_LINKS_ENABLED` plus two valid listing URLs. Both URL constants remain empty.
+Old PWA promotion removed; existing browser/standalone play retained. **Uncommitted, not deployed or enabled**;
+activation and actual Safari checks await live listings. Handoff: `docs/native-app-store-plan_PHASE_7_HANDOFF.md`.
+
+| Remaining work | Current state / dependency |
+|---|---|
+| Apple record and TestFlight | Record 6826962606 created; build 1 uploaded successfully. Andrew confirms Processing. Once ready, add an internal group/tester and install through TestFlight. |
+| Device checks | iPhone push (section K), remaining sharing/news checks (J item 33, L/M), Play-installed Android passkeys (O), and iPad checks. Record actual results in the device checklist. |
+| Session persistence | 7+ day observation still open; the Oct 25 passkey check cannot establish it. |
+| Apple listing and submission | iPhone+iPad screenshots, actual privacy/rating forms, US-only free availability, Andrew's legal review and final Submit. |
+| Google approval | Await review result, verify public listing and install the Play-distributed build; respond to any actual reviewer requests. |
+| Phase 7 | Implementation built locally behind an off flag; activate after both listings are live and Safari/device checks pass. |
+| Phase 8 | Release runbook prepared; perform the native update rehearsal after initial launch. |
+| Phase 10 (code-review fixes, added 2026-10-26) | **10.1 built 2026-10-26, uncommitted; migration `20261026173304` APPLIED 2026-10-26 (Andrew OK) — handoff `docs/native-app-store-plan_PHASE_10_1_HANDOFF.md`. 10.2 built 2026-10-26, uncommitted — handoff `docs/native-app-store-plan_PHASE_10_2_HANDOFF.md`.** **10.3 built 2026-10-26, uncommitted — handoff `docs/native-app-store-plan_PHASE_10_3_HANDOFF.md`.** **10.4 done 2026-10-26 (iCloud duplicate `config 2.xml` deleted after a byte-identical check; no other `* 2.*` files in `native/`) — handoff `docs/native-app-store-plan_PHASE_10_4_HANDOFF.md`. Phase 10 complete.** 10.1 + 10.2 before partner messages (5.5) are deployed or switched on; 10.3 before Phase 7's flag goes on; 10.4 before the next iOS build. See Phase 10 in §4. |
+
+Phase 4c's iPhone Face ID and Safari use are verified; Part B's signing switch is complete. Android
+certificate association/verifier are live at `7aacf153cd8707b6d3f3644051a96614703ecaba`; physical/Play-install
+ceremonies are not inferred from those server checks. Reviewer account/demo venue and iPad decisions are
+resolved (§2 items 13–15). Phase 5.5 partner-written messages are separate unpublished work, not a launch
+prerequisite: migration `20261023145024` is already in remote history; **do not reapply it**. Its current
+production feature flag has not been independently checked. The optional rating prompt is not a launch blocker.
+
+**Earlier status checkpoints below are retained as history. The table above supersedes conflicting
+“next”, “not uploaded”, “APNs pending” and “migration not applied” statements.**
+
+**Phase 6: Google Play Production is IN REVIEW (Andrew reported 2026-10-25); Apple submission remains unverified.** Reviewer access is live. `appreview` was created through
+the live account API with Andrew's supplied PIN (kept out of repository files), granted God Mode, and verified signing
+in and joining without location. Existing **Hightop Test Bar**, `venue-hightop-test`, **1010 Pacific St, Brooklyn,
+NY 11238, USA**, is now visible. **Keep iPhone + iPad support** (Andrew's answer); prepare iPad screenshots too.
+Updated submission pack: `docs/native-app-store-submission-pack.md`; current handoff:
+`docs/native-app-store-plan_PHASE_6_HANDOFF.md`. These setup/docs changes are uncommitted. Andrew manually uploaded
+Google build 2 and submitted for review; no agent store upload, submission or application deployment was performed.
+**Correction to the older Phase 6 handoff:** the paid-team
+signing switch was completed in Phase 5.2 on 2026-10-23. **Phase 4c update, 2026-10-25:** iPhone passkey creation,
+Face ID sign-in and Safari sign-in with that same passkey are now verified. Andrew approved migration
+`20261025150000_native_discoverable_passkeys.sql`; it is applied and fixes the account-less authentication challenge
+that previously failed before Apple's prompt. Android association and selected verifier are now **LIVE** at
+`7aacf153cd8707b6d3f3644051a96614703ecaba`; READY `dpl_2Y9ixHxGcj5ijT5P5pNfSSkjYxvx`, both hosts/exact source
+verified and Google DAL checks pass. Real Play-installed Android passkey testing remains open. Handoffs: `docs/native-app-store-plan_PHASE_4C_HANDOFF.md`
+and `docs/native-app-store-plan_PHASE_2B_HANDOFF.md`. Signing-switch half of Part B is verified complete; its 7+ day
+session check remains open. Earlier status paragraphs below are historical where they conflict.
+**Google Play setup, 2026-10-25:** Andrew created the app record, supplied developer ID **5775756752839536193**,
+and now chose to complete Console setup himself: **stop using TinyFish**. All browser runs are terminal; do not retry.
+TinyFish never verified the app dashboard or signing certificate; account-setup choices in the cancelled run remain
+unverified. Manual submission pack: `docs/native-app-store-submission-pack.md`; exact run, cancellation and cost facts:
+`docs/native-app-store-plan_PHASE_6_HANDOFF.md`. Phase 6 remains incomplete.
+**Release artifact update (2026-10-25):** Andrew confirmed first release and authorized creating the upload key
+and bundle for `com.hightopchallenge.app`. **Signed/verified AAB ready**:
+`/Users/andrewserulneck/Downloads/Hightop-Challenge-1.0.0-2.aab` (version 1.0.0 / code 2, 23,324,192 bytes).
+Key/password files are private and outside Git; their locations are recorded in §7. Password-manager backup remains
+unconfirmed. Andrew confirmed Organization account, removed shadowed build 1, and reported Google Production status
+**In review** for build 2. The two mapping/native-symbol warnings are nonblocking; minification is disabled.
+Approval/public availability and Android installed-release checks remain unverified. Andrew supplied the Play
+app-signing certificate; association/server release is now verified live (handoff below);
+no agent upload/publication performed. Phase 6 overall remains incomplete. Exact release facts are in the handoff.
+**iOS artifact update (2026-10-25):** App Store distribution archive/export succeeded locally; verified IPA:
+`/Users/andrewserulneck/Downloads/Hightop-Challenge-iOS-1.0.0-1.ipa` (1.0.0 / build 1, iPhone+iPad,
+production APNs entitlement). No Apple upload/server validation/TestFlight or submission yet. Android Play
+app-signing fingerprint received and configured in production; exact artifacts/checks/commands:
+`docs/native-app-store-plan_PHASE_6_HANDOFF.md`.
 **Status:** Plan written 2026-10-08; Andrew's answers folded in the same day (§2 items 4–11).
 **Current state (checked 2026-10-22; supersedes the "Next:" and "uncommitted" notes below):** every phase
 through 4b plus review fixes R1–R5 is committed AND pushed to `origin/main` (`87303ae` R4–R5, `52c63df`
@@ -8,7 +86,7 @@ through 4b plus review fixes R1–R5 is committed AND pushed to `origin/main` (`
 still blank); (2) Andrew — rebuild the shell from `main` and run 3B.3 + section I of
 `docs/native-app-device-checklist.md`; (3) Phase 4d (no account needed); (4) Phase 5 Android half (needs
 only Firebase — see Phase 5); then, once the paid Apple account exists: Part B (2B), 4c, Phase 5 iOS half,
-6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** **Phases 9c + 9d are BUILT and pushed (`678e680`; handoffs `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`, `…_PHASE_9D_HANDOFF.md`).** **Phase 9e is BUILT and pushed (`20a97e2`, 2026-10-22; migration `20261023011500` applied to production 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** **Phase 9f review is DONE (2026-10-22; handoff `docs/native-app-store-plan_PHASE_9F_HANDOFF.md`): 16 fixes scheduled as 9f.1–9f.6 + an iPad fix folded into 9g; Andrew's phone pass = section J of `docs/native-app-device-checklist.md`.** **Phase 9f.1 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_1_HANDOFF.md`).** **Phase 9f.2 is BUILT (2026-10-22, not committed; iPhone check pending; handoff `docs/native-app-store-plan_PHASE_9F_2_HANDOFF.md`).** **Phase 9f.3 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_3_HANDOFF.md`).** **Phase 9f.4 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_4_HANDOFF.md`).** **Phase 9f.5 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_5_HANDOFF.md`).** **Phase 9f.6 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_6_HANDOFF.md`).** 9f.1–9f.6 are DEPLOYED (`6047f68`, 2026-10-23) and the build is installed on his iPhone. **Phase 9g is BUILT (2026-10-23; handoff `docs/native-app-store-plan_PHASE_9G_HANDOFF.md`).** Next: Andrew's section J (item 33 = the 9f.2 iPhone check). **Phase 5.1 (push: server, website, Android) is BUILT and verified end to end on the Android emulator (2026-10-23, not committed, not deployed; migration `20261023105750` applied to production; `FCM_SERVICE_ACCOUNT_JSON` set in Vercel Production + Preview; handoff `docs/native-app-store-plan_PHASE_5_1_HANDOFF.md`). **Phase 5.2 (iPhone) is BUILT AND SIGNED (2026-10-23): the Part B signing switch is done (paid team `2U7HMXGQM3`, bundle `com.hightopchallenge.app`, push + associated-domains entitlements wired) and the build is installed on Andrew's iPhone; 4d + 5.1 + 5.2 committed and pushed. It waits on Andrew's APNs key upload, then the section K iPhone test — handoff `docs/native-app-store-plan_PHASE_5_2_HANDOFF.md`.** **Phase 5.3 (the welcome ask + new wording) is BUILT and pushed (`6372be0`, 2026-10-23; web-only; handoff `docs/native-app-store-plan_PHASE_5_3_HANDOFF.md`).** **Phase 5.4 ("News from your bars") is BUILT and pushed (2026-10-23; migration `20261023141109` applied to production; web-only, no app rebuild; handoff `docs/native-app-store-plan_PHASE_5_4_HANDOFF.md`). Next: 5.5, and Andrew's sections L + M of the device checklist.** **Sharing Phases 9a–9g (added
+6, 7 (incl. the sign-in "Get the app" pointer, added 2026-10-22), 8. **Phase 9a is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9A_HANDOFF.md`).** **Phase 9b is BUILT and pushed (`beebc77`; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** **Phases 9c + 9d are BUILT and pushed (`678e680`; handoffs `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`, `…_PHASE_9D_HANDOFF.md`).** **Phase 9e is BUILT and pushed (`20a97e2`, 2026-10-22; migration `20261023011500` applied to production 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** **Phase 9f review is DONE (2026-10-22; handoff `docs/native-app-store-plan_PHASE_9F_HANDOFF.md`): 16 fixes scheduled as 9f.1–9f.6 + an iPad fix folded into 9g; Andrew's phone pass = section J of `docs/native-app-device-checklist.md`.** **Phase 9f.1 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_1_HANDOFF.md`).** **Phase 9f.2 is BUILT (2026-10-22, not committed; iPhone check pending; handoff `docs/native-app-store-plan_PHASE_9F_2_HANDOFF.md`).** **Phase 9f.3 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_3_HANDOFF.md`).** **Phase 9f.4 is BUILT (2026-10-22, not committed; handoff `docs/native-app-store-plan_PHASE_9F_4_HANDOFF.md`).** **Phase 9f.5 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_5_HANDOFF.md`).** **Phase 9f.6 is BUILT (2026-10-23, not committed; handoff `docs/native-app-store-plan_PHASE_9F_6_HANDOFF.md`).** 9f.1–9f.6 are DEPLOYED (`6047f68`, 2026-10-23) and the build is installed on his iPhone. **Phase 9g is BUILT (2026-10-23; handoff `docs/native-app-store-plan_PHASE_9G_HANDOFF.md`).** Next: Andrew's section J (item 33 = the 9f.2 iPhone check). **Phase 5.1 (push: server, website, Android) is BUILT and verified end to end on the Android emulator (2026-10-23, not committed, not deployed; migration `20261023105750` applied to production; `FCM_SERVICE_ACCOUNT_JSON` set in Vercel Production + Preview; handoff `docs/native-app-store-plan_PHASE_5_1_HANDOFF.md`). **Phase 5.2 (iPhone) is BUILT AND SIGNED (2026-10-23): the Part B signing switch is done (paid team `2U7HMXGQM3`, bundle `com.hightopchallenge.app`, push + associated-domains entitlements wired) and the build is installed on Andrew's iPhone; 4d + 5.1 + 5.2 committed and pushed. It waits on Andrew's APNs key upload, then the section K iPhone test — handoff `docs/native-app-store-plan_PHASE_5_2_HANDOFF.md`.** **Phase 5.3 (the welcome ask + new wording) is BUILT and pushed (`6372be0`, 2026-10-23; web-only; handoff `docs/native-app-store-plan_PHASE_5_3_HANDOFF.md`).** **Phase 5.4 ("News from your bars") is BUILT and pushed (2026-10-23; migration `20261023141109` applied to production; web-only, no app rebuild; handoff `docs/native-app-store-plan_PHASE_5_4_HANDOFF.md`).** **Phase 5.5 (partner-written messages) is BUILT (2026-10-23, not committed; migration `20261023145024` NOT applied; flag `NEXT_PUBLIC_PARTNER_MESSAGES_ENABLED` off; handoff `docs/native-app-store-plan_PHASE_5_5_HANDOFF.md`).** Next: Andrew's go-ahead to apply the migration, commit/push and turn the flag on; then sections L, M + N of the device checklist. **Sharing Phases 9a–9g (added
 2026-10-22)** need no Apple account except 9d's in-app Instagram direct-share.
 **Phases 1a and 1b are DONE and deployed (2026-10-08)** — latest handoff
 `docs/native-app-store-plan_PHASE_1B_HANDOFF.md` (1a: `…_PHASE_1A_HANDOFF.md`). Migration
@@ -51,8 +129,8 @@ haptics, iPhone location timeout, tidy-ups) are planned as Phases R1–R5 in `do
 (2026-10-09). R1 (Android Back), R2 (venue-list QR scan) and R3 (one haptics path) are committed (`0d0c745`, not pushed); R4 (iPhone location budget) and R5 (code tidy-ups) are done, uncommitted — latest handoff `docs/native-app-review-fixes-plan_PHASE_R5_HANDOFF.md`.** Each finished phase writes `docs/native-app-store-plan_PHASE_<N>_HANDOFF.md` and updates
 this line.
 
-**Goal:** one "Hightop Challenge" app, live on the Apple App Store and Google Play. Players get the
-games and partners can sign in to the Partner Dashboard. The `/info` home page links visitors to both
+**Goal:** one players-only "Hightop Challenge" app, live on the Apple App Store and Google Play. Partners
+use the Partner Dashboard in their browser. The `/info` home page links players to both
 stores. The website keeps working exactly as it does today.
 
 ---
@@ -163,6 +241,15 @@ nothing (estimate in Phase 5). You already have the Mac you need for Xcode.
     switch the app back to the player side?" — moot: partners never sign in inside the app, so the
     remembered-partner launch (`htc_app_side` cookie, `lib/appFrontDoor.ts`) is removed. Built in
     Phase 3B.
+13. **Reviewer venue: choose the easiest option and do it** (Andrew, 2026-10-25: "Whatever is easiest, just do it.").
+    Reuse and un-hide **Hightop Test Bar**, `venue-hightop-test`, at **1010 Pacific St, Brooklyn, NY 11238, USA**.
+    Keep its name, address, geofence and POS settings; `venue-hightop-test-2` stays hidden. Completed 2026-10-25.
+14. **Reviewer account: `appreview`, with Andrew's chosen PIN** (supplied in chat 2026-10-25).
+    The supplied value was applied and live sign-in verified. Keep the PIN out of the repository; enter it only in
+    the stores' private review/access forms. God Mode is approved for reviewer location bypass; it grants no admin
+    or partner credentials. Do not ask Andrew to choose the PIN again.
+15. **Keep iPad support too** (Andrew, 2026-10-25). Keep `TARGETED_DEVICE_FAMILY = "1,2"` in both iOS build
+    configurations and prepare iPad screenshots. Do not ask whether to restrict the app to iPhone again.
 
 ---
 
@@ -243,6 +330,7 @@ Model rule (Andrew): **never more capable than Opus 5.5.** Models: `claude-opus-
 | 9g | `/app` on a phone asks "Get the app?" first ("Get the app" / "No thanks, play in the browser") instead of jumping straight to a store | Sonnet 5.5 | medium | 1 session |
 | 9f | Review + Andrew's phone pass of every share path (9a–9e, 9g) | **Opus 5.5** (review) + Andrew | high | 1 session |
 | 9f.1–9f.6 | Fixes from the 9f review (share-sheet taps, iPhone Instagram caption, redraws, stale venue choice, partner box, Pick 'Em points) | Sonnet 5.5 / Opus 5.5 (see each) | medium–high | 1 session each (9f.6 tiny) |
+| 10.1–10.4 | Fixes from the 2026-10-26 code review: partner-message reports/pauses (migration), partner-message app fixes, "Get the app" link fixes, iCloud duplicate cleanup | Opus 5.5 (10.1) / Sonnet 5.5 / Haiku 4.5 (see each) | low–high | 1 session each (10.4 tiny) |
 
 Phases 0 and 1 run in parallel; Phase 0 is mostly waiting on paperwork. Phase 2 can start once
 Xcode is installed. Free Apple provisioning can put a test build on Andrew's own iPhone before the
@@ -379,6 +467,13 @@ the D-U-N-S number and the paid developer account:
   days**, which would end the 7-day test early. Android passkeys sit in Part B too because both
   platforms need `/.well-known/*` files served from the live site (a narrow `proxy.ts` allow), so
   one web change serves both. Handoff: `docs/native-app-store-plan_PHASE_2B_HANDOFF.md`.
+
+**Part B update, 2026-10-25:** signing switch already completed in Phase 5.2 and now independently verified in both
+project configurations and the actual signed device app: team `2U7HMXGQM3`, bundle `com.hightopchallenge.app`,
+associated-domain entitlement for `webcredentials:hightopchallenge.com`. The development profile expires
+**2027-10-23T12:00:55Z**, not after seven days. Andrew verified native passkey creation/sign-in and native-created
+passkey use in iPhone Safari after the Phase 4c database fix. No iOS rebuild was needed. Android release trust and
+the 7+ day session-persistence observation are still open; do not mark them passed from signing checks.
 
 Setup:
 - Create a separate folder **`native/`** with its own `package.json`, the current Capacitor major
@@ -886,6 +981,40 @@ After 3B.1 and 3B.2 are deployed and the shell rebuilt:
 
 ### Phase 4c — Face ID passkeys in the app (Opus 5.5, xhigh)
 
+**2026-10-25: iOS LIVE/VERIFIED; Android association/server verifier LIVE, device ceremony pending.** Handoff:
+`docs/native-app-store-plan_PHASE_4C_HANDOFF.md`. iOS uses WKWebView's existing WebAuthn flow, with the paid-team
+entitlements/AASA already present; no native plugin or iOS source change is needed. Andrew saved a passkey for
+`appreview`, then successfully signed in with Face ID in the native app and Safari.
+
+**Production correction:** the original account-centric migration made `webauthn_challenges.account_id NOT NULL`,
+but the front-door Face ID button is discoverable authentication (identity unknown until the authenticator returns
+a credential). Live options returned HTTP 400 with an account_id not-null violation, shown as the misleading
+"no passkey saved" message. Andrew explicitly approved applying **20261025150000** on 2026-10-25. It permits
+identity-less authentication challenges while requiring an account or legacy profile for registration. Applied
+alone to linked project `pkmxupsayzshvpirkaav`; live options HTTP 200 verified at **2026-10-25T14:40:16Z**. No
+existing passkey/player rows were changed by the migration. It is immutable applied history; do not edit/reapply.
+
+**Android:** feature-checked `WEB_AUTHENTICATION_SUPPORT_FOR_APP` + official Credential Manager 1.6.0; the emulator
+reports support level 1 and exposes the passkey API/sign-in control. `getExpectedPasskeyOrigins` in `lib/webauthn.ts`
+accepts only exact certificate-derived Android origins alongside the challenge's own web origin, only on the
+allowed production RP. Certificates come from the existing `readAndroidCertFingerprints` reader, so Digital Asset
+Links and verification share one configuration; no broad origin allowlist or native plugin is added.
+Andrew supplied the Play signing SHA-256, added as `ANDROID_APP_CERT_SHA256` in the confirmed production project.
+Both `assetlinks.json` URLs now return **200** with that exact certificate; Google's DAL API confirms all three
+intended relationships. Web verifier/native implementation and applied migration record are committed/pushed at
+**7aacf153**, READY **dpl_2Y9ixHxGcj5ijT5P5pNfSSkjYxvx**. No new migration ran. Native options smoke passed.
+Google Production build **1.0.0 / code 2** is In review by Andrew's report. Still test Android passkey creation,
+sign-in and browser interchange in the **Play-installed** build; do not substitute the debug or upload certificate.
+Andrew originally created the Play record as App; recommended Game → Trivia change remains unconfirmed.
+
+**Gates:** 5,551 tests passed / 13 environment skips; typecheck, source lint (`npm run lint -- --ignore-pattern 'tmp/**'`),
+web build, Android debug build/unit tests and real PostgreSQL constraint regressions pass. Plain `npm run lint`
+also scanned ignored historical release copies under `tmp/` and failed there; no such artifacts were changed.
+Those initial gates preceded publication. The selected release now also passes 5,530 isolated tests / 13 skips,
+typecheck/lint/217-page build; live associations and exact deployment source verified. Andrew manually uploaded and
+submitted Android build 2; the agent deployed the selected server code only. Broad cross-device and 7+ day checks
+remain open; exact tested rows are in `docs/PASSKEY_CROSS_DEVICE_MATRIX.md`.
+
 - Implement whichever approach Phase 2 proved, either the web view's own WebAuthn or a native
   plugin. If native: add the Android origin to `WEBAUTHN_ALLOWED_ORIGINS` (via `vercel env add`,
   never `vercel env rm`/`pull`) and keep `lib/webauthn.ts` the single verifier.
@@ -958,7 +1087,7 @@ the permission moment can all be built and proven before Apple approves the paid
   `lib/pushCategories.ts`, explicit consent language on the ask, Apple 4.5.4). Cap: **5 automatic game/prize pushes per bar per day**
   (Andrew confirmed 2026-10-23; separate from 5.5's 2 partner-written messages; he may change both later, so
   keep each cap a single named constant). One bounded audience read + one batched FCM send per event; no new cron.
-- **5.5 (was "5b") — partner-written messages.** Andrew: build with limits, **2 per bar per day**, short
+- **5.5 (was "5b") — partner-written messages.** **BUILT 2026-10-23** (handoff `…_PHASE_5_5_HANDOFF.md`). Andrew: build with limits, **2 per bar per day**, short
   (≈150 characters), sent only to that bar's players with "News from your bars" on. Compose box on the Partner
   Dashboard (website only — never in the app). Needs review/abuse rules (words filter, report, admin kill switch).
 
@@ -977,6 +1106,29 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
 ---
 
 ### Phase 6 — Store listings and submission (Sonnet 5.5, medium + Andrew)
+
+**Progress, 2026-10-25:** reviewer account and visible demo venue are ready (§2 items 13–15). Live account login
+and demo profile join both returned HTTP 200 without location; the join issued a player session cookie. The shared
+active Speed Trivia catalog is readable (single-row availability check); no demo prize, scheduled game or answer was
+created. The submission pack no longer claims native Face ID sign-in or a preloaded prize coupon. Android's cached
+**debug merged manifest** contains `POST_NOTIFICATIONS`, contributed by `@capacitor-firebase/messaging`; still inspect
+the final release AAB before filling its permissions form. iOS source confirms paid team `2U7HMXGQM3`, bundle
+`com.hightopchallenge.app`, and universal iPhone/iPad support in both configurations.
+
+**Still pending (latest 2026-10-25):** Apple app record creation, then archive upload/processing and internal
+TestFlight install; iPhone delivery checks (Andrew confirms APNs key uploaded); remaining device checklist,
+including item 33; Play-installed Android passkeys and Part B persistence; screenshots including iPad; actual
+Apple privacy/rating forms, Andrew's legal review and Apple submission. Google build 2 is already in Production
+review by Andrew's choice; do not recreate a release solely to insert an internal-testing step. Verify its public
+availability and Play-installed behavior after approval. The bundle ID was accepted for the authorized first
+Android release. Phase 5.5's source/flag remain separate; its migration is already in remote history.
+The optional rating prompt remains undecided. Phase 7 waits for live store URLs; keep its URL constants empty.
+
+**Follow-up 2026-10-25:** iPhone native passkey creation, native Face ID sign-in and use of the same passkey in
+Safari now pass (Phase 4c, above). Paid-team signing is independently verified. Migration `20261025150000` was
+explicitly approved and applied; this does not require an iOS rebuild. Separately, the production migration history
+already contains `20261023145024` (Phase 5.5), contrary to the older notes; it was not applied in this session and
+its deployment/flag was not inspected. The passkey dry run and apply included only `20261025150000`.
 
 - **Reviewer access:** create a God Mode reviewer account (for example username `appreview`) and a
   demo venue with anytime games stocked. Put the credentials and these points in the App Review
@@ -997,6 +1149,11 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
 - Plan for possibly one rejection round; the handoff records any rejection text verbatim.
 
 ### Phase 7 — Home page links (Sonnet 5.5, medium)
+
+**Built locally 2026-10-25, uncommitted/not deployed/not enabled.** Switch defaults off, both verified
+live URLs required. PWA promotion retired in the working tree; manifest/standalone behavior retained.
+Activation and actual Safari banner behavior remain open. Files, gates, cost and next steps:
+`docs/native-app-store-plan_PHASE_7_HANDOFF.md`.
 
 - Official **App Store** and **Google Play** badges on `/info`, using each company's official badge
   artwork and following their usage rules (no custom-drawn badges). Show the right one first by
@@ -1028,6 +1185,11 @@ volume and stays small at 10×. Measure a baseline before and after, and report 
   with both choices, never a dead end.
 
 ### Phase 8 — Release process (Haiku 4.5, low)
+
+**Progress 2026-10-25:** `docs/native-app-release-runbook.md` is prepared with commands checked against
+the current source, signing helper, successful archive/export and local Xcode export options. The end-to-end
+update rehearsal is still pending; do not mark Phase 8 complete. Handoff:
+`docs/native-app-store-plan_PHASE_8_HANDOFF.md`.
 
 - Write `docs/native-app-release-runbook.md`. It covers:
   - which changes are web-only (deploy as today) and which need a store build;
@@ -1433,6 +1595,208 @@ but only shows once the store URLs are filled (Phase 6/7). **Cost:** $0 recurrin
 `/app`, no DB reads. All pictures are drawn on the player's phone, with no server
 rendering, no storage and no new cron.
 
+### Phase 10 — Fixes from the 2026-10-26 code review (added 2026-10-26)
+
+**For Andrew, in plain English:** a code review of everything not yet committed found 10 problems, all in two
+unreleased features: **partner messages** (Phase 5.5) and the **"Get the app" links** (Phase 7). Nothing is broken
+for players today, because neither feature is live. These phases fix them before either one goes live. Run them
+one at a time, in order. Only 10.1 changes the database, and it needs your OK to apply.
+
+**How the review was run:** `/code-review high` over the uncommitted working tree on top of `7aacf153`. 10 findings;
+each one was checked against the code before being scheduled. One finding was corrected: the review assumed migration
+`20261023145024` was not applied. `supabase migration list` (2026-10-26) shows it **is** in production, and a read-only
+count shows **0** rows in `push_venue_messages`, `push_venue_message_reports` and `push_venue_message_pauses`. So
+changing the report rules touches no real data, but it must be a **new** migration (existing migration files are
+read-only history).
+
+**Rules for every sub-phase** (same as the 9f fix phases): fix only in these phases, never as in-place patches. Each
+phase writes its own handoff (`docs/native-app-store-plan_PHASE_10_<N>_HANDOFF.md`), adds tests that would have caught
+the bug, and passes the gates: `npx tsc --noEmit`, `npm run lint`, `npm run test`, `npm run build` (never run typecheck
+and build at the same time). Preserve all unrelated uncommitted work. Commit/push/deploy only when Andrew asks.
+
+**Order:** 10.1 → 10.2 (partner messages; both before 5.5 is deployed or switched on) → 10.3 (before Phase 7's flag is
+switched on) → 10.4 (housekeeping, any time before the next iOS build). 10.2 and 10.3 are independent and can swap.
+
+**Cost:** no new recurring cost. 10.1 adds one indexed lookup inside an RPC that already runs once per report. 10.2 adds
+at most one extra status read, and only after a send whose status read failed. 10.3 adds no request and keeps `/info`
+a static page. No new cron, no polling.
+
+**Before deploying any 5.5 code (Andrew):** `NEXT_PUBLIC_PARTNER_MESSAGES_ENABLED` already exists in Vercel
+**Production and Preview** (added ~2026-10-23; value not read). It is a build-time flag, and the 5.5 code is not
+deployed yet. If its value is `true`, the **first deploy that includes 5.5 switches partner messages on at once**.
+Confirm the value (Vercel dashboard) before that deploy, and keep it off until 10.1 + 10.2 are done and section N of
+the device checklist passes.
+
+| Sub-phase | Findings | Model / effort | Needs |
+|---|---|---|---|
+| 10.1 | Reports and pauses: one person = one report; an admin's un-pause sticks | **Opus 5.5**, high | New migration + Andrew's `db push` OK |
+| 10.2 | Partner messages: false "Try again", over-eager word filter, endless spinner, admin panel ignores the flag | Sonnet 5.5, medium | Website only |
+| 10.3 | "Get the app": `/info#app` target, Safari banner tag, hard-coded host, repeated URL parsing | Sonnet 5.5, high | Website only; one decision from Andrew (below) |
+| 10.4 | Delete the iCloud duplicate `native/ios/App/App/config 2.xml` | Haiku 4.5, low | Nothing |
+
+#### 10.1 — Reports count people, and an admin's un-pause sticks (Opus 5.5, high; new migration)
+
+**Status: built 2026-10-26, uncommitted. Migration `20261026173304_partner_message_report_rules.sql` written, NOT applied (dry run lists only it). As-built: `docs/native-app-store-plan_PHASE_10_1_HANDOFF.md`.**
+
+- **F1 — One person can file several "distinct" reports.** `report_venue_message` (migration `20261023145024`) counts
+  report rows per venue **profile** (`users.id`). But `is_venue_message_reader` lets every profile on the same account
+  read and report. A player with profiles at three bars can sign in to each and report the same message three times,
+  reaching `PARTNER_MESSAGE_REPORTS_TO_PAUSE` (3) alone and pausing the bar. The rule is meant to need three different
+  players.
+- **F2 — An admin's "Un-pause" doesn't stick.** `setVenueMessagesPaused(venueId, false)` deletes the pause row. The next
+  `report_venue_message` call on the old message still counts ≥ 3 reports and re-inserts the pause, **even an
+  `already_reported` call that added no row**. The bar is paused again with no new evidence.
+- **Fix (one new migration, `supabase migration new partner_message_report_rules`):**
+  1. A reporter's identity is `coalesce(users.account_id::text, users.id::text)`: the account, or the profile when there
+     is no account. Compute it in SQL only, in one place: a small `stable` helper used by the functions below.
+  2. `alter table public.push_venue_messages add column reports_reviewed_at timestamptz;`. This is the last time an
+     admin reviewed this bar's reports. It is a new column on an existing table, so no new grant is needed (the grants
+     contract covers new tables, views and sequences); confirm `tests/supabase-migration-grants-contract.test.ts` passes.
+  3. `create or replace function public.report_venue_message(...)` with the **same signature and return type**, so the
+     existing grants carry over. Under the same per-bar advisory lock:
+     (a) if this message already has a report from **any profile with the same identity**, answer `already_reported`
+     and **stop**: no insert and no pause check;
+     (b) otherwise insert the row;
+     (c) count **distinct identities** among this message's reports with `reported_at > coalesce(reports_reviewed_at,
+     '-infinity')`;
+     (d) pause only if (c) ≥ the threshold. The pause check runs only on a call that inserted a row.
+  4. `create or replace function public.read_venue_message(...)`: `reported` is true when any profile with the same
+     identity reported the message, matching 3(a). Same signature.
+  5. New RPC `public.unpause_venue_messages(p_venue_id text)` (security definer, `set search_path = public`, same
+     advisory lock key `'push_venue_messages:' || venue_id`): delete the pause row **and** stamp
+     `reports_reviewed_at = now()` on all of that bar's messages, in one transaction. Revoke from public/anon/
+     authenticated; grant execute to `service_role` only.
+  6. `lib/push/venueMessages.ts` `setVenueMessagesPaused(venueId, false)` calls `unpause_venue_messages` instead of a
+     plain delete. That file stays the only writer of the pauses table. A missing function fails closed: log
+     `[Push] unpause-rpc-missing` (detect it with `isMissingFunction` from `lib/supabaseRpcErrors.ts`) and return 503 to
+     the admin. Never fall back to the plain delete. Admin **pause** (upsert, reason `admin`) is unchanged.
+  7. The admin panel's report count (`listVenueMessagesForAdmin`) shows reports **since the last review**, so the number
+     on screen is the number that drives a pause.
+- **Accepted limitation (write it in the handoff):** a person can still create a second account. The threshold is a
+  safety valve, not proof; the admin pause/un-pause is the real control. Profiles without an account count once each.
+- **Tests:** extend `scripts/test-push-sql.cjs` (PGlite; add the new migration to its file list), run with
+  `npm run test:push-sql`:
+  - two profiles of one account → the second report is `already_reported` and the distinct count stays 1;
+  - three different accounts → paused;
+  - admin un-pause, then a 4th account reports → **not** paused (1 since review);
+  - an earlier reporter reports again after the un-pause → `already_reported`, not paused;
+  - three **new** accounts after the review → paused again.
+
+  Update `tests/partner-messages.test.ts` for the unpause RPC call and the fail-closed path.
+- **Apply:** Andrew approves `supabase db push`; apply **only** the new migration (dry run first and check its list
+  contains just that file). Then deploy the code. While the migration is missing, un-pause fails closed (503) and
+  nothing else changes. `npm run test` after it, because the `auth.users` FK guard runs there.
+- **Undo:** none needed for data (0 rows today). To roll back the logic, a further migration restores the old function
+  bodies from `20261023145024`; the added column is harmless if left in place.
+
+#### 10.2 — Partner messages: false failures, the word filter, the spinner, the admin panel (Sonnet 5.5, medium; website only)
+
+- **F3 — A sent message can say "Try again."** `app/api/owner/messages/route.ts` POST reads `getVenueMessageStatus`
+  inside the same `try` as the send. If only that read fails, the partner sees "Couldn't send your message. Try again."
+  even though the message is recorded and the pushes are queued. If they resend, players get a duplicate and the
+  2-a-day cap is used up.
+  **Fix:** once `sendVenueMessage` returns `ok`, the reply is **always** `200 { ok: true, messageId, devices, status }`.
+  Read the status in its own `try`; on failure, log `[OwnerMessages] status-after-send-failed` and send
+  `status: null`. In `components/owner/messages/PartnerMessagesSheet.tsx`, a success without `status` shows the "Sent
+  to N phones" notice and reloads the status once (bump a `reloadKey` that the load effect depends on). Never show an
+  error after `ok: true`.
+  **Test:** the send succeeds and the status read throws → 200 `ok: true`, `status: null`; the sheet shows "Sent".
+- **F4 — The word filter blocks harmless phrases.** `checkPartnerMessage` in `lib/partnerMessageRules.ts` matches
+  `BLOCKED_INSIDE` against **all words joined together**, so "Bring your **mother f**or brunch" → `motherfor` → contains
+  `motherf` → refused. Joining was meant to catch spaced-out spellings ("f u c k", "f.u.c.k").
+  **Fix:** match `BLOCKED_INSIDE` (1) inside **each word** on its own, which still catches "fuckyeah" and
+  "motherfucker", and (2) inside each **run of consecutive single-letter words** joined together, which catches
+  "f u c k", "f.u.c.k" and "f-u-c-k". Never join across real words. `BLOCKED_WORDS` is unchanged.
+  **Tests:** allowed: "Bring your mother for brunch", "Mother Friday special", "Mother's Day brunch", "Half-price wings
+  tonight!". Refused: "fuckyeah", "f u c k", "f.u.c.k", "F-U-C-K", "MOTHERFUCKER", "m0therf*cker". Every case already
+  in the test file still behaves the same.
+  **Accepted limitation:** two-letter splits ("fu ck") get through. Reports and the pause are the backstop; don't widen
+  this into fuzzy matching.
+- **F5 — The sheet spins forever with no venue.** With `?sheet=messages` open and `venue` null (a partner with no
+  surviving venue, or a reload before venues resolve to none), the load effect returns early and `load` stays
+  `"loading"`.
+  **Fix:** with no venue, render a short line (new `PARTNER_MESSAGE_COPY.noVenue`: "Choose a venue to message its
+  players.") instead of the loader. Derive it during render (`!venueId`); don't set state in an effect (the
+  `react-hooks/set-state-in-effect` lint).
+  **Test:** open the sheet with `venue: null` → the line shows and no `HightopLoader` renders.
+- **F6 — The admin messages panel ignores the off switch.** `components/admin/sections/VenuesSection.tsx` mounts
+  `PartnerMessagesPanel` on every admin Venues visit, and `GET /api/admin?resource=partner-messages` runs, whatever
+  `NEXT_PUBLIC_PARTNER_MESSAGES_ENABLED` says. That is a wasted request while the feature is off.
+  **Fix:** render the panel only when `isPartnerMessagesEnabled()` (the flag's single reader). In `app/api/admin/route.ts`,
+  return 404 for both the GET `partner-messages` resource and the POST pause/unpause action while the flag is off,
+  matching the owner routes.
+  **Test:** add to `tests/partner-messages.test.ts`: with the flag off, the panel isn't rendered and both admin branches
+  404.
+- **Gates:** the four standard gates. This phase changes no navigation primitive and no `JoinFlow`.
+
+#### 10.3 — "Get the app" links: the `/info#app` target, the Safari banner tag, the host, repeated parsing (Sonnet 5.5, high; website only)
+
+**Status: built 2026-10-26, uncommitted. Andrew's decision: YES — the banner and the sign-in line also show on the apex's player pages while the domain split is off. As-built: `docs/native-app-store-plan_PHASE_10_3_HANDOFF.md`.**
+
+**Decision for Andrew at the start of this phase (recommended answer first):** while the domain split is **off**
+(today), players use **both** `hightopchallenge.com` and `play.hightopchallenge.com` (the printed QR goes to `play.`).
+Phase 7 shows the banner and the sign-in "Get the app" line on `play.` only.
+**Recommended:** also show them on the apex's **player** pages while the split is off. `/info`, `/owner`, `/admin` and
+the other marketing pages stay excluded by the existing path rule. Without this, most website players never see
+either. If Andrew says no, keep `play.` only but still take it from `playHost()`.
+
+- **F9 — The game host is typed out four times.** `"play.hightopchallenge.com"` appears in `smartAppBannerScript`
+  (`lib/appStorePromotion.ts`) and three times in `components/native/AppStorePromotion.tsx`, instead of coming from
+  `lib/domainSplit.ts`, which honours `NEXT_PUBLIC_PLAY_HOST`.
+  **Fix:** one home in `lib/appStorePromotion.ts`: `promotionHosts(): string[]` = `[playHost()]`, plus `apexHost()`
+  and `www.` + `apexHost()` while `isDomainSplitEnabled()` is false (if Andrew agreed above), and
+  `isPromotionHost(hostname)`. The head script embeds `JSON.stringify(promotionHosts())`; these are `NEXT_PUBLIC_*`
+  values inlined at build time, so the root layout stays static. Every component check calls `isPromotionHost`.
+  **Test:** add a contract assertion that neither file contains the literal `play.hightopchallenge.com`. Update
+  `tests/lib.app-store-promotion.test.ts` and `tests/components.app-store-promotion.test.ts` to use `playHost()`, plus
+  the apex case for each value of the split flag.
+- **F8 — Hydration removes the Safari banner tag.** On the hydration render, `useStoreBrowser()` returns the server
+  snapshot (null), so the effect in `PlayerAppStoreBanner` sees `hostname` undefined, decides "not allowed", and
+  **removes** the `apple-itunes-app` meta that the head script inserted while the page was parsed. A re-render adds a
+  new one; Safari may ignore a tag added that late.
+  **Fix:** the effect reads `location.hostname` and `navigator` **directly** (effects only run in the browser) plus
+  `pathname`; it no longer depends on the store snapshot. Compute "wanted": ready, `isPromotionHost`, player path,
+  Safari on iOS, not native, not an installed PWA. Then: wanted and the tag exists with the right content → do
+  nothing; wanted and missing → add it; not wanted and present → remove it. Depend on `[pathname]` only.
+  **Test:** in jsdom, insert the meta first (as the head script would), mount with an iPhone Safari UA on the play host,
+  and assert it is the **same element** afterwards (never removed and re-added). Navigating to `/owner` removes it, and
+  back to `/` adds it.
+- **F7 — `/app` sends desktops to an `#app` that isn't there.** `AppStoreDownloadSection` renders `null` on the server
+  (server snapshot `""`), so `/info#app` has no target when the page loads and the browser doesn't scroll to it.
+  Separately, `decideAppLinkDestination` (`lib/appDownloadLink.ts`) sends desktops to `/info#app` as soon as **either**
+  store URL is set, even while the Phase 7 flag is off and the section never renders.
+  **Fix (two halves):**
+  (1) when `appStorePromotionReady()` is true, render the section **on the server** in its desktop form (both badges,
+  "Play in your browser", the QR), so `id="app"` is in the static HTML. After hydration, narrow it to the visitor's
+  device. Hide it only for the native app or an installed PWA, detected after hydration. Give the snapshot three values
+  (`"pending"` on the server, `""` = hide, `"device:host"`) so "not known yet" is never treated as "hide".
+  (2) `decideAppLinkDestination` gains a `desktopSectionLive: boolean` argument; desktops go to `/info#app` only when it
+  is true, otherwise to `JOIN_QR_URL` as today. `app/app/route.ts` passes `appStorePromotionReady()`. Pass it as an
+  argument because `lib/appStorePromotion.ts` already imports `lib/appDownloadLink.ts`, so importing back would make a
+  cycle. Phone behaviour (9g's "ask" page) is unchanged.
+  **Tests:** server-render `/info`'s section with promotion ready → the HTML contains `id="app"` and both badges; with
+  it not ready → absent. `decideAppLinkDestination` on a desktop: one store URL set and the section not live →
+  `JOIN_QR_URL`; both set and live → `/info#app`. The existing 9a/9g tests stay green.
+- **F10 — Store URLs are re-parsed on every render.** `appStorePromotionReady()` (two `new URL()` parses plus regexes)
+  runs inside every `getSnapshot`, `readDismissed` and `subscribe` of every consumer, although its inputs are build-time
+  constants.
+  **Fix:** `const PROMOTION_READY = appStorePromotionReady();` once at module load in `AppStorePromotion.tsx`. The pure
+  function stays as it is for tests and the server.
+- **Gates:** the four standard gates, plus `npm run test:god-mode-join` (the sign-in link renders inside `JoinFlow`) and
+  `npm run test:pwa-contract` (the installed-PWA check). Check that `/info` is still listed as static (○) in the build
+  output. Andrew's Safari check of the real banner still waits for live listings (Phase 7).
+
+#### 10.4 — Remove the iCloud duplicate in the iOS project (Haiku 4.5, low)
+
+**Status: done 2026-10-26. `config 2.xml` was byte-identical to `config.xml` (`cmp`), untracked; deleted. The `find` (and a wider numbered-copy sweep) found no other duplicates in `native/`. As-built: `docs/native-app-store-plan_PHASE_10_4_HANDOFF.md`.**
+
+- `native/ios/App/App/config 2.xml` is an iCloud "name 2" copy. On 2026-10-26 it was byte-identical to `config.xml`,
+  which is generated by `cap sync` and git-ignored. Copies like this break native builds (`CLAUDE.md`, native section).
+  **Fix:** re-check `diff` against `config.xml`; if identical, delete it (it is untracked, so it can't be restored
+  from git: compare first). Before the next iOS build, check `native/` for other `* 2.*` files with
+  `find native -name '* 2.*' -not -path '*/node_modules/*'` and list them for Andrew rather than deleting anything
+  that differs.
+
 ---
 
 ## 5. Hard rules for every phase
@@ -1456,7 +1820,8 @@ rendering, no storage and no new cron.
 
 ## 6. Open questions for Andrew
 
-1. **App id `com.hightopchallenge.app`:** reconfirm before the first store upload (§2 item 11).
+1. **App id `com.hightopchallenge.app`:** resolved for the first release; Andrew authorized creating the
+   key/bundle for this package and uploaded it to Google Play. Keep the same ID on Apple.
 2. ~~Square logo (Phase 3B.2)~~ — answered 2026-10-09: Andrew supplied Square's "Built with Square"
    badge and its guidelines (Phase 3B.2 "Andrew's inputs").
 3. ~~Phase 3B.2 copy~~ — answered 2026-10-09: approved as written.
@@ -1473,6 +1838,15 @@ rendering, no storage and no new cron.
    goes in the caption and the partner picks handle/name/address (9e revived), `/app` asks first on phones (9g).
 7. **Share details per venue or per Prize/game? (9e)** Answered 2026-10-22: **per venue**; new games and prizes get the
    same info as the others.
+8. **Reviewer setup (answered 2026-10-25):** easiest venue option authorized and completed by un-hiding
+   `venue-hightop-test`; `appreview` created with the supplied PIN, verified, and given location bypass. PIN omitted
+   from repository files; do not ask for a new choice. See §2 items 13–14 and the Phase 6 handoff for the undo journal.
+9. **iPad (answered 2026-10-25):** keep support; include iPad screenshots (§2 item 15).
+10. **APNs (answered 2026-10-25):** Andrew confirms the authentication key is uploaded to Firebase.
+    Do not ask him to upload it again; test actual iPhone delivery. Private-key backup location remains unrecorded.
+11. **Apple app record (answered 2026-10-25):** Andrew created record **6826962606** after the first upload
+    reported no record. URL: `https://appstoreconnect.apple.com/apps/6826962606/distribution/ios/version/inflight`.
+    Keep this record; do not recreate it. The prepared archive upload succeeded; Andrew confirms TestFlight Processing.
 
 Answered 2026-10-08 and moved to §2: US-only, remove deleted accounts, retire the PWA prompt and
 keep the browser path, Andrew does the legal review, Android testing on the emulator (no phone). Answered in
@@ -1490,3 +1864,14 @@ dollar cap.
 - Meta (Facebook) App ID, for Instagram Story direct-share (Phase 9d): 1413553567605243 (given by Andrew 2026-10-22; an App ID is public, not a secret)
 - Support email: support@hightopchallenge.com — `SUPPORT_EMAIL` in `lib/legalInfo.ts`
 - Where the signing keys and APNs key are stored (location only):
+  - Public Play **app-signing** SHA-256 (Andrew supplied 2026-10-25):
+    `D6:3F:6E:3E:B3:E3:BA:49:7E:A7:3B:AE:19:A3:56:3D:86:D7:8F:4A:9D:59:E6:16:2B:FD:22:99:06:ED:8C:4E`.
+    Configured in production `ANDROID_APP_CERT_SHA256`; private Play app-signing key remains managed by Google.
+  - Android upload keystore: `/Users/andrewserulneck/Library/Application Support/Hightop Challenge/signing/android-upload.p12`
+  - Android upload credentials: same private folder, `android-upload-credentials.json`; **backup to Andrew's password manager pending**.
+    Never commit/print the file contents. Folder mode 0700; keystore/credentials mode 0600.
+  - Public upload certificate: same folder, `android-upload-certificate.pem`. This is **not** Google's Play app-signing certificate.
+  - iOS distribution/APNs private-key locations remain unconfirmed here.
+    APNs **upload to Firebase confirmed by Andrew 2026-10-25**; key backup location and real-device delivery
+    are separate outstanding checks. Distribution signing uses Xcode-managed signing; no exported private-key
+    backup was created by this release preparation.

@@ -6,15 +6,16 @@ import { OWNER_MENU_ITEMS, visibleOwnerMenuItems } from "@/components/owner/menu
 /**
  * Partner Dashboard menu tripwire (docs/partner-dashboard-app-redesign-plan.md §4b, §4g).
  * Six rows (Order Join Merch added by docs/join-merch-store-plan.md), fixed order,
- * then Sign Out last with no arrow. A seventh, Point of Sale, sits after Billing only
- * while NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED is on (docs/pos-rewards-integration-plan.md).
+ * then Sign Out last with no arrow. Point of Sale sits after Billing only while
+ * NEXT_PUBLIC_POS_INTEGRATIONS_ENABLED is on (docs/pos-rewards-integration-plan.md), and Message
+ * Your Players after Results only while NEXT_PUBLIC_PARTNER_MESSAGES_ENABLED is on (native app plan 5.5).
  */
 
 const read = (path: string): string => readFileSync(join(__dirname, "..", path), "utf8");
 
 describe("owner menu contract", () => {
-  it("lists the seven rows in the specified order (POS flag off, the default)", () => {
-    expect(visibleOwnerMenuItems(false).map((item) => item.label)).toEqual([
+  it("lists the seven rows in the specified order (POS and messages flags off, the default)", () => {
+    expect(visibleOwnerMenuItems(false, false).map((item) => item.label)).toEqual([
       "Venue Display",
       "Order Join Merch",
       "Results",
@@ -25,23 +26,25 @@ describe("owner menu contract", () => {
     ]);
   });
 
-  it("adds Point of Sale after Billing only when the POS flag is on", () => {
+  it("adds Point of Sale after Billing and Message Your Players after Results only when their flags are on", () => {
     expect(OWNER_MENU_ITEMS.map((item) => item.label)).toEqual([
       "Venue Display",
       "Order Join Merch",
       "Results",
+      "Message Your Players",
       "Billing",
       "Point of Sale",
       "Partner Manual",
       "Game Settings",
       "Account Settings",
     ]);
-    expect(visibleOwnerMenuItems(true)).toEqual(OWNER_MENU_ITEMS);
+    expect(visibleOwnerMenuItems(true, true)).toEqual(OWNER_MENU_ITEMS);
+    expect(visibleOwnerMenuItems(true, false).some((item) => item.id === "messages")).toBe(false);
     expect(OWNER_MENU_ITEMS.find((item) => item.id === "pos")?.sheet).toBe("pos");
   });
 
   it("points each link row at its page; the store and the Partner Manual open sheets", () => {
-    expect(visibleOwnerMenuItems(false).map((item) => item.href ?? null)).toEqual([
+    expect(visibleOwnerMenuItems(false, false).map((item) => item.href ?? null)).toEqual([
       "/owner/display",
       null,
       null,
@@ -56,7 +59,7 @@ describe("owner menu contract", () => {
     const store = OWNER_MENU_ITEMS.find((item) => item.id === "store");
     expect(store?.sheet).toBe("store");
     expect(store?.hint).toBe("QR coasters, tents & table cards");
-    expect(OWNER_MENU_ITEMS.filter((item) => item.sheet).map((item) => item.id)).toEqual(["store", "history", "pos"]);
+    expect(OWNER_MENU_ITEMS.filter((item) => item.sheet).map((item) => item.id)).toEqual(["store", "history", "messages", "pos"]);
     const src = read("components/owner/OwnerAppBar.tsx");
     expect(src).toContain("pushSheet(window.history, window.location, sheet)");
     expect(src).not.toMatch(/router\.push\([^)]*sheet=/);

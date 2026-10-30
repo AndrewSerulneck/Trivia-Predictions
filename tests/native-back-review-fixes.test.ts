@@ -201,6 +201,7 @@ describe("R1 — the audited popups are wired", () => {
     ["components/join/JoinFlow.tsx", 'useNativeBackHandler("overlay", onSkip)'],
     ["components/squares/SquaresCellSheet.tsx", 'useNativeBackHandler("overlay", open ? onClose : null)'],
     ["components/push/PushWelcomeScreen.tsx", 'useNativeBackHandler("overlay", open && !busy ? close : null)'],
+    ["components/push/PartnerMessageSheet.tsx", 'useNativeBackHandler("overlay", open && report !== "sending" ? close : null)'],
   ];
 
   it.each(OVERLAYS)("%s registers its close", (file, registration) => {

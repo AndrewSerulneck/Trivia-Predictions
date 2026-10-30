@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decideAppLinkDestination } from "@/lib/appDownloadLink";
 import { buildAppAskPage } from "@/lib/appDownloadPage";
+import { appStorePromotionReady } from "@/lib/appStorePromotion";
 import { apexBaseUrl, gameBaseUrl } from "@/lib/domainSplit";
 
 // hightopchallenge.com/app — docs/native-app-store-plan.md Phase 9a. One 302 (or, with a live
@@ -11,7 +12,7 @@ import { apexBaseUrl, gameBaseUrl } from "@/lib/domainSplit";
 export const dynamic = "force-dynamic";
 
 export const GET = (request: NextRequest) => {
-  const destination = decideAppLinkDestination(request.headers.get("user-agent"));
+  const destination = decideAppLinkDestination(request.headers.get("user-agent"), undefined, appStorePromotionReady());
   if (destination.kind === "ask") {
     return new NextResponse(buildAppAskPage(destination.device, destination.storeUrl), {
       status: 200,

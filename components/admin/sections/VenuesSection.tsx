@@ -6,6 +6,8 @@ import { TH, TD, TR } from "@/components/admin/AdminShell";
 import { GeofenceEditor } from "@/components/admin/GeofenceEditor";
 import { DeleteVenueModal, useVenueDeletion } from "@/components/admin/DeleteVenueModal";
 import { HiddenVenuesPanel } from "@/components/admin/sections/HiddenVenuesPanel";
+import { isPartnerMessagesEnabled } from "@/lib/partnerMessageRules";
+import { PartnerMessagesPanel } from "@/components/admin/sections/PartnerMessagesPanel";
 import { PosStuckClaimsPanel } from "@/components/admin/sections/PosStuckClaimsPanel";
 import { ShareDetailsPanel } from "@/components/owner/share/ShareDetailsPanel";
 import { useAddressLookup, type AddressPrediction } from "@/components/admin/useAddressLookup";
@@ -1048,6 +1050,8 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
       <HiddenVenuesPanel />
 
       <PosStuckClaimsPanel />
+
+      {isPartnerMessagesEnabled() ? <PartnerMessagesPanel /> : null}
 
       <DeleteVenueModal deletion={deletion} />
     </div>

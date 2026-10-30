@@ -1,6 +1,7 @@
 "use client";
 
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+import { JoinAppStoreLink } from "@/components/native/AppStorePromotion";
 
 import { House } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -2988,6 +2989,7 @@ export function JoinFlow({
                     >
                       <span className="text-2xl">Create Account →</span>
                     </button>
+                    <JoinAppStoreLink nativeAppRequest={inNativeApp} />
                   </motion.div>
                 )}
 

@@ -41,16 +41,18 @@ const looksLikeMacSafari = (ua: string): boolean =>
  * - iPhone/iPad → the "Get the app?" page (App Store), Android → the same page (Google Play),
  *   once that store URL is set; a Mac-looking Safari gets the "maybe iPad" form of it;
  * - a store URL still unset → the player sign-in, so a share made today still works;
- * - anything else (desktop, unknown) → `/info#app`, or the sign-in while no listing is live.
+ * - anything else (desktop, unknown) → `/info#app` only when that section is really on the page
+ *   (`desktopSectionLive`, the Phase 7 launch gate — passed in, since appStorePromotion imports this
+ *   file), otherwise the sign-in.
  */
 export const decideAppLinkDestination = (
   userAgent: string | null | undefined,
   stores: StoreUrls = STORE_URLS,
+  desktopSectionLive = false,
 ): AppLinkDestination => {
   const ua = userAgent ?? "";
   if (isNativeUserAgent(ua)) return { kind: "site", path: "/", host: "play" };
 
-  const anyLive = Boolean(stores.ios || stores.android);
   if (/iPhone|iPad|iPod/i.test(ua)) {
     return stores.ios
       ? { kind: "ask", device: "ios", storeUrl: stores.ios }
@@ -62,5 +64,5 @@ export const decideAppLinkDestination = (
       : { kind: "external", url: JOIN_QR_URL };
   }
   if (stores.ios && looksLikeMacSafari(ua)) return { kind: "ask", device: "ipad-maybe", storeUrl: stores.ios };
-  return anyLive ? { kind: "site", path: "/info#app", host: "apex" } : { kind: "external", url: JOIN_QR_URL };
+  return desktopSectionLive ? { kind: "site", path: "/info#app", host: "apex" } : { kind: "external", url: JOIN_QR_URL };
 };

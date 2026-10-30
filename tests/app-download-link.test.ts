@@ -25,16 +25,25 @@ describe("decideAppLinkDestination", () => {
   });
   it("a Mac-looking Safari might be an iPad; other Mac browsers are desktop", () => {
     expect(decideAppLinkDestination(IPAD_DESKTOP_UA, LIVE)).toEqual({ kind: "ask", device: "ipad-maybe", storeUrl: LIVE.ios });
-    expect(decideAppLinkDestination(DESKTOP, LIVE)).toEqual({ kind: "site", path: "/info#app", host: "apex" });
-    expect(decideAppLinkDestination(IPAD_DESKTOP_UA + " Edg/120", LIVE)).toEqual({ kind: "site", path: "/info#app", host: "apex" });
+    expect(decideAppLinkDestination(DESKTOP, LIVE, true)).toEqual({ kind: "site", path: "/info#app", host: "apex" });
+    expect(decideAppLinkDestination(IPAD_DESKTOP_UA + " Edg/120", LIVE, true)).toEqual({ kind: "site", path: "/info#app", host: "apex" });
     // App Store not live: a Mac Safari is just desktop.
-    expect(decideAppLinkDestination(IPAD_DESKTOP_UA, { ios: "", android: LIVE.android })).toEqual({ kind: "site", path: "/info#app", host: "apex" });
+    expect(decideAppLinkDestination(IPAD_DESKTOP_UA, { ios: "", android: LIVE.android }, true)).toEqual({ kind: "site", path: "/info#app", host: "apex" });
     expect(decideAppLinkDestination(IPAD_DESKTOP_UA, { ios: "", android: "" })).toEqual({ kind: "external", url: JOIN_QR_URL });
   });
   it("sends desktop and unknown to /info#app once listed", () => {
     for (const ua of [DESKTOP, "", null, undefined]) {
-      expect(decideAppLinkDestination(ua, LIVE)).toEqual({ kind: "site", path: "/info#app", host: "apex" });
+      expect(decideAppLinkDestination(ua, LIVE, true)).toEqual({ kind: "site", path: "/info#app", host: "apex" });
     }
+  });
+  it("a desktop goes to /info#app only when that section is on the page (10.3 F7)", () => {
+    expect(decideAppLinkDestination(DESKTOP, { ios: LIVE.ios, android: "" }, false)).toEqual({ kind: "external", url: JOIN_QR_URL });
+    expect(decideAppLinkDestination(DESKTOP, LIVE, false)).toEqual({ kind: "external", url: JOIN_QR_URL });
+    expect(decideAppLinkDestination(DESKTOP, LIVE)).toEqual({ kind: "external", url: JOIN_QR_URL });
+    expect(decideAppLinkDestination(DESKTOP, LIVE, true)).toEqual({ kind: "site", path: "/info#app", host: "apex" });
+  });
+  it("the route passes the launch gate", () => {
+    expect(readFileSync("app/app/route.ts", "utf8")).toContain("appStorePromotionReady()");
   });
   it("sends everyone to the player sign-in while no listing is live", () => {
     const none = { ios: "", android: "" };

@@ -27,6 +27,10 @@
 /** The user-agent token the shell appends. Never parse the OS version from the UA. */
 export const NATIVE_APP_UA_TOKEN = "HightopChallengeApp/";
 
+/** Conservative native guard for synchronous inline head scripts; detection stays in this module. */
+export const nativeAppPrePaintGuard = (): string =>
+  `(navigator.userAgent.indexOf(${JSON.stringify(NATIVE_APP_UA_TOKEN)})!==-1||!!window.Capacitor)`;
+
 /** Minimal shape of the bridge the shell injects. Only what this file uses. */
 type CapacitorBridge = {
   isNativePlatform?: () => boolean;
