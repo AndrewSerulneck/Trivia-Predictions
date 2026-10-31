@@ -1688,9 +1688,10 @@ export const AnsweringScreen = memo(function AnsweringScreen({
   // Gated on `!morphActive` so the round-start FLIP always measures the letter
   // badge at its full size: the badge is a shared-layoutId morph target, and
   // resizing it mid-projection is exactly the kind of stale-rect tear Phase 2
-  // scoped the projection away from. A row tapped inside the 570 ms window (the
-  // die's rows are tappable while they cascade in) keeps the full chrome until
-  // the badge has landed, then compacts.
+  // scoped the projection away from. Each cascading row is `inert` until its own
+  // fade-in finishes (11.4, 12.3), so a tap lands only on a row already shown; if
+  // that happens inside the 570 ms window the full chrome stays until the badge
+  // has landed, then compacts.
   const compactChrome = activeAnswerIndex !== null && !morphActive;
 
   // The Back bar lives in the root component, above this screen, so it needs to

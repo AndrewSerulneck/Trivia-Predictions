@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/categoryBlitz", () => ({
   createSession: vi.fn(),
-  driveVenueCategoryBlitz: mocks.driveVenueCategoryBlitz,
+  driveVenueCategoryBlitzWithSchedules: mocks.driveVenueCategoryBlitz,
   driveContinuousCategoryBlitz: mocks.driveContinuousCategoryBlitz,
   peekCategoryBlitz: mocks.peekCategoryBlitz,
   registerSessionPresence: mocks.registerSessionPresence,
@@ -79,7 +79,7 @@ describe("GET /api/category-blitz/sessions", () => {
 
   it("returns the next recurring Category Blitz window for lobby countdowns", async () => {
     vi.setSystemTime(new Date("2026-07-02T12:00:00.000Z"));
-    mocks.driveVenueCategoryBlitz.mockResolvedValue(null);
+    mocks.driveVenueCategoryBlitz.mockResolvedValue({ session: null, schedules: [makeSchedule()] });
     mocks.listSchedules.mockResolvedValue([makeSchedule()]);
 
     const response = await GET(
@@ -142,7 +142,15 @@ describe("GET /api/category-blitz/sessions", () => {
     });
 
     it("is the open window's end, read from the one schedule list (no extra read)", async () => {
-      mocks.driveVenueCategoryBlitz.mockResolvedValue(autoSession);
+      mocks.driveVenueCategoryBlitz.mockResolvedValue({ session: autoSession, schedules: [makeSchedule()] });
+      const body = await get();
+      expect(body.scheduleWindowEndAt).toBe("2026-07-09T00:00:00.000Z");
+      // 13.3a: the engine's own read is the only one.
+      expect(mocks.listSchedules).not.toHaveBeenCalled();
+    });
+
+    it("13.3a reads the schedules itself only when the engine stood down before reading", async () => {
+      mocks.driveVenueCategoryBlitz.mockResolvedValue({ session: autoSession, schedules: null });
       mocks.listSchedules.mockResolvedValue([makeSchedule()]);
       const body = await get();
       expect(body.scheduleWindowEndAt).toBe("2026-07-09T00:00:00.000Z");
@@ -150,23 +158,29 @@ describe("GET /api/category-blitz/sessions", () => {
     });
 
     it("follows a partner shortening tonight's window", async () => {
-      mocks.driveVenueCategoryBlitz.mockResolvedValue(autoSession);
-      mocks.listSchedules.mockResolvedValue([makeSchedule({ windowMinutes: 45, endTime: "2026-07-01T23:45:00.000Z" })]);
+      mocks.driveVenueCategoryBlitz.mockResolvedValue({
+        session: autoSession,
+        schedules: [makeSchedule({ windowMinutes: 45, endTime: "2026-07-01T23:45:00.000Z" })],
+      });
       const body = await get();
       expect(body.scheduleWindowEndAt).toBe("2026-07-08T23:45:00.000Z");
     });
 
     it("is null when no window is open (tonight's schedule moved or deleted)", async () => {
-      mocks.driveVenueCategoryBlitz.mockResolvedValue(autoSession);
-      mocks.listSchedules.mockResolvedValue([makeSchedule({ recurringDays: ["fri"] })]);
+      mocks.driveVenueCategoryBlitz.mockResolvedValue({
+        session: autoSession,
+        schedules: [makeSchedule({ recurringDays: ["fri"] })],
+      });
       expect((await get()).scheduleWindowEndAt).toBeNull();
-      mocks.listSchedules.mockResolvedValue([]);
+      mocks.driveVenueCategoryBlitz.mockResolvedValue({ session: autoSession, schedules: [] });
       expect((await get()).scheduleWindowEndAt).toBeNull();
     });
 
     it("is null for a manual session (the engine never advances one)", async () => {
-      mocks.driveVenueCategoryBlitz.mockResolvedValue({ ...autoSession, source: "manual", scheduledEndAt: null });
-      mocks.listSchedules.mockResolvedValue([makeSchedule()]);
+      mocks.driveVenueCategoryBlitz.mockResolvedValue({
+        session: { ...autoSession, source: "manual", scheduledEndAt: null },
+        schedules: [makeSchedule()],
+      });
       const body = await get();
       expect(body.scheduleWindowEndAt).toBeNull();
     });

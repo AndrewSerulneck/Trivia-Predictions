@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
-import { createSession, driveContinuousCategoryBlitz, driveVenueCategoryBlitz, peekCategoryBlitz, registerSessionPresence } from "@/lib/categoryBlitz";
+import { createSession, driveContinuousCategoryBlitz, driveVenueCategoryBlitzWithSchedules, peekCategoryBlitz, registerSessionPresence } from "@/lib/categoryBlitz";
 import { resolveContinuousConfig } from "@/lib/categoryBlitzPool";
 import { categoryBlitzChannelName } from "@/lib/categoryBlitzShared";
 import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
@@ -87,7 +87,7 @@ export async function GET(request: Request) {
     // opt-outs) take the else branch exactly as before.
     const continuousConfig = await resolveContinuousConfig(roomId);
 
-    let session: Awaited<ReturnType<typeof driveVenueCategoryBlitz>> = null;
+    let session: Awaited<ReturnType<typeof driveVenueCategoryBlitzWithSchedules>>["session"] = null;
     let nextWindowAt: string | null = null;
     let scheduleWindowEndAt: string | null = null;
 
@@ -105,11 +105,12 @@ export async function GET(request: Request) {
           }
         : null;
     } else {
-      const [scheduledSession, schedules] = await Promise.all([
-        driveVenueCategoryBlitz(roomId, now, testMode),
-        listSchedules(roomId),
-      ]);
-      session = scheduledSession;
+      // One schedules read per poll: the engine returns the list it decided
+      // on, so nextWindowAt and scheduleWindowEndAt can't come from a
+      // different read (13.3a). Null only if it stood down before reading.
+      const driven = await driveVenueCategoryBlitzWithSchedules(roomId, now, testMode);
+      session = driven.session;
+      const schedules = driven.schedules ?? (await listSchedules(roomId));
       const nextOcc = getNextScheduleOccurrence(schedules, now);
       nextWindowAt = nextOcc ? nextOcc.windowStart.toISOString() : null;
       if (session?.source === "auto") {

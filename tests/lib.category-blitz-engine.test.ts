@@ -287,4 +287,29 @@ describe("Category Blitz recurring schedule engine", () => {
     expect(result.started).toEqual([]);
     expect(mocks.latestRoundReads).toBe(0);
   });
+
+  // Phase 13.3b: the cron times the next start at the session's own
+  // intermission, like driveVenueCategoryBlitz. Scored 60 s ago: due after a
+  // 10 s test-mode intermission, not after the real 180 s one. A start attempt
+  // (it reaches tables this fixture doesn't mock) shows as started or errors.
+  it("13.3b a test-mode cron session is due after the test intermission", async () => {
+    mocks.listAllActiveSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.activeSessionsByVenue.set("venue-1", makeSession({ status: "active", test_mode: true }));
+    mocks.latestRound = { status: "complete", started_at: "2026-07-01T23:28:00.000Z", scored_at: "2026-07-01T23:29:00.000Z" };
+
+    const result = await runCategoryBlitzEngine(new Date("2026-07-01T23:30:00.000Z"));
+
+    expect(result.started.length + result.errors.length).toBe(1);
+  });
+
+  it("13.3b a real cron session scored 60 s ago is not yet due", async () => {
+    mocks.listAllActiveSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.activeSessionsByVenue.set("venue-1", makeSession({ status: "active", test_mode: false }));
+    mocks.latestRound = { status: "complete", started_at: "2026-07-01T23:28:00.000Z", scored_at: "2026-07-01T23:29:00.000Z" };
+
+    const result = await runCategoryBlitzEngine(new Date("2026-07-01T23:30:00.000Z"));
+
+    expect(result.started).toEqual([]);
+    expect(result.errors).toEqual([]);
+  });
 });

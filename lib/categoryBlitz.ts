@@ -16,6 +16,7 @@ import {
 } from "@/lib/categoryBlitzPool";
 import type {
   CategoryBlitzSession,
+  CategoryBlitzSchedule,
   CategoryBlitzRound,
   CategoryBlitzMode,
   CategoryBlitzSubmission,
@@ -761,6 +762,19 @@ async function standDownScheduledIfContinuous(venueId: string): Promise<boolean>
 export async function driveVenueCategoryBlitz(
   venueId: string,
   now: Date = new Date(),
+  requestedTestMode: boolean = false,
+): Promise<CategoryBlitzSession | null> {
+  return (await driveVenueCategoryBlitzWithSchedules(venueId, now, requestedTestMode)).session;
+}
+
+/**
+ * `driveVenueCategoryBlitz` plus the schedules it read, so the sessions poll
+ * needs no second `category_blitz_schedules` read (Phase 13.3a). `schedules`
+ * is null when the engine stood down for a continuous venue before reading.
+ */
+export async function driveVenueCategoryBlitzWithSchedules(
+  venueId: string,
+  now: Date = new Date(),
   // Only consulted when this call ends up CREATING a new session below — an
   // existing session's own `test_mode` column is authoritative for every
   // other decision in this function (see Root Cause 2 in
@@ -769,11 +783,11 @@ export async function driveVenueCategoryBlitz(
   // request happened to fire startRound decide the round's real duration,
   // independent of what the UI's toggle displayed).
   requestedTestMode: boolean = false,
-): Promise<CategoryBlitzSession | null> {
+): Promise<{ session: CategoryBlitzSession | null; schedules: CategoryBlitzSchedule[] | null }> {
   // Phase 4: if this venue runs continuous mode, the scheduled engine stands
   // down entirely (and retires any lingering scheduled session). Continuous is
   // driven by driveContinuousCategoryBlitz, never here.
-  if (await standDownScheduledIfContinuous(venueId)) return null;
+  if (await standDownScheduledIfContinuous(venueId)) return { session: null, schedules: null };
 
   let existing = await getActiveSession(venueId);
   debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): session status in = ${existing ? existing.status : "none"}`);
@@ -795,12 +809,12 @@ export async function driveVenueCategoryBlitz(
     const recentlyCompleted = await getRecentlyCompletedSession(venueId, now);
     if (recentlyCompleted) {
       debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): no session, but a recently-completed one is in its grace window`);
-      return withPlayerCount(recentlyCompleted);
+      return { session: await withPlayerCount(recentlyCompleted), schedules };
     }
 
     if (!openWindow) {
       debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): no session, no open schedule window — no-op`);
-      return null;
+      return { session: null, schedules };
     }
     const { occurrence } = openWindow;
 
@@ -813,13 +827,13 @@ export async function driveVenueCategoryBlitz(
       });
       debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): created new auto session`);
       const s = await getActiveSession(venueId);
-      return s ? withPlayerCount(s) : null;
+      return { session: s ? await withPlayerCount(s) : null, schedules };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes("already active")) {
         debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): lost the race to create a session, reading the winner`);
         const s = await getActiveSession(venueId);
-        return s ? withPlayerCount(s) : null;
+        return { session: s ? await withPlayerCount(s) : null, schedules };
       }
       throw error;
     }
@@ -868,7 +882,7 @@ export async function driveVenueCategoryBlitz(
 
   const s = await getActiveSession(venueId);
   debugLog(`[categoryBlitz] driveVenueCategoryBlitz(${venueId}): session status out = ${s ? s.status : "none"}`);
-  return s ? withPlayerCount(s) : null;
+  return { session: s ? await withPlayerCount(s) : null, schedules };
 }
 
 export type CreateSessionOptions = {
@@ -2009,7 +2023,7 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
 
       // Wait for the current round (and its results window) before the next start.
       if (latest.status !== "complete") continue;
-      if (now.getTime() >= nextRoundStartAtMs(latest, false)) {
+      if (now.getTime() >= nextRoundStartAtMs(latest, session.testMode)) {
         await startRound(session.id);
         result.started.push(venueId);
       }
