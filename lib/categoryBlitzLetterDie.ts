@@ -44,6 +44,18 @@ export const DIE_USABLE_LETTERS: readonly string[] = [
   "A", "B", "C", "D", "E", "F", "G", "H", "I", "L", "M", "N", "O", "P", "R", "S", "T", "W",
 ];
 
+/**
+ * How old a round is by the SERVER's clock — the clock its `startedAt` was
+ * written on — given a reading of this phone's clock and the offset from
+ * `nextDieClockSample` (server minus phone; 0 when unknown). The one rule for
+ * "is this round's start still fresh?" shared by the die's late-letter cutoff,
+ * the game's RoundStartReveal window and the die watchdog, so a phone clock a
+ * few seconds off can't make them disagree (plan Phase 13.5). Positive = the
+ * round started that long ago.
+ */
+export const roundAgeMs = (roundStartedAtMs: number, phoneNowMs: number, serverClockOffsetMs: number): number =>
+  phoneNowMs + serverClockOffsetMs - roundStartedAtMs;
+
 export type DieStage ="idle" | "tumbling" | "landing" | "holding" | "flying" | "done";
 
 export interface DieTimingInput {
@@ -58,7 +70,8 @@ export interface DieTimingInput {
   /**
    * Server time minus this phone's time (`DieClockSample.offsetMs`; 0 when
    * unknown). Used only by the late-letter cutoff, so a phone clock a few
-   * seconds off never skips every landing (plan Phase 12.2a).
+   * seconds off never skips every landing (plan Phase 12.2a). Read through
+   * `roundAgeMs`, like the game's reveal and watchdog (13.5).
    */
   serverClockOffsetMs: number;
   nowMs: number;
@@ -139,7 +152,7 @@ export const dieStage = (input: DieTimingInput): DieTiming => {
   // clock first, the clock `startedAt` was written on (Phase 12.2a).
   if (
     roundStartedAtMs !== null &&
-    letterArrivedAtMs + serverClockOffsetMs - roundStartedAtMs > DIE_MID_ROUND_CUTOFF_MS
+    roundAgeMs(roundStartedAtMs, letterArrivedAtMs, serverClockOffsetMs) > DIE_MID_ROUND_CUTOFF_MS
   ) {
     return result("done", 0, null, reduced);
   }

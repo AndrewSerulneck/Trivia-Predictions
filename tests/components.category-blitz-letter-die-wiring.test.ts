@@ -462,6 +462,92 @@ describe("CategoryBlitzGame ↔ letter die", () => {
     stalled.mockRestore();
   });
 
+  // ── Phase 13.5: one server-clock round age for the reveal and the watchdog ──
+  describe("13.5 the reveal and the watchdog read the round's age on the server's clock", () => {
+    const FAST = -4_000; // server − phone: this phone's clock is 4 s fast
+    const hideTab = async () => {
+      const hidden = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+      await act(async () => {
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      return hidden;
+    };
+    const showTab = async (hidden: { mockRestore: () => void }) => {
+      hidden.mockRestore();
+      await act(async () => {
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+    };
+    // RoundStartReveal shows the letter and categories without the answer board.
+    const revealShowing = () => !die() && !board() && !!document.body.textContent?.includes("Fruits");
+
+    const skippedOnFastPhone = async (mode: CategoryBlitzRound["mode"]) => {
+      const prev = makeRound("round-a", { status: "complete" });
+      const view = await mount({ phase: "results", round: prev, nextRoundStartsIn: 4, serverClockOffsetMs: FAST });
+      await advance(600);
+      // On time: by the server's clock the round started just now; this phone reads it as 4 s ago.
+      await setSession(view, {
+        phase: "answering",
+        round: makeRound("round-b", { mode, startedAt: new Date(Date.now() - 4_000).toISOString() }),
+        nextRoundStartsIn: null,
+        serverClockOffsetMs: FAST,
+      });
+      await advance(100);
+      const hidden = await hideTab(); // the player switched away as the die landed
+      await advance(400);
+      await showTab(hidden);
+      await advance(300);
+    };
+
+    it("phone 4 s fast, die skipped (tab hidden): the round-start reveal still plays", async () => {
+      await skippedOnFastPhone("standard");
+      expect(revealShowing()).toBe(true);
+      expect(markRevealDone).not.toHaveBeenCalled(); // not the elapsed-time fallback
+    });
+
+    it("phone 4 s fast, die skipped on a Majority Rules round: the takeover plays once", async () => {
+      await skippedOnFastPhone("reverse");
+      expect(revealShowing()).toBe(true);
+      expect(modeFlips()).toHaveLength(1);
+      await advance(3000);
+      expect(modeFlips()).toHaveLength(1);
+    });
+
+    it("correct clock, round 6 s old: no reveal, straight to the board (today's behaviour)", async () => {
+      const round = makeRound("round-b", { startedAt: new Date(T0 - 6_000).toISOString() });
+      await mount({ phase: "answering", round, nextRoundStartsIn: null });
+      expect(board()).not.toBeNull();
+      expect(revealShowing()).toBe(false);
+      expect(markRevealDone).toHaveBeenCalledWith("round-b"); // the elapsed-time fallback
+    });
+
+    it("phone 4 s slow, round 6 s old by the server: no reveal mid-round", async () => {
+      // This phone reads the round as only 2 s old.
+      const round = makeRound("round-b", { startedAt: new Date(T0 - 2_000).toISOString() });
+      await mount({ phase: "answering", round, nextRoundStartsIn: null, serverClockOffsetMs: 4_000 });
+      expect(board()).not.toBeNull();
+      expect(revealShowing()).toBe(false);
+    });
+
+    it("phone 4 s fast, die frames stalled on a Majority Rules round: the watchdog's takeover still plays", async () => {
+      const prev = makeRound("round-a", { status: "complete" });
+      const view = await mount({ phase: "results", round: prev, nextRoundStartsIn: 4, serverClockOffsetMs: FAST });
+      await advance(600);
+      const stalled = stallDieFrames();
+      await setSession(view, {
+        phase: "answering",
+        round: makeRound("round-b", { mode: "reverse", startedAt: new Date(Date.now() - 4_000).toISOString() }),
+        nextRoundStartsIn: null,
+        serverClockOffsetMs: FAST,
+      });
+      await advance(WATCHDOG_FIRED_MS);
+      expect(die()).toBeNull();
+      expect(board()).not.toBeNull();
+      expect(modeFlips()).toHaveLength(1);
+      stalled.mockRestore();
+    });
+  });
+
   // ── Phase 8: board cascade without a remount ───────────────────────────────
   describe("8 the die's board cascade never remounts a row", () => {
     // Focusing a row scrolls the list to it; jsdom has no scrollBy.

@@ -124,15 +124,21 @@ describe("Category Blitz letter die contract", () => {
     expect(read("components/category-blitz/RoundStartReveal.tsx")).not.toMatch(/duration: 0\.2\b/);
   });
 
-  it("12.2: the die's late-letter cutoff is on the server's clock, and only the die reads the offset", () => {
+  it("12.2 / 13.5: the die, the reveal and the watchdog read the round's age on the server's clock, via roundAgeMs", () => {
     const game = read("components/category-blitz/CategoryBlitzGame.tsx");
+    const die = read("lib/categoryBlitzLetterDie.ts");
     const route = read("app/api/category-blitz/sessions/route.ts");
     const hook = read("lib/categoryBlitzRealtime.ts");
     expect(route).toContain("serverNowMs: Date.now()");
     expect(hook).toContain("nextDieClockSample(");
     expect(hook).toMatch(/if \(seq < appliedLoadSeqRef\.current\) return;/);
     expect(game).toContain("serverClockOffsetMs={serverClockOffsetMs}");
-    // Scoped to the die (plan 12.2a): the round timer, showReveal and the watchdog keep the phone's clock.
-    expect(game.match(/serverClockOffsetMs/g)).toHaveLength(3);
+    // One rule for all three (plan 13.5).
+    expect(die).toMatch(/roundAgeMs\(roundStartedAtMs, letterArrivedAtMs, serverClockOffsetMs\) > DIE_MID_ROUND_CUTOFF_MS/);
+    expect(game).toContain("roundAgeMs(Date.parse(answeringRoundStartedAt), nowMs, serverClockOffsetMs)");
+    expect(game).toContain("roundAgeMs(Date.parse(answeringRoundStartedAt), Date.now(), serverClockOffsetRef.current)");
+    expect(game).not.toMatch(/(nowMs|Date\.now\(\)) - (new Date|Date\.parse)\(answeringRoundStartedAt\)/);
+    // Nothing else reads the offset: the round timer and submission deadlines keep the phone's clock (13.5 scope).
+    expect(game.match(/serverClockOffsetMs/g)).toHaveLength(7);
   });
 });

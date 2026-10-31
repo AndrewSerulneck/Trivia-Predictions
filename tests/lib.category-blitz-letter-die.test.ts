@@ -14,6 +14,7 @@ import {
   landingStartMs,
   nextDieClockSample,
   pickFillerLetters,
+  roundAgeMs,
   type DieClockSample,
   type DieTimingInput,
 } from "@/lib/categoryBlitzLetterDie";
@@ -152,6 +153,26 @@ describe("no replay / skip rules", () => {
     expect(
       at({ tumbleStartedAtMs: T0 - DIE_MAX_TUMBLE_MS - 500, letterArrivedAtMs: T0, roundStartedAtMs: T0 }).stage
     ).toBe("done");
+  });
+});
+
+// Plan Phase 13.5: one "round age" on the server's clock for the die, the reveal and the watchdog.
+describe("roundAgeMs", () => {
+  it("is the phone's reading moved onto the server's clock, minus the round's start", () => {
+    expect(roundAgeMs(T0, T0 + 1500, 0)).toBe(1500);
+    expect(roundAgeMs(T0, T0 + 4000 + 1000, -4000)).toBe(1000); // phone 4 s fast
+    expect(roundAgeMs(T0, T0 - 4000 + 6000, 4000)).toBe(6000); // phone 4 s slow
+    expect(roundAgeMs(T0, T0 - 200, 0)).toBe(-200); // not started yet by this clock
+  });
+  it("dieStage's late-letter cutoff is exactly roundAgeMs at arrival > DIE_MID_ROUND_CUTOFF_MS", () => {
+    for (const offset of [-4000, 0, 4000]) {
+      for (const age of [DIE_MID_ROUND_CUTOFF_MS - 1, DIE_MID_ROUND_CUTOFF_MS, DIE_MID_ROUND_CUTOFF_MS + 1]) {
+        const arrived = T0 + age - offset; // the phone's reading at which the server says `age`
+        expect(roundAgeMs(T0, arrived, offset)).toBe(age);
+        const t = at({ letterArrivedAtMs: arrived, roundStartedAtMs: T0, serverClockOffsetMs: offset, nowMs: arrived });
+        expect(t.stage === "done").toBe(age > DIE_MID_ROUND_CUTOFF_MS);
+      }
+    }
   });
 });
 

@@ -29,7 +29,7 @@ import { alliterationBonus } from "@/lib/categoryBlitzAlliteration";
 import RevealSequence from "@/components/category-blitz/RevealSequence";
 import RoundStartReveal, { ROUND_START_REVEAL_MAX_MS } from "@/components/category-blitz/RoundStartReveal";
 import LetterDieRoll from "@/components/category-blitz/LetterDieRoll";
-import { DIE_ARRIVAL_TO_BADGE_MAX_MS, type DieStage } from "@/lib/categoryBlitzLetterDie";
+import { DIE_ARRIVAL_TO_BADGE_MAX_MS, roundAgeMs, type DieStage } from "@/lib/categoryBlitzLetterDie";
 import LiveLeaderboard from "@/components/category-blitz/LiveLeaderboard";
 import ValidAnswerGlow from "@/components/category-blitz/ValidAnswerGlow";
 import WrongLetterReject from "@/components/category-blitz/WrongLetterReject";
@@ -2465,7 +2465,12 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
   }, []);
   const answeringRoundId = round?.id ?? null;
   const answeringRoundStartedAt = round?.startedAt ?? null;
-  const revealElapsedMs = answeringRoundStartedAt ? nowMs - new Date(answeringRoundStartedAt).getTime() : 0;
+  // The round's age on the server's clock (plan Phase 13.5): the same rule as
+  // the die's late-letter cutoff and the watchdog below, so a phone clock a
+  // few seconds fast never loses the reveal (or its Majority Rules takeover).
+  const revealElapsedMs = answeringRoundStartedAt
+    ? roundAgeMs(Date.parse(answeringRoundStartedAt), nowMs, serverClockOffsetMs)
+    : 0;
   const showReveal =
     phase === "answering" &&
     !!round &&
@@ -2592,6 +2597,13 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     [dieKey, phase, dieRoundId]
   );
 
+  // The watchdog reads the clock offset when it arms, without re-arming (and
+  // so postponing itself) when a faster clock reading lands mid-wait.
+  const serverClockOffsetRef = useRef(serverClockOffsetMs);
+  useEffect(() => {
+    serverClockOffsetRef.current = serverClockOffsetMs;
+  }, [serverClockOffsetMs]);
+
   // Watchdog: the die reaches `flying` within DIE_ARRIVAL_TO_BADGE_MAX_MS of
   // the letter arriving, by its own clock. If it somehow doesn't (its frames
   // never ran — a tab hidden at the moment the round arrived), never leave the
@@ -2606,7 +2618,8 @@ export function CategoryBlitzGame({ onBack }: { onBack?: () => void } = {}) {
     if (!dieHoldsBoard || !dieKey || !answeringRoundId || !answeringRoundStartedAt) return;
     const key = dieKey;
     const cueRoundId = answeringRoundId;
-    const sawRoundStart = Date.now() - Date.parse(answeringRoundStartedAt) <= ROUND_START_REVEAL_MAX_MS;
+    const sawRoundStart =
+      roundAgeMs(Date.parse(answeringRoundStartedAt), Date.now(), serverClockOffsetRef.current) <= ROUND_START_REVEAL_MAX_MS;
     const id = window.setTimeout(() => {
       setDieOutcome((cur) =>
         cur?.key === key && (cur.stage === "flying" || cur.stage === "done") ? cur : { key, stage: "done", flew: false }
