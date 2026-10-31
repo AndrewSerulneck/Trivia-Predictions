@@ -9,14 +9,15 @@ import type { CategoryBlitzRound, CategoryBlitzSession } from "@/types";
  * lands last must not restore an old window end or session (12.2b), and the
  * replies' `serverNowMs` gives the die its clock offset (12.2a). Phase 13.2: only
  * a good reply moves the order (13.2a); the end-of-session broadcasts and the
- * round fetch join it (13.2b).
+ * round fetch join it (13.2b). Phase 14.1a: a results or score fetch started
+ * before the session ended never pulls the player off Game Over.
  */
 
 /** A fake realtime client: each `.on("broadcast", { event }, cb)` is kept so a test can fire it. */
 const realtime = vi.hoisted(() => {
-  const handlers = new Map<string, () => void>();
+  const handlers = new Map<string, (msg?: unknown) => void>();
   const channel = {
-    on: (_type: string, filter: { event: string }, cb: () => void) => {
+    on: (_type: string, filter: { event: string }, cb: (msg?: unknown) => void) => {
       handlers.set(filter.event, cb);
       return channel;
     },
@@ -74,6 +75,8 @@ describe("useCategoryBlitzSession: overlapping session loads", () => {
   let immediate: SessionBody;
   /** null = answer current-round at once with `server.round`; otherwise each waits here. */
   let roundHeld: Held[] | null;
+  /** null = /results and /score answer `{ ok: false }` at once; otherwise each waits here. */
+  let resultsHeld: Held[] | null;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -82,6 +85,7 @@ describe("useCategoryBlitzSession: overlapping session loads", () => {
     server = { round: makeRound() };
     held = null;
     roundHeld = null;
+    resultsHeld = null;
     realtime.handlers.clear();
     immediate = { ok: true, session: SESSION, realtimeChannel: "chan-1", scheduleWindowEndAt: at(3_600_000) };
     vi.stubGlobal(
@@ -95,8 +99,13 @@ describe("useCategoryBlitzSession: overlapping session loads", () => {
             queue.push({ resolve: (body) => resolve(jsonResponse(body)) });
           });
         }
-        if (url.includes("/results")) return jsonResponse({ ok: false });
-        if (url.includes("/score")) return jsonResponse({ ok: false });
+        if (url.includes("/results") || url.includes("/score")) {
+          if (!resultsHeld) return jsonResponse({ ok: false });
+          const queue = resultsHeld;
+          return new Promise<Response>((resolve) => {
+            queue.push({ resolve: (body) => resolve(jsonResponse(body)) });
+          });
+        }
         if (!held) return jsonResponse(immediate);
         const queue = held;
         return new Promise<Response>((resolve) => {
@@ -289,6 +298,63 @@ describe("useCategoryBlitzSession: overlapping session loads", () => {
     await flush();
     expect(result.current.phase).toBe("complete");
     expect(result.current.round?.id).not.toBe("r9");
+  });
+
+  const scored = (roundId: string): SessionBody => ({
+    ok: true,
+    results: { roundId, letter: "S", mode: "standard", categories: [], results: [], playerCount: 3, totals: [] },
+  });
+
+  it("14.1a a round_scored results fetch that lands after session_ended keeps Game Over", async () => {
+    const { result } = await mount();
+    resultsHeld = [];
+    act(() => { realtime.handlers.get("round_scored")?.({ payload: { roundId: "r1" } }); });
+    await flush();
+    expect(resultsHeld).toHaveLength(1);
+    act(() => { realtime.handlers.get("session_ended")?.(); });
+    await flush();
+    resultsHeld[0].resolve(scored("r1"));
+    await flush();
+    expect(result.current.phase).toBe("complete");
+  });
+
+  it("14.1a the poll's results fetch for a completed round keeps Game Over too", async () => {
+    server.round = makeRound({ status: "complete", scoredAt: at(-1_000) });
+    resultsHeld = [];
+    const { result } = await mount();
+    expect(resultsHeld).toHaveLength(1);
+    act(() => { realtime.handlers.get("session_ended")?.(); });
+    await flush();
+    resultsHeld[0].resolve(scored("r1"));
+    await flush();
+    expect(result.current.phase).toBe("complete");
+  });
+
+  it("14.1a an ordinary poll landing mid-fetch doesn't drop a round_scored result", async () => {
+    const { result } = await mount();
+    result.current.markRevealDone("r1");
+    resultsHeld = [];
+    act(() => { realtime.handlers.get("round_scored")?.({ payload: { roundId: "r1" } }); });
+    await flush();
+    act(() => { result.current.retry(); });
+    await flush();
+    resultsHeld[0].resolve(scored("r1"));
+    await flush();
+    expect(result.current.phase).toBe("reveal");
+  });
+
+  it("14.1a this tab's own score POST that lands after session_ended keeps Game Over", async () => {
+    server.round = makeRound({ endsAt: at(1_000) });
+    const { result } = await mount();
+    act(() => { result.current.markRevealDone("r1"); });
+    resultsHeld = [];
+    await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
+    expect(resultsHeld).toHaveLength(1); // the POST /score
+    act(() => { realtime.handlers.get("session_ended")?.(); });
+    await flush();
+    resultsHeld[0].resolve(scored("r1"));
+    await flush();
+    expect(result.current.phase).toBe("complete");
   });
 
   it("12.2a the reply's serverNowMs becomes the clock offset", async () => {

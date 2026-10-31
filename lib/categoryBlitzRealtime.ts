@@ -231,6 +231,12 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
    *  in flight can't bring the ended session back (13.2b). */
   const loadSeqRef        = useRef(0);
   const appliedLoadSeqRef = useRef(0);
+  /** Moved ONLY by the end-of-session broadcasts (supersedeInFlightLoads), never
+   *  by an ordinary poll. A results or score fetch that started before the
+   *  session ended skips its writes, so it can't pull the player off Game Over
+   *  (plan Phase 14.1a: a drive that scores the last round and ends the session
+   *  sends round_scored and session_ended a few hundred ms apart). */
+  const sessionEndEpochRef = useRef(0);
   /** A visibility resync's `forceReveal`, kept until a response is applied,
    *  so a newer poll that wins the race still carries it. */
   const forceRevealPendingRef = useRef(false);
@@ -567,9 +573,11 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   // ── Load current round ────────────────────────────────────────────────────
   // Declared before loadSession so it can be called from within loadSession.
 
-  /** Drops every loadSession reply (and its round fetch) still in flight. */
+  /** Drops every loadSession reply (and its round fetch) still in flight, and
+   *  every results / score fetch (sessionEndEpochRef). */
   const supersedeInFlightLoads = useCallback((): void => {
     appliedLoadSeqRef.current = ++loadSeqRef.current;
+    sessionEndEpochRef.current += 1;
   }, []);
 
   /** `loadSeq` = the loadSession reply this fetch belongs to; its writes are
@@ -746,10 +754,11 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   // ── Load results ──────────────────────────────────────────────────────────
 
   const loadResults = useCallback(async (roundId: string) => {
+    const epoch = sessionEndEpochRef.current;
     try {
       const res = await fetch(`/api/category-blitz/rounds/${roundId}/results`);
       const json = (await res.json()) as { ok: boolean; results?: CategoryBlitzRoundResults };
-      if (!mountedRef.current || !json.ok || !json.results) return;
+      if (!mountedRef.current || epoch !== sessionEndEpochRef.current || !json.ok || !json.results) return;
       setResults(json.results);
       settlePhase(roundId, "results");
       endsAtRef.current = null;
@@ -781,11 +790,12 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
 
   useEffect(() => {
     triggerScoringRef.current = async (roundId: string): Promise<void> => {
+      const epoch = sessionEndEpochRef.current;
       try {
         const res = await fetch(`/api/category-blitz/rounds/${roundId}/score`, { method: "POST" });
         const json = (await res.json()) as { ok: boolean; results?: CategoryBlitzRoundResults };
         debugLog(`[categoryBlitzRealtime] POST /score for round ${roundId} returned status=${res.status} ok=${json.ok} hasResults=${!!json.results}`);
-        if (!mountedRef.current) return;
+        if (!mountedRef.current || epoch !== sessionEndEpochRef.current) return;
         if (json.ok && json.results) {
           setResults(json.results);
           // Enter the grading cascade ("reveal") rather than jumping to the
@@ -808,7 +818,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         debugLog(`[categoryBlitzRealtime] POST /score for round ${roundId} threw:`, err instanceof Error ? err.message : err);
         // Network or parse error — reset the guard so the next timer tick
         // retries, keeping the backoff implicit (250ms tick cadence).
-        if (mountedRef.current) {
+        if (mountedRef.current && epoch === sessionEndEpochRef.current) {
           scoringCalledRef.current = false;
           setPhase("scoring");
         }
