@@ -564,3 +564,53 @@ describe("startContinuousRound — every 5th round is Majority Rules (Phase 1)",
     }
   });
 });
+
+// docs/category-blitz-letter-die-plan.md Phase 13.4: driveVenueCategoryBlitz fits
+// a round against the EARLIER of tonight's live window end and the session's
+// frozen scheduled_end_at. Daily window from 00:00Z; the last round was scored at
+// 01:55:05 so the next one is due. If no round fits and the last one is scored,
+// the engine ends the session there and then.
+describe("driveVenueCategoryBlitz — the session's frozen end caps the fit (Phase 13.4)", () => {
+  const DRIVE_NOW = new Date("2026-07-15T01:59:00.000Z");
+  const scoredRound = (venueId: string): Row =>
+    continuousRound(venueId, {
+      session_id: `sched-session-${venueId}`,
+      started_at: "2026-07-15T01:52:00.000Z",
+      ends_at: "2026-07-15T01:55:00.000Z",
+      scored_at: "2026-07-15T01:55:05.000Z",
+      created_at: "2026-07-15T01:52:00.000Z",
+    });
+
+  beforeEach(() => {
+    store = {
+      category_blitz_sessions: [],
+      category_blitz_continuous_config: [],
+      category_blitz_rounds: [],
+      category_blitz_schedules: [],
+    };
+    mocks.broadcastCategoryBlitz.mockReset();
+    delete process.env.NEXT_PUBLIC_CATEGORY_BLITZ_CONTINUOUS_DEFAULT;
+  });
+
+  it("window extended to 02:30, frozen end 02:00, 01:59: no new round, the session ends", async () => {
+    store.category_blitz_schedules = [activeScheduleRow("venue-1", { window_minutes: 150 })];
+    store.category_blitz_sessions = [scheduledSession("venue-1", { scheduled_end_at: "2026-07-15T02:00:00.000Z" })];
+    store.category_blitz_rounds = [scoredRound("venue-1")];
+
+    await driveVenueCategoryBlitz("venue-1", DRIVE_NOW);
+
+    expect(store.category_blitz_rounds).toHaveLength(1);
+    expect(store.category_blitz_sessions[0].status).toBe("complete");
+  });
+
+  it("window shortened to 02:00, frozen end 02:30: the live end still wins", async () => {
+    store.category_blitz_schedules = [activeScheduleRow("venue-1")];
+    store.category_blitz_sessions = [scheduledSession("venue-1", { scheduled_end_at: "2026-07-15T02:30:00.000Z" })];
+    store.category_blitz_rounds = [scoredRound("venue-1")];
+
+    await driveVenueCategoryBlitz("venue-1", DRIVE_NOW);
+
+    expect(store.category_blitz_rounds).toHaveLength(1);
+    expect(store.category_blitz_sessions[0].status).toBe("complete");
+  });
+});

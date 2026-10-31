@@ -7,6 +7,7 @@ import {
   nextRoundStartAtMs,
   roundDurationSeconds,
   roundFitsWindow,
+  sessionWindowEndMs,
 } from "@/lib/categoryBlitzShared";
 import { CATEGORY_BLITZ_GLOBAL_ROOM_VENUE_ID, resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
 
@@ -122,6 +123,23 @@ describe("roundFitsWindow", () => {
   it("test mode uses the shortened round", () => {
     expect(roundFitsWindow(start, start + roundDurationSeconds(true) * 1000, true)).toBe(true);
     expect(roundFitsWindow(start, start + roundDurationSeconds(true) * 1000, false)).toBe(false);
+  });
+});
+
+// docs/category-blitz-letter-die-plan.md Phase 13.4: the one "earlier of the live
+// window end and the frozen scheduledEndAt" rule, shared by both engines and
+// anotherRoundFollows.
+describe("sessionWindowEndMs", () => {
+  const live = Date.parse("2026-07-02T21:30:00.000Z");
+  it("an extended window: the frozen end wins", () => {
+    expect(sessionWindowEndMs(live, "2026-07-02T21:00:00.000Z")).toBe(Date.parse("2026-07-02T21:00:00.000Z"));
+  });
+  it("a shortened window: the live end wins", () => {
+    expect(sessionWindowEndMs(live, "2026-07-02T22:00:00.000Z")).toBe(live);
+  });
+  it("no or unparsable frozen end: the live end only", () => {
+    expect(sessionWindowEndMs(live, null)).toBe(live);
+    expect(sessionWindowEndMs(live, "not a date")).toBe(live);
   });
 });
 

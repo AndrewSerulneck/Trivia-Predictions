@@ -167,6 +167,20 @@ export const roundFitsWindow = (startAtMs: number, windowEndMs: number, testMode
 export const ROUND_START_DRIVE_SLACK_MS = 15_000;
 
 /**
+ * The end a scheduled session's rounds must fit inside: the EARLIER of the live
+ * open window's end and the session's own `scheduledEndAt`, frozen at creation.
+ * The engine closes the session at the frozen end even when a partner extends
+ * tonight's window (`isStaleAutoSession`, lib/categoryBlitz.ts), and the live end
+ * catches a window shortened mid-game. An unparsable or missing frozen end → the
+ * live end only. The one home of this rule: both engines' fit checks and
+ * `anotherRoundFollows` (docs/category-blitz-letter-die-plan.md Phase 13.4).
+ */
+export const sessionWindowEndMs = (liveEndMs: number, scheduledEndAt: string | null): number => {
+  const frozenEndMs = scheduledEndAt ? Date.parse(scheduledEndAt) : Number.NaN;
+  return Number.isNaN(frozenEndMs) ? liveEndMs : Math.min(liveEndMs, frozenEndMs);
+};
+
+/**
  * Whether another round will follow `latestRound` in this session — the client's
  * read of the engine's decision, so the letter die (CategoryBlitzGame) never
  * tumbles over a session's final standings (docs/category-blitz-letter-die-plan.md
@@ -191,8 +205,7 @@ export const anotherRoundFollows = (
   if (!scheduleWindowEndAt) return false;
   const liveEndMs = Date.parse(scheduleWindowEndAt);
   if (Number.isNaN(liveEndMs)) return false;
-  const frozenEndMs = session.scheduledEndAt ? Date.parse(session.scheduledEndAt) : Number.NaN;
-  const windowEndMs = Number.isNaN(frozenEndMs) ? liveEndMs : Math.min(liveEndMs, frozenEndMs);
+  const windowEndMs = sessionWindowEndMs(liveEndMs, session.scheduledEndAt);
   const startAtMs = nextRoundStartAtMs(latestRound, session.testMode) + ROUND_START_DRIVE_SLACK_MS;
   return roundFitsWindow(startAtMs, windowEndMs, session.testMode);
 };

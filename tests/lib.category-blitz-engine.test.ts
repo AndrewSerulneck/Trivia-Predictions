@@ -312,4 +312,43 @@ describe("Category Blitz recurring schedule engine", () => {
     expect(result.started).toEqual([]);
     expect(result.errors).toEqual([]);
   });
+
+  // Phase 13.4: the cron fits a round against the EARLIER of the live window end
+  // and the session's frozen scheduled_end_at. The window is extended to 00:30Z
+  // (90 minutes) while the session froze 00:00Z. A round still in play means the
+  // engine stops right after reading it, so the latest-round read is the sign
+  // the fit check passed.
+  it("13.4 an extended window: no round that would run past the frozen end", async () => {
+    mocks.listAllActiveSchedules.mockResolvedValue([makeSchedule({ windowMinutes: 90 })]);
+    mocks.activeSessionsByVenue.set("venue-1", makeSession({ status: "active", scheduled_end_at: "2026-07-02T00:00:00.000Z" }));
+    mocks.latestRound = { status: "active", started_at: "2026-07-01T23:58:50.000Z", scored_at: null };
+
+    const result = await runCategoryBlitzEngine(new Date("2026-07-01T23:59:00.000Z"));
+
+    expect(result.errors).toEqual([]);
+    expect(result.started).toEqual([]);
+    expect(mocks.latestRoundReads).toBe(0);
+  });
+
+  it("13.4 a shortened window: the live end still wins", async () => {
+    mocks.listAllActiveSchedules.mockResolvedValue([makeSchedule()]);
+    mocks.activeSessionsByVenue.set("venue-1", makeSession({ status: "active", scheduled_end_at: "2026-07-02T00:30:00.000Z" }));
+    mocks.latestRound = { status: "active", started_at: "2026-07-01T23:58:50.000Z", scored_at: null };
+
+    const result = await runCategoryBlitzEngine(new Date("2026-07-01T23:59:00.000Z"));
+
+    expect(result.errors).toEqual([]);
+    expect(mocks.latestRoundReads).toBe(0);
+  });
+
+  it("13.4 no frozen end: the live end only", async () => {
+    mocks.listAllActiveSchedules.mockResolvedValue([makeSchedule({ windowMinutes: 90 })]);
+    mocks.activeSessionsByVenue.set("venue-1", makeSession({ status: "active", scheduled_end_at: null }));
+    mocks.latestRound = { status: "active", started_at: "2026-07-01T23:58:50.000Z", scored_at: null };
+
+    const result = await runCategoryBlitzEngine(new Date("2026-07-01T23:59:00.000Z"));
+
+    expect(result.errors).toEqual([]);
+    expect(mocks.latestRoundReads).toBe(1);
+  });
 });

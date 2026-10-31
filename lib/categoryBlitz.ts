@@ -6,7 +6,7 @@ import { broadcastCategoryBlitz } from "@/lib/categoryBlitzBroadcast";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
 import { trackAnthropicUsage } from "@/lib/llmCostTracker";
 import { isCategoryBlitzSoloScoringEnabled } from "@/lib/categoryBlitzTestMode";
-import { SUBMISSION_GRACE_MS, isContinuousDefaultEnabled, isContinuousGameAwake, roundDurationSeconds, roundIntervalSeconds, intermissionSeconds, lobbyDwellSeconds, answerStartsWithLetter, roundFitsWindow } from "@/lib/categoryBlitzShared";
+import { SUBMISSION_GRACE_MS, isContinuousDefaultEnabled, isContinuousGameAwake, roundDurationSeconds, roundIntervalSeconds, intermissionSeconds, lobbyDwellSeconds, answerStartsWithLetter, roundFitsWindow, sessionWindowEndMs } from "@/lib/categoryBlitzShared";
 import { POINTS_PER_UNIQUE_ANSWER, isReverseRound, minPlayersToScoreFor, reverseRoundPoints } from "@/lib/categoryBlitzModes";
 import { alliterationBonus } from "@/lib/categoryBlitzAlliteration";
 import {
@@ -849,7 +849,11 @@ export async function driveVenueCategoryBlitzWithSchedules(
       }
     } else if (openWindow) {
       const { occurrence } = openWindow;
-      const canFitAnother = roundFitsWindow(now.getTime(), occurrence.windowEnd.getTime(), existing.testMode);
+      // Fit against the earlier of the live window end and the session's frozen
+      // end: an extended window must not start a round that is force-scored at
+      // the frozen end (docs/category-blitz-letter-die-plan.md Phase 13.4).
+      const windowEndMs = sessionWindowEndMs(occurrence.windowEnd.getTime(), existing.scheduledEndAt);
+      const canFitAnother = roundFitsWindow(now.getTime(), windowEndMs, existing.testMode);
       if (canFitAnother) {
         const latest = await getLatestRound(existing.id);
         if (latest && latest.status === "complete") {
@@ -2014,9 +2018,9 @@ export async function runCategoryBlitzEngine(now: Date = new Date()): Promise<Ca
       }
 
       // Only fire another round if a full one can finish inside the window, at
-      // the session's own round length (test mode is shorter), exactly like
-      // driveVenueCategoryBlitz.
-      if (!roundFitsWindow(now.getTime(), windowEnd.getTime(), session.testMode)) continue;
+      // the session's own round length (test mode is shorter) and before the
+      // earlier of the live and frozen ends, exactly like driveVenueCategoryBlitz.
+      if (!roundFitsWindow(now.getTime(), sessionWindowEndMs(windowEnd.getTime(), session.scheduledEndAt), session.testMode)) continue;
 
       const latest = await getLatestRound(session.id);
       if (!latest) continue; // status is 'active' only once a round exists — defensive guard
