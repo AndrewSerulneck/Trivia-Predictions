@@ -1,5 +1,9 @@
 # Category Blitz letter die — Phase 14 handoff (2026-10-31)
 
+> **Update 2026-10-31: Andrew skipped Phases 14.1 and 14.2** ("these don't seem like serious problems"). Nothing below
+> is to be built unless he asks. The letter die is finished on `after-app-review`; only his phone pass (plan Phase 15)
+> remains before merging to `main` after Apple approval. The "next agent" section is kept as a record.
+
 ## For Andrew (plain English)
 **What changed:** a fresh code review checked the last five fixes (13.1–13.5). It found 7 possible problems. After
 checking each against the code: 3 are real, 1 is probably real, and 3 aren't worth fixing (reasons below). No code
