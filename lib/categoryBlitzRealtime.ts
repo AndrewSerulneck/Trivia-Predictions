@@ -225,7 +225,10 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
    *  visibility resync). Each takes the next number; a response older than
    *  the newest one already applied is dropped whole, so a slow poll that read
    *  the schedules before a partner's edit can't restore the old window end or
-   *  an older session (plan Phase 12.2b). */
+   *  an older session (plan Phase 12.2b). Only a good reply moves
+   *  `appliedLoadSeqRef`, so a fast failure never drops an older good reply
+   *  (13.2a); the end-of-session broadcasts move it too, so a reply already
+   *  in flight can't bring the ended session back (13.2b). */
   const loadSeqRef        = useRef(0);
   const appliedLoadSeqRef = useRef(0);
   /** A visibility resync's `forceReveal`, kept until a response is applied,
@@ -564,7 +567,15 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   // ── Load current round ────────────────────────────────────────────────────
   // Declared before loadSession so it can be called from within loadSession.
 
-  const loadCurrentRound = useCallback(async (sessionId: string, opts?: { forceReveal?: boolean }): Promise<void> => {
+  /** Drops every loadSession reply (and its round fetch) still in flight. */
+  const supersedeInFlightLoads = useCallback((): void => {
+    appliedLoadSeqRef.current = ++loadSeqRef.current;
+  }, []);
+
+  /** `loadSeq` = the loadSession reply this fetch belongs to; its writes are
+   *  skipped once a newer reply has been applied (plan Phase 13.2b). */
+  const loadCurrentRound = useCallback(async (sessionId: string, opts?: { forceReveal?: boolean; loadSeq?: number }): Promise<void> => {
+    const superseded = (): boolean => opts?.loadSeq !== undefined && opts.loadSeq < appliedLoadSeqRef.current;
     try {
       const userIdParam = userIdRef.current ? `?userId=${encodeURIComponent(userIdRef.current)}` : "";
       const res = await fetch(`/api/category-blitz/sessions/${sessionId}/current-round${userIdParam}`);
@@ -572,9 +583,9 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         ok: boolean;
         round?: CategoryBlitzRound | null;
       };
-      if (!mountedRef.current || !json.ok || !json.round) return;
-      applyRoundRef.current(json.round, opts);
-      if (json.round.status === "complete") {
+      if (!mountedRef.current || !json.ok || !json.round || superseded()) return;
+      applyRoundRef.current(json.round, opts?.forceReveal ? { forceReveal: true } : undefined);
+      if (json.round.status === "complete" && !superseded()) {
         await loadResultsRef.current(json.round.id);
       }
     } catch {
@@ -642,14 +653,15 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       }
 
       if (seq < appliedLoadSeqRef.current) return; // a newer reply is already on screen
-      appliedLoadSeqRef.current = seq;
 
       if (!json.ok) {
+        // Never moves the seq: an older good reply landing after it still applies.
         errorStreakRef.current += 1;
         setError(json.error ?? "Failed to load session.");
         setErrorEscalated(errorStreakRef.current >= ESCALATE_AFTER_FAILURES);
         return;
       }
+      appliedLoadSeqRef.current = seq;
 
       if (json.realtimeChannel) setRealtimeChannel(json.realtimeChannel);
       // Missing (an older server) counts as unknown, which keeps the die off.
@@ -710,10 +722,9 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       }
       // Session is active/scoring — load the current round.
       lobbyStartsAtRef.current = null;
-      await loadCurrentRound(s.id, forceReveal ? { forceReveal: true } : undefined);
+      await loadCurrentRound(s.id, forceReveal ? { forceReveal: true, loadSeq: seq } : { loadSeq: seq });
     } catch {
       if (!mountedRef.current || seq < appliedLoadSeqRef.current) return;
-      appliedLoadSeqRef.current = seq;
       errorStreakRef.current += 1;
       setError("Failed to connect to game.");
       setErrorEscalated(errorStreakRef.current >= ESCALATE_AFTER_FAILURES);
@@ -959,6 +970,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
       })
       .on("broadcast", { event: "session_ended" }, () => {
         if (!active || !mountedRef.current) return;
+        supersedeInFlightLoads();
         setPhase("complete");
         endsAtRef.current = null;
         setNextRoundCountdown(null);
@@ -976,6 +988,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         // Over screen with the final round's standings instead of waiting out
         // the 15s fallback poll.
         if (!active || !mountedRef.current) return;
+        supersedeInFlightLoads();
         setPhase("complete");
         endsAtRef.current = null;
         setNextRoundCountdown(null);
@@ -990,6 +1003,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
         // reconcile with the server (which no longer returns this session) to
         // pick up the venue's next scheduled window for the idle countdown.
         if (!active || !mountedRef.current) return;
+        supersedeInFlightLoads(); // the reload below takes a newer number, so it still applies
         setSession(null);
         sessionIdRef.current = null;
         setRound(null);
@@ -1023,7 +1037,7 @@ export function useCategoryBlitzSession(venueId: string, userId: string): Catego
   // Keyed on realtimeChannel (server-provided, stable per venue/room) rather
   // than venueId: identical churn with pooling off, and the only correct
   // subscription target with pooling on.
-  }, [realtimeChannel, loadCurrentRound, loadFinalResults]);
+  }, [realtimeChannel, loadCurrentRound, loadFinalResults, supersedeInFlightLoads]);
 
   // ── Initial load + fallback poll ──────────────────────────────────────────
 
