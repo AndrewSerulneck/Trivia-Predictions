@@ -20,6 +20,7 @@ import type {
   RewardPrizeKind,
 } from "@/types";
 import { BRACKET_PRIZE_DEFINITION_ID, isBracketPrizeOffered } from "@/lib/bracketPrizes";
+import { PICKEM_PRIZE_DEFINITION_ID, isPickEmPrizeOffered } from "@/lib/pickemPrizes";
 import { SQUARES_PRIZE_DEFINITION_ID, isSquaresPrizeOffered } from "@/lib/squaresPrizes";
 import { BRACKET_GAME_NAME, SQUARES_EVENT_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 
@@ -27,7 +28,8 @@ export type RewardDefinitionId =
   | "live_trivia_challenge"
   | "nfl_pickem_challenge"
   | typeof SQUARES_PRIZE_DEFINITION_ID
-  | typeof BRACKET_PRIZE_DEFINITION_ID;
+  | typeof BRACKET_PRIZE_DEFINITION_ID
+  | typeof PICKEM_PRIZE_DEFINITION_ID;
 
 /**
  * The Live Trivia Challenge's definition id. Its two sweeps (game winner, weekly places) pay ONLY
@@ -61,6 +63,10 @@ export const LIVE_TRIVIA_REWARD_DEFINITION_ID = "live_trivia_challenge" satisfie
  *   {moment}    — Squares win line: "halftime"
  *   {brackets}  — March Madness: the brackets that pay, "the men's bracket or the women's bracket"
  *   {bracket}   — March Madness win line: "men's bracket"
+ *   {scope}     — Pick 'Em Prize: the games that count, "college football", "EPL and NBA"
+ *   {window}    — Pick 'Em Prize: "on Sat, Nov 7", "each Saturday", "each week (Monday to Sunday)"
+ *   {correct}   — Pick 'Em Prize tiers: "15", "12, 15 or 18"
+ *   {limit}     — Pick 'Em Prize tiers: the N picks each player gets, "20"
  *
  * Never write "this venue" — the guest is standing in it.
  */
@@ -114,6 +120,24 @@ export type RewardDescriptionTemplates =
       places: string;
       /** Prize-wallet coupon: "You finished {place} in your {bracket}". */
       wonPlace: string;
+    }
+  | {
+      /** The Pick 'Em Prize: chosen games over a chosen window (lib/pickemPrizes.ts). */
+      calendar: "pickem_window";
+      /** Most picks right in the period. */
+      mostRight: string;
+      /** "Get N right". */
+      target: string;
+      /** "X out of N" with one tier. */
+      tierOne: string;
+      /** "X out of N" with 2–3 tiers; {ladder} is the tierLadderItem list. */
+      tierMany: string;
+      /** One tier inside {ladder}: "{correct} right wins {prize}". */
+      tierLadderItem: string;
+      /** Prize-wallet coupons. {when}: "on Sat, Nov 7", "the week of Nov 9", "from Nov 1 to Nov 30". */
+      wonMostRight: string;
+      wonTarget: string;
+      wonTier: string;
     };
 
 export type RewardDefinition = {
@@ -289,7 +313,52 @@ export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
       wonPlace: "You finished {place} in your {bracket}",
     },
   },
+  {
+    // The Pick 'Em Prize (docs/pickem-college-football-and-prize-plan.md Phase 4a). The partner picks
+    // the games (sports / leagues, never the NFL), the window and how it is won — most right
+    // (game_winner), get N right (points_threshold) or "X out of N" tiers; all of it lives in the
+    // pickem_* columns (lib/pickemPrizes.ts). Gated on nothing the venue schedules. The wizard's
+    // Games / When / How to win steps (Phase 5) take their rules from lib/pickemPrizeWizard.ts.
+    id: PICKEM_PRIZE_DEFINITION_ID,
+    name: "Pick 'Em Challenge",
+    gameName: "Pick 'Em",
+    gameType: "pickem",
+    challengeMode: "progress",
+    requiresScheduledGame: null,
+    requirementTemplate: "Get {threshold} Pick 'Em picks right",
+    supportsGameWinner: true,
+    gameWinnerRequirement: "Get the most Pick 'Em picks right",
+    supportsRankedPlaces: false,
+    rankedPlacesRequirement: null,
+    thresholdOptions: [5, 10, 15, 20],
+    defaultThreshold: 10,
+    thresholdStep: 1,
+    accent: "pickem",
+    glyph: "🎯",
+    description: {
+      calendar: "pickem_window",
+      mostRight: "Get the most {scope} picks right {window} and win {prize}.",
+      target: "Get {threshold} {scope} picks right {window} and win {prize}.",
+      tierOne: "Get {correct} of your {limit} {scope} picks right {window} and win {prize}.",
+      tierMany: "Get {correct} of your {limit} {scope} picks right {window}. {ladder}",
+      tierLadderItem: "{correct} right wins {prize}",
+      wonMostRight: "You got the most {scope} picks right {when}",
+      wonTarget: "You got {threshold} {scope} picks right {when}",
+      wonTier: "You got {correct} of {limit} {scope} picks right {when}",
+    },
+  },
 ] as const;
+
+/**
+ * The Create Prize wizard's words to the PARTNER about a Pick 'Em Prize (lib/pickemPrizeWizard.ts
+ * fills them). Kept apart from `description`, which is what guests read.
+ */
+export const PICKEM_PRIZE_PARTNER_COPY = {
+  /** D5's notice on the "X out of N" step and Confirm. */
+  limit: "Players at your bar will be limited to {limit} {scope} picks {window}, so everyone plays the same {limit}.",
+  mostRight: "One winner {window}: the player with the most {scope} picks right.",
+  target: "Up to {quantity} {winners} {window}: the first to get {threshold} {scope} picks right.",
+} as const;
 
 /**
  * The definitions the Create Prize wizard offers today. Every definition is always readable
@@ -302,7 +371,9 @@ export function offeredRewardDefinitions(now: Date = new Date()): RewardDefiniti
       ? isSquaresPrizeOffered(now)
       : definition.id === BRACKET_PRIZE_DEFINITION_ID
         ? isBracketPrizeOffered(now)
-        : true,
+        : definition.id === PICKEM_PRIZE_DEFINITION_ID
+          ? isPickEmPrizeOffered()
+          : true,
   );
 }
 

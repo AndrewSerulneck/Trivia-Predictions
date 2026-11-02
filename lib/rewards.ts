@@ -3,8 +3,11 @@ import "server-only";
 import {
   computeUpcomingCycleStart,
   createChallengeCampaign,
+  listActivePickEmPrizeCampaigns,
   loadBracketPrizeKeys,
+  loadPickEmPrizeTerms,
   loadSquaresPrizeMoments,
+  type PickEmPrizeTerms,
 } from "@/lib/challengeCampaigns";
 import {
   BRACKET_PRIZE_DEFINITION_ID,
@@ -26,6 +29,20 @@ import {
   normalizeSquaresMoments,
 } from "@/lib/squaresPrizes";
 import { getCurrentSquaresEvent } from "@/lib/squaresStore";
+import {
+  PICKEM_PRIZE_DEFINITION_ID,
+  PICKEM_PRIZE_SCOPE_MESSAGE,
+  PICKEM_PRIZE_TERMS_MISMATCH_MESSAGE,
+  PICKEM_PRIZE_ADMIN_EDIT_MESSAGE,
+  PICKEM_PRIZE_WINDOW_MESSAGE,
+  findPickEmPrizeConflict,
+  normalizePickEmPrizeScope,
+  normalizePickEmPrizeWindow,
+  pickemPrizeCampaignCalendar,
+  validatePickEmPrizeTerms,
+  type PickEmPrizeWinKind,
+} from "@/lib/pickemPrizes";
+import { claimPickEmPrizeSave, releasePickEmPrizeSave } from "@/lib/pickemPrizeSaveLease";
 import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 import type { SquaresMoment } from "@/lib/seasonalPoints";
 import {
@@ -141,6 +158,19 @@ export const REWARD_SQUARES_WIN_CONDITION_MESSAGE = `A ${SQUARES_GAME_NAME} priz
 export const REWARD_BRACKET_UNAVAILABLE_MESSAGE = BRACKET_PRIZE_UNAVAILABLE_MESSAGE;
 export const REWARD_BRACKET_LOCKED_MESSAGE = BRACKET_PRIZE_LOCKED_MESSAGE;
 export const REWARD_BRACKET_WIN_CONDITION_MESSAGE = `A ${BRACKET_GAME_NAME} prize goes to the top brackets at your venue (1st, 2nd and 3rd).`;
+// The Pick 'Em Prize's equivalents. A failed read of the bar's other Pick 'Em Prizes refuses the new
+// one (500): the overlap rule (D6) can't be checked, so nothing is created on a guess.
+export const REWARD_PICKEM_RANKED_PLACES_MESSAGE =
+  "A Pick 'Em prize is won by the most picks right, a number of picks right, or picks right out of a set number.";
+export const REWARD_PICKEM_OVERLAP_UNCHECKED_MESSAGE =
+  "We couldn't check this bar's other Pick 'Em prizes. Please try again.";
+// Another Pick 'Em Prize save holds this bar's save lease (Phase 7.5.3): a 409, like a clash. A failed
+// or missing lease is the unchecked message above (500): never create without the overlap check.
+export const REWARD_PICKEM_SAVE_BUSY_MESSAGE =
+  "Another Pick 'Em Prize is being saved for this bar. Try again in a moment.";
+// Admin Rewards' Enable/Edit on a Pick 'Em Prize past its rules (Phase 7.6.1): a 409. The words live in
+// the client-safe lib/pickemPrizes.ts (pickemPrizeAdminPatchRefusal) so the admin list can show them.
+export const REWARD_PICKEM_ADMIN_EDIT_MESSAGE = PICKEM_PRIZE_ADMIN_EDIT_MESSAGE;
 
 const WINNER_QUOTA_CAP = 100;
 
@@ -202,6 +232,18 @@ export class RewardTermsError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "RewardTermsError";
+  }
+}
+
+/**
+ * The new prize clashes with one the venue already offers (the Pick 'Em overlap rule, D6). Its
+ * message names the existing prize. Routes map it to 409 by type: the input is fine on its own, the
+ * venue's current prizes are what refuse it.
+ */
+export class RewardConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RewardConflictError";
   }
 }
 
@@ -325,6 +367,19 @@ export type RewardCreationContext = {
    * locked. null for every other definition.
    */
   bracket?: RewardBracketContext | null;
+  /**
+   * Present only for the Pick 'Em Prize: the venue's own day and time zone, which every window is
+   * judged in (a one-day prize can't be for a day that has passed there). null for every other definition.
+   */
+  pickem?: RewardPickEmContext | null;
+};
+
+/** What the wizard needs to judge a Pick 'Em Prize's window the way the server will. */
+export type RewardPickEmContext = {
+  /** The venue's today, YYYY-MM-DD. */
+  today: string;
+  /** The venue's IANA time zone. */
+  timezone: string;
 };
 
 /** What the wizard may say about the brackets a March Madness prize can pay. */
@@ -427,6 +482,8 @@ const nflSeasonWeeksCache = new Map<number, ReadCacheEntry<NFLWeekDates[]>>();
 const squaresMomentsCache = new Map<string, ReadCacheEntry<Map<string, SquaresMoment[]>>>();
 // March Madness prizes' brackets, the same way (they never change after creation either).
 const bracketKeysCache = new Map<string, ReadCacheEntry<Map<string, BracketPrizeKey[]>>>();
+// Pick 'Em Prizes' terms (scope, window, tiers…), the same way.
+const pickemTermsCache = new Map<string, ReadCacheEntry<Map<string, PickEmPrizeTerms>>>();
 
 /** Test hook: forget every cached schedule and NFL season read. */
 export function clearRewardDescriptionCaches(): void {
@@ -434,6 +491,7 @@ export function clearRewardDescriptionCaches(): void {
   nflSeasonWeeksCache.clear();
   squaresMomentsCache.clear();
   bracketKeysCache.clear();
+  pickemTermsCache.clear();
 }
 
 /**
@@ -548,6 +606,32 @@ async function loadBracketKeys(
   );
 }
 
+/**
+ * The terms of every Pick 'Em Prize in `campaigns` that doesn't already carry them (the shared
+ * campaign select leaves the pickem_* columns out). One read for all of them, none when there are none.
+ */
+async function loadPickEmTerms(
+  campaigns: ReadonlyArray<Pick<ChallengeCampaign, "id" | "rewardDefinitionId" | "pickemScope">>,
+  cachedReads: boolean,
+): Promise<Map<string, PickEmPrizeTerms>> {
+  const ids = [
+    ...new Set(
+      campaigns
+        .filter((campaign) => campaign.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID && !campaign.pickemScope)
+        .map((campaign) => campaign.id),
+    ),
+  ].sort();
+  if (ids.length === 0) return new Map();
+  return readThroughCache(
+    pickemTermsCache,
+    ids.join(","),
+    REWARD_NFL_WEEKS_CACHE_TTL_MS,
+    cachedReads,
+    () => loadPickEmPrizeTerms(ids),
+    (terms) => terms.size > 0,
+  );
+}
+
 /** YYYY-MM-DD of a season's earliest week_start_date, or null when none are synced. */
 const seasonFirstWeekStartDate = (spans: readonly NFLWeekDates[] | undefined): string | null =>
   spans && spans.length > 0
@@ -655,6 +739,7 @@ async function loadVenueGameSlots(
  *  - challenge_campaigns.squares_moments: ONE read, only when a Super Bowl Squares
  *    prize is present (the shared select leaves that column out), cached 10 minutes.
  *  - challenge_campaigns.bracket_keys: the same, only when a March Madness prize is present.
+ *  - challenge_campaigns.pickem_*: the same, only when a Pick 'Em Prize is present.
  *  - With `cachedReads` (the guest route, polled every 30 s per player), both of
  *    the above are reused per server instance for 5 / 10 minutes — see the
  *    description read cache above. Admin and partner lists leave it off.
@@ -704,7 +789,7 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
     ),
   ];
 
-  const [spansBySeason, slotsByVenue, timezoneByVenue, squaresMomentsById, bracketKeysById] = await Promise.all([
+  const [spansBySeason, slotsByVenue, timezoneByVenue, squaresMomentsById, bracketKeysById, pickemTermsById] = await Promise.all([
     hasNFL ? loadNFLSeasonWeekDates(campaigns, cachedReads) : Promise.resolve(new Map<number, NFLWeekDates[]>()),
     scheduleVenueIds.length > 0 ? loadVenueGameSlots(scheduleVenueIds, now, cachedReads) : Promise.resolve(null),
     Promise.all(
@@ -719,6 +804,7 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
     ).then((entries) => new Map<string, string | null>(entries)),
     loadSquaresMoments(campaigns, cachedReads),
     loadBracketKeys(campaigns, cachedReads),
+    loadPickEmTerms(campaigns, cachedReads),
   ]);
 
   const withUpcoming: Array<T & { upcomingStartDate?: string }> = hasNFL
@@ -731,9 +817,11 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
     const scope = normalizeNFLWeekScope(campaign.nflWeekScope);
     const slots = campaignVenueId && slotsByVenue ? slotsByVenue.get(campaignVenueId) ?? null : null;
     const nextCycleStart = timezone ? computeUpcomingCycleStart(campaign, now, timezone)?.toISOString() ?? null : null;
+    const pickemTerms = campaign.pickemScope ? null : pickemTermsById.get(campaign.id) ?? null;
     const description = describeReward(
       {
         ...campaign,
+        ...(pickemTerms ?? {}),
         squaresMoments: campaign.squaresMoments ?? squaresMomentsById.get(campaign.id) ?? null,
         bracketKeys: campaign.bracketKeys ?? bracketKeysById.get(campaign.id) ?? null,
         schedule: slots ? { slots } : null,
@@ -750,7 +838,13 @@ export async function attachRewardDescriptions<T extends ChallengeCampaign>(
     );
     const squaresMoments = campaign.squaresMoments ?? squaresMomentsById.get(campaign.id);
     const bracketKeys = campaign.bracketKeys ?? bracketKeysById.get(campaign.id);
-    return { ...campaign, ...(squaresMoments ? { squaresMoments } : {}), ...(bracketKeys ? { bracketKeys } : {}), description };
+    return {
+      ...campaign,
+      ...(squaresMoments ? { squaresMoments } : {}),
+      ...(bracketKeys ? { bracketKeys } : {}),
+      ...(pickemTerms ?? {}),
+      description,
+    };
   });
 }
 
@@ -992,6 +1086,25 @@ export async function resolveRewardCreationContext(
       gameSlots: [],
       nflSeason: null,
       bracket,
+    };
+  }
+
+  // ── Pick 'Em Prize branch ─────────────────────────────────────────────────
+  // Gated on nothing the venue schedules: Pick 'Em is always on. One read (cached): the venue's
+  // time zone, which every window is judged in.
+  if (definition.id === PICKEM_PRIZE_DEFINITION_ID) {
+    const timezone = await getVenueTimezone(venueId);
+    return {
+      definitionId: definition.id,
+      scheduled: true,
+      hasRecurringSchedule: true,
+      scheduleDays: [],
+      timezone,
+      allowedCadences: ["none", "weekly"],
+      scheduleShapes: [],
+      gameSlots: [],
+      nflSeason: null,
+      pickem: { today: getLocalDateKey(new Date(), timezone), timezone },
     };
   }
 
@@ -1257,6 +1370,18 @@ export type CreateRewardParams = {
    * women_second), each its own 1st / 2nd / 3rd. Required for that definition, ignored by every other.
    */
   bracketKeys?: BracketPrizeKey[] | null;
+  /**
+   * Pick 'Em Prizes only (lib/pickemPrizes.ts), required for that definition and ignored by every
+   * other. How it's won follows `winCondition`: "game_winner" = most picks right (needs
+   * pickemMinPicks, takes `prize` and `minPlayers`); "points_threshold" with pickemTiers = "X out of
+   * N" (needs pickemPickLimit; each tier brings its own prize); "points_threshold" without tiers =
+   * "get N right" (`threshold` = N, `winnerQuota` = prizes per period, takes `prize`).
+   */
+  pickemScope?: unknown;
+  pickemWindow?: unknown;
+  pickemPickLimit?: number | null;
+  pickemTiers?: Array<{ correct: number; quantity: number; prize: RewardPrizeInput }> | null;
+  pickemMinPicks?: number | null;
   /** Stamp the creating owner (null/absent = admin-created). */
   createdByOwnerId?: string | null;
 };
@@ -1347,6 +1472,9 @@ export async function createReward(params: CreateRewardParams): Promise<Challeng
   if (!context.scheduled) throw new Error(unavailableMessage);
 
   if (isSquaresReward) return createSquaresReward(definition, params, venueId);
+  if (definition.id === PICKEM_PRIZE_DEFINITION_ID) {
+    return createPickEmReward(definition, params, venueId, context.pickem ?? null);
+  }
   if (isBracketReward) return createBracketReward(definition, params, venueId, context.bracket ?? null);
 
   const winCondition: ChallengeWinCondition =
@@ -1744,4 +1872,169 @@ async function createBracketReward(
     bracketKeys,
     createdByOwnerId: params.createdByOwnerId ?? null,
   });
+}
+
+/** A number the client sent, or null when it sent nothing (NaN stays NaN and is refused). */
+const sentNumber = (value: unknown): number | null =>
+  value === null || value === undefined || value === "" ? null : Number(value);
+
+/**
+ * A Pick 'Em Prize (docs/pickem-college-football-and-prize-plan.md Phase 4a). The partner picks the
+ * games, the window and how it's won; everything else is derived here:
+ *   - most right: "game_winner", one winner per period, the partner's optional minimum players;
+ *   - get N right: "points_threshold", N = points_required_to_win (correct picks, not points),
+ *     winner_quota = prizes per period;
+ *   - X out of N: "points_threshold", N = pickem_pick_limit, points_required_to_win = the lowest
+ *     tier, winner_quota = all tiers' quantities; each tier's prize is in pickem_tiers and the
+ *     campaign's own prize columns stay empty (like a places prize's);
+ *   - the calendar from the window (pickemPrizeCampaignCalendar), so generic cycle math agrees with
+ *     pickemPrizeCycleStart; game_types ['pickem'], which the 10-points-a-pick accrual skips.
+ * Every window is judged in the VENUE's time zone. Last, the overlap rule (D6) against the venue's
+ * active Pick 'Em Prizes: a clash is a 409 naming the other prize; a failed read refuses (never a
+ * guess). The check and the insert run under the bar's save lease (lib/pickemPrizeSaveLease.ts): a
+ * save already in progress is a 409, a lease that can't be taken refuses like a failed read. Anything the client sends that this prize can't have is refused, never silently changed.
+ */
+async function createPickEmReward(
+  definition: NonNullable<ReturnType<typeof getRewardDefinition>>,
+  params: CreateRewardParams,
+  venueId: string,
+  context: RewardPickEmContext | null,
+): Promise<ChallengeCampaign> {
+  const timezone = context?.timezone ?? (await getVenueTimezone(venueId));
+  const today = context?.today ?? getLocalDateKey(new Date(), timezone);
+
+  if (params.winCondition === "ranked_places") throw new RewardTermsError(REWARD_PICKEM_RANKED_PLACES_MESSAGE);
+  if (Array.isArray(params.placePrizes) && params.placePrizes.length > 0) {
+    throw new RewardTermsError(REWARD_PLACE_PRIZES_NOT_RANKED_MESSAGE);
+  }
+  if ((Array.isArray(params.gameWinnerSlots) && params.gameWinnerSlots.length > 0) || params.nflWeekScope) {
+    throw new RewardTermsError(PICKEM_PRIZE_TERMS_MISMATCH_MESSAGE);
+  }
+  const scope = normalizePickEmPrizeScope(params.pickemScope);
+  if (!scope) throw new RewardTermsError(PICKEM_PRIZE_SCOPE_MESSAGE);
+  const window = normalizePickEmPrizeWindow(params.pickemWindow);
+  if (!window) throw new RewardTermsError(PICKEM_PRIZE_WINDOW_MESSAGE);
+
+  const tierInputs = Array.isArray(params.pickemTiers) ? params.pickemTiers : null;
+  const winKind: PickEmPrizeWinKind =
+    params.winCondition === "game_winner" ? "most_right" : tierInputs && tierInputs.length > 0 ? "tiers" : "target";
+  const minPicks = sentNumber(params.pickemMinPicks);
+  const pickLimit = sentNumber(params.pickemPickLimit);
+  const target = winKind === "target" ? sentNumber(params.threshold) : null;
+  const quantity = winKind === "target" ? sentNumber(params.winnerQuota) : null;
+  const tierRules = tierInputs?.map((tier) => ({
+    correct: Number((tier as { correct?: unknown } | null)?.correct),
+    quantity: Number((tier as { quantity?: unknown } | null)?.quantity),
+  }));
+  const termsError = validatePickEmPrizeTerms(
+    { winKind, scope, window, minPicks, target, quantity, pickLimit, tiers: tierRules ?? null },
+    today,
+  );
+  if (termsError) throw new RewardTermsError(termsError);
+  const minPlayers = normalizeMinPlayersInput(
+    params.minPlayers,
+    winKind === "most_right" ? "game_winner" : "points_threshold",
+  );
+
+  // Prizes: one for most right / get N right; one per tier (tier 1 = the lowest) for X out of N.
+  const prize = winKind === "tiers" ? null : normalizeRewardPrize(params.prize);
+  const tiers =
+    winKind === "tiers" && tierInputs && tierRules
+      ? tierInputs.map((tier, index) => ({
+          ...normalizePlacePrizeInputs([tier?.prize as RewardPrizeInput])[0],
+          place: index + 1,
+          correct: tierRules[index].correct,
+          quantity: tierRules[index].quantity,
+        }))
+      : null;
+
+  // One Pick 'Em Prize save at a time per bar (7.5.3, F17): the lease is held from before the overlap
+  // read until after the insert, so two saves can't both read "no clash". Any future path that
+  // changes a Pick 'Em Prize's scope, window or pick limit must take the same lease.
+  const lease = await claimPickEmPrizeSave(venueId);
+  if (lease.status === "busy") throw new RewardConflictError(REWARD_PICKEM_SAVE_BUSY_MESSAGE);
+  if (lease.status === "failed") throw new Error(REWARD_PICKEM_OVERLAP_UNCHECKED_MESSAGE);
+  try {
+    // D6 against the bar's other active Pick 'Em Prizes, judged from the venue's today on.
+    let existing: Awaited<ReturnType<typeof listActivePickEmPrizeCampaigns>>;
+    try {
+      existing = await listActivePickEmPrizeCampaigns(venueId);
+    } catch (error) {
+      console.error("[PickEmPrize] overlap-read-failed", { venueId, message: error instanceof Error ? error.message : String(error) });
+      throw new Error(REWARD_PICKEM_OVERLAP_UNCHECKED_MESSAGE);
+    }
+    const conflict = findPickEmPrizeConflict(
+      { scope, window, pickLimit: winKind === "tiers" ? pickLimit : null, minPicks: winKind === "most_right" ? minPicks : null },
+      existing.map((other) => ({
+        id: other.id,
+        scope: other.pickemScope,
+        window: other.pickemWindow,
+        pickLimit: other.pickemPickLimit,
+        minPicks: other.pickemMinPicks,
+      })),
+      today,
+    );
+    if (conflict) throw new RewardConflictError(conflict.message);
+
+    const calendar = pickemPrizeCampaignCalendar(window);
+    const winCondition: ChallengeWinCondition = winKind === "most_right" ? "game_winner" : "points_threshold";
+    const pointsRequiredToWin = winKind === "target" ? (target as number) : winKind === "tiers" && tiers ? tiers[0].correct : 1;
+    const winnerQuota =
+      winKind === "target" ? (quantity as number) : winKind === "tiers" && tiers ? tiers.reduce((sum, tier) => sum + tier.quantity, 0) : 1;
+    const pickemTerms: PickEmPrizeTerms = {
+      pickemScope: scope,
+      pickemWindow: window,
+      pickemPickLimit: winKind === "tiers" ? pickLimit : null,
+      pickemTiers: tiers,
+      pickemMinPicks: winKind === "most_right" ? minPicks : null,
+    };
+
+    return await createChallengeCampaign({
+      name: definition.name,
+      // The frozen fallback wording (every reader composes it fresh — attachRewardDescriptions).
+      rules: describeReward(
+        {
+          rules: "",
+          recurringType: calendar.recurringType,
+          activeDays: calendar.activeDays,
+          winnerQuota,
+          pointsRequiredToWin,
+          winCondition,
+          rewardDefinitionId: definition.id,
+          minPlayers,
+          ...pickemTerms,
+          ...(prize ?? {}),
+        },
+        new Date(),
+      ).summary,
+      winCondition,
+      venueIds: [venueId],
+      gameTypes: [definition.gameType],
+      challengeMode: definition.challengeMode,
+      pointsRequiredToWin,
+      scheduleType: "single_day",
+      recurringType: calendar.recurringType,
+      activeDays: calendar.activeDays,
+      winnerQuota,
+      ...(calendar.startDate ? { startDate: calendar.startDate } : {}),
+      ...(calendar.endDate ? { endDate: calendar.endDate } : {}),
+      gameWinnerSlots: null,
+      nflWeekScope: null,
+      rewardDefinitionId: definition.id,
+      prizeKind: prize?.prizeKind ?? null,
+      prizeMenuItem: prize?.prizeMenuItem ?? null,
+      prizeMenuItemName: prize?.prizeMenuItemName ?? null,
+      prizeDiscountKind: prize?.prizeDiscountKind ?? null,
+      prizeDiscountValue: prize?.prizeDiscountValue ?? null,
+      prizeGiftCertificateAmount: prize?.prizeGiftCertificateAmount ?? null,
+      prizePosValueCents: prize?.prizePosValueCents ?? null,
+      prizePosDelivery: prize?.prizePosDelivery ?? null,
+      placePrizes: null,
+      minPlayers,
+      ...pickemTerms,
+      createdByOwnerId: params.createdByOwnerId ?? null,
+    });
+  } finally {
+    await releasePickEmPrizeSave(venueId, lease.token);
+  }
 }

@@ -1,0 +1,127 @@
+[
+ {
+  "id": 1,
+  "name": "ACC",
+  "abbreviation": "ACC"
+ },
+ {
+  "id": 2,
+  "name": "American",
+  "abbreviation": "American"
+ },
+ {
+  "id": 3,
+  "name": "Big 12",
+  "abbreviation": "Big 12"
+ },
+ {
+  "id": 12,
+  "name": "Big Sky",
+  "abbreviation": "Big Sky"
+ },
+ {
+  "id": 4,
+  "name": "Big Ten",
+  "abbreviation": "Big Ten"
+ },
+ {
+  "id": 13,
+  "name": "CAA",
+  "abbreviation": "CAA"
+ },
+ {
+  "id": 5,
+  "name": "CUSA",
+  "abbreviation": "CUSA"
+ },
+ {
+  "id": 6,
+  "name": "FBS Indep.",
+  "abbreviation": "FBS Indep."
+ },
+ {
+  "id": 14,
+  "name": "FCS Indep.",
+  "abbreviation": "FCS Indep."
+ },
+ {
+  "id": 15,
+  "name": "Ivy",
+  "abbreviation": "Ivy"
+ },
+ {
+  "id": 7,
+  "name": "MAC",
+  "abbreviation": "MAC"
+ },
+ {
+  "id": 16,
+  "name": "MEAC",
+  "abbreviation": "MEAC"
+ },
+ {
+  "id": 8,
+  "name": "Mountain West",
+  "abbreviation": "Mountain West"
+ },
+ {
+  "id": 17,
+  "name": "MVFC",
+  "abbreviation": "MVFC"
+ },
+ {
+  "id": 18,
+  "name": "NEC",
+  "abbreviation": "NEC"
+ },
+ {
+  "id": 19,
+  "name": "OVC-Big South",
+  "abbreviation": "OVC-Big South"
+ },
+ {
+  "id": 9,
+  "name": "Pac-12",
+  "abbreviation": "Pac-12"
+ },
+ {
+  "id": 20,
+  "name": "Patriot",
+  "abbreviation": "Patriot"
+ },
+ {
+  "id": 21,
+  "name": "Pioneer",
+  "abbreviation": "Pioneer"
+ },
+ {
+  "id": 10,
+  "name": "SEC",
+  "abbreviation": "SEC"
+ },
+ {
+  "id": 22,
+  "name": "Southern",
+  "abbreviation": "Southern"
+ },
+ {
+  "id": 23,
+  "name": "Southland",
+  "abbreviation": "Southland"
+ },
+ {
+  "id": 11,
+  "name": "Sun Belt",
+  "abbreviation": "Sun Belt"
+ },
+ {
+  "id": 24,
+  "name": "SWAC",
+  "abbreviation": "SWAC"
+ },
+ {
+  "id": 25,
+  "name": "UAC",
+  "abbreviation": "UAC"
+ }
+]

@@ -7,6 +7,7 @@ import { adminField, adminLabel } from "@/lib/adminStyles";
 import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import { describeRankedTerms, placeOrdinal } from "@/lib/rankedPlaceRewards";
 import { buildRankedWeekHistory, type RankedWeekHistoryRow } from "@/lib/rankedWeekHistory";
+import { PICKEM_PRIZE_ADMIN_EDIT_MESSAGE, PICKEM_PRIZE_DEFINITION_ID } from "@/lib/pickemPrizes";
 import {
   CreateRewardWizard,
   type CreateRewardSubmission,
@@ -86,6 +87,8 @@ type AdminChallengeCampaign = {
   /** Weekly places rewards: one prize per place, 1st first. */
   placePrizes?: RewardPlacePrize[] | null;
   minPlayers?: number | null;
+  /** The prize definition it was made from; a Pick 'Em Prize can't be edited or re-enabled here (Phase 7.6.1). */
+  rewardDefinitionId?: string | null;
   // Composed server-side (attachRewardDescriptions). `isCustom: false` means guests see this
   // automatic wording instead of `rules`.
   description?: RewardDescription;
@@ -418,7 +421,7 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
   async function bulkPatch(isActive: boolean) {
     setBulkBusy(true);
     try {
-      await Promise.all(
+      const responses = await Promise.all(
         Array.from(selectedIds).map((id) =>
           fetch("/api/admin", {
             method: "PATCH",
@@ -427,8 +430,17 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
           })
         )
       );
+      // The server refuses some rows on its own (Enable on a Pick 'Em Prize, Phase 7.6.1): say so.
+      const refused = responses.filter((res) => !res.ok);
       setSelectedIds(new Set());
       await fetchCampaigns(page);
+      if (refused.length > 0) {
+        const reason = await refused[0]
+          .json()
+          .then((payload: { error?: string }) => payload.error ?? "")
+          .catch(() => "");
+        setError(`${refused.length} campaign(s) weren't changed.${reason ? ` ${reason}` : ""}`);
+      }
     } catch {
       setError("Failed to update some campaigns.");
     } finally {
@@ -1450,15 +1462,25 @@ export function ChallengesSection({ venues }: ChallengesSectionProps) {
                     </td>
                     <td className={`${TD} text-right`}>
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => beginEdit(c)}
-                          className="rounded border border-indigo-200 px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-50"
-                        >
-                          Edit
-                        </button>
+                        {/* A Pick 'Em Prize's terms change only by creating a new one (Phase 7.6.1): no Edit, and
+                            no Enable once it is off. Disable and Delete stay. */}
+                        {c.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID ? null : (
+                          <button
+                            onClick={() => beginEdit(c)}
+                            className="rounded border border-indigo-200 px-2 py-1 text-xs text-indigo-700 hover:bg-indigo-50"
+                          >
+                            Edit
+                          </button>
+                        )}
                         <button
                           onClick={() => toggleActive(c)}
-                          className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+                          disabled={!c.isActive && c.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID}
+                          title={
+                            !c.isActive && c.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID
+                              ? PICKEM_PRIZE_ADMIN_EDIT_MESSAGE
+                              : undefined
+                          }
+                          className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           {c.isActive ? "Disable" : "Enable"}
                         </button>

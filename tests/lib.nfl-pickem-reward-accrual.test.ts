@@ -347,9 +347,13 @@ describe("accrueNFLPickEmChallengePoints", () => {
 describe("daily Pick 'Em is untouched by NFL reward accrual", () => {
   const pickemSource = readFileSync(resolve(process.cwd(), "lib/pickem.ts"), "utf8");
 
-  it("still accrues daily Pick 'Em points under gameType 'pickem'", () => {
-    expect(pickemSource).toContain("applyChallengeCampaignPoints");
-    expect(pickemSource).toContain('gameType: "pickem"');
+  // Since Pick 'Em Phase 1 (automatic points) daily accrual lives with the payment in
+  // lib/pickemPoints.ts, and skips NFL picks so this sweep stays their only accrual.
+  it("still accrues daily Pick 'Em points under gameType 'pickem', never for NFL picks", () => {
+    const pointsSource = readFileSync(resolve(process.cwd(), "lib/pickemPoints.ts"), "utf8");
+    expect(pointsSource).toContain("applyChallengeCampaignPoints");
+    expect(pointsSource).toContain('gameType: "pickem"');
+    expect(pointsSource).toContain("if (pick.sportSlug === NFL_SPORT_SLUG) continue;");
   });
 
   it("keeps challenge accrual out of the shared settlement sweep", () => {

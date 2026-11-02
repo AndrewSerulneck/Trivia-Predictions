@@ -134,7 +134,7 @@ describe("when the prize is offered", () => {
     const ids = (now: string) => offeredRewardDefinitions(new Date(now)).map((d) => d.id);
     expect(ids("2026-10-19T12:00:00Z")).toContain(SQUARES_PRIZE_DEFINITION_ID);
     expect(ids("2027-03-01T12:00:00Z")).not.toContain(SQUARES_PRIZE_DEFINITION_ID);
-    expect(ids("2027-03-01T12:00:00Z")).toEqual(["live_trivia_challenge", "nfl_pickem_challenge"]);
+    expect(ids("2027-03-01T12:00:00Z")).toEqual(["live_trivia_challenge", "nfl_pickem_challenge", "pickem_challenge"]);
     vi.stubEnv("NEXT_PUBLIC_SQUARES_ENABLED", "");
     expect(ids("2026-10-19T12:00:00Z")).not.toContain(SQUARES_PRIZE_DEFINITION_ID);
     expect(getRewardDefinition(SQUARES_PRIZE_DEFINITION_ID)?.gameType).toBe("squares");

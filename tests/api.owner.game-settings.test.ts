@@ -6,14 +6,18 @@ vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: null }));
 const mocks = vi.hoisted(() => ({
   requireOwnerAuth: vi.fn(),
   getVenueGameSettings: vi.fn(),
-  setVenueNFLPickEmScoringMode: vi.fn(),
+  updateVenueGameSettings: vi.fn(),
 }));
 
 vi.mock("@/lib/requireOwnerAuth", () => ({ requireOwnerAuth: mocks.requireOwnerAuth }));
-vi.mock("@/lib/venueGameSettings", () => ({
-  getVenueGameSettings: mocks.getVenueGameSettings,
-  setVenueNFLPickEmScoringMode: mocks.setVenueNFLPickEmScoringMode,
-}));
+vi.mock("@/lib/venueGameSettings", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/venueGameSettings")>("@/lib/venueGameSettings");
+  return {
+    getVenueGameSettings: mocks.getVenueGameSettings,
+    updateVenueGameSettings: mocks.updateVenueGameSettings,
+    readGameSettingsChanges: actual.readGameSettingsChanges,
+  };
+});
 
 import { GET, POST } from "@/app/api/owner/game-settings/route";
 
@@ -23,7 +27,7 @@ describe("owner game settings API", () => {
   beforeEach(() => {
     mocks.requireOwnerAuth.mockReset();
     mocks.getVenueGameSettings.mockReset();
-    mocks.setVenueNFLPickEmScoringMode.mockReset();
+    mocks.updateVenueGameSettings.mockReset();
 
     mocks.requireOwnerAuth.mockResolvedValue(OWNER);
     mocks.getVenueGameSettings.mockResolvedValue({
@@ -32,7 +36,7 @@ describe("owner game settings API", () => {
       createdAt: null,
       updatedAt: null,
     });
-    mocks.setVenueNFLPickEmScoringMode.mockResolvedValue({
+    mocks.updateVenueGameSettings.mockResolvedValue({
       venueId: "venue-1",
       nflPickEmScoringMode: "spread",
       createdAt: null,
@@ -69,6 +73,37 @@ describe("owner game settings API", () => {
 
     expect(response.status).toBe(200);
     expect(body.settings.nflPickEmScoringMode).toBe("spread");
-    expect(mocks.setVenueNFLPickEmScoringMode).toHaveBeenCalledWith("venue-1", "spread");
+    expect(mocks.updateVenueGameSettings).toHaveBeenCalledWith("venue-1", { nflPickEmScoringMode: "spread" });
+  });
+
+  it("saves the College Football rule on its own, and refuses a bad value or an empty body", async () => {
+    const post = (body: Record<string, unknown>) =>
+      POST(
+        new Request("http://localhost/api/owner/game-settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ venueId: "venue-1", ...body }),
+        }),
+      );
+
+    expect((await post({ cfbPickEmScoringMode: "standard" })).status).toBe(200);
+    expect(mocks.updateVenueGameSettings).toHaveBeenCalledWith("venue-1", { cfbPickEmScoringMode: "standard" });
+
+    mocks.updateVenueGameSettings.mockClear();
+    expect((await post({ cfbPickEmScoringMode: "moneyline" })).status).toBe(400);
+    expect((await post({})).status).toBe(400);
+    expect(mocks.updateVenueGameSettings).not.toHaveBeenCalled();
+  });
+
+  it("checks the venue is the owner's before reading the body's settings", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/owner/game-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ venueId: "venue-999", cfbPickEmScoringMode: "standard" }),
+      }),
+    );
+    expect(response.status).toBe(403);
+    expect(mocks.updateVenueGameSettings).not.toHaveBeenCalled();
   });
 });

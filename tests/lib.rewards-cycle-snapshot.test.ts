@@ -148,6 +148,7 @@ vi.mock("@/lib/supabaseAdmin", () => ({
 vi.mock("@/lib/notifications", () => ({ createNotification: vi.fn(async () => {}) }));
 
 import { getChallengeCampaignSnapshotForUser, listChallengeCampaignWinsForUser } from "@/lib/challengeCampaigns";
+import { serializePickEmPrizeTiers } from "@/lib/pickemPrizeTiers";
 
 const VENUE_ID = "venue-1";
 const NOW_ISO = "2026-07-20T18:00:00.000Z"; // Monday
@@ -759,6 +760,89 @@ describe("listChallengeCampaignWinsForUser — a coupon only describes terms it 
 });
 
 // docs/square-scannable-prizes-plan.md Phase S1 — how the coupon is taken at a Square register.
+describe("listChallengeCampaignWinsForUser — a Pick 'Em Prize coupon carries the prize's own terms (Phase 6)", () => {
+  // The terms read only asks for real campaign ids (uuids).
+  const PICKEM_ID = "6f1b2a40-5c1d-4c1e-9a55-0d6f3a9b7c21";
+  const pickemRedemption = (overrides: Row = {}): Row => ({
+    challenge_id: PICKEM_ID,
+    winner_user_id: "u1",
+    venue_id: VENUE_ID,
+    // Saturday Nov 7 2026 midnight in Chicago (06:00Z) + tier 2 in seconds.
+    cycle_start: "2026-11-07T06:00:02+00:00",
+    created_at: "2026-11-08T03:00:00+00:00",
+    claimed_at: "2026-11-08T03:00:00+00:00",
+    prize_expires_at: "2026-11-15T00:00:00.000Z",
+    prize_redeemed_at: null,
+    ...overrides,
+  });
+  const pickemCampaign = (overrides: Row = {}): Row =>
+    campaignRow({
+      id: PICKEM_ID,
+      reward_definition_id: "pickem_challenge",
+      game_types: ["pickem"],
+      terms_updated_at: null,
+      pickem_scope: { sports: ["ncaaf"], leagues: [] },
+      pickem_window: { kind: "day", date: "2026-11-07" },
+      pickem_pick_limit: 20,
+      pickem_min_picks: null,
+      pickem_tiers: null,
+      ...overrides,
+    });
+
+  it("adds the scope, window and limit so the coupon can say what it was won for", async () => {
+    const giftPlace = (place: number, amount: number) => ({
+      place,
+      prizeKind: "gift_card" as const,
+      prizeGiftCertificateAmount: amount,
+      prizeMenuItem: null,
+      prizeMenuItemName: null,
+      prizeDiscountKind: null,
+      prizeDiscountValue: null,
+      prizePosValueCents: null,
+      prizePosDelivery: null,
+    });
+    const tiers = serializePickEmPrizeTiers([
+      { ...giftPlace(1, 10), correct: 12, quantity: 5 },
+      { ...giftPlace(2, 20), correct: 15, quantity: 3 },
+    ]);
+    store.challenge_campaigns = [pickemCampaign({ pickem_tiers: tiers })];
+    store.challenge_campaign_redemptions.push(pickemRedemption());
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.rewardTerms).toMatchObject({
+      rewardDefinitionId: "pickem_challenge",
+      pickemScope: { sports: ["ncaaf"], leagues: [] },
+      pickemWindow: { kind: "day", date: "2026-11-07" },
+      pickemPickLimit: 20,
+    });
+    expect(win.rewardTerms?.pickemTiers?.map((tier) => tier.correct)).toEqual([12, 15]);
+  });
+
+  it("reads the prize's terms only when the wallet holds a Pick 'Em coupon", async () => {
+    store.challenge_campaigns = [campaignRow()];
+    store.challenge_campaign_redemptions.push(pickemRedemption({ challenge_id: "camp-1" }));
+    selectLog = [];
+
+    await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(selectLog.filter((entry) => entry.cols.includes("pickem_scope"))).toHaveLength(0);
+  });
+
+  it("a failed terms read keeps the coupon (it falls back to 'Won from: …')", async () => {
+    missingColumns = { challenge_campaigns: ["pickem_scope"] };
+    store.challenge_campaigns = [pickemCampaign()];
+    store.challenge_campaign_redemptions.push(pickemRedemption());
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const [win] = await listChallengeCampaignWinsForUser({ userId: "u1", venueId: VENUE_ID });
+
+    expect(win.rewardTerms?.pickemScope).toBeUndefined();
+    expect(win.challengeName).toBe("Live Trivia Challenge");
+    error.mockRestore();
+  });
+});
+
 describe("listChallengeCampaignWinsForUser — prizePosDelivery comes from the coupon's own snapshot", () => {
   const redemption = (overrides: Row = {}): Row => ({
     id: "red-1",
@@ -953,5 +1037,217 @@ describe("getChallengeCampaignSnapshotForUser — Super Bowl Squares prizes (squ
     const [card] = await getChallengeCampaignSnapshotForUser({ userId: "u2", venueId: VENUE_ID });
     expect(card.viewerWon).toBe(false);
     expect(card.quotaRemaining).toBe(1);
+  });
+});
+
+// docs/pickem-college-football-and-prize-plan.md Phase 7.2 (finding F2): a Pick 'Em Prize's card follows
+// ITS periods — the winners at the period's tier 0–3 keys, "Upcoming" before a period, "Ended" once it
+// is over — read inside the one batched ledger read.
+describe("getChallengeCampaignSnapshotForUser — Pick 'Em Prizes (Phase 7.2)", () => {
+  // Saturday Jul 25 2026 and Saturday Jul 18 2026 midnight in New York (EDT, UTC−4).
+  const SAT_25 = "2026-07-25T04:00:00.000Z";
+  const SAT_18 = "2026-07-18T04:00:00.000Z";
+  const tierKey = (periodStart: string, tier: number) => new Date(Date.parse(periodStart) + tier * 1000).toISOString();
+  const giftTier = (place: number, correct: number, quantity: number) => ({
+    place,
+    correct,
+    quantity,
+    prizeKind: "gift_card" as const,
+    prizeGiftCertificateAmount: 10 * place,
+    prizeMenuItem: null,
+    prizeMenuItemName: null,
+    prizeDiscountKind: null,
+    prizeDiscountValue: null,
+    prizePosValueCents: null,
+    prizePosDelivery: null,
+  });
+  const pickemRow = (overrides: Row = {}): Row =>
+    campaignRow({
+      id: "pk-1",
+      name: "Pick 'Em Prize",
+      reward_definition_id: "pickem_challenge",
+      game_types: ["pickem"],
+      win_condition: "points_threshold",
+      points_required_to_win: 5,
+      winner_quota: 2,
+      recurring_type: "none",
+      start_date: "2026-07-25",
+      end_date: "2026-07-25",
+      pickem_scope: { sports: ["mlb"], leagues: [] },
+      pickem_window: { kind: "day", date: "2026-07-25" },
+      pickem_pick_limit: null,
+      pickem_tiers: null,
+      pickem_min_picks: null,
+      ...overrides,
+    });
+  const saturdaysRow = (overrides: Row = {}): Row =>
+    pickemRow({
+      recurring_type: "weekly",
+      active_days: ["sat"],
+      start_date: null,
+      end_date: null,
+      pickem_window: { kind: "weekday", weekday: "sat" },
+      ...overrides,
+    });
+  const won = (id: string, cycleStart: string, userId: string, challengeId = "pk-1") => ({
+    id,
+    challenge_id: challengeId,
+    cycle_start: cycleStart,
+    winner_user_id: userId,
+    venue_id: VENUE_ID,
+    points_earned: 5,
+    finalized_at: cycleStart,
+    prize_type: null,
+  });
+  const cardFor = async (userId: string, id = "pk-1") =>
+    (await getChallengeCampaignSnapshotForUser({ userId, venueId: VENUE_ID })).find((card) => card.id === id)!;
+
+  it("a one-day prize before its day is Upcoming on that day, with nothing won", async () => {
+    store.challenge_campaigns = [pickemRow()];
+    const card = await cardFor("u3");
+    expect(card.upcomingStartDate).toBe("2026-07-25");
+    expect(card.viewerWon).toBe(false);
+    expect(card.quotaRemaining).toBe(2);
+    expect(card.prizeEnded).toBeUndefined();
+  });
+
+  it("a one-day winner sees You Won: the day's midnight key, not the epoch", async () => {
+    vi.setSystemTime(new Date("2026-07-25T20:00:00.000Z"));
+    store.challenge_campaigns = [pickemRow()];
+    store.challenge_cycle_winners.push(won("w-epoch", EPOCH_ISO, "u1"), won("w-day", SAT_25, "u3"));
+    const card = await cardFor("u3");
+    expect(card.viewerWon).toBe(true);
+    expect(card.winnerUsernames).toEqual(["carol"]);
+    expect(card.quotaRemaining).toBe(1);
+    expect(card.upcomingStartDate).toBeUndefined();
+  });
+
+  it('an "X out of N" tier winner sees You Won and the quota counts every tier', async () => {
+    vi.setSystemTime(new Date("2026-07-25T20:00:00.000Z"));
+    store.challenge_campaigns = [
+      pickemRow({
+        winner_quota: 3,
+        pickem_pick_limit: 10,
+        pickem_tiers: serializePickEmPrizeTiers([giftTier(1, 6, 2), giftTier(2, 8, 1)]),
+      }),
+    ];
+    store.challenge_cycle_winners.push(
+      won("w-t1", tierKey(SAT_25, 1), "u1"),
+      won("w-t2", tierKey(SAT_25, 2), "u3"),
+      // Another day's tier win of the same prize never counts.
+      won("w-old", tierKey(SAT_18, 2), "u2"),
+    );
+    store.challenge_campaign_redemptions.push({
+      challenge_id: "pk-1",
+      winner_user_id: "u3",
+      venue_id: VENUE_ID,
+      cycle_start: tierKey(SAT_25, 2),
+      claimed_at: "2026-07-26T02:00:00.000Z",
+      prize_expires_at: "2026-08-02T00:00:00.000Z",
+      prize_redeemed_at: null,
+    });
+    const card = await cardFor("u3");
+    expect(card.viewerWon).toBe(true);
+    expect(card.prizeClaimedAt).toBe("2026-07-26T02:00:00.000Z");
+    expect(card.winnerUsernames).toEqual(["alice", "carol"]);
+    expect(card.quotaRemaining).toBe(1);
+  });
+
+  it("shows All Claimed to the others once every prize is won", async () => {
+    vi.setSystemTime(new Date("2026-07-25T20:00:00.000Z"));
+    store.challenge_campaigns = [pickemRow()];
+    store.challenge_cycle_winners.push(won("w-a", SAT_25, "u1"), won("w-b", SAT_25, "u2"));
+    const card = await cardFor("u3");
+    expect(card.viewerWon).toBe(false);
+    expect(card.quotaRemaining).toBe(0);
+  });
+
+  it("after its day: still in progress while it settles, Ended once the sweep ends it or the sweep stopped looking", async () => {
+    store.challenge_campaigns = [pickemRow()];
+    store.challenge_cycle_winners.push(won("w-a", SAT_25, "u1"));
+
+    vi.setSystemTime(new Date("2026-07-26T12:00:00.000Z"));
+    const settling = await cardFor("u3");
+    expect(settling.prizeEnded).toBeUndefined();
+    expect(settling.upcomingStartDate).toBeUndefined();
+
+    store.challenge_campaigns = [pickemRow({ is_active: false })];
+    const ended = await cardFor("u3");
+    expect(ended.prizeEnded).toBe(true);
+    expect(ended.winnerUsernames).toEqual(["alice"]);
+
+    // Its day ended Jul 26 04:00Z: 23 h later the Ended card is still there, 25 h later it is gone (7.6.2, F22).
+    vi.setSystemTime(new Date("2026-07-27T03:00:00.000Z"));
+    expect((await cardFor("u3")).prizeEnded).toBe(true);
+    vi.setSystemTime(new Date("2026-07-27T05:00:00.000Z"));
+    const list = await getChallengeCampaignSnapshotForUser({ userId: "u3", venueId: VENUE_ID });
+    expect(list.find((card) => card.id === "pk-1")).toBeUndefined();
+  });
+
+  it("an active prize past the sweep's look-back leaves the panel too", async () => {
+    store.challenge_campaigns = [pickemRow()];
+    vi.setSystemTime(new Date("2026-08-01T12:00:00.000Z"));
+    const list = await getChallengeCampaignSnapshotForUser({ userId: "u3", venueId: VENUE_ID });
+    expect(list.find((card) => card.id === "pk-1")).toBeUndefined();
+  });
+
+  it("an archived prize with no period to show leaves the panel at once, never Upcoming", async () => {
+    store.challenge_campaigns = [pickemRow({ is_active: false })];
+    const list = await getChallengeCampaignSnapshotForUser({ userId: "u3", venueId: VENUE_ID });
+    expect(list.find((card) => card.id === "pk-1")).toBeUndefined();
+  });
+
+  it("a Saturdays prize on a Monday shows last Saturday's winners and names next Saturday", async () => {
+    store.challenge_campaigns = [saturdaysRow({ win_condition: "game_winner", winner_quota: 1 })];
+    store.challenge_cycle_winners.push(won("w-18", SAT_18, "u3"), won("w-11", "2026-07-11T04:00:00.000Z", "u1"));
+    const card = await cardFor("u3");
+    expect(card.viewerWon).toBe(true);
+    expect(card.winnerUsernames).toEqual(["carol"]);
+    expect(card.upcomingStartDate).toBe("2026-07-25");
+  });
+
+  it("a Saturdays prize created after last Saturday is Upcoming with nothing won", async () => {
+    store.challenge_campaigns = [saturdaysRow({ created_at: "2026-07-19T15:00:00.000Z" })];
+    store.challenge_cycle_winners.push(won("w-18", SAT_18, "u3"));
+    const card = await cardFor("u3");
+    expect(card.viewerWon).toBe(false);
+    expect(card.upcomingStartDate).toBe("2026-07-25");
+  });
+
+  it("on its Saturday the card is live: no upcoming date", async () => {
+    vi.setSystemTime(new Date("2026-07-25T20:00:00.000Z"));
+    store.challenge_campaigns = [saturdaysRow()];
+    const card = await cardFor("u3");
+    expect(card.upcomingStartDate).toBeUndefined();
+    expect(card.prizeEnded).toBeUndefined();
+  });
+
+  it("rides the one batched ledger read and carries its terms (no request of its own)", async () => {
+    store.challenge_campaigns = [
+      campaignRow(),
+      pickemRow(),
+      saturdaysRow({ id: "pk-2", win_condition: "game_winner", winner_quota: 1 }),
+    ];
+    const cards = await getChallengeCampaignSnapshotForUser({ userId: "u3", venueId: VENUE_ID });
+    expect(fromCallCounts.challenge_cycle_winners).toBe(1);
+    expect(fromCallCounts.challenge_campaigns).toBe(1);
+    expect(cards.find((card) => card.id === "pk-2")?.pickemWindow).toEqual({ kind: "weekday", weekday: "sat" });
+    expect(cards.find((card) => card.id === "camp-1")?.pickemWindow).toBeUndefined();
+  });
+
+  it("terms columns missing: retries once without them and still finds the day's winners", async () => {
+    missingColumns = { challenge_campaigns: ["pickem_window"] };
+    vi.setSystemTime(new Date("2026-07-25T20:00:00.000Z"));
+    store.challenge_campaigns = [pickemRow()];
+    store.challenge_cycle_winners.push(won("w-t1", tierKey(SAT_25, 1), "u3"));
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const card = await cardFor("u3");
+    expect(card.viewerWon).toBe(true);
+    expect(card.upcomingStartDate).toBeUndefined();
+    const campaignSelects = selectLog.filter((entry) => entry.table === "challenge_campaigns");
+    expect(campaignSelects).toHaveLength(2);
+    expect(campaignSelects[1].cols).not.toContain("pickem_");
+    expect(error).toHaveBeenCalledWith("[PickEmPrize] terms-columns-missing");
+    error.mockRestore();
   });
 });

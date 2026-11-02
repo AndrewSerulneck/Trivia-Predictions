@@ -77,6 +77,33 @@ describe("guardRewardWizardStep", () => {
     expect(guardRewardWizardStep("prize", ready)).toBe("prize");
   });
 
+  it("asks the Pick 'Em Prize's Games and When before How to win (Phase 5)", () => {
+    expect(REWARD_WIZARD_STEPS.indexOf("games")).toBe(REWARD_WIZARD_STEPS.indexOf("definition") + 1);
+    expect(REWARD_WIZARD_STEPS.indexOf("when")).toBe(REWARD_WIZARD_STEPS.indexOf("games") + 1);
+    expect(REWARD_WIZARD_STEPS.indexOf("terms")).toBe(REWARD_WIZARD_STEPS.indexOf("when") + 1);
+  });
+
+  it("sends a Pick 'Em step back to the first question it is missing", () => {
+    const base = { definition: true, context: true, offersMinimum: false };
+    const answered = { scope: true, window: true, terms: true };
+    for (const step of ["when", "terms", "players", "prize", "confirm"] as const) {
+      expect(guardRewardWizardStep(step, { ...base, pickem: { ...answered, scope: false } })).toBe("games");
+    }
+    for (const step of ["terms", "prize", "confirm"] as const) {
+      expect(guardRewardWizardStep(step, { ...base, pickem: { ...answered, window: false } })).toBe("when");
+    }
+    expect(guardRewardWizardStep("prize", { ...base, pickem: { ...answered, terms: false } })).toBe("terms");
+    expect(guardRewardWizardStep("confirm", { ...base, pickem: answered })).toBe("confirm");
+    expect(guardRewardWizardStep("games", { ...base, pickem: { scope: false, window: false, terms: false } })).toBe("games");
+    // Most right asks the minimum; get N right / X out of N skip it.
+    expect(guardRewardWizardStep("players", { ...base, offersMinimum: true, pickem: answered })).toBe("players");
+    expect(guardRewardWizardStep("players", { ...base, pickem: answered })).toBe("prize");
+    // Without a Pick 'Em pick there is no Games or When step, and a reload still lands on Definition.
+    expect(guardRewardWizardStep("games", base)).toBe("terms");
+    expect(guardRewardWizardStep("when", base)).toBe("terms");
+    expect(guardRewardWizardStep("games", { definition: false, context: false, offersMinimum: false })).toBe("definition");
+  });
+
   it("leaves venue and definition alone", () => {
     expect(guardRewardWizardStep("venue", none)).toBe("venue");
     expect(guardRewardWizardStep("definition", none)).toBe("definition");

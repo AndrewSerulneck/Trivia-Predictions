@@ -5,11 +5,13 @@ import { RewardProgressGauge } from "@/components/venue/RewardProgressGauge";
 import {
   CHALLENGE_ICON_STYLE,
   ChallengeIconBadge,
+  countActivePrizeCards,
   inferChallengeGameType,
   rewardGameLabel,
   rewardHeadline,
   type ChallengeCampaignCard,
 } from "@/components/venue/venueHubShared";
+import { PICKEM_PRIZE_DEFINITION_ID } from "@/lib/pickemPrizes";
 import { composeRankedCard } from "@/lib/rankedPlaceCard";
 import { playHaptic } from "@/lib/nativeHaptics";
 import { formatCalendarDate as formatUpcomingDate } from "@/lib/formatCalendarDate";
@@ -52,6 +54,8 @@ function VenueChallengesPanelInner({
     if (before && [...wonNow].some((id) => !before.has(id))) playHaptic("celebrate");
   }, [challengeCards, isChallengesLoading, challengesError, hasLoadedChallenges]);
 
+  const activeCount = countActivePrizeCards(challengeCards);
+
   return (
     <section className="venue-screen m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
       <div className={`venue-home-panel-content w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-3 pt-1 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
@@ -61,7 +65,7 @@ function VenueChallengesPanelInner({
               {isChallengesLoading
                 ? "Prizes"
                 : challengeCards.length > 0
-                ? `Active · ${challengeCards.length} Prize${challengeCards.length !== 1 ? "s" : ""}`
+                ? `Active · ${activeCount} Prize${activeCount !== 1 ? "s" : ""}`
                 : "Prizes"}
             </p>
             <div className="space-y-2">
@@ -102,13 +106,16 @@ function VenueChallengesPanelInner({
                 const isExhausted = !isRanked && quotaRemaining <= 0;
                 const winnerUsernames = challenge.winnerUsernames ?? [];
                 const isWon = isWinner || isExhausted;
-                // An NFL reward whose first week is still in the future: real
-                // cycles are already running, but nothing can be earned yet, so
-                // it must not read as live. Rules stay openable — seeing the
-                // terms early is the point of creating it before the season.
-                const upcomingStartDate = !isWon ? challenge.upcomingStartDate ?? null : null;
+                // A Pick 'Em Prize with nothing left to run (its last period settled, or archived).
+                const isEnded = !isWon && Boolean(challenge.prizeEnded);
+                // A Pick 'Em Prize is won by correct picks, never points: no gauge (plan Phase 7.2).
+                const isPickEmPrize = challenge.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID;
+                // An NFL reward whose first week is still in the future (or a Pick 'Em Prize before its
+                // next day): nothing can be earned yet, so it must not read as live. Rules stay
+                // openable — seeing the terms early is the point of creating it ahead of time.
+                const upcomingStartDate = !isWon && !isEnded ? challenge.upcomingStartDate ?? null : null;
                 const isUpcoming = Boolean(upcomingStartDate);
-                const canOpenRules = !isWon;
+                const canOpenRules = !isWon && !isEnded;
                 const canOpenRedeem = isWinner;
                 const isBusy = pendingChallengeRedeemId === challenge.id;
                 const gameType = inferChallengeGameType(challenge.name, challenge.rewardDefinitionId);
@@ -169,6 +176,10 @@ function VenueChallengesPanelInner({
                           ) : rankedCard?.status === "week_complete" ? (
                             <span className="inline-flex items-center rounded-full border border-ht-chip-neutral-edge bg-ht-chip-neutral-bg px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-ht-fg-muted">
                               Week Complete
+                            </span>
+                          ) : isEnded ? (
+                            <span className="inline-flex items-center rounded-full border border-ht-chip-neutral-edge bg-ht-chip-neutral-bg px-2 py-0.5 text-xs font-black uppercase tracking-[0.1em] text-ht-fg-muted">
+                              Ended
                             </span>
                           ) : isUpcoming || rankedCard?.status === "upcoming" ? (
                             <span
@@ -236,10 +247,22 @@ function VenueChallengesPanelInner({
                           "All prizes for this cycle have been claimed."
                         )}
                       </p>
+                    ) : isEnded ? (
+                      <p className="mt-3 text-base text-ht-fg-faint">
+                        {winnerUsernames.length > 0 ? (
+                          <>
+                            Congrats to <span className="text-ht-fg-muted">{winnerUsernames.join(", ")}</span>.
+                          </>
+                        ) : (
+                          "This prize has ended."
+                        )}
+                      </p>
                     ) : isUpcoming && upcomingStartDate ? (
                       <p className="mt-3 text-base text-ht-warn-fg/80">
                         Starts {formatUpcomingDate(upcomingStartDate)} — get your picks in early.
                       </p>
+                    ) : isPickEmPrize ? (
+                      <p className="mt-3 text-base text-ht-fg-faint">Make your picks in Pick &apos;Em.</p>
                     ) : challenge.challengeMode === "leaderboard" ? (
                       // Legacy leaderboard-mode rewards finish out their current cycle, but
                       // standings are never rendered on this panel (Rewards is progress-only).

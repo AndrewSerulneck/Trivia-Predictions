@@ -118,6 +118,7 @@ vi.mock("@/lib/supabaseAdmin", () => {
 
 import { settlePendingPickEmPicks } from "@/lib/pickem";
 import { getLockedNFLPickEmGameLineForSettlement } from "@/lib/nflPickEm";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const startsAt = "2026-01-01T18:00:00.000Z";
 const gameId = `nfl-game-1__${startsAt}__Away Team__Home Team`;
@@ -217,7 +218,10 @@ const kickoffPlusHours = (hours: number) => new Date(Date.parse(startsAt) + hour
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.useRealTimers();
+  // 5 h after kickoff (past the 4 h staleness window). Not the real clock: a pick whose game
+  // started over 8 days ago is cancelled unread (PICKEM_UNFINDABLE_PENDING_MS, Phase 7.4).
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(kickoffPlusHours(5));
   store.tables = { pickem_picks: [], notifications: [], nfl_pickem_game_lines: [] };
   store.modes = new Map([["venue-1", "standard"]]);
   store.modeErrors = new Set();
@@ -518,5 +522,95 @@ describe("settlePendingPickEmPicks NFL scoring modes", () => {
     const venue2Pick = store.tables.pickem_picks.find((row) => row.venue_id === "venue-2");
     expect(venue1Pick).toMatchObject({ status: "pending" });
     expect(venue2Pick).toMatchObject({ status: "won" });
+  });
+});
+
+// docs/pickem-college-football-and-prize-plan.md Phase 1 (D2 + D10): every correct pick, NFL
+// included, is paid 10 points automatically after grading — by the pay_pickem_points RPC only.
+describe("settlePendingPickEmPicks pays correct picks automatically", () => {
+  const rpc = () => vi.mocked(supabaseAdmin!.rpc);
+
+  it("grades an NFL pick exactly as before, then pays through the RPC (never a direct stamp)", async () => {
+    store.tables.pickem_picks = [makePick()];
+    mockFinalScore(21, 24);
+    rpc().mockResolvedValue({
+      data: [
+        {
+          pick_id: "pick-1",
+          user_id: "user-1",
+          venue_id: "venue-1",
+          sport_slug: "nfl",
+          starts_at: startsAt,
+          resolved_at: new Date().toISOString(),
+          points_awarded: 10,
+        },
+      ],
+      error: null,
+    } as never);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 1, payout: { picksPaid: 1, pointsPaid: 10, error: null } });
+    expect(store.tables.pickem_picks[0]).toMatchObject({
+      status: "won",
+      scoring_mode: "standard",
+      reward_points: 10,
+      reward_claimed_at: null,
+    });
+    expect(rpc()).toHaveBeenCalledTimes(1);
+    expect(rpc()).toHaveBeenCalledWith("pay_pickem_points", { p_user_id: null, p_limit: 500 });
+  });
+
+  it("a global run still pays when nothing is left to grade (a payment that failed or was capped last run)", async () => {
+    rpc().mockResolvedValue({ data: [], error: null } as never);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ pendingScanned: 0, payout: { picksPaid: 0, error: null } });
+    expect(rpc()).toHaveBeenCalledWith("pay_pickem_points", { p_user_id: null, p_limit: 500 });
+  });
+
+  // Phase 7.5.2 (F15): the games and picks screens settle the player's own picks on every load
+  // and every 60-second live poll; they pay only when that call graded a win.
+  it("a player's own call with nothing pending pays nothing (no RPC)", async () => {
+    const result = await settlePendingPickEmPicks({ userId: "user-9" });
+
+    expect(result).toMatchObject({ pendingScanned: 0, payout: null });
+    expect(rpc()).not.toHaveBeenCalled();
+  });
+
+  it("a player's own call that graded only a loss pays nothing (no RPC)", async () => {
+    store.tables.pickem_picks = [makePick({ selected_team_id: "home-id", selected_team: "Home Team", selected_side: "home" })];
+    mockFinalScore(21, 24);
+
+    const result = await settlePendingPickEmPicks({ userId: "user-1" });
+
+    expect(result).toMatchObject({ settledCount: 1, won: 0, lost: 1, payout: null });
+    expect(rpc()).not.toHaveBeenCalled();
+  });
+
+  it("a player's own call that graded a win pays that player", async () => {
+    store.tables.pickem_picks = [makePick()];
+    mockFinalScore(21, 24);
+    rpc().mockResolvedValue({ data: [], error: null } as never);
+
+    const result = await settlePendingPickEmPicks({ userId: "user-1" });
+
+    expect(result).toMatchObject({ won: 1 });
+    expect(rpc()).toHaveBeenCalledTimes(1);
+    expect(rpc()).toHaveBeenCalledWith("pay_pickem_points", { p_user_id: "user-1", p_limit: 500 });
+  });
+
+  it("a failed payment never fails grading", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    store.tables.pickem_picks = [makePick()];
+    mockFinalScore(21, 24);
+    rpc().mockRejectedValue(new Error("database unavailable"));
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 1, payout: { picksPaid: 0, error: "database unavailable" } });
+    expect(store.tables.pickem_picks[0]).toMatchObject({ status: "won", reward_claimed_at: null });
+    errorSpy.mockRestore();
   });
 });

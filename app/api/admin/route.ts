@@ -63,6 +63,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
   createChallengeCampaign,
   deleteChallengeCampaign,
+  getChallengeCampaignDefinitionId,
   getChallengeCampaignRedemptionCounts,
   getChallengeFinalizedPrize,
   listChallengeCampaignProgress,
@@ -74,6 +75,7 @@ import {
 import {
   REWARD_GAME_WINNER_UNSUPPORTED_MESSAGE,
   REWARD_INVALID_PRIZE_MESSAGE,
+  REWARD_PICKEM_ADMIN_EDIT_MESSAGE,
   REWARD_INVALID_QUANTITY_MESSAGE,
   REWARD_INVALID_THRESHOLD_MESSAGE,
   REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE,
@@ -83,6 +85,7 @@ import {
   REWARD_REQUIRES_SCHEDULED_GAME_MESSAGE,
   REWARD_UNKNOWN_DEFINITION_MESSAGE,
   REWARD_UNSUPPORTED_CADENCE_MESSAGE,
+  RewardConflictError,
   RewardTermsError,
   createReward,
   attachRewardDescriptions,
@@ -90,6 +93,7 @@ import {
   type RewardPrizeInput,
 } from "@/lib/rewards";
 import type { NFLRewardWeekScope } from "@/lib/nflPickEmRewardWeeks";
+import { PICKEM_PRIZE_DEFINITION_ID, pickemPrizeAdminPatchRefusal } from "@/lib/pickemPrizes";
 import { recordAdClick, recordAdImpression } from "@/lib/ads";
 import type {
   AdDisplayTrigger,
@@ -679,6 +683,12 @@ export async function POST(request: Request) {
           squaresMoments?: unknown;
           /** March Madness prizes: the brackets that pay (men_main / women_main / men_second / women_second). */
           bracketKeys?: unknown;
+          // Pick 'Em Prizes: which games, when, and the numbers for how it's won (lib/pickemPrizes.ts).
+          pickemScope?: unknown;
+          pickemWindow?: unknown;
+          pickemPickLimit?: number | null;
+          pickemTiers?: Array<{ correct: number; quantity: number; prize: RewardPrizeInput }> | null;
+          pickemMinPicks?: number | null;
         }
       | {
           resource: "apply-placeholder-inline";
@@ -1103,6 +1113,11 @@ export async function POST(request: Request) {
           minPlayers: body.minPlayers ?? null,
           squaresMoments: Array.isArray(body.squaresMoments) ? body.squaresMoments : null,
           bracketKeys: Array.isArray(body.bracketKeys) ? body.bracketKeys : null,
+          pickemScope: body.pickemScope ?? null,
+          pickemWindow: body.pickemWindow ?? null,
+          pickemPickLimit: body.pickemPickLimit ?? null,
+          pickemTiers: Array.isArray(body.pickemTiers) ? body.pickemTiers : null,
+          pickemMinPicks: body.pickemMinPicks ?? null,
           createdByOwnerId: null,
         });
         return NextResponse.json({ ok: true, item });
@@ -1111,6 +1126,10 @@ export async function POST(request: Request) {
         // A terms violation is always bad input, never a server fault.
         if (error instanceof RewardTermsError) {
           return NextResponse.json({ ok: false, error: message }, { status: 400 });
+        }
+        // A clash with one of the venue's other prizes (Pick 'Em overlap rule): the message names it.
+        if (error instanceof RewardConflictError) {
+          return NextResponse.json({ ok: false, error: message }, { status: 409 });
         }
         // The NFL season not being loaded (or Squares numbers already drawn) is a state conflict.
         if (message === REWARD_NFL_SEASON_UNAVAILABLE_MESSAGE ||
@@ -1656,6 +1675,15 @@ export async function PATCH(request: Request) {
     }
 
     if (body.resource === "challenge-campaigns") {
+      // A Pick 'Em Prize's terms change only through createReward (save lease + overlap rule D6), so
+      // this legacy PATCH may only rename, re-image, reorder or turn one off (plan Phase 7.6.1). A
+      // body that is allowed for any prize needs no read; otherwise one read says what this row is.
+      if (pickemPrizeAdminPatchRefusal(body) !== null) {
+        const definitionId = await getChallengeCampaignDefinitionId(body.id);
+        if (definitionId === PICKEM_PRIZE_DEFINITION_ID) {
+          return NextResponse.json({ ok: false, error: REWARD_PICKEM_ADMIN_EDIT_MESSAGE }, { status: 409 });
+        }
+      }
       const item = await updateChallengeCampaign({
         id: body.id,
         name: body.name,

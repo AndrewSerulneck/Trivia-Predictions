@@ -17,6 +17,7 @@ import { clearLoginInProgress } from "@/lib/authFastPath";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { getPasskeyClientMessage } from "@/lib/passkeyErrors";
+import { PICKEM_PRIZE_DEFINITION_ID } from "@/lib/pickemPrizes";
 import { writeWarmTriviaCache, writeWarmPredictionsCache } from "@/lib/warmupCache";
 import {
   evaluateLiveTriviaStatePayload,
@@ -1549,10 +1550,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       // actually accruing: game_winner has no target, legacy leaderboard rows
       // carry no per-viewer progress, and an upcoming NFL reward sits at 0 until
       // its first week opens (which would read as "you're losing", not "not yet").
-      // A weekly places reward ("ranked_places") has no target either.
+      // A weekly places reward ("ranked_places") has no target either, and a Pick 'Em Prize is won
+      // by correct picks, never points (its progress is never written).
       showGauge:
         selectedChallenge.winCondition !== "game_winner" &&
         selectedChallenge.winCondition !== "ranked_places" &&
+        selectedChallenge.rewardDefinitionId !== PICKEM_PRIZE_DEFINITION_ID &&
         selectedChallenge.challengeMode !== "leaderboard" &&
         !upcomingStartDate,
     };

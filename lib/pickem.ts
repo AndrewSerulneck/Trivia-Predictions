@@ -2,11 +2,36 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
-import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
+import { PICKEM_SPORT_CATALOG, type PickEmSportSlug } from "@/lib/pickemSports";
+import { checkPickEmPrizePickLimit } from "@/lib/pickemPrizeLimit";
+import { loadPickEmGamePrizes } from "@/lib/pickemGamePrizes";
+import type { PickEmGamePrize } from "@/lib/pickemPrizeLine";
+import { payPickEmPoints, PICKEM_POINTS_PER_CORRECT_PICK, type PickEmPayoutReport } from "@/lib/pickemPoints";
+import {
+  collegeFootballGradeGate,
+  collegeFootballMissingGameGate,
+  collegeFootballSpreadLineGate,
+  COLLEGE_FOOTBALL_SPREAD_COPY,
+  COLLEGE_FOOTBALL_SPORT_KEY,
+  formatCollegeFootballPeriodLabel,
+  isFbsCollegeFootballGame,
+} from "@/lib/pickemCollegeFootball";
 import { getLockedNFLPickEmGameLineForSettlement, type NFLPickEmGameLine } from "@/lib/nflPickEm";
-import { getVenueNFLPickEmScoringMode, type NFLPickEmScoringMode } from "@/lib/venueGameSettings";
+import {
+  DEFAULT_CFB_PICKEM_SCORING_MODE,
+  getVenueCollegeFootballPickEmScoringMode,
+  getVenueNFLPickEmScoringMode,
+  type NFLPickEmScoringMode,
+} from "@/lib/venueGameSettings";
+import {
+  isSpreadLineSportKey,
+  loadPickEmGameLines,
+  lockPickEmGameLinesForSettlement,
+  readPickEmGameLine,
+  type PickEmGameLine,
+} from "@/lib/pickemGameLines";
 
-export type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma" | "tennis";
+export type { PickEmSportSlug };
 type PickEmPickStatus = "pending" | "won" | "lost" | "push" | "canceled";
 type PickEmGameStatus = "scheduled" | "live" | "final";
 
@@ -37,6 +62,21 @@ export type PickEmGame = {
   awayScore: number | null;
   winnerTeam: string | null;
   periodLabel: string | null;
+  /**
+   * College Football only: the rule this game is played by at this venue (the player's own pick's
+   * stamped rule once they have picked), its line, and whether it can be picked yet.
+   */
+  scoringMode?: NFLPickEmScoringMode;
+  homeSpread?: number | null;
+  awaySpread?: number | null;
+  lineComingSoon?: boolean;
+  /**
+   * A Pick 'Em Prize that limits picks ("X out of N") covers this game and the player has used them all:
+   * a NEW pick is refused (a pick already made can still be changed or cleared).
+   */
+  pickLimitReached?: boolean;
+  /** The server's words from the prize that covers THIS game (set with pickLimitReached). */
+  pickLimitMessage?: string;
   userPickId?: string;
   userPickTeam?: string;
   userPickStatus?: PickEmPickStatus;
@@ -70,6 +110,8 @@ export type PickEmPick = {
   resolvedAt: string | null;
   rewardPoints: number;
   rewardClaimedAt: string | null;
+  /** College picks: the rule stamped when the pick was made. NFL: written at settlement. */
+  scoringMode?: NFLPickEmScoringMode | null;
 };
 
 type PickEmPickRow = {
@@ -98,38 +140,21 @@ type PickEmPickRow = {
   resolved_at: string | null;
   reward_points: number;
   reward_claimed_at: string | null;
+  scoring_mode: NFLPickEmScoringMode | null;
+  home_spread: number | string | null;
+  away_spread: number | string | null;
 };
 
-export type PickEmPointsBankSummary = {
+/**
+ * One muted line on the Pick 'Em screen: "Today: 7 right · +70 points". Regular sports only
+ * (NFL Pick 'Em has its own screen). Points are already paid — there is nothing to collect.
+ */
+export type PickEmTodaySummary = {
   localDate: string;
-  totalPicks: number;
-  settledPicks: number;
-  pendingPicks: number;
-  correctPicks: number;
-  incorrectPicks: number;
-  unclaimedCorrectPicks: number;
-  pendingPoints: number;
-  multiplierEligible: boolean;
-  multiplierIfSettledNow: 1 | 2 | 3;
-  collectedPointsToday: number;
-};
-
-type PickEmDailySnapshotRow = {
-  user_id: string;
-  venue_id: string;
-  local_date: string;
-  total_picks: number;
-  settled_picks: number;
-  pending_picks: number;
-  correct_picks: number;
-  incorrect_picks: number;
-  unclaimed_correct_picks: number;
-  pending_points: number;
-  collected_points: number;
-  multiplier_eligible: boolean;
-  multiplier_if_settled_now: number;
-  collected_at: string | null;
-  updated_at: string;
+  picks: number;
+  pending: number;
+  correct: number;
+  points: number;
 };
 
 type BallDontLieScoreEvent = {
@@ -148,6 +173,9 @@ type BallDontLieScoreEvent = {
     name?: string;
     score?: number | string | null;
   }>;
+  // The provider's own status words, unparsed (College Football grades from these; Phase 7.3).
+  status?: string | null;
+  status_state?: string | null;
 };
 
 type NormalizedBallDontLieEvent = {
@@ -228,6 +256,7 @@ const BDL_PATH_BY_SPORT_KEY: Record<string, { path: string; league: string; isSo
   icehockey_nhl: { path: "/nhl/v1/games", league: "NHL" },
   nhl: { path: "/nhl/v1/games", league: "NHL" },
   americanfootball_nfl: { path: "/nfl/v1/games", league: "NFL" },
+  [COLLEGE_FOOTBALL_SPORT_KEY]: { path: "/ncaaf/v1/games", league: "College Football" },
   nfl: { path: "/nfl/v1/games", league: "NFL" },
   mma_ufc: { path: "/mma/v1/fights", league: "UFC" },
   mma: { path: "/mma/v1/fights", league: "MMA" },
@@ -246,86 +275,28 @@ const BDL_PATH_BY_SPORT_KEY: Record<string, { path: string; league: string; isSo
 };
 
 const PICKEM_LOCK_GRACE_MS = 0;
-const PICKEM_DAILY_PICK_LIMIT = 10;
 const PICKEM_TABLES_MISSING_ERROR =
   "Pick 'Em tables are not installed in this Supabase project yet. Run migration supabase/migrations/20260427113000_add_pickem_tables.sql.";
-const PICKEM_REWARD_POINTS = 10;
+const PICKEM_REWARD_POINTS = PICKEM_POINTS_PER_CORRECT_PICK;
 const PICKEM_PICK_SELECT =
-  "id, user_id, venue_id, sport_slug, sport_key, league, game_id, home_team_id, away_team_id, selected_team_id, winning_team_id, game_label, home_team, away_team, starts_at, selected_team, selected_side, status, home_score, away_score, created_at, updated_at, resolved_at, reward_points, reward_claimed_at";
+  "id, user_id, venue_id, sport_slug, sport_key, league, game_id, home_team_id, away_team_id, selected_team_id, winning_team_id, game_label, home_team, away_team, starts_at, selected_team, selected_side, status, home_score, away_score, created_at, updated_at, resolved_at, reward_points, reward_claimed_at, scoring_mode, home_spread, away_spread";
 
-const DEFAULT_SOCCER_KEYS = [
-  "soccer_usa_mls",
-  "soccer_epl",
-  "soccer_spain_la_liga",
-  "soccer_italy_serie_a",
-  "soccer_france_ligue_one",
-  "soccer_germany_bundesliga",
-  "soccer_uefa_champs_league",
-  "soccer_fifa_world_cup",
-];
-
-const PICKEM_SPORTS: PickEmSportOption[] = [
-  {
-    slug: "nba",
-    label: "Basketball",
-    subtitle: "NBA + WNBA",
-    isInSeason: true,
-    isClickable: true,
-    sportKeys: ["basketball_nba", "basketball_wnba"],
-  },
-  {
-    slug: "mlb",
-    label: "MLB",
-    subtitle: "Major League Baseball",
-    isInSeason: true,
-    isClickable: true,
-    sportKeys: ["baseball_mlb"],
-  },
-  {
-    slug: "nhl",
-    label: "NHL",
-    subtitle: "National Hockey League",
-    isInSeason: true,
-    isClickable: true,
-    sportKeys: ["icehockey_nhl"],
-  },
-  {
-    slug: "soccer",
-    label: "Soccer",
-    subtitle: "Top Domestic & International Leagues",
-    isInSeason: true,
-    isClickable: true,
-    sportKeys: DEFAULT_SOCCER_KEYS,
-  },
-  {
-    slug: "nfl",
-    label: "NFL",
-    subtitle: "National Football League",
-    isInSeason: false,
-    isClickable: false,
-    sportKeys: ["americanfootball_nfl"],
-  },
-  {
-    slug: "mma",
-    label: "MMA",
-    subtitle: "UFC & major cards",
-    isInSeason: true,
-    isClickable: true,
-    sportKeys: ["mma_ufc"],
-  },
-  {
-    slug: "tennis",
-    label: "Tennis",
-    subtitle: "ATP + WTA",
-    isInSeason: true,
-    isClickable: true,
-    sportKeys: ["tennis_atp", "tennis_wta"],
-  },
-];
+// One list, shared with the Pick 'Em Prize rules (lib/pickemSports.ts).
+const PICKEM_SPORTS: PickEmSportOption[] = PICKEM_SPORT_CATALOG.map(
+  ({ slug, label, subtitle, isInSeason, isClickable, leagues }) => ({
+    slug,
+    label,
+    subtitle,
+    isInSeason,
+    isClickable,
+    sportKeys: leagues.map((league) => league.sportKey),
+  }),
+);
 
 const SPORT_BY_SLUG = new Map(PICKEM_SPORTS.map((item) => [item.slug, item]));
 
-function getLeagueLabelForSportKey(sportKey: string): string {
+/** The league label a game (and its pick) carries. Exported for the catalog parity test. */
+export function getLeagueLabelForSportKey(sportKey: string): string {
   const provider = BDL_PATH_BY_SPORT_KEY[sportKey];
   if (provider?.league) {
     return provider.league;
@@ -737,6 +708,7 @@ function mapPickRow(row: PickEmPickRow): PickEmPick {
     resolvedAt: row.resolved_at,
     rewardPoints: Number(row.reward_points ?? PICKEM_REWARD_POINTS),
     rewardClaimedAt: row.reward_claimed_at,
+    scoringMode: row.scoring_mode ?? null,
   };
 }
 
@@ -1124,6 +1096,9 @@ async function fetchBallDontLieEventsForSportKey(
     if (!id || !homeTeam || !awayTeam || !startsAt) {
       continue;
     }
+    if (sportKey === COLLEGE_FOOTBALL_SPORT_KEY && !isFbsCollegeFootballGame(eventRecord)) {
+      continue;
+    }
 
     const startsTs = new Date(startsAt).getTime();
     if (!Number.isFinite(startsTs)) {
@@ -1137,7 +1112,10 @@ async function fetchBallDontLieEventsForSportKey(
       ? parseScore((eventRecord.player2_game_score as number | string | null | undefined) ?? null)
       : extractAwayScore(eventRecord);
     const isCompleted = isBallDontLieFinalStatus(eventRecord);
-    const periodLabel = formatPeriodLabel(event.time, event.time_in_period, provider.isSoccerMatch ?? false, typeof event.period === "number" ? event.period : null);
+    const periodLabel =
+      sportKey === COLLEGE_FOOTBALL_SPORT_KEY
+        ? formatCollegeFootballPeriodLabel(eventRecord)
+        : formatPeriodLabel(event.time, event.time_in_period, provider.isSoccerMatch ?? false, typeof event.period === "number" ? event.period : null);
     const tennisWinner = tennisMode ? extractTennisWinner(eventRecord) : null;
 
     events.push({
@@ -1167,10 +1145,20 @@ async function fetchBallDontLieEventsForSportKey(
   return events;
 }
 
-async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, BallDontLieScoreEvent>> {
+/**
+ * One sport's games from 7 days ago to 7 days ahead. `complete` is true only when every day's
+ * query came back whole (none failed, none cut off at the page cap), so a game absent from
+ * `events` is really absent — the only case in which settlement may act on a missing game.
+ */
+type PickEmScoreFetch = {
+  events: Map<string, BallDontLieScoreEvent>;
+  complete: boolean;
+};
+
+async function fetchScoresForSportKey(sportKey: string): Promise<PickEmScoreFetch> {
   const provider = BDL_PATH_BY_SPORT_KEY[sportKey];
   if (!provider) {
-    return new Map();
+    return { events: new Map(), complete: false };
   }
 
   if (sportKey === "mma_ufc") {
@@ -1189,7 +1177,7 @@ async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, Bal
       }
     }
     if (completedEventIds.length === 0) {
-      return new Map();
+      return { events: new Map(), complete: false };
     }
 
     const query = new URLSearchParams({ per_page: "100" });
@@ -1231,7 +1219,8 @@ async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, Bal
         ],
       });
     }
-    return byId;
+    // MMA reads by year, not by day: never treated as complete.
+    return { events: byId, complete: false };
   }
 
   const now = Date.now();
@@ -1242,12 +1231,21 @@ async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, Bal
     "100"
   );
 
+  const truncation = { truncated: false };
+  const failure = { failed: false };
   const [batchResults, teamNameMap] = await Promise.all([
     Promise.allSettled(
-      queryVariants.map((query) => fetchBallDontLieList<BallDontLieGame>(provider.path, query, 2))
+      queryVariants.map((query) =>
+        fetchBallDontLieList<BallDontLieGame>(provider.path, query, 2, truncation, failure)
+      )
     ),
     fetchTeamNameMapForSportKey(sportKey),
   ]);
+  const complete =
+    queryVariants.length > 0 &&
+    !truncation.truncated &&
+    !failure.failed &&
+    batchResults.every((result) => result.status === "fulfilled");
 
   const payload: BallDontLieGame[] = [];
   const seenKeys = new Set<string>();
@@ -1322,10 +1320,12 @@ async function fetchScoresForSportKey(sportKey: string): Promise<Map<string, Bal
         { name: homeTeam, score: homeScore },
         { name: awayTeam, score: awayScore },
       ],
+      status: String(eventRecord.status ?? "").trim() || null,
+      status_state: String(eventRecord.status_state ?? "").trim() || null,
     });
   }
 
-  return byId;
+  return { events: byId, complete };
 }
 
 async function probePathForDebug(sportKey: string, path: string, query: URLSearchParams): Promise<PickEmDebugProbe | null> {
@@ -1393,187 +1393,43 @@ function resolveWinner(homeTeam: string, awayTeam: string, homeScore: number | n
   return "tie";
 }
 
-function getPickEmRoundMultiplier(params: {
-  totalPicks: number;
-  pendingPicks: number;
-  correctPicks: number;
-  multiplierEligible: boolean;
-}): 1 | 2 | 3 {
-  if (!params.multiplierEligible) {
-    return 1;
-  }
-  if (params.pendingPicks > 0) {
-    return 1;
-  }
-  if (params.totalPicks !== PICKEM_DAILY_PICK_LIMIT) {
-    return 1;
-  }
-  if (params.correctPicks >= PICKEM_DAILY_PICK_LIMIT) {
-    return 3;
-  }
-  if (params.correctPicks >= 7) {
-    return 2;
-  }
-  return 1;
-}
-
-function getUtcDateRangeForIsoDay(startsAtIso: string): { dayStartIso: string; dayEndIso: string } | null {
-  const startsAtMs = Date.parse(startsAtIso);
-  if (!Number.isFinite(startsAtMs)) {
-    return null;
-  }
-  const date = new Date(startsAtMs);
-  const dayStartMs = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0);
-  const dayEndMs = dayStartMs + 24 * 60 * 60 * 1000 - 1;
-  return {
-    dayStartIso: new Date(dayStartMs).toISOString(),
-    dayEndIso: new Date(dayEndMs).toISOString(),
-  };
-}
-
-async function recomputePickEmRoundRewards(params: {
-  userId: string;
-  venueId: string;
-  startsAtIso: string;
-}): Promise<void> {
-  await getPickEmPointsBankSummary({
-    userId: params.userId,
-    venueId: params.venueId,
-    localDate: params.startsAtIso.slice(0, 10),
-    tzOffsetMinutes: 0,
-  });
-}
-
-function computePickEmDailySummary(
-  rows: Array<PickEmPickRow | { status: PickEmPickStatus; reward_claimed_at?: string | null }>
-): Omit<PickEmPointsBankSummary, "localDate" | "multiplierEligible" | "collectedPointsToday"> {
-  let settledPicks = 0;
-  let pendingPicks = 0;
-  let correctPicks = 0;
-  let incorrectPicks = 0;
-  let unclaimedCorrectPicks = 0;
-  for (const row of rows) {
-    if (row.status === "pending") {
-      pendingPicks += 1;
-      continue;
-    }
-    settledPicks += 1;
-    if (row.status === "won") {
-      correctPicks += 1;
-      if (!row.reward_claimed_at) {
-        unclaimedCorrectPicks += 1;
-      }
-      continue;
-    }
-    if (row.status === "lost") {
-      incorrectPicks += 1;
-    }
-  }
-  return {
-    totalPicks: rows.length,
-    settledPicks,
-    pendingPicks,
-    correctPicks,
-    incorrectPicks,
-    unclaimedCorrectPicks,
-    pendingPoints: unclaimedCorrectPicks * PICKEM_REWARD_POINTS,
-    multiplierIfSettledNow: 1,
-  };
-}
-
-export async function getPickEmPointsBankSummary(params: {
+export async function getPickEmTodaySummary(params: {
   userId: string;
   venueId: string;
   localDate: string;
   tzOffsetMinutes?: number | string;
-}): Promise<PickEmPointsBankSummary> {
-  const fallback: PickEmPointsBankSummary = {
-    localDate: params.localDate,
-    totalPicks: 0,
-    settledPicks: 0,
-    pendingPicks: 0,
-    correctPicks: 0,
-    incorrectPicks: 0,
-    unclaimedCorrectPicks: 0,
-    pendingPoints: 0,
-    multiplierEligible: true,
-    multiplierIfSettledNow: 1,
-    collectedPointsToday: 0,
-  };
-  if (!supabaseAdmin) {
-    return fallback;
-  }
-  const userId = String(params.userId ?? "").trim();
-  const venueId = String(params.venueId ?? "").trim();
-  if (!userId || !venueId) {
-    return fallback;
-  }
-
+}): Promise<PickEmTodaySummary> {
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
   const range = buildUtcRangeForLocalDay(params.localDate, tzOffsetMinutes);
-  const localDate = range.date;
-
-  const { data: picks, error } = await supabaseAdmin
-    .from("pickem_picks")
-    .select("status, reward_claimed_at, reward_points")
-    .eq("user_id", userId)
-    .eq("venue_id", venueId)
-    .gte("starts_at", range.fromIso)
-    .lte("starts_at", range.toIso);
-  if (error || !picks) {
-    return { ...fallback, localDate };
+  const empty: PickEmTodaySummary = { localDate: range.date, picks: 0, pending: 0, correct: 0, points: 0 };
+  const userId = String(params.userId ?? "").trim();
+  const venueId = String(params.venueId ?? "").trim();
+  if (!supabaseAdmin || !userId || !venueId) {
+    return empty;
   }
 
-  const computed = computePickEmDailySummary(
-    picks as Array<{ status: PickEmPickStatus; reward_claimed_at?: string | null }>
-  );
-
-  const { data: existing } = await supabaseAdmin
-    .from("pickem_daily_snapshots")
-    .select("multiplier_eligible, collected_points")
+  const { data, error } = await supabaseAdmin
+    .from("pickem_picks")
+    .select("status, reward_points")
     .eq("user_id", userId)
     .eq("venue_id", venueId)
-    .eq("local_date", localDate)
-    .maybeSingle<{ multiplier_eligible: boolean | null; collected_points: number | null }>();
+    .neq("sport_slug", "nfl")
+    .gte("starts_at", range.fromIso)
+    .lte("starts_at", range.toIso);
+  if (error || !data) {
+    return empty;
+  }
 
-  const multiplierEligible = existing?.multiplier_eligible ?? true;
-  const collectedPointsToday = Math.max(0, Number(existing?.collected_points ?? 0));
-  const multiplierIfSettledNow = getPickEmRoundMultiplier({
-    totalPicks: computed.totalPicks,
-    pendingPicks: computed.pendingPicks,
-    correctPicks: computed.correctPicks,
-    multiplierEligible,
-  });
-
-  const snapshotRow = {
-    user_id: userId,
-    venue_id: venueId,
-    local_date: localDate,
-    total_picks: computed.totalPicks,
-    settled_picks: computed.settledPicks,
-    pending_picks: computed.pendingPicks,
-    correct_picks: computed.correctPicks,
-    incorrect_picks: computed.incorrectPicks,
-    unclaimed_correct_picks: computed.unclaimedCorrectPicks,
-    pending_points: computed.pendingPoints,
-    multiplier_eligible: multiplierEligible,
-    multiplier_if_settled_now: multiplierIfSettledNow,
-    collected_points: collectedPointsToday,
-    collected_at: null as string | null,
-    updated_at: new Date().toISOString(),
-  };
-
-  await supabaseAdmin
-    .from("pickem_daily_snapshots")
-    .upsert(snapshotRow, { onConflict: "user_id,venue_id,local_date" });
-
-  return {
-    localDate,
-    ...computed,
-    multiplierEligible,
-    multiplierIfSettledNow,
-    collectedPointsToday,
-  };
+  const summary = { ...empty };
+  for (const row of data as Array<{ status: PickEmPickStatus; reward_points: number | null }>) {
+    summary.picks += 1;
+    if (row.status === "pending") summary.pending += 1;
+    if (row.status === "won") {
+      summary.correct += 1;
+      summary.points += Math.max(0, Number(row.reward_points ?? PICKEM_REWARD_POINTS));
+    }
+  }
+  return summary;
 }
 
 type PickEmWinGroup = {
@@ -1679,7 +1535,7 @@ function resolveSpreadPickEmSettlement(params: {
   awayScore: number;
   providerWinnerTeamId: string;
   providerWinnerTeamName: string;
-  line: NFLPickEmGameLine;
+  line: Pick<NFLPickEmGameLine, "homeSpread" | "awaySpread">;
 }): PickEmSettlementResult {
   const { row, scoreEvent, homeScore, awayScore, providerWinnerTeamId, providerWinnerTeamName, line } = params;
   const winningTeamId =
@@ -1817,6 +1673,56 @@ export function listRegularPickEmSports(): PickEmSport[] {
   return listPickEmSports().filter((sport) => sport.slug !== "nfl");
 }
 
+/** A provider game as the Pick 'Em Prize tiebreaker needs it (lib/pickemPrizeTiebreaker.ts). */
+export type PickEmProviderGame = {
+  id: string;
+  sportKey: string;
+  homeTeam: string;
+  awayTeam: string;
+  startsAt: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  isFinal: boolean;
+};
+
+/**
+ * Every game the provider lists for these leagues starting in [fromIso, toIso), with the same ids
+ * and the same FBS filter the games list uses. A failed provider request reads as no games (the
+ * provider client swallows errors), so a caller must never treat an empty list as proof of anything.
+ */
+export async function listPickEmProviderGames(
+  sportKeys: readonly string[],
+  fromIso: string,
+  toIso: string,
+): Promise<PickEmProviderGame[]> {
+  const fromMs = Date.parse(fromIso);
+  const toMs = Date.parse(toIso);
+  const settled = await Promise.allSettled(
+    sportKeys.map((sportKey) =>
+      fetchBallDontLieEventsForSportKey(sportKey, fromIso, toIso, getLeagueLabelForSportKey(sportKey)),
+    ),
+  );
+  const games: PickEmProviderGame[] = [];
+  for (const result of settled) {
+    if (result.status !== "fulfilled") continue;
+    for (const event of result.value) {
+      const startsMs = Date.parse(event.startsAt);
+      if (!Number.isFinite(startsMs) || startsMs < fromMs || startsMs >= toMs) continue;
+      games.push({
+        id: event.id,
+        sportKey: event.sportKey,
+        homeTeam: event.homeTeam,
+        awayTeam: event.awayTeam,
+        startsAt: event.startsAt,
+        homeScore: event.homeScore,
+        awayScore: event.awayScore,
+        isFinal: event.isCompleted,
+      });
+    }
+  }
+  return games;
+}
+
 export async function listPickEmGames(params: {
   sportSlug: string;
   date?: string;
@@ -1824,11 +1730,17 @@ export async function listPickEmGames(params: {
   tzOffsetMinutes?: number | string;
   userId?: string;
   venueId?: string;
+  /** The pick check reads its one line itself; it never needs the list's lines. */
+  skipLines?: boolean;
 }): Promise<{
   sport: PickEmSport;
   date: string;
   games: PickEmGame[];
-  pointsBank?: PickEmPointsBankSummary;
+  today?: PickEmTodaySummary;
+  /** College Football only: this venue's rule, and true when lines may be missing (provider/read failure). */
+  collegeScoring?: { mode: NFLPickEmScoringMode; linesUnavailable: boolean };
+  /** The venue's active Pick 'Em Prizes that cover these games (Phase 6); empty when there are none. */
+  prizes?: PickEmGamePrize[];
   weekOptions?: Array<{ label: string; value: string }>;
   selectedWeekStartDate?: string;
   debug?: { probes: PickEmDebugProbe[] };
@@ -1992,6 +1904,36 @@ export async function listPickEmGames(params: {
     return +new Date(a.startsAt) - +new Date(b.startsAt);
   });
 
+  // The college lines, the prize lines and today's summary are independent, so they run together. Lines
+  // write scoringMode / homeSpread / awaySpread / lineComingSoon on each game; prizes read sportSlug,
+  // sportKey, startsAt and userPickTeam and write only pickLimitReached / pickLimitMessage — no field is
+  // shared. The pick check (skipLines) never needs lines or prizes, and NFL Pick 'Em has its own prize.
+  const wantsLines = sport.slug === "ncaaf" && !params.skipLines;
+  const wantsPrizes = !params.skipLines && sport.slug !== "nfl";
+  const [collegeScoring, prizes, today] = await Promise.all([
+    wantsLines
+      ? applyCollegeFootballLines({
+          games,
+          eventsById,
+          picksByGameId,
+          venueId: params.venueId,
+          fromIso,
+          toIso,
+        })
+      : Promise.resolve(undefined),
+    wantsPrizes
+      ? loadPickEmGamePrizes({ games, venueId: params.venueId, userId: params.userId })
+      : Promise.resolve([] as PickEmGamePrize[]),
+    params.userId && params.venueId
+      ? getPickEmTodaySummary({
+          userId: params.userId.trim(),
+          venueId: params.venueId.trim(),
+          localDate: date,
+          tzOffsetMinutes,
+        }).catch(() => undefined)
+      : Promise.resolve(undefined),
+  ]);
+
   let debug: { probes: PickEmDebugProbe[] } | undefined;
   if (games.length === 0) {
     const probes: PickEmDebugProbe[] = [];
@@ -2008,16 +1950,6 @@ export async function listPickEmGames(params: {
     debug = { probes };
   }
 
-  let pointsBank: PickEmPointsBankSummary | undefined;
-  if (params.userId && params.venueId) {
-    pointsBank = await getPickEmPointsBankSummary({
-      userId: params.userId.trim(),
-      venueId: params.venueId.trim(),
-      localDate: date,
-      tzOffsetMinutes,
-    }).catch(() => undefined);
-  }
-
   return {
     sport: {
       slug: sport.slug,
@@ -2028,11 +1960,97 @@ export async function listPickEmGames(params: {
     },
     date,
     games,
-    pointsBank,
+    today,
     weekOptions,
     selectedWeekStartDate,
+    collegeScoring,
+    prizes,
     debug,
   };
+}
+
+const COLLEGE_RULE_DISPLAY_CACHE_TTL_MS = 30_000;
+const collegeRuleDisplayCache = new Map<string, { value: Promise<NFLPickEmScoringMode>; expiresAtMs: number }>();
+
+/** Test hook: forget the cached display rules. */
+export function clearCollegeScoringModeDisplayCache(): void {
+  collegeRuleDisplayCache.clear();
+}
+
+/**
+ * The venue's college rule, for DISPLAY only; a failed read shows the default (spread) rather than failing the
+ * list. Cached 30 s per venue per instance. A failed read is not cached. `submitPickEmPick` reads fresh: that read
+ * is the stamp of record for the pick.
+ */
+async function resolveCollegeScoringModeForDisplay(venueId: string | undefined): Promise<NFLPickEmScoringMode> {
+  const normalized = String(venueId ?? "").trim();
+  if (!normalized) return DEFAULT_CFB_PICKEM_SCORING_MODE;
+  const nowMs = Date.now();
+  const cached = collegeRuleDisplayCache.get(normalized);
+  if (cached && cached.expiresAtMs > nowMs) return cached.value;
+  for (const [key, entry] of collegeRuleDisplayCache) if (entry.expiresAtMs <= nowMs) collegeRuleDisplayCache.delete(key);
+  const value = getVenueCollegeFootballPickEmScoringMode(normalized);
+  collegeRuleDisplayCache.set(normalized, { value, expiresAtMs: nowMs + COLLEGE_RULE_DISPLAY_CACHE_TTL_MS });
+  try {
+    return await value;
+  } catch (error) {
+    collegeRuleDisplayCache.delete(normalized);
+    console.warn(`[Pick 'Em] Could not read the college rule for venue ${normalized}; showing the default.`, error);
+    return DEFAULT_CFB_PICKEM_SCORING_MODE;
+  }
+}
+
+/**
+ * College Football games, in place: each gets the rule it is played by (the player's own pick's
+ * stamped rule once picked, else the venue's), and in spread mode its line, or "Line coming soon"
+ * (can't be picked) while a not-yet-started game has none. Lines are refreshed only in spread mode.
+ */
+async function applyCollegeFootballLines(params: {
+  games: PickEmGame[];
+  eventsById: Map<string, NormalizedBallDontLieEvent>;
+  picksByGameId: Map<string, PickEmPickRow>;
+  venueId: string | undefined;
+  fromIso: string;
+  toIso: string;
+}): Promise<{ mode: NFLPickEmScoringMode; linesUnavailable: boolean }> {
+  const mode = await resolveCollegeScoringModeForDisplay(params.venueId);
+  const pickModeOf = (game: PickEmGame): NFLPickEmScoringMode => {
+    const pick = params.picksByGameId.get(game.id);
+    return pick?.scoring_mode ?? mode;
+  };
+  const needsLines = params.games.some((game) => pickModeOf(game) === "spread");
+
+  let lines = new Map<string, PickEmGameLine>();
+  let linesUnavailable = false;
+  if (needsLines) {
+    try {
+      const result = await loadPickEmGameLines({
+        sportKey: COLLEGE_FOOTBALL_SPORT_KEY,
+        games: Array.from(params.eventsById.values()).filter((event) => event.sportKey === COLLEGE_FOOTBALL_SPORT_KEY),
+        fromIso: params.fromIso,
+        toIso: params.toIso,
+      });
+      lines = result.lines;
+      linesUnavailable = result.refreshFailed;
+    } catch (error) {
+      // The read itself failed (e.g. the table is not there yet): games still show, none can be
+      // picked against a spread until a line is readable.
+      console.warn("[Pick 'Em] Could not read college spread lines; showing games without lines.", error);
+      linesUnavailable = true;
+    }
+  }
+
+  for (const game of params.games) {
+    const gameMode = pickModeOf(game);
+    game.scoringMode = gameMode;
+    if (gameMode !== "spread") continue;
+    const line = lines.get(game.id);
+    game.homeSpread = line?.homeSpread ?? null;
+    game.awaySpread = line?.awaySpread ?? null;
+    game.lineComingSoon = !line && !game.isLocked;
+  }
+
+  return { mode, linesUnavailable };
 }
 
 export async function submitPickEmPick(params: {
@@ -2072,6 +2090,7 @@ export async function submitPickEmPick(params: {
     weekStartDate: params.weekStartDate,
     tzOffsetMinutes,
     userId,
+    skipLines: true,
   });
 
   const game = gameList.games.find((entry) => entry.id === gameId);
@@ -2121,7 +2140,20 @@ export async function submitPickEmPick(params: {
     if (existing.status !== "pending") {
       throw new Error("This pick can no longer be modified.");
     }
+  }
 
+  // College Football: the venue's rule when the pick is first made is stamped on it and decides
+  // its grade (plan §4); switching sides keeps that rule. A spread pick needs a saved line.
+  const scoringMode = await resolvePickScoringMode({ game, venueId, existing });
+
+  // A bar's "X out of N" Pick 'Em Prize gives each player N picks in its games (plan D5). Only a new
+  // pick can use one up: switching sides on an existing pick never counts.
+  if (!existing) {
+    const limit = await checkPickEmPrizePickLimit({ userId, venueId, game });
+    if (!limit.ok) throw new Error(limit.message);
+  }
+
+  if (existing) {
     const { data, error } = await supabaseAdmin
       .from("pickem_picks")
       .update({
@@ -2131,6 +2163,7 @@ export async function submitPickEmPick(params: {
         league: game.league,
         sport_key: game.sportKey,
         selected_team_id: selectedTeamId,
+        ...(scoringMode ? { scoring_mode: scoringMode } : {}),
       })
       .eq("id", existing.id)
       .select(PICKEM_PICK_SELECT)
@@ -2141,27 +2174,6 @@ export async function submitPickEmPick(params: {
     }
 
     return mapPickRow(data);
-  }
-
-  const localGameDate = toLocalDateKey(game.startsAt, tzOffsetMinutes);
-  const dailyRange = buildUtcRangeForLocalDay(localGameDate || undefined, tzOffsetMinutes);
-  const { count: existingCount, error: countError } = await supabaseAdmin
-    .from("pickem_picks")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("venue_id", venueId)
-    .gte("starts_at", dailyRange.fromIso)
-    .lte("starts_at", dailyRange.toIso);
-
-  if (countError) {
-    if (isMissingPickEmTablesError(countError)) {
-      throw new Error(PICKEM_TABLES_MISSING_ERROR);
-    }
-    throw new Error(countError.message ?? "Failed to validate daily Pick 'Em limit.");
-  }
-
-  if ((existingCount ?? 0) >= PICKEM_DAILY_PICK_LIMIT) {
-    throw new Error(`Daily pick limit reached (${PICKEM_DAILY_PICK_LIMIT}).`);
   }
 
   const { data, error } = await supabaseAdmin
@@ -2184,6 +2196,7 @@ export async function submitPickEmPick(params: {
       selected_side: selectedSide,
       status: "pending",
       reward_points: PICKEM_REWARD_POINTS,
+      ...(scoringMode ? { scoring_mode: scoringMode } : {}),
     })
     .select(PICKEM_PICK_SELECT)
     .single<PickEmPickRow>();
@@ -2199,6 +2212,42 @@ export async function submitPickEmPick(params: {
   }
 
   return mapPickRow(data);
+}
+
+/**
+ * The rule a college pick is stamped with (null for every other sport). An existing pick keeps its
+ * stamp. A new one takes the venue's rule; if that can't be read the pick is refused rather than
+ * stamped with a guess. In spread mode the game must already have a saved line.
+ */
+async function resolvePickScoringMode(params: {
+  game: PickEmGame;
+  venueId: string;
+  existing: PickEmPickRow | null;
+}): Promise<NFLPickEmScoringMode | null> {
+  if (!isSpreadLineSportKey(params.game.sportKey)) return null;
+
+  let mode = params.existing?.scoring_mode ?? null;
+  if (!mode) {
+    try {
+      mode = await getVenueCollegeFootballPickEmScoringMode(params.venueId);
+    } catch (error) {
+      console.warn(`[Pick 'Em] Could not read the college rule for venue ${params.venueId}; refusing the pick.`, error);
+      throw new Error("We couldn't load this bar's Pick 'Em rules. Please try again.");
+    }
+  }
+
+  if (mode === "spread") {
+    let line: PickEmGameLine | null = null;
+    try {
+      line = await readPickEmGameLine(params.game.sportKey, params.game.id);
+    } catch (error) {
+      console.warn(`[Pick 'Em] Could not read the line for game ${params.game.id}.`, error);
+    }
+    if (!line) {
+      throw new Error(COLLEGE_FOOTBALL_SPREAD_COPY.noLineYet);
+    }
+  }
+  return mode;
 }
 
 export async function clearPickEmPick(params: {
@@ -2303,6 +2352,33 @@ export async function listUserPickEmPicks(params: {
   return (data ?? []).map((row) => mapPickRow(row as PickEmPickRow));
 }
 
+/**
+ * A pending pick whose game started this long ago can never be graded: the score fetch only looks
+ * 7 days back (`fetchScoresForSportKey`). It is cancelled instead (Phase 7.4, F4), or such picks
+ * pile up at the head of the oldest-first read and, past the page cap, nobody is graded or paid.
+ */
+export const PICKEM_UNFINDABLE_PENDING_MS = 8 * 24 * 60 * 60 * 1000;
+
+/** Rows per page of the pending read. */
+export const PICKEM_SETTLE_PAGE_SIZE = 500;
+
+/**
+ * Most pages of started pending picks one settlement reads (Phase 7.5.2, F14): picks that may
+ * legitimately wait up to 48 h (no locked line, "post" but not final) sit at the head of the
+ * oldest-first read, so one page alone could hide every later finished game. A normal run is one read.
+ */
+export const PICKEM_SETTLE_PAGE_CAP = 6;
+
+/**
+ * Grade pending picks whose games have started, then pay every correct pick its 10 points
+ * (payPickEmPoints, lib/pickemPoints.ts).
+ *
+ * Who pays (Phase 7.5.2, F15): a global call (the every-minute cron and the balldontlie webhook,
+ * no `userId`) always pays, even when it graded nothing, so a pick whose payment failed or was cut
+ * off by the batch cap is retried within a minute. A player's own call (the games and picks
+ * screens, `userId` set) pays only when it graded a win itself — otherwise every screen load and
+ * every 60-second live poll would run a write transaction for nothing; `payout` is then null.
+ */
 export async function settlePendingPickEmPicks(params: { userId?: string } = {}): Promise<{
   pendingScanned: number;
   settledCount: number;
@@ -2310,6 +2386,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   lost: number;
   push: number;
   scoringModeUnresolvedSkipped: number;
+  payout: PickEmPayoutReport | null;
 }> {
   if (!supabaseAdmin) {
     return {
@@ -2319,33 +2396,94 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
       lost: 0,
       push: 0,
       scoringModeUnresolvedSkipped: 0,
+      payout: null,
     };
   }
 
+  const admin = supabaseAdmin;
   const nowIso = new Date().toISOString();
-
-  let query = supabaseAdmin
-    .from("pickem_picks")
-    .select(PICKEM_PICK_SELECT)
-    .eq("status", "pending")
-    .lte("starts_at", nowIso)
-    .order("starts_at", { ascending: true })
-    .limit(500);
-
   const userId = String(params.userId ?? "").trim();
-  if (userId) {
-    query = query.eq("user_id", userId);
-  }
 
-  const { data, error } = await query;
-  if (error) {
-    if (isMissingPickEmTablesError(error)) {
-      throw new Error(PICKEM_TABLES_MISSING_ERROR);
+  // Keyset pages ordered by (starts_at, id): `id` breaks ties, so a game with more picks than a
+  // page is still read once each, never skipped or repeated.
+  const readPendingPage = async (after: { startsAt: string; id: string } | null): Promise<PickEmPickRow[]> => {
+    let query = admin
+      .from("pickem_picks")
+      .select(PICKEM_PICK_SELECT)
+      .eq("status", "pending")
+      .lte("starts_at", nowIso)
+      .order("starts_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(PICKEM_SETTLE_PAGE_SIZE);
+    if (userId) {
+      query = query.eq("user_id", userId);
     }
-    throw new Error(error.message ?? "Failed to load pending Pick 'Em picks.");
+    if (after) {
+      query = query.or(
+        `starts_at.gt."${after.startsAt}",and(starts_at.eq."${after.startsAt}",id.gt."${after.id}")`
+      );
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      if (isMissingPickEmTablesError(error)) {
+        throw new Error(PICKEM_TABLES_MISSING_ERROR);
+      }
+      throw new Error(error.message ?? "Failed to load pending Pick 'Em picks.");
+    }
+    return (data ?? []) as PickEmPickRow[];
+  };
+
+  let pending = await readPendingPage(null);
+
+  // The read is oldest first, so only when its first row is past the score window is there anything
+  // to cancel: a normal run pays no extra request. One update cancels them all, then read again.
+  // Only the first page is checked: a stale pick always sorts ahead of every fresh one.
+  const unfindableCutoffMs = Date.parse(nowIso) - PICKEM_UNFINDABLE_PENDING_MS;
+  const oldestStartsAtMs = pending.length > 0 ? Date.parse(pending[0].starts_at) : Number.NaN;
+  if (Number.isFinite(oldestStartsAtMs) && oldestStartsAtMs < unfindableCutoffMs) {
+    let cancelQuery = admin
+      .from("pickem_picks")
+      .update({
+        status: "canceled",
+        winning_team_id: null,
+        resolved_at: nowIso,
+        reward_points: PICKEM_REWARD_POINTS,
+      })
+      .eq("status", "pending")
+      .lt("starts_at", new Date(unfindableCutoffMs).toISOString());
+    if (userId) {
+      cancelQuery = cancelQuery.eq("user_id", userId);
+    }
+    const { data: canceledRows, error: cancelError } = await cancelQuery.select("id, starts_at");
+    if (cancelError) {
+      console.error("[Pick 'Em] stale-pending-cancel-failed", cancelError.message ?? cancelError);
+    } else {
+      const canceled = (canceledRows ?? []) as Array<{ id: string; starts_at: string }>;
+      const oldest = canceled.reduce<string | null>(
+        (min, row) => (min === null || Date.parse(row.starts_at) < Date.parse(min) ? row.starts_at : min),
+        null
+      );
+      console.warn(
+        `[Pick 'Em] stale-pending-canceled count=${canceled.length} oldest=${oldest ?? "none"} (game started over 8 days ago; outside the score window)`
+      );
+      pending = await readPendingPage(null);
+    }
   }
 
-  const pending = (data ?? []) as PickEmPickRow[];
+  // Collect every page first, so each sport's scores are still fetched once per run.
+  let lastPage = pending;
+  let pagesRead = 1;
+  while (lastPage.length === PICKEM_SETTLE_PAGE_SIZE && pagesRead < PICKEM_SETTLE_PAGE_CAP) {
+    const last = lastPage[lastPage.length - 1];
+    lastPage = await readPendingPage({ startsAt: last.starts_at, id: last.id });
+    pagesRead += 1;
+    pending = pending.concat(lastPage);
+  }
+  if (lastPage.length === PICKEM_SETTLE_PAGE_SIZE) {
+    console.warn(`[Pick 'Em] settle-page-cap scanned=${pending.length} oldest=${pending[0]?.starts_at ?? "none"}`);
+  }
+
   if (pending.length === 0) {
     return {
       pendingScanned: 0,
@@ -2354,11 +2492,13 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
       lost: 0,
       push: 0,
       scoringModeUnresolvedSkipped: 0,
+      // A player's own call has nothing to pay; a global one still pays (retries, F15).
+      payout: userId ? null : await payPickEmPoints({ userId }),
     };
   }
 
   const uniqueSportKeys = Array.from(new Set(pending.map((row) => row.sport_key).filter(Boolean)));
-  const scoresBySportKey = new Map<string, Map<string, BallDontLieScoreEvent>>();
+  const scoresBySportKey = new Map<string, PickEmScoreFetch>();
 
   const scoresSettled = await Promise.allSettled(uniqueSportKeys.map((sportKey) => fetchScoresForSportKey(sportKey)));
   for (let i = 0; i < scoresSettled.length; i += 1) {
@@ -2394,6 +2534,22 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     return nflLineCache.get(gameId)!;
   };
 
+  // College spread picks: lock their lines at kickoff (one call; never fetches or creates a line).
+  // A failed lock read leaves those picks waiting; it must never run down the 48-hour cancel.
+  const collegeSpreadGameIds = pending
+    .filter((row) => row.sport_key === COLLEGE_FOOTBALL_SPORT_KEY && row.scoring_mode === "spread")
+    .map((row) => row.game_id);
+  let collegeLines = new Map<string, PickEmGameLine>();
+  let collegeLinesReadFailed = false;
+  if (collegeSpreadGameIds.length > 0) {
+    try {
+      collegeLines = await lockPickEmGameLinesForSettlement(COLLEGE_FOOTBALL_SPORT_KEY, collegeSpreadGameIds);
+    } catch (error) {
+      collegeLinesReadFailed = true;
+      console.warn("[Pick 'Em] Could not lock college spread lines; leaving college spread picks pending this sweep.", error);
+    }
+  }
+
   let settledCount = 0;
   let won = 0;
   let lost = 0;
@@ -2404,11 +2560,68 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   const spreadStallWarned = new Set<string>();
   // One warning per venue whose scoring-mode read failed, not per pick at that venue.
   const scoringModeUnresolvedWarned = new Set<string>();
+  // One warning per college game the provider calls "post" that isn't a final we grade.
+  const collegeNotFinalWarned = new Set<string>();
   const staleFinalizeMs = 4 * 60 * 60 * 1000;
   const nowMs = Date.now();
 
+  const recordSettlement = async (
+    row: PickEmPickRow,
+    settlement: PickEmSettlementResult,
+    homeScore: number | null,
+    awayScore: number | null
+  ): Promise<void> => {
+    const { data: updatedRows, error: updateError } = await admin
+      .from("pickem_picks")
+      .update({
+        status: settlement.status,
+        home_score: homeScore,
+        away_score: awayScore,
+        winning_team_id: settlement.winningTeamId,
+        scoring_mode: settlement.scoringMode,
+        home_spread: settlement.homeSpread,
+        away_spread: settlement.awaySpread,
+        resolved_at: new Date().toISOString(),
+        reward_points: PICKEM_REWARD_POINTS,
+      })
+      .eq("id", row.id)
+      .eq("status", "pending")
+      .select("id");
+
+    // No row changed: a concurrent run (cron, webhook, player screen) graded this pick first (F23).
+    if (updateError || !updatedRows || updatedRows.length === 0) {
+      return;
+    }
+
+    if (settlement.status === "won") {
+      won += 1;
+      const localDate = row.starts_at.slice(0, 10);
+      const groupKey = `${row.user_id}:${localDate}:${row.sport_slug}`;
+      const existing = winGroups.get(groupKey);
+      if (existing) {
+        existing.teams.push(row.selected_team);
+        existing.totalPoints += PICKEM_REWARD_POINTS;
+      } else {
+        winGroups.set(groupKey, {
+          userId: row.user_id,
+          teams: [row.selected_team],
+          totalPoints: PICKEM_REWARD_POINTS,
+          localDate,
+          sportSlug: row.sport_slug,
+        });
+      }
+    } else if (settlement.status === "lost") {
+      lost += 1;
+    } else if (settlement.status === "push") {
+      push += 1;
+    }
+
+    settledCount += 1;
+  };
+
   for (const row of pending) {
-    const scoreMap = scoresBySportKey.get(row.sport_key);
+    const scoreFetch = scoresBySportKey.get(row.sport_key);
+    const scoreMap = scoreFetch?.events;
     const providerEventId = extractProviderEventIdFromGameId(row.game_id);
     let scoreEvent = scoreMap?.get(row.game_id);
     if (!scoreEvent && providerEventId) {
@@ -2427,6 +2640,26 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
       }
     }
     if (!scoreEvent) {
+      // A college pick whose game the provider no longer lists still gets its 48-hour cancel, but
+      // only on a complete fetch (an outage reads as "no games"). Other sports: the 8-day cancel above.
+      if (
+        row.sport_key === COLLEGE_FOOTBALL_SPORT_KEY &&
+        collegeFootballMissingGameGate({
+          scoresComplete: scoreFetch?.complete === true,
+          startsAtMs: Date.parse(row.starts_at),
+          nowMs,
+        }) === "cancel"
+      ) {
+        console.warn(
+          `[Pick 'Em] Canceling college pick ${row.id} (game ${row.game_id}): the provider has no such game 48 hours after kickoff.`
+        );
+        await recordSettlement(
+          row,
+          { status: "canceled", winningTeamId: null, scoringMode: row.scoring_mode ?? null, homeSpread: null, awaySpread: null },
+          null,
+          null
+        );
+      }
       continue;
     }
 
@@ -2438,11 +2671,35 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     const isStale = Number.isFinite(startsAtMs) && nowMs - startsAtMs >= staleFinalizeMs;
     const canFinalizeFromScores = homeScore !== null && awayScore !== null && isStale;
     const canFinalizeFromProviderWinner = providerWinnerTeamId.length > 0 || providerWinnerTeamName.length > 0;
-    if (!scoreEvent.completed && !canFinalizeFromScores && !canFinalizeFromProviderWinner) {
+    const collegeGate =
+      row.sport_key === COLLEGE_FOOTBALL_SPORT_KEY
+        ? collegeFootballGradeGate({
+            status: scoreEvent.status ?? null,
+            statusState: scoreEvent.status_state ?? null,
+            homeScore,
+            awayScore,
+            startsAtMs,
+            nowMs,
+          })
+        : null;
+    if (collegeGate === "wait") {
+      // The provider calls it over but it isn't a final we grade (a 0–0 "final", an unknown
+      // status_state): say so once per game, so a feed change can't run picks into the 48-hour cancel unseen.
+      if (String(scoreEvent.status ?? "").trim().toLowerCase() === "post" && !collegeNotFinalWarned.has(row.game_id)) {
+        collegeNotFinalWarned.add(row.game_id);
+        console.warn(
+          `[Pick 'Em] College game ${row.game_id} is "post" but not a gradeable final (status_state ${JSON.stringify(scoreEvent.status_state ?? null)}, score ${homeScore ?? "?"}–${awayScore ?? "?"}); waiting (cancelled 48 h after kickoff).`
+        );
+      }
+      continue;
+    }
+    if (collegeGate === null && !scoreEvent.completed && !canFinalizeFromScores && !canFinalizeFromProviderWinner) {
       continue;
     }
 
     const nflScoringMode = row.sport_slug === "nfl" ? nflScoringModes.get(row.venue_id) ?? null : null;
+    // College picks carry the rule stamped when they were made (null only on rows from before it existed).
+    const collegeScoringMode = row.sport_key === COLLEGE_FOOTBALL_SPORT_KEY ? row.scoring_mode ?? null : null;
     if (row.sport_slug === "nfl" && !nflScoringMode) {
       // The venue's scoring-mode read failed (rejected out of the
       // Promise.allSettled above), not "this venue has no mode" — that read
@@ -2461,7 +2718,46 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     }
 
     let settlement: PickEmSettlementResult;
-    if (nflScoringMode === "spread") {
+    if (collegeGate === "cancel" || collegeGate === "called_off") {
+      console.warn(
+        collegeGate === "called_off"
+          ? `[Pick 'Em] Canceling college pick ${row.id} (game ${row.game_id}): the provider says ${JSON.stringify(scoreEvent.status_state ?? scoreEvent.status ?? null)}.`
+          : `[Pick 'Em] Canceling college pick ${row.id} (game ${row.game_id}): no final 48 hours after kickoff.`
+      );
+      settlement = {
+        status: "canceled",
+        winningTeamId: null,
+        scoringMode: collegeScoringMode,
+        homeSpread: null,
+        awaySpread: null,
+      };
+    } else if (collegeScoringMode === "spread" && homeScore !== null && awayScore !== null) {
+      const line = collegeLines.get(row.game_id) ?? null;
+      const lineGate = collegeLinesReadFailed
+        ? "wait"
+        : collegeFootballSpreadLineGate({ hasLockedLine: line !== null, startsAtMs, nowMs });
+      if (lineGate === "wait") {
+        if (!spreadStallWarned.has(row.game_id)) {
+          spreadStallWarned.add(row.game_id);
+          console.warn(`[Pick 'Em] College spread game ${row.game_id} is final but has no locked line; leaving picks pending.`);
+        }
+        continue;
+      }
+      if (lineGate === "cancel" || !line) {
+        console.warn(`[Pick 'Em] Canceling college spread pick ${row.id} (game ${row.game_id}): no locked line 48 hours after kickoff.`);
+        settlement = { status: "canceled", winningTeamId: null, scoringMode: "spread", homeSpread: null, awaySpread: null };
+      } else {
+        settlement = resolveSpreadPickEmSettlement({
+          row,
+          scoreEvent,
+          homeScore,
+          awayScore,
+          providerWinnerTeamId,
+          providerWinnerTeamName,
+          line,
+        });
+      }
+    } else if (nflScoringMode === "spread") {
       const line = homeScore !== null && awayScore !== null ? await getLockedNFLLine(row.game_id) : null;
       if (homeScore === null || awayScore === null || !line) {
         // A spread pick needs BOTH final scores and the line that was locked at
@@ -2478,9 +2774,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
         //    in progress.
         //
         // Skipping unconditionally (the old behaviour) left the pick `pending`
-        // forever with no error anywhere — and a permanently-pending pick also
-        // blocks the player's daily multiplier for good (claim_pickem_points
-        // clears multiplier_eligible while any pick is pending).
+        // forever with no error anywhere.
         //
         // Policy: keep retrying while the game is fresh, so a transient gap
         // that closes on its own still grades correctly; once past
@@ -2488,8 +2782,8 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
         // status the standard path already writes when it cannot determine a
         // winner. Voiding is honest (we cannot grade against a line we never
         // recorded), symmetric across every player on that game, and awards
-        // nothing either way: reward accrual and the claim RPC both key on
-        // `won` only. Grading it straight-up instead would score a player who
+        // nothing either way: reward accrual and automatic payment
+        // (pay_pickem_points) both key on `won` only. Grading it straight-up instead would score a player who
         // picked against the spread by a rule they never played by.
         const missing = homeScore === null || awayScore === null ? "final scores" : "a locked spread line";
         if (!isStale) {
@@ -2532,57 +2826,16 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
         awayScore,
         providerWinnerTeamId,
         providerWinnerTeamName,
-        scoringMode: nflScoringMode,
+        scoringMode: nflScoringMode ?? collegeScoringMode,
       });
     }
 
-    const { error: updateError } = await supabaseAdmin
-      .from("pickem_picks")
-      .update({
-        status: settlement.status,
-        home_score: homeScore,
-        away_score: awayScore,
-        winning_team_id: settlement.winningTeamId,
-        scoring_mode: settlement.scoringMode,
-        home_spread: settlement.homeSpread,
-        away_spread: settlement.awaySpread,
-        resolved_at: new Date().toISOString(),
-        reward_points: PICKEM_REWARD_POINTS,
-      })
-      .eq("id", row.id)
-      .eq("status", "pending");
-
-    if (updateError) {
-      continue;
-    }
-
-    if (settlement.status === "won") {
-      won += 1;
-      const localDate = row.starts_at.slice(0, 10);
-      const groupKey = `${row.user_id}:${localDate}:${row.sport_slug}`;
-      const existing = winGroups.get(groupKey);
-      if (existing) {
-        existing.teams.push(row.selected_team);
-        existing.totalPoints += PICKEM_REWARD_POINTS;
-      } else {
-        winGroups.set(groupKey, {
-          userId: row.user_id,
-          teams: [row.selected_team],
-          totalPoints: PICKEM_REWARD_POINTS,
-          localDate,
-          sportSlug: row.sport_slug,
-        });
-      }
-    } else if (settlement.status === "lost") {
-      lost += 1;
-    } else if (settlement.status === "push") {
-      push += 1;
-    }
-
-    settledCount += 1;
+    await recordSettlement(row, settlement, homeScore, awayScore);
   }
 
   await insertPickEmWinGroupNotifications(winGroups);
+  // A player's own call pays only the win it just graded; a global call always pays (F15).
+  const payout = userId && won === 0 ? null : await payPickEmPoints({ userId });
 
   return {
     pendingScanned: pending.length,
@@ -2591,198 +2844,6 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     lost,
     push,
     scoringModeUnresolvedSkipped,
-  };
-}
-
-export async function claimPickEmPoints(params: {
-  userId: string;
-  venueId: string;
-  localDate: string;
-  tzOffsetMinutes?: number | string;
-}): Promise<{
-  claimed: boolean;
-  pointsAwarded: number;
-  claimedPickCount: number;
-  multiplierApplied: 1 | 2 | 3;
-  multiplierEligible: boolean;
-  totalPicks: number;
-  settledPicks: number;
-  correctPicks: number;
-  pendingPicks: number;
-}> {
-  if (!supabaseAdmin) {
-    throw new Error("Supabase admin client is not configured.");
-  }
-  const admin = supabaseAdmin;
-
-  const userId = String(params.userId ?? "").trim();
-  const venueId = String(params.venueId ?? "").trim();
-  if (!userId || !venueId) {
-    throw new Error("userId and venueId are required.");
-  }
-  const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
-  const range = buildUtcRangeForLocalDay(params.localDate, tzOffsetMinutes);
-
-  const runClaimForRange = async (claimRange: ReturnType<typeof buildUtcRangeForLocalDay>) => {
-    const { data, error } = await admin.rpc("claim_pickem_points", {
-      p_user_id: userId,
-      p_venue_id: venueId,
-      p_local_date: claimRange.date,
-      p_day_start: claimRange.fromIso,
-      p_day_end: claimRange.toIso,
-    });
-    if (error) {
-      throw new Error(error.message ?? "Failed to claim Pick 'Em points.");
-    }
-    const row = Array.isArray(data) ? data[0] : null;
-    if (!row) {
-      throw new Error("No claim result returned.");
-    }
-    return row;
-  };
-
-  let effectiveClaimDate = range.date;
-  let row = await runClaimForRange(range);
-
-  const pointsAwarded = Math.max(0, Number(row.points_awarded ?? 0));
-  const claimedPickCount = Math.max(0, Number(row.claimed_pick_count ?? 0));
-  const multiplierAppliedRaw = Number(row.multiplier_applied ?? 1);
-  const multiplierApplied: 1 | 2 | 3 =
-    multiplierAppliedRaw >= 3 ? 3 : multiplierAppliedRaw >= 2 ? 2 : 1;
-  const totalPicks = Math.max(0, Number(row.total_picks ?? 0));
-  const settledPicks = Math.max(0, Number(row.settled_picks ?? 0));
-  const correctPicks = Math.max(0, Number(row.correct_picks ?? 0));
-  const pendingPicks = Math.max(0, Number(row.pending_picks ?? 0));
-  const multiplierEligible = Boolean(row.multiplier_eligible);
-
-  if (pointsAwarded <= 0 && claimedPickCount <= 0) {
-    const latestUnclaimed = await admin
-      .from("pickem_picks")
-      .select("starts_at")
-      .eq("user_id", userId)
-      .eq("venue_id", venueId)
-      .eq("status", "won")
-      .is("reward_claimed_at", null)
-      .order("starts_at", { ascending: false })
-      .limit(1)
-      .maybeSingle<{ starts_at: string }>();
-
-    const latestStartsAt = latestUnclaimed.data?.starts_at ?? "";
-    const fallbackLocalDate = latestStartsAt ? toLocalDateKey(latestStartsAt, tzOffsetMinutes) : "";
-
-    if (fallbackLocalDate && fallbackLocalDate !== range.date) {
-      const fallbackRange = buildUtcRangeForLocalDay(fallbackLocalDate, tzOffsetMinutes);
-      row = await runClaimForRange(fallbackRange);
-      effectiveClaimDate = fallbackRange.date;
-    }
-  }
-
-  const finalPointsAwarded = Math.max(0, Number(row.points_awarded ?? 0));
-  const finalClaimedPickCount = Math.max(0, Number(row.claimed_pick_count ?? 0));
-  const finalTotalPicks = Math.max(0, Number(row.total_picks ?? 0));
-  const finalSettledPicks = Math.max(0, Number(row.settled_picks ?? 0));
-  const finalCorrectPicks = Math.max(0, Number(row.correct_picks ?? 0));
-  const finalPendingPicks = Math.max(0, Number(row.pending_picks ?? 0));
-
-  const qualifyingMultiplier: 1 | 2 | 3 =
-    finalPendingPicks === 0 && finalTotalPicks === PICKEM_DAILY_PICK_LIMIT
-      ? finalCorrectPicks >= PICKEM_DAILY_PICK_LIMIT
-        ? 3
-        : finalCorrectPicks >= 7
-        ? 2
-        : 1
-      : 1;
-
-  let bonusPoints = 0;
-  if (qualifyingMultiplier > 1) {
-    const { data: snapshot } = await admin
-      .from("pickem_daily_snapshots")
-      .select("collected_points")
-      .eq("user_id", userId)
-      .eq("venue_id", venueId)
-      .eq("local_date", effectiveClaimDate)
-      .maybeSingle<{ collected_points: number | null }>();
-
-    const collectedPoints = Math.max(0, Number(snapshot?.collected_points ?? 0));
-    const targetCollected = finalCorrectPicks * PICKEM_REWARD_POINTS * qualifyingMultiplier;
-    bonusPoints = Math.max(0, targetCollected - collectedPoints);
-
-    if (bonusPoints > 0) {
-      const { data: userRow } = await admin
-        .from("users")
-        .select("points")
-        .eq("id", userId)
-        .maybeSingle<{ points: number | null }>();
-      const currentPoints = Math.max(0, Number(userRow?.points ?? 0));
-      await admin.from("users").update({ points: currentPoints + bonusPoints }).eq("id", userId);
-      await admin
-        .from("pickem_daily_snapshots")
-        .update({
-          collected_points: collectedPoints + bonusPoints,
-          multiplier_if_settled_now: qualifyingMultiplier,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId)
-        .eq("venue_id", venueId)
-        .eq("local_date", effectiveClaimDate);
-    }
-  }
-
-  const totalAwarded = finalPointsAwarded + bonusPoints;
-  const result = {
-    claimed: finalClaimedPickCount > 0 || totalAwarded > 0,
-    pointsAwarded: totalAwarded,
-    claimedPickCount: finalClaimedPickCount,
-    multiplierApplied: qualifyingMultiplier > 1 ? qualifyingMultiplier : multiplierApplied,
-    multiplierEligible,
-    totalPicks: finalTotalPicks,
-    settledPicks: finalSettledPicks,
-    correctPicks: finalCorrectPicks,
-    pendingPicks: finalPendingPicks,
-  };
-
-  if (result.claimed && totalAwarded > 0) {
-    try {
-      await applyChallengeCampaignPoints({
-        userId,
-        venueId,
-        gameType: "pickem",
-        basePoints: totalAwarded,
-        occurredAt: new Date(),
-      });
-    } catch {}
-
-  }
-
-  return result;
-}
-
-export async function claimPickEmReward(params: {
-  userId: string;
-  pickId: string;
-}): Promise<{ claimed: boolean; pointsAwarded: number; status: PickEmPickStatus }> {
-  if (!supabaseAdmin) {
-    throw new Error("Supabase admin client is not configured.");
-  }
-  const pickLookup = await supabaseAdmin
-    .from("pickem_picks")
-    .select("venue_id, starts_at")
-    .eq("id", String(params.pickId ?? "").trim())
-    .eq("user_id", String(params.userId ?? "").trim())
-    .maybeSingle<{ venue_id: string; starts_at: string }>();
-  if (pickLookup.error || !pickLookup.data) {
-    throw new Error(pickLookup.error?.message ?? "Pick not found.");
-  }
-  const localDate = pickLookup.data.starts_at.slice(0, 10);
-  const result = await claimPickEmPoints({
-    userId: params.userId,
-    venueId: pickLookup.data.venue_id,
-    localDate,
-    tzOffsetMinutes: 0,
-  });
-  return {
-    claimed: result.claimed,
-    pointsAwarded: result.pointsAwarded,
-    status: result.claimed ? "won" : "pending",
+    payout,
   };
 }

@@ -15,6 +15,10 @@ import {
 } from "@/lib/adPlacements";
 import { getPredictionMarketById, listResolvedPredictionOutcomes } from "@/lib/polymarket";
 import { listPickEmGames, listPickEmSports, type PickEmSportSlug } from "@/lib/pickem";
+import { COLLEGE_FOOTBALL_SPORT_KEY } from "@/lib/pickemCollegeFootball";
+import { payPickEmPoints, PICKEM_POINTS_PER_CORRECT_PICK } from "@/lib/pickemPoints";
+import { chunkIds } from "@/lib/postgrestIds";
+import { getVenueNFLPickEmScoringMode, type NFLPickEmScoringMode } from "@/lib/venueGameSettings";
 import { buildGeographicHierarchy, type GeographicHierarchy } from "@/lib/geographicHierarchy";
 import type { AdDisplayTrigger, AdPageKey, AdSlot, AdType, Advertisement, TriviaQuestion, Venue } from "@/types";
 
@@ -144,9 +148,11 @@ type PickEmPendingGameRow = {
 
 type PickEmPendingPickRow = {
   id: string;
-  user_id: string;
+  venue_id: string;
+  sport_slug: string;
+  sport_key: string;
   selected_team_id: string | null;
-  reward_points: number;
+  scoring_mode: NFLPickEmScoringMode | null;
 };
 
 type PickEmMatchupRow = {
@@ -3373,10 +3379,34 @@ export async function listAdminPickEmMatchupsByDate(params: {
     .sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt));
 }
 
+export type AdminPickEmSettleResult = {
+  /** Picks this call graded (winners + losers). */
+  affectedPicks: number;
+  winners: number;
+  losers: number;
+  /** Picks scored against the spread: a winning team alone can't grade them, so they wait for the cron. */
+  spreadPicksLeft: number;
+  /** NFL picks at a venue whose scoring rule couldn't be read: left pending, never graded on a guess. */
+  scoringModeUnresolvedLeft: number;
+  picksPaid: number;
+  pointsPaid: number;
+  /** null = payment ran cleanly; otherwise why it didn't. Unpaid wins are paid by the next cron run. */
+  payoutError: string | null;
+};
+
+/**
+ * Grade one game's pending picks from the winning team an admin names, then pay
+ * (Pick 'Em plan Phase 7.5.1, F12). This only grades: the money moves only in the
+ * pay_pickem_points RPC (payPickEmPoints), which stamps reward_claimed_at, so the cron can't
+ * pay the same picks again. Never credit users.points here.
+ *
+ * A spread pick (a college pick stamped `spread`, or an NFL pick at a venue that plays the
+ * spread) needs the score and the locked line, so it is left pending for automatic grading.
+ */
 export async function settleAdminPickEmGame(params: {
   gameId: string;
   winningTeamId: string;
-}): Promise<{ affectedPicks: number; winners: number; losers: number }> {
+}): Promise<AdminPickEmSettleResult> {
   assertAdminConfigured();
 
   const gameId = params.gameId.trim();
@@ -3390,7 +3420,7 @@ export async function settleAdminPickEmGame(params: {
 
   const { data: pendingRows, error } = await supabaseAdmin!
     .from("pickem_picks")
-    .select("id, user_id, selected_team_id, reward_points")
+    .select("id, venue_id, sport_slug, sport_key, selected_team_id, scoring_mode")
     .eq("game_id", gameId)
     .eq("status", "pending");
 
@@ -3399,66 +3429,90 @@ export async function settleAdminPickEmGame(params: {
   }
 
   const picks = (pendingRows ?? []) as PickEmPendingPickRow[];
-  if (picks.length === 0) {
-    return { affectedPicks: 0, winners: 0, losers: 0 };
+
+  // NFL picks are scored by their venue's rule (stamped at settlement, as the cron does).
+  const nflVenueIds = Array.from(
+    new Set(picks.filter((pick) => pick.sport_slug === "nfl").map((pick) => pick.venue_id).filter(Boolean))
+  );
+  const nflScoringModes = new Map<string, NFLPickEmScoringMode>();
+  const nflModeResults = await Promise.allSettled(
+    nflVenueIds.map((venueId) => getVenueNFLPickEmScoringMode(venueId))
+  );
+  nflModeResults.forEach((result, i) => {
+    if (result.status === "fulfilled") nflScoringModes.set(nflVenueIds[i], result.value);
+  });
+
+  // One update per (result, scoring-mode stamp), in id chunks.
+  const groups = new Map<string, { status: "won" | "lost"; scoringMode: NFLPickEmScoringMode | null; ids: string[] }>();
+  let spreadPicksLeft = 0;
+  let scoringModeUnresolvedLeft = 0;
+  for (const pick of picks) {
+    let scoringMode: NFLPickEmScoringMode | null = null;
+    if (pick.sport_slug === "nfl") {
+      const mode = nflScoringModes.get(pick.venue_id);
+      if (!mode) {
+        scoringModeUnresolvedLeft += 1;
+        continue;
+      }
+      if (mode === "spread") {
+        spreadPicksLeft += 1;
+        continue;
+      }
+      scoringMode = mode;
+    } else if (pick.sport_key === COLLEGE_FOOTBALL_SPORT_KEY && pick.scoring_mode === "spread") {
+      spreadPicksLeft += 1;
+      continue;
+    }
+
+    const status = String(pick.selected_team_id ?? "").trim() === winningTeamId ? "won" : "lost";
+    const key = `${status}|${scoringMode ?? ""}`;
+    const group = groups.get(key) ?? { status, scoringMode, ids: [] };
+    group.ids.push(pick.id);
+    groups.set(key, group);
   }
 
   const resolvedAt = new Date().toISOString();
-  const winnerUserDeltas = new Map<string, number>();
   let winners = 0;
   let losers = 0;
+  for (const group of groups.values()) {
+    for (const ids of chunkIds(group.ids)) {
+      const { data: gradedRows, error: updateError } = await supabaseAdmin!
+        .from("pickem_picks")
+        .update({
+          status: group.status,
+          winning_team_id: winningTeamId,
+          resolved_at: resolvedAt,
+          reward_points: PICKEM_POINTS_PER_CORRECT_PICK,
+          ...(group.scoringMode ? { scoring_mode: group.scoringMode } : {}),
+        })
+        .in("id", ids)
+        .eq("status", "pending")
+        .select("id");
 
-  for (const pick of picks) {
-    const isWinner = String(pick.selected_team_id ?? "").trim() === winningTeamId;
-    const status = isWinner ? "won" : "lost";
+      if (updateError) {
+        // Wins graded by an earlier chunk are paid by the next cron run.
+        throw new Error(updateError.message ?? "Failed to settle one or more picks.");
+      }
 
-    const { error: updateError } = await supabaseAdmin!
-      .from("pickem_picks")
-      .update({
-        status,
-        winning_team_id: winningTeamId,
-        resolved_at: resolvedAt,
-      })
-      .eq("id", pick.id)
-      .eq("status", "pending");
-
-    if (updateError) {
-      throw new Error(updateError.message ?? "Failed to settle one or more picks.");
-    }
-
-    if (isWinner) {
-      winners += 1;
-      const current = winnerUserDeltas.get(pick.user_id) ?? 0;
-      winnerUserDeltas.set(pick.user_id, current + Math.max(0, Number(pick.reward_points ?? 0)));
-    } else {
-      losers += 1;
-    }
-  }
-
-  for (const [userId, delta] of winnerUserDeltas.entries()) {
-    const { data: userRow, error: userError } = await supabaseAdmin!
-      .from("users")
-      .select("points")
-      .eq("id", userId)
-      .maybeSingle<{ points: number }>();
-    if (userError) {
-      throw new Error(userError.message ?? "Failed to load user points during settlement.");
-    }
-
-    const nextPoints = Math.max(0, Number(userRow?.points ?? 0)) + delta;
-    const { error: pointsError } = await supabaseAdmin!
-      .from("users")
-      .update({ points: nextPoints })
-      .eq("id", userId);
-    if (pointsError) {
-      throw new Error(pointsError.message ?? "Failed to apply winner points.");
+      // Count only rows this call changed: the cron may have graded some in the meantime.
+      const graded = (gradedRows ?? []).length;
+      if (group.status === "won") winners += graded;
+      else losers += graded;
     }
   }
+
+  // Global, so it also pays any win the cron left unpaid. Never throws.
+  const payout = await payPickEmPoints();
 
   return {
-    affectedPicks: picks.length,
+    affectedPicks: winners + losers,
     winners,
     losers,
+    spreadPicksLeft,
+    scoringModeUnresolvedLeft,
+    picksPaid: payout.picksPaid,
+    pointsPaid: payout.pointsPaid,
+    payoutError: payout.error,
   };
 }
 

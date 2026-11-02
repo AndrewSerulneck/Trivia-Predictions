@@ -72,6 +72,12 @@ export type ChallengeCampaignCard = {
    */
   upcomingStartDate?: string | null;
   /**
+   * A Pick 'Em Prize with nothing more to run: its last period settled (the sweep ended it), it was
+   * archived, or it is long past (getChallengeCampaignSnapshotForUser, plan Phase 7.2). The card says
+   * "Ended" instead of "In Progress".
+   */
+  prizeEnded?: boolean;
+  /**
    * Guest-facing description (when, how often, what to do, what you win),
    * composed server-side by attachRewardDescriptions (lib/rewards.ts). Optional:
    * an old server / new client skew falls back to `rules`.
@@ -290,6 +296,15 @@ function isCompletePrize(card: ChallengeCampaignCard): boolean {
  * prize data (see isCompletePrize) that would otherwise degrade to a vague
  * label like "Gift card".
  */
+/** Cards that are not "Ended" — the "Active · N Prizes" count (a won card is never shown as ended). */
+export function countActivePrizeCards(cards: readonly ChallengeCampaignCard[]): number {
+  return cards.filter((card) => {
+    const isRanked = card.winCondition === "ranked_places";
+    const isWon = Boolean(card.viewerWon) || (!isRanked && (card.quotaRemaining ?? card.winnerQuota ?? 1) <= 0);
+    return isWon || !card.prizeEnded;
+  }).length;
+}
+
 export function rewardHeadline(card: ChallengeCampaignCard): string {
   // A weekly places reward has no single prize: one place pays that prize, several say how many win.
   if (card.winCondition === "ranked_places") {

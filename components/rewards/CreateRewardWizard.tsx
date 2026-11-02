@@ -14,6 +14,11 @@
 // ever won by holding the winning square) and asks "Which moments pay a prize?" as its terms step.
 // Its tile shows only in season (offeredRewardDefinitions). Every Squares branch is gated on its id.
 //
+// The Pick 'Em Prize (docs/pickem-college-football-and-prize-plan.md Phase 5) asks its own Games and
+// When steps before "How to win" (most right / get N right / X out of N with 1-3 tiers), then the
+// usual minimum players (most right only) and one prize per tier. Its rules are in
+// lib/pickemPrizeWizard.ts. Every Pick 'Em branch is gated on its id.
+//
 // March Madness (Phase 9a) is always won by places: it skips "how it's won", asks "Which brackets
 // pay a prize?" and "How many places?" as its terms step, then the usual minimum-players step and one
 // prize per place. Every bracket branch is gated on its id.
@@ -104,7 +109,39 @@ import {
   SCANNABLE_CHOICE_GIFT_CARD,
   SCANNABLE_CHOICE_QUESTION,
 } from "@/lib/posStaffInstructions";
-import type { RewardBracketContext, RewardPrizeInput, RewardSquaresContext } from "@/lib/rewards";
+import type { RewardBracketContext, RewardPickEmContext, RewardPrizeInput, RewardSquaresContext } from "@/lib/rewards";
+import {
+  PICKEM_PRIZE_DEFINITION_ID,
+  PICKEM_PRIZE_MAX_TIERS,
+  PICKEM_PRIZE_MOST_RIGHT_SCORES_MESSAGE,
+  PICKEM_PRIZE_SCOPE_MESSAGE,
+  PICKEM_PRIZE_SPORTS,
+  describePickEmPrizeScope,
+  describePickEmPrizeWindow,
+  formatPickEmPrizeDate,
+  pickemScopeHasScoreGames,
+} from "@/lib/pickemPrizes";
+import {
+  DEFAULT_PICKEM_TERMS_DRAFT,
+  EMPTY_PICKEM_SCOPE_DRAFT,
+  PICKEM_WEEKDAY_CHIPS,
+  PICKEM_WINDOW_KINDS,
+  PICKEM_WIN_KINDS,
+  describePickEmPrizeTermsForPartner,
+  isPickEmScopeLeagueOn,
+  nextPickEmTierDraft,
+  pickemEngineTerms,
+  pickemPickLimitNotice,
+  pickemScopeFromDraft,
+  pickemTermsFromDraft,
+  pickemWindowDraftFor,
+  pickemWindowFromDraft,
+  togglePickEmScopeLeague,
+  togglePickEmScopeSport,
+  type PickEmScopeDraft,
+  type PickEmTermsDraft,
+  type PickEmWindowDraft,
+} from "@/lib/pickemPrizeWizard";
 import {
   BRACKET_PRIZE_DEFINITION_ID,
   BRACKET_PRIZE_KEYS,
@@ -142,6 +179,9 @@ import {
 import type {
   CampaignRecurringType,
   ChallengeGameWinnerSlot,
+  PickEmPrizeScope,
+  PickEmPrizeSportSlug,
+  PickEmPrizeWindow,
   ChallengeWinCondition,
   RewardDiscountKind,
   RewardMenuItem,
@@ -167,6 +207,8 @@ export type RewardCreationContextDTO = {
   squares?: RewardSquaresContext | null;
   /** March Madness prizes only: which brackets have locked (a locked one can't be chosen). */
   bracket?: RewardBracketContext | null;
+  /** Pick 'Em Prizes only: the venue's today and time zone, which every window is judged in. */
+  pickem?: RewardPickEmContext | null;
   /**
    * POS plan Phase 1: the venue has a live POS connection, so a percent-off prize also
    * needs its value at the register (lib/pos/prizeValue.ts). Optional: absent = false.
@@ -194,6 +236,14 @@ export type CreateRewardSubmission = {
   squaresMoments?: SquaresMoment[];
   /** March Madness prizes: the brackets that each pay the place ladder. */
   bracketKeys?: BracketPrizeKey[];
+  /** Pick 'Em Prizes (lib/pickemPrizes.ts): which games, when, and the numbers for how it's won. */
+  pickemScope?: PickEmPrizeScope;
+  pickemWindow?: PickEmPrizeWindow;
+  /** "X out of N": N, and one prize per tier, lowest first. */
+  pickemPickLimit?: number;
+  pickemTiers?: Array<{ correct: number; quantity: number; prize: RewardPrizeInput }>;
+  /** "Most picks right": picks a player must make to be ranked. */
+  pickemMinPicks?: number;
 };
 
 export type CreateRewardWizardVenue = { id: string; name: string };
@@ -264,6 +314,9 @@ const summarizePrize = (prize: RewardPrizeInput): string => {
   const discountLabel = prize.discountKind === "percent" ? `${prize.discountValue}% off` : `$${prize.discountValue.toFixed(2)} off`;
   return `${discountLabel} ${itemLabel}${prize.posDelivery === "gift_card" ? " (Square gift card)" : ""}`;
 };
+
+/** "Tier 1" — how the wizard names one "X out of N" tier, lowest first. */
+const pickemTierLabel = (index: number): string => `Tier ${index + 1}`;
 
 type Styles = {
   card: string;
@@ -413,6 +466,13 @@ export function CreateRewardWizard({
   // Nothing pre-selected: Next stays off until the partner picks at least one open bracket.
   const [bracketKeys, setBracketKeys] = useState<BracketPrizeKey[]>([]);
 
+  // ── The Pick 'Em Prize: which games, when, how it's won (lib/pickemPrizeWizard.ts) ─────────
+  // Nothing chosen to start: each step's Next stays off until it's answered.
+  const [pickemScopeDraft, setPickemScopeDraft] = useState<PickEmScopeDraft>(EMPTY_PICKEM_SCOPE_DRAFT);
+  const [pickemOpenSports, setPickemOpenSports] = useState<string[]>([]);
+  const [pickemWindowDraft, setPickemWindowDraft] = useState<PickEmWindowDraft>(() => pickemWindowDraftFor(""));
+  const [pickemTermsDraft, setPickemTermsDraft] = useState<PickEmTermsDraft>(DEFAULT_PICKEM_TERMS_DRAFT);
+
   // ── The game picker (Phase 5, flag-gated) ───────────────────────────────────
   // Replaces the period-based sentence for game-winner rewards: the partner
   // picks exact scheduled games instead of a count. Selection is a set of
@@ -456,6 +516,27 @@ export function CreateRewardWizard({
   const isSquaresDefinition = definition?.id === SQUARES_PRIZE_DEFINITION_ID;
   // March Madness is always won by places, so it always offers the minimum.
   const isBracketDefinition = definition?.id === BRACKET_PRIZE_DEFINITION_ID;
+
+  // The Pick 'Em Prize's answers, judged in the VENUE's today exactly as createReward judges them.
+  const isPickEmDefinition = definition?.id === PICKEM_PRIZE_DEFINITION_ID;
+  const pickemToday = context?.pickem?.today ?? "";
+  const pickemScope = useMemo(() => pickemScopeFromDraft(pickemScopeDraft), [pickemScopeDraft]);
+  const pickemWindowResult = useMemo(
+    () => pickemWindowFromDraft(pickemWindowDraft, pickemToday),
+    [pickemWindowDraft, pickemToday],
+  );
+  const pickemWindow = pickemWindowResult.ok ? pickemWindowResult.window : null;
+  const pickemTermsResult = useMemo(
+    () =>
+      pickemScope && pickemWindow ? pickemTermsFromDraft(pickemTermsDraft, pickemScope, pickemWindow, pickemToday) : null,
+    [pickemTermsDraft, pickemScope, pickemWindow, pickemToday],
+  );
+  const pickemTerms = pickemTermsResult?.ok ? pickemTermsResult.terms : null;
+  const pickemEngine = useMemo(() => (pickemTerms ? pickemEngineTerms(pickemTerms) : null), [pickemTerms]);
+  const isPickEmTiers = isPickEmDefinition && pickemTermsDraft.winKind === "tiers";
+  const pickemTierCount = Math.min(pickemTermsDraft.tiers.length, PICKEM_PRIZE_MAX_TIERS);
+  const pickemMostRightOffered = pickemScope ? pickemScopeHasScoreGames(pickemScope) : true;
+
   const offersMinPlayers = !isSquaresDefinition && (winCondition === "game_winner" || winCondition === "ranked_places");
   const step =
     controlledStep === undefined
@@ -464,6 +545,9 @@ export function CreateRewardWizard({
           definition: definition !== null,
           context: context !== null,
           offersMinimum: offersMinPlayers,
+          pickem: isPickEmDefinition
+            ? { scope: pickemScope !== null, window: pickemWindow !== null, terms: pickemTerms !== null }
+            : null,
         });
 
   const goTo = (next: RewardWizardStep, change: RewardWizardStepChange) => {
@@ -615,7 +699,7 @@ export function CreateRewardWizard({
   // Game picker (Phase 5): flag-gated replacement for the game-winner sentence.
   // Never for NFL — it has no venue-scheduled games to pin to; its own
   // week-scope picker replaces the sentence instead.
-  const useGamePicker = !isNFLDefinition && isGamePickerEnabled() && isGameWinner;
+  const useGamePicker = !isNFLDefinition && !isPickEmDefinition && isGamePickerEnabled() && isGameWinner;
   const gameSlots = context?.gameSlots ?? EMPTY_GAME_SLOTS;
   const recurringSlots = useMemo(() => gameSlots.filter((slot) => slot.recurring), [gameSlots]);
   const oneOffSlots = useMemo(() => gameSlots.filter((slot) => !slot.recurring), [gameSlots]);
@@ -712,6 +796,9 @@ export function CreateRewardWizard({
     const isNFLPick = picked.id === NFL_PICKEM_DEFINITION_ID;
     const isSquaresPick = picked.id === SQUARES_PRIZE_DEFINITION_ID;
     const isBracketPick = picked.id === BRACKET_PRIZE_DEFINITION_ID;
+    const isPickEmPick = picked.id === PICKEM_PRIZE_DEFINITION_ID;
+    // The Pick 'Em Prize asks which games first; every other prize starts with its terms.
+    const firstStep: RewardWizardStep = isPickEmPick ? "games" : "terms";
     // requiresScheduledGame is null for the NFL and Squares definitions (they gate on a
     // season, not anything a venue schedules), so the "not available" copy — and whether a
     // "schedule it" link even makes sense — differs.
@@ -732,6 +819,9 @@ export function CreateRewardWizard({
     setNflWeekNumber(null);
     setSquaresMoments([]);
     setBracketKeys([]);
+    setPickemScopeDraft(EMPTY_PICKEM_SCOPE_DRAFT);
+    setPickemOpenSports([]);
+    setPickemTermsDraft(DEFAULT_PICKEM_TERMS_DRAFT);
     setContextError(null);
     setNotScheduledError(null);
     setNotScheduledHasNoLink(isNFLPick || isSquaresPick || isBracketPick);
@@ -746,7 +836,8 @@ export function CreateRewardWizard({
         return;
       }
       setContext(cached);
-      goTo("terms", "forward");
+      if (isPickEmPick) setPickemWindowDraft(pickemWindowDraftFor(cached.pickem?.today ?? ""));
+      goTo(firstStep, "forward");
       return;
     }
 
@@ -760,7 +851,8 @@ export function CreateRewardWizard({
         return;
       }
       setContext(ctx);
-      goTo("terms", "forward");
+      if (isPickEmPick) setPickemWindowDraft(pickemWindowDraftFor(ctx.pickem?.today ?? ""));
+      goTo(firstStep, "forward");
     } catch (err) {
       setContextError(err instanceof Error ? err.message : "Couldn't check that game's schedule.");
     } finally {
@@ -781,8 +873,10 @@ export function CreateRewardWizard({
     [drafts, posConnected],
   );
   const isRanked = winCondition === "ranked_places";
-  // The draft the prize step is editing right now: always the first unless places are on.
-  const editIndex = isRanked ? Math.min(activePlace, placeCount - 1) : 0;
+  // How many prizes the prize step edits: one per place, one per Pick 'Em tier, else one.
+  const prizeSlotCount = isRanked ? placeCount : isPickEmTiers ? pickemTierCount : 1;
+  // The draft the prize step is editing right now: always the first unless places or tiers are on.
+  const editIndex = Math.min(activePlace, prizeSlotCount - 1);
   const editDraft = drafts[editIndex];
   const { asksPosValue, asksPosDelivery, posValueCents, posValueInvalid, prize } = derivedPrizes[editIndex];
   // Every place that pays, 1st first. Empty unless the reward is won by places.
@@ -794,11 +888,12 @@ export function CreateRewardWizard({
     () => placePrizeInputs.map((input, index) => placePrizeFromInput(index + 1, input)),
     [placePrizeInputs],
   );
-  const firstInvalidPosPlace = isRanked
-    ? derivedPrizes.slice(0, placeCount).findIndex((derived) => derived.posValueInvalid)
-    : posValueInvalid
-      ? 0
-      : -1;
+  // Every Pick 'Em tier's prize, lowest tier first. Empty unless the prize is "X out of N".
+  const tierPrizeInputs = useMemo(
+    () => (isPickEmTiers ? derivedPrizes.slice(0, pickemTierCount).map((derived) => derived.prize) : []),
+    [isPickEmTiers, derivedPrizes, pickemTierCount],
+  );
+  const firstInvalidPosPlace = derivedPrizes.slice(0, prizeSlotCount).findIndex((derived) => derived.posValueInvalid);
 
   // ── Minimum players (D7) ─────────────────────────────────────────────────────
   // `offersMinPlayers` is defined above the step guard. The partner's answer (docs/reward-minimum-players-plan.md
@@ -819,7 +914,12 @@ export function CreateRewardWizard({
   const pickedSlotTerms = useGamePicker && gameWinnerTerms.ok ? gameWinnerTerms.terms : null;
   const derivedTerms = useMemo(
     () =>
-      isSquaresDefinition
+      isPickEmDefinition
+        ? // The calendar and quota createPickEmReward derives from the window and the terms.
+          pickemEngine
+          ? { cadence: pickemEngine.cadence, activeDays: pickemEngine.activeDays, winnerQuota: pickemEngine.winnerQuota }
+          : null
+        : isSquaresDefinition
         ? // One-off, one prize per chosen moment — the facts createReward fixes for Squares.
           squaresMoments.length > 0
           ? { cadence: "none" as const, activeDays: [] as string[], winnerQuota: squaresMoments.length }
@@ -843,6 +943,8 @@ export function CreateRewardWizard({
               scheduleDays: context?.scheduleDays ?? EMPTY_SCHEDULE_DAYS,
             }),
     [
+      isPickEmDefinition,
+      pickemEngine,
       isSquaresDefinition,
       squaresMoments,
       isBracketDefinition,
@@ -866,7 +968,19 @@ export function CreateRewardWizard({
     if (!definition || !context || !derivedTerms) return null;
     // A one-off-only venue has no period, but its reward still submits (cadence
     // "none") and describeReward words it, so the preview shows there too.
-    if (!isSquaresDefinition && !isRanked && !isNFLDefinition && !pickedSlotTerms && !period && !isOneOffOnly) return null;
+    if (!isPickEmDefinition && !isSquaresDefinition && !isRanked && !isNFLDefinition && !pickedSlotTerms && !period && !isOneOffOnly) {
+      return null;
+    }
+    if (isPickEmDefinition && !(pickemTerms && pickemEngine)) return null;
+    // A Pick 'Em "X out of N" prize keeps its prizes in its tiers; its own prize columns stay empty.
+    const pickemTierPrizes = isPickEmTiers
+      ? (pickemTerms?.tiers ?? []).map((tier, index) => ({
+          ...placePrizeFromInput(index + 1, tierPrizeInputs[index] ?? derivedPrizes[0].prize),
+          correct: tier.correct,
+          quantity: tier.quantity,
+        }))
+      : null;
+    const noOwnPrize = isRanked || isPickEmTiers;
     // isRanked covers March Madness too (it is always won by places).
     const now = new Date();
     // "Starts Thu, Sep 10" until the reward's first covered NFL week begins — the
@@ -890,9 +1004,18 @@ export function CreateRewardWizard({
         recurringType: derivedTerms.cadence,
         activeDays: derivedTerms.activeDays,
         winnerQuota: derivedTerms.winnerQuota,
-        pointsRequiredToWin: effectiveThreshold,
+        pointsRequiredToWin: isPickEmDefinition && pickemEngine ? pickemEngine.threshold : effectiveThreshold,
         winCondition,
         rewardDefinitionId: definition.id,
+        ...(isPickEmDefinition && pickemTerms
+          ? {
+              pickemScope: pickemTerms.scope,
+              pickemWindow: pickemTerms.window,
+              pickemPickLimit: pickemTerms.winKind === "tiers" ? pickemTerms.pickLimit ?? null : null,
+              pickemTiers: pickemTierPrizes,
+              pickemMinPicks: pickemTerms.winKind === "most_right" ? pickemTerms.minPicks ?? null : null,
+            }
+          : {}),
         gameWinnerSlots: pickedSlotTerms
           ? selectedSlots.map((slot) => ({ scheduleId: slot.scheduleId, weekday: slot.weekday }))
           : null,
@@ -902,20 +1025,26 @@ export function CreateRewardWizard({
         minPlayers: sentMinPlayers,
         squaresMoments: isSquaresDefinition ? squaresMoments : null,
         bracketKeys: isBracketDefinition ? bracketKeys : null,
-        prizeKind: isRanked ? null : prize.prizeKind,
-        prizeMenuItem: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItem : null,
-        prizeMenuItemName: !isRanked && prize.prizeKind === "menu_item" ? prize.menuItemName : null,
-        prizeDiscountKind: !isRanked && prize.prizeKind === "menu_item" ? prize.discountKind : null,
-        prizeDiscountValue: !isRanked && prize.prizeKind === "menu_item" ? prize.discountValue : null,
-        prizeGiftCertificateAmount: !isRanked && prize.prizeKind === "gift_card" ? prize.amount : null,
+        prizeKind: noOwnPrize ? null : prize.prizeKind,
+        prizeMenuItem: !noOwnPrize && prize.prizeKind === "menu_item" ? prize.menuItem : null,
+        prizeMenuItemName: !noOwnPrize && prize.prizeKind === "menu_item" ? prize.menuItemName : null,
+        prizeDiscountKind: !noOwnPrize && prize.prizeKind === "menu_item" ? prize.discountKind : null,
+        prizeDiscountValue: !noOwnPrize && prize.prizeKind === "menu_item" ? prize.discountValue : null,
+        prizeGiftCertificateAmount: !noOwnPrize && prize.prizeKind === "gift_card" ? prize.amount : null,
         schedule: { slots: context.gameSlots },
         nfl: isNFLDefinition ? { upcomingStartDate, seasonEndDate: nflSeason?.seasonEndDate ?? null } : null,
-        timezone: context.timezone,
+        timezone: context.timezone ?? context.pickem?.timezone ?? null,
       },
       now,
     );
   }, [
     definition,
+    isPickEmDefinition,
+    isPickEmTiers,
+    pickemTerms,
+    pickemEngine,
+    tierPrizeInputs,
+    derivedPrizes,
     context,
     derivedTerms,
     isNFLDefinition,
@@ -940,7 +1069,12 @@ export function CreateRewardWizard({
 
   const handleSubmit = async () => {
     if (!definition) return;
-    if (isSquaresDefinition) {
+    if (isPickEmDefinition) {
+      if (!pickemTerms) {
+        setSubmitError(pickemTermsResult && !pickemTermsResult.ok ? pickemTermsResult.message : PICKEM_PRIZE_SCOPE_MESSAGE);
+        return;
+      }
+    } else if (isSquaresDefinition) {
       if (squaresMoments.length === 0) {
         setSubmitError(SQUARES_PRIZE_MOMENTS_MESSAGE);
         return;
@@ -977,10 +1111,16 @@ export function CreateRewardWizard({
       setSubmitError(minPlayersError);
       return;
     }
-    const prizesToCheck = isRanked ? placePrizeInputs : [derivedPrizes[0].prize];
+    const prizesToCheck = isRanked ? placePrizeInputs : isPickEmTiers ? tierPrizeInputs : [derivedPrizes[0].prize];
     for (const [index, input] of prizesToCheck.entries()) {
       if (input.prizeKind === "menu_item" && input.menuItem === "other" && !input.menuItemName) {
-        setSubmitError(isRanked ? `${placeOrdinal(index + 1)} place: enter a name for the menu item.` : "Enter a name for the menu item.");
+        setSubmitError(
+          isRanked
+            ? `${placeOrdinal(index + 1)} place: enter a name for the menu item.`
+            : isPickEmTiers
+              ? `${pickemTierLabel(index)}: enter a name for the menu item.`
+              : "Enter a name for the menu item.",
+        );
         return;
       }
     }
@@ -997,10 +1137,10 @@ export function CreateRewardWizard({
         venueId,
         definitionId: definition.id,
         cadence: derivedTerms.cadence,
-        winCondition,
-        threshold: effectiveThreshold,
+        winCondition: isPickEmDefinition && pickemEngine ? pickemEngine.winCondition : winCondition,
+        threshold: isPickEmDefinition && pickemEngine ? pickemEngine.threshold : effectiveThreshold,
         winnerQuota: derivedTerms.winnerQuota,
-        prize: isRanked ? placePrizeInputs[0] : derivedPrizes[0].prize,
+        prize: isRanked ? placePrizeInputs[0] : isPickEmTiers ? tierPrizeInputs[0] : derivedPrizes[0].prize,
         gameWinnerSlots:
           pickedSlotTerms
             ? selectedSlots.map((slot) => ({ scheduleId: slot.scheduleId, weekday: slot.weekday }))
@@ -1013,6 +1153,23 @@ export function CreateRewardWizard({
         ...(sentMinPlayers !== null ? { minPlayers: sentMinPlayers } : {}),
         ...(isSquaresDefinition ? { squaresMoments } : {}),
         ...(isBracketDefinition ? { bracketKeys } : {}),
+        ...(isPickEmDefinition && pickemTerms
+          ? {
+              pickemScope: pickemTerms.scope,
+              pickemWindow: pickemTerms.window,
+              ...(pickemTerms.winKind === "tiers"
+                ? {
+                    pickemPickLimit: pickemTerms.pickLimit as number,
+                    pickemTiers: (pickemTerms.tiers ?? []).map((tier, index) => ({
+                      correct: tier.correct,
+                      quantity: tier.quantity,
+                      prize: tierPrizeInputs[index],
+                    })),
+                  }
+                : {}),
+              ...(pickemTerms.winKind === "most_right" ? { pickemMinPicks: pickemTerms.minPicks as number } : {}),
+            }
+          : {}),
       });
       if (!result.ok) {
         setSubmitError(result.error);
@@ -1110,6 +1267,184 @@ export function CreateRewardWizard({
         </div>
       ) : null}
 
+      {id === "games" && definition && context && isPickEmDefinition ? (
+        <div className="space-y-4">
+          <p className={s.heading} {...headingFocus}>
+            Which games count?
+          </p>
+          <div className="space-y-2">
+            {PICKEM_PRIZE_SPORTS.map((sport) => {
+              const slug = sport.slug as PickEmPrizeSportSlug;
+              const whole = pickemScopeDraft.sports.includes(slug);
+              const someLeagues = sport.leagues.some((league) => pickemScopeDraft.leagues.includes(league.sportKey));
+              const hasLeagues = sport.leagues.length > 1;
+              const open = hasLeagues && (pickemOpenSports.includes(sport.slug) || (someLeagues && !whole));
+              return (
+                <div key={sport.slug} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-pressed={whole}
+                      onClick={() => setPickemScopeDraft((prev) => togglePickEmScopeSport(prev, slug))}
+                      className={`${s.chip} flex-1 text-left ${whole ? s.chipActive : ""}`}
+                    >
+                      {hasLeagues ? `All ${sport.label}` : sport.label}
+                    </button>
+                    {hasLeagues ? (
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        onClick={() =>
+                          setPickemOpenSports((prev) =>
+                            prev.includes(sport.slug) ? prev.filter((s2) => s2 !== sport.slug) : [...prev, sport.slug],
+                          )
+                        }
+                        className={s.secondaryButton}
+                      >
+                        {open ? "Hide leagues" : "Leagues"}
+                      </button>
+                    ) : null}
+                  </div>
+                  {open ? (
+                    <div className="grid grid-cols-2 gap-2 pl-3">
+                      {sport.leagues.map((league) => {
+                        const on = isPickEmScopeLeagueOn(pickemScopeDraft, league.sportKey);
+                        return (
+                          <button
+                            key={league.sportKey}
+                            type="button"
+                            aria-pressed={on}
+                            onClick={() => setPickemScopeDraft((prev) => togglePickEmScopeLeague(prev, league.sportKey))}
+                            className={`${s.chip} ${on ? s.chipActive : ""}`}
+                          >
+                            {league.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+          <p className={s.helpText}>
+            {pickemScope
+              ? `Counts ${describePickEmPrizeScope(pickemScope)} picks. A whole sport includes leagues added later. NFL Pick 'Em has its own prize.`
+              : "Choose a whole sport, or open it to choose single leagues. NFL Pick 'Em has its own prize."}
+          </p>
+          <WizardFooter
+            variant="inline"
+            tone={footerTone}
+            onBack={() => goTo("definition", "back")}
+            backLabel={definition.name}
+            nextLabel="Next: When"
+            nextDisabled={pickemScope === null}
+            onNext={() => goTo("when", "forward")}
+          />
+        </div>
+      ) : null}
+
+      {id === "when" && definition && context && isPickEmDefinition ? (
+        <div className="space-y-4">
+          <p className={s.heading} {...headingFocus}>
+            When does it run?
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {PICKEM_WINDOW_KINDS.map((option) => (
+              <button
+                key={option.kind}
+                type="button"
+                aria-pressed={pickemWindowDraft.kind === option.kind}
+                onClick={() => setPickemWindowDraft((prev) => ({ ...prev, kind: option.kind }))}
+                className={`${s.optionCard} ${pickemWindowDraft.kind === option.kind ? s.optionCardActive : ""}`}
+              >
+                <span className="min-w-0">
+                  <span className="block font-black">{option.label}</span>
+                  <span className={`block ${s.helpText}`}>{option.help}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+          {pickemWindowDraft.kind === "day" ? (
+            <div>
+              <label className={s.label} htmlFor="pickem-prize-day">
+                Which day?
+              </label>
+              <input
+                id="pickem-prize-day"
+                type="date"
+                min={pickemToday || undefined}
+                value={pickemWindowDraft.date}
+                onChange={(e) => setPickemWindowDraft((prev) => ({ ...prev, date: e.target.value }))}
+                className={s.input}
+              />
+            </div>
+          ) : pickemWindowDraft.kind === "weekday" ? (
+            <div>
+              <p className={s.label}>Which day each week?</p>
+              <div className="grid grid-cols-7 gap-1">
+                {PICKEM_WEEKDAY_CHIPS.map((chip) => (
+                  <button
+                    key={chip.weekday}
+                    type="button"
+                    aria-pressed={pickemWindowDraft.weekday === chip.weekday}
+                    onClick={() => setPickemWindowDraft((prev) => ({ ...prev, weekday: chip.weekday }))}
+                    className={`${s.chip} !px-1 ${pickemWindowDraft.weekday === chip.weekday ? s.chipActive : ""}`}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : pickemWindowDraft.kind === "range" ? (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={s.label} htmlFor="pickem-prize-from">
+                  First day
+                </label>
+                <input
+                  id="pickem-prize-from"
+                  type="date"
+                  min={pickemToday || undefined}
+                  value={pickemWindowDraft.from}
+                  onChange={(e) => setPickemWindowDraft((prev) => ({ ...prev, from: e.target.value }))}
+                  className={s.input}
+                />
+              </div>
+              <div>
+                <label className={s.label} htmlFor="pickem-prize-to">
+                  Last day
+                </label>
+                <input
+                  id="pickem-prize-to"
+                  type="date"
+                  min={pickemWindowDraft.from || pickemToday || undefined}
+                  value={pickemWindowDraft.to}
+                  onChange={(e) => setPickemWindowDraft((prev) => ({ ...prev, to: e.target.value }))}
+                  className={s.input}
+                />
+              </div>
+            </div>
+          ) : null}
+          {pickemWindow ? (
+            <p className={s.helpText}>
+              Runs {describePickEmPrizeWindow(pickemWindow)}, by your venue&apos;s clock. A pick counts on the day its game starts.
+            </p>
+          ) : pickemWindowDraft.kind !== null && !pickemWindowResult.ok ? (
+            <div className={s.error}>{pickemWindowResult.message}</div>
+          ) : null}
+          <WizardFooter
+            variant="inline"
+            tone={footerTone}
+            onBack={() => goTo("games", "back")}
+            backLabel="Games"
+            nextLabel="Next: How to Win"
+            nextDisabled={pickemWindow === null}
+            onNext={() => goTo("terms", "forward")}
+          />
+        </div>
+      ) : null}
+
       {id === "terms" && definition && context ? (
         <div className="space-y-4">
           {animateSteps ? (
@@ -1118,7 +1453,7 @@ export function CreateRewardWizard({
             </p>
           ) : null}
           {/* 1. The question that decides everything below it. Squares has only one answer. */}
-          {definition.supportsGameWinner && !isSquaresDefinition ? (
+          {definition.supportsGameWinner && !isSquaresDefinition && !isPickEmDefinition ? (
             <div>
               <p className={s.label}>How is this prize won?</p>
               <div className={rankedOffered ? "grid grid-cols-1 gap-2 sm:grid-cols-3" : "grid grid-cols-2 gap-2"}>
@@ -1163,7 +1498,7 @@ export function CreateRewardWizard({
           {/* 2. Points target — only meaningful when that's how it's won. NFL
               renders its own copy of this below the week-scope picker (§3),
               matching the phase doc's win-condition → scope → target order. */}
-          {isGameWinner || isRanked || isNFLDefinition || isSquaresDefinition ? null : (
+          {isGameWinner || isRanked || isNFLDefinition || isSquaresDefinition || isPickEmDefinition ? null : (
             <div>
               <p className={s.label}>Points target</p>
               <div className="grid grid-cols-4 gap-2">
@@ -1200,7 +1535,191 @@ export function CreateRewardWizard({
           {/* 3. The contract — the NFL week-scope picker, the game picker
               (Phase 5, flag-gated), or the period-based sentence the game
               picker replaces for game-winner rewards. */}
-          {isSquaresDefinition ? (
+          {isPickEmDefinition ? (
+            <div className="space-y-4">
+              <div>
+                <p className={s.label}>How is this prize won?</p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {PICKEM_WIN_KINDS.map((option) => {
+                    const blocked = option.kind === "most_right" && !pickemMostRightOffered;
+                    const picked = pickemTermsDraft.winKind === option.kind;
+                    return (
+                      <button
+                        key={option.kind}
+                        type="button"
+                        aria-pressed={picked}
+                        disabled={blocked}
+                        onClick={() => {
+                          setPickemTermsDraft((prev) => ({ ...prev, winKind: option.kind }));
+                          setWinCondition(option.kind === "most_right" ? "game_winner" : "points_threshold");
+                          setActivePlace(0);
+                        }}
+                        className={`${s.optionCard} ${picked ? s.optionCardActive : ""} disabled:opacity-40`}
+                      >
+                        <span className="min-w-0">
+                          <span className="block font-black">{option.label}</span>
+                          <span className={`block ${s.helpText}`}>{option.help}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {!pickemMostRightOffered ? (
+                  <p className={`mt-1.5 ${s.helpText}`}>{PICKEM_PRIZE_MOST_RIGHT_SCORES_MESSAGE}</p>
+                ) : null}
+              </div>
+
+              {pickemTermsDraft.winKind === "most_right" ? (
+                <div>
+                  <label className={s.label} htmlFor="pickem-min-picks">
+                    Picks needed to be ranked
+                  </label>
+                  <input
+                    id="pickem-min-picks"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={pickemTermsDraft.minPicks}
+                    onChange={(e) => setPickemTermsDraft((prev) => ({ ...prev, minPicks: e.target.value }))}
+                    className={s.input}
+                  />
+                  <p className={`mt-1.5 ${s.helpText}`}>
+                    Ties go to a guess of the total points in the last game.
+                  </p>
+                </div>
+              ) : pickemTermsDraft.winKind === "target" ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className={s.label} htmlFor="pickem-target">
+                      Picks right to win
+                    </label>
+                    <input
+                      id="pickem-target"
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      value={pickemTermsDraft.target}
+                      onChange={(e) => setPickemTermsDraft((prev) => ({ ...prev, target: e.target.value }))}
+                      className={s.input}
+                    />
+                  </div>
+                  <div>
+                    <label className={s.label} htmlFor="pickem-quantity">
+                      How many winners?
+                    </label>
+                    <input
+                      id="pickem-quantity"
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      value={pickemTermsDraft.quantity}
+                      onChange={(e) => setPickemTermsDraft((prev) => ({ ...prev, quantity: e.target.value }))}
+                      className={s.input}
+                    />
+                  </div>
+                </div>
+              ) : pickemTermsDraft.winKind === "tiers" ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className={s.label} htmlFor="pickem-pick-limit">
+                      Picks each player gets (N)
+                    </label>
+                    <input
+                      id="pickem-pick-limit"
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      value={pickemTermsDraft.pickLimit}
+                      onChange={(e) => setPickemTermsDraft((prev) => ({ ...prev, pickLimit: e.target.value }))}
+                      className={s.input}
+                    />
+                  </div>
+                  {pickemTermsDraft.tiers.map((tier, index) => (
+                    <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+                      <div>
+                        <label className={s.label} htmlFor={`pickem-tier-${index}-correct`}>
+                          {pickemTierLabel(index)}: picks right
+                        </label>
+                        <input
+                          id={`pickem-tier-${index}-correct`}
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          value={tier.correct}
+                          onChange={(e) =>
+                            setPickemTermsDraft((prev) => ({
+                              ...prev,
+                              tiers: prev.tiers.map((t, i) => (i === index ? { ...t, correct: e.target.value } : t)),
+                            }))
+                          }
+                          className={s.input}
+                        />
+                      </div>
+                      <div>
+                        <label className={s.label} htmlFor={`pickem-tier-${index}-quantity`}>
+                          How many prizes
+                        </label>
+                        <input
+                          id={`pickem-tier-${index}-quantity`}
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          value={tier.quantity}
+                          onChange={(e) =>
+                            setPickemTermsDraft((prev) => ({
+                              ...prev,
+                              tiers: prev.tiers.map((t, i) => (i === index ? { ...t, quantity: e.target.value } : t)),
+                            }))
+                          }
+                          className={s.input}
+                        />
+                      </div>
+                      {index > 0 ? (
+                        <button
+                          type="button"
+                          aria-label={`Remove ${pickemTierLabel(index)}`}
+                          onClick={() => {
+                            setPickemTermsDraft((prev) => ({ ...prev, tiers: prev.tiers.filter((_, i) => i !== index) }));
+                            setActivePlace(0);
+                          }}
+                          className={`${s.secondaryButton} pb-2.5`}
+                        >
+                          Remove
+                        </button>
+                      ) : (
+                        <span />
+                      )}
+                    </div>
+                  ))}
+                  {pickemTermsDraft.tiers.length < PICKEM_PRIZE_MAX_TIERS ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPickemTermsDraft((prev) => {
+                          const next = nextPickEmTierDraft(prev);
+                          return next ? { ...prev, tiers: [...prev.tiers, next] } : prev;
+                        })
+                      }
+                      className={s.secondaryButton}
+                    >
+                      Add a tier
+                    </button>
+                  ) : null}
+                  <p className={s.helpText}>A player wins only the highest tier they reach.</p>
+                  {pickemScope && pickemWindow ? (
+                    <div className={s.notice}>
+                      {pickemPickLimitNotice(parseInt(pickemTermsDraft.pickLimit, 10), pickemScope, pickemWindow) ??
+                        "Every player gets the same number of picks."}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {pickemTermsDraft.winKind && pickemTermsResult && !pickemTermsResult.ok ? (
+                <div className={s.error}>{pickemTermsResult.message}</div>
+              ) : null}
+            </div>
+          ) : isSquaresDefinition ? (
             <div>
               <p className={s.label}>Which moments pay a prize?</p>
               <div className="grid grid-cols-2 gap-2">
@@ -1619,11 +2138,13 @@ export function CreateRewardWizard({
           <WizardFooter
             variant="inline"
             tone={footerTone}
-            onBack={() => goTo("definition", "back")}
-            backLabel={definition.name}
+            onBack={() => goTo(isPickEmDefinition ? "when" : "definition", "back")}
+            backLabel={isPickEmDefinition ? "When" : definition.name}
             nextLabel={offersMinPlayers ? "Next: Minimum Players" : "Next: Offer a Prize"}
             nextDisabled={
-              isSquaresDefinition
+              isPickEmDefinition
+                ? pickemTerms === null
+                : isSquaresDefinition
                 ? squaresMoments.length === 0
                 : isBracketDefinition
                 ? bracketKeys.length === 0
@@ -1636,7 +2157,7 @@ export function CreateRewardWizard({
                     : Boolean(termsError)
             }
             onNext={() => {
-              if (!isGameWinner && !isRanked && !isSquaresDefinition) {
+              if (!isGameWinner && !isRanked && !isSquaresDefinition && !isPickEmDefinition) {
                 // The step is the definition's, not a fixed 10: Live Trivia
                 // targets are points (step 10), NFL targets are correct picks
                 // (step 1). Same rule the server re-checks in createReward.
@@ -1695,7 +2216,9 @@ export function CreateRewardWizard({
               />
             ) : null}
             <p className={`mt-1.5 ${s.helpText}`}>
-              {isBracketDefinition
+              {isPickEmDefinition
+                ? "Name a winner only if at least this many players make picks in these games. With no minimum, even one player can win."
+                : isBracketDefinition
                 ? "Pay out only if at least this many players fill out that bracket at your venue. Below it, nobody wins that bracket."
                 : isRanked
                 ? "Pay out only if at least this many players answered a question that week. Below it, nobody wins and the week is recorded."
@@ -1723,16 +2246,17 @@ export function CreateRewardWizard({
             Prize
           </p>
 
-          {/* Weekly places: one prize per place. Every other reward has exactly one prize, no tabs. */}
-          {isRanked ? (
+          {/* Weekly places: one prize per place; Pick 'Em "X out of N": one per tier. Every other
+              reward has exactly one prize, no tabs. */}
+          {isRanked || isPickEmTiers ? (
             <div className="space-y-2">
-              <p className={s.helpText}>Choose a prize for each place.</p>
+              <p className={s.helpText}>{isPickEmTiers ? "Choose a prize for each tier." : "Choose a prize for each place."}</p>
               <div
                 role="tablist"
-                aria-label="Prize for each place"
-                className={`grid gap-2 ${placeCount === 1 ? "grid-cols-1" : placeCount === 2 ? "grid-cols-2" : "grid-cols-3"}`}
+                aria-label={isPickEmTiers ? "Prize for each tier" : "Prize for each place"}
+                className={`grid gap-2 ${prizeSlotCount === 1 ? "grid-cols-1" : prizeSlotCount === 2 ? "grid-cols-2" : "grid-cols-3"}`}
               >
-                {Array.from({ length: placeCount }, (_, index) => (
+                {Array.from({ length: prizeSlotCount }, (_, index) => (
                   <button
                     key={index}
                     type="button"
@@ -1744,7 +2268,9 @@ export function CreateRewardWizard({
                     }}
                     className={`${s.chip} ${editIndex === index ? s.chipActive : ""}`}
                   >
-                    {placeOrdinal(index + 1)} place
+                    {isPickEmTiers
+                      ? `${pickemTermsDraft.tiers[index]?.correct ?? ""} right`
+                      : `${placeOrdinal(index + 1)} place`}
                   </button>
                 ))}
               </div>
@@ -1756,7 +2282,7 @@ export function CreateRewardWizard({
                   }
                   className={s.secondaryButton}
                 >
-                  Same prize as 1st place
+                  {isPickEmTiers ? "Same prize as tier 1" : "Same prize as 1st place"}
                 </button>
               ) : null}
             </div>
@@ -1922,7 +2448,42 @@ export function CreateRewardWizard({
               <span>Game</span>
               <span className="font-bold">{definition.name}</span>
             </div>
-            {isRanked ? (
+            {isPickEmDefinition && pickemTerms ? (
+              <>
+                <div className={s.summaryRow}>
+                  <span>Games</span>
+                  <span className="text-right font-bold">{describePickEmPrizeScope(pickemTerms.scope)}</span>
+                </div>
+                <div className={s.summaryRow}>
+                  <span>When</span>
+                  <span className="text-right font-bold">
+                    {pickemTerms.window.kind === "day"
+                      ? formatPickEmPrizeDate(pickemTerms.window.date)
+                      : describePickEmPrizeWindow(pickemTerms.window).replace(/^./, (first) => first.toUpperCase())}
+                  </span>
+                </div>
+                <div className={s.summaryRow}>
+                  <span>Won by</span>
+                  <span className="text-right font-bold">
+                    {pickemTerms.winKind === "most_right"
+                      ? `Most picks right (at least ${pickemTerms.minPicks} picks)`
+                      : pickemTerms.winKind === "target"
+                        ? `Get ${pickemTerms.target} right`
+                        : `Picks right out of ${pickemTerms.pickLimit}`}
+                  </span>
+                </div>
+              </>
+            ) : null}
+            {isPickEmTiers && pickemTerms ? (
+              (pickemTerms.tiers ?? []).map((tier, index) => (
+                <div key={index} className={s.summaryRow}>
+                  <span>
+                    {tier.correct} right{tier.quantity > 1 ? ` (${tier.quantity} prizes)` : ""}
+                  </span>
+                  <span className="font-bold">{tierPrizeInputs[index] ? summarizePrize(tierPrizeInputs[index]) : ""}</span>
+                </div>
+              ))
+            ) : isRanked ? (
               <>
                 <div className={s.summaryRow}>
                   <span>Won by</span>
@@ -1949,7 +2510,7 @@ export function CreateRewardWizard({
                 <span className="font-bold">{summarizePrize(derivedPrizes[0].prize)}</span>
               </div>
             )}
-            {!isRanked && derivedPrizes[0].posValueCents !== null ? (
+            {!isRanked && !isPickEmTiers && derivedPrizes[0].posValueCents !== null ? (
               <div className={s.summaryRow}>
                 <span>Most off at the register</span>
                 <span className="font-bold">${(derivedPrizes[0].posValueCents / 100).toFixed(2)}</span>
@@ -1987,7 +2548,11 @@ export function CreateRewardWizard({
 
           {/* The terms the partner just agreed to, restated verbatim. */}
           <p className={s.sentence}>
-            {isSquaresDefinition
+            {isPickEmDefinition
+              ? pickemTerms
+                ? describePickEmPrizeTermsForPartner(pickemTerms)
+                : null
+              : isSquaresDefinition
               ? describeSquaresPrizeTerms(squaresMoments, squaresMoments.length)
               : isBracketDefinition
               ? describeBracketPrizeTerms(bracketKeys, placePrizes, minPlayers)

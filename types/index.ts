@@ -248,6 +248,28 @@ export type RewardPlacePrize = {
   prizePosValueCents: number | null;
   prizePosDelivery: PrizePosDelivery | null;
 };
+/** The regular Pick 'Em sports a Pick 'Em Prize can cover (never the NFL — it has its own Prize). */
+export type PickEmPrizeSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "ncaaf" | "mma" | "tennis";
+/**
+ * Which games a Pick 'Em Prize counts. A sport means every league in it, including ones added
+ * later; a league is a provider sport key ("soccer_epl"). At least one of the two is non-empty.
+ */
+export type PickEmPrizeScope = { sports: PickEmPrizeSportSlug[]; leagues: string[] };
+/** When a Pick 'Em Prize runs, in the venue's time zone. Dates are YYYY-MM-DD, inclusive. */
+export type PickEmPrizeWindow =
+  | { kind: "day"; date: string }
+  | { kind: "weekday"; weekday: "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat" }
+  | { kind: "week" }
+  | { kind: "range"; from: string; to: string };
+/**
+ * One "X out of N" tier: `correct` right (of the prize's N) wins this prize. `place` is the tier
+ * number, 1 = the lowest; the prize fields are stored in the same shape as `place_prizes`.
+ */
+export type PickEmPrizeTier = RewardPlacePrize & {
+  correct: number;
+  /** Prizes of this tier available per period. */
+  quantity: number;
+};
 /**
  * One scheduled game a game-winner reward is pinned to. The `{scheduleId,
  * weekday}` PAIR is the identity — two schedules on the same weekday (a 6pm and
@@ -378,6 +400,21 @@ export interface ChallengeCampaign {
    * the bracket paths — lib/bracketPrizeAwards.ts and attachRewardDescriptions).
    */
   bracketKeys?: Array<"men_main" | "women_main" | "men_second" | "women_second"> | null;
+  /**
+   * Pick 'Em Prizes (`pickem_challenge`, lib/pickemPrizes.ts) only — null/absent for every other
+   * reward. NOT in the shared campaign select: read only by the Pick 'Em Prize paths
+   * (listActivePickEmPrizeCampaigns, loadPickEmPrizeTerms).
+   *   pickemScope     — which games count (whole sports and/or single leagues)
+   *   pickemWindow    — when (one day, a repeating weekday, each Mon–Sun week, a date range)
+   *   pickemPickLimit — "X out of N": players get N picks in the scope per period (D5)
+   *   pickemTiers     — "X out of N": 1–3 tiers, lowest first, each with its own prize and quantity
+   *   pickemMinPicks  — "most picks right": picks a player must make to be ranked
+   */
+  pickemScope?: PickEmPrizeScope | null;
+  pickemWindow?: PickEmPrizeWindow | null;
+  pickemPickLimit?: number | null;
+  pickemTiers?: PickEmPrizeTier[] | null;
+  pickemMinPicks?: number | null;
   /** Which pre-set reward definition created this (e.g. "live_trivia_challenge"), or null. */
   rewardDefinitionId?: string | null;
   /** New prize model. Null on pre-Rewards campaigns unless derived from legacy prizeType. */
@@ -492,6 +529,11 @@ export type ChallengeCampaignWinTerms = Pick<
   | "winnerQuota"
   | "nflWeekScope"
   | "gameWinnerSlots"
+  | "pickemScope"
+  | "pickemWindow"
+  | "pickemPickLimit"
+  | "pickemTiers"
+  | "pickemMinPicks"
 >;
 
 export interface ChallengeCampaignProgress {

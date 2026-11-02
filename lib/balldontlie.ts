@@ -52,12 +52,18 @@ export async function fetchBallDontLieJson(path: string, query?: URLSearchParams
  * where a truncated result is a real data-loss risk (not just "fetched a
  * little less than the full catalog") should pass this and log on it rather
  * than absorb the truncation silently.
+ *
+ * `failure`, if passed, is set to `failed: true` when a page came back with no
+ * `data` list — `fetchBallDontLieJson` turns a network error or a non-2xx reply
+ * into `{}`, which otherwise reads exactly like "no games". A caller that acts
+ * on a game being ABSENT (Pick 'Em's missing-game cancel) must check it.
  */
 export async function fetchBallDontLieList<T>(
   path: string,
   baseQuery: URLSearchParams,
   maxPages = 4,
-  truncation?: { truncated: boolean }
+  truncation?: { truncated: boolean },
+  failure?: { failed: boolean }
 ): Promise<T[]> {
   const rows: T[] = [];
   let cursor: string | null = null;
@@ -69,6 +75,9 @@ export async function fetchBallDontLieList<T>(
     }
 
     const payload = (await fetchBallDontLieJson(path, query)) as BallDontLieListResponse<T>;
+    if (!Array.isArray(payload.data) && failure) {
+      failure.failed = true;
+    }
     const data = Array.isArray(payload.data) ? payload.data : [];
     rows.push(...data);
 

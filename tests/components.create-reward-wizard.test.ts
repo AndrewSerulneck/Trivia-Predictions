@@ -1325,3 +1325,193 @@ describe("CreateRewardWizard — March Madness (squares plan Phase 9a)", () => {
     expect(screen.queryByText("Schedule Live Trivia")).toBeNull();
   });
 });
+
+describe("CreateRewardWizard — Pick 'Em Prize (pickem plan Phase 5)", () => {
+  const PICKEM_CONTEXT: RewardCreationContextDTO = {
+    scheduled: true,
+    hasRecurringSchedule: true,
+    scheduleDays: [],
+    timezone: "America/Chicago",
+    allowedCadences: ["none", "weekly"],
+    scheduleShapes: [],
+    gameSlots: [],
+    nflSeason: null,
+    pickem: { today: "2026-11-04", timezone: "America/Chicago" },
+  };
+  const renderPickEm = (
+    onSubmit: (submission: unknown) => Promise<{ ok: true } | { ok: false; error: string }> = async () => ({ ok: true }),
+  ) => {
+    const submit = vi.fn(onSubmit);
+    render(
+      createElement(CreateRewardWizard, {
+        variant: "admin",
+        venues: [{ id: "venue-1", name: "The Pub" }],
+        defaultVenueId: "venue-1",
+        scheduleLinkHref: "/admin/schedule",
+        fetchContext: async (_venueId: string, definitionId: string) =>
+          definitionId === "pickem_challenge" ? PICKEM_CONTEXT : { ...LIVE_CONTEXT, scheduled: false },
+        onSubmit: submit,
+        onCreated: () => {},
+        onCancel: () => {},
+      }),
+    );
+    return { submit };
+  };
+  const next = (name: RegExp) => screen.getByRole("button", { name });
+
+  /** Pick 'Em tile → College Football → one day, Sat Nov 7 → the How to win step. */
+  const toHowToWin = async () => {
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /^🎯/ }));
+    await screen.findByText("Which games count?");
+    expect(next(/Next: When/)).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: "College Football" }));
+    expect(next(/Next: When/)).toHaveProperty("disabled", false);
+    fireEvent.click(next(/Next: When/));
+    await screen.findByText("When does it run?");
+    expect(next(/Next: How to Win/)).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: /One day/ }));
+    fireEvent.change(screen.getByLabelText("Which day?"), { target: { value: "2026-11-07" } });
+    expect(next(/Next: How to Win/)).toHaveProperty("disabled", false);
+    fireEvent.click(next(/Next: How to Win/));
+    await screen.findByText("How is this prize won?");
+  };
+
+  it("is offered, and Games opens a sport's single leagues", async () => {
+    renderPickEm();
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /^🎯/ }));
+    await screen.findByText("Which games count?");
+    expect(screen.queryByRole("button", { name: /NFL/ })).toBeNull();
+    fireEvent.click(screen.getAllByRole("button", { name: "Leagues" })[1]); // Soccer
+    fireEvent.click(screen.getByRole("button", { name: "EPL" }));
+    expect(document.body.textContent).toContain("Counts EPL picks.");
+  });
+
+  it("refuses a day that has passed, by the venue's clock", async () => {
+    renderPickEm();
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /^🎯/ }));
+    await screen.findByText("Which games count?");
+    fireEvent.click(screen.getByRole("button", { name: "College Football" }));
+    fireEvent.click(next(/Next: When/));
+    await screen.findByText("When does it run?");
+    fireEvent.click(screen.getByRole("button", { name: /One day/ }));
+    fireEvent.change(screen.getByLabelText("Which day?"), { target: { value: "2026-11-03" } });
+    expect(document.body.textContent).toContain("Choose a day that hasn't passed yet.");
+    expect(next(/Next: How to Win/)).toHaveProperty("disabled", true);
+  });
+
+  it("X out of N: tiers, the limit notice, one prize per tier, and the server's terms", async () => {
+    const { submit } = renderPickEm();
+    await toHowToWin();
+    fireEvent.click(screen.getByRole("button", { name: /X out of N/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Add a tier" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add a tier" }));
+    expect(screen.queryByRole("button", { name: "Add a tier" })).toBeNull();
+    expect(document.body.textContent).toContain(
+      "Players at your bar will be limited to 20 college football picks on Sat, Nov 7, so everyone plays the same 20.",
+    );
+    // Most right asks the minimum; tiers go straight to the prize.
+    fireEvent.click(next(/Next: Offer a Prize/));
+    await screen.findByText("Choose a prize for each tier.");
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["12 right", "15 right", "18 right"]);
+    fireEvent.click(screen.getAllByRole("tab")[2]);
+    fireEvent.click(screen.getByRole("button", { name: "Gift Card" }));
+    fireEvent.click(next(/Next: Confirm/));
+    await screen.findByText("Confirm");
+    expect(screen.getByText("Games").nextSibling?.textContent).toBe("college football");
+    expect(screen.getByText("When").nextSibling?.textContent).toBe("Sat, Nov 7");
+    expect(screen.getByText("18 right").nextSibling?.textContent).toBe("$25.00 gift card");
+    expect(document.body.textContent).toContain("What guests will see");
+    expect(document.body.textContent).toContain("Get 12, 15 or 18 of your 20 college football picks right on Sat, Nov 7.");
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+    const submission = (submit.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
+    expect(submission).toMatchObject({
+      definitionId: "pickem_challenge",
+      cadence: "none",
+      winCondition: "points_threshold",
+      threshold: 12,
+      winnerQuota: 3,
+      pickemScope: { sports: ["ncaaf"], leagues: [] },
+      pickemWindow: { kind: "day", date: "2026-11-07" },
+      pickemPickLimit: 20,
+    });
+    const tiers = submission.pickemTiers as Array<Record<string, unknown>>;
+    expect(tiers.map((tier) => [tier.correct, tier.quantity])).toEqual([
+      [12, 1],
+      [15, 1],
+      [18, 1],
+    ]);
+    expect(tiers[0].prize).toEqual(PRIZE);
+    expect(tiers[2].prize).toEqual({ prizeKind: "gift_card", amount: 25 });
+    expect(submission).not.toHaveProperty("pickemMinPicks");
+    expect(submission).not.toHaveProperty("minPlayers");
+  });
+
+  it("most right: minimum picks, then the players step, and an overlap refusal shows inline", async () => {
+    const { submit } = renderPickEm(async () => ({
+      ok: false,
+      error: "Your college football prize on Sat, Nov 7 already limits picks for some of these games on the same day.",
+    }));
+    await toHowToWin();
+    fireEvent.click(screen.getByRole("button", { name: /Most picks right/ }));
+    fireEvent.change(screen.getByLabelText("Picks needed to be ranked"), { target: { value: "8" } });
+    fireEvent.click(next(/Next: Minimum Players/));
+    await screen.findByText("How many players must play?");
+    expect(document.body.textContent).toContain("make picks in these games");
+    fireEvent.click(screen.getByRole("button", { name: "Set a minimum" }));
+    fireEvent.click(next(/Next: Offer a Prize/));
+    await screen.findByText("Prize");
+    fireEvent.click(next(/Next: Confirm/));
+    await screen.findByText("Confirm");
+    expect(document.body.textContent).toContain("One winner on Sat, Nov 7: the player with the most college football picks right.");
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
+    await screen.findByText(/already limits picks for some of these games/);
+    const submission = (submit.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
+    expect(submission).toMatchObject({
+      winCondition: "game_winner",
+      threshold: 1,
+      winnerQuota: 1,
+      pickemMinPicks: 8,
+      minPlayers: 3,
+      prize: PRIZE,
+    });
+    expect(submission).not.toHaveProperty("pickemTiers");
+    expect(submission).not.toHaveProperty("pickemPickLimit");
+  });
+
+  it("get N right: target and winners, no minimum players, a weekly cadence for a repeating day", async () => {
+    const { submit } = renderPickEm();
+    await waitFor(() => expect(screen.queryByText(/Checking the venue/)).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: /^🎯/ }));
+    await screen.findByText("Which games count?");
+    fireEvent.click(screen.getByRole("button", { name: "MMA" }));
+    fireEvent.click(next(/Next: When/));
+    await screen.findByText("When does it run?");
+    fireEvent.click(screen.getByRole("button", { name: /Every week, one day/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Sat" }));
+    fireEvent.click(next(/Next: How to Win/));
+    await screen.findByText("How is this prize won?");
+    // MMA has no scores, so no tiebreaker: most right isn't offered.
+    expect(screen.getByRole("button", { name: /Most picks right/ })).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: /Get N right/ }));
+    fireEvent.change(screen.getByLabelText("Picks right to win"), { target: { value: "6" } });
+    fireEvent.change(screen.getByLabelText("How many winners?"), { target: { value: "4" } });
+    fireEvent.click(next(/Next: Offer a Prize/));
+    await screen.findByText("Prize");
+    fireEvent.click(next(/Next: Confirm/));
+    await screen.findByText("Confirm");
+    fireEvent.click(screen.getByRole("button", { name: /Create Prize/ }));
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+    expect((submit.mock.calls[0] as unknown[])[0]).toMatchObject({
+      cadence: "weekly",
+      winCondition: "points_threshold",
+      threshold: 6,
+      winnerQuota: 4,
+      pickemScope: { sports: ["mma"], leagues: [] },
+      pickemWindow: { kind: "weekday", weekday: "sat" },
+    });
+  });
+});

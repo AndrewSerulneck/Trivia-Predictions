@@ -1,0 +1,189 @@
+"use client";
+
+import { Check } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
+import { haptic } from "@/lib/haptics";
+
+// The "most picks right" Pick 'Em Prize's tiebreaker question (plan D8, Phase 6): "How many total points
+// in the last game?". One request when it appears (GET /api/pickem/prize-tiebreaker), one per save —
+// no polling. It is an inline card, not a popup, so there is no native Back to register. Mirrors
+// NFLTiebreakerCard; the answer range (0–400) is the server's (PICKEM_PRIZE_TIEBREAKER_*_TOTAL).
+
+type TiebreakerGame = {
+  gameId: string;
+  homeTeam: string;
+  awayTeam: string;
+  startsAt: string;
+  isLocked: boolean;
+};
+
+const MAX_TOTAL = 400;
+const SAVED_FLASH_MS = 2500;
+
+const formatKickoff = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+export function PickEmPrizeTiebreakerCard({
+  venueId,
+  userId,
+  campaignId,
+}: {
+  venueId: string;
+  userId: string;
+  campaignId: string;
+}) {
+  const [game, setGame] = useState<TiebreakerGame | null>(null);
+  const [savedGuess, setSavedGuess] = useState<number | null>(null);
+  const [inputValue, setInputValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [justSaved, setJustSaved] = useState(false);
+  const savingRef = useRef(false);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (!venueId || !campaignId) return;
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        const params = new URLSearchParams({ venueId, campaignId });
+        if (userId) params.set("userId", userId);
+        const response = await fetch(`/api/pickem/prize-tiebreaker?${params.toString()}`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        const data = (await response.json()) as {
+          ok: boolean;
+          game?: TiebreakerGame;
+          guess?: { predictedTotal: number } | null;
+        };
+        // No tiebreaker today (or it can't be read): the card simply isn't there.
+        if (!data.ok || !data.game || controller.signal.aborted) return;
+        setGame(data.game);
+        const predicted = data.guess?.predictedTotal ?? null;
+        setSavedGuess(predicted);
+        setInputValue(predicted !== null ? String(predicted) : "");
+      } catch {
+        // Aborted or offline: no card.
+      }
+    };
+    void load();
+    return () => controller.abort();
+  }, [venueId, campaignId, userId]);
+
+  const handleSave = async () => {
+    if (savingRef.current || !game || game.isLocked) return;
+    const predictedTotal = inputValue.trim() === "" ? NaN : Number(inputValue);
+    if (!Number.isInteger(predictedTotal) || predictedTotal < 0 || predictedTotal > MAX_TOTAL) {
+      setError(`Enter a whole number between 0 and ${MAX_TOTAL}.`);
+      return;
+    }
+    const previousGuess = savedGuess;
+    savingRef.current = true;
+    setSavedGuess(predictedTotal);
+    setJustSaved(false);
+    setSaving(true);
+    setError("");
+    try {
+      const response = await fetch("/api/pickem/prize-tiebreaker", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, venueId, campaignId, predictedTotal }),
+      });
+      const data = (await response.json()) as { ok: boolean; error?: string };
+      if (!data.ok) throw new Error(data.error);
+      setJustSaved(true);
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      flashTimerRef.current = setTimeout(() => setJustSaved(false), SAVED_FLASH_MS);
+      haptic("success");
+    } catch (caught) {
+      setSavedGuess(previousGuess);
+      setError(caught instanceof Error && caught.message ? caught.message : "Couldn't save your guess.");
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  };
+
+  if (!game) return null;
+
+  const showSavedGuess = savedGuess !== null && !saving && inputValue.trim() === String(savedGuess);
+
+  return (
+    <section
+      className="rounded-2xl border border-ht-pickem-card-edge bg-ht-surface px-4 py-4 shadow-ht-panel"
+      data-testid="pickem-prize-tiebreaker"
+    >
+      <h2 className="text-caption font-black uppercase tracking-[0.16em] text-ht-pickem-accent">Tiebreaker</h2>
+      <p className="mt-1 text-caption font-semibold text-ht-fg-muted">
+        If you tie for the most picks right, the closest guess wins the prize.
+      </p>
+      <p className="mt-3 text-[14px] font-bold text-ht-fg-bright">
+        How many total points will be scored in {game.awayTeam} at {game.homeTeam}?
+      </p>
+
+      {error ? (
+        <p role="alert" className="mt-2 text-caption font-semibold text-ht-loss-fg">
+          {error}
+        </p>
+      ) : null}
+
+      {game.isLocked ? (
+        <p className="mt-3 text-footnote font-bold text-ht-fg-soft">
+          {savedGuess !== null ? `Your guess: ${savedGuess}` : "You didn't answer the tiebreaker."}
+        </p>
+      ) : (
+        <>
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              max={MAX_TOTAL}
+              inputMode="numeric"
+              disabled={saving}
+              value={inputValue}
+              onChange={(event) => {
+                setInputValue(event.target.value);
+                setJustSaved(false);
+              }}
+              className="w-24 rounded-xl border border-ht-pickem-accent/30 bg-ht-canvas px-3 py-2 text-[14px] font-bold text-ht-fg-bright focus:outline-none focus:ring-2 focus:ring-ht-pickem-accent/40"
+              aria-label="Predicted total points"
+            />
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving || inputValue === ""}
+              className={`tp-player-hit-target tp-player-pressable tp-clean-button inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-footnote font-black transition-all duration-300 disabled:opacity-50 ${
+                justSaved ? "scale-105 bg-ht-success-fg text-ht-pickem-on-fill" : "scale-100 bg-ht-pickem-accent text-ht-pickem-on-fill"
+              }`}
+              aria-busy={saving}
+            >
+              {saving ? <ButtonSpinner /> : null}
+              {justSaved ? <Check className="h-4 w-4" strokeWidth={3} aria-hidden /> : null}
+              {saving ? "Saving…" : justSaved ? "Saved!" : "Save"}
+            </button>
+          </div>
+          {showSavedGuess ? (
+            <p className="mt-2 inline-flex items-center gap-1 text-caption font-bold text-ht-gain-fg">
+              <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />
+              Your guess of {savedGuess} is saved
+            </p>
+          ) : null}
+          <p className="mt-2 text-caption font-semibold text-ht-fg-faint">Locks at {formatKickoff(game.startsAt)}</p>
+        </>
+      )}
+    </section>
+  );
+}

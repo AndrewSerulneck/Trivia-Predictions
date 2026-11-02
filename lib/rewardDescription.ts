@@ -51,6 +51,16 @@ import {
   squaresPrizeMomentOf,
 } from "@/lib/squaresPrizes";
 import { SQUARES_PER_PLAYER_CAP } from "@/lib/seasonalGames";
+import {
+  describePickEmPrizePeriodWon,
+  describePickEmPrizeScope,
+  describePickEmPrizeWindow,
+  normalizePickEmPrizeScope,
+  normalizePickEmPrizeWindow,
+  pickemPrizeCycleDate,
+  pickemPrizeTierOfCycle,
+  pickemPrizeWinKind,
+} from "@/lib/pickemPrizes";
 import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -112,6 +122,11 @@ export type RewardDescriptionInput = Pick<
       | "minPlayers"
       | "squaresMoments"
       | "bracketKeys"
+      | "pickemScope"
+      | "pickemWindow"
+      | "pickemPickLimit"
+      | "pickemTiers"
+      | "pickemMinPicks"
     >
   > &
   RewardPrizeSummaryInput & {
@@ -683,6 +698,94 @@ const describeBracketReward = (templates: BracketTemplates, input: RewardDescrip
   };
 };
 
+// ── Pick 'Em Prizes ─────────────────────────────────────────────────────────
+
+type PickEmTemplates = Extract<RewardDefinition["description"], { calendar: "pickem_window" }>;
+
+/**
+ * The Pick 'Em Prize (lib/pickemPrizes.ts): most right, get N right, or "X out of N" tiers. Null when
+ * its scope, window or tiers aren't known — a caller that couldn't read them (attachRewardDescriptions)
+ * — and the stored `rules` stand in.
+ */
+const describePickEmReward = (
+  templates: PickEmTemplates,
+  input: RewardDescriptionInput,
+  prize: string,
+): RewardDescription | null => {
+  const scope = normalizePickEmPrizeScope(input.pickemScope ?? null);
+  const window = normalizePickEmPrizeWindow(input.pickemWindow ?? null);
+  if (!scope || !window) return null;
+  const scopeText = describePickEmPrizeScope(scope);
+  const windowText = describePickEmPrizeWindow(window);
+  const onlyThese = `Make your picks in Pick 'Em. Only ${scopeText} games count.`;
+  const kind = pickemPrizeWinKind({ winCondition: input.winCondition ?? "points_threshold", pickemTiers: input.pickemTiers });
+
+  if (kind === "most_right") {
+    const minPicks = Number(input.pickemMinPicks);
+    const minimum = minPlayersOf(input);
+    return {
+      summary: fill(templates.mostRight, { scope: scopeText, window: windowText, prize }),
+      when: onlyThese,
+      fineprint: [
+        Number.isInteger(minPicks) && minPicks > 0 ? `Make at least ${formatCount(minPicks)} picks to be ranked.` : "",
+        "Ties go to the closest guess of the total points in the last game, then the earliest guess.",
+        minimum ? `At least ${minimum} players need to play for a winner to be named.` : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+      isCustom: false,
+    };
+  }
+
+  if (kind === "target") {
+    const quota = Math.max(1, Math.round(Number(input.winnerQuota) || 1));
+    return {
+      summary: fill(templates.target, {
+        threshold: formatCount(input.pointsRequiredToWin),
+        scope: scopeText,
+        window: windowText,
+        prize,
+      }),
+      when: onlyThese,
+      fineprint: quota === 1 ? "The first player to get there wins." : `The first ${quota} players to get there win.`,
+      isCustom: false,
+    };
+  }
+
+  const tiers = [...(input.pickemTiers ?? [])].sort((a, b) => a.place - b.place);
+  const limit = Number(input.pickemPickLimit);
+  if (tiers.length === 0 || !Number.isInteger(limit) || limit < 1) return null;
+  const summary =
+    tiers.length === 1
+      ? fill(templates.tierOne, {
+          correct: formatCount(tiers[0].correct),
+          limit: formatCount(limit),
+          scope: scopeText,
+          window: windowText,
+          prize: describeRewardPrizeInSentence(tiers[0]),
+        })
+      : fill(templates.tierMany, {
+          correct: listOr(tiers.map((tier) => formatCount(tier.correct))),
+          limit: formatCount(limit),
+          scope: scopeText,
+          window: windowText,
+          ladder: `${listAnd(
+            tiers.map((tier) =>
+              fill(templates.tierLadderItem, {
+                correct: formatCount(tier.correct),
+                prize: describeRewardPrizeInSentence(tier),
+              }),
+            ),
+          )}.`.replace(/^./, (first) => first.toUpperCase()),
+        });
+  return {
+    summary,
+    when: `You get ${formatCount(limit)} ${scopeText} picks ${windowText}. Only your first ${formatCount(limit)} count.`,
+    fineprint: tiers.length > 1 ? "You win only the highest tier you reach." : null,
+    isCustom: false,
+  };
+};
+
 /**
  * "Next contest starts Thu, Oct 9." — only when this cycle's quota is filled on a
  * recurring reward that will actually run again: never for a paused reward
@@ -736,6 +839,9 @@ export function describeReward(input: RewardDescriptionInput, now: Date): Reward
   }
   if (templates.calendar === "march_madness") {
     return describeBracketReward(templates, input) ?? legacyDescription(input);
+  }
+  if (templates.calendar === "pickem_window") {
+    return describePickEmReward(templates, input, prize) ?? legacyDescription(input);
   }
 
   const scheduled = describeScheduleReward(definition, templates, input, prize);
@@ -805,6 +911,22 @@ export function describeRewardWin(input: RewardDescriptionInput, win: RewardWinF
   }
 
   const zone = win.timezone || DEFAULT_VENUE_TIMEZONE;
+  if (templates.calendar === "pickem_window") {
+    // The period is the coupon's cycle key (pickemPrizeCycleStart), read in the venue's zone; a
+    // tier coupon's tier is in that key's seconds.
+    const scope = normalizePickEmPrizeScope(input.pickemScope ?? null);
+    const window = normalizePickEmPrizeWindow(input.pickemWindow ?? null);
+    const startDate = pickemPrizeCycleDate(cycleStart, zone);
+    if (!scope || !window || !startDate) return null;
+    const vars = { scope: describePickEmPrizeScope(scope), when: describePickEmPrizePeriodWon(window, startDate) };
+    const kind = pickemPrizeWinKind({ winCondition: input.winCondition ?? "points_threshold", pickemTiers: input.pickemTiers });
+    if (kind === "most_right") return fill(templates.wonMostRight, vars);
+    if (kind === "target") return fill(templates.wonTarget, { ...vars, threshold });
+    const tier = (input.pickemTiers ?? []).find((entry) => entry.place === pickemPrizeTierOfCycle(cycleStart));
+    const limit = Number(input.pickemPickLimit);
+    if (!tier || !Number.isInteger(limit) || limit < 1) return null;
+    return fill(templates.wonTier, { ...vars, correct: formatCount(tier.correct), limit: formatCount(limit) });
+  }
   if (input.winCondition === "ranked_places") {
     // The coupon's own place; without it there is nothing true to say, so "Won from: …" stays.
     const place = Number(win.place);

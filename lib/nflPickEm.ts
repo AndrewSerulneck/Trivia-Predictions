@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
+import { bestSpreadLinesByGame, type BDLSpreadOddsRow, type NormalizedSpreadLine } from "@/lib/spreadLines";
 import { getLocalDateKey, getEasternDayOfWeek } from "@/lib/timezone";
 import { type PickEmPick, type PickEmGame } from "@/lib/pickem";
 import { getVenueNFLPickEmScoringMode, type NFLPickEmScoringMode } from "@/lib/venueGameSettings";
@@ -867,24 +868,6 @@ type NFLPickEmGameLineRow = {
   locked_at: string | null;
 };
 
-type BDLNFLOdds = {
-  game_id?: number | string | null;
-  vendor?: string | null;
-  spread_home_value?: number | string | null;
-  spread_away_value?: number | string | null;
-  updated_at?: string | null;
-};
-
-type NormalizedNFLSpreadLine = {
-  providerGameId: string;
-  homeSpread: number;
-  awaySpread: number;
-  provider: string;
-  fetchedAt: string | null;
-  updatedAtMs: number;
-  priority: number;
-};
-
 function mapBDLGame(game: BDLGame): NFLGameFetchResult {
   const homeTeam = game.home_team?.full_name || game.home_team?.name || "";
   const awayTeam = game.visitor_team?.full_name || game.visitor_team?.name || "";
@@ -922,74 +905,13 @@ function mapGameLineRow(row: NFLPickEmGameLineRow): NFLPickEmGameLine {
   };
 }
 
-function parseSpreadValue(value: number | string | null | undefined): number | null {
-  if (value === null || value === undefined) return null;
-  const parsed = Number.parseFloat(String(value));
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
 // See the arithmetic in fetchNFLSpreadLinesFromBDL for why 8.
 const NFL_SPREAD_LINES_MAX_PAGES = 8;
-
-const NFL_SPREAD_VENDOR_PRIORITY = [
-  "fanduel",
-  "draftkings",
-  "betmgm",
-  "caesars",
-  "bet365",
-  "fanatics",
-  "betrivers",
-  "betparx",
-  "ballybet",
-  "betway",
-];
-
-function getSpreadVendorPriority(vendor: string): number {
-  const index = NFL_SPREAD_VENDOR_PRIORITY.indexOf(vendor.toLowerCase());
-  return index >= 0 ? index : NFL_SPREAD_VENDOR_PRIORITY.length;
-}
-
-function normalizeBDLNFLSpread(row: BDLNFLOdds): NormalizedNFLSpreadLine | null {
-  const providerGameId = String(row.game_id ?? "").trim();
-  if (!providerGameId) return null;
-
-  const rawHomeSpread = parseSpreadValue(row.spread_home_value);
-  const rawAwaySpread = parseSpreadValue(row.spread_away_value);
-  if (rawHomeSpread === null && rawAwaySpread === null) return null;
-
-  const homeSpread = rawHomeSpread ?? -rawAwaySpread!;
-  const awaySpread = rawAwaySpread ?? -homeSpread;
-  if (!Number.isFinite(homeSpread) || !Number.isFinite(awaySpread)) return null;
-
-  const vendor = String(row.vendor ?? "unknown").trim() || "unknown";
-  const updatedAtMs = Date.parse(String(row.updated_at ?? ""));
-
-  return {
-    providerGameId,
-    homeSpread,
-    awaySpread,
-    provider: `balldontlie:${vendor}`,
-    fetchedAt: row.updated_at ?? null,
-    updatedAtMs: Number.isFinite(updatedAtMs) ? updatedAtMs : 0,
-    priority: getSpreadVendorPriority(vendor),
-  };
-}
-
-function pickBetterSpreadLine(
-  current: NormalizedNFLSpreadLine | undefined,
-  next: NormalizedNFLSpreadLine
-): NormalizedNFLSpreadLine {
-  if (!current) return next;
-  if (next.priority !== current.priority) {
-    return next.priority < current.priority ? next : current;
-  }
-  return next.updatedAtMs > current.updatedAtMs ? next : current;
-}
 
 async function fetchNFLSpreadLinesFromBDL(params: {
   seasonWeek?: { season: number; weekNumber: number };
   providerGameIds: string[];
-}): Promise<Map<string, NormalizedNFLSpreadLine>> {
+}): Promise<Map<string, NormalizedSpreadLine>> {
   if (params.providerGameIds.length === 0) return new Map();
 
   // BDL's /nfl/v1/odds does not accept a vendor/book/market filter — only
@@ -1014,7 +936,7 @@ async function fetchNFLSpreadLinesFromBDL(params: {
   // malformed/huge response can't loop unbounded against a paid provider API
   // on a hot read path.
   const truncation = { truncated: false };
-  const rows = await fetchBallDontLieList<BDLNFLOdds>(
+  const rows = await fetchBallDontLieList<BDLSpreadOddsRow>(
     "/nfl/v1/odds",
     query,
     NFL_SPREAD_LINES_MAX_PAGES,
@@ -1029,19 +951,7 @@ async function fetchNFLSpreadLinesFromBDL(params: {
         " — some spread lines may be missing."
     );
   }
-  const byProviderGameId = new Map<string, NormalizedNFLSpreadLine>();
-
-  for (const row of rows) {
-    const line = normalizeBDLNFLSpread(row);
-    if (!line) continue;
-    if (!params.providerGameIds.includes(line.providerGameId)) continue;
-    byProviderGameId.set(
-      line.providerGameId,
-      pickBetterSpreadLine(byProviderGameId.get(line.providerGameId), line)
-    );
-  }
-
-  return byProviderGameId;
+  return bestSpreadLinesByGame(rows, params.providerGameIds);
 }
 
 export async function getNFLPickEmGameLine(gameId: string): Promise<NFLPickEmGameLine | null> {
@@ -1164,7 +1074,7 @@ async function refreshNFLPickEmGameLines(
           seasonWeek,
           providerGameIds: unlockableGames.map((game) => game.id),
         })
-      : new Map<string, NormalizedNFLSpreadLine>();
+      : new Map<string, NormalizedSpreadLine>();
 
   for (const game of games) {
     const gameId = toNFLPickEmGameId(game);
@@ -1231,7 +1141,7 @@ async function refreshNFLPickEmGameLines(
           away_team: game.awayTeam,
           home_spread: providerLine.homeSpread,
           away_spread: providerLine.awaySpread,
-          provider: providerLine.provider,
+          provider: `balldontlie:${providerLine.vendor}`,
           fetched_at: fetchedAt,
         },
         { onConflict: "game_id" }

@@ -24,6 +24,7 @@ const SPORT_ICONS: Record<string, string> = {
   soccer: "⚽",
   nfl: "🏈",
   nhl: "🏒",
+  ncaaf: "🏈",
   mma: "🥊",
   tennis: "🎾",
 };

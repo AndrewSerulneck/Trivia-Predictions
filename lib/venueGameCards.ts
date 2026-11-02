@@ -143,10 +143,9 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
     cardClassName: "bg-indigo-600 text-white",
     visibleOnVenueHome: true,
     rules: [
-      "-10 picks total",
+      "-Pick as many of today's games as you like",
       "-10 points per correct pick",
-      "-7 correct picks wins double",
-      "-10 correct picks wins triple",
+      "-Points are added automatically when the game ends",
     ],
     steps: [
       {
@@ -154,16 +153,12 @@ export const VENUE_GAME_CARDS: VenueGameCardConfig[] = [
         body: "This is a very simple game. Just pick who you think will win each of today's matchups. Tap a team to lock in your pick.",
       },
       {
-        heading: "Correct picks earn you points.",
-        body: "But choose wisely — you only get 10 picks per day. Predictions are graded minutes after the final whistle. ",
+        heading: "Pick as many games as you like.",
+        body: "Picks lock when each game starts. Predictions are graded minutes after the final whistle.",
       },
       {
         heading: "10 points per correct pick.",
-        body: [
-          "Hit 7 correct → 2× bonus.",
-          "A perfect score (10/10) → 3× bonus.",
-          "Max: 300 points.",
-        ],
+        body: "Points are added to your score automatically. Nothing to collect.",
       },
     ],
   },

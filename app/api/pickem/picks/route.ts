@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import {
-  claimPickEmPoints,
-  claimPickEmReward,
   clearPickEmPick,
   listUserPickEmPicks,
   settlePendingPickEmPicks,
@@ -39,6 +37,7 @@ function toClientErrorStatus(message: string): number {
     normalized.includes("locked") ||
     normalized.includes("already") ||
     normalized.includes("coming soon") ||
+    normalized.includes("check back soon") ||
     normalized.includes("must match") ||
     normalized.includes("limit")
   ) {
@@ -99,8 +98,6 @@ export async function POST(request: Request) {
       sportSlug?: string;
       gameId?: string;
       pickTeam?: string;
-      pickId?: string;
-      localDate?: string;
       date?: string;
       weekStartDate?: string;
       tzOffsetMinutes?: number | string;
@@ -108,30 +105,11 @@ export async function POST(request: Request) {
 
     const mutationUserId = sessionUserId ?? String(body.userId ?? "").trim();
     const action = String(body.action ?? "").trim().toLowerCase();
-    if (action === "claim_points") {
-      await maybeRequireActiveVenuePresence({
-        userId: mutationUserId,
-        venueId: String(body.venueId ?? "").trim(),
-      });
-
-      const result = await claimPickEmPoints({
-        userId: mutationUserId,
-        venueId: String(body.venueId ?? "").trim(),
-        localDate: String(body.localDate ?? body.date ?? "").trim(),
-        tzOffsetMinutes: body.tzOffsetMinutes,
-      });
-
-      return NextResponse.json({ ok: true, result });
-    }
-    if (action === "claim") {
-      await maybeRequireActiveVenuePresenceForUser({ userId: mutationUserId });
-
-      const result = await claimPickEmReward({
-        userId: mutationUserId,
-        pickId: String(body.pickId ?? "").trim(),
-      });
-
-      return NextResponse.json({ ok: true, result });
+    // Collect is retired: correct picks are paid automatically when graded
+    // (lib/pickemPoints.ts). A tab opened before the release may still send these;
+    // answer "nothing to collect" without touching points.
+    if (action === "claim_points" || action === "claim") {
+      return NextResponse.json({ ok: true, result: { claimed: false, pointsAwarded: 0, automatic: true } });
     }
     if (action === "clear") {
       await maybeRequireActiveVenuePresenceForUser({ userId: mutationUserId });

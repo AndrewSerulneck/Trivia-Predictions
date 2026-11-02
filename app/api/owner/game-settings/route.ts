@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
-import {
-  getVenueGameSettings,
-  setVenueNFLPickEmScoringMode,
-  type NFLPickEmScoringMode,
-} from "@/lib/venueGameSettings";
-
-const isNFLPickEmScoringMode = (value: unknown): value is NFLPickEmScoringMode =>
-  value === "standard" || value === "spread";
+import { getVenueGameSettings, readGameSettingsChanges, updateVenueGameSettings } from "@/lib/venueGameSettings";
 
 export async function GET(request: Request) {
   let auth;
@@ -51,6 +44,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     venueId?: string;
     nflPickEmScoringMode?: unknown;
+    cfbPickEmScoringMode?: unknown;
   };
 
   const venueId = String(body.venueId ?? "").trim();
@@ -63,15 +57,16 @@ export async function POST(request: Request) {
       { status: 403 },
     );
   }
-  if (!isNFLPickEmScoringMode(body.nflPickEmScoringMode)) {
+  const changes = readGameSettingsChanges(body);
+  if (!changes) {
     return NextResponse.json(
-      { ok: false, error: "nflPickEmScoringMode must be 'standard' or 'spread'." },
+      { ok: false, error: "nflPickEmScoringMode or cfbPickEmScoringMode must be 'standard' or 'spread'." },
       { status: 400 },
     );
   }
 
   try {
-    const settings = await setVenueNFLPickEmScoringMode(venueId, body.nflPickEmScoringMode);
+    const settings = await updateVenueGameSettings(venueId, changes);
     return NextResponse.json({ ok: true, settings });
   } catch (error) {
     return NextResponse.json(

@@ -20,6 +20,15 @@ import { isMissingFunction } from "@/lib/supabaseRpcErrors";
 import { chunkIds } from "@/lib/postgrestIds";
 import { SQUARES_PRIZE_DEFINITION_ID, normalizeSquaresMoments } from "@/lib/squaresPrizes";
 import { BRACKET_PRIZE_DEFINITION_ID, normalizeBracketPrizeKeys, type BracketPrizeKey } from "@/lib/bracketPrizes";
+import {
+  PICKEM_PRIZE_DEFINITION_ID,
+  PICKEM_PRIZE_MAX_TIERS,
+  normalizePickEmPrizeScope,
+  normalizePickEmPrizeWindow,
+  pickemPrizeCycleStart,
+} from "@/lib/pickemPrizes";
+import { PICKEM_PRIZE_ENDED_CARD_MS, pickemPrizeCardPeriod } from "@/lib/pickemPrizeStandings";
+import { normalizePickEmPrizeTiers, serializePickEmPrizeTiers } from "@/lib/pickemPrizeTiers";
 import type { SquaresMoment } from "@/lib/seasonalPoints";
 import type {
   ChallengeCampaign,
@@ -36,6 +45,9 @@ import type {
   ChallengeMode,
   ChallengeWinCondition,
   NFLWeekScope,
+  PickEmPrizeScope,
+  PickEmPrizeTier,
+  PickEmPrizeWindow,
   PrizePosDelivery,
   PrizeType,
   RewardPlacePrize,
@@ -911,9 +923,19 @@ function campaignMatchesVenue(campaign: ChallengeCampaign, venueId: string): boo
   return campaign.venueIds.includes(venueId);
 }
 
+/**
+ * A Pick 'Em Prize (game_types ['pickem']) counts only correct picks in ITS games and window, through
+ * its own sweep (Phase 4b) — never the 10 points every correct Pick 'Em pick pays, which would count
+ * every league, every day.
+ */
+function isPointsAccrualExempt(campaign: Pick<ChallengeCampaign, "rewardDefinitionId">): boolean {
+  return campaign.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID;
+}
+
 function isCampaignEligibleAtTime(campaign: ChallengeCampaign, now: Date, gameType: ChallengeGameType, timezone: string): boolean {
   if (!campaign.isActive || campaign.winnerUserId) return false;
   if (!campaign.gameTypes.includes(gameType)) return false;
+  if (isPointsAccrualExempt(campaign)) return false;
   if (campaign.scheduleType === "multi_day" || campaign.scheduleType === "one_time") {
     return isMultiDayCampaignActive(campaign, now, timezone);
   }
@@ -963,6 +985,7 @@ export function isCampaignEligibleForAccrual(
   if (!window) return isCampaignEligibleAtTime(campaign, occurredAt, gameType, timezone);
   if (!campaign.isActive || campaign.winnerUserId) return false;
   if (!campaign.gameTypes.includes(gameType)) return false;
+  if (isPointsAccrualExempt(campaign)) return false;
   if (!Number.isFinite(window.startMs) || !Number.isFinite(window.endMsExclusive)) return false;
   const atMs = occurredAt.getTime();
   return atMs >= window.startMs && atMs < window.endMsExclusive;
@@ -1344,41 +1367,61 @@ export async function listChallengeCampaigns(params: {
   includeResolved?: boolean;
   /** Phase 9a: scope to campaigns created by this owner (null/absent = all). */
   createdByOwnerId?: string | null;
+  /**
+   * Also read the pickem_* columns in this same query and attach each Pick 'Em Prize's terms (the
+   * venue Prizes panel needs its window: plan Phase 7.2). The columns missing → retried once without
+   * them, and those prizes carry no terms.
+   */
+  withPickEmTerms?: boolean;
 } = {}): Promise<ChallengeCampaign[]> {
   assertConfigured();
   const includeInactive = Boolean(params.includeInactive);
   const includeResolved = Boolean(params.includeResolved);
 
-  let query = supabaseAdmin!
-    .from("challenge_campaigns")
-    .select(CAMPAIGN_SELECT_COLUMNS)
-    .order("display_order", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const readCampaigns = (columns: string) => {
+    let query = supabaseAdmin!
+      .from("challenge_campaigns")
+      .select(columns)
+      .order("display_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(200);
 
-  if (!includeInactive) {
-    query = query.eq("is_active", true);
-  }
-  if (!includeResolved) {
-    query = query.is("winner_user_id", null);
-  }
-  // Phase 9a: owner-scoped listing filters to a single owner's campaigns.
-  if (params.createdByOwnerId) {
-    query = query.eq("created_by_owner_id", params.createdByOwnerId);
-  }
-  // Push the venue scope into the WHERE clause (not just the in-memory filter
-  // below) so the 200-row cap applies PER VENUE instead of globally — without
-  // this, a venue's campaign can be truncated by unrelated campaigns at other
-  // venues filling the cap first. venue_ids = '{}' means "global" (matches
-  // every venue), so it's kept alongside the overlap check.
-  if (params.venueId) {
-    query = query.or(`venue_ids.ov.{${params.venueId}},venue_ids.eq.{}`);
-  }
+    if (!includeInactive) {
+      query = query.eq("is_active", true);
+    }
+    if (!includeResolved) {
+      query = query.is("winner_user_id", null);
+    }
+    // Phase 9a: owner-scoped listing filters to a single owner's campaigns.
+    if (params.createdByOwnerId) {
+      query = query.eq("created_by_owner_id", params.createdByOwnerId);
+    }
+    // Push the venue scope into the WHERE clause (not just the in-memory filter
+    // below) so the 200-row cap applies PER VENUE instead of globally — without
+    // this, a venue's campaign can be truncated by unrelated campaigns at other
+    // venues filling the cap first. venue_ids = '{}' means "global" (matches
+    // every venue), so it's kept alongside the overlap check.
+    if (params.venueId) {
+      query = query.or(`venue_ids.ov.{${params.venueId}},venue_ids.eq.{}`);
+    }
+    return query.returns<Array<ChallengeCampaignRow & Partial<PickEmPrizeTermsRow>>>();
+  };
 
-  const { data, error } = await query.returns<ChallengeCampaignRow[]>();
+  let read = await readCampaigns(
+    params.withPickEmTerms ? `${CAMPAIGN_SELECT_COLUMNS}, ${PICKEM_PRIZE_COLUMNS}` : CAMPAIGN_SELECT_COLUMNS,
+  );
+  if (params.withPickEmTerms && read.error && isMissingColumn(read.error, "pickem_")) {
+    console.error("[PickEmPrize] terms-columns-missing");
+    read = await readCampaigns(CAMPAIGN_SELECT_COLUMNS);
+  }
+  const { data, error } = read;
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to load challenge campaigns.");
   }
+  const pickemTermsOfRow = (row: ChallengeCampaignRow & Partial<PickEmPrizeTermsRow>): PickEmPrizeTerms | null =>
+    params.withPickEmTerms && row.reward_definition_id?.trim() === PICKEM_PRIZE_DEFINITION_ID && row.pickem_window !== undefined
+      ? mapPickEmPrizeTerms(row as PickEmPrizeTermsRow)
+      : null;
 
   const now = new Date();
   const parsedCampaigns = data.map((row) => mapCampaignRow(row));
@@ -1409,7 +1452,11 @@ export async function listChallengeCampaigns(params: {
     }
   }
 
-  let mapped = data.map((row) => mapCampaignRow(row, row.winner_user_id ? winnerNameById.get(row.winner_user_id) ?? null : null));
+  let mapped = data.map((row) => {
+    const campaign = mapCampaignRow(row, row.winner_user_id ? winnerNameById.get(row.winner_user_id) ?? null : null);
+    const pickemTerms = pickemTermsOfRow(row);
+    return pickemTerms ? { ...campaign, ...pickemTerms } : campaign;
+  });
   if (!includeInactive) {
     mapped = mapped.filter((campaign) => campaign.isActive);
   }
@@ -1522,6 +1569,15 @@ export async function createChallengeCampaign(input: {
    * only when set, so every other reward's insert is unchanged even before 20261019213121 is applied.
    */
   bracketKeys?: BracketPrizeKey[] | null;
+  /**
+   * Pick 'Em Prizes only (validated by createReward): scope, window, and how it's won. Written only
+   * when set, so every other reward's insert is unchanged even before 20261031200417 is applied.
+   */
+  pickemScope?: PickEmPrizeScope | null;
+  pickemWindow?: PickEmPrizeWindow | null;
+  pickemPickLimit?: number | null;
+  pickemTiers?: PickEmPrizeTier[] | null;
+  pickemMinPicks?: number | null;
 }): Promise<ChallengeCampaign> {
   assertConfigured();
   const name = String(input.name ?? "").trim();
@@ -1539,6 +1595,8 @@ export async function createChallengeCampaign(input: {
   const prizePosDelivery = normalizePrizePosDelivery(input.prizePosDelivery);
   const squaresMoments = normalizeSquaresMoments(input.squaresMoments ?? null);
   const bracketKeys = normalizeBracketPrizeKeys(input.bracketKeys ?? null);
+  const pickemTerms = pickemTermsOf(input);
+  const pickemTermsRow = pickemTerms ? serializePickEmPrizeTerms(pickemTerms) : {};
   if (
     prizePosDelivery === "gift_card" &&
     !prizeCanBeScannableGiftCard(prizeKind, prizeKind === "menu_item" ? normalizeDiscountKind(input.prizeDiscountKind) : null)
@@ -1613,6 +1671,7 @@ export async function createChallengeCampaign(input: {
     ...(Number.isInteger(input.minPlayers) ? { min_players: input.minPlayers } : {}),
     ...(squaresMoments ? { squares_moments: squaresMoments } : {}),
     ...(bracketKeys ? { bracket_keys: bracketKeys } : {}),
+    ...pickemTermsRow,
   };
 
   const { data, error } = await supabaseAdmin!
@@ -1624,7 +1683,12 @@ export async function createChallengeCampaign(input: {
     throw new Error(error?.message ?? "Failed to create challenge campaign.");
   }
   const created = mapCampaignRow(data);
-  return { ...created, ...(squaresMoments ? { squaresMoments } : {}), ...(bracketKeys ? { bracketKeys } : {}) };
+  return {
+    ...created,
+    ...(squaresMoments ? { squaresMoments } : {}),
+    ...(bracketKeys ? { bracketKeys } : {}),
+    ...(pickemTerms ?? {}),
+  };
 }
 
 export async function updateChallengeCampaign(input: {
@@ -1934,6 +1998,24 @@ export async function getChallengeCampaignOwnership(
   };
 }
 
+/**
+ * The prize definition a campaign was made from (`reward_definition_id`), or null when it has none
+ * or the id doesn't exist. One read by id, for the admin PATCH's Pick 'Em Prize check (plan Phase
+ * 7.6.1). Throws on a read error: that check must never read a failure as "not a Pick 'Em Prize".
+ */
+export async function getChallengeCampaignDefinitionId(id: string): Promise<string | null> {
+  assertConfigured();
+  const challengeId = String(id ?? "").trim();
+  if (!CAMPAIGN_ID_PATTERN.test(challengeId)) return null;
+  const { data, error } = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .select("reward_definition_id")
+    .eq("id", challengeId)
+    .maybeSingle<{ reward_definition_id: string | null }>();
+  if (error) throw new Error(error.message ?? "Failed to load campaign.");
+  return data?.reward_definition_id?.trim() || null;
+}
+
 export type ChallengeCycleWinnerRecord = {
   id: string;
   challengeId: string;
@@ -2160,6 +2242,185 @@ export async function loadBracketPrizeKeys(campaignIds: readonly string[]): Prom
     if (parsed) keys.set(row.id, parsed);
   }
   return keys;
+}
+
+// ── Pick 'Em Prizes (docs/pickem-college-football-and-prize-plan.md Phase 4a) ─────────────────
+
+/** A Pick 'Em Prize's own terms — the pickem_* columns, never in CAMPAIGN_SELECT_COLUMNS. */
+export type PickEmPrizeTerms = {
+  pickemScope: PickEmPrizeScope;
+  pickemWindow: PickEmPrizeWindow;
+  pickemPickLimit: number | null;
+  pickemTiers: PickEmPrizeTier[] | null;
+  pickemMinPicks: number | null;
+};
+
+const PICKEM_PRIZE_COLUMNS = "pickem_scope, pickem_window, pickem_pick_limit, pickem_tiers, pickem_min_picks";
+
+type PickEmPrizeTermsRow = {
+  pickem_scope: unknown;
+  pickem_window: unknown;
+  pickem_pick_limit: number | null;
+  pickem_tiers: unknown;
+  pickem_min_picks: number | null;
+};
+
+const positiveIntOrNull = (value: unknown): number | null => {
+  const n = Number(value);
+  return value !== null && value !== undefined && Number.isInteger(n) && n > 0 ? n : null;
+};
+
+/** Stored columns → typed terms, or null when the scope or window can't be read (never guessed). */
+function mapPickEmPrizeTerms(row: PickEmPrizeTermsRow): PickEmPrizeTerms | null {
+  const pickemScope = normalizePickEmPrizeScope(row.pickem_scope);
+  const pickemWindow = normalizePickEmPrizeWindow(row.pickem_window);
+  if (!pickemScope || !pickemWindow) return null;
+  const pickemTiers = row.pickem_tiers === null || row.pickem_tiers === undefined ? null : normalizePickEmPrizeTiers(row.pickem_tiers);
+  // Tiers that are stored but unreadable make the prize unreadable: never treat it as a "get N right".
+  if (row.pickem_tiers !== null && row.pickem_tiers !== undefined && !pickemTiers) return null;
+  return {
+    pickemScope,
+    pickemWindow,
+    pickemPickLimit: positiveIntOrNull(row.pickem_pick_limit),
+    pickemTiers,
+    pickemMinPicks: positiveIntOrNull(row.pickem_min_picks),
+  };
+}
+
+/** The Pick 'Em terms createChallengeCampaign was handed, or null for every other reward. */
+function pickemTermsOf(input: {
+  pickemScope?: PickEmPrizeScope | null;
+  pickemWindow?: PickEmPrizeWindow | null;
+  pickemPickLimit?: number | null;
+  pickemTiers?: PickEmPrizeTier[] | null;
+  pickemMinPicks?: number | null;
+}): PickEmPrizeTerms | null {
+  if (!input.pickemScope || !input.pickemWindow) return null;
+  return {
+    pickemScope: input.pickemScope,
+    pickemWindow: input.pickemWindow,
+    pickemPickLimit: input.pickemPickLimit ?? null,
+    pickemTiers: input.pickemTiers && input.pickemTiers.length > 0 ? input.pickemTiers : null,
+    pickemMinPicks: input.pickemMinPicks ?? null,
+  };
+}
+
+function serializePickEmPrizeTerms(terms: PickEmPrizeTerms): PickEmPrizeTermsRow {
+  return {
+    pickem_scope: terms.pickemScope,
+    pickem_window: terms.pickemWindow,
+    pickem_pick_limit: terms.pickemPickLimit,
+    pickem_tiers: terms.pickemTiers ? serializePickEmPrizeTiers(terms.pickemTiers) : null,
+    pickem_min_picks: terms.pickemMinPicks,
+  };
+}
+
+type PickEmPrizeCampaignRow = ChallengeCampaignRow & PickEmPrizeTermsRow;
+
+/**
+ * Every active Pick 'Em Prize at this venue, each with its terms — the input of the pick limit
+ * (lib/pickemPrizeLimit.ts), the overlap check (createReward) and the tiebreaker route. One read on
+ * the partial index idx_challenge_campaigns_pickem_prizes. The pickem_* columns are selected here by
+ * name because they are deliberately NOT in CAMPAIGN_SELECT_COLUMNS. Archived prizes
+ * (is_active = false) are left out: archiving stops a prize. A row whose terms can't be read is left
+ * out and logged. Throws on any read error — including the columns missing — so no caller mistakes a
+ * failed read for "no prizes".
+ */
+export async function listActivePickEmPrizeCampaigns(venueId: string): Promise<Array<ChallengeCampaign & PickEmPrizeTerms>> {
+  const vid = String(venueId ?? "").trim();
+  if (!vid) return [];
+  return queryActivePickEmPrizeCampaigns(vid);
+}
+
+/**
+ * Every active Pick 'Em Prize at every venue — the award sweep's first read (lib/pickemPrizeAwards.ts).
+ * Same rules and failure behaviour as listActivePickEmPrizeCampaigns.
+ */
+export async function listAllActivePickEmPrizeCampaigns(): Promise<Array<ChallengeCampaign & PickEmPrizeTerms>> {
+  return queryActivePickEmPrizeCampaigns(null);
+}
+
+const PICKEM_PRIZE_LIST_CAP = 500;
+
+async function queryActivePickEmPrizeCampaigns(venueId: string | null): Promise<Array<ChallengeCampaign & PickEmPrizeTerms>> {
+  assertConfigured();
+  let query = supabaseAdmin!
+    .from("challenge_campaigns")
+    .select(`${CAMPAIGN_SELECT_COLUMNS}, ${PICKEM_PRIZE_COLUMNS}`)
+    .eq("reward_definition_id", PICKEM_PRIZE_DEFINITION_ID)
+    .eq("is_active", true);
+  if (venueId) query = query.contains("venue_ids", [venueId]);
+  const { data, error } = await query
+    .order("created_at", { ascending: true })
+    .limit(venueId ? 200 : PICKEM_PRIZE_LIST_CAP)
+    .returns<PickEmPrizeCampaignRow[]>();
+  if (error) {
+    throw new Error(
+      isMissingColumn(error, "pickem_scope")
+        ? "[PickEmPrize] terms-columns-missing"
+        : error.message ?? "Failed to load Pick 'Em prizes.",
+    );
+  }
+  if (!venueId && (data?.length ?? 0) >= PICKEM_PRIZE_LIST_CAP) {
+    console.error("[PickEmPrize] active-list-capped", { cap: PICKEM_PRIZE_LIST_CAP });
+  }
+  const campaigns: Array<ChallengeCampaign & PickEmPrizeTerms> = [];
+  for (const row of data ?? []) {
+    const terms = mapPickEmPrizeTerms(row);
+    if (!terms) {
+      console.error("[PickEmPrize] terms-unreadable", { campaignId: row.id });
+      continue;
+    }
+    campaigns.push({ ...mapCampaignRow(row), ...terms });
+  }
+  return campaigns;
+}
+
+/**
+ * End a one-day or date-range Pick 'Em Prize whose only period is settled (plan Phase 7.2): is_active
+ * = false, so the venue Prizes card says it ended and the partner's list files it under Ended. Only an
+ * active Pick 'Em Prize is touched. Called only by the award sweep (lib/pickemPrizeAwards.ts). Throws
+ * on a write error.
+ */
+export async function endPickEmPrize(campaignId: string): Promise<void> {
+  assertConfigured();
+  const { error } = await supabaseAdmin!
+    .from("challenge_campaigns")
+    .update({ is_active: false })
+    .eq("id", campaignId)
+    .eq("reward_definition_id", PICKEM_PRIZE_DEFINITION_ID)
+    .eq("is_active", true);
+  if (error) throw new Error(error.message ?? "Failed to end the Pick 'Em prize.");
+}
+
+/**
+ * campaign id → its Pick 'Em terms, for describing Pick 'Em Prizes (attachRewardDescriptions).
+ * Never throws: a failed read (or migration 20261031200417 not applied yet) is logged and answers an
+ * empty map, and those prizes fall back to their stored wording.
+ */
+export async function loadPickEmPrizeTerms(campaignIds: readonly string[]): Promise<Map<string, PickEmPrizeTerms>> {
+  const terms = new Map<string, PickEmPrizeTerms>();
+  const wanted = [...new Set(campaignIds.map((id) => String(id ?? "").trim()))].filter((id) => CAMPAIGN_ID_PATTERN.test(id));
+  if (wanted.length === 0 || !supabaseAdmin) return terms;
+  for (const chunk of chunkIds(wanted)) {
+    const { data, error } = await supabaseAdmin
+      .from("challenge_campaigns")
+      .select(`id, ${PICKEM_PRIZE_COLUMNS}`)
+      .in("id", chunk)
+      .returns<Array<{ id: string } & PickEmPrizeTermsRow>>();
+    if (error) {
+      console.error(
+        isMissingColumn(error, "pickem_scope") ? "[PickEmPrize] terms-columns-missing" : "[PickEmPrize] terms-read-failed",
+        { message: error.message },
+      );
+      return new Map();
+    }
+    for (const row of data ?? []) {
+      const parsed = mapPickEmPrizeTerms(row);
+      if (parsed) terms.set(row.id, parsed);
+    }
+  }
+  return terms;
 }
 
 /**
@@ -2480,6 +2741,63 @@ export async function awardRankedCyclePlaces(params: {
   return { status, winnersAwarded };
 }
 
+export type PickEmTierAwardStatus = "awarded" | "already_won" | "not_reached" | "exhausted";
+
+const PICKEM_TIER_AWARD_STATUSES: readonly PickEmTierAwardStatus[] = ["awarded", "already_won", "not_reached", "exhausted"];
+
+/**
+ * Pick 'Em Prize "X out of N" (docs/pickem-college-football-and-prize-plan.md Phase 4b): pay ONE
+ * player the highest tier they reached that still has a prize left, through the
+ * `award_pickem_tier_prize` RPC — the only writer of tier wins. It copies that tier's prize onto the
+ * ledger row and the coupon under the tier's own key (period start + tier seconds) and refuses a
+ * second prize for the player in the same period at any tier (D4). Repeating is safe: an award
+ * already made answers "already_won" and writes nothing.
+ *
+ * `periodStart` MUST be pickemPrizeCycleStart(period, 0); `correct` = the player's correct picks
+ * among their first N in the period. Fails closed: any RPC error throws (a missing function logs
+ * `[PickEmPrize] tier-rpc-missing`). The win notification is best-effort after the commit.
+ */
+export async function awardPickEmTierPrize(params: {
+  campaign: Pick<ChallengeCampaign, "id" | "name">;
+  venueId: string;
+  userId: string;
+  periodStart: Date;
+  correct: number;
+  now: Date;
+}): Promise<{ status: PickEmTierAwardStatus; tier: number | null }> {
+  assertConfigured();
+  const { campaign, venueId, userId, now } = params;
+  const { data, error } = await supabaseAdmin!.rpc("award_pickem_tier_prize", {
+    p_challenge_id: campaign.id,
+    p_period_start: params.periodStart.toISOString(),
+    p_winner_user_id: userId,
+    p_venue_id: venueId,
+    p_correct: Math.max(0, Math.trunc(params.correct)),
+    p_prize_expires_at: new Date(now.getTime() + PRIZE_EXPIRY_MS).toISOString(),
+  });
+  if (error) {
+    if (isMissingFunction(error, "award_pickem_tier_prize")) {
+      console.error("[PickEmPrize] tier-rpc-missing", { campaignId: campaign.id });
+    }
+    throw new Error(`award_pickem_tier_prize RPC failed: ${error.message}`);
+  }
+  const row = (Array.isArray(data) ? data[0] : data) as { status?: string; tier?: number | null } | null;
+  const status = PICKEM_TIER_AWARD_STATUSES.find((s) => s === row?.status);
+  if (!status) {
+    throw new Error(`award_pickem_tier_prize returned an unknown status: ${String(row?.status)}`);
+  }
+  const tier = status === "awarded" && Number.isInteger(row?.tier) ? Number(row?.tier) : null;
+  if (status === "awarded") {
+    await notifyPrizeWinBestEffort({
+      userId,
+      campaignId: campaign.id,
+      campaignName: campaign.name,
+      message: `You got ${Math.trunc(params.correct)} picks right and won a prize in "${campaign.name}"! Tap here to view your coupon before it expires.`,
+    });
+  }
+  return { status, tier };
+}
+
 /**
  * Fire the prize-win notification without ever throwing. The redemption coupon
  * is already durably committed by the award_cycle_winner RPC, so a transient
@@ -2702,8 +3020,14 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
   campaigns: ChallengeCampaign[];
   venueTimezone: string;
   now: Date;
+  /**
+   * Pick 'Em Prizes: the keys of the period the card shows, tier 0 first (pickemPrizeSnapshotState).
+   * Read inside the batched read below; an empty list = no period yet (no winners).
+   */
+  pickemKeysById?: Map<string, Date[]>;
 }): Promise<Map<string, { cycleStartIso: string; winners: ChallengeCycleWinnerRecord[] }>> {
   const { campaigns, venueTimezone, now } = params;
+  const pickemKeysById = params.pickemKeysById ?? new Map<string, Date[]>();
   const result = new Map<string, { cycleStartIso: string; winners: ChallengeCycleWinnerRecord[] }>();
   if (campaigns.length === 0) return result;
 
@@ -2716,25 +3040,28 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
   // instead of from a computed anchor.
   // A March Madness bracket prize is "ranked_places" but one-off with one cycle per bracket
   // (lib/bracketPrizes.ts), so it has no computable anchor either: it rides the same path.
+  // A Pick 'Em Prize ("most right" is game_winner too) is keyed by its own period, every tier of it
+  // (pickemPrizeCycleStart), so it rides the batched read with up to four keys.
   const readsOwnCycles = (c: ChallengeCampaign): boolean =>
-    c.winCondition === "game_winner" || c.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID;
+    !pickemKeysById.has(c.id) &&
+    (c.winCondition === "game_winner" || c.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID);
   const cycleKeyedCampaigns = campaigns.filter((c) => !readsOwnCycles(c));
   const gameWinnerCampaigns = campaigns.filter(readsOwnCycles);
 
-  // Per-campaign target cycle start (recurring: real cycle; one-time: epoch).
-  const targetMsById = new Map<string, number>();
-  const targetIsoById = new Map<string, string>();
+  // Per-campaign target cycle start(s) (recurring: real cycle; one-time: epoch; a Pick 'Em Prize:
+  // its period's tier keys).
+  const targetMsById = new Map<string, Set<number>>();
+  const targetIsos = new Set<string>();
   for (const campaign of cycleKeyedCampaigns) {
+    const pickemKeys = pickemKeysById.get(campaign.id);
     const isRecurring = Boolean(campaign.recurringType && campaign.recurringType !== "none");
-    const cycleStartDate = isRecurring ? computeCycleStart(campaign, now, venueTimezone) : new Date(0);
-    const iso = cycleStartDate.toISOString();
-    targetMsById.set(campaign.id, cycleStartDate.getTime());
-    targetIsoById.set(campaign.id, iso);
-    result.set(campaign.id, { cycleStartIso: iso, winners: [] });
+    const keys = pickemKeys ?? [isRecurring ? computeCycleStart(campaign, now, venueTimezone) : new Date(0)];
+    targetMsById.set(campaign.id, new Set(keys.map((key) => key.getTime())));
+    for (const key of keys) targetIsos.add(key.toISOString());
+    result.set(campaign.id, { cycleStartIso: (keys[0] ?? new Date(0)).toISOString(), winners: [] });
   }
 
-  const challengeIds = cycleKeyedCampaigns.map((c) => c.id);
-  const targetIsos = [...new Set(targetIsoById.values())];
+  const challengeIds = cycleKeyedCampaigns.filter((c) => (targetMsById.get(c.id)?.size ?? 0) > 0).map((c) => c.id);
 
   type CycleWinnerRow = {
     id: string; challenge_id: string; cycle_start: string; winner_user_id: string | null;
@@ -2753,7 +3080,7 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
       .from("challenge_cycle_winners")
       .select(CYCLE_WINNER_COLUMNS)
       .in("challenge_id", challengeIds)
-      .in("cycle_start", targetIsos)
+      .in("cycle_start", [...targetIsos])
       .returns<CycleWinnerRow[]>();
     if (error) throw new Error(error.message ?? "Failed to load cycle winners.");
     rows.push(...(data ?? []));
@@ -2896,8 +3223,7 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
   // for the same Postgres "+00:00" vs JS "...Z" reason noted throughout this file.
   for (const r of rows) {
     const targetMs = targetMsById.get(r.challenge_id);
-    if (targetMs === undefined) continue;
-    if (new Date(r.cycle_start).getTime() !== targetMs) continue;
+    if (!targetMs?.has(new Date(r.cycle_start).getTime())) continue;
     result.get(r.challenge_id)!.winners.push(toWinnerRecord(r));
   }
 
@@ -2916,18 +3242,55 @@ async function resolveCurrentCycleWinnersForSnapshot(params: {
   return result;
 }
 
+/** A Pick 'Em Prize's state on the venue Prizes card (plan Phase 7.2, F2). */
+type PickEmPrizeSnapshotState = {
+  /** The shown period's tier 0–3 keys (tier 0 first); empty before its first period. */
+  keys: Date[];
+  /** Venue-local first day of the next period while none is running. */
+  upcomingStartDate: string | null;
+  /** Nothing more to run: archived, or its last period settled (the sweep then ends it) or long past. */
+  prizeEnded: boolean;
+  /** An ended prize's card has outlived PICKEM_PRIZE_ENDED_CARD_MS (or has no period to show): leave the panel. */
+  dropCard: boolean;
+};
+
+function pickemPrizeSnapshotState(campaign: ChallengeCampaign, venueTimezone: string, now: Date): PickEmPrizeSnapshotState {
+  const tierKeys = (startMs: number): Date[] =>
+    Array.from({ length: PICKEM_PRIZE_MAX_TIERS + 1 }, (_, tier) => pickemPrizeCycleStart({ startMs }, tier)).filter(
+      (key): key is Date => key !== null,
+    );
+  if (!campaign.pickemWindow) {
+    // Terms unreadable: the generic cycle start is the period's tier-0 key (createReward stores the
+    // calendar from the window), so winners still show; no upcoming or ended state.
+    const start = computeCycleStart(campaign, now, venueTimezone).getTime();
+    return { keys: start > 0 ? tierKeys(start) : [], upcomingStartDate: null, prizeEnded: !campaign.isActive, dropCard: false };
+  }
+  const card = pickemPrizeCardPeriod(campaign.pickemWindow, campaign.createdAt, now.getTime(), venueTimezone);
+  const prizeEnded = !campaign.isActive || card.pastLookback;
+  return {
+    keys: card.shown ? tierKeys(card.shown.startMs) : [],
+    upcomingStartDate: prizeEnded ? null : card.nextStartDate,
+    prizeEnded,
+    dropCard: prizeEnded && (!card.shown || now.getTime() - card.shown.endMsExclusive > PICKEM_PRIZE_ENDED_CARD_MS),
+  };
+}
+
 export async function getChallengeCampaignSnapshotForUser(params: {
   userId: string;
   venueId: string;
-}): Promise<Array<ChallengeCampaign & { progressPoints: number }>> {
+}): Promise<Array<ChallengeCampaign & { progressPoints: number; upcomingStartDate?: string; prizeEnded?: boolean }>> {
   const userId = String(params.userId ?? "").trim();
   const venueId = String(params.venueId ?? "").trim();
   if (!userId || !venueId) return [];
 
+  // withPickEmTerms: a Pick 'Em Prize's card follows its own periods (its window), read in this same
+  // query — never a request of its own on the 30-second poll. attachRewardDescriptions then skips its
+  // terms read for them (they already carry pickemScope).
   const campaigns = await listChallengeCampaigns({
     venueId,
     includeInactive: true,
     includeResolved: true,
+    withPickEmTerms: true,
   });
   if (campaigns.length === 0) return [];
 
@@ -2940,10 +3303,16 @@ export async function getChallengeCampaignSnapshotForUser(params: {
   const venueTimezone = await getVenueTimezone(venueId);
   const now = new Date();
   const progressCampaigns = campaigns.filter((campaign) => campaign.challengeMode === "progress");
+  const pickemStateById = new Map(
+    progressCampaigns
+      .filter((campaign) => campaign.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID)
+      .map((campaign) => [campaign.id, pickemPrizeSnapshotState(campaign, venueTimezone, now)] as const),
+  );
   const cycleStateById = await resolveCurrentCycleWinnersForSnapshot({
     campaigns: progressCampaigns,
     venueTimezone,
     now,
+    pickemKeysById: new Map([...pickemStateById].map(([id, state]) => [id, state.keys])),
   });
 
   const winnerCampaignIds = progressCampaigns
@@ -2966,7 +3335,9 @@ export async function getChallengeCampaignSnapshotForUser(params: {
     }
   }
 
-  const baseCampaigns = campaigns.map((campaign) => {
+  const baseCampaigns = campaigns
+    .filter((campaign) => !pickemStateById.get(campaign.id)?.dropCard)
+    .map((campaign) => {
     const cycleState = cycleStateById.get(campaign.id);
     const winners = cycleState?.winners ?? [];
     const viewerWin = winners.find((winner) => winner.winnerUserId === userId) ?? null;
@@ -2979,6 +3350,8 @@ export async function getChallengeCampaignSnapshotForUser(params: {
     const prizeClaimedAt = viewerWin
       ? claimedAtByKey.get(`${campaign.id}:${new Date(viewerWin.cycleStart).getTime()}`) ?? null
       : null;
+    // A Pick 'Em Prize also says when its next period starts, or that it has ended.
+    const pickemState = pickemStateById.get(campaign.id);
     return {
       ...campaign,
       progressPoints: progressByChallenge.get(campaign.id) ?? 0,
@@ -2986,6 +3359,8 @@ export async function getChallengeCampaignSnapshotForUser(params: {
       winnerUsernames: winners.map((winner) => winner.winnerUsername ?? "Champion"),
       quotaRemaining: Math.max(0, campaign.winnerQuota - winners.length),
       viewerWon: viewerWin !== null,
+      ...(pickemState?.upcomingStartDate ? { upcomingStartDate: pickemState.upcomingStartDate } : {}),
+      ...(pickemState?.prizeEnded ? { prizeEnded: true } : {}),
     };
   });
 
@@ -2996,11 +3371,11 @@ export async function getChallengeCampaignSnapshotForUser(params: {
   });
 }
 
-export async function attachLeaderboardSnapshotsToCampaigns(params: {
-  campaigns: Array<ChallengeCampaign & { progressPoints: number }>;
+export async function attachLeaderboardSnapshotsToCampaigns<T extends ChallengeCampaign & { progressPoints: number }>(params: {
+  campaigns: T[];
   venueId: string;
   viewerUserId?: string;
-}): Promise<Array<ChallengeCampaign & { progressPoints: number }>> {
+}): Promise<T[]> {
   const venueId = String(params.venueId ?? "").trim();
   if (!venueId || params.campaigns.length === 0) return params.campaigns;
 
@@ -3064,6 +3439,12 @@ export async function listChallengeCampaignWinsForUser(params: {
   );
   const campaignRows = await loadWalletCampaignRows(challengeIds);
   const campaignById = new Map((campaignRows ?? []).map((c) => [c.id, c]));
+  // A Pick 'Em Prize coupon says what it was won for ("You got 15 of 20 college football picks right on
+  // Sat, Nov 7") from the prize's own terms, which the wallet select leaves out. One read, only when the
+  // wallet holds such a coupon; never throws (a failed read keeps "Won from: …").
+  const pickemTermsById = await loadPickEmPrizeTerms(
+    (campaignRows ?? []).filter((c) => c.reward_definition_id?.trim() === PICKEM_PRIZE_DEFINITION_ID).map((c) => c.id),
+  );
 
   return redemptionRows.map((row) => {
     const campaign = row.challenge_id ? campaignById.get(row.challenge_id) : undefined;
@@ -3133,6 +3514,7 @@ export async function listChallengeCampaignWinsForUser(params: {
             winnerQuota: Math.max(1, Number(campaign.winner_quota ?? 1)),
             nflWeekScope: normalizeNFLWeekScope(campaign.nfl_week_scope),
             gameWinnerSlots: normalizeGameWinnerSlots(campaign.game_winner_slots),
+            ...(pickemTermsById.get(campaign.id) ?? {}),
           }
         : null,
     };

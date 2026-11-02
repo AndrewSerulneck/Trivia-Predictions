@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 // like a Live Trivia "winner of the game" prize; the Live Trivia sweep once kept every active
 // game_winner prize at the venue, so the next trivia game would have won them.
 //
-// Every file that pays a prize (calls awardCycleWinner / awardRankedCyclePlaces) must be listed
+// Every file that pays a prize (calls awardCycleWinner / awardRankedCyclePlaces / awardPickEmTierPrize) must be listed
 // below with the definition check it uses. A new paying file fails this test until it is added —
 // with its own `rewardDefinitionId === <its constant>` check.
 
@@ -31,6 +31,7 @@ const OWN_DEFINITION_CHECK: Record<string, RegExp> = {
   "lib/nflPickEmWinnerRewards.ts": /campaign\.rewardDefinitionId === NFL_PICKEM_REWARD_DEFINITION_ID/,
   "lib/squaresPrizeAwards.ts": /campaign\.rewardDefinitionId === SQUARES_PRIZE_DEFINITION_ID/,
   "lib/bracketPrizeAwards.ts": /campaign\.rewardDefinitionId === BRACKET_PRIZE_DEFINITION_ID/,
+  "lib/pickemPrizeAwards.ts": /campaign\.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID/,
 };
 
 /**
@@ -41,7 +42,7 @@ const OWN_DEFINITION_CHECK: Record<string, RegExp> = {
  */
 const POINTS_TARGET_FILE = "lib/challengeCampaigns.ts";
 
-const PAYS = /\bawait\s+(awardCycleWinner|awardRankedCyclePlaces)\s*\(/;
+const PAYS = /\bawait\s+(awardCycleWinner|awardRankedCyclePlaces|awardPickEmTierPrize)\s*\(/;
 
 const payingFiles = [...filesUnder("lib"), ...filesUnder("app")]
   .filter((file) => /\.(ts|tsx)$/.test(file))
@@ -65,6 +66,14 @@ describe("prize sweep ownership (plan 6.1)", () => {
   it("the Live Trivia weekly places sweep filters its list read", () => {
     expect(read("lib/liveTriviaRankedRewards.ts")).toMatch(
       /\(await listActiveRankedPlaceCampaigns\(\)\)\.filter\(isLiveTriviaRankedCampaign\)/,
+    );
+  });
+
+  it("only the Pick 'Em Prize sweep pays a tier, and only from its own list read", () => {
+    const tierPayers = payingFiles.filter((file) => /\bawait\s+awardPickEmTierPrize\s*\(/.test(read(file)));
+    expect(tierPayers).toEqual(["lib/pickemPrizeAwards.ts"]);
+    expect(read("lib/pickemPrizeAwards.ts")).toMatch(
+      /\(await listAllActivePickEmPrizeCampaigns\(\)\)\.filter\(\s*\(campaign\) => campaign\.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID,?\s*\)/,
     );
   });
 

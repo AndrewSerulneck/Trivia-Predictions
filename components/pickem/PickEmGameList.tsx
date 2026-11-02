@@ -5,6 +5,7 @@ import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { haptic } from "@/lib/haptics";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { HightopLoader } from "@/components/ui/HightopLoader";
@@ -13,13 +14,16 @@ import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { getUserId, getVenueId } from "@/lib/storage";
 import { InlineSlotAdClient } from "@/components/ui/InlineSlotAdClient";
 import { CoinFXCanvas } from "@/components/ui/CoinFXCanvas";
-import { PickEmCollectAnimation } from "@/components/animations/PickEmCollectAnimation";
 import { ShareWinButton } from "@/components/social-share/ShareWinButton";
 import type { AdSlot } from "@/types";
+import { COLLEGE_FOOTBALL_SPREAD_COPY, NFL_PICKEM_SIGNPOST } from "@/lib/pickemCollegeFootball";
+import { formatSpreadLine } from "@/lib/spreadLines";
+import { PickEmPrizeTiebreakerCard } from "@/components/pickem/PickEmPrizeTiebreakerCard";
+import { pickemPrizeLineText, type PickEmGamePrize } from "@/lib/pickemPrizeLine";
 
 // Historical regular Pick 'Em rows can still be NFL rows from before the
 // dedicated game split, even though NFL is no longer a selectable sport here.
-type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "nfl" | "mma" | "tennis";
+type PickEmSportSlug = "nba" | "mlb" | "nhl" | "soccer" | "ncaaf" | "nfl" | "mma" | "tennis";
 
 type PickEmSport = {
   slug: PickEmSportSlug;
@@ -43,6 +47,14 @@ type PickEmGame = {
   awayScore: number | null;
   winnerTeam: string | null;
   periodLabel?: string | null;
+  // College Football only (plan Phase 3): the rule, the line, and "no line yet = can't pick".
+  scoringMode?: "standard" | "spread";
+  homeSpread?: number | null;
+  awaySpread?: number | null;
+  lineComingSoon?: boolean;
+  // A Pick 'Em Prize's pick limit is used up: a NEW pick is refused (Phase 6).
+  pickLimitReached?: boolean;
+  pickLimitMessage?: string;
   userPickId?: string;
   userPickTeam?: string;
   userPickStatus?: "pending" | "won" | "lost" | "push" | "canceled";
@@ -68,19 +80,9 @@ type GamesResponse = {
   sport?: PickEmSport;
   date?: string;
   games?: PickEmGame[];
-  pointsBank?: {
-    localDate: string;
-    totalPicks: number;
-    settledPicks: number;
-    pendingPicks: number;
-    correctPicks: number;
-    incorrectPicks: number;
-    unclaimedCorrectPicks: number;
-    pendingPoints: number;
-    multiplierEligible: boolean;
-    multiplierIfSettledNow: 1 | 2 | 3;
-    collectedPointsToday: number;
-  };
+  today?: PickEmTodaySummary;
+  collegeScoring?: CollegeScoring;
+  prizes?: PickEmGamePrize[];
   weekOptions?: Array<{ label: string; value: string }>;
   selectedWeekStartDate?: string;
   debug?: {
@@ -94,6 +96,31 @@ type GamesResponse = {
   };
   error?: string;
 };
+
+type CollegeScoring = { mode: "standard" | "spread"; linesUnavailable: boolean };
+
+// Today's regular picks at this venue; the points are already paid (no Collect, no bonus).
+type PickEmTodaySummary = {
+  localDate: string;
+  picks: number;
+  pending: number;
+  correct: number;
+  points: number;
+};
+
+/**
+ * Points for the user's won picks that were PAID between two loads of the same list (Phase 7.5.2,
+ * F19): grading and payment are separate steps, so a graded-but-unpaid pick shows its result but
+ * adds nothing to the header until a later load sees its payment stamp.
+ */
+export const newlyWonPointsOf = (previous: Map<string, PickEmGame>, next: PickEmGame[]): number =>
+  next.reduce((sum, game) => {
+    const before = previous.get(game.id);
+    if (!before || before.userPickRewardClaimedAt || game.userPickStatus !== "won" || !game.userPickRewardClaimedAt) {
+      return sum;
+    }
+    return sum + Math.max(0, game.userPickRewardPoints || 10);
+  }, 0);
 
 type PickEmPickHistoryItem = {
   id: string;
@@ -125,10 +152,10 @@ const SPORT_ICONS: Record<string, string> = {
   mlb: "⚾",
   soccer: "⚽",
   nhl: "🏒",
+  ncaaf: "🏈",
   mma: "🥊",
   tennis: "🎾",
 };
-const PICKEM_PICK_LIMIT = 10;
 const PICKEM_INLINE_SLOTS: Record<number, AdSlot> = {
   1: "pickem-inline-cards-1-5",
   2: "pickem-inline-cards-6-10",
@@ -192,7 +219,7 @@ function resultLabel(game: PickEmGame): string {
     return "Incorrect pick";
   }
   if (game.userPickStatus === "push") {
-    return "Push (tie game)";
+    return game.scoringMode === "spread" ? COLLEGE_FOOTBALL_SPREAD_COPY.push : "Push (tie game)";
   }
   return "Canceled";
 }
@@ -241,29 +268,18 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   const hasLiveGamesRef = useRef(false);
   const refreshTimerRef = useRef<number | null>(null);
   const [pickPulseByGameId, setPickPulseByGameId] = useState<Record<string, string | undefined>>({});
-  const [dailyPickCount, setDailyPickCount] = useState(0);
-  const [dailyPickCountDelta, setDailyPickCountDelta] = useState(0);
-  const [pointsBank, setPointsBank] = useState<GamesResponse["pointsBank"] | null>(null);
-  const [collectResult, setCollectResult] = useState<{
-    pointsCollected: number;
-    correctPicks: number;
-    totalSettledPicks: number;
-    multiplierApplied: 1 | 2 | 3;
-  } | null>(null);
-  const hasAutoCollectedRef = useRef(false);
-  const [goldFlash, setGoldFlash] = useState(false);
+  const [today, setToday] = useState<PickEmTodaySummary | null>(null);
+  const [collegeScoring, setCollegeScoring] = useState<CollegeScoring | null>(null);
+  const [prizes, setPrizes] = useState<PickEmGamePrize[]>([]);
+  const [gradedToast, setGradedToast] = useState<{ points: number; id: number } | null>(null);
   const [flashingSportSlug, setFlashingSportSlug] = useState("");
   const [lastDebugProbes, setLastDebugProbes] = useState<
     Array<{ sportKey: string; path: string; url: string; statusCode: number; bodyPreview: string }>
   >([]);
-  const [popAnim, setPopAnim] = useState<{ count: number; shake: boolean; id: number } | null>(null);
-  const [limitEchoAnim, setLimitEchoAnim] = useState<{ id: number } | null>(null);
-  const [multiplierAnim, setMultiplierAnim] = useState<{ label: "Double Points!" | "Triple Points!"; id: number } | null>(null);
-  const [limitPulse, setLimitPulse] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [pickHistory, setPickHistory] = useState<PickEmPickHistoryItem[]>([]);
   const [loadingPickHistory, setLoadingPickHistory] = useState(false);
-  const popIdRef = useRef(0);
+  const toastIdRef = useRef(0);
   const animatedWinDatesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -407,16 +423,27 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
 
         setSport(payload.sport ?? null);
         if (!shouldPreserveExistingGames) {
+          // A pick paid while the screen is open (no Collect): show "+10" and let the header
+          // catch up. Graded but not yet paid = no toast until the payment lands.
+          const gradedPoints = background ? newlyWonPointsOf(latestGameMapRef.current, nextGames) : 0;
           setGames(nextGames);
+          if (gradedPoints > 0) {
+            toastIdRef.current += 1;
+            setGradedToast({ points: gradedPoints, id: toastIdRef.current });
+            window.dispatchEvent(
+              new CustomEvent("tp:points-updated", { detail: { source: "pickem-graded", delta: gradedPoints } })
+            );
+          }
         }
-        setPointsBank(payload.pointsBank ?? null);
+        setToday(payload.today ?? null);
+        setCollegeScoring(payload.collegeScoring ?? null);
+        setPrizes(payload.prizes ?? []);
         setLastDebugProbes(payload.debug?.probes ?? []);
         if (!background) {
           setErrorMessage("");
         }
       } catch (error) {
         setLastDebugProbes([]);
-        setPointsBank(null);
         const message = error instanceof Error ? error.message : "Failed to load Pick 'Em games.";
         if (!background || gamesRef.current.length === 0) {
           setErrorMessage(message);
@@ -469,8 +496,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
     return Array.from(byLeague.entries()).sort((a, b) => a[0].localeCompare(b[0], undefined, { sensitivity: "base" }));
   }, [games]);
 
-  const pickCount = Math.max(0, dailyPickCount + dailyPickCountDelta);
-  const picksRemaining = Math.max(0, PICKEM_PICK_LIMIT - pickCount);
   const isViewingToday = selectedDate === todayDateKey;
 
   const toLocalDateKey = useCallback((iso: string) => {
@@ -498,6 +523,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
     [historicalPicks]
   );
   const todayWinPoints = useMemo(() => todayWinPointsOf(games), [games]);
+  const FALLBACK_PRIZE_LIMIT_MESSAGE = "You've used all your prize picks.";
 
   useEffect(() => {
     if (!selectedSportSlug || historicalPicks.length === 0) return;
@@ -541,36 +567,6 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
       void loadGames({ background: true });
     }, 250);
   }, [loadGames]);
-
-  const loadDailyPickCount = useCallback(async () => {
-    if (!userId || !venueId) {
-      setDailyPickCount(0);
-      setDailyPickCountDelta(0);
-      return;
-    }
-    const response = await fetch(`/api/pickem/picks?userId=${encodeURIComponent(userId)}&includeSettled=true&limit=300`, {
-      cache: "no-store",
-    });
-    const payload = (await response.json()) as {
-      ok: boolean;
-      picks?: Array<{ startsAt: string; venueId: string }>;
-    };
-    if (!payload.ok) {
-      return;
-    }
-    const tzOffsetMinutes = new Date().getTimezoneOffset();
-    const toLocalDateKey = (iso: string) => {
-      const ms = Date.parse(iso);
-      if (!Number.isFinite(ms)) return "";
-      const localMs = ms - tzOffsetMinutes * 60_000;
-      const d = new Date(localMs);
-      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
-    };
-    const todayKey = toLocalDateKey(new Date().toISOString());
-    const count = (payload.picks ?? []).filter((pick) => pick.venueId === venueId && toLocalDateKey(pick.startsAt) === todayKey).length;
-    setDailyPickCount(count);
-    setDailyPickCountDelta(0);
-  }, [userId, venueId]);
 
   const submitPickRequest = useCallback(
     async (gameId: string, pickTeam: string) => {
@@ -636,17 +632,11 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
       if (venuePresence.isInteractionBlocked) return;
       const previousTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
       const isDeselect = previousTeam === pickTeam;
-      if (!previousTeam && pickCount >= PICKEM_PICK_LIMIT) {
-        setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
-        return;
-      }
       savingGamesRef.current.add(game.id);
       setSavingGames(new Set(savingGamesRef.current));
       setSavedMessage("");
       setSubmitMessage("");
       haptic("selection");
-      const delta = isDeselect ? -1 : previousTeam ? 0 : 1;
-      setDailyPickCountDelta((current) => current + delta);
       const applySelection = (team: string | undefined) => {
         setGames((current) => current.map((row) => row.id === game.id ? { ...row, userPickTeam: team, userPickStatus: "pending" } : row));
         setOptimisticPickByGame((current) => {
@@ -658,97 +648,20 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
       applySelection(isDeselect ? undefined : pickTeam);
       setPickPulseByGameId((current) => ({ ...current, [game.id]: isDeselect ? undefined : pickTeam }));
       window.setTimeout(() => setPickPulseByGameId((current) => ({ ...current, [game.id]: undefined })), 420);
-      if (delta > 0) { popIdRef.current += 1; setPopAnim({ count: pickCount + 1, shake: false, id: popIdRef.current }); }
       try {
         if (isDeselect) await clearPickRequest(game.id); else await submitPickRequest(game.id, pickTeam);
         setSavedMessage("Pick saved");
         scheduleBackgroundRefresh();
-        await loadDailyPickCount();
       } catch (error) {
         applySelection(previousTeam);
-        setDailyPickCountDelta((current) => current - delta);
         setSubmitMessage(error instanceof Error ? error.message : "Failed to save your pick.");
       } finally {
         savingGamesRef.current.delete(game.id);
         setSavingGames(new Set(savingGamesRef.current));
       }
     },
-    [clearPickRequest, submitPickRequest, isViewingToday, loadDailyPickCount, optimisticPickByGame, pickCount, scheduleBackgroundRefresh, userId, venueId, venuePresence.isInteractionBlocked]
+    [clearPickRequest, submitPickRequest, isViewingToday, optimisticPickByGame, scheduleBackgroundRefresh, userId, venueId, venuePresence.isInteractionBlocked]
   );
-
-  useEffect(() => {
-    if (!userId || !venueId) return;
-    if (venuePresence.isInteractionBlocked) return;
-    if (!pointsBank || pointsBank.unclaimedCorrectPicks <= 0) return;
-    if (hasAutoCollectedRef.current) return;
-    hasAutoCollectedRef.current = true;
-
-    const run = async () => {
-      try {
-        const response = await fetch("/api/pickem/picks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "claim_points",
-            userId,
-            venueId,
-            localDate: selectedDate,
-            tzOffsetMinutes: new Date().getTimezoneOffset(),
-          }),
-        });
-        const payload = (await response.json()) as {
-          ok: boolean;
-          result?: {
-            claimed: boolean;
-            pointsAwarded: number;
-            claimedPickCount: number;
-            multiplierApplied: 1 | 2 | 3;
-            correctPicks: number;
-            settledPicks: number;
-          };
-          error?: string;
-          code?: string;
-          userMessage?: string;
-        };
-        const presenceFailure = venuePresence.capturePresenceFailure(payload);
-        if (presenceFailure) {
-          return;
-        }
-        if (!payload.ok || !payload.result || !payload.result.claimed || payload.result.pointsAwarded <= 0) {
-          return;
-        }
-        const { pointsAwarded, multiplierApplied, correctPicks, settledPicks } = payload.result;
-        window.dispatchEvent(
-          new CustomEvent("tp:coin-flight", {
-            detail: {
-              delta: pointsAwarded,
-              coins: Math.min(36, Math.max(12, Math.round(pointsAwarded / 2))),
-            },
-          })
-        );
-        window.dispatchEvent(
-          new CustomEvent("tp:points-updated", {
-            detail: { source: "pickem-claim", delta: pointsAwarded },
-          })
-        );
-        setCollectResult({
-          pointsCollected: pointsAwarded,
-          correctPicks,
-          totalSettledPicks: settledPicks,
-          multiplierApplied,
-        });
-        void loadGames({ background: true });
-        void loadDailyPickCount();
-      } catch {
-        // silent — user still sees their picks, just no animation
-      }
-    };
-    void run();
-  }, [loadDailyPickCount, loadGames, pointsBank, selectedDate, userId, venueId, venuePresence]);
-
-  useEffect(() => {
-    void loadDailyPickCount();
-  }, [loadDailyPickCount]);
 
   useEffect(() => {
     const run = async () => {
@@ -782,36 +695,12 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
     void run();
   }, [userId, venueId]);
 
-  useEffect(() => {
-    if (!pointsBank || !userId || !venueId) return;
-    if (pointsBank.totalPicks !== PICKEM_PICK_LIMIT || pointsBank.pendingPicks !== 0) return;
-    if (pointsBank.correctPicks < 7) return;
-    const label: "Double Points!" | "Triple Points!" =
-      pointsBank.correctPicks >= PICKEM_PICK_LIMIT ? "Triple Points!" : "Double Points!";
-    const shownKey = `tp:pickem-multiplier-pop:${userId}:${venueId}:${pointsBank.localDate}:${label}`;
-    if (typeof window !== "undefined" && window.localStorage.getItem(shownKey) === "1") return;
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(shownKey, "1");
-    }
-    popIdRef.current += 1;
-    setMultiplierAnim({ label, id: popIdRef.current });
-  }, [pointsBank, userId, venueId]);
-
   const totalPickEmGames = grouped.reduce((sum, [, leagueGames]) => sum + leagueGames.length, 0);
   let renderedPickEmCardCount = 0;
 
   return (
     <div className="tp-pickem-compact min-h-[100dvh] touch-pan-y pb-[max(env(safe-area-inset-bottom),6px)]">
       <CoinFXCanvas />
-      {collectResult ? (
-        <PickEmCollectAnimation
-          pointsCollected={collectResult.pointsCollected}
-          correctPicks={collectResult.correctPicks}
-          totalSettledPicks={collectResult.totalSettledPicks}
-          multiplierApplied={collectResult.multiplierApplied}
-          onComplete={() => setCollectResult(null)}
-        />
-      ) : null}
       <style>{`
         @keyframes sport-pop {
           0%   { transform: scale(1); }
@@ -824,17 +713,11 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           25% { box-shadow: 0 0 0 6px rgba(250,204,21,0.45), 0 0 32px rgba(250,204,21,0.35); }
           100% { box-shadow: 0 0 0 rgba(250,204,21,0); }
         }
-        @keyframes pickem-limit-pulse {
-          0% { transform: scale(1); opacity: 1; }
-          35% { transform: scale(1.08); opacity: 0.92; }
-          100% { transform: scale(1); opacity: 1; }
-        }
         @media (prefers-reduced-motion: reduce) {
-          .sport-pop, .pickem-gold-flash, .pickem-limit-pulse { animation: none !important; }
+          .sport-pop, .pickem-gold-flash { animation: none !important; }
         }
         .sport-pop { animation: sport-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
         .pickem-gold-flash { animation: pickem-gold-flash 700ms ease-out; }
-        .pickem-limit-pulse { animation: pickem-limit-pulse 420ms ease-in-out; }
       `}</style>
 
       <GameAppBar game="pickem" onExit={onBack} />
@@ -851,54 +734,13 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
             Select winners by checking a team. Picks lock at scheduled start time and are final.
           </p>
 
-          <motion.div
-            animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : limitPulse ? { scale: [1, 1.06, 1] } : { scale: 1 }}
-            transition={reducedMotion ? { duration: 0 } : { duration: 0.35 }}
-            className={`mt-3 overflow-hidden rounded-xl border ${
-              pickCount >= PICKEM_PICK_LIMIT
-                ? "border-rose-400/60 bg-ht-danger-wash-soft"
-                : "border-ht-pickem-accent/30 bg-ht-tracker-bg"
-            }`}
-          >
-            <div className="flex items-center justify-between border-b border-ht-pickem-accent/20 bg-ht-tracker-head px-3 py-1.5">
-              <span className="text-caption font-black uppercase tracking-[0.16em] text-ht-fg-muted">Pick Tracker</span>
-              <span
-                className={`text-caption font-black uppercase tracking-[0.16em] ${
-                  pickCount >= PICKEM_PICK_LIMIT ? "text-ht-loss-fg" : "text-ht-pickem-accent"
-                } ${pickCount >= PICKEM_PICK_LIMIT && limitPulse ? "pickem-limit-pulse" : ""}`}
-              >
-                {pickCount >= PICKEM_PICK_LIMIT ? "Limit Reached" : "Daily Picks"}
-              </span>
-            </div>
-            <div className="flex items-center gap-3 px-3 py-2.5">
-              <div className="flex flex-1 items-center gap-[3px]">
-                {Array.from({ length: PICKEM_PICK_LIMIT }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-[7px] flex-1 rounded-full ${
-                      i < pickCount
-                        ? pickCount >= PICKEM_PICK_LIMIT
-                          ? `bg-rose-500 ${limitPulse ? "pickem-limit-pulse" : ""}`
-                          : "bg-ht-pickem-accent"
-                        : "bg-ht-seg-empty"
-                    }`}
-                  />
-                ))}
-              </div>
-              <motion.span
-                key={pickCount}
-                initial={reducedMotion ? false : { scale: 1 }}
-                animate={reducedMotion ? { scale: 1 } : { scale: [1, 1.16, 1] }}
-                transition={reducedMotion ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }}
-                className={`shrink-0 text-[19px] font-black leading-none tabular-nums ${
-                  pickCount >= PICKEM_PICK_LIMIT ? "text-ht-loss-fg" : "text-ht-pickem-accent"
-                }`}
-              >
-                {pickCount}
-                <span className="text-caption font-semibold text-ht-fg-muted">/{PICKEM_PICK_LIMIT}</span>
-              </motion.span>
-            </div>
-          </motion.div>
+          {isViewingToday ? (
+            <p className="mt-1 text-footnote font-semibold text-ht-fg-muted" aria-live="polite">
+              {today && today.picks > 0
+                ? `Today: ${today.correct} right · +${today.points} points`
+                : "Every correct pick is worth 10 points, added automatically."}
+            </p>
+          ) : null}
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <div className="flex w-full items-center justify-between rounded-xl border border-ht-pickem-bar-edge bg-ht-pickem-bar-bg px-2 py-1.5">
@@ -990,6 +832,12 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                   })
                 )}
               </div>
+              <p className="mt-2 text-caption text-ht-fg-muted" data-testid="pickem-nfl-signpost">
+                {NFL_PICKEM_SIGNPOST.text}{" "}
+                <Link href={NFL_PICKEM_SIGNPOST.href} className="font-semibold text-ht-pickem-accent underline-offset-2 hover:underline">
+                  {NFL_PICKEM_SIGNPOST.linkLabel}
+                </Link>
+              </p>
             </div>
           ) : null}
         </section>
@@ -1069,6 +917,32 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           </div>
         ) : (
           <div className="space-y-4 pb-1">
+            {sport.slug === "ncaaf" && collegeScoring?.mode === "spread" ? (
+              <p className="px-1 text-caption font-semibold text-ht-fg-muted" data-testid="pickem-spread-explainer">
+                {COLLEGE_FOOTBALL_SPREAD_COPY.explainer}
+              </p>
+            ) : null}
+            {prizes.length > 0 ? (
+              <div className="space-y-1 px-1" data-testid="pickem-prize-lines">
+                {prizes.map((prize) => (
+                  <div key={prize.campaignId}>
+                    <p className="text-caption font-bold text-ht-pickem-accent">{pickemPrizeLineText(prize)}</p>
+                    {prize.limitMessage ? (
+                      <p className="text-caption font-semibold text-ht-fg-muted" role="status">
+                        {prize.limitMessage}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+            {userId && venueId && isViewingToday
+              ? prizes
+                  .filter((prize) => prize.hasTiebreaker)
+                  .map((prize) => (
+                    <PickEmPrizeTiebreakerCard key={prize.campaignId} venueId={venueId} userId={userId} campaignId={prize.campaignId} />
+                  ))
+              : null}
             {todayWinPoints > 0 ? (
               <ShareWinButton gameType="pickem" result={{ finalPoints: todayWinPoints, isChampion: true }} />
             ) : null}
@@ -1091,9 +965,18 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                     const baseDisabled = !sport.isClickable || !userId || !venueId || !isViewingToday;
                     const awaySelected = displayedPickTeam === game.awayTeam;
                     const homeSelected = displayedPickTeam === game.homeTeam;
-                    const pickLimitReached = pickCount >= PICKEM_PICK_LIMIT;
-                    const disableAwaySelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
-                    const disableHomeSelection = baseDisabled || (pickLimitReached && !awaySelected && !homeSelected);
+                    const lineComingSoon = game.lineComingSoon === true;
+                    // A used-up prize limit refuses only a NEW pick; changing or clearing one is always allowed.
+                    const limitReached = game.pickLimitReached === true && !displayedPickTeam;
+                    const blockedMessage = lineComingSoon
+                      ? COLLEGE_FOOTBALL_SPREAD_COPY.noLineYet
+                      : limitReached
+                        ? game.pickLimitMessage ?? FALLBACK_PRIZE_LIMIT_MESSAGE
+                        : null;
+                    const disableAwaySelection = baseDisabled || lineComingSoon || limitReached;
+                    const disableHomeSelection = baseDisabled || lineComingSoon || limitReached;
+                    const awayLine = game.scoringMode === "spread" ? formatSpreadLine(game.awaySpread) : null;
+                    const homeLine = game.scoringMode === "spread" ? formatSpreadLine(game.homeSpread) : null;
                     const isAwayWinner = game.winnerTeam === game.awayTeam;
                     const isHomeWinner = game.winnerTeam === game.homeTeam;
                     const statusLabel = getGameStatusLabel(game);
@@ -1122,19 +1005,11 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                               disabled={savingGames.has(game.id)}
                               aria-busy={savingGames.has(game.id)}
                               onClick={() => {
+                                if (blockedMessage && !baseDisabled) {
+                                  setSubmitMessage(blockedMessage);
+                                  return;
+                                }
                                 if (disableAwaySelection) {
-                                  if (!awaySelected && !homeSelected && pickCount >= PICKEM_PICK_LIMIT) {
-                                    setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
-                                    popIdRef.current += 1;
-                                    setPopAnim({ count: PICKEM_PICK_LIMIT, shake: true, id: popIdRef.current });
-                                    window.setTimeout(() => {
-                                      popIdRef.current += 1;
-                                      setLimitEchoAnim({ id: popIdRef.current });
-                                    }, 170);
-                                    setLimitPulse(false);
-                                    window.requestAnimationFrame(() => setLimitPulse(true));
-                                    window.setTimeout(() => setLimitPulse(false), 900);
-                                  }
                                   return;
                                 }
                                 if (game.isLocked) {
@@ -1162,6 +1037,11 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                               <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-ht-fg-bright">
                                 {game.awayTeam}
                               </span>
+                              {awayLine ? (
+                                <span className="text-footnote font-extrabold tabular-nums text-ht-pickem-accent" aria-label={`Spread ${awayLine}`}>
+                                  {awayLine}
+                                </span>
+                              ) : null}
                               <span className={`text-[16px] font-black tabular-nums ${isAwayWinner ? "text-ht-success-fg" : "text-ht-fg-secondary"}`}>
                                 {getDisplayedScoreCell(game, game.awayTeam, game.awayScore)}
                               </span>
@@ -1173,19 +1053,11 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                               disabled={savingGames.has(game.id)}
                               aria-busy={savingGames.has(game.id)}
                               onClick={() => {
+                                if (blockedMessage && !baseDisabled) {
+                                  setSubmitMessage(blockedMessage);
+                                  return;
+                                }
                                 if (disableHomeSelection) {
-                                  if (!awaySelected && !homeSelected && pickCount >= PICKEM_PICK_LIMIT) {
-                                    setSubmitMessage(`Pick limit reached (${PICKEM_PICK_LIMIT}/${PICKEM_PICK_LIMIT}). Remove one pick to change your slate.`);
-                                    popIdRef.current += 1;
-                                    setPopAnim({ count: PICKEM_PICK_LIMIT, shake: true, id: popIdRef.current });
-                                    window.setTimeout(() => {
-                                      popIdRef.current += 1;
-                                      setLimitEchoAnim({ id: popIdRef.current });
-                                    }, 170);
-                                    setLimitPulse(false);
-                                    window.requestAnimationFrame(() => setLimitPulse(true));
-                                    window.setTimeout(() => setLimitPulse(false), 900);
-                                  }
                                   return;
                                 }
                                 if (game.isLocked) {
@@ -1213,11 +1085,22 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                               <span className="whitespace-normal break-words text-[15px] font-black leading-tight text-ht-fg-bright">
                                 {game.homeTeam}
                               </span>
+                              {homeLine ? (
+                                <span className="text-footnote font-extrabold tabular-nums text-ht-pickem-accent" aria-label={`Spread ${homeLine}`}>
+                                  {homeLine}
+                                </span>
+                              ) : null}
                               <span className={`text-[16px] font-black tabular-nums ${isHomeWinner ? "text-ht-success-fg" : "text-ht-fg-secondary"}`}>
                                 {getDisplayedScoreCell(game, game.homeTeam, game.homeScore)}
                               </span>
                             </button>
                           </div>
+
+                          {lineComingSoon ? (
+                            <div className="px-4 py-1.5 text-center text-caption font-extrabold tracking-[0.04em] text-ht-fg-muted" data-testid="pickem-line-coming-soon">
+                              {COLLEGE_FOOTBALL_SPREAD_COPY.lineComingSoon}
+                            </div>
+                          ) : null}
 
                           {resultLabel(game) ? (
                             <div
@@ -1259,137 +1142,20 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           </div>
         )}
       </div>
-      {isMounted && (popAnim || multiplierAnim || limitEchoAnim)
+      {isMounted && gradedToast
         ? createPortal(
-            <div className="pointer-events-none fixed inset-0 z-[7000] flex items-center justify-center">
-              {(() => {
-                if (multiplierAnim) {
-                  return (
-                    <motion.span
-                      key={multiplierAnim.id}
-                      className="select-none whitespace-nowrap font-black leading-none transform-gpu will-change-transform"
-                      style={{
-                        color: "rgb(var(--ht-pickem-accent-rgb))",
-                        fontSize: "clamp(2.1rem, 10vw, 4.6rem)",
-                        textShadow: "0 0 30px rgb(var(--ht-pickem-glow-rgb) / 0.62), 0 0 62px rgb(var(--ht-pickem-glow-rgb) / 0.42)",
-                        filter: "drop-shadow(0 0 14px rgb(var(--ht-pickem-glow-rgb) / 0.75))",
-                      }}
-                      initial={reducedMotion ? false : { scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
-                      animate={reducedMotion ? { scale: 1, y: 0, rotate: 0, opacity: 1 } : {
-                        scale: [0, 1.65, 1.25, 1.25, 0.9],
-                        y: [0, -35, -35, -35, 340],
-                        rotate: [0, 0, 0, 0, 13],
-                        opacity: [0, 1, 1, 1, 0],
-                      }}
-                      transition={reducedMotion ? { duration: 0 } : {
-                        duration: 0.8,
-                        times: [0, 0.13, 0.23, 0.62, 1],
-                        ease: ["easeOut", "easeOut", "linear", "easeIn"],
-                      }}
-                      onAnimationComplete={() => setMultiplierAnim(null)}
-                    >
-                      {multiplierAnim.label}
-                    </motion.span>
-                  );
-                }
-                if (!popAnim) {
-                  if (!limitEchoAnim) return null;
-                  return (
-                    <motion.span
-                      key={limitEchoAnim.id}
-                      className="absolute top-[19%] select-none whitespace-nowrap font-black leading-none text-red-500 transform-gpu will-change-transform"
-                      style={{
-                        fontSize: "clamp(1.8rem, 7vw, 3.2rem)",
-                        textShadow: "0 0 18px rgba(239,68,68,0.38), 0 0 34px rgba(239,68,68,0.18)",
-                      }}
-                      initial={reducedMotion ? false : { scale: 0.7, opacity: 0, y: 0 }}
-                      animate={reducedMotion ? { scale: 1, opacity: 1, y: 0 } : { scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
-                      transition={reducedMotion ? { duration: 0 } : { duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
-                      onAnimationComplete={() => setLimitEchoAnim(null)}
-                    >
-                      Limit Reached
-                    </motion.span>
-                  );
-                }
-
-                const isLimitReached = popAnim.count >= PICKEM_PICK_LIMIT;
-                const useShake = popAnim.shake && !isLimitReached;
-                return (
-                  <>
-                    <motion.span
-                      key={popAnim.id}
-                      className="select-none whitespace-nowrap font-black leading-none transform-gpu will-change-transform"
-                      style={{
-                        color: isLimitReached ? "#ef4444" : "#22c55e",
-                        fontSize:
-                          isLimitReached
-                            ? "clamp(2.2rem, 10vw, 4.5rem)"
-                            : "clamp(5rem, 22vw, 11rem)",
-                        textShadow:
-                          isLimitReached
-                            ? "0 0 22px rgba(239,68,68,0.42), 0 0 44px rgba(239,68,68,0.24)"
-                            : "0 0 60px rgba(34,197,94,0.55), 0 0 120px rgba(34,197,94,0.3)",
-                      }}
-                      initial={reducedMotion ? false : { scale: 0, y: 0, x: 0, rotate: 0, opacity: 0 }}
-                      animate={reducedMotion ? { opacity: 1, x: 0, y: 0, scale: 1 } : isLimitReached
-                          ? {
-                              scale: [0.72, 1.08, 1.02, 0.98],
-                              y: [0, -20, -16, -8],
-                              opacity: [0, 1, 1, 0],
-                            }
-                          : useShake
-                            ? {
-                                scale: [0, 1.65, 1.3, 1.3, 1.3, 1.3, 1.3, 0.9],
-                                x: [0, 0, -30, 30, -22, 22, 0, 0],
-                                y: [0, -35, -35, -35, -35, -35, -35, 360],
-                                rotate: [0, 0, 0, 0, 0, 0, 0, 18],
-                                opacity: [0, 1, 1, 1, 1, 1, 1, 0],
-                              }
-                            : {
-                                scale: [0, 1.65, 1.25, 1.25, 0.9],
-                                y: [0, -35, -35, -35, 340],
-                                rotate: [0, 0, 0, 0, 13],
-                                opacity: [0, 1, 1, 1, 0],
-                              }}
-                      transition={reducedMotion ? { duration: 0 } : isLimitReached
-                          ? {
-                              duration: 0.55,
-                              times: [0, 0.28, 0.62, 1],
-                              ease: ["easeOut", "easeOut", "easeIn", "easeIn"],
-                            }
-                          : useShake
-                            ? {
-                                duration: 0.9,
-                                times: [0, 0.14, 0.27, 0.4, 0.53, 0.66, 0.76, 1],
-                                ease: ["easeOut", "easeOut", "easeOut", "easeOut", "easeOut", "easeOut", "easeIn"],
-                              }
-                            : {
-                                duration: 0.8,
-                                times: [0, 0.13, 0.23, 0.62, 1],
-                                ease: ["easeOut", "easeOut", "linear", "easeIn"],
-                              }}
-                    >
-                      {isLimitReached ? "Limit Reached" : popAnim.count}
-                    </motion.span>
-                    {limitEchoAnim ? (
-                      <motion.span
-                        key={limitEchoAnim.id}
-                        className="absolute top-[19%] select-none whitespace-nowrap font-black leading-none text-red-500 transform-gpu will-change-transform"
-                        style={{
-                          fontSize: "clamp(1.8rem, 7vw, 3.2rem)",
-                          textShadow: "0 0 18px rgba(239,68,68,0.38), 0 0 34px rgba(239,68,68,0.18)",
-                        }}
-                        initial={reducedMotion ? false : { scale: 0.7, opacity: 0, y: 0 }}
-                        animate={reducedMotion ? { scale: 1, opacity: 1, y: 0 } : { scale: [0.7, 1.06, 1], opacity: [0, 1, 0], y: [0, -12, -20] }}
-                        transition={reducedMotion ? { duration: 0 } : { duration: 0.55, times: [0, 0.45, 1], ease: "easeOut" }}
-                        onAnimationComplete={() => setLimitEchoAnim(null)}
-                      >
-                        Limit Reached
-                      </motion.span>
-                    ) : null}
-                  </>
-                );
-              })()}
+            <div className="pointer-events-none fixed inset-x-0 top-20 z-[7000] flex justify-center px-4">
+              <motion.div
+                key={gradedToast.id}
+                role="status"
+                className="rounded-full bg-ht-pickem-accent px-4 py-2 text-footnote font-black text-ht-pickem-on-fill shadow-ht-panel"
+                initial={reducedMotion ? false : { opacity: 0, y: -8 }}
+                animate={reducedMotion ? { opacity: [1, 1, 0] } : { opacity: [0, 1, 1, 0], y: [-8, 0, 0, -4] }}
+                transition={reducedMotion ? { duration: 2.4, times: [0, 0.9, 1] } : { duration: 2.4, times: [0, 0.12, 0.85, 1] }}
+                onAnimationComplete={() => setGradedToast(null)}
+              >
+                {`+${gradedToast.points} points`}
+              </motion.div>
             </div>,
             document.body
           )

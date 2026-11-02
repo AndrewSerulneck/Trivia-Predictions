@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isCronAuthorized } from "@/lib/cronAuth";
 import { accrueNFLPickEmChallengePoints, type NFLPickEmAccrualReport } from "@/lib/nflPickEmRewardAccrual";
 import { settlePendingPickEmPicks } from "@/lib/pickem";
+import { settlePickEmPrizes, type PickEmPrizeSweepReport } from "@/lib/pickemPrizeAwards";
 import { isBracketsSyncActive, runBracketsTick, type BracketsTickReport } from "@/lib/bracketsSync";
 import { isSquaresSettlementActive, runSquaresTick, type SquaresTickReport } from "@/lib/squaresSettlement";
 
@@ -34,7 +35,11 @@ export async function POST(request: Request) {
       nflRewardAccrualError =
         error instanceof Error ? error.message : "NFL Pick 'Em reward accrual failed.";
     }
-    return NextResponse.json({ ok: true, result, nflRewardAccrual, nflRewardAccrualError, squares, brackets });
+    // Pick 'Em Prizes (docs/pickem-college-football-and-prize-plan.md Phase 4b), after grading so a pick
+    // graded this run can pay this run. One read and out when no bar has a Pick 'Em Prize; never throws,
+    // and its failures are in its own report, never the settlement's.
+    const pickemPrizes: PickEmPrizeSweepReport = await settlePickEmPrizes();
+    return NextResponse.json({ ok: true, result, nflRewardAccrual, nflRewardAccrualError, pickemPrizes, squares, brackets });
   } catch (error) {
     return NextResponse.json(
       {
