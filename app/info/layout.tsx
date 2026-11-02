@@ -24,10 +24,10 @@ export const metadata: Metadata = {
       "Mobile-first venue gaming with live trivia, speed trivia, sports bingo, pick'em, fantasy sports, and geofenced challenges.",
     images: [
       {
-        url: "/brand/hero-poster.jpg",
+        url: "/brand/share/hightop-link-preview-v1.png",
         width: 1200,
         height: 630,
-        alt: "Hightop Challenge venue gaming platform for bars and restaurants",
+        alt: "Hightop Challenge logo",
       },
     ],
   },
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     title: "Venue Gaming Platform for Bars and Restaurants",
     description:
       "Mobile-first venue gaming with live trivia, speed trivia, sports bingo, pick'em, fantasy sports, and geofenced challenges.",
-    images: ["/brand/hero-poster.jpg"],
+    images: ["/brand/share/hightop-link-preview-v1.png"],
   },
 };
 

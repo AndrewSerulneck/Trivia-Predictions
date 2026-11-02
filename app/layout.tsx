@@ -59,10 +59,10 @@ export const metadata: Metadata = {
       "Browser-based venue gaming for bars and restaurants with live trivia, speed trivia, sports bingo, pick'em, fantasy sports, and venue-scoped challenges.",
     images: [
       {
-        url: "/brand/hero-poster.jpg",
+        url: "/brand/share/hightop-link-preview-v1.png",
         width: 1200,
         height: 630,
-        alt: "Hightop Challenge venue gaming platform",
+        alt: "Hightop Challenge logo",
       },
     ],
   },
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     title: "Hightop Challenge",
     description:
       "Browser-based venue gaming for bars and restaurants with live trivia, speed trivia, sports bingo, pick'em, fantasy sports, and venue-scoped challenges.",
-    images: ["/brand/hero-poster.jpg"],
+    images: ["/brand/share/hightop-link-preview-v1.png"],
   },
   // iOS ignores the manifest's icons for the home screen and needs this
   // link tag; omitting it produces a screenshot-of-the-page icon.

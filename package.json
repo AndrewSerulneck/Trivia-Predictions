@@ -38,6 +38,7 @@
     "pos:spike": "node --env-file=.env.local scripts/pos-sandbox-spike.cjs",
     "store:images": "node scripts/optimize-store-images.cjs",
     "brand:images": "node scripts/optimize-brand-logo.cjs",
+    "brand:link-preview": "node scripts/render-link-preview.cjs",
     "square-badge:image": "node scripts/optimize-square-badge.cjs",
     "loader:preview": "node --import tsx scripts/capture-hightop-loader.cjs",
     "email:preview": "node --import tsx scripts/preview-partner-emails.cjs",
