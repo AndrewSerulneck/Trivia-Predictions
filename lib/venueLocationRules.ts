@@ -34,8 +34,27 @@ export const VENUE_LOCATION_COPY = {
   movedTooFar: "That's far from your saved location — email support and we'll move it for you.",
   invalidRadius: "The geofence must be a whole number of meters.",
   radiusOutOfRange: `The geofence must be between ${SIGNUP_RADIUS_MIN} and ${SIGNUP_RADIUS_MAX} m.`,
-  saved: "Saved. New players can join from the new spot right away.",
+  // The 5 minutes is VENUE_CACHE_TTL_MS in lib/venues.ts — change this copy if that constant changes.
+  saved: "Saved. New players see it now; anyone already on the venue list, within 5 minutes.",
   helper: "Players can't join? Stand inside your venue and tap Use my current location.",
+  // Venue Location page (Phase 3).
+  pageTitle: "Venue Location",
+  pageSubtitle: "Where players can join",
+  noVenue: "No venue found for this account.",
+  venuesLoadFailed: "Couldn't load your venues.",
+  tryAgain: "Try again",
+  discardChanges: "Discard your unsaved location changes?",
+  loadFailed: "Couldn't load your venue location.",
+  saveFailed: "Couldn't save your venue location.",
+  save: "Save location",
+  saving: "Saving…",
+  savedButton: "Saved",
+  /**
+   * Shown while the radius is still an admin-set value outside the dial's range. The editor's locked
+   * card and the selected chip show the clamped value (200 or 50), so this names the real one.
+   */
+  radiusKept: (meters: number): string =>
+    `Your geofence is ${meters} m, set by Hightop. The dial can't show that size, so it stays unless you pick a new one.`,
 } as const;
 
 const refuse = (code: VenueLocationRefusalCode, message: string): VenueLocationVerdict => ({
@@ -44,8 +63,12 @@ const refuse = (code: VenueLocationRefusalCode, message: string): VenueLocationV
   message,
 });
 
-const isUsablePin = (pin: { latitude: number; longitude: number } | null): boolean =>
-  pin !== null && isValidGeofenceCoordinates(pin) && !isPlaceholderVenueRow(pin);
+/** The one "does this venue have a usable pin" rule, shared by the server route and the page. */
+export const isUsableVenuePin = (latitude: number | null, longitude: number | null): boolean => {
+  if (latitude === null || longitude === null) return false;
+  const pin = { latitude, longitude };
+  return isValidGeofenceCoordinates(pin) && !isPlaceholderVenueRow(pin);
+};
 
 /**
  * `saved` is the row as stored (any field may be null on a malformed row). `next` is what the
@@ -66,13 +89,10 @@ export const validateOwnerVenueLocation = ({
     return refuse("placeholder_pin", VENUE_LOCATION_COPY.placeholderPin);
   }
 
-  const savedPin =
-    saved.latitude === null || saved.longitude === null
-      ? null
-      : { latitude: saved.latitude, longitude: saved.longitude };
-  if (savedPin === null || !isUsablePin(savedPin)) {
+  if (!isUsableVenuePin(saved.latitude, saved.longitude)) {
     return refuse("no_saved_pin", VENUE_LOCATION_COPY.noSavedPin);
   }
+  const savedPin = { latitude: saved.latitude as number, longitude: saved.longitude as number };
 
   const movedMeters = calculateDistanceMeters(savedPin, next);
   if (!(movedMeters <= OWNER_PIN_MOVE_MAX_METERS)) {

@@ -14,7 +14,7 @@ import { OWNER_MENU_ITEMS, visibleOwnerMenuItems } from "@/components/owner/menu
 const read = (path: string): string => readFileSync(join(__dirname, "..", path), "utf8");
 
 describe("owner menu contract", () => {
-  it("lists the seven rows in the specified order (POS and messages flags off, the default)", () => {
+  it("lists the eight rows in the specified order (POS and messages flags off, the default)", () => {
     expect(visibleOwnerMenuItems(false, false).map((item) => item.label)).toEqual([
       "Venue Display",
       "Order Join Merch",
@@ -22,6 +22,7 @@ describe("owner menu contract", () => {
       "Billing",
       "Partner Manual",
       "Game Settings",
+      "Venue Location",
       "Account Settings",
     ]);
   });
@@ -36,6 +37,7 @@ describe("owner menu contract", () => {
       "Point of Sale",
       "Partner Manual",
       "Game Settings",
+      "Venue Location",
       "Account Settings",
     ]);
     expect(visibleOwnerMenuItems(true, true)).toEqual(OWNER_MENU_ITEMS);
@@ -51,6 +53,7 @@ describe("owner menu contract", () => {
       "/owner/billing",
       null,
       "/owner/game-settings",
+      "/owner/venue-location",
       "/owner/account",
     ]);
   });

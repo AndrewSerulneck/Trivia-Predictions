@@ -1,0 +1,9 @@
+# Signup price copy + partner geofence — Phase 7 handoff (2026-11-03)
+
+**For Andrew:** (R4) a venue whose saved pin is missing, (0,0) or invalid now shows "email support" on the Venue Location page instead of a map in the Atlantic; (R8) the success message now reads "Saved. New players see it now; anyone already on the venue list, within 5 minutes." Not live: uncommitted on `after-app-review` with Phases 3, 5, 6; nothing pushed or deployed. No migration, env var or cost change. Needs you later: the phone pass (checklist section N, one new line; tell the tester which venue sits at 0,0 — 3 do).
+
+**Changed:** `lib/venueLocationRules.ts` (exported `isUsableVenuePin(lat, lon)`; `validateOwnerVenueLocation` uses it; `saved` copy + comment naming `VENUE_CACHE_TTL_MS` in `lib/venues.ts`); `app/owner/venue-location/page.tsx` (`hasUsablePin` uses it); tests `tests/lib.venueLocationRules.test.ts` (new `isUsableVenuePin` cases), `tests/owner-venue-location-page-contract.test.ts` (shared-rule case); checklist section N line.
+
+**Verified:** `npx tsc --noEmit` clean; eslint clean on changed files; `npm run test` all pass except the same 4 MLB/NFL star-index tripwires (unrelated). Not browser-checked (logic is a one-line swap covered by the unit/contract tests).
+
+**Next agent — Phase 8 (Opus 5.5, medium):** run `/code-review high` on the branch diff (Phases 1–7), fix real findings, add ONE short CLAUDE.md bullet (owner location route `/api/owner/venues/location`, `lib/venueLocationRules.ts`, D6 1 km cap, D7 unchanged out-of-range radius kept, radius changes only via `GeofenceEditor`'s `onRadiusChange`), and write the release note (phone checks = checklist N; no env/migration). Branch `after-app-review`; Phases 3,5,6,7 are uncommitted, ask Andrew before committing. Never push `main`/deploy/touch Production env until he confirms App Store approval. Known test noise: 4 star-index tripwires fail on a clean tree.

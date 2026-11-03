@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { calculateDistanceMeters } from "@/lib/geofence";
 import { SIGNUP_RADIUS_MAX, SIGNUP_RADIUS_MIN } from "@/lib/selfServeSignup";
 import {
+  isUsableVenuePin,
   OWNER_PIN_MOVE_MAX_METERS,
   VENUE_LOCATION_COPY,
   validateOwnerVenueLocation,
@@ -80,5 +81,18 @@ describe("validateOwnerVenueLocation", () => {
       ok: false,
       code: "invalid_radius",
     });
+  });
+});
+
+describe("isUsableVenuePin", () => {
+  it("is false for null, (0,0), out-of-range and NaN", () => {
+    expect(isUsableVenuePin(null, -75)).toBe(false);
+    expect(isUsableVenuePin(40, null)).toBe(false);
+    expect(isUsableVenuePin(0, 0)).toBe(false);
+    expect(isUsableVenuePin(91, 10)).toBe(false);
+    expect(isUsableVenuePin(Number.NaN, 10)).toBe(false);
+  });
+  it("is true for a real pin", () => {
+    expect(isUsableVenuePin(40.7128, -74.006)).toBe(true);
   });
 });

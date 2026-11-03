@@ -1,19 +1,28 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createElement } from "react";
+import { createElement, forwardRef } from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { GeofenceEditor, pinLabel } from "@/components/admin/GeofenceEditor";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
+import { SIGNUP_RADIUS_MAX, SIGNUP_RADIUS_MIN, SIGNUP_RADIUS_PRESETS } from "@/lib/selfServeSignup";
 
 // venue-activation Phase 5 (docs/venue-activation-map-radius-plan.md). Phase 3's
 // as-built notes describe an 8-test throwaway jsdom probe, verified then
 // deleted, with instructions to recreate it here. VenueMapPicker calls
-// /api/admin/maps-key on mount, so fetch is stubbed to fail and park it in its
-// loadError state — the map itself is never exercised by this file (that's the
-// device checklist's job); this file covers GeofenceEditor's own wiring:
+// /api/admin/maps-key on mount, so it is replaced by a stub (below) whose one
+// button stands in for a pin drag — the real map is never exercised by this
+// file (that's the device checklist's job); this file covers GeofenceEditor's own wiring:
 // dial -> onChange with pin/source preserved, the no-pin disabled/placeholder
 // state, Advanced commit parsing, GPS success/denied, hideAdvanced, and the
 // pinLabel copy matrix.
+
+// Map stub: the real VenueMapPicker needs Google Maps. A "Drag pin" button stands in for a pin drag
+// so the radius-intent tests below can prove a drag never calls onRadiusChange (plan Phase 5).
+vi.mock("@/components/admin/VenueMapPicker", () => ({
+  VenueMapPicker: forwardRef<unknown, { onChange: (lat: number, lng: number) => void }>(function MapStub(props, _ref) {
+    return createElement("button", { type: "button", onClick: () => props.onChange(40.71, -74.01) }, "Drag pin");
+  }),
+}));
 
 beforeEach(() => {
   vi.stubGlobal(
@@ -36,6 +45,7 @@ type Props = {
   radius: number;
   source: PinSource;
   onChange: (value: GeofenceEditorValue) => void;
+  onRadiusChange?: (radius: number) => void;
   disabled?: boolean;
   hideAdvanced?: boolean;
 };
@@ -126,6 +136,59 @@ describe("GeofenceEditor", () => {
   it("hideAdvanced removes the Advanced disclosure", () => {
     renderEditor({ onChange: vi.fn(), hideAdvanced: true });
     expect(screen.queryByRole("button", { name: /Advanced/ })).toBeNull();
+  });
+
+  describe("onRadiusChange (owner Venue Location, plan Phase 5)", () => {
+    const signupRange = { min: SIGNUP_RADIUS_MIN, max: SIGNUP_RADIUS_MAX, presets: SIGNUP_RADIUS_PRESETS };
+
+    it("fires with the chip's value when a size chip is tapped, even when the shown radius is already that size", () => {
+      const onChange = vi.fn();
+      const onRadiusChange = vi.fn();
+      // Stored 600 m on a 50–200 dial: the editor shows 200, and the 200 chip must still count as a pick.
+      render(createElement(GeofenceEditor, { latitude: 40.7, longitude: -74.0, radius: 600, source: "existing", onChange, onRadiusChange, ...signupRange }));
+      fireEvent.click(screen.getByRole("button", { name: /Patio and parking/ }));
+      expect(onRadiusChange).toHaveBeenCalledWith(200);
+      expect(onChange).toHaveBeenCalledWith({ lat: 40.7, lng: -74.0, radius: 200, source: "existing" });
+    });
+
+    it("fires when the dial moves", async () => {
+      const onRadiusChange = vi.fn();
+      renderEditor({ onChange: vi.fn(), onRadiusChange });
+      fireEvent.keyDown(await screen.findByRole("slider", { name: "Geofence radius" }), { key: "ArrowRight" });
+      expect(onRadiusChange).toHaveBeenCalledWith(175);
+    });
+
+    it("never fires for a map drag", () => {
+      const onChange = vi.fn();
+      const onRadiusChange = vi.fn();
+      renderEditor({ onChange, onRadiusChange });
+      fireEvent.click(screen.getByRole("button", { name: "Drag pin" }));
+      expect(onChange).toHaveBeenCalledWith({ lat: 40.71, lng: -74.01, radius: 150, source: "map" });
+      expect(onRadiusChange).not.toHaveBeenCalled();
+    });
+
+    it("never fires for Use my current location", async () => {
+      const onChange = vi.fn();
+      const onRadiusChange = vi.fn();
+      const getCurrentPosition = vi.fn((success: PositionCallback) => {
+        success({ coords: { latitude: 42.1, longitude: -71.1, accuracy: 12 } } as GeolocationPosition);
+      });
+      vi.stubGlobal("navigator", { geolocation: { getCurrentPosition } });
+      renderEditor({ onChange, onRadiusChange });
+      fireEvent.click(screen.getByRole("button", { name: /Use my current location/ }));
+      await waitFor(() => expect(onChange).toHaveBeenCalled());
+      expect(onRadiusChange).not.toHaveBeenCalled();
+    });
+
+    it("never fires for Advanced lat/long entry", () => {
+      const onChange = vi.fn();
+      const onRadiusChange = vi.fn();
+      renderEditor({ onChange, onRadiusChange });
+      fireEvent.click(screen.getByRole("button", { name: /Advanced/ }));
+      fireEvent.change(screen.getByLabelText("Latitude"), { target: { value: "41.5" } });
+      expect(onChange).toHaveBeenCalled();
+      expect(onRadiusChange).not.toHaveBeenCalled();
+    });
   });
 
   it("pinLabel covers all seven branches", () => {

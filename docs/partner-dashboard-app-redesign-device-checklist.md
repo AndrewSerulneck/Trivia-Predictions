@@ -176,4 +176,19 @@ Nothing on any screen should say "Reward" any more. Do this on a normal phone, t
 - [ ] `/rules` also shows the disclaimer wording "contest, prize, challenge".
 - [ ] Create Prize wizard: if it lets a $0 gift card through, the new invalid-prize message appears (skip if it can't be reached).
 
+## N. Venue Location page (new, 2026-11-03 — partners fix their own geofence)
+Do this on a normal phone, signed in as a partner, **standing inside a test venue you own** (a save changes the real venue).
+- [ ] Menu → **Venue Location** (after Game Settings) opens the page; Back returns to the dashboard.
+- [ ] The map is locked at first. Tap **Edit location & geofence**; the map and radius dial appear.
+- [ ] Drag the pin a little; **Save location** turns on. Save: "Saved. New players see it now; anyone already on the venue list, within 5 minutes."
+- [ ] Reload: the page shows the saved pin and radius.
+- [ ] **Use my current location** moves the pin to where you stand.
+- [ ] A venue whose radius is over 200 m (set by Hightop) keeps it after a pin-only save, and the page says "Your geofence is … m, set by Hightop".
+- [ ] On that same over-200 m venue, tap the **200 m** chip ("Patio and parking"): **Save location** turns on, and after saving and reloading the radius is 200 m and the "set by Hightop" note is gone. *(Phase 5)*
+- [ ] Drag the pin more than 1 km away and save: refused with "email support and we'll move it for you."
+- [ ] Two-venue account: the venue picker switches venues and loads each one's pin.
+- [ ] Two-venue account: drag venue A's pin, then pick venue B. A "Discard your unsaved location changes?" prompt appears; Cancel keeps A and its edit. *(Phase 6)*
+- [ ] While **Save location** is working, the venue picker is greyed out. *(Phase 6)*
+- [ ] A venue at 0,0 (ask Andrew which test venue) shows the "email support" message, not a map. *(Phase 7)*
+
 When every box is ticked (or a problem is written next to it), send the list back.

@@ -1,6 +1,7 @@
 import {
   BookOpen,
   CreditCard,
+  MapPin,
   Megaphone,
   ReceiptText,
   ShoppingBag,
@@ -31,7 +32,7 @@ type OwnerMenuRowBase = { label: string; hint: string; icon: LucideIcon };
 
 export type OwnerMenuItem =
   | (OwnerMenuRowBase & {
-      id: "display" | "billing" | "game-settings" | "account";
+      id: "display" | "billing" | "game-settings" | "venue-location" | "account";
       href: string;
       sheet?: undefined;
     })
@@ -61,6 +62,7 @@ export const OWNER_MENU_ITEMS: readonly OwnerMenuItem[] = [
     icon: SlidersHorizontal,
     href: "/owner/game-settings",
   },
+  { id: "venue-location", label: "Venue Location", hint: "Where players can join", icon: MapPin, href: "/owner/venue-location" },
   { id: "account", label: "Account Settings", hint: "Email & password", icon: UserRound, href: "/owner/account" },
 ];
 

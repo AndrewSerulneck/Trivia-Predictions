@@ -1,6 +1,6 @@
 # Signup price copy + partner-adjustable geofence — plan
 
-**Status (2026-11-03):** Phases 1–2 done and committed on `after-app-review`; latest handoff `docs/signup-price-copy-and-partner-geofence-plan_PHASE_2_HANDOFF.md`. Next: Phase 3.
+**Status (2026-11-03):** Phases 1–8 done and committed on `after-app-review` (Phases 3, 5–8 in `faaa7cde`, not pushed); latest handoff `docs/signup-price-copy-and-partner-geofence-plan_PHASE_8_HANDOFF.md`. Phase 8 re-review fixed 3 small page bugs and added the CLAUDE.md bullet and release note. Andrew accepted the unpaid-claim risk (Phase 8 handoff Q1 = c, 2026-11-03). **Waiting on Andrew:** the phone pass (checklist N), then release once App Store approval is confirmed.
 Each finished phase writes `docs/signup-price-copy-and-partner-geofence-plan_PHASE_<N>_HANDOFF.md` and updates this line.
 
 ## For Andrew (plain English)
@@ -192,6 +192,181 @@ pin-only save, a move over 1 km is refused.
   migration is needed.
 - Do **not** push `main`, deploy, or touch Production env until Andrew confirms App Store approval (memory: "main
   frozen during App Store review").
+
+**Outcome (2026-11-03):** the review found 9 problems, all in `app/owner/venue-location/page.tsx` and
+`lib/venueLocationRules.ts`. They are numbered R1–R9 below, in the order the review ranked them. Phases 5–7 fix
+them, and the CLAUDE.md bullet and release note move to Phase 8 so they describe the fixed code.
+
+| # | Problem (short) | Phase |
+|---|-----------------|-------|
+| R1 | Out-of-range radius: a deliberate dial move to 200 m (or 50 m) is swallowed by the D7 echo guard | 5 |
+| R2 | Venue switch during a save: a late PATCH reply for venue A overwrites venue B's state | 6 |
+| R3 | `loadVenues` has no catch and no `res.ok` check, so a 500 or offline error reads "No venue found" | 6 |
+| R4 | `hasUsablePin` only checks for null; a (0,0) or invalid pin shows an editor the server always refuses | 7 |
+| R5 | "Currently 600 m … stays" notice stays on screen after the partner changes the dial | 5 |
+| R6 | Null stored radius falls back to 50 m and a pin-only save writes it | 5 |
+| R7 | `shownRadius` copies the editor's private formula and guesses intent from equal values | 5 |
+| R8 | Saved message leaves out the 5-minute delay for players who already have the venue list open | 7 |
+| R9 | Switching venues throws away unsaved edits with no warning | 6 |
+
+Live data checked read-only on 2026-11-03 (16 venues): **1** has a radius over 200 m, **2** have a radius under
+50 m, **3** sit at (0,0), and **0** have a null radius or null coordinates. So R1, R4 and R5 affect real venues
+today. R6 affects none yet, but the column allows null.
+
+---
+
+## Phase 5 — Radius intent: the editor says when the dial moved (R1, R5, R6, R7)
+
+**Model / effort:** Opus 5.5, medium effort. It touches the shared `GeofenceEditor`, and a mistake here causes
+the D7 regression: a pin-only save shrinking an admin-set radius.
+**Goal:** the page changes the radius **only** when the partner used the dial or a size chip, and never guesses
+from equal values.
+**Out of scope:** `RadiusDial` behavior, signup/admin/add-venue callers (they must behave exactly as before),
+the 50–200 range (D4), and server rules (unchanged; the server already accepts an unchanged radius).
+
+**Why the current guard fails (R1, R7).** The editor shows `clampRadius(snapRadius(radius))`, which is 200 for a
+stored 600. Every pin move emits that shown value. The page treats "emitted radius === shown radius" as an echo
+and keeps 600. A partner who deliberately taps the "Patio and parking 200 m" chip emits 200 too, so the page
+can't tell that tap from an echo. The page also copies the editor's private formula (`shownRadius`), which will
+drift silently if the editor's snapping ever changes.
+
+**Fix.** The editor tells the page which control changed.
+
+1. **`components/admin/GeofenceEditor.tsx`:** add one optional prop,
+   `onRadiusChange?: (radius: number) => void`. Call it inside `handleRadiusChange`, and nowhere else, with the
+   clamped value, just before the existing `emit(...)`. Don't change anything else: no new field on
+   `GeofenceEditorValue` (`tests/venue-activation.geofence-editor.test.ts:60,80,111` assert the emitted object
+   exactly, and five other callers read it). Callers that omit the prop behave exactly as before. Add a JSDoc line:
+   "Fires only when the partner used the dial or a size chip, never for a pin move, GPS fix or manual entry."
+2. **`app/owner/venue-location/page.tsx`:**
+   - `handleEditorChange` sets only `pin`, `source` and clears `statusMessage`. It **never** calls `setRadius`.
+   - New `handleRadiusChange = (next: number) => setRadius(next)`, passed as `onRadiusChange`.
+   - Delete `shownRadius`, and drop the `clampRadius`/`snapRadius` imports. Rewrite the D7 header comment to
+     describe the new rule: the radius changes only through `onRadiusChange`.
+3. **R5, the notice.** Key it on the **current** radius, not the stored one:
+   `radius !== null && radius === storedRadius && (radius < SIGNUP_RADIUS_MIN || radius > SIGNUP_RADIUS_MAX)`.
+   Once the partner picks a new size, the notice goes away. Reword `VENUE_LOCATION_COPY.radiusKept` so it also
+   covers the editor's locked summary card and the selected chip, which both show the clamped value (200 or 50):
+   `` `Your geofence is ${meters} m, set by Hightop. The dial can't show that size, so it stays unless you pick a new one.` ``
+4. **R6, null radius.** Pass `radius ?? SIGNUP_RADIUS_DEFAULT` (150) to the editor. Save sends that same
+   `radiusToSave = radius ?? SIGNUP_RADIUS_DEFAULT`, which is what the dial shows. Keep
+   `changed = pinMoved || (radius !== null && radius !== saved.radius)`, so opening the page alone doesn't enable
+   Save. A pin move then writes 150, the value on screen, never a silent 50. Import `SIGNUP_RADIUS_DEFAULT` from
+   `lib/selfServeSignup.ts`; never hard-code 150.
+
+**Known limit (record it in the handoff, no code needed):** for a 600 m venue, dragging the dial (or using the
+arrow keys) to the far end does **not** fire. `RadiusDial` skips a change when `next === value`
+(`components/admin/RadiusDial.tsx:101,150`), and its shown value is already 200. Tapping the 200 m chip always
+fires (`RadiusDial.tsx:199`), and so does dragging to 190 m. Don't change `RadiusDial` for this. The new
+`radiusKept` copy ("pick a new one") points partners to the chips.
+
+**Tests:**
+- `tests/venue-activation.geofence-editor.test.ts`: tapping a size chip calls `onRadiusChange` with its value.
+  Map drag, "Use my current location" and Advanced lat/long entry never call it. Leave the existing exact-object
+  assertions as they are; they prove the emitted shape didn't change.
+- `tests/owner-venue-location-page-contract.test.ts`: replace the `value.radius === shownRadius(current)` regex
+  with these checks: the page passes `onRadiusChange=`, `handleEditorChange`'s body contains no `setRadius`, the
+  file contains no `shownRadius`, and the editor gets `radius ?? SIGNUP_RADIUS_DEFAULT`.
+- If the repo can render the page in Vitest without much setup, also add a behavior test (mock `fetch`). Stored
+  600: a pin drag leaves the PATCH body at `radius: 600`, and a 200 chip tap sends `radius: 200`. Stored null: a
+  pin drag sends 150. If that setup costs too much, say so in the handoff and rely on checklist N.
+
+**Checks:** `npx tsc --noEmit`, `npm run lint`, `npm run test`. Add to checklist section N in
+`docs/partner-dashboard-app-redesign-device-checklist.md`: "On the 600 m venue, tap the 200 m chip: Save becomes
+active, and after saving and reloading the radius is 200 m and the 'set by Hightop' note is gone." Do the
+browser check from a scratchpad clone with mocked `/api/owner/*` routes only.
+
+Cost: none. This is client logic only, with no new requests.
+
+---
+
+## Phase 6 — Loading, saving and switching venues safely (R2, R3, R9)
+
+**Model / effort:** Sonnet 5.5, medium effort.
+**Goal:** a failed load shows an error with a way to retry, a save can't land on the wrong venue, and switching
+venues doesn't silently throw away edits.
+**Out of scope:** leaving the page with unsaved edits (Back, closing the tab). This phase doesn't add a
+`beforeunload` prompt; note it as a possible follow-up. Server routes are unchanged.
+
+1. **R3, venue list load (`loadVenues`).**
+   - Add a `catch`, and treat `!res.ok || !json.ok` as a failure. Read the JSON with `.catch(() => ({}))` so a
+     non-JSON 500 page doesn't throw.
+   - On failure, set a new `venuesError` state, leave `venues` empty, and show `COPY.venuesLoadFailed`
+     ("Couldn't load your venues.") with one **Try again** button. The button bumps a `venuesReloadKey` state that
+     the effect depends on. "No venue found for this account." shows only after a load that **succeeded** and
+     returned an empty list.
+   - No automatic retry or polling (CLAUDE.md cost rule). A retry happens only when the partner taps.
+   - Keep the 401 → `ownerAuthRecoveryPath` branch first, as it is now.
+2. **R2, save racing a venue switch.**
+   - Pass `disabled={saving}` to the venue `Dropdown` (it already supports `disabled`, see
+     `components/ui/Dropdown.tsx:10`).
+   - Also guard in code, because a disabled control isn't a guarantee: keep `selectedVenueIdRef` (a `useRef`
+     updated whenever `selectedVenueId` changes). In `handleSave`, capture `const venueId = selectedVenueId`
+     before the `fetch`. After the response, if `selectedVenueIdRef.current !== venueId`, drop the reply: no
+     `applySaved` and no message. The save still happened on the server for venue A, which is correct.
+   - The GET effect already uses a `cancelled` flag; leave it as it is.
+3. **R9, unsaved edits on a venue switch.** Replace `onChange={setSelectedVenueId}` with `handleVenueChange`:
+   if the venue is the same, do nothing. If `changed` is true and
+   `!window.confirm(COPY.discardChanges)`, keep the current venue (the Dropdown is controlled, so it stays). Then
+   `setSelectedVenueId(next)`. Copy: `discardChanges: "Discard your unsaved location changes?"`. There is
+   precedent for `window.confirm` in `/owner` at `app/owner/billing/setup/page.tsx:165`.
+4. New copy keys go in `VENUE_LOCATION_COPY` (`lib/venueLocationRules.ts`). The page keeps no inline strings.
+
+**Tests:** extend `tests/owner-venue-location-page-contract.test.ts`: `loadVenues` checks `res.ok`, the Dropdown
+gets `disabled={saving}`, `handleSave` compares `selectedVenueIdRef.current`, and the Dropdown's `onChange` is
+`handleVenueChange` and calls `window.confirm`. Add a render test if Phase 5 set one up.
+
+**Checks:** tsc, lint, test. Add to checklist N: "With two venues, drag venue A's pin, then pick venue B: a
+'Discard…' prompt appears. Cancel keeps A and its edit." Run a mocked-route browser check of a 500 from
+`/api/owner/venues`: the error shows, and Try again recovers.
+
+Cost: none in normal use. A failed load adds one request per tap of Try again.
+
+---
+
+## Phase 7 — Pin check shared with the server, and honest "Saved" copy (R4, R8)
+
+**Model / effort:** Sonnet 5.5, low effort.
+**Goal:** the page decides "this venue has no usable pin" with the same rule the server uses, and the saved
+message tells partners about the 5-minute delay.
+**Out of scope:** fixing the 3 venues at (0,0). That's admin/support work, and the page keeps telling those
+partners to email support.
+
+1. **R4, `lib/venueLocationRules.ts`.** Export the private `isUsablePin` as
+   `isUsableVenuePin(latitude: number | null, longitude: number | null): boolean`. It returns false when either
+   value is null, then runs `isValidGeofenceCoordinates` and `!isPlaceholderVenueRow` as it does now.
+   `validateOwnerVenueLocation` calls it, so the server keeps one rule. The file is already pure and has no
+   `server-only` (`lib/venueClaim.ts` is pure too), so the client can import it.
+2. **Page:** `hasUsablePin = saved !== null && isUsableVenuePin(saved.latitude, saved.longitude)`. A (0,0) or
+   out-of-range pin now shows `COPY.noSavedPin` (email support) instead of a map centered in the Atlantic.
+3. **R8, saved copy.** Plan Phase 2 said the page must state the 5-minute venue-list cache (`lib/venues.ts`,
+   `VENUE_CACHE_TTL_MS = 5 * 60 * 1000`). Change `VENUE_LOCATION_COPY.saved` to:
+   "Saved. New players see it now; anyone already on the venue list, within 5 minutes."
+   If `VENUE_CACHE_TTL_MS` ever changes, this copy must change too. Put a comment next to `saved` that names the
+   constant.
+
+**Tests:** add rules unit tests for `isUsableVenuePin`: null, (0,0), lat 91 and NaN are false; a real pin is
+true. All existing `validateOwnerVenueLocation` tests must still pass unchanged. In the page contract test,
+check that the page imports `isUsableVenuePin` and contains no hand-rolled `saved.latitude !== null` pin check.
+
+**Checks:** tsc, lint, test. Add to checklist N: "A venue at 0,0 (ask Andrew which test venue) shows the 'email
+support' message, not a map."
+
+Cost: none.
+
+---
+
+## Phase 8 — Re-review + release prep (takes over Phase 4's remaining items)
+
+**Model / effort:** Opus 5.5, medium effort.
+**Goal:** run `/code-review high` again on the branch diff (Phases 1–7), fix anything real, then finish
+Phase 4's release prep against the fixed code:
+- One short CLAUDE.md bullet: the owner location route, the rules file, and the D6/D7 traps. Mention that the
+  radius changes only via `GeofenceEditor`'s `onRadiusChange`.
+- The release note for Andrew: the phone checks (checklist section N, including the new Phase 5–7 lines), and the
+  fact that no env var or migration is needed.
+- Same freeze as Phase 4: don't push `main`, deploy, or touch Production env until Andrew confirms App Store
+  approval.
 
 ---
 

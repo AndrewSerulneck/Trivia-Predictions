@@ -53,6 +53,9 @@
 - State: `AuthSessionProvider` + component `useState`. No Redux/Zustand.
 - Types are hand-maintained in `types/index.ts` (no generated Supabase types). React Strict Mode is off.
 - **Data scoping:** auth is global (passkeys/username); points, leaderboards and game state are per venue.
+- **Partner geofence** (`/owner/venue-location` → `PATCH /api/owner/venues/location`): rules only in
+  `lib/venueLocationRules.ts` — pin moves ≤ 1 km per save (D6); an unchanged out-of-range radius is kept (D7). The page
+  changes the radius only via `GeofenceEditor`'s `onRadiusChange`, never from `onChange`.
 - **Wording:** players and partners see **Prize**; code/DB keep `reward`. Never "Reward" on screen
   (`tests/prizes-wording-contract.test.ts`). Say "credit allocation", never "credit limit".
 - **Cost:** no polling or per-player loops where one bounded read per run works; estimate cost before adding a cron,

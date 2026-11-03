@@ -74,6 +74,7 @@ describe("partner route transitions (Phase 4a)", () => {
       "app/owner/billing/setup/page.tsx",
       "app/owner/account/page.tsx",
       "app/owner/game-settings/page.tsx",
+      "app/owner/venue-location/page.tsx",
     ];
     for (const page of pages) {
       const source = read(page);

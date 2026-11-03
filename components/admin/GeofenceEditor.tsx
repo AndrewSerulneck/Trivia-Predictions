@@ -45,6 +45,12 @@ type GeofenceEditorProps = {
   /** Where the current pin came from — drives the provenance label. */
   source: PinSource;
   onChange: GeofenceEditorChange;
+  /**
+   * Fires only when the partner used the dial or a size chip, never for a pin move, GPS fix or manual entry.
+   * Called with the clamped radius just before the matching `onChange`. Lets a caller tell a deliberate
+   * radius pick from the shown radius echoed on a pin move (owner Venue Location page, plan Phase 5).
+   */
+  onRadiusChange?: (radius: number) => void;
   disabled?: boolean;
   /** Hide the Advanced lat/long disclosure (the mobile flow has its own). */
   hideAdvanced?: boolean;
@@ -87,6 +93,7 @@ export function GeofenceEditor({
   radius,
   source,
   onChange,
+  onRadiusChange,
   disabled = false,
   hideAdvanced = false,
   className,
@@ -130,9 +137,10 @@ export function GeofenceEditor({
       // Sizing the circle never moves the pin, and never changes its
       // provenance — a GPS-set pin is still a GPS-set pin at 600 m.
       if (latitude === null || longitude === null) return;
+      onRadiusChange?.(clampRadius(nextRadius, min, max));
       emit({ lat: latitude, lng: longitude, radius: nextRadius, source });
     },
-    [emit, latitude, longitude, source]
+    [emit, onRadiusChange, latitude, longitude, source, min, max]
   );
 
   const handleMapDrag = useCallback(
