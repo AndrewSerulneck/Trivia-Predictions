@@ -8,7 +8,7 @@ import { isSelfServeSignupEnabled, isValidSignupEmail, SIGNUP_FIELD_LIMITS } fro
 // Partner Self-Serve Signup — the step-2 email pre-check.
 //
 // WHY THIS ROUTE EXISTS. Before it, a partner whose email already had a
-// `venue_owners` row filled in all six steps, tapped "Start subscription", and
+// `venue_owners` row filled in all six steps, tapped the checkout button, and
 // was bounced back to step 2 by the review screen's 409. That jump reads as
 // "the wizard reset itself" — it was the single most confusing thing in the
 // flow. Now the collision is caught on the field it belongs to, before the

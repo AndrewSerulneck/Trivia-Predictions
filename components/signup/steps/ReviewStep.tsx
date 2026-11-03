@@ -4,13 +4,13 @@ import { useState } from "react";
 import { SignupQuestion } from "@/components/signup/SignupQuestion";
 import { SignupStaggerItem } from "@/components/signup/SignupStagger";
 import { DEFAULT_VENUE_COUNTRY } from "@/lib/adminVenueForm";
-import { SIGNUP_PRICE_LABEL, hasSignupPin, type SignupDraft } from "@/lib/selfServeSignup";
+import { SIGNUP_CHECKOUT_COPY, hasSignupPin, type SignupDraft } from "@/lib/selfServeSignup";
 
 // Step 6 of 6 — confirm, then pay.
 //
 // Compact by design: every value here was answered two screens ago, so this is a
-// receipt, not a form. The only new information on the page is the price and
-// what happens next.
+// receipt, not a form. The only new information on the page is what happens
+// next (Stripe Checkout). No plan name or amount: Stripe shows the real price.
 //
 // THE MAP IS A STATIC IMAGE, not a re-mounted GeofenceEditor. See
 // app/api/signup/venue-map/route.ts for why. It is also NON-FATAL: if the image
@@ -101,14 +101,7 @@ export function ReviewStep({ draft, duplicate, submitting, onClaim, onEditLocati
 
       <SignupStaggerItem className="mt-3">
         <div className="rounded-ht-lg border border-ht-cyan-400/40 bg-ht-surface p-4">
-          <p className="ht-eyebrow">Venue Pro</p>
-          <div className="mt-1 font-black text-ht-primary">
-            <span className="text-4xl">{SIGNUP_PRICE_LABEL.amount}</span>
-            <span className="text-base text-ht-muted"> {SIGNUP_PRICE_LABEL.period}</span>
-          </div>
-          <p className="mt-3 ht-caption text-ht-fg-muted">
-            Next you&apos;ll go to Stripe&apos;s secure checkout to enter your card. Cancel anytime.
-          </p>
+          <p className="ht-caption text-ht-fg-muted">{SIGNUP_CHECKOUT_COPY.note}</p>
         </div>
       </SignupStaggerItem>
     </SignupQuestion>

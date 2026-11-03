@@ -20,7 +20,7 @@ import { isNativeApp } from "@/lib/nativeApp";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
 import {
   BLANK_SIGNUP_DRAFT,
-  SIGNUP_PRICE_LABEL,
+  SIGNUP_CHECKOUT_COPY,
   SIGNUP_STEPS,
   signupStepIssue,
   type SignupDraft,
@@ -214,7 +214,7 @@ export function SignupWizard() {
    *
    * Returns true when the wizard may advance. Blocking HERE is the whole point:
    * without it a partner whose email already has a `venue_owners` row filled in
-   * four more steps, tapped "Start subscription", and was thrown back to this
+   * four more steps, tapped the review step's checkout button, and was thrown back to this
    * field by the review screen's 409 — which reads as the wizard resetting
    * itself rather than as an answer about their email.
    *
@@ -299,8 +299,7 @@ export function SignupWizard() {
     window.location.href = homeHref(isNativeApp());
   }, []);
 
-  const nextLabel =
-    step === "review" ? `Start subscription — ${SIGNUP_PRICE_LABEL.amount}${SIGNUP_PRICE_LABEL.period}` : "Next";
+  const nextLabel = step === "review" ? SIGNUP_CHECKOUT_COPY.button : "Next";
 
   return (
     <SignupShell

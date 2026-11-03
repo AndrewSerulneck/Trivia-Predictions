@@ -79,19 +79,20 @@ export const SIGNUP_RADIUS_PRESETS: ReadonlyArray<RadiusPreset> = [
  */
 export const SIGNUP_DUPLICATE_RADIUS_METERS = 150;
 
-// --- Price display ----------------------------------------------------------
+// --- Checkout hand-off copy ------------------------------------------------
 
 /**
- * The subscription price as the wizard shows it, split so the review card and
- * the footer button read from ONE place rather than two literals that can drift.
- *
- * This is DISPLAY COPY, not the source of truth: the real amount lives in the
- * Stripe price the Checkout session is created from, and /owner/billing renders
- * whatever Stripe reports. It matches the same literal /owner/billing/setup and
- * /info already show. If the plan price changes, this is one of the four places
- * to update — grep for "$100".
+ * What the signup review step and /owner/billing/setup say before Stripe
+ * Checkout. Deliberately NO plan name and NO amount (Andrew, 2026-11-03,
+ * docs/signup-price-copy-and-partner-geofence-plan.md D1/D2): a partner may
+ * enter a promo code at Stripe (`allow_promotion_codes: true`), so any amount
+ * shown here could be wrong. Stripe shows the real price.
+ * Pinned by tests/signup-no-price-copy-contract.test.ts.
  */
-export const SIGNUP_PRICE_LABEL = { amount: "$100", period: "/mo" } as const;
+export const SIGNUP_CHECKOUT_COPY = {
+  button: "Continue to checkout",
+  note: "You'll see your price on Stripe's secure checkout, where you can also enter a promo code. Cancel anytime.",
+} as const;
 
 // --- Wizard step model ------------------------------------------------------
 

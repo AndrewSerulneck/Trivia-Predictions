@@ -18,7 +18,7 @@
 
 /**
  * Decisive ease-out with no overshoot. Deliberately not a spring — a bouncing
- * signup form reads as a toy, and this flow ends at a $100/mo Checkout.
+ * signup form reads as a toy, and this flow ends at a paid Checkout.
  */
 export const SIGNUP_EASE: [number, number, number, number] = [0.22, 0.9, 0.24, 1];
 

@@ -235,7 +235,11 @@ describe("self-serve signup — the Google Maps key split", () => {
   const FALLBACK_ACCESSOR = /(?<![A-Za-z0-9_])browserGoogleMapsKey\(/;
 
   it("the two maps-key routes serve the browser (referrer-restricted) key, never GOOGLE_MAPS_API_KEY", () => {
-    for (const route of ["app/api/signup/maps-key/route.ts", "app/api/admin/maps-key/route.ts"]) {
+    for (const route of [
+      "app/api/signup/maps-key/route.ts",
+      "app/api/admin/maps-key/route.ts",
+      "app/api/owner/maps-key/route.ts",
+    ]) {
       const src = stripComments(read(route));
       expect(src, `${route} must read the key through lib/googleMapsKeys`).toMatch(
         /from ["']@\/lib\/googleMapsKeys["']/,
@@ -261,9 +265,16 @@ describe("self-serve signup — the Google Maps key split", () => {
 
     const adminSrc = stripComments(read("app/api/admin/maps-key/route.ts"));
     expect(adminSrc, "the authenticated route keeps the fallback").toMatch(FALLBACK_ACCESSOR);
+
+    // The partner route is authenticated, but any self-serve signup becomes a partner, so it
+    // fails closed like the public route (docs/signup-price-copy-and-partner-geofence-plan.md).
+    const ownerSrc = stripComments(read("app/api/owner/maps-key/route.ts"));
+    expect(ownerSrc, "owner route must call publicBrowserGoogleMapsKey()").toMatch(/publicBrowserGoogleMapsKey\(\)/);
+    expect(ownerSrc, "owner route must NOT fall back to the server key").not.toMatch(FALLBACK_ACCESSOR);
+    expect(ownerSrc).not.toMatch(/serverGoogleMapsKey/);
   });
 
-  it("publicBrowserGoogleMapsKey has exactly one definition and one caller", () => {
+  it("publicBrowserGoogleMapsKey has exactly one definition and two callers (signup + owner)", () => {
     const files = [
       ...collectFiles(join(REPO_ROOT, "app"), /\.tsx?$/),
       ...collectFiles(join(REPO_ROOT, "components"), /\.tsx?$/),
@@ -277,7 +288,10 @@ describe("self-serve signup — the Google Maps key split", () => {
     const callers = files.filter((f) =>
       /publicBrowserGoogleMapsKey\(\)/.test(stripComments(readFileSync(f, "utf8"))),
     );
-    expect(callers.map(rel).sort()).toEqual(["app/api/signup/maps-key/route.ts"]);
+    expect(callers.map(rel).sort()).toEqual([
+      "app/api/owner/maps-key/route.ts",
+      "app/api/signup/maps-key/route.ts",
+    ]);
   });
 
   it("GOOGLE_MAPS_BROWSER_KEY is read in exactly one place", () => {

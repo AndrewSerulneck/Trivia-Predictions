@@ -7,7 +7,7 @@ import { HightopLoader } from "@/components/ui/HightopLoader";
 import { homeHref } from "@/lib/domainSplit";
 import { isNativeApp } from "@/lib/nativeApp";
 import { OWNER_AUTH_NO_VENUE, ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
-import { isSelfServeSignupEnabled } from "@/lib/selfServeSignup";
+import { SIGNUP_CHECKOUT_COPY, isSelfServeSignupEnabled } from "@/lib/selfServeSignup";
 
 type BillingResponse = {
   ok: boolean;
@@ -209,21 +209,14 @@ const OwnerBillingSetupPage = () => {
           <HightopLoader size="lg" className="py-10" />
         ) : (
           <div className="rounded-2xl border border-indigo-400/40 bg-ht-surface p-6 shadow-ht-card">
-            <p className="text-caption font-black uppercase tracking-wider text-ht-indigo-300">Venue Pro</p>
-            <div className="mt-1 font-black text-ht-primary">
-              <span className="text-4xl">$100</span>
-              <span className="text-base text-ht-muted"> /mo</span>
-            </div>
-            <p className="mt-4 text-sm font-semibold text-ht-muted">
-              You&apos;ll be taken to Stripe&apos;s secure checkout to enter your card. Cancel anytime.
-            </p>
+            <p className="text-sm font-semibold text-ht-muted">{SIGNUP_CHECKOUT_COPY.note}</p>
             <button
               type="button"
               onClick={handlePay}
               disabled={paying}
               className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-ht-cyan-500 px-4 font-black text-slate-950 shadow-ht-glow-cyan transition active:translate-y-px disabled:opacity-60"
             >
-              {paying ? "Redirecting to payment…" : "Subscribe — $100/mo"}
+              {paying ? "Redirecting to payment…" : SIGNUP_CHECKOUT_COPY.button}
             </button>
             {canAbandon ? (
               <button
