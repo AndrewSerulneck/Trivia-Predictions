@@ -171,3 +171,15 @@ Every phase, including a partially completed one, ends with `docs/group-games-te
 ## 7. Open questions
 
 No developer answer is required to prepare or begin the wording implementation under the assumptions in §1. If Andrew intends new game membership, new scheduling behavior or a different meaning of Active, that is a product behavior change and needs a separate scope decision. External App Store/Play listing changes are relevant only if their published text contains the old umbrella term; do not publish listing changes automatically.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Group Games terminology
+
+- **Group Games (2026-10-24, complete/live):** the umbrella for shared-room, simultaneous games, currently **Live Trivia** and **Category Blitz**. Keep those individual game names and timing statuses such as **Live now**. Dashboard lists are **Active Group Games** and **Active Prizes**; the schedule sheet is **Group Games**, creation is **Schedule a group game**. “Active” preserves the existing upcoming-game and active-prize filters. Internal `live*` names, routes, IDs, channels and push category `games` remain stable. Plan: `docs/group-games-terminology-plan.md`; Phases 1–4 complete. Andrew explicitly requested publication with `/info` copy and three trivia additions. Application `e095b546b264fb02350666b430337b3a4df0a767`, READY `dpl_963x3ij1uoLwvUYdT9zETpcrjAkF`, both domains/exact source verified 2026-10-24. Release/data/undo facts: `docs/copy-and-trivia-publication-2026-10-24.md`; handoff: `docs/group-games-terminology-plan_PHASE_4_HANDOFF.md`. No pending publication approval; preserve unrelated dirty work and do not repair/reimport the historical bank.

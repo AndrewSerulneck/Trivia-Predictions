@@ -623,3 +623,97 @@ fields; 7.5.5's ledger order.
 
 **Cost:** nothing in 7.6.1–7.6.3 adds a request on any poll or cron (7.6.1 adds one indexed read per manual admin PATCH).
 **Deploy:** none of F21–F23 blocks deploying Phases 1–7.5.5; 7.6.1 should land before the first Pick 'Em Prize is created.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Pick 'Em scoring + College Football (Phases 1–7.5.5 built 2026-10-31/11-01, uncommitted; ALL NINE migrations applied to production)
+Plan: `docs/pickem-college-football-and-prize-plan.md` (Andrew's decisions in §2; latest handoff on its status line).
+- **Phase 7 review (2026-11-01): findings F1–F11 in plan §9, fixes 7.1–7.6.** Don't deploy Phases 1–6 before 7.1–7.4.
+  F1: players can write `pickem_picks` (and `users`) straight through the public API (RLS "own row" insert/update
+  policies + full grants); a forged `won` row is paid and counts toward prizes. The browser never writes either table —
+  never add a browser write to `pickem_picks` or `users`. Every SQL fix is a NEW migration (all seven are applied).
+  **7.1/7.1b APPLIED 2026-11-01:** `20261101150024_pickem_picks_server_only_writes.sql` and
+  `20261101150026_users_server_only_writes.sql` revoke anon/authenticated writes and drop the "own row" write policies
+  (SELECT stays). **7.2 (2026-11-01, no migration):** the venue Prizes card reads a Pick 'Em Prize's own period
+  (`pickemPrizeCardPeriod`, tier 0–3 keys inside the one batched ledger read; terms ride the snapshot's campaign read via
+  `listChallengeCampaigns({ withPickEmTerms })`), never a points gauge; the sweep ends a one-day/range prize once its only
+  period is settled (`endPickEmPrize`, is_active = false) — that is the card's and the partner list's "Ended". **7.1c (2026-11-01, migration `20261101153306` applied):** players can't EXECUTE server-only SECURITY DEFINER
+  functions (`settle_prediction_market`, `get_challenge_leaderboard_snapshot`, analytics/inventory refreshes) — a new one
+  must `revoke all … from public, anon, authenticated` + `grant execute … to service_role` in its own migration, or
+  `tests/security-definer-execute-contract.test.ts` fails (`revoke … from public` alone is NOT enough on Supabase). **7.3
+  (2026-11-01, code only):** a college pick grades only on `status` "post" + `status_state` "final" with a non-0–0 score;
+  cancelled/postponed/forfeit → cancelled at once (`collegeFootballGradeGate`). **7.4 (2026-11-01, code only):** a pending
+  pick whose game started > 8 days ago (`PICKEM_UNFINDABLE_PENDING_MS`, outside the ±7-day score fetch) is cancelled in one
+  bulk update before grading (`[Pick 'Em] stale-pending-canceled`); a college pick whose game the provider doesn't list gets
+  its 48 h cancel ONLY on a complete fetch (`collegeFootballMissingGameGate`; `fetchBallDontLieList`'s `failure` box — a
+  failed provider reply reads as "no games", never cancel on it). **7.5.1 (2026-11-01, code only):** admin "settle game"
+  (`settleAdminPickEmGame`, `lib/admin.ts`) only grades, then calls `payPickEmPoints()` — never credits `users.points`; spread
+  picks stay pending for the cron. **7.5.2 (2026-11-01, code only):** settlement reads started pending picks in keyset pages by
+  `(starts_at, id)` (`PICKEM_SETTLE_PAGE_SIZE` 500 × `PICKEM_SETTLE_PAGE_CAP` 6, log `settle-page-cap`); a player's own
+  `settlePendingPickEmPicks({ userId })` (games/picks GETs) pays ONLY when it graded a win — cron + webhook always pay; the
+  screen's "+10" (`newlyWonPointsOf`) fires only when `userPickRewardClaimedAt` goes null → set. **7.5.3 (2026-11-01, migration `20261102021619`
+  applied — found in 7.6; the code fails closed without it):** a Pick 'Em Prize save holds a per-venue lease
+  (`lib/pickemPrizeSaveLease.ts` → `claim_pickem_prize_save` / `release_pickem_prize_save`, 30 s) from before the overlap read
+  until after the insert; busy → 409. Any new path that changes a Pick 'Em Prize's scope/window/pick limit takes it too
+  (`npm run test:pickem-prize-lease-sql`). **7.5.4 (2026-11-01, code only):** `listPickEmGames` runs the college lines, the prize loader and today's summary with `Promise.all` (they write disjoint game fields); the college rule for DISPLAY is cached 30 s per venue per instance (`clearCollegeScoringModeDisplayCache` in tests) while `submitPickEmPick` still reads it fresh. **7.5.5 (2026-11-01, code only):** dead `ActiveGamesPanel` (Collect button) deleted, contract test bans `action: "claim"` to the picks route; the prize winners-ledger read pages by `(cycle_start, id)`. **7.6 re-review (2026-11-01): F21–F24 in plan §11, none blocks deploy;
+  fixes 7.6.1–7.6.3.** **7.6.1 (2026-11-01, code only):** the admin `challenge-campaigns` PATCH skips the lease and D6, so on a
+  Pick 'Em Prize it accepts ONLY name, image fields, `displayOrder` and `isActive: false` — `pickemPrizeAdminPatchRefusal`
+  (`lib/pickemPrizes.ts`, an allowlist) → 409 `REWARD_PICKEM_ADMIN_EDIT_MESSAGE`; the row is read (`getChallengeCampaignDefinitionId`)
+  only when the body would be refused. Admin list: no Edit, Enable disabled on those rows (`tests/pickem-prize-admin-patch-guard.test.ts`).
+  Squares/Bracket prizes still go through the same unguarded PATCH (not this plan). `tests/player-table-write-lockdown-contract.test.ts` fails if a later migration re-opens them or a
+  browser-client file names either table; SQL proof `npm run test:player-write-lockdown-sql`.
+- **No daily cap, no 2×/3× bonus, no Collect button.** Every correct pick in `pickem_picks` — NFL Pick 'Em included
+  (Andrew, D10) — is paid a flat 10 venue points automatically after grading. The money moves ONLY in the
+  `pay_pickem_points` RPC (conditional `reward_claimed_at` stamp + `users.points` in one statement), called ONLY by
+  `payPickEmPoints` in `lib/pickemPoints.ts`, which `settlePendingPickEmPicks` runs on every path. Never pay a pick with a
+  plain update, never call the retired `claim_pickem_points` (`tests/pickem-automatic-points-contract.test.ts`).
+- The old uncollected backlog is NOT paid (Andrew D12): the migration stamps won picks graded > 24 h before it runs
+  `reward_claimed_at` + `reward_points = 0`.
+- **College Football (Phase 2, 2026-10-31, migration `20261031185853` applied 2026-10-31 — needed before the code or college picks
+  are refused):** slug `ncaaf`, key `americanfootball_ncaaf`. FBS rule, live label and grade gate live ONLY in
+  `lib/pickemCollegeFootball.ts` (FBS = at least one team in conference ids 1–11, pinned by a captured fixture). A college
+  pick grades only on a real final (status + both scores) — never the 4 h staleness shortcut — and is cancelled 48 h after
+  kickoff with no final. `tests/lib.pickem-college-football.test.ts`.
+- **College spreads (Phase 3, 2026-10-31, migration `20261031191250` applied 2026-10-31):** venue rule
+  `venue_game_settings.cfb_pickem_scoring_mode` (default `spread`; Game Settings owner + admin). A college pick is stamped
+  `pickem_picks.scoring_mode` WHEN MADE (switching sides keeps it) and graded by that stamp. Lines live in
+  `pickem_game_lines`, written ONLY by `upsert_pickem_game_lines` (before kickoff, never once locked/started) from the
+  games list, and locked ONLY by `lock_pickem_game_lines` in settlement (never fetches/creates) — both via
+  `lib/pickemGameLines.ts`. One sportsbook rule for NFL + college: `lib/spreadLines.ts`. Provider asked ≤ once per
+  10 min (`PICKEM_LINE_REFRESH_MS`). No line = "Line coming soon", can't pick; final with no locked line → cancelled at
+  48 h; a failed lock read never cancels. Tests `tests/lib.pickem-college-spreads.test.ts`, `npm run test:pickem-lines-sql`.
+- **Pick 'Em Prize data + rules (Phase 4a, 2026-10-31, migration `20261031200417` applied; the wizard offers it
+  since Phase 5, `isPickEmPrizeOffered` = true).** Definition `pickem_challenge`, `game_types ['pickem']`. Its terms are the
+  `challenge_campaigns.pickem_*` columns (NOT in `CAMPAIGN_SELECT_COLUMNS`; read only via `listActivePickEmPrizeCampaigns` /
+  `loadPickEmPrizeTerms`). ALL rules live in the leaf `lib/pickemPrizes.ts` (scope = sport slugs + league SPORT KEYS, window →
+  venue-local periods, the ONE cycle key `pickemPrizeCycleStart` = period start + tier seconds, validation, overlap rule D6);
+  sports/leagues list = `lib/pickemSports.ts` (shared with `lib/pickem.ts`); tier prizes = `lib/pickemPrizeTiers.ts`. The generic
+  10-points accrual SKIPS this definition (`isPointsAccrualExempt`). A clash is `RewardConflictError` → 409. Pick limit (D5) =
+  `lib/pickemPrizeLimit.ts`, new picks only, fails OPEN on a read error (the prize counts only the first N picks).
+- **Pick 'Em Prize awards (Phase 4b, 2026-10-31, migration `20261031203914` applied).** Sweep `settlePickEmPrizes`
+  (`lib/pickemPrizeAwards.ts`) at the end of `/api/cron/pickem-settle`; ALL award rules are pure in `lib/pickemPrizeStandings.ts`.
+  "X out of N" pays ONLY via RPC `award_pickem_tier_prize` (`awardPickEmTierPrize`; top tier reached with a prize left, one per
+  player per period, counts only a player's first N picks by `created_at`); target / most right via `award_cycle_winner` at the
+  tier-0 key. A settled period has a `pickem_prize_settlements` row and is never re-read. Tiebreaker guesses
+  (`pickem_prize_tiebreakers`) are written only by `savePickEmPrizeGuess` (`lib/pickemPrizeTiebreaker.ts`), route
+  `/api/pickem/prize-tiebreaker` (session-bound, locks at the game's start). SQL proof `npm run test:pickem-prize-awards-sql`.
+- **Pick 'Em Prize wizard (Phase 5, 2026-10-31).** Steps `games` → `when` → `terms` ("How to win") come before the usual
+  `players` (most right only) / `prize` (one per tier) / `confirm`, in the ONE `CreateRewardWizard`; `games`/`when` exist
+  only for this definition (`guardRewardWizardStep` sends them to `terms` otherwise, and a later step back to the first
+  unanswered Pick 'Em question). Rules = `lib/pickemPrizeWizard.ts` (feeds `validatePickEmPrizeTerms`, same as the
+  server); partner words = `PICKEM_PRIZE_PARTNER_COPY` in `lib/rewardDefinitions.ts` (never in `description`, which guests read).
+- **Pick 'Em Prize player screens (Phase 6, 2026-10-31).** The games response carries `prizes` (`PickEmGamePrize`, client-safe in
+  `lib/pickemPrizeLine.ts`; built by `loadPickEmGamePrizes`, `lib/pickemGamePrizes.ts`, from the limit's 60 s per-instance prize cache +
+  one `countPickEmPicksInPrizePeriod` per "out of N" prize) — the screen makes no request of its own for the prize line. A used-up
+  limit sets `pickLimitReached` on games not yet picked (changing/clearing a pick is always allowed). `PickEmPrizeTiebreakerCard`
+  (inline, no Back) calls `/api/pickem/prize-tiebreaker` once and only when a "most right" prize runs TODAY (`hasTiebreaker`).
+  Coupon words: `listChallengeCampaignWinsForUser` adds the prize's `pickem*` terms to `rewardTerms` (one `loadPickEmPrizeTerms` read,
+  only when the wallet holds such a coupon). Period words have one home, `describePickEmPrizePeriodPhrase`.
+- `pickem` points-target prizes get 10 per correct REGULAR pick at payment; NFL picks feed only `nfl-pickem` (their own
+  sweep), and picks graded > 6 h earlier add points but no prize progress. SQL proof: `npm run test:pickem-points-sql`.

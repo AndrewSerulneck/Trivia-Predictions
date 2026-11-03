@@ -127,7 +127,7 @@ describe("auth.users foreign key guard", () => {
         "auth user touches every one of them — SET NULL silently detaches a player's " +
         "identity, CASCADE deletes their rows. Before updating EXPECTED, widen the " +
         "guard on Phase 6's orphaned-auth-user sweep in /api/cron/signup-sweep to " +
-        "check the new table too, and re-read the prohibition in CLAUDE.md."
+        "check the new table too, and re-read the auth.users prohibition (CLAUDE.md + docs/partner-self-serve-signup-plan.md, Standing rules)."
     ).toEqual(Object.keys(EXPECTED).sort());
   });
 

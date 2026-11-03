@@ -1385,3 +1385,136 @@ against the committed feed fixture. No Squares event exists in production, so th
   discovered in one run, last season's Super Bowl the same, rehearsal mode untouched, this season's Super Bowl
   untouched, admin create refused); `tests/squares-engine.test.ts` (old-season archive allowed; `isStaleSquaresEvent`).
   Full suite 5,239 pass / 13 skip; tsc and eslint clean.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Super Bowl Squares + March Madness (seasonal games; Phase 1 built 2026-10-19, flags off)
+Plan: `docs/squares-and-brackets-plan.md` (Andrew's decisions in §1; latest handoff on its status line).
+- **Cards are date-windowed, zero requests:** `lib/seasonalGames.ts` (Eastern dates; Squares Feb 1–15 2027, Brackets
+  Mar 14–Apr 6 with a teaser from Mar 1) and the ONLY readers of `NEXT_PUBLIC_SQUARES_ENABLED` /
+  `NEXT_PUBLIC_BRACKETS_ENABLED`. Off = no card, routes 404. Never turn a flag on before its route exists.
+- **On-screen names live only in `lib/venueGameCards.ts`** (`SQUARES_GAME_NAME`, `BRACKET_GAME_NAME`; Andrew: a rename
+  must be one edit). `tests/seasonal-games.test.ts` fails on a copied literal.
+- **Venue points are paid only through `creditSeasonalPoints`** (`lib/seasonalPointsCredit.ts`) → batched RPC
+  `credit_seasonal_points` (≤ 500 per call; ledger `seasonal_points_credits`, unique `(source, source_key)` = pays once).
+  Never `update users set points` for these games; never delete a ledger row to "re-grade" (it frees the key). Scale in
+  `lib/seasonalPoints.ts`. SQL proof: `npm run test:seasonal-points-sql`.
+- **Squares engine (Phase 2, 2026-10-19, migrations `20261019045030` + `20261019051458`, applied 2026-10-19):** claims only via `squares_claim`
+  (`lib/squaresBoard.ts`), grading/draw only in `lib/squaresSettlement.ts` (rides on `/api/cron/pickem-settle`, zero I/O
+  outside Feb 1–15 or with the flag off), voids only via `squares_void_moment` (`lib/squaresAdmin.ts`: reverses paid /
+  burns unpaid credits, re-grade pays under `board:moment:grade_no`). A quarter counts only on positive evidence + a 60 s
+  hold (`lib/squares.ts`); corrections are never automatic. Compare PostgREST timestamps with `Date.parse`, not strings.
+  SQL proof: `npm run test:squares-sql`.
+- **Squares player screens (Phase 3, 2026-10-19):** `/squares` → `components/squares/`; all rules in `lib/squaresView.ts`.
+  The shared score `GET /api/squares/score` (`lib/squaresScore.ts`) is CDN-cached 15 s and carries no player or venue —
+  keep it that way, and never poll the board per player after the lock (`useSquaresData`, `tests/squares-screen.test.ts`
+  pins the cadence). Squares are `div role="gridcell"`, never `<button>`s. The sheet is pinned in
+  `tests/native-back-review-fixes.test.ts`.
+- **Squares Prizes + Results (Phase 4, 2026-10-19, migration `20261019131139`, applied 2026-10-19):** definition `squares_challenge`
+  (`lib/rewardDefinitions.ts`; offered only while `isSquaresPrizeOffered`, and the server refuses once the numbers are
+  drawn). The partner picks the moments that pay (`challenge_campaigns.squares_moments`, deliberately NOT in
+  `CAMPAIGN_SELECT_COLUMNS`: read only by `listActiveSquaresPrizeCampaigns` / `loadSquaresPrizeMoments`). Each moment is
+  its own cycle — `squaresPrizeCycleStart` in `lib/squaresPrizes.ts` (kickoff minute + moment in seconds + grade_no in
+  ms) is the ONE key; never key a Squares award any other way. Awards only in `lib/squaresPrizeAwards.ts` (via
+  `settleSquaresWinners`): `award_cycle_winner` quota 1, then `squares_results.prize_checked_at`. A void + re-grade pays
+  the corrected winner and takes back the old coupon only if unused (Andrew: "take back if unused") — ONLY via the
+  `squares_withdraw_prize_coupons` RPC (`withdrawVoidedSquaresPrizes`); never delete a coupon or ledger row by hand.
+  Results: `lib/results/adapters/squares.ts` + a placement rule.
+- **Squares TV view (Phase 5, 2026-10-19):** `mode: "squares"` on the venue screen REPLACES THE IDLE SCREEN only (live
+  Trivia / Category Blitz still win). Built inside the existing `/api/venue-screen/state` poll — no new request loop.
+  `lib/squaresTvRead.ts` (flag + Eastern-date gate = zero I/O otherwise; one board read per venue per 15 s cached) →
+  `lib/squaresTv.ts` (`buildSquaresTvPayload`: shows only once drawn, a claim exists, and until kickoff + 7 h; no user ids)
+  → `components/venue-screen/SquaresTvScreen.tsx`. Poll 15 s; the route CDN-caches this mode like idle.
+- **Phase 6 review (2026-10-19): fixes are sub-phases 6.1–6.9, findings in plan §13.** Before turning the flag on,
+  6.1–6.4 must be done. The 6.6 re-review (2026-10-21, plan §29) added 6.6.1–6.6.4, also required before the 6.7
+  rehearsal. **6.1 built 2026-10-19 (committed, deploy pending):** every prize sweep pays only its own
+  `rewardDefinitionId` (`isLiveTriviaGameWinnerCampaign`, `isLiveTriviaRankedCampaign`, `isNFLWeekWinnerCampaign`, the
+  Squares check); a new file that calls `awardCycleWinner`/`awardRankedCyclePlaces` fails
+  `tests/prize-sweep-ownership-contract.test.ts` until it does too. Never turn `NEXT_PUBLIC_SQUARES_ENABLED` on in Production before 6.9 (rehearsals run
+  on a Preview).
+- **Squares event lifecycle (6.2, 2026-10-19, migration `20261019142642`, applied 2026-10-19).** `squares_events.purpose`: `super_bowl` (discovery, or an admin game that is the
+  season's Super Bowl, `squaresEventPurposeFor`) or `rehearsal` (any other game). `squares_claim` answers
+  `rehearsal_only` for a rehearsal at any venue not `hidden = true` — the main guard; prizes check it again
+  (`squaresPrizePaysAtVenue`). `set_game` never changes purpose. Discovery never re-creates an archived game; a drawn
+  Super Bowl can't be archived before the window closes (`squaresArchiveRefusal`). A void stamps `reopened_at`; the tick
+  watches the feed 3 h after it even past the 12 h deadline (`isSquaresReopenWatchOn`). **Rehearsal switch
+  `SQUARES_REHEARSAL_ENABLED`** (server-side, one reader `isSquaresRehearsalEnabled()` in `lib/seasonalGames.ts`): ALONE it
+  runs the settlement (`squaresSettlementMode` → `rehearsal`, never discovers) — that is what goes on Production for 6.7;
+  with the public flag it also runs the TV read (`isSquaresServerLive`) — Preview only. Archive any rehearsal event
+  before 6.9 (since 6.6.1 the season-mode cron also archives a leftover rehearsal or old season's event itself, and
+  admin create refuses a rehearsal during the window).
+- **Paying Squares winners (6.3, 2026-10-19, no migration).** A list of ids sent to PostgREST (`.in()`, `.overlaps()`)
+  goes through `chunkIds` (`lib/postgrestIds.ts`, `POSTGREST_ID_CHUNK` = 150) — never one request with more (the URL
+  limit; `tests/lib.postgrest-ids.test.ts` pins the Squares payers). A result whose points can never be paid (key paid
+  to another player, or player gone: `squaresCreditBlockNote`) is stamped `credit_blocked_at` + note, logged once
+  (`[Squares] credit-blocked`), never re-sent, shown in the admin panel and does NOT block Archive. Once the watch is
+  over (or past the no-final deadline with no late-void watch), the tick returns before `settleSquaresWinners`: one
+  event read per minute, nothing else; admin actions still settle.
+- **Bracket engine (Phase 7, 2026-10-19, migration `20261019203858`, NOT applied; flag off).** Picks are SEATS
+  (`lib/brackets/tree.ts`, the one slot/seat definition; an entry = `smallint[63]`). Pure rules only in `lib/brackets/`
+  (`picks.ts` validity + clearing, `scoring.ts`, `games.ts` feed merge/winner seats/locks/replay mask). Entries are
+  written ONLY by `bracket_save_entry` (`lib/bracketsEntries.ts`), winner seats + scores ONLY by
+  `bracket_record_results` (`recordBracketResults`, `lib/bracketsStore.ts`); the sync never changes a decided result
+  (admin `override_result` only). Venue points per entry per round, key `entry:r<round>:<grade_no>`, paid only in
+  `lib/bracketsSync.ts`. Rehearsals: `purpose = 'rehearsal'` (hidden venues only) + `clock_offset_seconds`; switch
+  `BRACKETS_REHEARSAL_ENABLED` (one reader, `lib/seasonalGames.ts`). Tests: `tests/brackets-*.test.ts`,
+  `npm run test:brackets-sql`.
+- **Bracket player screens (Phase 8, 2026-10-19, flag off, nothing new in the database).** `/bracket`
+  (`app/bracket/page.tsx`, `notFound()` with the flag off) → `components/bracket/` (`BracketGame` switcher + modes,
+  `BracketEditor`, `BracketMatchups`, `BracketReview`, `BracketStandings`, `BracketStepChips`, `useBracketData`); every
+  decision is pure in `lib/bracketsView.ts` (steps, seat labels, pick states, headline, save messages). Screens call only
+  the Phase 7 routes and `lib/brackets/*` — `setBracketPick` for every tap, never a rule of their own
+  (`tests/bracket-screen-contract.test.ts`). **No polling:** one `GET /api/bracket/state` when the page opens, one more on
+  returning to a tab away > 5 min (only while a bracket can still change), one at a live bracket's lock time, one after a
+  copy; a save patches the held state (`withSavedEntry`) instead of re-reading. Drafts save on each step change, when the tab
+  hides and before leaving (`BracketEditor` `flushRef`, `EXIT_SAVE_WAIT_MS`). Step buttons are the shared `WizardFooter` (its
+  `-mx-2 !max-w-none` matches the app bar). Teams are in seats: an opening-round game with no linked seat shows "TBD" until an
+  admin links it; linked + undecided shows "A / B". The seasonal app-bar label is `BRACKET_SHORT_NAME` ("Bracket") in
+  `lib/venueGameCards.ts`.
+- **Bracket Prizes, Results, TV (Phase 9, 2026-10-20, migration `20261019213121`, applied 2026-10-20; flag off).**
+  Andrew: the bracket screen shows NO Prize line — Prizes tab and Results only. Definition `bracket_challenge`
+  (`lib/bracketPrizes.ts`, a leaf: the registry imports it): places only, partner picks the brackets that pay
+  (`challenge_campaigns.bracket_keys`, NOT in `CAMPAIGN_SELECT_COLUMNS`), the usual `players` minimum. One cycle per
+  bracket per tournament, keyed ONLY by `bracketPrizeCycleStart`; settled once after the championship by
+  `settleBracketPrizes` (`lib/bracketPrizeAwards.ts`, from `lib/bracketsSync.ts`) → `award_ranked_cycle_places`, then
+  `bracket_tournaments.prizes_settled_at`. A later admin correction never changes settled prizes. Results adapter
+  `lib/results/adapters/bracket.ts` (breakdown = picks right/wrong). TV `mode: "bracket"` replaces idle only, inside the
+  existing poll (`lib/bracketsTvRead.ts` → `lib/bracketsTv.ts` → `BracketTvScreen.tsx`; zero I/O off-season).
+- **Phase 10 review (2026-10-20): fixes are sub-phases 10.1–10.4, findings in plan §17.** Same rule as Phase 6: no
+  in-place patches. Never turn `NEXT_PUBLIC_BRACKETS_ENABLED` on in Production before 10.1–10.4 are done and the 10.6
+  replay has passed (launch is 10.8, by Mar 8, 2027). The 10.5 re-review (2026-10-21, plan §22) added 10.5.1–10.5.4,
+  also required before 10.6.
+- **Bracket admin corrections (10.1, 2026-10-21, migration `20261021035254`, applied).** The sync writes games
+  ONLY through `bracket_save_feed_games` (`saveFeedBracketGames`), which keeps whatever an admin took over in the
+  current row; admin actions write only their own columns (`updateBracketGameColumns`). Never upsert whole
+  `bracket_games` rows (contract test). The sync records results only against the seats it read
+  (`expectedWinnerSeats` → `stale`); every result/game admin action sets `next_sync_at = now`; "No result" =
+  `result_held` (the feed never fills it until `release_result`). Plan §18.
+- **Bracket lock + final-score guards (10.2, 2026-10-21, no migration).** `move_lock` asks only `lockMoveRefusal`
+  (`lib/bracketsAdmin.ts`): never after the kind's first tip (tournament clock); once it has tipped, only EARLIER than
+  the current lock (10.5.1), never reopened. The championship `override_result`
+  takes `homeScore`/`awayScore` (both, winner higher); prizes never settle without the total, a decided final with
+  none is read hourly with needsAdmin, and the sync never clears a known total. Plan §19.
+- **Championship total (10.5.2, 2026-10-21, migration `20261021134157`, NOT applied).** Both writers of
+  `championship_total` (sync + admin override) record ONLY `recordedChampionshipTotal` (`lib/bracketsStore.ts`); the
+  feed writer keeps a stored score when the feed has none. A championship winner the stored score contradicts needs the
+  corrected score (409). Plan §24.
+- **Bracket shared helpers (10.4, 2026-10-21, no migration).** Stored 63-seat arrays are read ONLY through
+  `bracketSeatList` (`lib/brackets/tree.ts`); a lock in real time ONLY through `bracketRealLockMs`
+  (`lib/bracketsStore.ts`); "rehearsals only at hidden venues" ONLY through `bracketTournamentsShownAt`
+  (`lib/bracketsEntries.ts`, screen + TV) — contract test. The TV lists only the shown bracket's tournament's games.
+  Due rounds are paid in ONE pass over the entries (`payBracketRounds`, `lib/bracketsSync.ts`). Plan §21.
+- **Bracket lock-passed stamps (10.7.1, 2026-10-21, migration `20261021203544`, applied).** `bracketRealLockMs` returns
+  `main_lock_passed_at` / `second_lock_passed_at` once set (else lock + the current offset): a rehearsal's offset
+  shrinks with every forward `set_clock`, so the old rule put the lock weeks early (no prize paid, §25 F1). Stamps are
+  written once, ONLY through `lockPassedPatch` (`lib/bracketsStore.ts`), by `set_clock` and the sync — contract test.
+  Plan §26.
+- **Brackets LAUNCHED in Production 2026-10-21 (10.8, early; Andrew skipped the 10.7 phone pass).**
+  `NEXT_PUBLIC_BRACKETS_ENABLED` = true, `BRACKETS_REHEARSAL_ENABLED` = false (Production). Card from Mar 1, sync from
+  Mar 14 (zero I/O before); partners can set up a bracket Prize now. A rehearsal now needs the switch back on. Plan §27.

@@ -354,3 +354,28 @@ light-capable screen", and `docs/light-theme-device-checklist.md`.
 - **Q5 — Game tutorial cards** shown before "Make your picks" / "Play Fantasy": default unchanged (they're
   artwork).
 - **Q6 — Venue Home game tiles keep their solid colours?** Default: yes.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Light theme (built 2026-10-22, flag off)
+Plan + handoffs: `docs/light-theme-plan.md`; phone pass `docs/light-theme-device-checklist.md` (Andrew only).
+- **Four screens have a light version: Venue Home, Pick 'Em, NFL Pick 'Em, Fantasy.** Everything else stays dark.
+  `lib/theme.ts` is the one home: the flag `NEXT_PUBLIC_LIGHT_THEME_ENABLED` (`isLightThemeEnabled()`; build-time, so
+  redeploy), the light paths (`LIGHT_THEME_PATH_PATTERN`), the choice (localStorage `htc_theme`, Dark / Light only —
+  no "Match my phone", Andrew 2026-10-22; default Dark = `DEFAULT_THEME_PREFERENCE`, Andrew's call), `THEME_COLOR` and the Appearance copy. Flag off
+  = no pre-paint script, no `ThemeRouteSync`, no Appearance row: every page dark.
+- **The choice never goes to the server.** No cookie, no account column: the root layout must never read
+  `cookies()`/`headers()` (it would make every static page a per-visit render; `tests/light-theme-contract.test.ts`).
+- **A colour on those screens is a token with a dark AND a light value** — in `:root` and
+  `:root[data-theme="light"]` of BOTH `app/globals.css` and `colors_and_type.css`, plus a `tailwind.config.ts` `ht.*`
+  entry. Never an arbitrary hex, never a `dark:`/`light:` variant. Steps: `AGENTS.md` "Adding a colour".
+  Dark must stay pixel-identical: `scripts/theme-screenshots.cjs` + `scripts/theme-pairs/`.
+- **App status bar: `lib/nativeStatusBar.ts` is the only painter.** Dark icons only on a strip known to be white
+  (Android 15+ ignores the colour, so it stays navy); never flip `overlaysWebView`. Installed iPhone PWA: a navy band
+  behind the clock on light screens (`html.tp-standalone[data-theme="light"]::after`).

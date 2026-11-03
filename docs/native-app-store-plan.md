@@ -1875,3 +1875,167 @@ dollar cap.
     APNs **upload to Firebase confirmed by Andrew 2026-10-25**; key backup location and real-device delivery
     are separate outstanding checks. Distribution signing uses Xcode-managed signing; no exported private-key
     backup was created by this release preparation.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Native app (App Store / Google Play) — planned 2026-10-08
+
+Plan: `docs/native-app-store-plan.md` (phases, models, Andrew's decisions). One Capacitor app over
+the live site, for **PLAYERS ONLY** (Andrew, plan §2 item 12): every `/owner/*` page, `/tv` and
+`/admin` open in the system browser, never in-app — no partner link, sign-in, dashboard or billing
+screen anywhere in the app. Partners use the website. Read the plan before any native/app-store work.
+
+- **Native passkeys (Phase 4c / Part B, 2026-10-25).** Paid-team signing was already done in 5.2 and is verified
+  in the signed app (`2U7HMXGQM3.com.hightopchallenge.app`, profile expires 2027-10-23). Andrew verified iPhone
+  passkey creation, native Face ID sign-in and Safari sign-in with that same passkey. Approved migration
+  `20261025150000_native_discoverable_passkeys.sql` is applied: discoverable authentication must allow an unknown
+  account on the challenge; registration still requires an account/profile. Never reintroduce `account_id NOT NULL`
+  on every challenge. Android WebView/Credential Manager integration is built locally; exact app-certificate origins
+  are derived by `getExpectedPasskeyOrigins` in `lib/webauthn.ts` from the same certificate reader as Digital Asset
+  Links. Android association/verifier are live at `7aacf153` (2026-10-25); Google DAL verifies both hosts' credential
+  trust and play.'s App Links with the supplied Play signing SHA-256. Real Play-installed passkey testing is still
+  open; never substitute debug/upload certificates or claim Android end-to-end ready. Handoffs `docs/native-app-store-plan_PHASE_4C_HANDOFF.md`
+  and `docs/native-app-store-plan_PHASE_2B_HANDOFF.md`; 7+ day persistence remains unverified.
+- **Player account deletion is live (Phase 1b, 2026-10-08).** One all-or-nothing RPC,
+  `delete_player_account` (migration `20261008044524`), called only by `lib/playerAccountDeletion.ts`
+  from `POST /api/account/delete` (signed session only; 503 without `SESSION_SECRET`, because dev
+  shares the production DB). Andrew: REMOVE, don't anonymise — except a won reward keeps its
+  `challenge_cycle_winners` slot with `winner_user_id` NULL (else sweeps re-award the prize), and the
+  Square ledger is kept unlinked. `challenge_campaigns.winner_user_id` has NO FK on purpose (a
+  "resolved" marker). A new `users` FK that is ON DELETE SET NULL must be deleted explicitly in the
+  function — `tests/account-deletion-contract.test.ts` fails until it is. SQL is proven on PGlite by
+  `npm run test:account-deletion-sql`. Emailed requests: `scripts/delete-player-account.cjs`.
+- **`native/` is the Capacitor shell (Phase 2 spike, 2026-10-08)** — its own `package.json`, excluded
+  from `tsconfig`/eslint/Vercel (`.vercelignore`). Build Android with `JAVA_HOME=/opt/homebrew/opt/openjdk@21`
+  (Gradle can't run on Android Studio's Java 25); Gradle output goes to `~/Library/Caches/hightop-native/`
+  because iCloud syncs `~/Documents` and makes `name 2` copies that break builds. Findings and commands:
+  `docs/native-app-store-plan_PHASE_2A_HANDOFF.md`.
+- **The iPhone app's web view starts BELOW the status bar (Phase 2D, 2026-10-09)**:
+  `@capacitor/status-bar` `overlaysWebView: false` + dark navy, light icons (`SystemBars.style "DARK"`;
+  Android paints the edge-to-edge strip via `htc_canvas` in `styles.xml`). Don't flip it back to
+  overlaying: half the player screens ignore `env(safe-area-inset-top)`. Never put safe-area top padding
+  on a `<section>`/`<article>`: `.tp-page-main section` gets `0.625rem !important` on phones and silently
+  replaces it (`tests/native-safe-area-contract.test.ts`).
+- **The app's front door + link-outs (Phase 2E, 2026-10-09; 3B.1).** `lib/nativeApp.ts` is the ONLY
+  reader of the `HightopChallengeApp/` UA token and `window.Capacitor` (`isNativeApp()`,
+  `isNativeUserAgent()`); contract test. In the app `/` is the player sign-in and nothing else: no Home
+  link, no partner link (`app/page.tsx` passes the server's UA check as `JoinFlow`'s `nativeAppRequest`
+  so even the first paint has no Home). The 2E remembered-partner launch (`AppFrontDoor`,
+  `lib/appFrontDoor.ts`, cookie `htc_app_side`) was deleted in 3B.1 — don't bring it back. Marketing pages (`plugins.HightopShell.openInBrowser` in
+  `native/capacitor.config.json`) open in the system browser; legal pages stay in the app. The offline
+  page is shown by our own native wrappers (`HightopBridgeViewController.swift`,
+  `HightopWebViewClient.java`) only for real network errors — `server.errorPath` is deliberately unset.
+- **Production shell (Phase 3, 2026-10-09; handoff `docs/native-app-store-plan_PHASE_3_HANDOFF.md`).** No
+  `@capacitor/*` package in the website — `lib/nativeApp.ts` talks to the injected bridge
+  (`hasNativeCapability()`, `callNative()`, `addNativeListener()`, `openInSystemBrowser()`); check the
+  capability first, old app versions stay in use. Link-outs are ONE list: `lib/nativeLinkOut.ts` =
+  `native/capacitor.config.json` `openInBrowser.paths`; the web-only entries are **`/owner`, `/tv`,
+  `/admin`** (each = itself and everything below). The shell catches full page loads on the apex;
+  everything else (Next router hops, `/owner` on `play.` while the split is off) is caught by
+  **`proxy.ts`**, which rewrites an app-UA request for a web-only page to the static notice page
+  `app/in-app-notice/[page]` (URL unchanged) — browsers never match, so the partner pages stay static.
+  Don't add a per-page `WebOnlyInApp` layout gate (deleted in 3B.1: it made every page it wrapped a
+  per-visit render). Never a Subscribe/Pay button in the app — guaranteed by `/owner` being web-only. Android Back runs the on-screen control
+  (`components/navigation/nativeBackButton.ts`: overlay > step > exit) — never new navigation logic.
+  Every closable player popup calls `useNativeBackHandler("overlay", open ? close : null)` with its X's close
+  (list pinned in `tests/native-back-review-fixes.test.ts` — add new popups there); native Back runs
+  `handleExit({ replace: true })` (a tap pushes); the venue hub is the root and Back minimises (review-fix R1).
+  Native env vars (`NATIVE_APP_*`, `APPLE_TEAM_ID`, `ANDROID_APP_CERT_SHA256`) are server-side but
+  need a Vercel **Redeploy** to apply. App version lives in four places, pinned equal by
+  `tests/native-app-contract.test.ts`.
+- **Native share, haptics and the QR scanner (Phase 4, 2026-10-09; handoffs `…_PHASE_4A_HANDOFF.md`,
+  `…_PHASE_4B_HANDOFF.md`).** Plugins are capability-checked (`NativeCapability` in `lib/nativeApp.ts`:
+  `Share`, `Haptics`, `Filesystem`, `CapacitorBarcodeScanner`); old app builds fall back. Share: `lib/nativeShare.ts`
+  (link/text) and `lib/nativeImageShare.ts` (story picture; Android only, via Filesystem cache). Haptics have ONE native call
+  site, `playHaptic` in `lib/nativeHaptics.ts`, reached from `triggerAnimation` (gameplay animations) and from
+  `haptic()` in `lib/haptics.ts` (taps/submits/claims; with the plugin it skips `navigator.vibrate`, so no
+  double buzz; website unchanged). Never call both for one moment. The Rewards "prize won" buzz baselines only on a successful load (`hasLoadedChallenges`). **QR scanner:** `lib/nativeQrScan.ts` — `parseHightopQr`
+  accepts ONLY https `play.hightopchallenge.com` / `hightopchallenge.com` at `/` or `/join` (optional `?v=`), and the
+  app navigates to a path it BUILDS (`joinPathForScan`), never to the scanned text. On the signed-in venue list a
+  scan instead selects via `handleSelectVenue`, only if the venue is in the built list (`decideScannedVenue` in
+  `lib/joinVenueList.ts`, R2) — a QR never bypasses the geofence. Plugin is
+  `@capacitor/barcode-scanner` (the MLKit one has no Swift Package Manager support — don't swap it in);
+  Android minSdk is 26 because of it. Camera is asked for only on tap. No partner surface (player-only app).
+- **App download link `hightopchallenge.com/app` (Phase 9a, 2026-10-22).** `app/app/route.ts` 302s by User-Agent via
+  `decideAppLinkDestination` (`lib/appDownloadLink.ts`): iPhone → App Store, Android → Play, else `/info#app`; store URLs are
+  EMPTY constants there until the listings are live (until then everyone lands on the player sign-in); inside the app → the
+  front door. **9g (2026-10-23):** once a store URL is set, a phone first sees a tiny page (`lib/appDownloadPage.ts`: "Get the app" /
+  "No thanks, play in the browser"; `decideAppLinkDestination` returns `kind: "ask"`); a Mac-looking Safari = maybe an iPad. The PATH is permanent (printed on shared pictures; literal, never env). Share cards (9b) print `APP_DOWNLOAD_URL`.
+- **Share pictures v2 (Phase 9b, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9B_HANDOFF.md`).** "Create story" opens
+  READY-MADE designs first (Spotlight / Card / Night, no camera), Story 1080×1920 or Post 1080×1350; "Add a selfie" is the
+  old camera flow. A game is a registry entry (`lib/socialShare/shareGames.ts`; no share component/layout branches on a game id,
+  test). Layouts: `lib/socialShare/shareDesigns.ts`; one renderer `storyCanvas.ts`. Headline = Andrew's line, ONLY via
+  `shareWinHeadline` (`copyPresets.ts`). Every picture carries the bar (name + street + city, no directions) and the QR file
+  `public/share/app-download-qr-v1.png` = `APP_DOWNLOAD_URL` (`npm run share:qr`; new value = new file name). Canvas text ≥ 34px
+  (= 12px on a phone). The hub remembers its venue for the games (`rememberShareVenue`, zero requests). Visual check:
+  `npm run share-card:render -- --sheet` (also decodes every QR).
+- **"Share my win" (Phase 9c, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`).** ONE button,
+  `components/social-share/ShareWinButton.tsx` (wraps `StoryShareLauncher variant="button"`; reads the player from storage, makes
+  no request). A new win screen adds it and is listed in `tests/share-win-button.test.ts`. It only appears on a result the screen
+  already loaded; a prize shares `prizeCardFace` (name only — never a code/QR/card number, tested). Share analytics accept every
+  registry game (`story_share_events_game_type_valid`, migration `20261023004047`, applied).
+- **The share sheet (Phase 9d, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9D_HANDOFF.md`).** Still ONE sheet,
+  `StoryCaptureModal` (never fork it): designs + Story/Post + caption box ("Copy caption + link") + a destinations row
+  (`components/social-share/ShareDestinations.tsx`). What a tap does is pure in `lib/socialShare/shareDestinations.ts`
+  (`planShareDestination`); words in `copyPresets.ts`. The clipboard write starts inside the tap before any await (browsers
+  allow it only then; `lib/copyText.ts`), and the picture still goes with NO `url` field. In the app, Instagram Story uses
+  our plugin `InstagramStories` (`native/…/InstagramStoriesPlugin.{swift,java}`, Meta App ID in
+  `native/capacitor.config.json`; web side `lib/nativeInstagramStories.ts`, capability-checked; old builds → share sheet). On iPhone the picture REPLACES
+  the pasteboard, so the caption goes to the plugin and rides in the same item (9f.2) — never a picture-only `setItems`.
+  Next: the 9f review's fix phases (9f.1–9f.4 built 2026-10-22; 9f.5–9f.6; 9f.2's iPhone check is section J item 33) (plan; handoff `docs/native-app-store-plan_PHASE_9F_HANDOFF.md`), then 9g.
+- **What a share shows (Phase 9e, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** ONE choice per venue
+  (Andrew): `venues.instagram_handle` (bare, CHECK = `parseInstagramHandle` in `lib/venueShareDetails.ts`) + `share_show_name /
+  _address / _instagram` (default true; migration `20261023011500`, applied 2026-10-22). Applied in ONE place, `applyShareVenue` (`lib/socialShare/shareVenue.ts`), called only by
+  `StoryShareLauncher` — so every game/prize, including new ones, honours it; no screen sets `venueInstagram` (contract test). Players
+  read it on the venue rows they already load (`lib/venues.ts` select tiers step down if the columns are missing; localStorage
+  `htc_share_venue_v3` with `savedAt`). **9f.4: the partner's choice always wins** — a remembered copy older than 10 min
+  (`SHARE_VENUE_FRESH_MS`) means the open sheet reads the one row (`fetchVenueById`, which tells a failed read from the
+  fallback list), and nothing can be sent until it settles (`resolveShareVenue`); unknown → `applyShareVenue(p, "unknown")`
+  = no bar at all, never the screen's own name. Partners edit it in ONE panel, `components/owner/share/ShareDetailsPanel.tsx` (Schedule Review, the
+  owner wizard's `confirmExtra`, Game Settings; admin venue form with `host="admin"`), saved on its own via
+  `PATCH /api/owner/venues/share-details` (owner auth + venue check first) or `/api/admin/venues/share-details`.
+- **Phone push (Phase 5.1, 2026-10-23; handoff `docs/native-app-store-plan_PHASE_5_1_HANDOFF.md`; migration
+  `20261023105750` applied).** Firebase Cloud Messaging, no SDK on the server: `lib/push/fcm.ts` is the only reader
+  of `FCM_SERVICE_ACCOUNT_JSON` (unset → every sweep returns before any read). The hook is the `notifications`
+  TABLE, not `createNotification()` (ten writers incl. two SQL functions): `claim_notification_pushes` stamps
+  `pushed_at` once, run by `lib/push/outbox.ts` at the end of `/api/cron/bingo-progress`; "Live Trivia starts soon"
+  is `lib/push/gameReminders.ts` in `/api/cron/resolve-live-trivia-winners`, once per game via `push_game_reminders`.
+  No new cron. `push_devices` is written only by `lib/push/devices.ts` (route `POST /api/push/devices`, session-bound,
+  503 without `SESSION_SECRET`). App side: `lib/nativePush.ts` is the only caller of the `FirebaseMessaging` plugin;
+  the ask is `PushPermissionCard` on Venue Home only once the player has points (never at launch), switches are
+  `PushNotificationSettings` in the menu, Sign Out unregisters first. **5.3 (2026-10-23): the FIRST ask is our own
+  full screen, `PushWelcomeScreen` on Venue Home (once per phone, `htc:push-welcome-seen-at`); the OS prompt only on its
+  Turn on; the card is the later reminder. `PopupAds` asks `pushWelcomeHoldsPopupAds()` before every popup — the welcome
+  and a popup ad never share a visit. Words in `PUSH_COPY` promise only pushes the server sends (contract test).** Categories: `games`/`prizes`/`results`/`news`
+  (`lib/pushCategories.ts`). **5.4 (2026-10-23, migration `20261023141109` applied): `news` = "News from your bars", the ONE
+  promotional switch (Apple 4.5.4; default on, stated on the welcome before Turn on).** A partner's NEW game or prize
+  (`POST /api/owner/schedule`, `POST /api/owner/rewards` only) → `lib/push/venueNews.ts` after the reply (`after`) → RPC
+  `claim_venue_news_push` (once per game/prize, cap `VENUE_NEWS_DAILY_CAP` = 5 per bar per local day, audience = phones of
+  players with a profile at the bar). **5.5 (2026-10-23, migration `20261023145024` NOT yet applied; flag
+  `NEXT_PUBLIC_PARTNER_MESSAGES_ENABLED`, off): partner-written messages** on the same `news` switch and audience. Rules +
+  copy + caps (`PARTNER_MESSAGES_DAILY_CAP` = 2, `PARTNER_MESSAGE_REPORTS_TO_PAUSE` = 3, 150 chars, no links, word list)
+  in `lib/partnerMessageRules.ts` (also the flag's one reader); the ONLY caller of `claim_venue_message_push` /
+  `read_venue_message` / `report_venue_message` and writer of `push_venue_message_pauses` is `lib/push/venueMessages.ts`.
+  Compose box `components/owner/messages/PartnerMessagesSheet.tsx` (`?sheet=messages`, website only) → `/api/owner/messages`;
+  a tapped push opens `/venue/{id}?message={id}` → `components/push/PartnerMessageSheet.tsx` (Report) → `/api/push/messages/[id]`
+  (signed session; popup ads wait while `?message=` is in the URL); admin pause/un-pause in Venues → `PartnerMessagesPanel`.
+  `tests/partner-messages.test.ts`. **10.1 (2026-10-26, migration `20261026173304` applied 2026-10-26):** a reporter is a
+  PERSON (`venue_message_reporter` = account, else profile; SQL only); admin un-pause ONLY via `unpause_venue_messages`
+  (also stamps `reports_reviewed_at`; missing RPC → 503, never a plain delete).
+  `tests/push-notifications-contract.test.ts`, `npm run test:push-sql`. iPhone half = Phase 5.2 (signed by the
+  paid team as `com.hightopchallenge.app` 2026-10-23; Andrew confirmed APNs key uploaded 2026-10-25;
+  real iPhone push delivery remains unverified — `…_PHASE_5_2_HANDOFF.md`). Firebase Analytics must stay unlinked.
+- **"Get the app" promotion hosts (Phase 10.3, 2026-10-26).** `promotionHosts()` / `isPromotionHost()` in `lib/appStorePromotion.ts`
+  are the one home of which hosts show the banner, the sign-in line and the Safari tag: `playHost()`, plus the apex and `www.` while
+  the domain split is OFF (Andrew). Never type the game host in those files (test). `/info#app` renders on the server in desktop form
+  (snapshot `"pending"`), and `/app` sends a desktop there only when `appStorePromotionReady()` (`desktopSectionLive`).
+- **Legal pages** (`/privacy /terms /rules /support /delete-account`) take their facts from
+  `lib/legalInfo.ts`; a signed-in player can read them only because `AuthNavigationGuard` allowlists
+  `LEGAL_PAGE_PATHS`. `/privacy` promises usernames never go to Anthropic — keep
+  `ANTHROPIC_USERNAME_MODERATOR_API_KEY` unset in Vercel unless the policy changes first.

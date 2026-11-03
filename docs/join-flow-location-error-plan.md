@@ -351,3 +351,21 @@ Recommendation: **Phase 1 already shipped** (pure UX, no security surface). The
 god-mode is only read after the user authenticates — so Phases 2–5 are a clean,
 connected unit. Still write Phase 2's exact call-site plan before Phase 3 touches the
 tangled initial-load effect, and don't write Phase 5 docs until the code matches.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Join/Login Flow (Auth-First)
+- **Canonical order:** `auth-method-selection` ("How do you want to continue?" — Face ID/Touch ID, Username/PIN, or Create Account) → username → PIN/passkey → **only then** the venue list.
+- **Geolocation runs after authentication, never before.** The initial page load (`JoinFlow.tsx`'s load effect) picks only the entry panel — it does not call geolocation, geofence-filter venues, or show the location-permission panel. All venue-list construction happens in `buildVenueListAfterAuth`, triggered by a `useEffect` keyed on `activePanel === "venue-list"` (guarded by `venueListBuiltRef` so it runs once per session).
+- **God Mode accounts (`accounts.god_mode`) see ALL venues, with zero geolocation calls.** Every other account gets exactly one geolocation check and sees only in-range venues (existing geofence math, unchanged). `buildVenueListAfterAuth` decides this by calling `getGodMode()` — which is safe to trust only because every auth-success path (`saveGodMode(account.godMode)`) already persisted the server-confirmed value before the venue-list panel/effect can run. There is no unauthenticated god-mode lookup anywhere in this flow — do not add one; it would be a username-enumeration leak.
+- **God Mode venue entry is server-authoritative.** `/api/join/profile` reads `accounts.god_mode` and must remain the source of truth for allowing Andrew, marc, Rick, and any future God Mode account to join any venue from anywhere. Do not place browser geolocation, `locationVerified`, or localStorage-based gates in front of the account-backed profile resolution path; client geofence checks are only UX prechecks for normal users and must not be able to block God Mode.
+- **The join venue list is generation-tagged (Phase 2C, 2026-10-08).** `JoinFlow` never sets the list directly: `beginVenueListBuild()` empties it before any await, `commitVenueList()` drops a stale build, and the panel renders `visibleJoinVenueList()` (`lib/joinVenueList.ts`, which also owns the one geofence filter `filterVenuesInRange`). Every `venueListBuiltRef` reset goes through `discardVenueList()`. This is what stops a God Mode account's "every venue" list showing behind the next player's location check. The deep-link load path only warms the venue cache.
+- **Run `npm run test:god-mode-join` after touching join/geofence/auth flow.** This named tripwire includes a static guard that fails if account-backed venue selection starts calling browser geolocation before server profile resolution again.
+- **`venueListBuiltRef` must be reset** whenever the user returns to `auth-method-selection` (sign-out, back navigation) so the next login rebuilds the list fresh. It must NOT be reset by in-session back-navigation to the venue list itself (e.g. from a venue-login sub-screen) — that should reuse the already-built list, not re-prompt location.
+- **Full history/rationale:** `docs/join-flow-location-error-plan.md`.

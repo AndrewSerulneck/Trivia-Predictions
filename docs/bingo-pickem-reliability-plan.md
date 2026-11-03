@@ -240,3 +240,53 @@ Each note must stand alone for an agent with only the repository:
 This is an implementation plan, not authorization to deploy or mutate production today. Routine implementation, investigation, and tests should proceed when that phase is requested; do not insert redundant approval stops for reversible local work. Follow `CLAUDE.md` for `.env.local`, `lib/supabaseAdmin.ts`, existing migrations, and `vercel.json`. If a new schema is actually needed, read `supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md`, create a new timestamped migration only, and obtain the required explicit authorization before `supabase db push`.
 
 No new sports/provider subscription, broad sports-engine rewrite, billing/auth redesign, service worker, NFL Pick ’Em scoring redesign, or fabricated sports data. The capability matrix covers all currently supported Bingo leagues; adding another league is a separate feature.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Bingo / Pick ’Em reliability work (complete, 2026-09-19)
+
+Current plan: `docs/bingo-pickem-reliability-plan.md`; complete and developer-accepted after
+Andrew confirmed authenticated Prop Bingo works. Maintenance starts from
+`docs/bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md` and
+`docs/bingo-pickem-reliability-release-record-2026-09-19.md`. Andrew intentionally skipped
+Phase 6: do not repair historical boards, rewards or consequences. The atomic-grading migration
+was applied to linked Supabase project `pkmxupsayzshvpirkaav` on 2026-09-19; application changes
+were committed as `62f027cd46528d771e154ccb5cc75df24f6d8173` and pushed to `origin/main`.
+Deployment status was not independently checked. Old NFL activation notes are dated history.
+
+- Creation leagues follow actual boardable games on the player's local day; no season/flag
+  override may make an empty league selectable. Shared eligibility lives in
+  `lib/sportsBingoAvailability.ts` and inherits capability-filtered candidates.
+- `lib/sportsBingoCapabilities.ts` admits only verified resolver/parameter families. Add
+  precise label/field/ID/closure/missing-data evidence and captured-data regression cases in
+  `docs/bingo-grading-capability-matrix.md` before admitting a new square. Preserve legacy parsing.
+- `lib/sportsBingoQuality.ts` enforces 24 supported non-free cells, unique player-stat axes,
+  max two cells per player, the NFL 10/6/8 mix, six prop subjects, both teams where possible
+  and at least three early-progress opportunities. Non-composable games are unavailable.
+- Normalize stored `nfl`/`nba` only at Bingo boundaries. Missing/partial data is unknown;
+  never restore a blanket zero conversion to satisfy a calibration test.
+- `lib/sportsBingoSettlement.ts` owns 60-second final confirmation, 2-hour delayed-final
+  grace and the 48-hour no-final deadline. Recheck provisional grades; terminal corrections
+  require reviewed explicit repair outside this plan. `bypassCache` never reopens won/lost cards.
+- `20260914010000_bingo_atomic_grading.sql` was applied to linked Supabase project
+  `pkmxupsayzshvpirkaav` at 2026-09-19T23:48Z. The column and service-only RPC were verified
+  through PostgREST; the RPC saves cells/card/notification atomically. Do not reapply, remove,
+  down-migrate or add a non-atomic fallback. Application rollout has not occurred.
+- Regular Pick ’Em excludes NFL from discovery; old regular NFL links redirect to the
+  dedicated game. Dedicated NFL types, scoring, rewards/history and shared week dropdown remain.
+
+Core checks: `npx tsc --noEmit`, `npm run lint`, `npm run test:bingo-nfl`,
+`npm run test:bingo-mlb`, `npm run test`, `npm run build`; exact captured-data and isolated
+SQL commands are in the Phase 4 handoff. Offline incident assertion:
+`node --conditions react-server --import tsx scripts/replay-bingo-brunswick-incident.cjs --assert-correct`.
+Final local gates: NFL 288/288, MLB 142/142, full Vitest 2,620 pass / 13 environment-gated
+skip / zero fail, PWA 20/20, clean typecheck/lint and 179-page build. The 16-game Week 1
+provider validator passes. Do not run typecheck concurrently with build because `.next/types`
+is regenerated. Physical-device UI and real NFL plus webhook-driven live→final observation
+remain optional operational monitoring, not unfinished plan work.

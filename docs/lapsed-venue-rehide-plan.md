@@ -777,3 +777,68 @@ jobs to a shape that exists. Everything else was always mechanical.
    most-hardened file in the repo, with six existing test files over it. Phase 2
    adds one follower and touches nothing else; every existing webhook test must
    pass untouched.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Venue Visibility (`venues.hidden`, the reveal / re-hide lifecycle)
+
+- **`venues.hidden` is soft.** It removes a venue from the join list — and that
+  exclusion happens in exactly **one** place, `listVenues()` in `lib/venues.ts`
+  (`hidden.is.null,hidden.eq.false`). Already-joined players, direct URLs, the
+  owner dashboard and the TV screen are all unaffected. Do not harden this into a
+  real access gate without a separate, explicit decision.
+- **`lib/venueVisibility.ts` is the single home** of `shouldRevealVenue` /
+  `shouldRehideVenue` / `shouldRestoreVenue` — one truth table, all three built on
+  `classifyBillingRow()` from `lib/billing.ts` and on `lib/venueClaim.ts`'s
+  `isSelfServeVenueRow` / `isPlaceholderVenueRow`. Never re-derive the
+  live/not-live predicate, the self-serve-provenance test, or the `(0,0)`
+  placeholder clause at a call site.
+- **Never compute `current_period_end < now` in a visibility path.** Stripe's
+  subscription status already encodes cancel-at-period-end and dunning;
+  `classifyBillingRow()` reads the status, not the dates.
+- **Never delete a `billing_subscriptions` row on cancellation.** That row is the
+  only thing keeping `sweepAbandonedSignupVenues` from deleting a re-hidden real
+  venue.
+- **Both webhook followers (`maybeRevealVenue`, `maybeRehideVenue`) are
+  best-effort by design** — each fires once and swallows its error so a cosmetic
+  failure can't make Stripe retry the whole billing sync. **`/api/cron/billing`
+  is the repair path** (`lib/venueVisibilitySync.ts`, daily, bounded,
+  `isCronAuthorized`, no `rateLimit()`): `repairMissedVenueReveals` re-does a
+  missed reveal, and `reconcileLapsedVenues` runs three jobs — **restore** (a
+  venue we hid, once billing is live again), **re-hide** (a lapsed self-serve
+  venue), and **report** (count-only, lapsed admin-activated venues; never
+  touched). A visibility bug is fixed in the reconciler, **never** by making a
+  follower throw.
+- **Re-hide / restore are wired, flag-gated, and ship LOG-ONLY.**
+  `VENUE_REHIDE_ENABLED` (server-side, **no** `NEXT_PUBLIC_` — it flips without a
+  redeploy), single reader `isVenueRehideEnabled()` in `lib/venueVisibility.ts`.
+  Off (today's default) = `maybeRehideVenue` returns early and the cron's
+  restore + re-hide jobs run in dry-run mode (they log `[VenueVisibility]` lines,
+  write nothing); the report job always runs. `?dryRun=1` on the cron forces the
+  same. Cutover: read a week of dry-run lines, then set the flag. Full plan:
+  `docs/lapsed-venue-rehide-plan.md`.
+- **`venues.rehidden_at` is provenance, not bookkeeping** — it is the only thing
+  telling "we hid this because they lapsed" (restorable) from "an admin hid this
+  on purpose" (never auto-restore). Written by `maybeRehideVenue` and the cron
+  re-hide job; **cleared by `maybeRevealVenue`, `repairMissedVenueReveals` and
+  the cron restore job**. Rule with no exceptions: whatever un-hides a venue
+  clears `rehidden_at` in the same write. Migration
+  `20260908130000_venues_rehidden_at.sql`, live.
+- **Admin sees hidden venues in the "Hidden venues" panel** (bottom of the
+  Venues section — `HiddenVenuesPanel`, `GET /api/admin?resource=hidden-venues`
+  → `listHiddenVenues`). Rows are badged **lapsed** (`rehidden_at` set — the
+  reconciler hid it), **admin-hidden** (`hidden`, no stamp), or **system room**
+  ((0,0) placeholder). Only lapsed rows get a **Restore (unhide)** button
+  (`POST resource=venue-visibility action=restore` → `restoreLapsedVenue`), which
+  clears `rehidden_at`. The manual restore is deliberately **billing-agnostic**:
+  if the subscription is still not live the nightly reconciler re-hides the venue
+  on its next run, so the real fix is a live subscription — the panel copy says
+  this. `restoreLapsedVenue` refuses anything that is not a genuine lapsed row
+  (guarded on `hidden = true` AND `rehidden_at IS NOT NULL` AND self-serve-stamped
+  AND not (0,0)), so it can never publish a Category Blitz global room.

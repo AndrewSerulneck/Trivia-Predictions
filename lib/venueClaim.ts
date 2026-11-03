@@ -36,7 +36,7 @@ export type ClaimableVenueRow = {
   state: string | null;
   latitude: number | null;
   longitude: number | null;
-  /** Soft-hidden: absent from `listVenues()` only. See CLAUDE.md, Venue Visibility. */
+  /** Soft-hidden: absent from `listVenues()` only. See docs/lapsed-venue-rehide-plan.md, Standing rules. */
   hidden: boolean | null;
   /**
    * A CAPABILITY GRANT, not a timestamp. Non-null simultaneously arms

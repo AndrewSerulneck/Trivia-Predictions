@@ -416,3 +416,96 @@ wizard writes into a proven backend. Phase 1 can ship first as an immediate visi
 - No per-challenge leaderboards render on the panel.
 - Adding the *next* reward is a documented one-entry-in-the-registry process.
 ```
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Rewards System (on screen: **Prizes**; venue-home Prizes panel, admin, Partner Dashboard)
+- **Rewards consolidates three prior concepts** — the venue-home Challenges panel, admin
+  Challenge Campaigns, and the Partner Dashboard Competitions gallery — into one
+  customer-loyalty system built on `challenge_campaigns` (reused, not rebuilt). Full design +
+  phase-by-phase as-built notes: `docs/rewards-system-plan.md`.
+- **Reward definitions are a registry, not free-form authoring.** Admins and partners pick
+  from a small slate of pre-built definitions (today: the Live Trivia Challenge) and fill in
+  cadence/prize/quantity. **Adding a new reward = one entry in `lib/rewardDefinitions.ts`** (+
+  a schedule lookup in `lib/rewards.ts` only if it gates on a group game with no existing
+  lookup). See `AGENTS.md` for the exact steps — do not hand-roll a new creation form.
+- **One shared wizard, two hosts.** `components/rewards/CreateRewardWizard.tsx` is used by
+  both the admin Rewards section (`components/admin/sections/ChallengesSection.tsx`) and the
+  Partner Dashboard (`app/owner/competitions/page.tsx`) via a `variant: "admin" | "owner"`
+  prop. Do not fork this component per host.
+  **Minimum players has its own wizard step, `players` (2026-10-17, `docs/reward-minimum-players-plan.md`):** between
+  `terms` and `prize`, asked for every contest reward (Win the game, Weekly 1st/2nd/3rd, NFL most picks), never a
+  points target (`guardRewardWizardStep` sends a `?step=players` for one to `prize`). Nothing is pre-selected; Next
+  stays off until "No minimum" or a valid 2–100 number (pre-fill `REWARD_MIN_PLAYERS_DEFAULT` = 3).
+- **Rewards are threshold+quantity (progress) only.** Leaderboard mode is retired from
+  creation; in-flight leaderboard campaigns finish their current cycle but no longer render
+  standings on the venue panel.
+- **Multi-winner quota is enforced atomically via `challenge_cycle_winners` + the
+  `award_cycle_winner` Postgres RPC** (count-guarded insert under a transaction-scoped
+  advisory lock), not in application code — never re-implement the quota check client-side or
+  in a plain `INSERT`.
+- **`NEXT_PUBLIC_REWARDS_ENABLED` / `lib/rewardsFlags.ts` no longer exist** (deleted in commit
+  9abbb1b, 2026-07-22) — multi-winner Rewards is live unconditionally, not flag-gated. The only
+  live Rewards flag today is `NEXT_PUBLIC_REWARD_GAME_PICKER_ENABLED`
+  (`isGamePickerEnabled()` in `lib/rewardGameSlots.ts`), which gates ONLY the wizard's
+  game-picker UI branch — not cadence support, not the archive/delete split, not the slot
+  cascade. Don't describe other Rewards work as "inert until a flag flips."
+- **Every prize is drawn as ONE digital gift card** (`docs/prize-gift-card-redesign-plan.md`, built
+  2026-10-15). One component, `components/prizes/PrizeCard.tsx` (back laid out by `PrizeCardBackFace.tsx`,
+  logo `PrizeCardLogo.tsx`); what it says comes only from `lib/prizeCardFace.ts` (`prizeCardFace`,
+  `prizeCardBack`); colours only from `PRIZE_CARD` in `lib/themeTokens.ts`. Never add per-prize colour
+  themes, dashed/double borders or a second card. Tapping a card (not the logo) flips it; the list's
+  action ("Redeem" / "Show gift card", decided by `prizeActionOf` in `PrizeWalletPanel.tsx`) is on the
+  back; Confirm Redemption in the live sheet stays the only redeem. No overflow/opacity/filter on the
+  flip's perspective root or rotating element (iOS flattens the 3D). A bare `<button>` on the card
+  needs `!border-0` plus `[&:not(:disabled)]:!p-0`/`!min-h-0`, or the global phone button rules pad it.
+  `npm run prize-card:render` draws specimens; `-- --email` writes the email picture. **Email pictures
+  under `public/brand/email/` are cached long: new artwork ships under a NEW file name (`-v2`), never
+  overwrite**, then update `imageFile` in `lib/email/partnerEmailCopy.ts`.
+- **Redemption = in-app coupon, staff-taps-redeemed.** No POS or gift-card-issuance
+  integration; winners see a coupon on `/redeem-prizes` (`components/prizes/PrizeWalletPanel.tsx`).
+- **A coupon is redeemed ONLY through the `redeem_challenge_prize` RPC** (migration
+  `20261005123950_reward_redeem_once.sql`, via `redeemChallengePrize()` in
+  `lib/challengeCampaigns.ts`) — its conditional UPDATE is the once-only guarantee, so never write
+  `prize_redeemed_at` with a plain update. It fails closed (503, `[RewardRedeem] rpc-missing`) if
+  the RPC is absent. Every prize route binds `userId` to the signed session via
+  `resolveRequestUserId()` (forged → 403). Plan: `docs/reward-live-redemption-plan.md`.
+- **The coupon shown to staff is LIVE, not static** (`components/prizes/LiveCouponFrame.tsx`, wrapped
+  around the large coupon inside `RedeemModal` only — wallet-list cards stay calm). A web page can't
+  block screenshots, so it proves it is live: never-stopping shimmer band, a clock + date on the
+  **server's** time (the wallet `GET /api/challenge-campaigns/redeem` returns `serverNowMs` + `venueName`
+  — zero extra requests; offset math in `lib/liveCouponClock.ts`), guest username + venue name, a tap
+  sparkle, and a screen wake lock. Reduce Motion drops the band and sparkle travel but keeps the ticking
+  clock and a border flash. Motion is `tailwind.config.ts` keyframes (`coupon-shimmer/spark/flash`),
+  transform/opacity only. The venue name comes from `getVenueDisplayName()` (`lib/venueDisplayName.ts`,
+  10-min per-instance cache, failure → no name). Motion-only by Andrew's decision — no staff PIN/scan/
+  rotating code.
+- **The NFL Pick 'Em Challenge is the one reward that does NOT gate on a venue schedule.**
+  It gates on the NFL season calendar (`nfl_pickem_weeks`), so it takes none of the Live
+  Trivia schedule machinery: a partner picks a **week scope** — `weekly`, `season` or
+  `single_week` (one chosen week, added 2026-10-12, `docs/nfl-pickem-single-week-reward-plan.md`),
+  and only those three; arbitrary week ranges are explicitly rejected — and
+  `lib/nflPickEmRewardWeeks.ts` derives cadence, quota, `activeDays` (all seven days,
+  **`"thu"` first**, or the cycle anchor and accrual gate both break) and date bounds from
+  it. "Most picks right" is locked to **1 winner** (refused server-side, not clamped) and
+  needs **the partner's own minimum** of pickers at the venue or nobody wins — per reward,
+  `challenge_campaigns.min_players`, null = no minimum (even 1 picker can win), else 2–100;
+  every reward created before 2026-10-17 was backfilled to 3 (migration `20261017191219`,
+  `docs/reward-minimum-players-plan.md`); a minimum is refused on a picks target. Ties are broken by a per-week tiebreaker
+  question (`lib/nflPickEmTiebreaker.ts`). Accrual is **1 point per correct pick, not 10**
+  (`lib/nflPickEmRewardAccrual.ts`, a separate sweep — daily Pick 'Em's settlement path is
+  untouched). Full as-built record, deviations and remaining work:
+  `docs/nfl-pickem-reward-plan.md`. **Single week:** the client sends only the week NUMBER;
+  `createReward` accepts it only if it is on the server's fresh `selectableWeeks`
+  (`buildNFLSelectableWeeks`: regular/postseason, games synced, first game not kicked off)
+  and takes the dates from the server row. It is resolved by THAT week's weekly contest and
+  spent after one award (`isOneOffNFLReward`); picks-target accrual uses the exact Tue→Tue
+  week span (`nflSingleWeekAccrualWindow`) — never remove that argument from the sweep. A
+  one-off reward's cycle key matches every week, so any per-week reader must filter with
+  `nflRewardAppliesToWeek` first.

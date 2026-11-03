@@ -1749,3 +1749,81 @@ doesn't care — `ActivateVenueFlow` is under `components/admin/`, outside the
 prop swap (`onClick={onCancel}` → `onExit={onCancel}`), delete the local button
 markup, and add one line to the admin device checklist.
 
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Navigation (Back / Next / Sign Out) — unified 2026-09-05
+
+Full as-built record, per-phase: `docs/navigation-unification-plan.md` (Phases 0–7 all
+shipped; only a real-device visual pass remains, §13c).
+
+- **There are exactly four navigation primitives, all in `components/navigation/`.**
+  Do not hand-roll a fifth, and do not re-implement any of their behavior inline:
+  - `ExitBackButton` — **THE** Back. "Leave this screen for its parent." A neutral
+    dark-slate 34px circle with a Lucide `ChevronLeft`, exactly one per screen, pinned
+    **top-left in the sticky header** — never inline in content, never at the bottom,
+    never in a wizard footer.
+  - `StepBackButton` + `NextButton`, composed by **`WizardFooter`** — step progression
+    inside a multi-step flow. Rendering `<StepBackButton>`/`<NextButton>` anywhere but
+    `WizardFooter.tsx` fails the tripwire.
+  - `SignOutButton` — "leave your account." Lives as the **last** item of an account
+    drawer / sidebar footer, below a divider, so it can never sit next to Back. It
+    **never renders an arrow** (an arrow reads as Back).
+- **Back's behavior lives in `components/navigation/exitNavigation.ts`, not in the
+  component.** `useExitNavigation` owns the precedence order (`onExit` → `venueHomeFallback`
+  → history), the installed-PWA hardening (`history.length <= 1` → internal referrer →
+  `href`), the 150ms post-`history.back()` fallthrough, and the venue-game return
+  transition. Never copy this logic to a call site.
+- **The warm red-orange exit pill is RETIRED.** `.tp-exit-pill`, `.ht-btn-exit`, the
+  `--ht-exit-*` CSS vars and the Tailwind `ht.color.exit` scale were all deleted in
+  Phase 7. Back is neutral slate on every surface and is **never tinted per game** —
+  that neutrality is exactly what lets the identical button sit on Bingo's felt,
+  Category Blitz's emerald and Live Trivia's cyan. Use `tone="light"` (not a new
+  component) for the admin and `/owner/*` white-card surfaces.
+- **All auth teardown goes through `SignOutButton`/`performSignOut`.** `signOut()`,
+  `clearVenueSession()` and the three logout endpoints (`/api/join/logout`,
+  `/api/owner/auth/logout`, `/api/admin/logout`) are called from `SignOutButton.tsx`
+  and nowhere else. Two allow-listed exceptions exist and are **not** sign-outs:
+  `JoinFlow` dropping a stale Supabase session mid-login, and `VenueHubClient`'s
+  arrival watchdog. Add teardown to the button, not to the call site.
+- **The player account drawer is ONE component: `components/navigation/AccountDrawer.tsx`** (scrim, "Menu" header +
+  Close, scroll lock, native Back). The venue hub and the in-game `AccountMenu` render it with their own contents as
+  children; never copy the shell back into a host (`tests/account-drawer.test.ts`). Its Back registration is the one
+  pinned in `tests/native-back-review-fixes.test.ts`.
+- **Host shells own the Back slot, not the pages.** Player content pages pass
+  `PageShell backTo={…}`; dark `/owner/*` pages pass `OwnerShell backTo={…}` (the compact
+  app bar; **no Sign Out there** — see the Partner Dashboard bullet below); the four `GameAppBar` games inherit it from
+  `components/venue/AppBar.tsx`'s defaulted `leading` slot. Do not add a page-level
+  back link that bypasses its shell.
+- **Partner Dashboard app shell (2026-09-30, `docs/partner-dashboard-app-redesign-plan.md`).**
+  The dashboard's top-left is the **logo menu button** (`components/owner/OwnerAppBar.tsx`),
+  not Back; it opens `OwnerMenuDrawer`, where **Sign Out is the last row** — the only place a
+  dark `/owner/*` partner signs out (`OwnerAccountMenu` survives only for the orphan `/owner/category-blitz`, light variant). The
+  `SignOutButton` host allowlist is `OwnerAppBar.tsx`. Two overlay primitives, both built on
+  `components/owner/sheet/useModalOverlay.ts` (controlled `open`, topmost-only Escape, Tab trap,
+  popup scroll lock, portal): `OwnerSheet` (slide-up, flows) and `OwnerMenuDrawer` (left).
+  Flow sheets mirror their step in the URL (`?sheet=&step=`, `lib/useOwnerSheet.ts` — native
+  `history.pushState` with a depth counter, so Close pops every entry) so the phone's Back
+  steps back or closes; **never `router.push` a sheet step**. A step a flow can't show (a reload lost
+  its data) is fixed with `nav.correctStep()`, which pops to the screen below when the sheet pushed
+  it (no duplicate entry) — don't rewrite it in place by hand (join-merch plan Phase 4.2). Do not hand-roll a modal, sheet
+  or toast for `/owner/*`: use those, `DiscardGuard` (closing a flow with entered answers asks
+  first — Close, Escape, scrim, and a phone Back that would leave the sheet; a flow's own closes
+  go through `closeWithoutAsking`) and `DashboardToast`. `CreateRewardWizard` stays one shared component — its owner
+  behaviour is four opt-in props and the admin snapshots pin that it is unchanged.
+  `tests/owner-menu-contract.test.ts` and `tests/owner-dashboard-contract.test.ts` are the
+  tripwires; `docs/partner-dashboard-app-redesign-device-checklist.md` is Andrew's device pass.
+- **Run `npm run test` after touching any navigation control** —
+  `tests/navigation-controls-contract.test.ts` is the standing static tripwire (7
+  assertions: no raw `←` in player-facing TSX, no retired warm-pill literals, the
+  sign-out/endpoint allowlists, the `WizardFooter`/`SignOutButton` host allowlists, and
+  that `BackButton.tsx` stays deleted). It runs under plain `npm run test`, not a named
+  `test:*` script. Phase 1 also touched the landscape bingo chrome, so
+  `npm run test:pwa-contract` applies there, and any change to `JoinFlow`'s wizard
+  footer still requires `npm run test:god-mode-join`.

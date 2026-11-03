@@ -771,3 +771,120 @@ the Stripe invoice and the Billing page.
 
 All nine planning questions are answered — see §2 rows 1–10 (2026-10-11). New questions raised
 while building go in the latest phase handoff, not here.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Multi-Venue Volume Billing — Phases 1–5 pushed, Phases 6–6.9 admin tools + review fixes built (flag off)
+
+Plan: `docs/multi-venue-volume-billing-plan.md` (Andrew's answers in §2 — don't re-ask); latest handoff
+`docs/multi-venue-volume-billing-plan_PHASE_6.9_HANDOFF.md`. One Stripe subscription per partner, quantity =
+venues, graduated $100 / $75 / $60 / $45. Migration `20261011134820` is applied; every card subscriber is on
+the graduated Price `price_1UPOUD1djkdMC76XYeVsQXKl` (lookup key `hightop_venue_graduated_monthly_v1`) at
+quantity 1, and new Checkouts start on it via `getCheckoutPriceId()` in `lib/stripe.ts`
+(`STRIPE_GRADUATED_PRICE_ID`, else `STRIPE_PRICE_ID`). `npm run billing:graduated-price` re-checks the live tiers.
+- **"Which bill covers this venue?" has ONE home: `lib/venueBilling.ts`** (`loadBillingForVenue(s)`,
+  `venueIdsEverBilled`, `venueIdsOnBill`). `billing_subscriptions.venue_id` is the bill's ANCHOR venue;
+  other venues on a bill are rows in `billing_subscription_venues` (a trigger adds every bill's anchor
+  row). Never `.eq/.in("venue_id")` on `billing_subscriptions` elsewhere — the destructive paths (signup
+  sweep, pending-signup purge) would miss a chain venue. `tests/venue-billing-resolver-contract.test.ts`.
+- **Prices have ONE home: `lib/venuePricing.ts`** (integer cents). A price change = a new Stripe lookup key.
+  The Stripe webhook mirrors `amount_cents` = the whole bill (flat × quantity, or the bands for a tiered
+  price, whose `unit_amount` is null) plus `quantity`.
+- **Partner email wording lives in `lib/email/partnerEmailCopy.ts`** (Andrew edits it; welcome + "Venue
+  added"). Preview: `npm run email:preview`. Builders only lay it out.
+- **Check-paying (offline) accounts never lapse automatically** (Andrew, 2026-10-11). `/api/cron/billing`
+  no longer expires an offline grant past its paid-through date; only an admin Revoke ends it. Don't
+  reintroduce an expiry sweep (`tests/api.cron.billing-offline-never-lapses.test.ts`).
+- **"Add a venue" (Phase 3) lives in ONE file: `lib/venueAddition.ts`.** Routes `GET /api/owner/venues/add/quote`
+  and `POST /api/owner/venues/add` 404 unless `NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED` (single reader
+  `isMultiVenueBillingEnabled()`, `lib/multiVenueBilling.ts`, which also holds the client types + refusal
+  copy). Money rules: claim the ledger row first (`claim_venue_addition` RPC, advisory lock per bill, one add
+  in flight, same idempotency key → same row; migration `20261011153607`), then a hidden venue stamped
+  `self_serve_created_at` + `checkout_started_at` in ONE insert (sweepable, never visible first), then ONE
+  `stripe.subscriptions.update` with `payment_behavior: "pending_if_incomplete"` + `proration_behavior:
+  "always_invoice"` keyed on the ledger key. Paid → membership (`addVenueToBill`, the only non-anchor
+  membership writer, in `lib/venueBilling.ts`) + owner link + reveal + "Venue added" email once (claim-then-
+  send stamp). Declined → VOID the invoice before deleting the venue. 3-D Secure → `requires_action` +
+  hosted invoice URL; `invoice.paid` (webhook) or `reconcileStaleVenueAdditions` (daily `/api/cron/billing`)
+  finishes it. Completion/reconcile are deliberately NOT flag-gated. The venue is linked to the partner
+  only once paid. Pinned by `tests/multi-venue-billing-contract.test.ts`; behaviour in
+  `tests/api.owner.venues-add.test.ts`. `findNearbyVenue` moved to `lib/nearbyVenue.ts` (shared with signup).
+- **"+ Add a venue" UI (Phase 4, 2026-10-11)** — `components/owner/add-venue/` (`AddVenueSheet`, `AddVenueReviewStep`)
+  + pure logic in `lib/addVenueFlow.ts`; sheet id `add-venue` (`?sheet=add-venue[&step=map|review]`). Shown only
+  when `isAddVenueAvailable()` (`lib/multiVenueBilling.ts`) = billing flag AND `NEXT_PUBLIC_SELF_SERVE_SIGNUP_ENABLED`,
+  because it reuses signup's `AddressStep`/`GeofenceStep` and so `/api/signup/places` + `/maps-key`. The dashboard
+  Dropdown is always a dropdown then (`footerAction`). Never price anything in the UI (the quote has every number);
+  one idempotency key per Confirm (`newAttemptKey`), re-asks reuse it; a new key only after a definitive refusal.
+  After a paid add the page reloads venues via `fetchOwnerVenues()` (`lib/ownerVenuesClient.ts`) — the page file must
+  not name `/api/owner/venues` (first-load tripwire). `tests/add-venue-ui-contract.test.ts`. **Never exercise the
+  real POST from a dev server** (live Stripe + shared DB): Andrew's `next dev` holds `.next/dev/lock`, so browser-test
+  from a scratchpad clone with no `.env.local` and mocked routes (Phase 4 handoff §5), and never `pkill next-server`.
+- **Remove at end of month / Undo / Add back (Phase 5, 2026-10-11) live in ONE file: `lib/venueRemoval.ts`**, route
+  `POST /api/owner/venues/remove` (`action: "remove" | "undo"`, flag-gated 404). Remove = Stripe quantity −1 with
+  `proration_behavior: "none"` (no credit) + membership `remove_at` = period end; the venue stays live until then, and the
+  daily `/api/cron/billing` (`applyDueVenueRemovals`) hides it (`hidden = true, rehidden_at = now`) and stamps
+  `removed_at`. Undo = +1, also `"none"`, only before `remove_at`. After that, putting it back is a PAID **Add back**:
+  `POST /api/owner/venues/add` with `readdVenueId` (no new venue; `addVenueToBill` revives a same-bill row). Every change
+  is claimed by `claim_venue_bill_change` under the SAME advisory lock as `claim_venue_addition` (migration
+  `20261011210033`), and each refuses while the other is in flight — any `items` update voids an add's pending 3-D
+  Secure payment. `finish_venue_bill_change` applies the membership change + re-anchor (anchor leaving → another billed
+  venue becomes `billing_subscriptions.venue_id`, and Stripe `metadata.venueId` follows) only after Stripe accepted it.
+  "Billed" = `removed_at IS NULL AND remove_at IS NULL` (`isBilledMembership`, = the RPC count = Stripe's quantity).
+  Billing page account view: `components/owner/billing/BillVenuesPanel.tsx` + pure `lib/billAccountView.ts`; numbers come
+  from `GET /api/owner/billing` `account` (only when the flag is on). Tests: `tests/api.owner.venues-remove.test.ts`.
+- **A negotiated custom rate is PER VENUE (Andrew, 2026-10-11, Phase 6).** `lib/billingCustomPrice.ts` swaps the item onto
+  a flat `custom_monthly_<cents>` Price and KEEPS the quantity, so the bill = rate × venues (no bands); adds/removes on
+  that bill use the same rate; a coupon still applies on top. `setStandardPrice` (admin "Back to standard pricing")
+  returns it to the graduated Price. **The swap is a CLAIMED change under the bill's advisory lock** (Phase 6.1:
+  `claim_bill_price_change` / `finish_bill_price_change`, a `'price'` row in `billing_venue_changes`, migration
+  `20261011224839`) — mutually exclusive with adds and Remove/Undo inside Postgres; never a TypeScript read-then-write;
+  a missing RPC fails closed (503 `[CustomPrice] claim-rpc-missing`). A bill's rate has ONE home:
+  `BillRate` in `lib/venuePricing.ts` (`billRateFromPrice` for a live Stripe item — a per-venue rate ONLY for a
+  `custom_monthly_` lookup key (`CUSTOM_PER_VENUE_LOOKUP_PREFIX`, the one home of that literal); any other flat Price is
+  refused, as `custom_rate` (hand-pasted) or `billing_state` (list Price) via `unratedPriceRefusal` —
+  and `billRateFromMirror` for displays). Never price a chain with `monthlyTotalCents` alone where a rate is in play.
+- **Confirm carries the quoted price (Phase 6.5).** Every add Confirm (partner sheet, Add back, admin "Add to their
+  bill") sends the quote's `thisVenueCents` as `quotedVenueCents`; `startVenueAddition` re-checks it after the claim
+  and before any venue insert or Stripe write (`quotedPriceMatches`) and refuses `quote_changed` (409) on any mismatch
+  or a missing value — the client re-quotes. Any 5xx reply to an add is "unconfirmed" (`interpretAddVenueReply`):
+  keep the idempotency key and Check again; a new key only after a 4xx refusal (`refusalEndsAttempt`).
+- **One bill per partner is enforced at every bill-opening door** (Phase 6.3/6.5). The rule is `refusesOwnBill` on
+  `unbilledVenueStates` (both `lib/venueBilling.ts`): a venue removed from a bill, comped, or whose partner already has a
+  live bill elsewhere must not open its own. Owner Checkout refuses `on_partner_bill` (NOT flag-gated, before any Stripe
+  call) and so does admin "Grant offline" (before the upsert; the admin list's `grantOfflineBlocked` disables the button).
+  Renewing a venue's own live offline bill is unaffected. Copy: `ON_PARTNER_BILL_MESSAGES` /
+  `ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES` in `lib/multiVenueBilling.ts`.
+- **Admin "Link a venue to a partner" (Phase 6)** — Partner Billing → button → `LinkVenueToPartner`, server
+  `lib/adminVenueAttach.ts` (`POST /api/admin/billing` `action: "attach-venue"`, Preview first). "Add to their bill" on a
+  card bill runs the partner's own add flow (`startVenueAddition` with `adminAttachVenue`) — never its own Stripe call;
+  on a check bill it adds a `role 'admin'` membership and only SUGGESTS the graduated amount. "Free (comped)" = link only.
+  The CARD path is refused (`card_add_switched_off`) while `NEXT_PUBLIC_MULTI_VENUE_BILLING_ENABLED` is off.
+- **Daily drift check (Phase 6):** `lib/billingQuantityDrift.ts`, last job of `/api/cron/billing`, REPORT-ONLY
+  (`[MultiVenueBilling] quantity-drift`): Stripe quantity vs `billedVenueCountFromRows`. One Stripe list call per run.
+- **A venue whose bill was cancelled can REJOIN the partner's live bill (Phases 6.6–6.7)** — through the same paid add
+  (partner Add back / admin "Add to their bill"), never a new money path. `rejoinStateOf` / pure `classifyRejoin`
+  (`lib/venueBilling.ts`) say where a venue stands; `addVenueToBill` moves a membership row off a **cancelled** bill
+  (`moveFromDeadBill`, the only place a row changes bill) and refuses one on another live bill. `unbilledVenueStates` gives
+  `removed`/`lapsed` a `rejoin` target (`{ billId, byCard }`: the bill it left while live, else the partner's live bill);
+  **`rejoinBillOf` is the one home** for both Billing views. Refusal copy: `onPartnerBillMessageKey(state, "partner" |
+  "admin")` says "Add it back" only where that button exists (partner: card bill + flag; admin: check bill any time, card
+  bill only with the flag), else `rejoin_unavailable` (6.9).
+- **Anchor-home repair (6.6):** `bringAnchorHome(billId)` moves a LIVE bill's anchor row back from a dead bill (or inserts
+  it); best-effort from the webhook's first sync and admin Grant offline, repaired daily by `repairAnchorMemberships`
+  (`/api/cron/billing`, keyset-paged by `ANCHOR_REPAIR_PAGE_SIZE`). Never moves a row off another live bill (logs for an admin).
+- **The Price's lookup key is mirrored (6.8, migration `20261012033356`):** every writer of
+  `billing_subscriptions.stripe_price_id` writes `stripe_price_lookup_key` too (webhook, `lib/billingCustomPrice.ts`,
+  Grant offline clears both — contract test). `billRateFromMirror` returns **null** for a flat Price without a
+  `custom_monthly_` key (admin `rate: "unrated"`, partner "Custom monthly price", no per-venue math); the graduated key
+  on a non-graduated id counts only when the amount matches the bands (a stale key, 6.9). Backfill/check:
+  `npm run billing:backfill-lookup-keys` (dry run default).
+- **The add ledger records who added the venue:** `billing_venue_additions.membership_role` (`added`|`admin`), set in
+  the same write as `venue_id`; completion (request, webhook or cron) uses the STORED row's role. If that write matches
+  no `pending` row, the add stops before Stripe (`payment_unconfirmed`, `ledger-write-missed`) — never charge on an
+  in-memory copy (6.9). Missing-RPC checks share `isMissingFunction` (`lib/supabaseRpcErrors.ts`).

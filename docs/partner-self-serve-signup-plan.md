@@ -2414,3 +2414,266 @@ ones. No Haiku phase — nothing here is bulk transformation.
    `unwind()` is safe because it only ever deletes an auth user it just created;
    Phase 5a §1 makes that a written rule and adds the tripwire. This is the sharpest
    edge in the whole plan and it is not obvious from the owner code alone.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Partner Self-Serve Signup (`/owner/signup`, flag-gated)
+
+- **A partner can now subscribe without an admin pre-activating their venue.**
+  The full-screen wizard at `/owner/signup` (six steps: name → email → password →
+  address → geofence → review → Stripe Checkout) creates its own `venues` row
+  (`hidden = true`, `self_serve_created_at` stamped) and owner account, then hands
+  off to `/owner/billing/setup`. The Stripe webhook unhides the venue on first
+  paid activation. Full plan + as-built: `docs/partner-self-serve-signup-plan.md`;
+  ops cutover: `docs/self-serve-signup-runbook.md`.
+- **Admin Activate-a-Venue is NOT deleted.** `components/admin/mobile/ActivateVenueFlow.tsx`
+  stays — ops still needs it for offline-billed venues, second venues for an
+  existing owner (self-serve is **one venue per email**), and support fixes. It is
+  no longer a *prerequisite*, that is all that changed.
+- **Everything is behind `NEXT_PUBLIC_SELF_SERVE_SIGNUP_ENABLED`**, single reader
+  `isSelfServeSignupEnabled()` in `lib/selfServeSignup.ts` (same reversible
+  convention as `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED`). Off (today's default) =
+  `/owner/register` keeps its venue-lookup flow and every `/api/signup/*` route
+  plus `/owner/signup` 404s. On = `/owner/register` redirects to `/owner/signup`
+  and the `/info` partner CTAs point there. The flag is a `NEXT_PUBLIC_*` value
+  inlined at build time, so **env var, then redeploy** — a mid-rollout skew shows
+  as a live wizard whose submit 404s.
+- **`/api/signup/maps-key`, `/api/signup/places`, `/api/signup/venue-map`,
+  `/api/signup/email-available` and `POST /api/owner/signup` are public and
+  unauthenticated** (the first three are Google-billed). They are gated on the
+  flag + `rateLimit()` (`lib/rateLimit.ts`, `signup_attempts` table), never
+  `requireAdminAuth`.
+- **An unpaid signup is NOT an account.** Account creation is **Stripe payment
+  completing** — nothing earlier. Tapping "Start subscription" writes a
+  `venue_owners` + `auth.users` + hidden `venues` row, but that bundle has no
+  payment, no gameplay, no player linkage and **no user-visible identity**: it is
+  a *pending signup*, debris with an email on it, not something to sign into,
+  resume, or recover. "An account with this email already exists" must never
+  appear for one. Full rationale: `docs/abandoned-signup-cleanup-plan.md` §0.1.
+- **"Is this email a real partner account, or an unpaid pending signup?" has one
+  home — `classifyEmailForSignup()` in `lib/pendingSignup.ts`.** It returns
+  `{ exists: false }`, `{ exists: true, kind: "account", ownerId }` (paid, ever
+  paid, or admin-activated — **blocks**), or `{ exists: true, kind: "pending",
+  ownerId }` (unpaid, never finished — **does not block**). Built on
+  `findOwnerIdByEmail` (`lib/ownerEmailAvailability.ts`, still the single
+  `venue_owners`-by-email query) → `findPendingSignupByOwnerId`. Both
+  `POST /api/signup/email-available` and `POST /api/owner/signup` go through it
+  (contract test pins this). Fails **closed**: any read error is `{ ok: false }`,
+  never a `kind`. `ownerEmailExists()` survives as a thin boolean reading of
+  `findOwnerIdByEmail` but has no live caller.
+- **The pending-signup predicate is `findPendingSignupByOwnerId` in
+  `lib/pendingSignup.ts` — four load-bearing clauses, none optional, fails
+  closed.** (1) a `venue_owners` row exists; (2) ≥1 linked venue and **every**
+  linked venue is `hidden = true` AND `self_serve_created_at` stamped AND not at
+  `(0,0)` — reuses `isSelfServeVenueRow` / `isPlaceholderVenueRow` /
+  `isAdminHiddenVenueRow` from `lib/venueClaim.ts`, never re-derived; (3) **no
+  `billing_subscriptions` row** for the owner or any linked venue, ever, any
+  status (a cancelled subscriber keeps its row precisely as this proof); (4) the
+  auth user is unreferenced by the seven FK consumers — calls
+  `authUserIsUnreferenced(authId, { ignoreVenueOwnerId })` from
+  `lib/signupSweep.ts`, never copied. Anything failing a clause is not pending
+  and is never touched. `ok: false` and `pending: null` are different answers —
+  a caller must never collapse them.
+- **`purgePendingSignup(ownerId)` (`lib/pendingSignup.ts`) is the only
+  Stripe-safe teardown.** It **re-runs the full predicate itself** before
+  deleting anything (a caller's prior lookup is not permission to skip it), then:
+  cancel incomplete Stripe subscriptions (via `sweepAbandonedIncompleteSubscriptions`
+  in `lib/stripeIncomplete.ts` — shared with `POST /api/owner/billing/checkout`,
+  which uses the OPPOSITE failure policy: checkout ignores the result, the purge
+  aborts on it) → delete venues → delete `venue_owners` → delete the auth user.
+  A Stripe failure aborts with **nothing** deleted; `stripe === null` is not a
+  failure. A caller must not assume the email is free unless `ok === true`.
+  (4.1a: the Stripe cancel is skipped entirely when every linked venue has
+  `checkout_started_at IS NULL` — nothing reached Stripe to cancel.)
+- **Retry is SUPERSEDE, not resume, and it works at t=0.** When
+  `POST /api/owner/signup` finds a **pending** collision on the submitted email,
+  it calls `purgePendingSignup()` and continues the new signup — no 409, no
+  branch shown to the partner, no latency, whether they came back after ten
+  seconds or ten days. Logs `[OwnerSignup] pending-signup-superseded`. The purge
+  runs **before `findNearbyVenue`** or the partner's own abandoned venue is
+  rediscovered as a duplicate at their own address. A `kind: "account"` collision
+  still 409s. The accepted trade: a stranger who knows a partner's email can
+  destroy that partner's in-flight pending signup — accepted because the record
+  has no payment/gameplay/identity, the attacker learns nothing the enumeration
+  oracle does not already disclose, it is rate-limited, and the cost is retyping
+  an unfinished form. `docs/abandoned-signup-cleanup-plan.md` §2.
+- **`POST /api/owner/signup/abandon` (auth: `requireOwnerAuth`, never an email in
+  the body) is the explicit "Cancel and start over".** Resolves the caller's own
+  owner id → `findPendingSignupByOwnerId` → `purgePendingSignup` → clears the
+  owner session cookie on success only. A non-pending owner gets `409 { code:
+  "not_pending" }` and nothing happens. Flag-gated (404 when off), **not**
+  rate-limited (an authenticated owner deleting their own debris is not a spam
+  vector) — deliberately NOT in `PUBLIC_SIGNUP_ROUTES`. The `/owner/billing/setup`
+  button renders only when `venueId` is set and there is no subscription row.
+- **A `no_venue` 401 routes to the signup flow, not the login page.**
+  `requireOwnerAuth` distinguishes `no_session` (no/bad cookie → `/owner/login`)
+  from `no_venue` (a **valid, correctly signed** cookie whose owner holds no
+  surviving venue → `signupEntryPath()`) — the codes and `ownerAuthRecoveryPath()`
+  live once in `lib/ownerAuthCodes.ts` (pure, no `server-only`; contract test
+  pins the literals appear nowhere else). `no_venue` is what a purged pending
+  signup looks like from the browser. Only `app/owner/billing/setup/page.tsx`
+  reads the code today; the other ~15 `/owner/*` pages still bare-`push("/owner/login")`
+  on any 401 — a known bounded follow-up, `ownerAuthRecoveryPath` is one line each.
+- **`OWNER_EMAIL_TAKEN_MESSAGE` (still defined once in
+  `lib/ownerEmailAvailability.ts`) is reachable ONLY for `kind: "account"`.**
+  `EmailStep` renders its sign-in link on `error && taken`, and the wizard sets
+  that state only from a `available: false` pre-check or a `409 { code:
+  "email_taken" }` submit — both of which now fire only for a real account. The
+  message must NOT carry a raw `/owner/login` path. A contract test pins all of
+  this (`both callers go through the shared classifyEmailForSignup`).
+- **`/api/signup/email-available` is an email-enumeration oracle, accepted
+  narrowly.** The disclosure already existed — a signup form cannot refuse
+  duplicate accounts and hide that it did — so the pre-check changes the *cost*
+  of enumeration, not the fact of it. That cost is controlled by its own
+  `emailCheck` bucket, which is an **hour-long window on purpose** (sized
+  against someone walking a list, not against burst traffic). Do not widen it to
+  a per-minute window, and do not add a GET/query-string variant.
+- **The step-2 pre-check FAILS OPEN; the submit fails closed.** A 404, 503, 429
+  or dead network on `/api/signup/email-available` lets the partner through,
+  because `POST /api/owner/signup` re-runs the same lookup and is the authority.
+  Only a definite `available: false` blocks. Never invert this — a UX pre-check
+  that can wedge the whole wizard when a non-essential route is unhealthy is
+  worse than the dead end it replaced. Conversely, a lookup *failure* must never
+  be collapsed into `available: true`.
+- **An attacker-supplied venue id must pass the SAME eligibility predicate as
+  proximity discovery.** `POST /api/owner/signup` takes an optional
+  `claimVenueId` from the request body; it is attacker-controlled and never
+  trusted as proof of anything. The claim/placeholder/provenance predicates live
+  in **one place, `lib/venueClaim.ts`** (`isClaimableVenueRow`,
+  `isPlaceholderVenueRow`, `isSelfServeVenueRow`, `isAdminHiddenVenueRow`,
+  `claimableDistanceMeters`, plus the shared `VENUE_CLAIM_COLUMNS` select),
+  called by **both** `findNearbyVenue` and the claim branch. `route.ts` must not
+  import `calculateDistanceMeters` or hand-list venue columns — the contract test
+  fails the build if it does.
+- **A venue at `latitude = 0, longitude = 0` is a placeholder or internal room
+  and is NEVER claimable, joinable, or revealable.** Both Category Blitz global
+  rooms are seeded there. This clause is `isPlaceholderVenueRow` in
+  `lib/venueClaim.ts`; the Stripe webhook's reveal update also carries
+  `.or("latitude.neq.0,longitude.neq.0")` (NOT two `.neq` filters — that would
+  exclude a real venue on the equator or prime meridian).
+- **`self_serve_created_at` is a capability grant, not a timestamp.** Writing it
+  simultaneously arms `maybeRevealVenue` (publish the venue to every player's
+  join list) and `sweepAbandonedSignupVenues` (the retention sweep — see the two
+  TTL tiers below). Never
+  stamp a row this flow did not create; guard the stamp on the stamp itself
+  (`isSelfServeVenueRow`), never on `hidden`. A stranger must not get a
+  `venue_owner_venues` row to an admin-created hidden venue at all —
+  `isAdminHiddenVenueRow` refuses it outright on both the claim and discovery
+  branches.
+- **`/api/signup/maps-key` fails closed.** It serves `GOOGLE_MAPS_BROWSER_KEY`
+  via `publicBrowserGoogleMapsKey()` or returns **503** with
+  `[SignupMapsKey] browser-key-unset` — it must never fall back to the
+  unrestricted server key. Only `/api/admin/maps-key` (authenticated) keeps the
+  fallback, via `browserGoogleMapsKey()`.
+- **Two Google Maps keys, one Cloud project (`lib/googleMapsKeys.ts`).**
+  `browserGoogleMapsKey()` = `GOOGLE_MAPS_BROWSER_KEY` (HTTP-referrer-restricted
+  to our hosts), falling back to `GOOGLE_MAPS_API_KEY` if unset — **authenticated
+  surfaces only**. `publicBrowserGoogleMapsKey()` = `GOOGLE_MAPS_BROWSER_KEY` or
+  `""`, no fallback. `serverGoogleMapsKey()` = `GOOGLE_MAPS_API_KEY`, and is the
+  **only** server-side reader of that var (Places / Static Maps / Geocoding
+  `fetch`; the shared Static Maps builder is `lib/venueStaticMap.ts`); it **must
+  not be referrer-restricted** (a server request has no `Referer`). Do not
+  collapse these into one key or read `GOOGLE_MAPS_API_KEY` inline anywhere else —
+  the contract test enforces both. Risk #1 + the exact Cloud Console steps:
+  `docs/self-serve-signup-runbook.md` §2.
+- **The signup rate limiter is atomic in Postgres.** The quota decision is the
+  `claim_signup_attempt` RPC — a count-guarded insert under
+  `pg_advisory_xact_lock`, same pattern as `award_cycle_winner`. `lib/rateLimit.ts`
+  is one `.rpc()` call and computes nothing; it fails **closed** on any error,
+  including a missing function (mid-deploy skew:
+  `[SignupRateLimit] claim_signup_attempt-missing`). Never re-implement the guard
+  as a TypeScript read-then-write — that is the bug it replaced.
+- **`POST /api/owner/signup` is limited in TWO tiers, and the order is
+  load-bearing.** `rateLimitSignupSubmit()` in `lib/rateLimit.ts` is the single
+  home of both: an inner bucket keyed on **`IP + normalised email`** (15/hour),
+  claimed **first**, then an outer **IP-only** bucket (40/hour). Because
+  `claim_signup_attempt` records only *allowed* calls, checking the narrow bucket
+  first is exactly what stops one fumbling partner from eating the shared ceiling
+  of everyone else on the venue's WiFi — never invert it, and never drop the
+  outer bucket, which is the only thing capping an attacker who varies the email.
+  The route reads the body **before** the limiter (the inner bucket needs the
+  email) but still validates, looks up and writes nothing until the limiter has
+  spoken, and the oversized-body **413 is returned after** it so a malformed body
+  still costs a slot. `docs/abandoned-signup-cleanup-plan.md` §4.1b.
+- **Public `/api/signup/*` routes return generic errors.** Upstream Google / config
+  error text goes to `console.error`, never the response body
+  (`/api/signup/places` is `"Address lookup is unavailable right now."`). The
+  authenticated admin siblings keep their diagnostics.
+- **The `/api/cron/signup-sweep` `vercel.json` cron entry
+  (`{ "path": "/api/cron/signup-sweep", "schedule": "0 8 * * *" }`) was added
+  2026-09-07 on Andrew's explicit instruction**, so the "do not alter
+  `vercel.json` unasked" hard boundary was satisfied. Recorded here so the next
+  reviewer does not re-flag it; the boundary otherwise still stands.
+- **`/api/cron/signup-sweep` is deliberately un-flag-gated** and ships log-only
+  (`SIGNUP_SWEEP_DELETE_ENABLED` / `SIGNUP_SWEEP_AUTH_DELETE_ENABLED`, both
+  absent). An `auth.users` row with **no email** is an anonymous player session,
+  never a partner — the sweep's email filter is what keeps it off the 765 orphan
+  player rows in production. See the section below and
+  `tests/lib.auth-users-fk-guard.test.ts`.
+- **The venue sweep has TWO retention tiers (`lib/signupSweep.ts`), one scan
+  partitioned in memory.** **Tier A** (`venues.checkout_started_at IS NULL` —
+  never reached Stripe) = `PENDING_SIGNUP_TTL_MINUTES` (server-side env, no
+  redeploy; unset/invalid → 60; below `PENDING_SIGNUP_TTL_MINUTES_FLOOR` 15 →
+  clamped up with a warning). **Tier B** (stamped) = `SWEEP_ABANDON_AFTER_DAYS`
+  (7), measured from the **later** of `self_serve_created_at` and
+  `checkout_started_at` — stricter than "keep the 7-day window", so it can only
+  KEEP a venue the old predicate would have deleted (a late-settling card, 3-D
+  Secure, an overnight bank hold). Never shorten Tier B. `checkout_started_at` is
+  stamped by `POST /api/owner/billing/checkout` **after `session.url` is
+  confirmed, before it is returned** — placement is a correctness constraint: a
+  null value is read as both "one hour is enough" (the sweep) and "nothing at
+  Stripe to cancel" (`lib/pendingSignup.ts` §4.1a). The stamp is best-effort
+  (logs `[OwnerCheckout] checkout-stamp-failed`, never fails the request).
+  Migration `20260909120000_venues_checkout_started_at.sql`. If the column is
+  absent the scan falls back to the pre-Phase-4 single 7-day window,
+  `tierSplit=false`, `[SignupSweep] checkout-stamp-column-missing` — conservative
+  (sweeps later, never sooner); every OTHER read error still fails closed.
+  Tier A's TTL is only safe because the `no_venue` 401 (above) routes a swept
+  partner into a fresh signup — if that regresses, raise the TTL.
+- **Cron cadence: `vercel.json` `/api/cron/signup-sweep` is `0 * * * *`
+  (hourly).** Changed from `0 8 * * *` (daily) on **Andrew's explicit written
+  go-ahead, 2026-09-09** — recorded here beside the 2026-09-07 precedent so the
+  next reviewer does not re-flag it; the "do not alter `vercel.json` unasked"
+  hard boundary otherwise still stands. Hourly is so Tier A debris (a signup
+  that never reached Stripe) clears within the hour rather than living up to a
+  day. The tiers are correct at any cadence; this only tightens the ceiling.
+
+### `auth.users` is SHARED WITH PLAYERS — standing prohibition
+
+`auth.users` is **not** the venue-owner credential store. Seven tables reference
+it, and only one of them (`venue_owners`, `ON DELETE CASCADE`) is a partner
+credential. The other six belong to PLAYERS — including `accounts.auth_id` and
+`users.auth_id`, both `ON DELETE SET NULL`, both actively read and written by
+`app/api/join/profile/route.ts`.
+
+`SET NULL` means **deleting an `auth.users` row does not error** — it silently
+detaches a player's account from their identity. The `CASCADE` ones delete their
+gameplay rows outright.
+
+- **No signup or owner code path may adopt, delete, or reset the password of a
+  PRE-EXISTING `auth.users` row.** The tempting shortcut — "this email has no
+  `venue_owners` row, so just take over the auth user" — is an **account-takeover
+  vector against players**. Do not build it. `POST /api/owner/signup` returns a
+  support-contact 409 instead (`[OwnerSignup] orphan-auth-user`).
+- Deleting an auth user is legitimate **only** for one the same request just
+  created — exactly and only what that route's `unwind()` does.
+- Any batch reconciliation (`/api/cron/signup-sweep`) must check
+  **every** consumer table before deleting, not just `venue_owners`.
+- **AN `auth.users` ROW WITH NO EMAIL IS AN ANONYMOUS PLAYER, NEVER A PARTNER.**
+  `lib/auth.ts`'s `signInAnonymously()` (three call sites in `JoinFlow.tsx`)
+  mints one per anonymous visit, and a visitor who never finishes joining a venue
+  never gets an `accounts` or `users` row — so **765 of production's 966 auth
+  users are "orphans" by the seven-table test and every one of them is a player**
+  (measured 2026-09-07). The seven-table guard alone is NOT sufficient; the sweep
+  additionally requires an email, and `POST /api/owner/signup` always sets one.
+  Never delete an emailless auth user to "fix" a signup. Size it first with
+  `npm run signup:check-orphan-auth-users` (read-only).
+- **`tests/lib.auth-users-fk-guard.test.ts` is the tripwire.** It pins the exact
+  set of seven tables and their on-delete rules; an eighth consumer fails it.
+  Run `npm run test` after any migration that touches an `auth.users` FK.

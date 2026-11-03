@@ -286,3 +286,26 @@ Ignored local evidence: `tmp/nunito-unification-2026-10-24/` contains `entry-sta
 font-transfer JSON, browser reports/PNGs and share-render log. Sample share PNGs are under
 `/private/tmp/hightop-nunito-review-2026-10-24/tmp/share-cards/`. No secrets, players or consequence
 records belong in commits.
+
+
+---
+
+## Standing rules (moved from CLAUDE.md, 2026-11-03)
+
+> These rules were in the project `CLAUDE.md` until 2026-11-03 and still apply. CLAUDE.md now keeps a
+> one-line pointer here. Keep this section current when the feature changes.
+
+### Fonts
+
+- **Nunito is the only website font (Andrew, 2026-10-24).** `app/layout.tsx` self-hosts its
+  variable face through `next/font/google`; never add a separate heading or monospace face.
+  `--ht-font-body` carries the generated metric-matched fallback, while `--ht-font-display`,
+  `--ht-font-mono`, story font tokens and Tailwind sans/serif/mono utilities resolve to it.
+  Use the tokens, not literal family overrides; `tabular-nums` keeps scores aligned. Partner
+  Dashboard section headings use `--ht-text-dashboard-heading` (18–22 px). Canonical typography:
+  `design-system/hightop-challenge-design-system/project/colors_and_type.css` (mirrored in
+  `design-system/project/colors_and_type.css`). Standalone app-download/global-error pages
+  use the versioned `/fonts/nunito-v1.css` and Latin WOFF2 with its OFL license; new bytes get
+  new filenames because `/fonts/*` is immutable-cached. Email clients and text in existing
+  artwork/historical exports are outside this website rule. Tripwire: `tests/fonts-contract.test.ts`.
+  Live release and final Venue Home text-flow rules: `docs/nunito-typography-update-2026-10-24.md`.
