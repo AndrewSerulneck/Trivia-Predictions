@@ -37,6 +37,8 @@ type ScheduleTiming = Pick<
 // today. As of Phase 4b BOTH group games are supported — Category Blitz and Live
 // Trivia — each backed by its own engine (category_blitz_schedules vs.
 // trivia_schedules) but merged into one owner-facing calendar here.
+// Adding a schedulable game? Partners also need a Share to social design for it
+// (docs/partner-social-promo-plan.md, lib/promo/promoTemplates.ts).
 export const KNOWN_OWNER_SCHEDULE_GAME_TYPES: readonly OwnerScheduleGameType[] = [
   "category_blitz",
   "live_trivia",

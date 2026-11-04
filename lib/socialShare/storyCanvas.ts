@@ -395,7 +395,7 @@ function drawImageBlock(context: CanvasRenderingContext2D, block: StoryImageBloc
  * CSS variables, so they are swapped for the computed value on <html>, which carries the
  * metric-matched fallback too. Outside the app (no variable set) the font's own fallback list wins.
  */
-function resolveCanvasFont(font: string): string {
+export function resolveCanvasFont(font: string): string {
   if (!font.includes("var(")) return font;
   const root = typeof document !== "undefined" ? document.documentElement : null;
   const style = root && typeof getComputedStyle === "function" ? getComputedStyle(root) : null;
@@ -408,7 +408,7 @@ function resolveCanvasFont(font: string): string {
 }
 
 /** Waits (bounded) for the webfonts the text needs, so the first picture isn't in a fallback face. */
-async function loadCanvasFonts(fonts: string[]): Promise<void> {
+export async function loadCanvasFonts(fonts: string[]): Promise<void> {
   const faces = typeof document !== "undefined" ? (document as Document & { fonts?: FontFaceSet }).fonts : undefined;
   if (!faces || typeof faces.load !== "function") return;
   const timeout = new Promise<void>((resolve) => setTimeout(resolve, 2500));
@@ -416,6 +416,24 @@ async function loadCanvasFonts(fonts: string[]): Promise<void> {
     Promise.all([...new Set(fonts)].map((font) => faces.load(font).catch(() => []))).then(() => undefined),
     timeout,
   ]);
+}
+
+/**
+ * Draws ready-made design blocks onto a canvas you already have, synchronously: no photo, frame or
+ * images, fonts already loaded and resolved (`resolveCanvasFont`). The Share to social Reel draws its
+ * end card with these every frame (lib/promo/promoReelRender.ts), so its last frame is the very
+ * layout `renderStoryImage` draws for the Post/Story picture.
+ */
+export function paintStoryBlocks(
+  context: CanvasRenderingContext2D,
+  blocks: { background?: StoryFill | null; width?: number; height?: number; shapes?: readonly StoryShapeBlock[]; textBlocks?: readonly StoryTextBlock[] }
+): void {
+  if (blocks.background && blocks.width && blocks.height) {
+    context.fillStyle = fillStyleOf(context, blocks.background);
+    context.fillRect(0, 0, blocks.width, blocks.height);
+  }
+  for (const shape of blocks.shapes ?? []) drawShape(context, shape);
+  for (const block of blocks.textBlocks ?? []) drawTextBlock(context, block);
 }
 
 export async function renderStoryImage({

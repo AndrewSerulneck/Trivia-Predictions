@@ -99,10 +99,16 @@ export const ShareDetailsPanel = ({
   venueId,
   host = "owner",
   tone = "dark",
+  onDetails,
 }: {
   venueId: string;
   host?: Host;
   tone?: keyof typeof TONES;
+  /**
+   * Told the venue's choice once it is known and after every save, so a host can draw with it
+   * (Share to social's picture). No extra request: it is the panel's own load.
+   */
+  onDetails?: (details: VenueShareDetails) => void;
 }) => {
   const t = TONES[tone];
   const key = `${host}:${venueId}`;
@@ -141,6 +147,10 @@ export const ShareDetailsPanel = ({
       cancelled = true;
     };
   }, [host, key, venueId, attempt]);
+
+  useEffect(() => {
+    if (details) onDetails?.(details);
+  }, [details, onDetails]);
 
   // Leaving a venue throws its draft and message away (coming back to A starts clean).
   useEffect(() => {

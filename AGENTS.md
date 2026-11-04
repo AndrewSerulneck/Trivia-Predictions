@@ -188,6 +188,12 @@ another:
    description cases to `tests/lib.reward-description.test.ts`. A new
    `calendar` kind (neither a venue schedule nor the NFL season) is the one
    case that also needs a branch in `lib/rewardDescription.ts`.
+5. **Share to social:** partners advertise each game, with its prizes shown
+   on the same post/Reel (`docs/partner-social-promo-plan.md`). A definition
+   whose **game has no design yet** needs one in `lib/promo/promoTemplates.ts`.
+   Otherwise, check that its prize and "how to win" copy read well in that
+   game's prize panel (preview it). The promo coverage contract test fails until
+   it's done (once Phase 1 of that plan ships).
 
 Full rationale, the prize/quota data model, and the multi-winner ledger design
 are in `docs/rewards-system-plan.md` (§3–§4).

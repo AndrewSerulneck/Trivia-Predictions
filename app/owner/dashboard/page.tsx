@@ -11,6 +11,10 @@ import { RewardsSection } from "@/components/owner/dashboard/RewardsSection";
 import { RewardsFlow, type RewardsChange } from "@/components/owner/rewards/RewardsFlow";
 import { ScheduleGameFlow, type ScheduleChange } from "@/components/owner/schedule/ScheduleGameFlow";
 import { PartnerMessagesSheet } from "@/components/owner/messages/PartnerMessagesSheet";
+import { ShareToSocialEntry } from "@/components/owner/social/ShareToSocialEntry";
+import { ShareToSocialSheet } from "@/components/owner/social/ShareToSocialSheet";
+import { SHARE_SOCIAL_COPY } from "@/lib/promo/promoCopy";
+import type { PromoFocus } from "@/lib/promo/promoSubjects";
 import { PosConnectionsSheet } from "@/components/owner/pos/PosConnectionsSheet";
 import { ResultsSheet } from "@/components/owner/results/ResultsSheet";
 import { AddVenueSheet, type AddedVenue } from "@/components/owner/add-venue/AddVenueSheet";
@@ -36,8 +40,11 @@ type Venue = {
   name: string;
 };
 
-/** The confirmation toast; `offerReward` adds "Now offer a prize for it →". `id` remounts it (fresh timer) per change. */
-type ToastState = { id: number; message: string; offerReward: boolean };
+/**
+ * The confirmation toast; `offerReward` adds "Now offer a prize for it →", else `share` adds
+ * "Share to social →" for a NEW game or prize (plan §4.5). `id` remounts it (fresh timer) per change.
+ */
+type ToastState = { id: number; message: string; offerReward: boolean; share: PromoFocus | null };
 
 /** A row to ring once its list refetches (see lib/ownerDashboardHighlight.ts). */
 type PendingRing =
@@ -153,6 +160,11 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
   const [rewardsTarget, setRewardsTarget] = useState<OwnerCompetition | null>(null);
   // The schedule sheet was opened from the wizard's "Schedule Live Trivia": once a game is saved, offer to continue the reward.
   const [scheduleForReward, setScheduleForReward] = useState(false);
+  // What Share to social opens on: the game or prize just created (from the toast), else the first game.
+  const [socialFocus, setSocialFocus] = useState<PromoFocus | null>(null);
+  // Set by the Connect Instagram redirect (lib/social/ownerSocialGuard.ts); shown only for the venue it was for.
+  const searchParams = useSearchParams();
+  const socialResult = searchParams.get("socialVenue") === venueId ? searchParams.get("socialResult") : null;
   // The row just saved gets a ring for HIGHLIGHT_MS; `pendingHighlight` waits for the refetch that contains it.
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [pendingHighlight, setPendingHighlight] = useState<PendingRing | null>(null);
@@ -252,7 +264,10 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
   // A game was saved or cancelled: show the result and refetch. The list keeps its
   // current rows until the new ones arrive (no skeleton flash).
   const handleScheduleChanged = (change: ScheduleChange) => {
-    setToast((prev) => ({ id: (prev?.id ?? 0) + 1, message: change.message, offerReward: scheduleForReward }));
+    setToast((prev) => ({ id: (prev?.id ?? 0) + 1, message: change.message,
+      offerReward: scheduleForReward,
+      share: change.shareScheduleId ? { scheduleId: change.shareScheduleId } : null,
+    }));
     setAdvisory(change.rewardNotice);
     // A cancel removes a row; a save adds or edits one, and that row gets the ring.
     setPendingHighlight(
@@ -263,7 +278,10 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
 
   // A reward was created or removed: show the result and refetch its list.
   const handleRewardsChanged = (change: RewardsChange) => {
-    setToast((prev) => ({ id: (prev?.id ?? 0) + 1, message: change.message, offerReward: false }));
+    setToast((prev) => ({ id: (prev?.id ?? 0) + 1, message: change.message,
+      offerReward: false,
+      share: change.shareRewardId ? { rewardId: change.shareRewardId } : null,
+    }));
     setAdvisory(null);
     setPendingHighlight(
       change.removed ? null : { list: "rewards", baseline: rewards, knownIds: knownItemIds(rewards), id: null },
@@ -312,6 +330,12 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
           setRewardsAttempt((n) => n + 1);
         }}
       />
+      <ShareToSocialEntry
+        onOpen={() => {
+          setSocialFocus(null);
+          sheet.openSheet("social");
+        }}
+      />
 
       {toast ? (
         <DashboardToast
@@ -325,7 +349,17 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
                     openRewards("new");
                   },
                 }
-              : undefined
+              : toast.share
+                ? {
+                    label: SHARE_SOCIAL_COPY.afterCreateAction,
+                    onClick: () => {
+                      const focus = toast.share;
+                      setToast(null);
+                      setSocialFocus(focus);
+                      sheet.openSheet("social");
+                    },
+                  }
+                : undefined
           }
           onDismiss={dismissToast}
         >
@@ -352,6 +386,17 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
         initialReward={rewardsTarget}
         onChanged={handleRewardsChanged}
         onRequestSchedule={() => openSchedule(undefined, true)}
+      />
+
+      <ShareToSocialSheet
+        nav={sheet}
+        venueId={venueId}
+        venueName={venueName}
+        games={games}
+        rewards={rewards}
+        nowMs={gamesAsOfMs}
+        focus={socialFocus}
+        socialResult={socialResult}
       />
     </div>
   );

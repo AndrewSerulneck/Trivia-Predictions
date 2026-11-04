@@ -34,6 +34,7 @@ import {
   type ScheduleSheetStep,
 } from "@/lib/ownerScheduleForm";
 import { nextStep, previousStep } from "@/lib/ownerSheetParams";
+import { promoGameForSchedule } from "@/lib/promo/promoTemplates";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 import type { OwnerSchedule } from "@/types";
 
@@ -63,9 +64,11 @@ export type ScheduleChange = {
   scheduleId?: string;
   /** A cancel: the row is gone, so there is nothing to ring. */
   removed?: boolean;
+  /** A NEW game that has a Share to social design: the id the dashboard offers to promote (plan §4.5). */
+  shareScheduleId?: string;
 };
 
-type ServerReply = { ok: boolean; error?: string; rewardNotice?: string | null };
+type ServerReply = { ok: boolean; error?: string; rewardNotice?: string | null; schedule?: { id?: string } };
 
 const readReply = async (res: Response, fallback: string): Promise<ServerReply> => {
   try {
@@ -219,6 +222,7 @@ export const ScheduleGameFlow = ({
         // An edit that changes the days or the recurrence retires/shrinks rewards pinned to this game.
         rewardNotice: reply.rewardNotice ?? null,
         scheduleId: editing?.id,
+        shareScheduleId: !editing && reply.schedule?.id && promoGameForSchedule(form.gameType) ? reply.schedule.id : undefined,
       });
       setFinished(true);
       closeWithoutAsking();

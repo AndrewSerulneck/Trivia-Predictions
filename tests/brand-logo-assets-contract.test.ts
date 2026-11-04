@@ -37,6 +37,7 @@ describe("brand logo assets (speed plan Phase 2)", () => {
     expect(cfg).toMatch(/source: "\/brand\/web\/:path\*"[\s\S]*?public, max-age=31536000, immutable/);
     const rules = await nextConfig.headers?.();
     expect(rules?.filter((rule) => rule.headers.some((header) => header.value.includes("immutable"))).map((rule) => rule.source))
-      .toEqual(["/brand/web/:path*", "/fonts/:path*"]);
+      // /promo: Share to social sounds, versioned by name (-v1); tests/promo-coverage-contract.test.ts.
+      .toEqual(["/brand/web/:path*", "/promo/:path*", "/fonts/:path*"]);
   });
 });

@@ -21,6 +21,17 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Share to social sounds (lib/promo/promoSounds.ts): immutable by name, a changed sound ships
+        // under a new file name (-v2). docs/partner-social-promo-plan.md §4.2.
+        source: "/promo/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         // Versioned font/CSS/license assets; replacements use new filenames.
         source: "/fonts/:path*",
         headers: [

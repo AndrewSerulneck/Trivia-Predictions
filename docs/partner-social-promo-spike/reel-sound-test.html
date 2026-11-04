@@ -1,0 +1,583 @@
+<title>Reel Sound Test</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap">
+<style>
+/* Layout: a bench test. Phone-shaped Reel preview on the left, the checks and controls on the right; stacks on phones. */
+:root {
+  --bg: #f3f5f9;
+  --panel: #ffffff;
+  --fg: #0f172a;
+  --muted: #55607a;
+  --line: #dde2ec;
+  --accent: #0891b2;
+  --accent-fg: #ffffff;
+  --ok: #0f7a4a;
+  --ok-bg: #e3f5ec;
+  --bad: #b42318;
+  --bad-bg: #fde8e6;
+  --wait: #6b7280;
+  --wait-bg: #eef0f4;
+  --font: "Nunito", ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1020; --panel: #121a2e; --fg: #e6ebf5; --muted: #9aa6c0; --line: #24304a;
+    --accent: #22d3ee; --accent-fg: #06202a; --ok: #4ade80; --ok-bg: #0f2a1d; --bad: #f87171; --bad-bg: #2d1414;
+    --wait: #9aa6c0; --wait-bg: #1b2440; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1020; --panel: #121a2e; --fg: #e6ebf5; --muted: #9aa6c0; --line: #24304a;
+  --accent: #22d3ee; --accent-fg: #06202a; --ok: #4ade80; --ok-bg: #0f2a1d; --bad: #f87171; --bad-bg: #2d1414;
+  --wait: #9aa6c0; --wait-bg: #1b2440; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font-size: 28px; font-weight: 900; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.phone { position: relative; width: 100%; max-width: 320px; aspect-ratio: 9 / 16; border-radius: 22px; overflow: hidden; background: #060b1a; border: 1px solid var(--line); justify-self: center; }
+.phone canvas, .phone video { width: 100%; height: 100%; display: block; object-fit: cover; }
+.tag { position: absolute; left: 10px; top: 10px; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.14); color: #fff; padding: 3px 8px; border-radius: 99px; }
+.col { display: grid; gap: 16px; min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel h2 { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.checks li { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.pill { font-size: 12px; font-weight: 800; padding: 2px 10px; border-radius: 99px; white-space: nowrap; }
+.pill.ok { color: var(--ok); background: var(--ok-bg); }
+.pill.bad { color: var(--bad); background: var(--bad-bg); }
+.pill.wait { color: var(--wait); background: var(--wait-bg); }
+.ua { font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.opts { display: grid; gap: 10px; }
+.opt { display: flex; gap: 10px; align-items: center; }
+.opt input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); }
+select { font: inherit; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); min-width: 0; max-width: 100%; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; }
+button { font: inherit; font-weight: 800; border-radius: 12px; padding: 12px 18px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+button:disabled { opacity: 0.5; cursor: default; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.bar { height: 10px; border-radius: 99px; background: var(--wait-bg); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.15s linear; }
+.status { color: var(--muted); font-size: 14px; min-height: 1.5em; }
+.stats { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; font-size: 14px; margin: 0; font-variant-numeric: tabular-nums; }
+.stats dt { color: var(--muted); }
+.stats dd { margin: 0; overflow-wrap: anywhere; }
+ol.steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.note { font-size: 13px; color: var(--muted); }
+pre.report { font-family: var(--mono); font-size: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; overflow-x: auto; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Reel Sound Test</h1>
+    <p>Phase 0 of Share to social. This page builds a 1080×1920 Reel with music and sound effects inside your browser, the same way the Partner Dashboard will. Run it on each phone and computer you can, then send me the report at the bottom.</p>
+  </header>
+
+  <div class="grid">
+    <div class="phone" id="phone">
+      <canvas id="stage" width="1080" height="1920" aria-label="Reel preview"></canvas>
+      <video id="result" playsinline controls hidden></video>
+      <span class="tag" id="phoneTag">Preview · sample venue</span>
+    </div>
+
+    <div class="col">
+      <section class="panel" aria-labelledby="h-checks">
+        <h2 id="h-checks">This browser</h2>
+        <ul class="checks" id="checks">
+          <li><span>Video encoder (WebCodecs)</span><span class="pill wait" id="c-webcodecs">Checking</span></li>
+          <li><span>H.264 video at 1080×1920</span><span class="pill wait" id="c-avc">Checking</span></li>
+          <li><span>AAC sound, built into the browser</span><span class="pill wait" id="c-aac">Checking</span></li>
+          <li><span>Sound mixing (Web Audio)</span><span class="pill wait" id="c-mix">Checking</span></li>
+        </ul>
+        <div class="ua" id="ua"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-make">
+        <h2 id="h-make">Make the Reel</h2>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" id="optPrize" checked> Show the prize (15 s Reel; off = 10 s, no prize)</label>
+          <label class="opt"><input type="checkbox" id="optSfx" checked> Sound effects (opening applause, drumroll, crowd cheer, ka-ching)</label>
+          <label class="opt" for="optCrowd">Crowd sound
+            <select id="optCrowd">
+              <option value="both">Stadium crowd + applause (your two files)</option>
+              <option value="applause">Applause and cheer only</option>
+              <option value="stadium">Stadium crowd only</option>
+              <option value="synth">Made-up crowd (first test)</option>
+            </select>
+          </label>
+          <label class="opt" for="optMusic">Music
+            <select id="optMusic">
+              <option value="beat">Game-night beat (test tune)</option>
+              <option value="none">No music</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <button class="primary" id="make" disabled>Make Reel</button>
+          <button id="replay" type="button">Play preview</button>
+        </div>
+        <div class="bar" aria-hidden="true"><i id="barFill"></i></div>
+        <div class="status" id="status" role="status">Loading the encoder…</div>
+      </section>
+
+      <section class="panel" id="resultPanel" aria-labelledby="h-result" hidden>
+        <h2 id="h-result">Result</h2>
+        <dl class="stats" id="stats"></dl>
+        <div class="row">
+          <button class="primary" id="save" type="button">Save MP4</button>
+        </div>
+        <p class="note" id="saveNote">Save it, then try posting it as an Instagram Reel from your camera roll. You can stop at Instagram's preview screen. The point is to hear the sound play there.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-steps">
+        <h2 id="h-steps">What to test on each device</h2>
+        <ol class="steps">
+          <li>Tap <b>Make Reel</b> and wait for it to finish.</li>
+          <li>Play the result. You should hear applause and the beat from the start, then a drumroll, a crowd cheer and a ka-ching.</li>
+          <li>Tap <b>Save MP4</b>, open Instagram, start a new Reel and pick the saved video. Check the sound plays in Instagram's preview.</li>
+          <li>Tap <b>Copy report</b> and paste it to Claude, with what you heard in Instagram.</li>
+        </ol>
+        <pre class="report" id="report">No Reel made yet.</pre>
+        <div class="row"><button id="copy" type="button">Copy report</button></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "mediabunny": "https://cdn.jsdelivr.net/npm/mediabunny@1.61.6/dist/bundles/mediabunny.min.mjs",
+  "@mediabunny/aac-encoder": "https://cdn.jsdelivr.net/npm/@mediabunny/aac-encoder@1.61.6/dist/bundles/mediabunny-aac-encoder.min.mjs"
+} }
+</script>
+
+<script type="module">
+import { Output, Mp4OutputFormat, BufferTarget, CanvasSource, AudioBufferSource, canEncodeVideo, canEncodeAudio } from "mediabunny";
+
+// ---------- sample content (not a real venue) ----------
+const SAMPLE = {
+  game: "LIVE TRIVIA",
+  when: "Every Thursday",
+  time: "8 PM",
+  venue: "The Pour House",
+  handle: "@thepourhouse",
+  prize: "$50 gift card",
+  howToWin: "Most points wins",
+};
+const W = 1080, H = 1920, FPS = 30, SR = 48000;
+const C = { navy: "#060b1a", navy2: "#0d1a3a", cyan: "#22d3ee", violet: "#8b5cf6", white: "#ffffff", slate: "#94a3b8", ink: "#0f172a" };
+
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), ctx = stage.getContext("2d");
+const results = { ua: navigator.userAgent };
+$("ua").textContent = navigator.userAgent;
+
+// ---------- seeded randomness so every run sounds and looks the same ----------
+const rng = (seed) => () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+
+// ---------- timeline ----------
+const plan = (withPrize) => withPrize
+  ? { dur: 15, title: [0, 3], when: [3, 6.5], roll: [6.5, 7.5], prize: [7.5, 11.5], venue: [11.5, 15] }
+  : { dur: 10, title: [0, 3], when: [3, 6.5], roll: null, prize: null, venue: [6.5, 10] };
+
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const easeOut = (x) => 1 - Math.pow(1 - clamp(x), 3);
+const easeBack = (x) => { x = clamp(x); const c = 1.70158; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const inWin = (t, w) => w && t >= w[0] && t < w[1];
+const fadeFor = (t, w, edge = 0.35) => w ? clamp((t - w[0]) / edge) * clamp((w[1] - t) / edge) : 0;
+
+const font = (weight, px) => `${weight} ${px}px Nunito, ui-rounded, system-ui, sans-serif`;
+const text = (s, x, y, weight, px, color, align = "center") => {
+  ctx.font = font(weight, px); ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(s, x, y);
+};
+const roundRect = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); };
+
+const qrMods = (() => { const r = rng(7); const n = 25; const m = []; for (let i = 0; i < n * n; i++) m.push(r() > 0.5); return { n, m }; })();
+const drawQr = (x, y, size) => {
+  ctx.fillStyle = C.white; roundRect(x - 18, y - 18, size + 36, size + 36, 18); ctx.fill();
+  const { n, m } = qrMods, s = size / n;
+  ctx.fillStyle = C.ink;
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    const finder = (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+    if (finder) continue;
+    if (m[r * n + c]) ctx.fillRect(x + c * s, y + r * s, s, s);
+  }
+  for (const [fr, fc] of [[0, 0], [0, n - 7], [n - 7, 0]]) {
+    ctx.fillRect(x + fc * s, y + fr * s, 7 * s, 7 * s);
+    ctx.fillStyle = C.white; ctx.fillRect(x + (fc + 1) * s, y + (fr + 1) * s, 5 * s, 5 * s);
+    ctx.fillStyle = C.ink; ctx.fillRect(x + (fc + 2) * s, y + (fr + 2) * s, 3 * s, 3 * s);
+  }
+};
+
+const drawFrame = (t, p) => {
+  // background: navy with a slow cyan/violet glow and moving light bars
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, C.navy2); g.addColorStop(1, C.navy);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const gx = W * (0.75 + 0.1 * Math.sin(t * 0.6)), gy = H * (0.18 + 0.04 * Math.cos(t * 0.5));
+  const rg = ctx.createRadialGradient(gx, gy, 0, gx, gy, 900);
+  rg.addColorStop(0, "rgba(34,211,238,0.30)"); rg.addColorStop(0.35, "rgba(139,92,246,0.18)"); rg.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.globalAlpha = 0.06; ctx.fillStyle = C.white;
+  for (let i = 0; i < 6; i++) { const x = ((i * 260 + t * 120) % (W + 600)) - 300; ctx.save(); ctx.translate(x, 0); ctx.rotate(0.35); ctx.fillRect(0, -200, 70, H + 400); ctx.restore(); }
+  ctx.restore();
+
+  // brand line, always on (inside Instagram's top safe zone)
+  text("HIGHTOP CHALLENGE", W / 2, 300, 900, 34, "rgba(255,255,255,0.55)");
+
+  // The END CARD (from p.venue[0] + 0.6 s to the last frame) holds everything still, with no fade-out:
+  // the game, when, the prize + how to win, the venue and the QR. It is the frame the Reel stops on,
+  // the Reel's cover, and the same layout as the Post/Story picture.
+  const endK = easeOut((t - p.venue[0]) / 0.6);
+
+  // beat 1: game title (stays, shrinking to the top once the next beat starts, smaller again on the end card)
+  const titleIn = easeBack((t - 0.1) / 0.6);
+  const toTop = easeOut((t - p.when[0]) / 0.6);
+  const titleY = 860 - 340 * toTop + 20 * endK, titleScale = (0.4 + 0.6 * titleIn) * (1 - 0.3 * toTop - 0.15 * endK);
+  ctx.save(); ctx.globalAlpha = clamp(titleIn);
+  ctx.translate(W / 2, titleY); ctx.scale(titleScale, titleScale);
+  text("LIVE", 0, -95, 900, 210, C.cyan); text("TRIVIA", 0, 95, 900, 210, C.white);
+  ctx.restore();
+
+  // beat 2: when + where
+  if (t >= p.when[0]) {
+    const leaveAt = p.prize ? p.prize[0] : p.venue[0];
+    const a = easeOut((t - p.when[0]) / 0.5) * (t >= leaveAt ? 1 - easeOut((t - leaveAt) / 0.3) : 1);
+    if (a > 0.01) {
+      ctx.save(); ctx.globalAlpha = a; ctx.translate(0, 60 * (1 - a));
+      text(SAMPLE.when, W / 2, 860, 800, 92, C.white);
+      text(SAMPLE.time, W / 2, 990, 900, 150, C.cyan);
+      text(`at ${SAMPLE.venue}`, W / 2, 1120, 700, 64, "rgba(255,255,255,0.8)");
+      ctx.restore();
+    }
+  }
+
+  // drumroll: a pulsing ring
+  if (inWin(t, p.roll)) {
+    const k = (t - p.roll[0]) / (p.roll[1] - p.roll[0]);
+    ctx.save(); ctx.strokeStyle = C.cyan; ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 40);
+    ctx.lineWidth = 10 + 20 * k; ctx.beginPath(); ctx.arc(W / 2, 1000, 120 + 200 * k, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+  }
+
+  // beat 3: the prize panel, drawn as the white gift card
+  if (p.prize && t >= p.prize[0] && t < p.venue[1]) {
+    const pop = easeBack((t - p.prize[0]) / 0.5);
+    const shrink = easeOut((t - p.venue[0]) / 0.6);
+    const cy = 1000 - 60 * shrink, sc = pop * (1 - 0.28 * shrink);
+    ctx.save(); ctx.translate(W / 2, cy); ctx.scale(sc, sc); ctx.rotate(-0.03 * (1 - shrink));
+    const cw = 820, ch = 470;
+    ctx.shadowColor = "rgba(34,211,238,0.45)"; ctx.shadowBlur = 80;
+    const cg = ctx.createLinearGradient(-cw / 2, -ch / 2, cw / 2, ch / 2); cg.addColorStop(0, "#ffffff"); cg.addColorStop(1, "#f1f5f9");
+    ctx.fillStyle = cg; roundRect(-cw / 2, -ch / 2, cw, ch, 44); ctx.fill(); ctx.shadowBlur = 0;
+    const glow = ctx.createRadialGradient(cw / 2, -ch / 2, 0, cw / 2, -ch / 2, cw * 0.7);
+    glow.addColorStop(0, "rgba(34,211,238,0.28)"); glow.addColorStop(0.4, "rgba(139,92,246,0.16)"); glow.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = glow; roundRect(-cw / 2, -ch / 2, cw, ch, 44); ctx.fill();
+    text("WIN", 0, -140, 900, 56, "#64748b");
+    text(SAMPLE.prize, 0, -10, 900, 104, C.ink);
+    text(SAMPLE.howToWin, 0, 120, 700, 52, "#475569");
+    ctx.restore();
+    // a burst of confetti on the reveal
+    const k = (t - p.prize[0]);
+    if (k < 1.6) {
+      const r = rng(11);
+      for (let i = 0; i < 70; i++) {
+        const ang = r() * Math.PI * 2, sp = 500 + r() * 900, x = W / 2 + Math.cos(ang) * sp * k, y = 1000 + Math.sin(ang) * sp * k + 600 * k * k;
+        ctx.save(); ctx.globalAlpha = clamp(1 - k / 1.6); ctx.fillStyle = [C.cyan, C.violet, C.white, "#facc15"][i % 4];
+        ctx.translate(x, y); ctx.rotate(k * 8 + i); ctx.fillRect(-10, -5, 20, 10); ctx.restore();
+      }
+    }
+  }
+
+  // beat 4 → END CARD: when, venue + call to action (title above and prize card in between stay put).
+  // No QR: viewers are already on their phones and can't scan it (Andrew, 2026-11-03).
+  // Everything sits between Instagram's safe lines (y 250 and 1580).
+  if (t >= p.venue[0]) {
+    const a = easeOut((t - p.venue[0]) / 0.5);
+    ctx.save(); ctx.globalAlpha = a; ctx.translate(0, 60 * (1 - a));
+    const L = p.prize
+      ? { when: 700, whenPx: 64, venue: 1180, cta: 1350 }
+      : { when: 760, whenPx: 84, venue: 960, cta: 1140 };
+    // "Every Thursday · 8 PM" with the time in the accent colour
+    const lead = `${SAMPLE.when} · `;
+    ctx.font = font(800, L.whenPx); const lw = ctx.measureText(lead).width;
+    ctx.font = font(900, L.whenPx); const tw = ctx.measureText(SAMPLE.time).width;
+    const x0 = W / 2 - (lw + tw) / 2;
+    text(lead, x0, L.when, 800, L.whenPx, C.white, "left");
+    text(SAMPLE.time, x0 + lw, L.when, 900, L.whenPx, C.cyan, "left");
+    text(SAMPLE.venue, W / 2, L.venue, 900, 56, C.white);
+    text(SAMPLE.handle, W / 2, L.venue + 58, 700, 40, C.cyan);
+    // call to action as a pill
+    const cta = "Play on Hightop Challenge";
+    ctx.font = font(800, 40); const cwid = ctx.measureText(cta).width + 96;
+    ctx.fillStyle = "rgba(34,211,238,0.16)"; roundRect(W / 2 - cwid / 2, L.cta - 44, cwid, 88, 44); ctx.fill();
+    ctx.strokeStyle = "rgba(34,211,238,0.55)"; ctx.lineWidth = 3; ctx.stroke();
+    text(cta, W / 2, L.cta, 800, 40, C.white);
+    ctx.restore();
+  }
+};
+
+// ---------- recorded crowd sounds (Pixabay; published next to this page) ----------
+const SOUND_FILES = { applause: "sounds/applause-cheer-v1.mp4", stadium: "sounds/stadium-crowd-v1.mp4" };
+const recorded = {};
+const loadSounds = async () => {
+  const dec = new OfflineAudioContext(2, 1, SR);
+  await Promise.all(Object.entries(SOUND_FILES).map(async ([k, url]) => {
+    try { const res = await fetch(url); if (!res.ok) throw new Error(res.status); recorded[k] = await dec.decodeAudioData(await res.arrayBuffer()); }
+    catch (e) { recorded[k] = null; results.soundLoadError = `${k}: ${e?.message ?? e}`; }
+  }));
+};
+
+// ---------- sound: built with Web Audio, mixed offline ----------
+const buildAudio = async (p, music, sfx, crowd = "synth") => {
+  const off = new OfflineAudioContext(2, Math.ceil(p.dur * SR), SR);
+  const r = rng(42);
+  const noise = off.createBuffer(1, SR * 2, SR); const nd = noise.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = r() * 2 - 1;
+  // a gentle limiter so the crowd + music + ka-ching never clip
+  const limiter = off.createDynamicsCompressor(); limiter.threshold.value = -6; limiter.knee.value = 6; limiter.ratio.value = 12; limiter.attack.value = 0.003; limiter.release.value = 0.2;
+  limiter.connect(off.destination);
+  const master = off.createGain(); master.gain.value = 0.9; master.connect(limiter);
+  // a recorded clip: start at `t` in the Reel, read from `offset` in the file, with fades
+  const clip = (buf, t, offset, dur, peak, fadeIn, fadeOut, bus) => {
+    if (!buf) return false;
+    dur = Math.min(dur, p.dur - t, buf.duration - offset);
+    const s = off.createBufferSource(); s.buffer = buf;
+    const g = off.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + fadeIn);
+    g.gain.setValueAtTime(peak, t + dur - fadeOut); g.gain.linearRampToValueAtTime(0, t + dur);
+    s.connect(g).connect(bus); s.start(t, offset, dur); return true;
+  };
+  const musicBus = off.createGain(); musicBus.connect(master);
+  const sfxBus = off.createGain(); sfxBus.gain.value = 1; sfxBus.connect(master);
+
+  const env = (g, t, peak, a, d) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); };
+  const noiseSrc = (t, d, filterType, freq, q, peak, a, dec, bus) => {
+    const s = off.createBufferSource(); s.buffer = noise; s.loop = true;
+    const f = off.createBiquadFilter(); f.type = filterType; f.frequency.value = freq; f.Q.value = q;
+    const g = off.createGain(); env(g, t, peak, a, dec);
+    s.connect(f).connect(g).connect(bus); s.start(t, r() * 1.5); s.stop(t + d);
+  };
+  const tone = (t, type, f0, f1, a, d, peak, bus, filt) => {
+    const o = off.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + a + d);
+    const g = off.createGain(); env(g, t, peak, a, d);
+    let node = o; if (filt) { const f = off.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = filt; o.connect(f); node = f; }
+    node.connect(g).connect(bus); o.start(t); o.stop(t + a + d + 0.05);
+  };
+
+  if (music === "beat") {
+    const beat = 0.5; // 120 BPM
+    const prog = [[220, 261.6, 329.6], [174.6, 220, 261.6], [261.6, 329.6, 392], [196, 246.9, 293.7]]; // Am F C G
+    for (let b = 0; b * beat < p.dur - 0.2; b++) {
+      const t = b * beat, bar = Math.floor(b / 4) % 4, chord = prog[bar];
+      tone(t, "sine", 150, 45, 0.005, 0.28, 0.9, musicBus);                               // kick
+      if (b % 2 === 1) noiseSrc(t, 0.2, "bandpass", 1800, 0.8, 0.35, 0.003, 0.13, musicBus); // snare
+      noiseSrc(t, 0.06, "highpass", 7000, 0.7, 0.12, 0.002, 0.04, musicBus);              // hat
+      noiseSrc(t + beat / 2, 0.06, "highpass", 7000, 0.7, 0.08, 0.002, 0.04, musicBus);
+      tone(t, "sawtooth", chord[0] / 2, null, 0.01, 0.2, 0.22, musicBus, 500);             // bass
+      tone(t + beat / 2, "sawtooth", chord[0] / 2, null, 0.01, 0.15, 0.16, musicBus, 500);
+      if (b % 4 === 0) for (const f of chord) { tone(t, "sawtooth", f, null, 0.08, 1.8, 0.035, musicBus, 1400); tone(t, "sawtooth", f * 1.005, null, 0.08, 1.8, 0.035, musicBus, 1400); }
+    }
+    // fade out over the last second
+    musicBus.gain.setValueAtTime(0.55, 0); musicBus.gain.setValueAtTime(0.55, p.dur - 1); musicBus.gain.linearRampToValueAtTime(0.0001, p.dur);
+  }
+
+  if (sfx) {
+    // opening: applause as the title lands (no whistle; Andrew, 2026-11-03)
+    clip(recorded.applause, 0, 0.95, 3.0, 0.75, 0.02, 1.2, sfxBus);
+
+    if (p.roll) {
+      // drumroll building into the prize
+      const [a, b] = p.roll; const n = Math.floor((b - a) * 24);
+      for (let i = 0; i < n; i++) { const t = a + i / 24; noiseSrc(t, 0.08, "bandpass", 1600, 0.9, 0.06 + 0.4 * (i / n), 0.002, 0.06, sfxBus); }
+    }
+    if (p.prize) {
+      const t0 = p.prize[0];
+      let usedRecorded = false;
+      // stadium crowd: swells in just before the reveal; its loudest stretch (9–10.5 s in the file) lands ~1.5 s after it
+      if (crowd === "both" || crowd === "stadium") usedRecorded = clip(recorded.stadium, Math.max(0, t0 - 0.3), 8.0, 4.4, crowd === "both" ? 0.45 : 0.6, 0.4, 1.3, sfxBus) || usedRecorded;
+      // applause + cheer: its burst starts ~1.0 s into the file, so it hits right on the reveal and fades on its own
+      if (crowd === "both" || crowd === "applause") usedRecorded = clip(recorded.applause, Math.max(0, t0 - 0.02), 0.95, 6.0, 1.0, 0.02, 1.2, sfxBus) || usedRecorded;
+      // made-up crowd (the first test), also the fallback if the files didn't load
+      if (!usedRecorded) for (const [f, q, pk] of [[700, 0.6, 0.35], [1500, 0.8, 0.28], [2800, 1.0, 0.16]]) {
+        const s = off.createBufferSource(); s.buffer = noise; s.loop = true;
+        const bf = off.createBiquadFilter(); bf.type = "bandpass"; bf.frequency.value = f; bf.Q.value = q;
+        const gg = off.createGain(); gg.gain.setValueAtTime(0.0001, t0);
+        gg.gain.exponentialRampToValueAtTime(pk, t0 + 0.35);
+        for (let k = 0.4; k < 2.6; k += 0.07) gg.gain.setValueAtTime(pk * (0.65 + 0.35 * r()), t0 + k);
+        gg.gain.exponentialRampToValueAtTime(0.0001, t0 + 3.4);
+        s.connect(bf).connect(gg).connect(sfxBus); s.start(t0, r()); s.stop(t0 + 3.5);
+      }
+      // a few "whoo" voices gliding up (made-up crowd only)
+      if (!usedRecorded) for (let v = 0; v < 6; v++) {
+        const t = t0 + 0.1 + r() * 1.4, f = 260 + r() * 160;
+        const vo = off.createOscillator(); vo.type = "sawtooth"; vo.frequency.setValueAtTime(f, t); vo.frequency.exponentialRampToValueAtTime(f * 1.8, t + 0.5); vo.frequency.exponentialRampToValueAtTime(f * 1.3, t + 0.9);
+        const form = off.createBiquadFilter(); form.type = "bandpass"; form.frequency.value = 900; form.Q.value = 4;
+        const vg = off.createGain(); env(vg, t, 0.06, 0.12, 0.8);
+        vo.connect(form).connect(vg).connect(sfxBus); vo.start(t); vo.stop(t + 1);
+      }
+      // ka-ching: a click and two bell strikes
+      const kt = t0 + 0.1;
+      noiseSrc(kt, 0.04, "highpass", 3000, 0.7, 0.3, 0.001, 0.03, sfxBus);
+      for (const f of [2637, 3951, 5274]) tone(kt + 0.02, "sine", f, null, 0.002, 0.7, 0.12, sfxBus);
+      for (const f of [3136, 4699]) tone(kt + 0.14, "sine", f, null, 0.002, 0.9, 0.12, sfxBus);
+      // the music stays at full level throughout (no dip under the cheer; Andrew, 2026-11-03)
+    }
+  }
+  return off.startRendering();
+};
+
+// ---------- checks ----------
+const setPill = (id, ok, label) => { const el = $(id); el.className = `pill ${ok ? "ok" : "bad"}`; el.textContent = label ?? (ok ? "Yes" : "No"); };
+const runChecks = async () => {
+  results.webcodecs = typeof VideoEncoder === "function";
+  setPill("c-webcodecs", results.webcodecs);
+  try { results.avc = await canEncodeVideo("avc", { width: W, height: H }); } catch { results.avc = false; }
+  setPill("c-avc", results.avc);
+  try { results.aacNative = await canEncodeAudio("aac", { numberOfChannels: 2, sampleRate: SR }); } catch { results.aacNative = false; }
+  setPill("c-aac", results.aacNative, results.aacNative ? "Yes" : "No, will use the add-on");
+  results.mix = typeof OfflineAudioContext === "function";
+  setPill("c-mix", results.mix);
+};
+
+// ---------- preview ----------
+let previewRaf = 0, previewAudio = null;
+const showCanvas = () => { $("result").hidden = true; $("result").pause?.(); stage.hidden = false; $("phoneTag").textContent = "Preview · sample venue"; };
+const stopPreview = () => { cancelAnimationFrame(previewRaf); previewRaf = 0; if (previewAudio) { try { previewAudio.stop(); } catch {} previewAudio = null; } };
+const playPreview = async () => {
+  stopPreview(); showCanvas();
+  const p = plan($("optPrize").checked);
+  let start = performance.now();
+  if (results.mix) {
+    try {
+      const buf = await buildAudio(p, $("optMusic").value, $("optSfx").checked, $("optCrowd").value);
+      const ac = new AudioContext(); const src = ac.createBufferSource(); src.buffer = buf; src.connect(ac.destination); src.start(); previewAudio = src;
+      start = performance.now();
+    } catch { /* silent preview is fine */ }
+  }
+  const loop = () => { const t = (performance.now() - start) / 1000; drawFrame(Math.min(t, p.dur - 0.001), p); if (t < p.dur) previewRaf = requestAnimationFrame(loop); };
+  loop();
+};
+
+// ---------- make the MP4 ----------
+let lastBlob = null, lastUrl = null;
+const status = (s) => { $("status").textContent = s; };
+const progress = (x) => { $("barFill").style.width = `${Math.round(clamp(x) * 100)}%`; };
+
+const makeReel = async () => {
+  stopPreview(); showCanvas();
+  $("make").disabled = true; $("replay").disabled = true; $("resultPanel").hidden = true;
+  const p = plan($("optPrize").checked), music = $("optMusic").value, sfx = $("optSfx").checked, crowd = $("optCrowd").value;
+  const hasAudio = music !== "none" || sfx;
+  const t0 = performance.now();
+  const run = { prize: $("optPrize").checked, music, sfx, crowd, seconds: p.dur };
+  try {
+    let audioPath = "none";
+    if (hasAudio && !results.aacNative) {
+      status("Loading the AAC add-on (about 1 MB)…");
+      const { registerAacEncoder } = await import("@mediabunny/aac-encoder");
+      registerAacEncoder(); audioPath = "add-on (WebAssembly)";
+    } else if (hasAudio) audioPath = "built into browser";
+    run.audioPath = audioPath;
+
+    status("Mixing the sound…"); progress(0.02);
+    const audioBuf = hasAudio ? await buildAudio(p, music, sfx, crowd) : null;
+
+    const target = new BufferTarget();
+    const output = new Output({ format: new Mp4OutputFormat({ fastStart: "in-memory" }), target });
+    const video = new CanvasSource(stage, { codec: "avc", bitrate: 6_000_000, keyFrameInterval: 2 });
+    output.addVideoTrack(video, { frameRate: FPS });
+    let audio = null;
+    if (audioBuf) { audio = new AudioBufferSource({ codec: "aac", bitrate: 160_000 }); output.addAudioTrack(audio); }
+    await output.start();
+    if (audio) await audio.add(audioBuf);
+
+    const frames = Math.round(p.dur * FPS);
+    for (let i = 0; i < frames; i++) {
+      drawFrame(i / FPS, p);
+      await video.add(i / FPS, 1 / FPS);
+      if (i % 10 === 0) { status(`Drawing frames ${i} of ${frames}…`); progress(0.05 + 0.9 * (i / frames)); await new Promise((r) => setTimeout(r, 0)); }
+    }
+    status("Finishing the file…"); progress(0.97);
+    await output.finalize();
+
+    const secs = (performance.now() - t0) / 1000;
+    lastBlob = new Blob([target.buffer], { type: "video/mp4" });
+    run.ok = true; run.makeSeconds = Number(secs.toFixed(1)); run.sizeMB = Number((lastBlob.size / 1048576).toFixed(2));
+    progress(1); status(`Done in ${secs.toFixed(1)} s.`);
+    showResult(run);
+  } catch (err) {
+    run.ok = false; run.error = String(err?.message ?? err);
+    status(`It failed: ${run.error}`); progress(0);
+  }
+  results.lastRun = run; renderReport();
+  $("make").disabled = false; $("replay").disabled = false;
+};
+
+const showResult = (run) => {
+  if (lastUrl) URL.revokeObjectURL(lastUrl);
+  lastUrl = URL.createObjectURL(lastBlob);
+  const v = $("result");
+  v.onerror = () => { stage.hidden = false; v.hidden = true; $("phoneTag").textContent = "Can't play here · save it to watch"; results.lastRun.playsInPage = false; renderReport(); };
+  v.onloadedmetadata = () => { results.lastRun.playsInPage = true; results.lastRun.videoSeconds = Number(v.duration.toFixed(2)); renderReport(); };
+  v.src = lastUrl; v.hidden = false; stage.hidden = true; $("phoneTag").textContent = "Your Reel";
+  const rows = [["Length", `${run.seconds} s`], ["File size", `${run.sizeMB} MB`], ["Time to make", `${run.makeSeconds} s`], ["Sound encoder", run.audioPath], ["Format", "MP4 · H.264 · AAC · 1080×1920 · 30 fps"]];
+  $("stats").replaceChildren(...rows.flatMap(([k, val]) => { const dt = document.createElement("dt"); dt.textContent = k; const dd = document.createElement("dd"); dd.textContent = val; return [dt, dd]; }));
+  $("resultPanel").hidden = false;
+};
+
+// ---------- save + report ----------
+let downloads = null;
+const initDownloads = async () => {
+  try { downloads = await window.claude?.use?.("downloads"); } catch { downloads = null; }
+  if (!downloads) { $("save").hidden = true; $("saveNote").textContent = "Saving files isn't available in this view. Open this page in the Claude app or claude.ai to save the Reel."; }
+};
+$("save").addEventListener("click", async () => {
+  if (!downloads || !lastBlob) return;
+  try { await downloads.save({ filename: `hightop-reel-test-${results.lastRun?.seconds ?? 15}s.mp4`, data: lastBlob }); status("Saved. Now try it in Instagram."); results.lastRun.saved = true; renderReport(); }
+  catch (e) { status(e?.code === "declined" ? "Not saved." : `Couldn't save: ${e?.message ?? e?.code ?? e}`); }
+});
+
+const renderReport = () => {
+  const r = results, run = r.lastRun;
+  const lines = [
+    "Reel Sound Test report",
+    `Browser: ${r.ua}`,
+    `WebCodecs: ${r.webcodecs ? "yes" : "no"} · H.264 1080x1920: ${r.avc ? "yes" : "no"} · AAC built in: ${r.aacNative ? "yes" : "no"} · Web Audio: ${r.mix ? "yes" : "no"}`,
+  ];
+  if (run) {
+    lines.push(run.ok
+      ? `Reel: OK · ${run.seconds}s · prize ${run.prize ? "on" : "off"} · music ${run.music} · sfx ${run.sfx ? "on" : "off"} · crowd ${run.crowd} · sound via ${run.audioPath} · ${run.sizeMB} MB · made in ${run.makeSeconds}s · plays in page: ${run.playsInPage ?? "?"}${run.saved ? " · saved" : ""}`
+      : `Reel: FAILED · ${run.error} · sound via ${run.audioPath ?? "?"}`);
+  }
+  if (r.soundLoadError) lines.push(`Recorded sounds didn't load (${r.soundLoadError}); used the made-up crowd`);
+  lines.push("Instagram preview played the sound: (yes / no, add here)");
+  $("report").textContent = lines.join("\n");
+};
+$("copy").addEventListener("click", async () => {
+  const s = $("report").textContent;
+  try { await navigator.clipboard.writeText(s); $("copy").textContent = "Copied"; setTimeout(() => ($("copy").textContent = "Copy report"), 1500); }
+  catch { const range = document.createRange(); range.selectNodeContents($("report")); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range); status("Select-all done. Copy it with your keyboard or the menu."); }
+});
+
+$("make").addEventListener("click", makeReel);
+$("replay").addEventListener("click", playPreview);
+for (const id of ["optPrize", "optMusic", "optSfx", "optCrowd"]) $(id).addEventListener("change", () => { stopPreview(); showCanvas(); const pp = plan($("optPrize").checked); drawFrame(pp.dur - 0.01, pp); });
+
+// ---------- boot ----------
+try { await document.fonts.load(font(900, 100)); await document.fonts.load(font(700, 60)); } catch {}
+const restP = plan(true); drawFrame(restP.dur - 0.01, restP); // resting frame: the end card
+await Promise.all([runChecks(), loadSounds()]);
+renderReport();
+const canMake = results.webcodecs && results.avc;
+$("make").disabled = !canMake;
+status(canMake ? "Ready. Tap Make Reel." : "This browser can't make Reels (no H.264 video encoder). The real tool would offer Post and Story here.");
+initDownloads();
+</script>

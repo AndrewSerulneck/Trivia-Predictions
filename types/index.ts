@@ -200,6 +200,8 @@ export type PrizeType = "wine_bottle" | "free_appetizer" | "gift_certificate";
 // The new prize shape for Rewards. A reward prize is either a discounted menu
 // item or a gift card. Legacy PrizeType above is kept for pre-Rewards campaigns;
 // the mapping layer derives these fields from legacy values when prize_kind is null.
+// Share to social shows prizes via lib/prizeCardFace.ts, so a new kind/menu item must read well there
+// (docs/partner-social-promo-plan.md §4.1).
 export type RewardPrizeKind = "menu_item" | "gift_card";
 export type RewardMenuItem =
   | "whole_order"

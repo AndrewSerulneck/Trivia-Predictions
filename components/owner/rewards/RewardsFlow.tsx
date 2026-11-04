@@ -29,6 +29,7 @@ import {
   removeReward,
   submitReward,
 } from "@/lib/ownerRewardRequests";
+import { promoGameForPrizeGameType } from "@/lib/promo/promoTemplates";
 import { getRewardDefinition } from "@/lib/rewardDefinitions";
 import { isRewardWizardStep, type RewardWizardStep, type RewardWizardStepChange } from "@/lib/rewardWizardSteps";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
@@ -53,6 +54,8 @@ export type RewardsChange = {
   message: string;
   /** The reward was ended (archived or deleted): nothing to ring. */
   removed?: boolean;
+  /** A NEW prize whose game has a Share to social design: the id the dashboard offers to promote (plan §4.5). */
+  shareRewardId?: string;
 };
 
 type EndingState = { counts: RedemptionCounts | null; error: string | null; busy: boolean };
@@ -86,6 +89,8 @@ export const RewardsFlow = ({
   // Which reward definition the partner submitted, for the confirmation line. A ref, not state:
   // the wizard calls onCreated from the click's closure, which predates any state set in onSubmit.
   const submittedDefinitionId = useRef<string | null>(null);
+  // The new prize's id from the create reply, for the same reason.
+  const createdRewardId = useRef<string | null>(null);
   // Which reward's End screen is showing: a prize-count reply for any other is ignored.
   const endingRewardId = useRef<string | null>(null);
   // A reward was ended: once the sheet has slid away, start over, so the browser's
@@ -211,12 +216,22 @@ export const RewardsFlow = ({
             fetchContext={fetchRewardContext}
             onSubmit={async (submission: CreateRewardSubmission) => {
               submittedDefinitionId.current = submission.definitionId;
-              return submitReward(submission);
+              createdRewardId.current = null;
+              const result = await submitReward(submission);
+              if (result.ok) createdRewardId.current = result.rewardId ?? null;
+              return result;
             }}
             onCreated={() => {
               const definitionId = submittedDefinitionId.current;
-              const name = definitionId ? getRewardDefinition(definitionId)?.name : null;
-              onChanged({ message: name ? `${name} prize created` : "Prize created" });
+              const definition = definitionId ? getRewardDefinition(definitionId) : null;
+              const name = definition?.name;
+              onChanged({
+                message: name ? `${name} prize created` : "Prize created",
+                shareRewardId:
+                  createdRewardId.current && definition && promoGameForPrizeGameType(definition.gameType)
+                    ? createdRewardId.current
+                    : undefined,
+              });
               closeWithoutAsking();
             }}
             onCancel={() => (addedFromList ? nav.goBack("all") : closeWithoutAsking())}

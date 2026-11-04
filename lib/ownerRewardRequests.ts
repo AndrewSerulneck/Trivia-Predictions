@@ -19,15 +19,15 @@ export const fetchRewardContext = async (venueId: string, definitionId: string):
 
 export const submitReward = async (
   submission: CreateRewardSubmission,
-): Promise<{ ok: true } | { ok: false; error: string }> => {
+): Promise<{ ok: true; rewardId?: string } | { ok: false; error: string }> => {
   const res = await fetch("/api/owner/rewards", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(submission),
   });
-  const json = (await res.json()) as { ok: boolean; error?: string };
+  const json = (await res.json()) as { ok: boolean; error?: string; reward?: { id?: string } };
   if (!json.ok) return { ok: false, error: json.error ?? "Couldn't create that prize." };
-  return { ok: true };
+  return { ok: true, rewardId: json.reward?.id };
 };
 
 /** The prize counts the remove choice is made on — "delete anyway" is only fair if the partner sees its cost. */

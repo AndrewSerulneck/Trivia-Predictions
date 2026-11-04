@@ -24,7 +24,8 @@
 // "history" = Results, was Game Results (docs/live-trivia-weekly-places-reward-plan.md §5f): the list, then `step=game|player|prize`.
 // "prizes" = Prizes, the sheet once called "rewards" (docs/rewards-to-prizes-rename-plan.md Phase 3).
 // "messages" = Message your players (docs/native-app-store-plan.md Phase 5.5), one screen.
-export const OWNER_SHEET_IDS = ["schedule", "prizes", "store", "pos", "add-venue", "history", "messages"] as const;
+// "social" = Share to social (docs/partner-social-promo-plan.md Phase 1), one screen.
+export const OWNER_SHEET_IDS = ["schedule", "prizes", "store", "pos", "add-venue", "history", "messages", "social"] as const;
 
 export type OwnerSheetId = (typeof OWNER_SHEET_IDS)[number];
 

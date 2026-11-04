@@ -194,6 +194,9 @@ export type RewardDefinition = {
   description: RewardDescriptionTemplates;
 };
 
+// Adding a definition? Its game needs a Share to social design, and its "how to win" copy must read
+// well in that design's prize panel (docs/partner-social-promo-plan.md; AGENTS.md "Adding a new
+// Reward definition" step 5).
 export const REWARD_DEFINITIONS: readonly RewardDefinition[] = [
   {
     id: LIVE_TRIVIA_REWARD_DEFINITION_ID,

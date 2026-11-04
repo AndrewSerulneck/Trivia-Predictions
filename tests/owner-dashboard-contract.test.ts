@@ -86,6 +86,19 @@ describe("owner dashboard body", () => {
     expect(dashboard).not.toContain("key={toast.message}");
   });
 
+  it("Share to social (plan §4.5): a NEW game or prize offers it in the toast; edits and the rewards-first path don't", () => {
+    expect(dashboard).toContain("SHARE_SOCIAL_COPY.afterCreateAction");
+    expect(dashboard).toContain("shareScheduleId");
+    expect(dashboard).toContain("shareRewardId");
+    // The prize-for-this-game action keeps priority; the Entry button always opens on the first game.
+    expect(dashboard.indexOf("Now offer a prize for it")).toBeLessThan(dashboard.indexOf("afterCreateAction"));
+    expect(dashboard).toContain("setSocialFocus(null)");
+    // Only a new game: an edit (editingId set) never offers it.
+    expect(read("components/owner/schedule/ScheduleGameFlow.tsx")).toMatch(/shareScheduleId: !editing/);
+    // The wizard is not forked: the id comes through the host's onSubmit wrapper.
+    expect(read("components/owner/rewards/RewardsFlow.tsx")).toContain("createdRewardId");
+  });
+
   it("Review: the flows' own closes skip the Back-gesture prompt; the user's closes stay guarded", () => {
     for (const file of ["components/owner/schedule/ScheduleGameFlow.tsx", "components/owner/rewards/RewardsFlow.tsx"]) {
       const src = read(file);

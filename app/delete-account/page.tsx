@@ -64,6 +64,19 @@ export default function DeleteAccountInfoPage() {
         <p>Nothing else is kept. There is no waiting period: deletion happens when you confirm.</p>
       </LegalSection>
 
+      <div id="partner-social">
+        <LegalSection heading="Venue partners: Instagram and Facebook connections">
+          <p>
+            If you connected an Instagram or Facebook account to Share to social, you can disconnect it in the Partner
+            Dashboard, or remove Hightop Challenge in your Instagram or Facebook settings (Apps and Websites). Either way
+            we delete the stored permission token and cancel your scheduled posts. If you asked for deletion from
+            Facebook, the confirmation code Facebook showed you means the request was received and handled. Posts already
+            published remain on your account until you remove them there. Questions:{" "}
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">{SUPPORT_EMAIL}</a>.
+          </p>
+        </LegalSection>
+      </div>
+
       <LegalSection heading="Venue partners">
         <p>
           Partner (venue owner) accounts are tied to a paid subscription. To close one, email{" "}

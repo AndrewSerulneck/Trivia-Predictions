@@ -113,3 +113,4 @@
 | Fonts | `docs/nunito-typography-update-2026-10-24.md` | Nunito only, via tokens. |
 | PWA / bingo landscape | `docs/bingo-fullscreen-pwa-plan.md` | No service worker ever; manifest `start_url` stays `/`, no `orientation`. Run `npm run test:pwa-contract`. |
 | Super Bowl Squares + March Madness Bracket | `docs/squares-and-brackets-plan.md` | Seasonal points only via `creditSeasonalPoints`; prize cycle keys only via their helper. |
+| Share to social (partner posts / Reels) | `docs/partner-social-promo-plan.md` | A new schedulable game or prize challenge needs a Share to social design too (`lib/promo/promoTemplates.ts`); prizes ride on the game's design. |

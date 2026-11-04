@@ -76,6 +76,29 @@ export default function PrivacyPage() {
         />
       </LegalSection>
 
+      <LegalSection heading="Venue partners: Instagram and Facebook (Share to social)">
+        <p>
+          Partners can make posts, Stories and Reels that advertise their games and prizes. Making one needs no
+          connection to Instagram or Facebook: the picture or video is built on your own device and you share or
+          download it yourself. If you choose to connect your Instagram professional account or Facebook Page so we can
+          post for you, now or at a time you pick, we receive and store:
+        </p>
+        <LegalList
+          items={[
+            "Your Instagram or Facebook account ID and display name, and a permission token that lets us publish to that account only. The token is stored encrypted and is never shown or logged.",
+            "The pictures or videos, captions and times for posts you create, until they are published or cancelled. They are kept in private storage and deleted after publishing, except a weekly post, which is kept until you end it.",
+          ]}
+        />
+        <p>
+          We use this only to publish what you ask us to publish. We do not read your messages, followers, comments or
+          other posts, and we do not use this data for advertising. Posts never contain player names, photos or
+          accounts. You can disconnect at any time from the Partner Dashboard or from your Instagram or Facebook
+          settings (Apps and Websites); we then delete the token and cancel your scheduled posts. You can also ask for
+          deletion from Facebook&apos;s data-deletion option or by emailing {SUPPORT_EMAIL}. Posts already published stay
+          on your account until you remove them there.
+        </p>
+      </LegalSection>
+
       <LegalSection heading="How we use it">
         <LegalList
           items={[
@@ -92,7 +115,7 @@ export default function PrivacyPage() {
         <p>
           We use service providers who process data for us under their own terms: Supabase (database and sign-in),
           Vercel (hosting), Stripe (partner billing), Google (address search and maps for partners), Resend (email),
-          and Anthropic (to judge whether a Category Blitz answer fits its category and to screen answers for hateful
+          Meta (Instagram and Facebook, only for partners who connect an account), and Anthropic (to judge whether a Category Blitz answer fits its category and to screen answers for hateful
           or explicit content before they appear on a venue screen; only the answers and their categories are sent,
           never your username or account details). Venue partners who connect Square or Clover share
           prize and redemption information with that provider. Phone notifications are delivered through Google Firebase
