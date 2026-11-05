@@ -2,6 +2,10 @@
 
 > **Be concise by default.** Keep responses short — direct answers, no restating the task, no trailing summaries unless asked. Save exhaustive detail for when the user explicitly asks for it. This saves tokens and the user's time; don't wait to be told each time.
 >
+> **Product copy must be minimal.** Use the fewest words needed to act, decide or recover from an error.
+> Omit redundant labels, obvious instructions, unsolicited helper text and implementation details.
+> Confirm success with “Saved.” when sufficient. Review new and edited screens for unnecessary copy before finishing.
+>
 > **Read `SYSTEM_CONTEXT.md` before starting any task.**
 >
 > **`/info` IS the home page — on the website.** Any control that means "go to the home page" — a Back button, a nav logo, a marketing link — must target **`/info`**, never `/`: `/` on `play.` is `JoinFlow` (the *player sign-in*), so pointing "home" at `/` silently drops partners and first-time visitors on a login screen. **Inside the native app there is no `/info`**: home is the app's front door (the player sign-in). So use **`homeHref(isNativeApp())`** from `lib/domainSplit.ts` (or the `ExitBackButton` `home` option / `useIsNativeApp()` for rendered links), never a bare `marketingHref("/info")` — `tests/native-app-contract.test.ts` fails on one (Phase 2E, 2026-10-09).

@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 
 declare global {
   interface Window {
@@ -21,6 +21,7 @@ type GmapsLatLngBounds = {
   extend: (pos: { lat: number; lng: number }) => void;
 };
 type GmapsMarker = {
+  setDraggable: (draggable: boolean) => void;
   setPosition: (pos: { lat: number; lng: number }) => void;
   getPosition: () => GmapsLatLng | null;
   addListener: (event: string, handler: () => void) => void;
@@ -50,6 +51,10 @@ type VenueMapPickerProps = {
   onChange: (lat: number, lng: number) => void;
   /** True while the radius dial is actively being dragged — thickens the circle stroke. */
   radiusEditing?: boolean;
+  /** Allow inspection without pin mutation (locked preview or a save in flight). */
+  readOnly?: boolean;
+  /** Omit instructional copy on the compact partner page. */
+  hideInstructions?: boolean;
   /**
    * Where to fetch the Google Maps JS key from. Defaults to the admin-gated
    * route; the public self-serve signup wizard passes "/api/signup/maps-key",
@@ -72,6 +77,8 @@ const DEFAULT_ZOOM = 17;
 
 const CIRCLE_STROKE_IDLE = 2;
 const CIRCLE_STROKE_EDITING = 4;
+const MAP_LOAD_TIMEOUT_MS = 20000;
+const MAP_UNAVAILABLE = "Map unavailable. You can still edit using your current location.";
 
 function loadMapsScript(apiKey: string, onReady: () => void) {
   if (window.google?.maps) {
@@ -84,7 +91,13 @@ function loadMapsScript(apiKey: string, onReady: () => void) {
   }
   window.__htcMapsReadyQueue.push(onReady);
 
-  if (document.querySelector("script[data-htc-maps]")) return;
+  const existingScript = document.querySelector<HTMLScriptElement>("script[data-htc-maps]");
+  if (existingScript?.dataset.htcMapsFailed) {
+    window.__htcMapsReadyQueue = window.__htcMapsReadyQueue.filter((fn) => fn !== onReady);
+    onReady();
+    return;
+  }
+  if (existingScript) return;
 
   window.__htcMapsCallback = () => {
     const queue = window.__htcMapsReadyQueue ?? [];
@@ -98,6 +111,7 @@ function loadMapsScript(apiKey: string, onReady: () => void) {
   script.defer = true;
   script.setAttribute("data-htc-maps", "1");
   script.onerror = () => {
+    script.dataset.htcMapsFailed = "1";
     const queue = window.__htcMapsReadyQueue ?? [];
     window.__htcMapsReadyQueue = [];
     queue.forEach((fn) => fn());
@@ -127,6 +141,8 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
       radius,
       onChange,
       radiusEditing = false,
+      readOnly = false,
+      hideInstructions = false,
       mapsKeyEndpoint = ADMIN_MAPS_KEY_ENDPOINT,
     },
     ref
@@ -138,10 +154,18 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
     const circleRef = useRef<GmapsCircle | null>(null);
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
+    const readOnlyRef = useRef(readOnly);
+    const positionRef = useRef({ latitude, longitude });
+    const radiusRef = useRef(radius);
+    useLayoutEffect(() => {
+      readOnlyRef.current = readOnly;
+      positionRef.current = { latitude, longitude };
+      radiusRef.current = radius;
+    }, [readOnly, latitude, longitude, radius]);
     const dragInProgressRef = useRef(false);
     const lastFitRadiusRef = useRef<number | null>(null);
     const pendingFitOnReleaseRef = useRef(false);
-    const hasResizedSinceVisibleRef = useRef(false);
+    const needsInitialFitRef = useRef(true);
 
     const [mapsReady, setMapsReady] = useState(false);
     const [loadError, setLoadError] = useState("");
@@ -149,22 +173,44 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
     // Fetch API key from secure endpoint then load Maps JS script
     useEffect(() => {
       let cancelled = false;
-      void fetch(mapsKeyEndpoint)
-        .then((res) => res.json() as Promise<{ ok: boolean; apiKey?: string; error?: string }>)
+      const controller = new AbortController();
+      const timeout = setTimeout(() => {
+        cancelled = true;
+        controller.abort();
+        setLoadError(MAP_UNAVAILABLE);
+      }, MAP_LOAD_TIMEOUT_MS);
+      const ready = () => {
+        if (cancelled) return;
+        clearTimeout(timeout);
+        if (window.google?.maps) setMapsReady(true);
+        else setLoadError(MAP_UNAVAILABLE);
+      };
+      void fetch(mapsKeyEndpoint, { signal: controller.signal })
+        .then(async (res) => {
+          if (!res.ok) throw new Error("Map configuration unavailable");
+          return res.json() as Promise<{ ok: boolean; apiKey?: string }>;
+        })
         .then((data) => {
           if (cancelled) return;
           if (!data.ok || !data.apiKey) {
-            setLoadError(data.error ?? "Maps key unavailable.");
+            clearTimeout(timeout);
+            setLoadError(MAP_UNAVAILABLE);
             return;
           }
-          loadMapsScript(data.apiKey, () => {
-            if (!cancelled) setMapsReady(true);
-          });
+          loadMapsScript(data.apiKey, ready);
         })
         .catch(() => {
-          if (!cancelled) setLoadError("Failed to load map configuration.");
+          if (!cancelled) {
+            clearTimeout(timeout);
+            setLoadError(MAP_UNAVAILABLE);
+          }
         });
-      return () => { cancelled = true; };
+      return () => {
+        cancelled = true;
+        controller.abort();
+        clearTimeout(timeout);
+        window.__htcMapsReadyQueue = window.__htcMapsReadyQueue?.filter((fn) => fn !== ready);
+      };
     }, [mapsKeyEndpoint]);
 
     // Initialize map once Google Maps JS is ready
@@ -177,54 +223,75 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
         ? { lat: latitude, lng: longitude }
         : DEFAULT_CENTER;
 
-      const map = new gmaps.Map(mapDivRef.current, {
-        center,
-        zoom: DEFAULT_ZOOM,
-        mapTypeId: "roadmap",
-        zoomControl: true,
-        streetViewControl: false,
-        mapTypeControl: false,
-        fullscreenControl: false,
-      });
-      mapRef.current = map;
+      try {
+        const map = new gmaps.Map(mapDivRef.current, {
+          center,
+          zoom: DEFAULT_ZOOM,
+          mapTypeId: "roadmap",
+          zoomControl: true,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false,
+          gestureHandling: "cooperative",
+        });
+        mapRef.current = map;
 
-      const marker = new gmaps.Marker({
-        position: center,
-        map,
-        draggable: true,
-        title: "Drag to set venue pin",
-      });
-      markerRef.current = marker;
+        const marker = new gmaps.Marker({
+          position: center,
+          map,
+          draggable: !readOnlyRef.current,
+          title: readOnlyRef.current ? "Venue pin" : "Drag to set venue pin",
+        });
+        markerRef.current = marker;
 
-      const circle = new gmaps.Circle({
-        map,
-        center,
-        radius,
-        strokeColor: "#4f46e5",
-        strokeOpacity: 0.8,
-        strokeWeight: CIRCLE_STROKE_IDLE,
-        fillColor: "#4f46e5",
-        fillOpacity: 0.12,
-      });
-      circleRef.current = circle;
-      lastFitRadiusRef.current = radius;
+        const circle = new gmaps.Circle({
+          map,
+          center,
+          radius,
+          strokeColor: "#4f46e5",
+          strokeOpacity: 0.8,
+          strokeWeight: CIRCLE_STROKE_IDLE,
+          fillColor: "#4f46e5",
+          fillOpacity: 0.12,
+        });
+        circleRef.current = circle;
+        lastFitRadiusRef.current = radius;
 
-      marker.addListener("dragstart", () => {
-        dragInProgressRef.current = true;
-      });
+        marker.addListener("dragstart", () => {
+          if (readOnlyRef.current) return;
+          dragInProgressRef.current = true;
+        });
 
-      marker.addListener("dragend", () => {
-        const pos = marker.getPosition();
-        if (!pos) return;
-        const lat = pos.lat();
-        const lng = pos.lng();
-        circle.setCenter({ lat, lng });
-        onChangeRef.current(lat, lng);
-        // Allow one render cycle for parent state to update before re-enabling sync
-        setTimeout(() => { dragInProgressRef.current = false; }, 100);
-      });
+        marker.addListener("dragend", () => {
+          if (readOnlyRef.current) {
+            dragInProgressRef.current = false;
+            const current = positionRef.current;
+            if (current.latitude !== null && current.longitude !== null) {
+              const pos = { lat: current.latitude, lng: current.longitude };
+              marker.setPosition(pos);
+              circle.setCenter(pos);
+            }
+            return;
+          }
+          const pos = marker.getPosition();
+          if (!pos) return;
+          const lat = pos.lat();
+          const lng = pos.lng();
+          circle.setCenter({ lat, lng });
+          onChangeRef.current(lat, lng);
+          // Allow one render cycle for parent state to update before re-enabling sync
+          setTimeout(() => { dragInProgressRef.current = false; }, 100);
+        });
+      } catch {
+        setLoadError(MAP_UNAVAILABLE);
+      }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mapsReady]);
+
+    useEffect(() => {
+      markerRef.current?.setDraggable(!readOnly);
+      if (readOnly) dragInProgressRef.current = false;
+    }, [readOnly, mapsReady]);
 
     // Sync marker and map center when coordinates change externally (address lookup).
     // Skip when the change originated from a drag so the pin doesn't snap back.
@@ -236,6 +303,9 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
       markerRef.current.setPosition(pos);
       circleRef.current.setCenter(pos);
       mapRef.current.panTo(pos);
+      if (!needsInitialFitRef.current && window.google?.maps) {
+        fitToCircle(mapRef.current, circleRef.current, window.google.maps);
+      }
     }, [latitude, longitude]);
 
     // Update circle radius, and refit zoom when it changes materially (not mid-drag).
@@ -253,11 +323,12 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
       const lastFit = lastFitRadiusRef.current;
       const changedMaterially = lastFit === null || Math.abs(radius - lastFit) / lastFit > 0.15;
       if (!changedMaterially) return;
-      if (radiusEditing) {
+      if (radiusEditing || needsInitialFitRef.current) {
         pendingFitOnReleaseRef.current = true;
         return;
       }
       lastFitRadiusRef.current = radius;
+      pendingFitOnReleaseRef.current = false;
       fitToCircle(map, circle, window.google.maps);
     }, [radius, radiusEditing]);
 
@@ -265,6 +336,7 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
     // change was skipped while `radiusEditing` was true.
     useEffect(() => {
       if (radiusEditing) return;
+      if (needsInitialFitRef.current) return;
       if (!pendingFitOnReleaseRef.current) return;
       pendingFitOnReleaseRef.current = false;
       const circle = circleRef.current;
@@ -296,6 +368,13 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
         const gmaps = window.google?.maps;
         if (!map || !gmaps) return;
         gmaps.event.trigger(map, "resize");
+        if (needsInitialFitRef.current && circleRef.current) {
+          needsInitialFitRef.current = false;
+          lastFitRadiusRef.current = radiusRef.current;
+          pendingFitOnReleaseRef.current = false;
+          fitToCircle(map, circleRef.current, gmaps);
+          return;
+        }
         const pos = markerRef.current?.getPosition();
         if (pos) {
           map.panTo({ lat: pos.lat(), lng: pos.lng() });
@@ -309,18 +388,16 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
         if (!entry) return;
         const { width, height } = entry.contentRect;
         if (width === 0 || height === 0) {
-          hasResizedSinceVisibleRef.current = false;
           return;
         }
         // First time the container has a real size (covers both "was hidden,
         // now visible" and "sheet resized to inline card") — force Maps to
         // recompute its internal size, or it renders grey/blank.
-        if (!hasResizedSinceVisibleRef.current) {
-          hasResizedSinceVisibleRef.current = true;
-        }
         triggerResize();
       });
       observer.observe(el);
+      const size = el.getBoundingClientRect();
+      if (size.width > 0 && size.height > 0) triggerResize();
 
       return () => observer.disconnect();
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -345,8 +422,8 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
 
     if (loadError) {
       return (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-          {loadError}
+        <div role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          {hideInstructions ? "Map unavailable." : loadError}
         </div>
       );
     }
@@ -359,9 +436,11 @@ export const VenueMapPicker = forwardRef<VenueMapPickerHandle, VenueMapPickerPro
           </div>
         )}
         <div ref={mapDivRef} className={`h-80 w-full${mapsReady ? "" : " hidden"}`} />
-        <p className="border-t border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-          Drag the red pin to the exact venue entrance. The blue circle shows the geofence boundary and updates as you change the radius.
-        </p>
+        {!readOnly && !hideInstructions && (
+          <p className="border-t border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            Drag the red pin to the exact venue entrance. The blue circle shows the geofence boundary and updates as you change the radius.
+          </p>
+        )}
       </div>
     );
   },

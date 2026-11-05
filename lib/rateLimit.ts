@@ -50,6 +50,9 @@ export type RateLimitResult = {
  * ~4-8 predicts and 1-2 details.
  */
 export const SIGNUP_RATE_LIMITS = {
+  /** Explicit owner address searches, owner-keyed across venues/IPs. */
+  venueAddressSearchOwner: { windowSeconds: 60, max: 10 },
+  venueAddressDetailsOwner: { windowSeconds: 60, max: 5 },
   /** GET /api/signup/maps-key — one per page load, a few retries on flaky networks. */
   mapsKey: { windowSeconds: 60, max: 10 },
   /** POST /api/signup/places (autocomplete) — debounced at 300ms client-side. */
