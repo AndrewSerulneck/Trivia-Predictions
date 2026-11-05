@@ -2,6 +2,10 @@
 
 > **Be concise by default.** Short, direct answers; no restating the task, no trailing summaries unless asked.
 >
+> **Product copy must be minimal.** Use the fewest words needed to act, decide or recover from an error.
+> Omit redundant labels, obvious instructions, unsolicited helper text and implementation details.
+> Confirm success with “Saved.” when sufficient. Review new and edited screens for unnecessary copy before finishing.
+>
 > **Read `SYSTEM_CONTEXT.md` before starting any task.** Feature rules live in each feature's plan doc, in a section
 > called **"Standing rules (moved from CLAUDE.md, 2026-11-03)"** at the end of the doc. **Before touching a feature
 > listed under "Feature rules" below, read that section.** Most rules are also pinned by a contract test in
@@ -64,8 +68,10 @@ for mechanical edits and doc-only phases. Give a reason for any departure from t
 - Types are hand-maintained in `types/index.ts` (no generated Supabase types). React Strict Mode is off.
 - **Data scoping:** auth is global (passkeys/username); points, leaderboards and game state are per venue.
 - **Partner geofence** (`/owner/venue-location` → `PATCH /api/owner/venues/location`): rules only in
-  `lib/venueLocationRules.ts` — pin moves ≤ 1 km per save (D6); an unchanged out-of-range radius is kept (D7). The page
+  `lib/venueLocationRules.ts` — pin-only moves ≤ 1 km per save (D6); an unchanged out-of-range radius is kept (D7). The page
   changes the radius only via `GeofenceEditor`'s `onRadiusChange`, never from `onChange`.
+  Full address relocation uses an owner/venue-scoped signed Places selection (`lib/ownerVenueAddress.ts`),
+  authorized 2026-11-05; see `docs/venue-address-change-2026-11-05.md`.
 - **Wording:** players and partners see **Prize**; code/DB keep `reward`. Never "Reward" on screen
   (`tests/prizes-wording-contract.test.ts`). Say "credit allocation", never "credit limit".
 - **Cost:** no polling or per-player loops where one bounded read per run works; estimate cost before adding a cron,

@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { validateOwnerVenueLocation } from "@/lib/venueLocationRules";
+import { isUsableVenuePin, validateOwnerVenueLocation, VENUE_LOCATION_COPY } from "@/lib/venueLocationRules";
+import { readOwnerVenueAddressToken } from "@/lib/ownerVenueAddress";
+import { calculateDistanceMeters } from "@/lib/geofence";
 
 /**
  * GET /api/owner/venues/location?venueId= — the venue's saved pin + radius.
  * PATCH /api/owner/venues/location { venueId, latitude, longitude, radius }.
  * Owner auth and "the venue is theirs" are checked BEFORE any read or write.
- * The PATCH writes latitude, longitude and radius ONLY — never place_id, address or name (D3).
- * place_id is left alone on purpose: only admin screens read it, nothing matches it against the
- * pin, and a move of at most 1 km (D6) keeps the same business.
+ * Pin-only edits keep the 1 km cap. Andrew authorized full address relocation on 2026-11-05:
+ * a signed, owner/venue-scoped Places result supplies the new address and distance baseline.
  * Rules: lib/venueLocationRules.ts. Plan: docs/signup-price-copy-and-partner-geofence-plan.md.
  */
 
@@ -21,6 +22,7 @@ type LocationRow = {
   latitude: number | string | null;
   longitude: number | string | null;
   radius: number | string | null;
+  address?: string | null;
 };
 
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: NO_STORE });
@@ -38,7 +40,7 @@ const loadVenue = async (venueId: string) => {
   if (!supabaseAdmin) return { found: false, error: fail("Server configuration error.", 500) } as const;
   const { data, error } = await supabaseAdmin
     .from("venues")
-    .select("id, name, latitude, longitude, radius")
+    .select("id, name, latitude, longitude, radius, address")
     .eq("id", venueId)
     .maybeSingle<LocationRow>();
   if (error) {
@@ -54,6 +56,7 @@ const loadVenue = async (venueId: string) => {
       latitude: toNumberOrNull(data.latitude),
       longitude: toNumberOrNull(data.longitude),
       radius: toNumberOrNull(data.radius),
+      address: data.address ?? "",
     },
   } as const;
 };
@@ -96,13 +99,30 @@ export async function PATCH(request: Request): Promise<Response> {
   if (!loaded.found) return loaded.error;
   const saved = loaded.venue;
 
-  const verdict = validateOwnerVenueLocation({ saved, next: { latitude, longitude, radius } });
+  const address = body.addressToken === undefined ? null : readOwnerVenueAddressToken(body.addressToken, auth.ownerId, venueId);
+  if (body.addressToken !== undefined && !address) {
+    return fail("Choose the address again.", 400);
+  }
+  // Validate the stored venue too: signed relocation never repairs missing/system-placeholder pins.
+  if (address && !isUsableVenuePin(saved.latitude, saved.longitude)) {
+    return json({ ok: false, code: "no_saved_pin", error: VENUE_LOCATION_COPY.noSavedPin }, 400);
+  }
+  const verdict = validateOwnerVenueLocation({
+    saved: address ? { ...saved, latitude: address.latitude, longitude: address.longitude } : saved,
+    next: { latitude, longitude, radius },
+  });
   if (!verdict.ok) return json({ ok: false, code: verdict.code, error: verdict.message }, 400);
 
+  const addressLabel = address ? [address.street, `${address.city}, ${address.state} ${address.zipCode}`, address.country].join(", ") : saved.address;
+  const addressUpdate = address ? {
+    street: address.street, address: addressLabel, city: address.city, state: address.state,
+    zip_code: address.zipCode, country: address.country, place_id: address.placeId,
+    county: null, region: null,
+  } : {};
   if (!supabaseAdmin) return fail("Server configuration error.", 500);
   const { error } = await supabaseAdmin
     .from("venues")
-    .update({ latitude, longitude, radius })
+    .update({ latitude, longitude, radius, ...addressUpdate })
     .eq("id", venueId);
   if (error) {
     console.error("[OwnerVenueLocation] update-failed", error.message);
@@ -110,8 +130,11 @@ export async function PATCH(request: Request): Promise<Response> {
   }
 
   // The audit trail for partner geofence edits — one line, no owner email.
+  const movedMeters = address && saved.latitude !== null && saved.longitude !== null
+    ? calculateDistanceMeters({ latitude: saved.latitude, longitude: saved.longitude }, { latitude, longitude })
+    : verdict.movedMeters;
   console.info(
-    `[OwnerVenueLocation] updated venue=${venueId} moved_m=${Math.round(verdict.movedMeters)} radius=${saved.radius}->${radius}`,
+    `[OwnerVenueLocation] updated venue=${venueId} moved_m=${Math.round(movedMeters)} radius=${saved.radius}->${radius}${address ? " address_changed=true" : ""}`,
   );
-  return json({ ok: true, venue: { ...saved, latitude, longitude, radius } });
+  return json({ ok: true, venue: { ...saved, latitude, longitude, radius, address: addressLabel } });
 }

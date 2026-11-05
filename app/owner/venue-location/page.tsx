@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GeofenceEditor } from "@/components/admin/GeofenceEditor";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { VenueAddressEditor, type VenueAddressSelection } from "@/components/owner/VenueAddressEditor";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
@@ -21,12 +22,12 @@ import { isUsableVenuePin, VENUE_LOCATION_COPY as COPY } from "@/lib/venueLocati
 //
 // D7 rule (plan Phase 5): the radius changes ONLY through the editor's `onRadiusChange`, which
 // fires when the partner uses the dial or a size chip. The editor's `onChange` also carries a
-// radius — its clamped, shown value (200 for an admin-set 600 m) — on every pin move, GPS fix
-// and manual entry; `handleEditorChange` ignores it, so a pin-only save keeps the stored radius.
+// radius on every pin move, GPS fix and manual entry; `handleEditorChange` ignores it,
+// so a pin-only save keeps the stored radius. The map preview also depicts that actual radius.
 // A null stored radius saves as SIGNUP_RADIUS_DEFAULT, the value the dial shows.
 
 type Venue = { id: string; name: string };
-type SavedLocation = { latitude: number | null; longitude: number | null; radius: number | null };
+type SavedLocation = { latitude: number | null; longitude: number | null; radius: number | null; address?: string };
 type Pin = { lat: number; lng: number };
 
 const PIN_EPSILON = 1e-7; // venues.latitude is decimal(10,8)
@@ -47,6 +48,8 @@ const OwnerVenueLocationPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [addressBusy, setAddressBusy] = useState(false);
+  const [addressSelection, setAddressSelection] = useState<(VenueAddressSelection & { previousPin: Pin | null; previousSource: PinSource }) | null>(null);
 
   // R2: lets an async save reply check which venue is selected NOW.
   const selectedVenueIdRef = useRef("");
@@ -63,6 +66,7 @@ const OwnerVenueLocationPage = () => {
     );
     setRadius(location.radius);
     setSource("existing");
+    setAddressSelection(null);
   }, []);
 
   // R3: a failed load shows an error and a Try again button; it never reads as "No venue found".
@@ -156,19 +160,23 @@ const OwnerVenueLocationPage = () => {
       saved.longitude === null ||
       Math.abs(pin.lat - saved.latitude) > PIN_EPSILON ||
       Math.abs(pin.lng - saved.longitude) > PIN_EPSILON;
-    return pinMoved || (radius !== null && radius !== saved.radius);
-  }, [saved, pin, radius]);
+    return Boolean(addressSelection) || pinMoved || (radius !== null && radius !== saved.radius);
+  }, [saved, pin, radius, addressSelection]);
 
   // R9: switching venues drops unsaved edits, so ask first. The Dropdown is controlled: declining
   // simply leaves the current venue selected.
   const handleVenueChange = (next: string) => {
     if (next === selectedVenueId) return;
     if (changed && !window.confirm(COPY.discardChanges)) return;
+    // Drop the old preview in the same render that changes the heading/selection.
+    setSaved(null);
+    setAddressSelection(null);
+    setLoadingLocation(true);
     setSelectedVenueId(next);
   };
 
   const handleSave = async () => {
-    if (!selectedVenueId || !pin || saving || !changed) return;
+    if (!selectedVenueId || !pin || saving || addressBusy || !changed) return;
     const venueId = selectedVenueId;
     setSaving(true);
     setError(null);
@@ -177,7 +185,9 @@ const OwnerVenueLocationPage = () => {
       const res = await fetch("/api/owner/venues/location", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ venueId, latitude: pin.lat, longitude: pin.lng, radius: radiusToSave }),
+        body: JSON.stringify({ venueId, latitude: pin.lat, longitude: pin.lng, radius: radiusToSave,
+          ...(addressSelection ? { addressToken: addressSelection.addressToken } : {}),
+        }),
       });
       if (res.status === 401) {
         const body = (await res.json().catch(() => ({}))) as { code?: string };
@@ -207,24 +217,27 @@ const OwnerVenueLocationPage = () => {
   return (
     <OwnerShell
       title={COPY.pageTitle}
-      subtitle={COPY.pageSubtitle}
+      flushHeader
       maxWidth="lg"
       variant="dark"
       backTo={{ href: "/owner/dashboard", label: "Dashboard", preferHref: true }}
     >
-      <div className="space-y-5">
-        {venues.length > 1 ? (
-          <div className="flex justify-end">
-            <Dropdown
-              value={selectedVenueId}
-              onChange={handleVenueChange}
-              disabled={saving}
-              options={venues.map((venue) => ({ value: venue.id, label: venue.name }))}
-              ariaLabel="Select venue"
-              size="sm"
-              className="min-h-11 rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 text-sm font-bold text-ht-primary outline-none focus:border-ht-cyan-400"
-            />
-          </div>
+      <div className="space-y-4 rounded-b-2xl border border-t-0 border-ht-hairline bg-ht-surface p-4 shadow-ht-card">
+        {selectedVenue ? (
+          <h2 className="min-w-0 text-lg font-black text-ht-primary">
+            {venues.length > 1 ? (
+              <Dropdown
+                value={selectedVenueId}
+                onChange={handleVenueChange}
+                disabled={saving}
+                options={venues.map((venue) => ({ value: venue.id, label: venue.name }))}
+                ariaLabel="Select venue"
+                className="min-h-11 w-full min-w-0 rounded-xl bg-transparent text-left text-lg font-black text-ht-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ht-cyan-300"
+              />
+            ) : (
+              <span className="block break-words">{selectedVenue.name}</span>
+            )}
+          </h2>
         ) : null}
 
         {loading || loadingLocation ? (
@@ -279,17 +292,12 @@ const OwnerVenueLocationPage = () => {
                 <p className="text-sm font-semibold text-ht-muted">{COPY.noSavedPin}</p>
               </div>
             ) : saved ? (
-              <div className="space-y-4 rounded-2xl border border-ht-hairline bg-ht-surface p-5 shadow-ht-card">
-                <div>
-                  <h2 className="text-lg font-black text-ht-primary">{selectedVenue?.name ?? "This venue"}</h2>
-                  <p className="mt-1 text-sm font-semibold text-ht-muted">{COPY.helper}</p>
-                </div>
-
+              <div className="space-y-4">
                 {radiusOutsideDial && radius !== null ? (
                   <p className="text-footnote font-semibold text-ht-secondary">{COPY.radiusKept(radius)}</p>
                 ) : null}
 
-                <div className="rounded-ht-lg bg-slate-200/90 p-3">
+                <div className="ht-light-surface rounded-ht-lg bg-slate-200/90 p-3">
                   <GeofenceEditor
                     latitude={pin?.lat ?? null}
                     longitude={pin?.lng ?? null}
@@ -298,7 +306,9 @@ const OwnerVenueLocationPage = () => {
                     onChange={handleEditorChange}
                     onRadiusChange={handleRadiusChange}
                     hideAdvanced
+                    hidePinDetails
                     startLocked
+                    lockedView="map"
                     disabled={saving}
                     mapsKeyEndpoint="/api/owner/maps-key"
                     min={SIGNUP_RADIUS_MIN}
@@ -307,10 +317,43 @@ const OwnerVenueLocationPage = () => {
                   />
                 </div>
 
+                <VenueAddressEditor
+                  venueId={selectedVenueId}
+                  currentAddress={saved.address}
+                  disabled={saving}
+                  onBusyChange={setAddressBusy}
+                  onSelect={(selection) => {
+                    setAddressSelection((previous) => ({ ...selection,
+                      previousPin: previous ? previous.previousPin : pin,
+                      previousSource: previous ? previous.previousSource : source,
+                    }));
+                    setPin({ lat: selection.details.latitude, lng: selection.details.longitude });
+                    setSource("lookup");
+                    setError(null);
+                    setStatusMessage(null);
+                  }}
+                />
+                {addressSelection ? (
+                  <div className="flex items-start gap-2 text-footnote text-ht-secondary">
+                    <p className="min-w-0 flex-1 break-words">
+                      {addressSelection.details.street}, {addressSelection.details.city}, {addressSelection.details.state} {addressSelection.details.zipCode}
+                    </p>
+                    <button type="button" disabled={saving || addressBusy} className="h-[44px] min-h-[44px] shrink-0 rounded-xl px-3 font-bold text-ht-primary disabled:opacity-50"
+                      onClick={() => {
+                        setPin(addressSelection.previousPin);
+                        setSource(addressSelection.previousSource);
+                        setAddressSelection(null);
+                        setError(null);
+                      }}>
+                      Undo
+                    </button>
+                  </div>
+                ) : null}
+
                 <button
                   type="button"
                   onClick={() => void handleSave()}
-                  disabled={saving || !changed}
+                  disabled={saving || addressBusy || !changed}
                   className="w-full rounded-xl border border-ht-soft bg-ht-cyan-500 px-4 py-3 text-sm font-black text-slate-950 transition active:translate-y-px disabled:opacity-50"
                 >
                   {saving ? COPY.saving : changed ? COPY.save : COPY.savedButton}

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // docs/signup-price-copy-and-partner-geofence-plan.md Phase 2 — GET/PATCH /api/owner/venues/location
 // and GET /api/owner/maps-key. Owner auth and "the venue is theirs" come BEFORE any read or write.
@@ -46,12 +46,15 @@ vi.mock("@/lib/supabaseAdmin", () => {
   return { supabaseAdmin: { from } };
 });
 
+import { createOwnerVenueAddressToken } from "@/lib/ownerVenueAddress";
 import { GET, PATCH } from "@/app/api/owner/venues/location/route";
 import { GET as MAPS_KEY_GET } from "@/app/api/owner/maps-key/route";
 
 const URL_BASE = "http://localhost/api/owner/venues/location";
 // decimal columns can come back as strings — the route must cope.
 const ROW = { id: "venue-1", name: "The Pour House", latitude: "40.71280000", longitude: "-74.00600000", radius: 150 };
+const ADDRESS = { street: "10 Main St", city: "Boston", state: "MA", zipCode: "02108", country: "United States", latitude: 42.36, longitude: -71.06, placeId: "new-place" };
+afterEach(() => { vi.unstubAllEnvs(); vi.useRealTimers(); });
 const NEAR = { latitude: 40.7137, longitude: -74.006 };
 
 const patch = (body: unknown) =>
@@ -60,6 +63,7 @@ const patch = (body: unknown) =>
 describe("owner venue location route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("SESSION_SECRET", "test-address-secret");
     mocks.requireOwnerAuth.mockResolvedValue({ ownerId: "owner-1", venueIds: ["venue-1"] });
     mocks.maybeSingle.mockResolvedValue({ data: ROW, error: null });
     mocks.updateResult.mockResolvedValue({ error: null });
@@ -86,7 +90,7 @@ describe("owner venue location route", () => {
     expect(res.headers.get("Cache-Control")).toBe("no-store");
     expect(await res.json()).toEqual({
       ok: true,
-      venue: { id: "venue-1", name: "The Pour House", latitude: 40.7128, longitude: -74.006, radius: 150 },
+      venue: { id: "venue-1", name: "The Pour House", latitude: 40.7128, longitude: -74.006, radius: 150, address: "" },
     });
     expect(mocks.select).toHaveBeenCalledTimes(1);
     expect(mocks.eq).toHaveBeenCalledWith("id", "venue-1");
@@ -136,6 +140,44 @@ describe("owner venue location route", () => {
       code: "invalid_radius",
     });
     expect((await PATCH(patch({ venueId: "venue-1", ...NEAR, radius: "120" }))).status).toBe(400);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it("atomically relocates the address and pin over 1 km while retaining a legacy radius", async () => {
+    mocks.maybeSingle.mockResolvedValue({ data: { ...ROW, radius: 600 }, error: null });
+    const addressToken = createOwnerVenueAddressToken("owner-1", "venue-1", ADDRESS);
+    const res = await PATCH(patch({ venueId: "venue-1", latitude: ADDRESS.latitude, longitude: ADDRESS.longitude, radius: 600, addressToken, name: "forged", street: "forged" }));
+    expect(res.status).toBe(200);
+    expect(mocks.update).toHaveBeenCalledExactlyOnceWith({ latitude: ADDRESS.latitude, longitude: ADDRESS.longitude, radius: 600,
+      street: "10 Main St", address: "10 Main St, Boston, MA 02108, United States", city: "Boston", state: "MA", zip_code: "02108",
+      country: "United States", place_id: "new-place", county: null, region: null });
+    expect(await res.json()).toMatchObject({ venue: { address: "10 Main St, Boston, MA 02108, United States", radius: 600 } });
+  });
+
+  it("invalid, expired or other-scope address tokens cannot authorize relocation", async () => {
+    const wrongOwner = createOwnerVenueAddressToken("other", "venue-1", ADDRESS);
+    const wrongVenue = createOwnerVenueAddressToken("owner-1", "other", ADDRESS);
+    vi.useFakeTimers();
+    const expired = createOwnerVenueAddressToken("owner-1", "venue-1", ADDRESS);
+    vi.advanceTimersByTime(30 * 60 * 1000);
+    for (const addressToken of ["forged", wrongOwner, wrongVenue, expired, null]) {
+      expect((await PATCH(patch({ venueId: "venue-1", latitude: ADDRESS.latitude, longitude: ADDRESS.longitude, radius: 150, addressToken }))).status).toBe(400);
+    }
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it("still caps pin adjustments relative to the selected address and enforces radius rules", async () => {
+    const addressToken = createOwnerVenueAddressToken("owner-1", "venue-1", ADDRESS);
+    expect((await PATCH(patch({ venueId: "venue-1", ...NEAR, radius: 150, addressToken }))).status).toBe(400);
+    expect((await PATCH(patch({ venueId: "venue-1", latitude: ADDRESS.latitude, longitude: ADDRESS.longitude, radius: 600, addressToken }))).status).toBe(400);
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect((await PATCH(patch({ venueId: "venue-1", latitude: ADDRESS.latitude + 0.0001, longitude: ADDRESS.longitude, radius: 200, addressToken }))).status).toBe(200);
+  });
+
+  it("a signed address cannot turn a system placeholder into an ordinary venue", async () => {
+    mocks.maybeSingle.mockResolvedValue({ data: { ...ROW, latitude: 0, longitude: 0 }, error: null });
+    const addressToken = createOwnerVenueAddressToken("owner-1", "venue-1", ADDRESS);
+    expect((await PATCH(patch({ venueId: "venue-1", latitude: ADDRESS.latitude, longitude: ADDRESS.longitude, radius: 150, addressToken }))).status).toBe(400);
     expect(mocks.update).not.toHaveBeenCalled();
   });
 

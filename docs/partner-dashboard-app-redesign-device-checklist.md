@@ -176,19 +176,45 @@ Nothing on any screen should say "Reward" any more. Do this on a normal phone, t
 - [ ] `/rules` also shows the disclaimer wording "contest, prize, challenge".
 - [ ] Create Prize wizard: if it lets a $0 gift card through, the new invalid-prize message appears (skip if it can't be reached).
 
-## N. Venue Location page (new, 2026-11-03 — partners fix their own geofence)
-Do this on a normal phone, signed in as a partner, **standing inside a test venue you own** (a save changes the real venue).
-- [ ] Menu → **Venue Location** (after Game Settings) opens the page; Back returns to the dashboard.
-- [ ] The map is locked at first. Tap **Edit location & geofence**; the map and radius dial appear.
-- [ ] Drag the pin a little; **Save location** turns on. Save: "Saved. New players see it now; anyone already on the venue list, within 5 minutes."
-- [ ] Reload: the page shows the saved pin and radius.
-- [ ] **Use my current location** moves the pin to where you stand.
-- [ ] A venue whose radius is over 200 m (set by Hightop) keeps it after a pin-only save, and the page says "Your geofence is … m, set by Hightop".
-- [ ] On that same over-200 m venue, tap the **200 m** chip ("Patio and parking"): **Save location** turns on, and after saving and reloading the radius is 200 m and the "set by Hightop" note is gone. *(Phase 5)*
-- [ ] Drag the pin more than 1 km away and save: refused with "email support and we'll move it for you."
-- [ ] Two-venue account: the venue picker switches venues and loads each one's pin.
-- [ ] Two-venue account: drag venue A's pin, then pick venue B. A "Discard your unsaved location changes?" prompt appears; Cancel keeps A and its edit. *(Phase 6)*
-- [ ] While **Save location** is working, the venue picker is greyed out. *(Phase 6)*
-- [ ] A venue at 0,0 (ask Andrew which test venue) shows the "email support" message, not a map. *(Phase 7)*
+## N. Venue Location page (reviewed 2026-11-05)
+
+Implementation and local review are complete; Andrew accepted the result on 2026-11-05. The checks below
+remain **unperformed physical-device/real-Google observations** for a later authorized release. Automated
+Chromium/WebKit evidence uses fake Maps/API responses; no live venue was saved during this plan.
+Use a designated test venue for save/relocation checks. Record device, browser, date and outcome.
+
+- [ ] Menu → **Venue Location** opens the page; Back returns to the dashboard.
+- [ ] Before Edit, the saved pin and full configured circle are visible. Inspect/pan/zoom without moving
+  the pin. Save is disabled and no GPS permission is requested.
+- [ ] The venue name appears once; for multi-venue accounts it is the selector. The containing card
+  meets the header. Long names fit without horizontal scrolling on the smallest phone available.
+- [ ] No “Where players can join” subtitle, lock/helper paragraphs, pin-details/GPS box, coordinates,
+  Check link or map instruction paragraph appears. The Geofence Size box remains after unlocking.
+- [ ] **Edit location & geofence** is a clearly filled cyan button. Tap it to enable pin/radius controls.
+  Unlocking alone does not save or request GPS; the map stays visible without reloading.
+- [ ] **Close** is a cyan text button beside Geofence Size. It hides the controls and locks the pin.
+  Reopening preserves unsaved pin/radius/address changes; closing alone never saves. With a keyboard,
+  Enter/Space work and focus returns to Edit after Close.
+- [ ] Scroll the page with one finger starting over the map; map gestures do not trap page scrolling.
+  Verify pinch/two-finger inspection on the real Google map without an accidental pin move.
+- [ ] Check a legacy radius (for example 600 m, and a below-50 m fixture if available): the full circle
+  shows the actual value. A pin-only save preserves it; selecting the 200 m chip deliberately replaces it.
+- [ ] Move the pin slightly, then **Save location**: confirmation is exactly **“Saved.”** Reload shows
+  the saved pin/radius. Save, venue switching and Close are disabled appropriately while saving.
+- [ ] A pin-only move over 1 km is refused; a failed save leaves the draft available to retry.
+- [ ] **Change address** starts collapsed. Opening/typing alone performs no search or save. Search
+  shows results; choosing one previews the new address/pin without saving and preserves the radius.
+- [ ] **Undo** restores the pre-selection pin. A separately authorized test-venue relocation over 1 km
+  saves address and pin together. Reload confirms the address/pin/radius; Save failure/retry keeps the
+  selected address without repeating the lookup. An expired selection asks to choose it again.
+- [ ] Switching venues loads the new circle and locks its controls. Unsaved pin/radius/address changes
+  prompt before discard; Cancel retains them. A delayed lookup never changes the newly selected venue.
+- [ ] Maps loading/key/SDK failure shows **“Map unavailable.”**, preserves draft settings and leaves the
+  page usable. It does not retry automatically or suggest the removed GPS control; reload can recover.
+- [ ] Missing/placeholder pins show the existing support state instead of an editable map. Confirm auth
+  recovery and server refusal messages remain usable when staging those failure cases.
+
+Local results and release/rollback facts: `docs/venue-location-usability-plan_PHASE_3_HANDOFF.md`.
+Unchecked observations do not reopen the accepted implementation phases.
 
 When every box is ticked (or a problem is written next to it), send the list back.

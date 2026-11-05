@@ -34,6 +34,11 @@ review, so all work goes on `after-app-review` and nothing is pushed to `main` u
 | D3 | What partners can change | **Pin + radius.** Not the address, name, or anything else. |
 | D4 | Partner radius range | **50–200 m**, the existing `SIGNUP_RADIUS_MIN`/`SIGNUP_RADIUS_MAX` in `lib/selfServeSignup.ts`. |
 
+**2026-11-05 amendment:** Andrew explicitly authorized full address replacement and moving the pin,
+including over 1 km, via a verified Change address selection. D3's address prohibition is superseded
+for that flow; D6 remains for ordinary pin-only edits. Implementation/handoff:
+`docs/venue-address-change-2026-11-05.md`. Radius rules remain unchanged.
+
 Defaults chosen by the planner (Andrew can override; listed again under Open questions):
 
 - **D5 Own page, not a dashboard sheet:** `/owner/venue-location`, menu row "Venue Location" (hint "Where players

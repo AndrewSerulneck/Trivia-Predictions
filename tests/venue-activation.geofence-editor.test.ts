@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement, forwardRef } from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { GeofenceEditor, pinLabel } from "@/components/admin/GeofenceEditor";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
 import { SIGNUP_RADIUS_MAX, SIGNUP_RADIUS_MIN, SIGNUP_RADIUS_PRESETS } from "@/lib/selfServeSignup";
@@ -11,7 +11,7 @@ import { SIGNUP_RADIUS_MAX, SIGNUP_RADIUS_MIN, SIGNUP_RADIUS_PRESETS } from "@/l
 // deleted, with instructions to recreate it here. VenueMapPicker calls
 // /api/admin/maps-key on mount, so it is replaced by a stub (below) whose one
 // button stands in for a pin drag — the real map is never exercised by this
-// file (that's the device checklist's job); this file covers GeofenceEditor's own wiring:
+// file (tests/venue-map-picker.render.test.ts covers its lifecycle); this file covers the editor's wiring:
 // dial -> onChange with pin/source preserved, the no-pin disabled/placeholder
 // state, Advanced commit parsing, GPS success/denied, hideAdvanced, and the
 // pinLabel copy matrix.
@@ -200,4 +200,22 @@ describe("GeofenceEditor", () => {
     expect(pinLabel(true, "existing", null)).toBe("Pin already on file");
     expect(pinLabel(true, "lookup", null)).toBe("Pin set from the address lookup");
   });
+});
+
+
+it("ignores a late GPS success and stale radius/map events after saving disables the editor", () => {
+  let finish!: PositionCallback;
+  vi.stubGlobal("navigator", { geolocation: { getCurrentPosition: (success: PositionCallback) => { finish = success; } } });
+  const onChange = vi.fn();
+  const onRadiusChange = vi.fn();
+  const props = { latitude: 40.7, longitude: -74, radius: 600, source: "existing" as const,
+    min: 50, max: 200, lockedView: "map" as const, onChange, onRadiusChange };
+  const { rerender } = render(createElement(GeofenceEditor, props));
+  fireEvent.click(screen.getByRole("button", { name: /Use my current location/ }));
+  rerender(createElement(GeofenceEditor, { ...props, disabled: true }));
+  fireEvent.click(screen.getByRole("button", { name: "Drag pin" }));
+  fireEvent.keyDown(screen.getByRole("slider"), { key: "ArrowLeft" });
+  act(() => finish({ coords: { latitude: 41, longitude: -75, accuracy: 10 } } as GeolocationPosition));
+  expect(onChange).not.toHaveBeenCalled();
+  expect(onRadiusChange).not.toHaveBeenCalled();
 });

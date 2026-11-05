@@ -9,6 +9,11 @@ describe("owner venue location page", () => {
   it("mounts the shared GeofenceEditor locked, with the owner maps key and the signup radius range", () => {
     expect(page).toContain("<GeofenceEditor");
     expect(page).toContain("startLocked");
+    expect(page).toContain('lockedView="map"');
+    expect(page).toContain("ht-light-surface");
+    expect(page).not.toContain("COPY.helper");
+    expect(page).not.toContain("COPY.pageSubtitle");
+    expect(page).toContain("flushHeader");
     expect(page).toContain("hideAdvanced");
     expect(page).toContain('mapsKeyEndpoint="/api/owner/maps-key"');
     expect(page).toMatch(/min=\{SIGNUP_RADIUS_MIN\}/);

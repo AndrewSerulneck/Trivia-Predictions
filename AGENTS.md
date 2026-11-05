@@ -2,11 +2,23 @@
 
 **Be concise by default.** Keep responses short — direct answers, no restating the task, no trailing summaries unless asked.
 
+**Product copy must be minimal.** Use the fewest words needed to act, decide or recover from an error.
+Omit redundant labels, obvious instructions, unsolicited helper text and implementation details.
+Confirm success with “Saved.” when sufficient. Review new and edited screens for unnecessary copy before finishing.
+
 This file exists because some agent tools look for `AGENTS.md` by convention.
 The canonical project rules live in **`CLAUDE.md`** (hard boundaries, code
 style, naming rules) and **`SYSTEM_CONTEXT.md`** (architecture, product
 direction) — read both before starting any task. This file does not duplicate
 them; it documents recurring processes and active implementation-plan pointers below.
+
+## Venue Location usability — complete locally
+
+Plan: `docs/venue-location-usability-plan.md`; Phases 0–3 and follow-ups accepted by Andrew on 2026-11-05.
+Final handoff: `docs/venue-location-usability-plan_PHASE_3_HANDOFF.md` (168 focused tests pass).
+Includes locked preview, compact copy, signed address relocation and branded Close. Committed locally on
+`after-app-review`; no push or production deployment. Draft PR #10 stays unmerged; main is unchanged.
+Real-device/Google observations remain unperformed. Preserve ignored evidence; App Store branch rules apply.
 
 ## Phase handoffs and planned Bingo / Pick ’Em work
 

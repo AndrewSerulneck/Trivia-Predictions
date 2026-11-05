@@ -2,7 +2,8 @@ import { calculateDistanceMeters, isValidGeofenceCoordinates } from "@/lib/geofe
 import { SIGNUP_RADIUS_MAX, SIGNUP_RADIUS_MIN } from "@/lib/selfServeSignup";
 import { isPlaceholderVenueRow } from "@/lib/venueClaim";
 
-// What a partner may change about their venue's geofence (pin + radius), and nothing else.
+// Partner pin/radius rules. Full address relocation additionally requires a signed Places selection
+// from lib/ownerVenueAddress.ts (Andrew's 2026-11-05 exception to the original D3).
 // Pure — shared by PATCH /api/owner/venues/location (the authority) and the
 // /owner/venue-location page (Phase 3, for early feedback only).
 // Plan: docs/signup-price-copy-and-partner-geofence-plan.md, decisions D3, D4, D6, D7.
@@ -34,12 +35,9 @@ export const VENUE_LOCATION_COPY = {
   movedTooFar: "That's far from your saved location — email support and we'll move it for you.",
   invalidRadius: "The geofence must be a whole number of meters.",
   radiusOutOfRange: `The geofence must be between ${SIGNUP_RADIUS_MIN} and ${SIGNUP_RADIUS_MAX} m.`,
-  // The 5 minutes is VENUE_CACHE_TTL_MS in lib/venues.ts — change this copy if that constant changes.
-  saved: "Saved. New players see it now; anyone already on the venue list, within 5 minutes.",
-  helper: "Players can't join? Stand inside your venue and tap Use my current location.",
+  saved: "Saved.",
   // Venue Location page (Phase 3).
   pageTitle: "Venue Location",
-  pageSubtitle: "Where players can join",
   noVenue: "No venue found for this account.",
   venuesLoadFailed: "Couldn't load your venues.",
   tryAgain: "Try again",
@@ -50,8 +48,8 @@ export const VENUE_LOCATION_COPY = {
   saving: "Saving…",
   savedButton: "Saved",
   /**
-   * Shown while the radius is still an admin-set value outside the dial's range. The editor's locked
-   * card and the selected chip show the clamped value (200 or 50), so this names the real one.
+   * Shown while the radius is still an admin-set value outside the dial's range.
+   * The map shows the real radius; the dial/chips only offer replacement sizes.
    */
   radiusKept: (meters: number): string =>
     `Your geofence is ${meters} m, set by Hightop. The dial can't show that size, so it stays unless you pick a new one.`,
