@@ -246,10 +246,8 @@ describe("VenuesSection (desktop) — Phase 4 mount", () => {
     expect(await screen.findByText("Pin set from your phone (±12 m)")).not.toBeNull();
   });
 
-  // startLocked has exactly one caller (ActivateVenueFlow.tsx:432) — desktop's
-  // VenuesSection.tsx:654 passes no startLocked at all, so the lock is
-  // mobile-edit-only, not "edit-mode" in general. Pin that narrower claim
-  // separately rather than folding it into the mobile create/edit tests above.
+  // Admin mobile edit uses the summary lock; the partner page opts into a locked map.
+  // Desktop VenuesSection still passes no startLocked and exposes its controls immediately.
   it("desktop edit mode has no lock — the slider is present with no unlock step", () => {
     render(
       createElement(VenuesSection, {

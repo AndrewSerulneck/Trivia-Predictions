@@ -2,6 +2,10 @@
 
 **Be concise by default.** Keep responses short — direct answers, no restating the task, no trailing summaries unless asked.
 
+**Product copy must be minimal.** Use the fewest words needed to act, decide or recover from an error.
+Omit redundant labels, obvious instructions, unsolicited helper text and implementation details.
+Confirm success with “Saved.” when sufficient. Review new and edited screens for unnecessary copy before finishing.
+
 This file exists because some agent tools look for `AGENTS.md` by convention.
 The canonical project rules live in **`CLAUDE.md`** (hard boundaries, code
 style, naming rules) and **`SYSTEM_CONTEXT.md`** (architecture, product

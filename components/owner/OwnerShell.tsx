@@ -43,6 +43,8 @@ type OwnerShellProps = {
    * screen-reader-only heading.
    */
   barCenter?: React.ReactNode;
+  /** Dark variant: let the first content panel meet the compact header. */
+  flushHeader?: boolean;
 };
 
 export const OwnerShell = ({
@@ -54,6 +56,7 @@ export const OwnerShell = ({
   backTo,
   showAccountMenu = false,
   barCenter,
+  flushHeader = false,
 }: OwnerShellProps) => {
   const widthClass = maxWidth === "lg" ? "max-w-2xl" : "max-w-sm";
 
@@ -72,7 +75,7 @@ export const OwnerShell = ({
             <h1 className="truncate text-base font-black text-ht-primary">{title}</h1>
           )}
         </OwnerAppBar>
-        <div className={`mx-auto w-full px-4 pb-16 pt-5 ${widthClass}`}>
+        <div className={`mx-auto w-full px-4 pb-16 ${flushHeader ? "" : "pt-5"} ${widthClass}`}>
           {subtitle ? <p className="mb-5 text-sm font-semibold text-ht-muted">{subtitle}</p> : null}
           {children}
         </div>

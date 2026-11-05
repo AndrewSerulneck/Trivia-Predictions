@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useId, useLayoutEffect, useRef, useState } from "react";
 import { RadiusDial } from "@/components/admin/RadiusDial";
 import { VenueMapPicker, type VenueMapPickerHandle } from "@/components/admin/VenueMapPicker";
 import { adminField, adminLabel } from "@/lib/adminStyles";
+import { VENUE_LOCATION } from "@/lib/themeTokens";
 import {
   RADIUS_MAX,
   RADIUS_MIN,
@@ -45,19 +46,29 @@ type GeofenceEditorProps = {
   /** Where the current pin came from — drives the provenance label. */
   source: PinSource;
   onChange: GeofenceEditorChange;
+  /**
+   * Fires only when the partner used the dial or a size chip, never for a pin move, GPS fix or manual entry.
+   * Called with the clamped radius just before the matching `onChange`. Lets a caller tell a deliberate
+   * radius pick from the shown radius echoed on a pin move (owner Venue Location page, plan Phase 5).
+   */
+  onRadiusChange?: (radius: number) => void;
   disabled?: boolean;
   /** Hide the Advanced lat/long disclosure (the mobile flow has its own). */
   hideAdvanced?: boolean;
+  /** Partner page: show only the map and radius controls, without pin details or GPS. */
+  hidePinDetails?: boolean;
   className?: string;
   /**
    * Editing venue-activation follow-up: on the edit flow the map and radius
    * dial start locked behind a summary card + "Edit location & geofence"
    * button, so a thumb scrolling past the map can't nudge the pin or resize
-   * the geofence by accident. Uncontrolled — once tapped open, it stays open
-   * for the rest of this form mount. Omit (or false) for the create flow,
+   * the geofence by accident. The partner map presentation can close back to
+   * its locked preview without discarding drafts. Omit (or false) for the create flow,
    * where there's nothing destructive to protect yet.
    */
   startLocked?: boolean;
+  /** Partner preview: keep one read-only map mounted across unlocking. Admin defaults to summary. */
+  lockedView?: "summary" | "map";
   /**
    * Passed straight through to VenueMapPicker. Defaults to the admin-gated
    * maps-key route; the public self-serve signup wizard passes
@@ -65,8 +76,8 @@ type GeofenceEditorProps = {
    */
   mapsKeyEndpoint?: string;
   /**
-   * Radius domain, passed straight to RadiusDial and used to clamp every value
-   * this editor emits. Defaults to the admin constants (25–2000 m); the
+   * Radius domain for the dial and deliberate size picks. The map presentation
+   * preserves the parent radius on pin changes. Defaults to admin (25–2000 m); the
    * self-serve signup wizard passes 50–200 m
    * (docs/partner-self-serve-signup-plan.md §4 Phase 2). Omitting both is
    * bit-identical to the pre-Phase-2 editor.
@@ -87,16 +98,23 @@ export function GeofenceEditor({
   radius,
   source,
   onChange,
+  onRadiusChange,
   disabled = false,
   hideAdvanced = false,
+  hidePinDetails = false,
   className,
   startLocked = false,
+  lockedView = "summary",
   mapsKeyEndpoint,
   min = RADIUS_MIN,
   max = RADIUS_MAX,
   presets,
 }: GeofenceEditorProps) {
   const mapRef = useRef<VenueMapPickerHandle | null>(null);
+  const editButtonRef = useRef<HTMLButtonElement | null>(null);
+  const restoreEditFocusRef = useRef(false);
+  const gpsRequestRef = useRef(0);
+  const controlsId = useId();
   const [radiusEditing, setRadiusEditing] = useState(false);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState("");
@@ -112,36 +130,50 @@ export function GeofenceEditor({
 
   const hasPin = latitude !== null && longitude !== null;
   const value = clampRadius(snapRadius(radius, min, max), min, max);
+  const mapPresentation = lockedView === "map";
+  const displayRadius = mapPresentation ? radius : value;
+  const readOnly = locked || disabled;
+  const readOnlyRef = useRef(readOnly);
+  useLayoutEffect(() => { readOnlyRef.current = readOnly; }, [readOnly]);
+  useLayoutEffect(() => {
+    if (locked && restoreEditFocusRef.current) {
+      restoreEditFocusRef.current = false;
+      editButtonRef.current?.focus();
+    }
+  }, [locked]);
 
   const emit = useCallback(
     (next: { lat: number; lng: number; radius: number; source: PinSource }) => {
+      if (readOnlyRef.current) return;
       onChange({
         lat: next.lat,
         lng: next.lng,
-        radius: clampRadius(next.radius, min, max),
+        radius: mapPresentation ? next.radius : clampRadius(next.radius, min, max),
         source: next.source,
       });
     },
-    [onChange, min, max]
+    [onChange, mapPresentation, min, max]
   );
 
   const handleRadiusChange = useCallback(
     (nextRadius: number) => {
       // Sizing the circle never moves the pin, and never changes its
       // provenance — a GPS-set pin is still a GPS-set pin at 600 m.
-      if (latitude === null || longitude === null) return;
+      if (readOnlyRef.current || latitude === null || longitude === null) return;
+      onRadiusChange?.(clampRadius(nextRadius, min, max));
       emit({ lat: latitude, lng: longitude, radius: nextRadius, source });
     },
-    [emit, latitude, longitude, source]
+    [emit, onRadiusChange, latitude, longitude, source, min, max]
   );
 
   const handleMapDrag = useCallback(
     (lat: number, lng: number) => {
+      if (readOnlyRef.current) return;
       setAccuracyMeters(null);
       setLocateError("");
-      emit({ lat, lng, radius: value, source: "map" });
+      emit({ lat, lng, radius: displayRadius, source: "map" });
     },
-    [emit, value]
+    [emit, displayRadius]
   );
 
   /**
@@ -151,22 +183,27 @@ export function GeofenceEditor({
    * because a first-ever pin also needs the camera moved off DEFAULT_CENTER.
    */
   const useCurrentLocation = useCallback(() => {
+    if (readOnlyRef.current) return;
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setLocateError("This device can't share its location. Drag the pin on the map instead.");
       return;
     }
     setLocating(true);
     setLocateError("");
+    const requestId = ++gpsRequestRef.current;
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (requestId !== gpsRequestRef.current) return;
+        setLocating(false);
+        if (readOnlyRef.current) return;
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         setAccuracyMeters(position.coords.accuracy);
-        setLocating(false);
-        emit({ lat, lng, radius: value, source: "gps" });
+        emit({ lat, lng, radius: displayRadius, source: "gps" });
         mapRef.current?.recenter({ lat, lng });
       },
       (positionError) => {
+        if (requestId !== gpsRequestRef.current) return;
         setLocating(false);
         setLocateError(
           positionError.code === positionError.PERMISSION_DENIED
@@ -176,7 +213,7 @@ export function GeofenceEditor({
       },
       GPS_OPTIONS
     );
-  }, [emit, value]);
+  }, [emit, displayRadius]);
 
   function commitAdvanced(nextLat: string, nextLng: string) {
     const lat = Number.parseFloat(nextLat);
@@ -184,13 +221,13 @@ export function GeofenceEditor({
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
     setAccuracyMeters(null);
-    emit({ lat, lng, radius: value, source: "manual" });
+    emit({ lat, lng, radius: displayRadius, source: "manual" });
   }
 
   const latText = latDraft ?? (latitude === null ? "" : String(latitude));
   const lngText = lngDraft ?? (longitude === null ? "" : String(longitude));
 
-  if (locked) {
+  if (locked && !mapPresentation) {
     return (
       <div className={className ? `space-y-3 ${className}` : "space-y-3"}>
         <div className={cardShell}>
@@ -238,10 +275,12 @@ export function GeofenceEditor({
           ref={mapRef}
           latitude={latitude}
           longitude={longitude}
-          radius={value}
+          radius={displayRadius}
+          readOnly={readOnly}
           radiusEditing={radiusEditing}
           onChange={handleMapDrag}
           mapsKeyEndpoint={mapsKeyEndpoint}
+          hideInstructions={hidePinDetails}
         />
       ) : (
         // Lazy-mount: no coordinates yet means nothing to show, and mounting
@@ -255,114 +294,158 @@ export function GeofenceEditor({
         </div>
       )}
 
-      <div className={cardShell}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-slate-900">{pinLabel(hasPin, source, accuracyMeters)}</p>
-            <p className="mt-0.5 text-xs text-slate-600">
-              {hasPin
-                ? "Drag the pin to the door players walk through."
-                : "The geofence runs off this pin, not the street address."}
-            </p>
-            {hasPin ? (
-              <p className="mt-0.5 font-mono text-caption text-slate-400">
-                {latitude.toFixed(5)}, {longitude.toFixed(5)}
-              </p>
-            ) : null}
-          </div>
-          {hasPin ? (
-            <a
-              href={`https://maps.google.com/?q=${latitude},${longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-xs font-semibold text-indigo-600 hover:underline"
-            >
-              Check ↗
-            </a>
-          ) : null}
-        </div>
-
-        <button
-          type="button"
-          onClick={useCurrentLocation}
-          disabled={disabled || locating}
-          className="mt-3 min-h-[48px] w-full rounded-xl border border-indigo-300 bg-indigo-50 px-4 text-sm font-semibold text-indigo-800 disabled:opacity-60"
-        >
-          {locating ? "Getting a fix…" : "📍 Use my current location"}
-        </button>
-        <p className="mt-2 text-xs text-slate-500">
-          Standing inside the venue? Your phone&apos;s location is more accurate than any address lookup.
-        </p>
-        {locateError ? <p className="mt-2 text-xs text-amber-700">{locateError}</p> : null}
-      </div>
-
-      <div className={cardShell}>
-        <span className={adminLabel}>Geofence size *</span>
-        <p className="mb-3 text-xs text-slate-500">
-          How close a player must be to the pin to join. Drag to resize — the circle on the map follows.
-        </p>
-        <RadiusDial
-          radius={value}
-          onChange={handleRadiusChange}
-          onEditingChange={setRadiusEditing}
-          disabled={disabled || !hasPin}
-          min={min}
-          max={max}
-          presets={presets}
-        />
-      </div>
-
-      {hideAdvanced ? null : (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      {locked ? (
+        <div className={hidePinDetails ? undefined : cardShell}>
+          {hidePinDetails ? null : (
+            <>
+              <p className="text-sm font-semibold text-slate-900">{pinLabel(hasPin, source, accuracyMeters)}</p>
+              <p className="mt-0.5 text-xs text-slate-600">Geofence radius: {displayRadius} m</p>
+            </>
+          )}
           <button
+            ref={editButtonRef}
             type="button"
-            onClick={() => setAdvancedOpen((prev) => !prev)}
-            aria-expanded={advancedOpen}
-            aria-controls="geofence-advanced"
-            className="flex min-h-[48px] w-full items-center justify-between px-4 text-left text-sm font-semibold text-slate-700"
+            onClick={() => setLocked(false)}
+            disabled={disabled}
+            aria-expanded={false}
+            aria-controls={controlsId}
+            className={VENUE_LOCATION.editAction}
           >
-            Advanced — exact coordinates
-            <span aria-hidden className="text-slate-400">{advancedOpen ? "▲" : "▼"}</span>
+            Edit location &amp; geofence
           </button>
-          {advancedOpen ? (
-            <div id="geofence-advanced" className="flex gap-3 border-t border-slate-100 px-4 py-4">
-              <div className="flex-1">
-                <label className={adminLabel} htmlFor="geofence-lat">
-                  Latitude
-                </label>
-                <input
-                  id="geofence-lat"
-                  className={`${adminField} min-h-[44px]`}
-                  inputMode="decimal"
-                  disabled={disabled}
-                  value={latText}
-                  onBlur={() => setLatDraft(null)}
-                  onChange={(event) => {
-                    setLatDraft(event.target.value);
-                    commitAdvanced(event.target.value, lngText);
-                  }}
-                />
-              </div>
-              <div className="flex-1">
-                <label className={adminLabel} htmlFor="geofence-lng">
-                  Longitude
-                </label>
-                <input
-                  id="geofence-lng"
-                  className={`${adminField} min-h-[44px]`}
-                  inputMode="decimal"
-                  disabled={disabled}
-                  value={lngText}
-                  onBlur={() => setLngDraft(null)}
-                  onChange={(event) => {
-                    setLngDraft(event.target.value);
-                    commitAdvanced(latText, event.target.value);
-                  }}
-                />
-              </div>
-            </div>
-          ) : null}
         </div>
+      ) : (
+        <>
+          {hidePinDetails ? null : (
+            <div className={cardShell}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{pinLabel(hasPin, source, accuracyMeters)}</p>
+                  <p className="mt-0.5 text-xs text-slate-600">
+                    {hasPin
+                      ? "Drag the pin to the door players walk through."
+                      : "The geofence runs off this pin, not the street address."}
+                  </p>
+                  {hasPin ? (
+                    <p className="mt-0.5 font-mono text-caption text-slate-400">
+                      {latitude.toFixed(5)}, {longitude.toFixed(5)}
+                    </p>
+                  ) : null}
+                </div>
+                {hasPin ? (
+                  <a
+                    href={`https://maps.google.com/?q=${latitude},${longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 text-xs font-semibold text-indigo-600 hover:underline"
+                  >
+                    Check ↗
+                  </a>
+                ) : null}
+              </div>
+
+              <button
+                type="button"
+                onClick={useCurrentLocation}
+                disabled={disabled || locating}
+                className="mt-3 min-h-[48px] w-full rounded-xl border border-indigo-300 bg-indigo-50 px-4 text-sm font-semibold text-indigo-800 disabled:opacity-60"
+              >
+                {locating ? "Getting a fix…" : "📍 Use my current location"}
+              </button>
+              <p className="mt-2 text-xs text-slate-500">
+                Standing inside the venue? Your phone&apos;s location is more accurate than any address lookup.
+              </p>
+              {locateError ? <p className="mt-2 text-xs text-amber-700">{locateError}</p> : null}
+            </div>
+          )}
+
+          <div id={controlsId} className={cardShell}>
+            {mapPresentation && startLocked ? (
+              <div className="flex items-center justify-between gap-3">
+                <span className={adminLabel}>Geofence size *</span>
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => {
+                    restoreEditFocusRef.current = true;
+                    gpsRequestRef.current++;
+                    setLocating(false);
+                    setRadiusEditing(false);
+                    setLocked(true);
+                  }}
+                  className={VENUE_LOCATION.closeAction}
+                >
+                  Close
+                </button>
+              </div>
+            ) : <span className={adminLabel}>Geofence size *</span>}
+            <p className="mb-3 text-xs text-slate-500">
+              How close a player must be to the pin to join. Drag to resize — the circle on the map follows.
+            </p>
+            <RadiusDial
+              radius={value}
+              onChange={handleRadiusChange}
+              onEditingChange={setRadiusEditing}
+              disabled={disabled || !hasPin}
+              min={min}
+              max={max}
+              presets={presets}
+            />
+          </div>
+
+          {hideAdvanced ? null : (
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <button
+                type="button"
+                onClick={() => setAdvancedOpen((prev) => !prev)}
+                aria-expanded={advancedOpen}
+                aria-controls="geofence-advanced"
+                className="flex min-h-[48px] w-full items-center justify-between px-4 text-left text-sm font-semibold text-slate-700"
+              >
+                Advanced — exact coordinates
+                <span aria-hidden className="text-slate-400">{advancedOpen ? "▲" : "▼"}</span>
+              </button>
+              {advancedOpen ? (
+                <div id="geofence-advanced" className="flex gap-3 border-t border-slate-100 px-4 py-4">
+                  <div className="flex-1">
+                    <label className={adminLabel} htmlFor="geofence-lat">
+                      Latitude
+                    </label>
+                    <input
+                      id="geofence-lat"
+                      className={`${adminField} min-h-[44px]`}
+                      inputMode="decimal"
+                      disabled={disabled}
+                      value={latText}
+                      onBlur={() => setLatDraft(null)}
+                      onChange={(event) => {
+                        setLatDraft(event.target.value);
+                        commitAdvanced(event.target.value, lngText);
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className={adminLabel} htmlFor="geofence-lng">
+                      Longitude
+                    </label>
+                    <input
+                      id="geofence-lng"
+                      className={`${adminField} min-h-[44px]`}
+                      inputMode="decimal"
+                      disabled={disabled}
+                      value={lngText}
+                      onBlur={() => setLngDraft(null)}
+                      onChange={(event) => {
+                        setLngDraft(event.target.value);
+                        commitAdvanced(latText, event.target.value);
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

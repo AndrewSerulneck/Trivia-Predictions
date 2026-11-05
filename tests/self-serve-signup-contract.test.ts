@@ -263,7 +263,7 @@ describe("self-serve signup — the Google Maps key split", () => {
     expect(adminSrc, "the authenticated route keeps the fallback").toMatch(FALLBACK_ACCESSOR);
   });
 
-  it("publicBrowserGoogleMapsKey has exactly one definition and one caller", () => {
+  it("publicBrowserGoogleMapsKey has one definition and the signup/owner callers", () => {
     const files = [
       ...collectFiles(join(REPO_ROOT, "app"), /\.tsx?$/),
       ...collectFiles(join(REPO_ROOT, "components"), /\.tsx?$/),
@@ -277,7 +277,7 @@ describe("self-serve signup — the Google Maps key split", () => {
     const callers = files.filter((f) =>
       /publicBrowserGoogleMapsKey\(\)/.test(stripComments(readFileSync(f, "utf8"))),
     );
-    expect(callers.map(rel).sort()).toEqual(["app/api/signup/maps-key/route.ts"]);
+    expect(callers.map(rel).sort()).toEqual(["app/api/owner/maps-key/route.ts", "app/api/signup/maps-key/route.ts"]);
   });
 
   it("GOOGLE_MAPS_BROWSER_KEY is read in exactly one place", () => {
