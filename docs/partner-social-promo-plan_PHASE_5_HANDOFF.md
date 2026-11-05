@@ -119,3 +119,26 @@ If Andrew has sent the Configuration ID: set it in `lib/social/metaConfig.ts` (t
 numeric string), and after his go-ahead apply the migration and help him turn the flag on for the Preview; watch the
 first real posts in Vercel logs (`[SocialInstagram]` lines: kinds and codes only). Fix anything §6 lists as unverified.
 Then Phase 6 (Opus 5.5, high).
+
+## Follow-up, 2026-11-04 (small change after Phase 5: D32–D33)
+
+**For Andrew:** the Share to social sheet is shorter: the "Post to Instagram" box is gone (Share does it on a phone),
+and the bar name / Instagram handle are now tick boxes next to the prize ticks, for that post only. Not committed or
+deployed. **For the next agent:** `components/owner/social/ShareToSocialSheet.tsx` no longer renders
+`InstagramPostPanel` or `ShareDetailsPanel`; it has one "On the picture" list (prizes + name + handle, local state)
+and reads the saved handle via the new `getVenueShareDetails` / saves a first handle via `saveVenueShareDetails`
+(both exported from `components/owner/share/ShareDetailsPanel.tsx`, sharing its cache). The `socialResult` prop and
+the dashboard's `?socialResult` read were removed; the Connect callback still redirects with it (harmless while the
+flag is off). Copy: `pictureHeading` etc. in `lib/promo/promoCopy.ts`. Tests: two new cases in
+`tests/components.share-to-social-sheet.test.ts`; `tests/social-publish-contract.test.ts` now asserts the sheet has
+no `<InstagramPostPanel`. Verified: `npx tsc --noEmit`, eslint on touched files, full `npx vitest run`. Not checked
+in a browser at 350 px. Phases 6–7 on hold (plan D32). If automatic posting is revived, bring the connection back
+as one small option and restore the `socialResult` plumbing.
+
+**Second follow-up, same day (D34):** ticks are labelled; an **Address** tick (from the venue's street/city, added
+read-only to the share-details GET/PATCH reply as `details.address`; `formatShareVenueAddress` moved to
+`lib/venueShareDetails.ts` and re-exported from `lib/socialShare/shareVenue.ts`); a faint "Follow
+@thehightopchallenge" bottom-right on every Post/Story/Reel (`followGroup` in `lib/promo/promoEndCard.ts`, animated in
+with the other end-card rows in `promoReelRender.ts`); the Caption box, Copy caption and clipboard copying are
+removed from the sheet. Verified: tsc, eslint, the six affected test files, and Post + Story rendered in headless
+Chromium (Arial fallback, not Nunito). Reel not watched end to end.

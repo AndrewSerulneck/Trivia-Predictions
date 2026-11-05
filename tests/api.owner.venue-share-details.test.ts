@@ -39,6 +39,10 @@ const ROW = {
   share_show_name: true,
   share_show_address: false,
   share_show_instagram: true,
+  street: "1010 Pacific St, Brooklyn, NY 11238, USA",
+  address: null,
+  city: "Brooklyn",
+  state: "NY",
 };
 
 const patch = (body: unknown) =>
@@ -79,7 +83,13 @@ describe("owner share-details route", () => {
     expect(res.headers.get("Cache-Control")).toBe("no-store");
     expect(await res.json()).toEqual({
       ok: true,
-      details: { instagramHandle: "thepourhouse", showName: true, showAddress: false, showInstagram: true },
+      details: {
+        instagramHandle: "thepourhouse",
+        showName: true,
+        showAddress: false,
+        showInstagram: true,
+        address: "1010 Pacific St · Brooklyn, NY",
+      },
     });
     expect(mocks.eq).toHaveBeenCalledWith("id", "venue-1");
   });

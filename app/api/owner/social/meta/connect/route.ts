@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
 import { isSocialTokenKeyConfigured } from "@/lib/social/crypto";
-import { isSocialPublishEnabled } from "@/lib/social/flags";
+import { isSocialPostNowLive } from "@/lib/social/flags";
 import { META_PARTNER_LOGIN_CONFIG_ID, metaAppSecret, metaAuthorizeUrl, metaRedirectUri } from "@/lib/social/metaConfig";
 import { createSocialOAuthState } from "@/lib/social/oauthState";
 import { redirectToSocialSheet } from "@/lib/social/ownerSocialGuard";
@@ -16,7 +16,7 @@ import { redirectToSocialSheet } from "@/lib/social/ownerSocialGuard";
  * sends the partner to Facebook Login for Business (config_id, User access token configuration).
  */
 export async function GET(request: Request) {
-  if (!isSocialPublishEnabled()) {
+  if (!isSocialPostNowLive()) {
     return NextResponse.json({ ok: false, error: "Not found." }, { status: 404 });
   }
 

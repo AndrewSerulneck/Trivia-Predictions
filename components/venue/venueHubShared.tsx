@@ -112,18 +112,6 @@ export const GAME_TITLE_LINES_BY_KEY: Record<VenueGameKey, string[]> = {
   bracket: BRACKET_TITLE_LINES,
 };
 
-export const VENUE_HUB_TILE_GRADIENT_BY_KEY: Record<VenueGameKey, string> = {
-  live_trivia: "#0891b2",
-  "speed-trivia": "#d97706",
-  bingo: "#059669",
-  pickem: "#4f46e5",
-  fantasy: "#7c3aed",
-  "category-blitz": "#701a75",
-  "nfl-pickem": "#1a2f72",
-  squares: "#15803d",
-  bracket: "#c2410c",
-};
-
 // Plain sentences, not pre-split lines — the tile lets these wrap naturally so
 // each line fills the available width (and clears the corner icon).
 export const VENUE_HUB_TILE_SUBTITLE_BY_KEY: Record<VenueGameKey, string> = {

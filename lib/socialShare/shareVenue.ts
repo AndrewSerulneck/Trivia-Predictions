@@ -1,8 +1,11 @@
 import { getVenueDisplayName } from "@/lib/venueDisplay";
 import { readCachedVenues } from "@/lib/venues";
-import { DEFAULT_VENUE_SHARE_DETAILS, parseInstagramHandle } from "@/lib/venueShareDetails";
+import { DEFAULT_VENUE_SHARE_DETAILS, formatShareVenueAddress, parseInstagramHandle } from "@/lib/venueShareDetails";
 import type { Venue } from "@/types";
 import type { StorySharePayload, StoryShareVenueAddress } from "./contracts";
+
+// Pure, so the server reads it too (Share to social's address tick): lives in lib/venueShareDetails.ts.
+export { formatShareVenueAddress };
 
 /**
  * The bar on a share picture: its name, physical address (street + city, never directions —
@@ -31,33 +34,11 @@ export type ShareVenueChoice = ShareVenue | "unknown";
 /** What storage knows: the venue and whether it is recent enough to share without re-reading. */
 export type StoredShareVenue = { venue: ShareVenue; fresh: boolean };
 
-type VenueAddressFields = Pick<Venue, "street" | "address" | "city" | "state">;
-
 // v3 (9f.4): adds `savedAt`; a v2 entry (no date, so no way to tell its age) is ignored and re-read.
 const STORAGE_KEY = "htc_share_venue_v3";
 
 /** A remembered venue older than this is re-read when the share sheet opens (Andrew's note, 9f.4). */
 export const SHARE_VENUE_FRESH_MS = 10 * 60 * 1000;
-
-const clean = (value: string | null | undefined): string | null => {
-  const text = (value ?? "").replace(/\s+/g, " ").trim();
-  return text || null;
-};
-
-/**
- * "1010 Pacific St" + "Brooklyn, NY". Some venues store the whole formatted address in
- * `street` ("1010 Pacific St, Brooklyn, NY 11238, USA"), so only the part before the first
- * comma is the street. No street and no city → null (the picture shows the name only).
- */
-export const formatShareVenueAddress = (venue: VenueAddressFields): StoryShareVenueAddress | null => {
-  const streetSource = clean(venue.street) ?? clean(venue.address);
-  const street = clean(streetSource?.split(",")[0]);
-  const city = clean(venue.city);
-  const state = clean(venue.state);
-  const locality = city ? (state ? `${city}, ${state}` : city) : null;
-  if (!street && !locality) return null;
-  return { street, locality };
-};
 
 export const toShareVenue = (venue: Venue): ShareVenue => {
   const handle = parseInstagramHandle(venue.instagramHandle);

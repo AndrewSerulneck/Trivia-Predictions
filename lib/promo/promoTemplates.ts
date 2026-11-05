@@ -16,9 +16,9 @@ export type PromoTemplate = {
   game: PromoGameId;
   /** The game's on-screen name: "Live Trivia". */
   name: string;
-  /** The big title, one or two lines, upper case. With two lines the first is in the accent colour. */
+  /** The big title, one or two lines, upper case. The game's theme styles it (lib/promo/promoThemes.ts). */
   titleLines: readonly [string] | readonly [string, string];
-  /** The design's one accent (title, time, @handle, call to action). Canvas colour, not a CSS token. */
+  /** The design's accent, used by the Reel's beats (drumroll ring, confetti). Canvas colour, not a CSS token. */
   accent: string;
   /** The schedule engine this game is scheduled through, or null when partners don't schedule it. */
   scheduleGameType: OwnerScheduleGameType | null;
@@ -71,7 +71,8 @@ export const PROMO_TEMPLATES: readonly PromoTemplate[] = [
     game: "pickem",
     name: "Pick 'Em",
     titleLines: ["PICK 'EM"],
-    accent: "#818CF8",
+    // Gold, as the approved game theme (docs/game-themes-plan.md G1).
+    accent: "#FACC15",
     scheduleGameType: null,
     prizeGameTypes: ["pickem"],
     standingWhen: "Make your picks every week",
@@ -95,7 +96,7 @@ export const PROMO_TEMPLATES: readonly PromoTemplate[] = [
     game: "squares",
     name: SQUARES_GAME_NAME,
     titleLines: [SQUARES_EVENT_NAME.toUpperCase(), "SQUARES"],
-    accent: "#4ADE80",
+    accent: "#FBBF24",
     scheduleGameType: null,
     prizeGameTypes: ["squares"],
     standingWhen: "Claim your square",

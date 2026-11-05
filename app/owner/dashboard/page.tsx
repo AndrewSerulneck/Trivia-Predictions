@@ -162,9 +162,6 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
   const [scheduleForReward, setScheduleForReward] = useState(false);
   // What Share to social opens on: the game or prize just created (from the toast), else the first game.
   const [socialFocus, setSocialFocus] = useState<PromoFocus | null>(null);
-  // Set by the Connect Instagram redirect (lib/social/ownerSocialGuard.ts); shown only for the venue it was for.
-  const searchParams = useSearchParams();
-  const socialResult = searchParams.get("socialVenue") === venueId ? searchParams.get("socialResult") : null;
   // The row just saved gets a ring for HIGHLIGHT_MS; `pendingHighlight` waits for the refetch that contains it.
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [pendingHighlight, setPendingHighlight] = useState<PendingRing | null>(null);
@@ -396,7 +393,6 @@ const DashboardBody = ({ venueId, venueName, initial = null, onReady, posNeedsAt
         rewards={rewards}
         nowMs={gamesAsOfMs}
         focus={socialFocus}
-        socialResult={socialResult}
       />
     </div>
   );

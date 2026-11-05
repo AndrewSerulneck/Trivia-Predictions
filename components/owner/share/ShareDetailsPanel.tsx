@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from "react";
 import {
+  cachedVenueShareDetails,
+  fetchVenueShareDetails,
+  patchVenueShareDetails,
+  type ShareDetailsHost,
+} from "@/lib/venueShareDetailsClient";
+import {
   parseInstagramHandle,
   SHARE_DETAILS_COPY as COPY,
   shareDetailsSummary,
@@ -14,37 +20,10 @@ import {
 // sheet's Review, the Prize wizard's Confirm (owner variant only), Game Settings — and the
 // admin venue form. It saves on its own: the venue setting is not part of the game or prize.
 //
-// Cost: one GET per venue per page visit (cached below, refreshed by a save), none on the
+// Cost: one GET per venue per page visit (cached in lib/venueShareDetailsClient.ts, refreshed by a save), none on the
 // player side.
 
-type Host = "owner" | "admin";
-
-const ENDPOINTS: Record<Host, string> = {
-  owner: "/api/owner/venues/share-details",
-  admin: "/api/admin/venues/share-details",
-};
-
-type Reply = { ok: boolean; details?: VenueShareDetails; error?: string };
-
-// Survives the step remounts inside a sheet (SlideSteps), so revisiting Review doesn't refetch.
-const cache = new Map<string, VenueShareDetails>();
-const inFlight = new Map<string, Promise<VenueShareDetails>>();
-
-const loadDetails = (host: Host, venueId: string): Promise<VenueShareDetails> => {
-  const key = `${host}:${venueId}`;
-  const pending = inFlight.get(key);
-  if (pending) return pending;
-  const request = fetch(`${ENDPOINTS[host]}?venueId=${encodeURIComponent(venueId)}`, { cache: "no-store" })
-    .then(async (res) => {
-      const reply = (await res.json().catch(() => ({ ok: false }))) as Reply;
-      if (!reply.ok || !reply.details) throw new Error(reply.error ?? COPY.loadFailed);
-      cache.set(key, reply.details);
-      return reply.details;
-    })
-    .finally(() => inFlight.delete(key));
-  inFlight.set(key, request);
-  return request;
-};
+type Host = ShareDetailsHost;
 
 type Draft = { handle: string; showName: boolean; showAddress: boolean; showInstagram: boolean };
 
@@ -113,7 +92,7 @@ export const ShareDetailsPanel = ({
   const t = TONES[tone];
   const key = `${host}:${venueId}`;
   const [loaded, setLoaded] = useState<{ key: string; details: VenueShareDetails } | null>(() => {
-    const cached = cache.get(key);
+    const cached = cachedVenueShareDetails(venueId, host);
     return cached ? { key, details: cached } : null;
   });
   const [loadError, setLoadError] = useState<{ key: string; message: string } | null>(null);
@@ -124,7 +103,7 @@ export const ShareDetailsPanel = ({
   const [attempt, setAttempt] = useState(0);
 
   // The module cache outlives this component, so a venue seen before (A → B → A) shows at once.
-  const details = (loaded?.key === key ? loaded.details : null) ?? cache.get(key) ?? null;
+  const details = (loaded?.key === key ? loaded.details : null) ?? cachedVenueShareDetails(venueId, host);
   const error = loadError?.key === key ? loadError.message : null;
   const draft = draftState?.key === key ? draftState.draft : null;
   const message = messageState?.key === key ? messageState : null;
@@ -133,9 +112,9 @@ export const ShareDetailsPanel = ({
     setMessageState(next ? { key, ...next } : null);
 
   useEffect(() => {
-    if (!venueId || cache.has(key)) return;
+    if (!venueId || cachedVenueShareDetails(venueId, host)) return;
     let cancelled = false;
-    loadDetails(host, venueId).then(
+    fetchVenueShareDetails(venueId, host).then(
       (next) => {
         if (!cancelled) setLoaded({ key, details: next });
       },
@@ -185,21 +164,17 @@ export const ShareDetailsPanel = ({
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch(ENDPOINTS[host], {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          venueId: savingVenueId,
+      const saved = await patchVenueShareDetails(
+        savingVenueId,
+        {
           instagramHandle: handle.handle,
           showName: draft.showName,
           showAddress: draft.showAddress,
           showInstagram: draft.showInstagram,
-        }),
-      });
-      const reply = (await res.json().catch(() => ({ ok: false }))) as Reply;
-      if (!reply.ok || !reply.details) throw new Error(reply.error ?? COPY.saveFailed);
-      cache.set(savingKey, reply.details);
-      setLoaded({ key: savingKey, details: reply.details });
+        },
+        host,
+      );
+      setLoaded({ key: savingKey, details: saved });
       setDraftState((cur) => (cur?.key === savingKey ? null : cur));
       setMessageState({ key: savingKey, kind: "ok", text: COPY.saved });
     } catch (err) {

@@ -3,6 +3,7 @@
 // off. It applies to every share from the venue — every game and every prize, including ones
 // added later — because it is applied once, in `applyShareVenue` (lib/socialShare/shareVenue.ts).
 // Pure: shared by the partner panel, the owner/admin routes and the player side.
+import type { StoryShareVenueAddress } from "@/lib/socialShare/contracts";
 
 export type VenueShareDetails = {
   /** Stored without the "@"; null = none set. */
@@ -11,6 +12,11 @@ export type VenueShareDetails = {
   showAddress: boolean;
   /** Only does anything when a handle is set. */
   showInstagram: boolean;
+  /**
+   * Read-only, from the venue's location: "1010 Pacific St · Brooklyn, NY", null = none. Sent by the
+   * GET/PATCH replies for Share to social's address tick; never saved through share details.
+   */
+  address?: string | null;
 };
 
 /** The database defaults: today's pictures (name + address), no handle. */
@@ -48,6 +54,42 @@ export const parseInstagramHandle = (input: string | null | undefined): Instagra
   }
   candidate = candidate.replace(/^@/, "");
   return HANDLE_PATTERN.test(candidate) ? { ok: true, handle: candidate } : { ok: false, error: INSTAGRAM_HANDLE_INVALID_MESSAGE };
+};
+
+// ── The bar's address on a picture (shared by players' share pictures and Share to social) ──
+
+export type VenueAddressFields = {
+  street?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+};
+
+const clean = (value: string | null | undefined): string | null => {
+  const text = (value ?? "").replace(/\s+/g, " ").trim();
+  return text || null;
+};
+
+/**
+ * "1010 Pacific St" + "Brooklyn, NY". Some venues store the whole formatted address in
+ * `street` ("1010 Pacific St, Brooklyn, NY 11238, USA"), so only the part before the first
+ * comma is the street. No street and no city → null (the picture shows the name only).
+ */
+export const formatShareVenueAddress = (venue: VenueAddressFields): StoryShareVenueAddress | null => {
+  const streetSource = clean(venue.street) ?? clean(venue.address);
+  const street = clean(streetSource?.split(",")[0]);
+  const city = clean(venue.city);
+  const state = clean(venue.state);
+  const locality = city ? (state ? `${city}, ${state}` : city) : null;
+  if (!street && !locality) return null;
+  return { street, locality };
+};
+
+/** "1010 Pacific St · Brooklyn, NY", or null when the venue has no street and no city. */
+export const formatVenueAddressLine = (venue: VenueAddressFields): string | null => {
+  const parts = formatShareVenueAddress(venue);
+  if (!parts) return null;
+  return [parts.street, parts.locality].filter(Boolean).join(" · ");
 };
 
 /** "@thepourhouse" — how a handle is shown everywhere. */

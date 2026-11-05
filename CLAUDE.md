@@ -21,6 +21,16 @@
 > **Branch rule (2026-10-30):** while the App Store review is open, new work goes on `after-app-review`; never push
 > `main`, `supabase db push`, or change Production env until Andrew confirms approval.
 
+## Model and effort per phase (all coding agents)
+Every multi-phase plan has a table naming each phase's **model and effort level**, with a one-line reason. The model
+matches the agent that will do the phase: a **Claude model when it's Claude** (Andrew's default, so name one when
+unsure), otherwise that agent's own model and effort setting (Codex, Gemini, Cursor, …). The agent doing a phase uses
+the named model, or the equivalent tier of its own family if the plan names another family's, and says so in its
+handoff note if it can't. A new plan can't be finished without the table. Defaults by tier: **top / high** (Claude:
+Opus 5.5) for auth, money, migrations, data changes, shared renderers or engines, or a design that spans several
+files. **Mid / medium** (Claude: Sonnet 5.5) for well-specified UI, copy and tests. **Small / low** (Claude: Haiku 5.5)
+for mechanical edits and doc-only phases. Give a reason for any departure from these.
+
 ## Build and Test Commands
 - Dev server: `npm run dev` (Andrew runs it on :3000 — never use it for tests that write data; never `pkill next`)
 - Build: `npm run build` · Lint: `npm run lint` · Tests: `npm run test` (Vitest)
@@ -113,4 +123,5 @@
 | Fonts | `docs/nunito-typography-update-2026-10-24.md` | Nunito only, via tokens. |
 | PWA / bingo landscape | `docs/bingo-fullscreen-pwa-plan.md` | No service worker ever; manifest `start_url` stays `/`, no `orientation`. Run `npm run test:pwa-contract`. |
 | Super Bowl Squares + March Madness Bracket | `docs/squares-and-brackets-plan.md` | Seasonal points only via `creditSeasonalPoints`; prize cycle keys only via their helper. |
+| Game themes (Venue Home buttons, Share to social looks) | `docs/game-themes-plan.md` | Every Venue Home game = one `GAME_TILE_THEMES` entry; every Share to social game (`PromoGameId`) = one `PROMO_THEMES` entry; a theme styles the name, never rewords it; vector art only, no logos. |
 | Share to social (partner posts / Reels) | `docs/partner-social-promo-plan.md` | A new schedulable game or prize challenge needs a Share to social design too (`lib/promo/promoTemplates.ts`); prizes ride on the game's design. |

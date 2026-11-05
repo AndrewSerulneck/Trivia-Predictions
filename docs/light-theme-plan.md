@@ -67,7 +67,8 @@ Decisions by the plan (Andrew can overrule in §6):
 
 4a. **Dark stays pixel-identical.** Converting a screen to named colours must not change a single dark
    pixel. Verified by before/after screenshot diffs (Phase 2 builds the harness).
-5. **Venue Home game tiles keep their solid colours** in light (`VENUE_HUB_TILE_GRADIENT_BY_KEY`). They are
+5. **Venue Home game tiles keep their solid colours** in light (since 2026-11-04 each tile's theme in
+   `components/game-themes/gameTileThemes.tsx`, `docs/game-themes-plan.md`; was `VENUE_HUB_TILE_GRADIENT_BY_KEY`). They are
    the brightest, most recognisable thing on the screen and already read well on a light page.
 6. **Out of scope:** the other games, `/owner/*` (Partner Dashboard has its own light sheets), `/admin`
    (already light), the TV display, the prize gift card (`PRIZE_CARD`), Redeem Prizes, Activity, the join

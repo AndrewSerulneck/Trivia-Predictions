@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
+import { SOCIAL_POST_COPY } from "@/lib/promo/promoCopy";
 import { reelCoverMs, reelPlan } from "@/lib/promo/promoReel";
 import { PROMO_MUSIC } from "@/lib/promo/promoSounds";
 import { PROMO_TEMPLATES } from "@/lib/promo/promoTemplates";
 import { guardOwnerSocialVenue, socialJsonError } from "@/lib/social/ownerSocialGuard";
-import { loadInstagramConnection } from "@/lib/social/socialConnections";
-import { createInstagramPost, postsLeftToday } from "@/lib/social/socialPosts";
+import { loadConnection } from "@/lib/social/socialConnections";
+import { createSocialPost, postsLeftToday } from "@/lib/social/socialPosts";
 import { isSocialPostFormat, socialCaptionProblem, socialMaxBytes } from "@/lib/social/socialPublishRules";
-import type { CreateSocialPostResponse } from "@/lib/social/socialTypes";
+import { providerSupportsFormat, type CreateSocialPostResponse } from "@/lib/social/socialTypes";
 
 /**
- * POST /api/owner/social/posts — step 1 of "Post now" (docs/partner-social-promo-plan.md Phase 5).
- * Body: CreateSocialPostBody. Checks the venue's Instagram connection is active, the daily cap, the
+ * POST /api/owner/social/posts — step 1 of "Post now" (docs/partner-social-promo-plan.md Phases 5–6).
+ * Body: CreateSocialPostBody, `provider` "instagram" or "facebook" (Facebook: Post or Reel, no Story).
+ * Checks the venue's connection for that provider is active, the daily cap, the
  * caption and the file size, makes the social_posts row and answers a signed upload path + token for
  * the PRIVATE social-media bucket. The browser uploads the file straight to storage (never through
  * Vercel), then calls POST /api/owner/social/posts/[id]/publish.
@@ -34,27 +36,29 @@ export async function POST(request: Request) {
   const caption = typeof body?.caption === "string" ? body.caption.trim() : "";
   const byteSize = typeof body?.byteSize === "number" ? body.byteSize : 0;
 
-  if (body?.provider !== "instagram") return socialJsonError(400, "Only Instagram is supported.");
+  const provider = body?.provider;
+  if (provider !== "instagram" && provider !== "facebook") return socialJsonError(400, "Pick Instagram or Facebook.");
   if (!isSocialPostFormat(format)) return socialJsonError(400, "Pick Post, Story or Reel.");
+  if (!providerSupportsFormat(provider, format)) return socialJsonError(400, "Facebook Stories can't be posted from here. Pick Post or Reel.", "format");
   if (!PROMO_TEMPLATES.some((template) => template.game === templateId)) return socialJsonError(400, "Unknown design.");
-  const captionProblem = socialCaptionProblem(caption);
+  const captionProblem = socialCaptionProblem(caption, provider);
   if (captionProblem) return socialJsonError(400, captionProblem, "caption");
   if (!(byteSize > 0 && byteSize <= socialMaxBytes(format))) {
     return socialJsonError(413, format === "reel" ? "This Reel is too large to post." : "This picture is too large to post.", "too_large");
   }
 
   try {
-    const connection = await loadInstagramConnection(venueId);
+    const connection = await loadConnection(venueId, provider);
+    const name = SOCIAL_POST_COPY.providers[provider];
     if (!connection || connection.status !== "active") {
-      return socialJsonError(409, "Connect Instagram first.", connection?.status === "reconnect_needed" ? "reconnect" : "not_connected");
+      return socialJsonError(409, `Connect ${name} first.`, connection?.status === "reconnect_needed" ? "reconnect" : "not_connected");
     }
     if ((await postsLeftToday(venueId)) <= 0) {
       return socialJsonError(429, "You've reached today's limit for Post now. Try again tomorrow, or Share it yourself.", "daily_cap");
     }
-    const created = await createInstagramPost({
+    const input = {
       venueId,
       ownerId: gate.auth.ownerId,
-      connection,
       format,
       templateId,
       scheduleId,
@@ -62,11 +66,12 @@ export async function POST(request: Request) {
       musicId,
       caption,
       coverMs: format === "reel" ? reelCoverMs(reelPlan(body?.withPrize === true)) : null,
-    });
+    };
+    const created = await createSocialPost({ ...input, connection });
     const response: CreateSocialPostResponse = { ok: true, ...created };
     return NextResponse.json(response);
   } catch (error) {
-    console.error("[SocialInstagram] create-failed", { venueId, error: error instanceof Error ? error.message : "unknown" });
+    console.error("[SocialPost] create-failed", { venueId, error: error instanceof Error ? error.message : "unknown" });
     return socialJsonError(500, "Couldn't start the post. Please try again.");
   }
 }

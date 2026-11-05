@@ -254,9 +254,10 @@ describe("Venue Home tiles", () => {
       }),
     );
     expect(html).toContain('data-venue-game-card="squares"');
-    expect(html).toContain("Super Bowl<br/>Squares");
+    // Each line is its own styled span in the game's theme (components/game-themes/gameTileThemes.tsx).
+    expect(html).toMatch(/>Super Bowl<\/span><span[^>]*>Squares</);
     expect(html).toContain("Claim your squares for the big game.");
-    expect(html).toContain("March<br/>Madness");
+    expect(html).toMatch(/>March<\/span><span[^>]*>Madness</);
     expect(html).toContain("Brackets open Selection Sunday, March 14.");
     expect(html).not.toContain("Fill out your bracket and take on the whole bar.");
   });

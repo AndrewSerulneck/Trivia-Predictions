@@ -1,4 +1,4 @@
-import type { StoryFill, StoryImageBlock, StoryRenderSpec, StoryShapeBlock, StoryTextBlock } from "./contracts";
+import type { StoryBlocks, StoryFill, StoryImageBlock, StoryRenderSpec, StoryShapeBlock, StoryTextBlock, StoryTransform } from "./contracts";
 
 export type StoryCanvasErrorCode =
   | "missing-video-dimensions"
@@ -287,13 +287,22 @@ function fitTextBlock(context: CanvasRenderingContext2D, block: StoryTextBlock):
   return { ...block, font };
 }
 
+/** Canvas `letterSpacing` where the browser has it (Safari 18.4+, Chrome 99+); a no-op elsewhere. */
+function setLetterSpacing(context: CanvasRenderingContext2D, px: number | undefined): void {
+  if (!px) return;
+  const spaced = context as CanvasRenderingContext2D & { letterSpacing?: string };
+  if ("letterSpacing" in spaced) spaced.letterSpacing = `${px}px`;
+}
+
 function drawTextBlock(context: CanvasRenderingContext2D, sourceBlock: StoryTextBlock): void {
   context.save();
+  setLetterSpacing(context, sourceBlock.letterSpacing);
   const block = fitTextBlock(context, sourceBlock);
   context.font = block.font;
   context.fillStyle = block.color;
   context.textAlign = block.align ?? "left";
   context.textBaseline = block.baseline ?? "alphabetic";
+  if (block.opacity != null) context.globalAlpha *= block.opacity;
   if (block.shadowColor) {
     context.shadowColor = block.shadowColor;
     context.shadowBlur = block.shadowBlur ?? 0;
@@ -308,17 +317,31 @@ function drawTextBlock(context: CanvasRenderingContext2D, sourceBlock: StoryText
     ? block.y
     : block.centerY - (lineHeight * (lines.length - 1)) / 2 + (fontPx(block.font) ?? 0) * 0.35;
 
+  // Letter spacing is added after every letter, the last one too: shift centred/right text back.
+  const spacing = block.letterSpacing ?? 0;
+  const align = block.align ?? "left";
+  const shift = align === "center" ? spacing / 2 : align === "right" || align === "end" ? spacing : 0;
+  let x = block.x + shift;
+  let y = startY;
+  if (block.rotate) {
+    const pivotY = block.centerY ?? block.y;
+    context.translate(block.x, pivotY);
+    context.rotate(block.rotate);
+    x = shift;
+    y = startY - pivotY;
+  }
+
   if (block.strokeColor && block.strokeWidth && block.strokeWidth > 0) {
     context.strokeStyle = block.strokeColor;
     context.lineWidth = block.strokeWidth;
     context.lineJoin = "round";
     lines.forEach((line, index) => {
-      context.strokeText(line, block.x, startY + lineHeight * index, block.maxWidth);
+      context.strokeText(line, x, y + lineHeight * index, block.maxWidth);
     });
   }
 
   lines.forEach((line, index) => {
-    context.fillText(line, block.x, startY + lineHeight * index, block.maxWidth);
+    context.fillText(line, x, y + lineHeight * index, block.maxWidth);
   });
   context.restore();
 }
@@ -365,16 +388,45 @@ function fillStyleOf(context: CanvasRenderingContext2D, fill: StoryFill): string
   return gradient;
 }
 
+function applyTransform(context: CanvasRenderingContext2D, transform: StoryTransform): void {
+  context.translate(transform.x, transform.y);
+  if (transform.rotate) context.rotate(transform.rotate);
+  const scale = transform.scale ?? 1;
+  const scaleY = transform.scaleY ?? scale;
+  if (scale !== 1 || scaleY !== 1) context.scale(scale, scaleY);
+}
+
+const canDrawPaths = (): boolean => typeof Path2D !== "undefined";
+
 function drawShape(context: CanvasRenderingContext2D, shape: StoryShapeBlock): void {
+  if ((shape.path || shape.clip) && !canDrawPaths()) return;
   context.save();
+  if (shape.opacity != null) context.globalAlpha *= shape.opacity;
+  if (shape.transform) applyTransform(context, shape.transform);
+  if (shape.clip) context.clip(new Path2D(shape.clip));
   if (shape.shadowColor) {
     context.shadowColor = shape.shadowColor;
     context.shadowBlur = shape.shadowBlur ?? 0;
     context.shadowOffsetY = shape.shadowOffsetY ?? 0;
   }
-  context.fillStyle = fillStyleOf(context, shape.fill);
-  roundedRectPath(context, shape.x, shape.y, shape.width, shape.height, shape.radius ?? 0);
-  context.fill();
+  const path = shape.path ? new Path2D(shape.path) : null;
+  if (!path) roundedRectPath(context, shape.x, shape.y, shape.width, shape.height, shape.radius ?? 0);
+  if (shape.fill) {
+    context.fillStyle = fillStyleOf(context, shape.fill);
+    if (path) context.fill(path);
+    else context.fill();
+  }
+  if (shape.stroke) {
+    // One shadow per shape, as a CSS box-shadow: the fill cast it already.
+    if (shape.fill) context.shadowColor = "transparent";
+    context.strokeStyle = shape.stroke.color;
+    context.lineWidth = shape.stroke.width;
+    context.lineCap = shape.stroke.cap ?? "butt";
+    context.lineJoin = shape.stroke.join ?? "miter";
+    if (shape.stroke.dash) context.setLineDash(shape.stroke.dash);
+    if (path) context.stroke(path);
+    else context.stroke();
+  }
   context.restore();
 }
 
@@ -418,6 +470,15 @@ export async function loadCanvasFonts(fonts: string[]): Promise<void> {
   ]);
 }
 
+/** A spec's decoration layer: its shapes, then its text (fonts already resolved). */
+function paintBackdrop(context: CanvasRenderingContext2D, backdrop: StoryBlocks): void {
+  for (const shape of backdrop.shapes) drawShape(context, shape);
+  for (const block of backdrop.textBlocks) drawTextBlock(context, block);
+}
+
+const resolveBlocks = (blocks: readonly StoryTextBlock[]): StoryTextBlock[] =>
+  blocks.map((block) => ({ ...block, font: resolveCanvasFont(block.font) }));
+
 /**
  * Draws ready-made design blocks onto a canvas you already have, synchronously: no photo, frame or
  * images, fonts already loaded and resolved (`resolveCanvasFont`). The Share to social Reel draws its
@@ -426,12 +487,20 @@ export async function loadCanvasFonts(fonts: string[]): Promise<void> {
  */
 export function paintStoryBlocks(
   context: CanvasRenderingContext2D,
-  blocks: { background?: StoryFill | null; width?: number; height?: number; shapes?: readonly StoryShapeBlock[]; textBlocks?: readonly StoryTextBlock[] }
+  blocks: {
+    background?: StoryFill | null;
+    width?: number;
+    height?: number;
+    backdrop?: StoryBlocks | null;
+    shapes?: readonly StoryShapeBlock[];
+    textBlocks?: readonly StoryTextBlock[];
+  }
 ): void {
   if (blocks.background && blocks.width && blocks.height) {
     context.fillStyle = fillStyleOf(context, blocks.background);
     context.fillRect(0, 0, blocks.width, blocks.height);
   }
+  if (blocks.backdrop) paintBackdrop(context, blocks.backdrop);
   for (const shape of blocks.shapes ?? []) drawShape(context, shape);
   for (const block of blocks.textBlocks ?? []) drawTextBlock(context, block);
 }
@@ -451,12 +520,13 @@ export async function renderStoryImage({
         return calculateCoverCrop(dimensions.width, dimensions.height, spec.width, spec.height);
       })()
     : null;
-  const textBlocks = spec.textBlocks.map((block) => ({ ...block, font: resolveCanvasFont(block.font) }));
+  const textBlocks = resolveBlocks(spec.textBlocks);
+  const backdrop = spec.backdrop ? { shapes: spec.backdrop.shapes, textBlocks: resolveBlocks(spec.backdrop.textBlocks) } : null;
   const imageBlocks = spec.images ?? [];
   const sources = [...new Set([...(spec.frameAssetUrl ? [spec.frameAssetUrl] : []), ...imageBlocks.map((block) => block.src)])];
   const [loaded] = await Promise.all([
     Promise.all(sources.map(async (src) => [src, await loadImageAsset(src)] as const)),
-    loadCanvasFonts(textBlocks.map((block) => block.font)),
+    loadCanvasFonts([...textBlocks, ...(backdrop?.textBlocks ?? [])].map((block) => block.font)),
   ]);
   const images = new Map(loaded);
 
@@ -471,6 +541,7 @@ export async function renderStoryImage({
     const frameImage = images.get(spec.frameAssetUrl);
     if (frameImage) context.drawImage(frameImage, 0, 0, spec.width, spec.height);
   }
+  if (backdrop) paintBackdrop(context, backdrop);
   for (const shape of spec.shapes ?? []) {
     drawShape(context, shape);
   }

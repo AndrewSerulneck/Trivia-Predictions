@@ -3,15 +3,12 @@
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 
 import React from "react";
-import Image from "next/image";
 import { InviteFriendButton } from "@/components/social-share/InviteFriendButton";
 import { PushPermissionCard } from "@/components/push/PushPermissionCard";
 import type { VenueGameCardConfig, VenueGameKey } from "@/lib/venueGameCards";
+import { GAME_TILE_THEMES, gameTileTitleLines } from "@/components/game-themes/gameTileThemes";
 import {
   formatBadgeCount,
-  GAME_CARD_ICON_BY_KEY,
-  GAME_TITLE_LINES_BY_KEY,
-  VENUE_HUB_TILE_GRADIENT_BY_KEY,
   VENUE_HUB_TILE_SUBTITLE_BY_KEY,
   VENUE_HUB_TILE_TEASER_BY_KEY,
   type LiveTriviaStatus,
@@ -184,72 +181,55 @@ function VenueGamesPanelInner({
               const isCategoryBlitzLive = card.key === "category-blitz" && categoryBlitzSessionActive;
               const statusLabel = (isLiveTriviaCard && liveTriviaStatus.live) || isCategoryBlitzLive ? "LIVE" : null;
               const subtitle = (teaserGames.has(card.key) && VENUE_HUB_TILE_TEASER_BY_KEY[card.key]) || VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key];
+              // The game's theme (components/game-themes/gameTileThemes.tsx, docs/game-themes-plan.md).
+              const theme = GAME_TILE_THEMES[card.key];
               return (
                 <button
                   key={card.key}
                   type="button"
-                    onClick={(event) => {
+                  onClick={(event) => {
                     onGoTo(card.key, event.currentTarget);
                   }}
                   disabled={pendingDestination !== null}
                   data-venue-game-card={card.key}
-                  className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button tp-game-card-btn group relative w-full overflow-hidden rounded-[22px] border border-white/75 text-left shadow-ht-tile ${isOpening ? "is-opening" : ""}`)}
-                  style={{ background: VENUE_HUB_TILE_GRADIENT_BY_KEY[card.key] }} aria-busy={isOpening}
+                  className={`tp-player-hit-target tp-player-pressable tp-clean-button tp-game-card-btn group relative block w-full overflow-hidden rounded-[22px] text-left text-white shadow-ht-tile [container-type:inline-size] ${theme.surfaceClass} ${isOpening ? "is-opening" : ""}`}
+                  aria-busy={isOpening}
                 >
-                  {isOpening ? <span role="status" className="absolute bottom-2 right-3 z-10 inline-flex items-center gap-2 text-sm font-black"><ButtonSpinner /> Opening…</span> : null}
-                  <div className="relative flow-root min-h-[190px] p-4">
-                    {/* One text flow wraps beside the artwork, then uses the full width below it. */}
-                    {(() => {
-                      const icon = GAME_CARD_ICON_BY_KEY[card.key];
-                      if (!icon) return null;
-                      return (
-                        <Image
-                          src={icon.src}
-                          alt=""
-                          width={icon.width}
-                          height={icon.height}
-                          className="pointer-events-none float-right mb-2 ml-3 aspect-square h-auto w-1/4 max-w-[5.5rem] object-contain drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]"
-                        />
-                      );
-                    })()}
-                    <div
-                      className="text-[2rem] font-black uppercase leading-[0.95] text-white"
-                      style={{
-                        fontFamily: "var(--ht-font-display)",
-                        letterSpacing: "0.045em",
-                        textShadow: "0 1px 0 rgba(12,18,28,.8), 0 3px 0 rgba(12,18,28,.58)",
-                      }}
-                    >
-                      {GAME_TITLE_LINES_BY_KEY[card.key][0]}
-                      <br />
-                      {GAME_TITLE_LINES_BY_KEY[card.key][1]}
-                    </div>
+                  {theme.backdrop}
+                  <span className="relative grid min-h-[176px] grid-cols-[minmax(0,1fr)_min(40%,170px)] items-center">
+                    <span className="block py-4 pl-4 pr-1">
+                      {theme.renderTitle(gameTileTitleLines(card.key))}
+                      {isCategoryBlitzLive ? (
+                        <>
+                          <span className="mt-2 block text-[clamp(15px,4.8cqw,18px)] font-black uppercase tracking-[0.1em] text-amber-100">
+                            Group game in progress!
+                          </span>
+                          <span className="mt-1 block text-[clamp(15px,4.6cqw,18px)] font-semibold leading-snug text-amber-50/90">
+                            {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+                          </span>
+                        </>
+                      ) : (
+                        <span className={`mt-2 block text-[clamp(15px,4.6cqw,18px)] font-bold leading-snug text-white/95 ${theme.subtitleClass ?? ""}`}>
+                          {subtitle}
+                        </span>
+                      )}
+                    </span>
+                    <span aria-hidden="true" className="pointer-events-none flex items-center justify-end self-stretch">
+                      {theme.art}
+                    </span>
+                  </span>
 
-                    {isCategoryBlitzLive ? (
-                      <div className="mt-3">
-                        <p className="text-[20px] font-black uppercase tracking-[0.12em] text-amber-100">
-                          Group game in progress!
-                        </p>
-                        <p className="mt-1 text-[19px] font-semibold leading-snug text-amber-50/90">
-                          {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="mt-3 text-[19px] font-bold leading-snug text-white/95">
-                        {subtitle}
-                      </div>
-                    )}
-                  </div>
+                  {isOpening ? <span role="status" className="absolute bottom-2 right-3 z-10 inline-flex items-center gap-2 rounded-full bg-black/45 px-3 py-1 text-sm font-black"><ButtonSpinner /> Opening…</span> : null}
 
                   {statusLabel ? (
-                    <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-caption font-black uppercase tracking-[0.12em] text-rose-200">
+                    <span className="absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-caption font-black uppercase tracking-[0.12em] text-rose-200">
                       <span className="h-[7px] w-[7px] rounded-full bg-rose-500" />
                       {statusLabel}
                     </span>
                   ) : null}
 
                   {badge ? (
-                    <span className="absolute right-2 top-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-caption font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">
+                    <span className="absolute right-2 top-2 z-10 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-caption font-black leading-none text-white shadow-[0_2px_8px_rgba(15,23,42,0.45)]">
                       {badge}
                     </span>
                   ) : null}

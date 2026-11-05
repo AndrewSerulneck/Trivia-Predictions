@@ -28,7 +28,7 @@ export const META_GRAPH_VERSION = "v26.0";
 
 /**
  * What the configuration asks for (Andrew, 2026-11-04: both Instagram and the Page in one login, so
- * Phase 6 needs no reconnect). Phase 5 REQUIRES the first four; pages_manage_posts is for Phase 6.
+ * Phase 6 needs no reconnect). Instagram needs the first four; the Facebook Page needs the last three.
  */
 export const META_LOGIN_PERMISSIONS = [
   "instagram_basic",
@@ -44,6 +44,9 @@ export const META_INSTAGRAM_REQUIRED_PERMISSIONS = [
   "pages_show_list",
   "pages_read_engagement",
 ] as const;
+
+/** Phase 6: what posting to a Facebook Page needs (Pages API: Page token from a CREATE_CONTENT holder). */
+export const META_FACEBOOK_REQUIRED_PERMISSIONS = ["pages_show_list", "pages_read_engagement", "pages_manage_posts"] as const;
 
 /** Where Meta sends the partner back. Must be listed exactly in Facebook Login for Business → Settings. */
 export const META_CALLBACK_PATH = "/api/owner/social/meta/callback";

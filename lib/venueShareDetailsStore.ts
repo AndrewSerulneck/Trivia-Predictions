@@ -1,19 +1,24 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { parseInstagramHandle, type VenueShareDetails } from "@/lib/venueShareDetails";
+import { formatVenueAddressLine, parseInstagramHandle, type VenueShareDetails } from "@/lib/venueShareDetails";
 
 // The one reader/writer of a venue's share details on the server (Phase 9e). Callers check
 // who may touch the venue first: the owner route (`requireOwnerAuth` + `auth.venueIds`) or the
 // admin route (`requireAdminAuth`). Nothing here checks ownership.
 
-const COLUMNS = "instagram_handle, share_show_name, share_show_address, share_show_instagram";
+// street/address/city/state are read only, for the address line Share to social can show.
+const COLUMNS = "instagram_handle, share_show_name, share_show_address, share_show_instagram, street, address, city, state";
 
 type Row = {
   instagram_handle: string | null;
   share_show_name: boolean;
   share_show_address: boolean;
   share_show_instagram: boolean;
+  street: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
 };
 
 export class VenueShareDetailsError extends Error {
@@ -30,6 +35,7 @@ const fromRow = (row: Row): VenueShareDetails => ({
   showName: row.share_show_name,
   showAddress: row.share_show_address,
   showInstagram: row.share_show_instagram,
+  address: formatVenueAddressLine(row),
 });
 
 const db = () => {

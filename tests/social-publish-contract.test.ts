@@ -35,14 +35,33 @@ describe("social publishing contract", () => {
     expect(mentions("process.env.NEXT_PUBLIC_SOCIAL_PUBLISH_ENABLED")).toEqual(["lib/social/flags.ts"]);
   });
 
-  it("every /api/owner/social route is behind the flag and the owner gate", () => {
+  it("every /api/owner/social route is behind the Post now gate and the owner gate", () => {
     const routes = walk("app/api/owner/social").filter((path) => path.endsWith("route.ts"));
     expect(routes.length).toBeGreaterThanOrEqual(6);
+    // Phase 18: the choose / disconnect routes are one line each over lib/social/socialProviderRoutes.ts,
+    // whose every handler opens with the guard (checked below).
+    const shared = /export const (POST|DELETE) = (chooseRoute|disconnectRoute)\("(instagram|facebook)"\);/;
     for (const route of routes) {
       const source = read(route);
-      const gated = source.includes("guardOwnerSocialVenue(") || (source.includes("isSocialPublishEnabled()") && source.includes("requireOwnerAuth("));
+      const gated =
+        source.includes("guardOwnerSocialVenue(") ||
+        (source.includes("isSocialPostNowLive()") && source.includes("requireOwnerAuth(")) ||
+        shared.test(source);
       expect(gated, route).toBe(true);
     }
+    const handlers = read("lib/social/socialProviderRoutes.ts").split(/export const (?=chooseRoute|disconnectRoute)/).slice(1);
+    expect(handlers.map((handler) => handler.slice(0, handler.indexOf(" ")))).toEqual(["chooseRoute", "disconnectRoute"]);
+    for (const handler of handlers) expect(handler).toContain("await guardOwnerSocialVenue(request, venueId);");
+  });
+
+  it("no owner social route spells out a provider name with a ternary (Phase 18: SOCIAL_POST_COPY.providers)", () => {
+    for (const route of walk("app/api/owner/social")) {
+      expect(read(route), route).not.toMatch(/"(Facebook|Instagram)"\s*:\s*"(Instagram|Facebook)"/);
+    }
+  });
+
+  it("no component imports the server-side share details store (Phase 12)", () => {
+    expect(mentions("@/lib/venueShareDetailsStore", SOURCE.filter((path) => path.startsWith("components")))).toEqual([]);
   });
 
   it("no log line in social code passes a token", () => {
@@ -71,8 +90,69 @@ describe("social publishing contract", () => {
     expect(migration).not.toMatch(/create policy/i);
   });
 
-  it("the sheet shows Post now only behind the flag", () => {
-    const sheet = read("components/owner/social/ShareToSocialSheet.tsx");
-    expect(sheet).toMatch(/isSocialPublishEnabled\(\) \? \(\s*<InstagramPostPanel/);
+  it("the Post now routes are live only while the sheet renders the Post now box (Phase 8, D32/D35)", () => {
+    const flags = code("lib/social/flags.ts");
+    const switchOn = /export const SOCIAL_POST_NOW_ON_SHEET = (true|false);/.exec(flags)?.[1];
+    expect(switchOn, "SOCIAL_POST_NOW_ON_SHEET must be a literal true/false").toBeDefined();
+    expect(flags).toContain("isSocialPublishEnabled() && SOCIAL_POST_NOW_ON_SHEET");
+    const rendersBox = /<SocialPostNowPanel\b/.test(code("components/owner/social/ShareToSocialSheet.tsx"));
+    expect(rendersBox).toBe(switchOn === "true");
+    // Only flags.ts and tests may use the bare env flag; Post now callers use isSocialPostNowLive().
+    expect(mentions("isSocialPublishEnabled(")).toEqual(["lib/social/flags.ts"]);
+  });
+
+  it("the sheet hands the Post now panel its props only through postNowProps (Phase 19, plan §5.13)", () => {
+    // A Reel's picture format is "story" and the picture's bar name follows a tick: passing either straight through
+    // would post a Reel MP4 as a Story or drop the bar from the caption (components/owner/social/postNowProps.ts).
+    const mounts = code("components/owner/social/ShareToSocialSheet.tsx").match(/<SocialPostNowPanel\b[^>]*>/g) ?? [];
+    for (const mount of mounts) expect(mount).toMatch(/^<SocialPostNowPanel \{\.\.\.postNowProps\(/);
+    // The restore snippet in the sheet's comment says the same.
+    expect(read("components/owner/social/ShareToSocialSheet.tsx")).toContain("<SocialPostNowPanel {...postNowProps({");
+  });
+
+  it("the Post now panel wires itself: own connect result, own caption (Phase 16)", () => {
+    const panel = code("components/owner/social/SocialPostNowPanel.tsx");
+    expect(panel).toContain("useSearchParams");
+    expect(panel).toContain("socialCaptionProblem");
+    expect(panel).not.toMatch(/\bconnectResult\??: /);
+    expect(panel).not.toMatch(/^\s+caption\??: string;/m);
+  });
+
+  it("Meta's deauthorize / data-deletion callbacks are never behind the Post now gate", () => {
+    for (const file of [...walk("app/api/social/meta"), "lib/social/metaCallbacks.ts"]) {
+      expect(code(file), file).not.toMatch(/isSocialPostNowLive|isSocialPublishEnabled|guardOwnerSocialVenue/);
+    }
+  });
+
+  it("no request that can claim a post outlives its lease (Phase 9, plan §5.3)", async () => {
+    const rules = await import("@/lib/social/socialPublishRules");
+    expect(rules.SOCIAL_PUBLISH_LEASE_MS).toBeGreaterThanOrEqual(rules.SOCIAL_ROUTE_MAX_DURATION_S * 1000 + 60_000);
+    // Every route that can claim a post: the publish step, the poll and Recent posts.
+    const claiming = walk("app")
+      .filter((path) => path.endsWith("route.ts") && /\b(publishSocialPost|pollSocialPost|listRecentSocialPosts)\(/.test(code(path)))
+      .sort();
+    expect(claiming).toEqual([
+      "app/api/owner/social/posts/[id]/publish/route.ts",
+      "app/api/owner/social/posts/[id]/route.ts",
+      "app/api/owner/social/status/route.ts",
+    ]);
+    for (const route of claiming) expect(code(route), route).toContain(`export const maxDuration = ${rules.SOCIAL_ROUTE_MAX_DURATION_S};`);
+  });
+
+  it("every post write goes through one fenced update, with no fallback that ignores a lost claim (Phase 9)", () => {
+    const source = code("lib/social/socialPosts.ts");
+    // moveIf is the only update; writes under a claim go through updateClaimed (status + claimed_at).
+    expect(source.match(/\.update\(/g) ?? []).toHaveLength(1);
+    expect(source).toContain('moveIf(row.id, "publishing", patch, { claimedAt: row.claimed_at })');
+    expect(source).not.toMatch(/\?\?\s*\{\s*\.\.\.row/);
+  });
+
+  it("Facebook Page posting asks only for Page publishing permissions, and the Page token never goes in a URL", () => {
+    const config = read("lib/social/metaConfig.ts");
+    expect(config).toMatch(/META_FACEBOOK_REQUIRED_PERMISSIONS = \["pages_show_list", "pages_read_engagement", "pages_manage_posts"\]/);
+    const graph = code("lib/social/metaGraph.ts");
+    // The hosted Reel upload carries the token in the Authorization header only.
+    expect(graph).toMatch(/rupload\.facebook\.com\/video-upload\/\$\{META_GRAPH_VERSION\}\/\$\{encodeURIComponent\(input\.videoId\)\}`/);
+    expect(graph).toContain("Authorization: `OAuth ${input.pageToken}`");
   });
 });

@@ -15,8 +15,9 @@ export type MetaCallbackKind = "deauthorize" | "data-deletion";
 
 /**
  * Remove every stored connection for this Meta user, on every venue: the token and account name go,
- * open posts are cancelled and their files deleted (lib/social/socialConnections.ts). Returns the
- * number of connections removed. A database failure throws → 500, so Meta retries.
+ * open posts are ended and their files deleted (cancelled, or "unconfirmed" when they may already be live;
+ * lib/social/socialConnections.ts, Phase 19). Returns the number of connections removed. A database
+ * failure throws → 500, so Meta retries.
  */
 export const removeMetaUserConnections = async (metaUserId: string): Promise<number> =>
   removeMetaUserSocialConnections(metaUserId);

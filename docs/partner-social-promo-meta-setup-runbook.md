@@ -107,6 +107,18 @@ The code is built (plan Phase 5). Four things are Andrew's; Claude can do 3–4 
 must have a role on the app): Partner Dashboard → Share to social → Post to Instagram → Connect Instagram → post a
 Post, a Story and a Reel. Check each on Instagram (the Reel's cover should be the end card) and tell Claude what you saw.
 
+## Phase 6 setup (Facebook Page "Post now") — nothing new to create
+
+Phase 6 (2026-11-04) uses the **same** login configuration, redirect URIs, migration, key and flag as Phase 5: the
+configuration above already asks for `pages_manage_posts`, and one login now connects the Instagram account **and**
+the Facebook Page. Before trying it:
+- In the configuration's **Assets**, keep **Pages** ticked (it is, if you followed step 1).
+- In the app's **Settings → Advanced**, check whether **Require App Secret** is on. If it is and the Reel upload fails,
+  tell Claude: Meta doesn't document whether the Reel upload host (`rupload.facebook.com`) accepts the app-secret
+  proof that every other call sends.
+- **Try it** (once the Post now box is switched back on, plan D35): post a Post and a Reel to the Hightop Facebook
+  Page. Facebook Stories aren't offered.
+
 ## Later (not now)
 - **App Review submission:** after Phases 5–7 work, Claude gives you screencast scripts, permission wording, and a
   reviewer test login, and you record and submit. Permissions to request then (Unified login, D28): `instagram_basic`,

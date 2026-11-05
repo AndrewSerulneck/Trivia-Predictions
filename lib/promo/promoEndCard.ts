@@ -1,15 +1,26 @@
 import type { StoryRenderSpec, StoryShapeBlock, StoryTextBlock } from "@/lib/socialShare/contracts";
 import { SHARE_PLAY_LINE } from "@/lib/socialShare/copyPresets";
-import { STORY_SHARE_SIZES, STORY_TEXT_FLOOR_PX } from "@/lib/socialShare/shareDesigns";
+import { STORY_SHARE_SIZES } from "@/lib/socialShare/shareDesigns";
+import { font, rectShape, shadowed, solid, textLine, type Blocks } from "@/lib/promo/promoArt";
+import { prizePanelRow } from "@/lib/promo/promoPrizePanel";
 import type { PromoPrize } from "@/lib/promo/promoPrizes";
 import type { PromoWhen } from "@/lib/promo/promoSubjects";
 import type { PromoTemplate } from "@/lib/promo/promoTemplates";
+import { promoThemeFor } from "@/lib/promo/promoThemes";
+import type { MeasureText, PromoTheme, ThemeRow, ThemeStage } from "@/lib/promo/promoThemeTypes";
+
+export type { MeasureText } from "@/lib/promo/promoThemeTypes";
+export { withAlpha } from "@/lib/promo/promoArt";
 
 // THE END CARD (docs/partner-social-promo-plan.md §4.1, D17/D19): one still picture that says it all —
 // the game, when, the prize panel (prize + how to win), the venue and "Play on Hightop Challenge".
 // It is the Post (1080×1350), the Story (1080×1920), and the frame a Reel ends on and holds
 // (lib/promo/promoReelRender.ts animates its rows into place, then holds this exact picture).
 // NO QR code: viewers are already on their phones (D19).
+//
+// Each game wears its own look (docs/game-themes-plan.md Phase 2): background, backdrop artwork, the
+// styled title, a prize panel shaped like an object from the game, colours. All of it comes from the
+// game's theme (lib/promo/promoThemes.ts); this file never names a game.
 //
 // Pure: it builds a StoryRenderSpec for the one share renderer (lib/socialShare/storyCanvas.ts). Text
 // widths come from `measure`, injected so this runs in tests; the browser passes a real canvas measure
@@ -19,79 +30,43 @@ export type PromoFormat = "post" | "story";
 
 export const PROMO_FORMATS: readonly PromoFormat[] = ["post", "story"];
 
-/** Width of `text` drawn in `font` (a canvas font string), in px. */
-export type MeasureText = (text: string, font: string) => number;
-
 export type PromoEndCardInput = {
   format: PromoFormat;
-  template: Pick<PromoTemplate, "titleLines" | "accent">;
+  template: Pick<PromoTemplate, "game" | "titleLines" | "accent">;
   when: PromoWhen;
-  /** Null when the venue hides its name on shared pictures. */
+  /** Null when the partner unticked the bar name. */
   venueName: string | null;
-  /** Without "@"; null when the venue has none or hides it. */
+  /** One line, "1010 Pacific St · Brooklyn, NY"; null when unticked or the venue has none. */
+  venueAddress?: string | null;
+  /** Without "@"; null when the venue has none or the partner unticked it. */
   instagramHandle: string | null;
   /** 0 = no prize panel. More than 3 shows the first 3 and "+ more prizes". */
   prizes: readonly Pick<PromoPrize, "headline" | "howToWin">[];
   measure: MeasureText;
 };
 
-const BODY = "var(--ht-font-body), Arial, sans-serif";
-const font = (weight: number, px: number): string => `${weight} ${px}px ${BODY}`;
-
-/** Every font the end card uses, so the renderer can load them before measuring. */
-export const PROMO_END_CARD_FONTS: readonly string[] = [
-  font(900, 34),
-  font(900, 118),
-  font(800, 64),
-  font(900, 64),
-  font(800, 84),
-  font(900, 84),
-  font(800, 56),
-  font(900, 56),
-  font(700, 36),
-  font(700, 40),
-  font(900, 56),
-  font(800, 40),
-];
+/**
+ * Every face the end card uses, so the renderer can load them before measuring (the size doesn't
+ * matter to the font loader, only weight and style).
+ */
+export const PROMO_END_CARD_FONTS: readonly string[] = [font(700, 40), font(800, 40), font(900, 40), font(900, 40, true)];
 
 const WHITE = "#FFFFFF";
-export const PROMO_NAVY_TOP = "#0D1A3A";
-export const PROMO_NAVY_BOTTOM = "#060B1A";
-/** The background glow, top-right, as on the approved Reel. The Reel's moving glow settles here. */
-export const PROMO_GLOW = {
-  x: 0.78,
-  y: 0.16,
-  r: 900,
-  stops: [
-    { offset: 0, color: "rgba(34, 211, 238, 0.30)" },
-    { offset: 0.35, color: "rgba(139, 92, 246, 0.18)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ],
-} as const;
-const CARD_INK = "#0F172A";
-const CARD_MUTED = "#475569";
-const CARD_LABEL = "#64748B";
-const BRAND_TEXT = "rgba(255, 255, 255, 0.55)";
 const CONTENT_WIDTH = 960;
-const CARD_WIDTH = 840;
-const CARD_TEXT_WIDTH = CARD_WIDTH - 96;
-const MAX_LISTED_PRIZES = 3;
 
-export const withAlpha = (hex: string, alpha: number): string => {
-  const value = hex.replace("#", "");
-  const [r, g, b] = [0, 2, 4].map((offset) => Number.parseInt(value.slice(offset, offset + 2), 16));
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
+/**
+ * The small "follow us" tag in the bottom-right corner (Andrew, 2026-11-04): small and faint so the bar
+ * stays the star. Kept clear of the stack by reserving FOLLOW_RESERVE at the bottom of the safe zone.
+ */
+export const PROMO_FOLLOW_LINE = "Follow @thehightopchallenge";
+const FOLLOW_PX = 34; // = STORY_TEXT_FLOOR_PX, the smallest text a share picture may have.
+const FOLLOW_RESERVE = 64;
+const FOLLOW_MARGIN_X = 56;
 
-export type PromoEndCardRowId = "brand" | "title" | "when" | "prize" | "venue" | "cta";
+export type PromoEndCardRowId = "brand" | "title" | "when" | "art" | "prize" | "venue" | "cta" | "follow";
 
 /** A row of the stack: its height, and the blocks it draws once its top is known. */
-type Row = {
-  id: PromoEndCardRowId;
-  height: number;
-  gapAfter: number;
-  draw: (top: number) => { shapes: StoryShapeBlock[]; text: StoryTextBlock[] };
-};
+type Row = ThemeRow & { id: PromoEndCardRowId; gapAfter: number };
 
 /** One drawn row: where it landed and its blocks. The Reel moves these as a unit. */
 export type PromoEndCardGroup = {
@@ -104,86 +79,38 @@ export type PromoEndCardGroup = {
 
 export type PromoEndCardLayout = {
   spec: StoryRenderSpec;
-  /** The rows in the order drawn (the glow and the background are not rows). */
+  /** The rows in the order drawn (the background and the backdrop are not rows). */
   groups: PromoEndCardGroup[];
+  /** What the theme's backdrop (and its Reel motion) was given: the size, safe zone and rows. */
+  stage: ThemeStage;
 };
 
-const line = (
-  text: string,
-  centerY: number,
-  fontString: string,
-  color: string,
-  options: Partial<StoryTextBlock> = {},
-): StoryTextBlock => ({
-  text,
-  x: 540,
-  y: centerY,
-  centerY,
-  maxWidth: CONTENT_WIDTH,
-  font: fontString,
-  color,
-  align: "center",
-  baseline: "alphabetic",
-  maxLines: 1,
-  fitMinPx: STORY_TEXT_FLOOR_PX,
-  ...options,
-});
+const line = (text: string, centerY: number, fontString: string, color: string, options: Partial<StoryTextBlock> = {}): StoryTextBlock =>
+  textLine(text, 540, centerY, fontString, color, options);
 
-/** How many lines `text` wraps to at `maxWidth` (by words), capped at `maxLines`. */
-const lineCount = (measure: MeasureText, text: string, fontString: string, maxWidth: number, maxLines: number): number => {
-  const words = text.split(/\s+/).filter(Boolean);
-  let lines = 1;
-  let current = "";
-  for (const word of words) {
-    const next = current ? `${current} ${word}` : word;
-    if (current && measure(next, fontString) > maxWidth) {
-      lines += 1;
-      current = word;
-    } else {
-      current = next;
-    }
-  }
-  return Math.min(lines, maxLines);
-};
+const row = (id: PromoEndCardRowId, themed: ThemeRow, gapAfter: number): Row => ({ id, gapAfter, ...themed });
 
-const brandRow = (): Row => ({
+const brandRow = (theme: PromoTheme, gapAfter: number): Row => ({
   id: "brand",
   height: 44,
-  gapAfter: 36,
-  draw: (top) => ({ shapes: [], text: [line("HIGHTOP CHALLENGE", top + 22, font(900, 34), BRAND_TEXT)] }),
+  gapAfter,
+  draw: (top) => ({ shapes: [], text: [line("HIGHTOP CHALLENGE", top + 22, font(900, 34), theme.brand.color, { letterSpacing: 6 })] }),
 });
 
-const titleRow = (template: PromoEndCardInput["template"], titlePx: number): Row => {
-  const lineHeight = Math.round(titlePx * 0.95);
-  const lines = template.titleLines;
-  return {
-    id: "title",
-    height: lineHeight * lines.length,
-    gapAfter: 40,
-    draw: (top) => ({
-      shapes: [],
-      text: lines.map((text, index) =>
-        line(text, top + lineHeight * index + lineHeight / 2, font(900, titlePx), lines.length === 2 && index === 1 ? WHITE : template.accent, {
-          fitMinPx: 64,
-        }),
-      ),
-    }),
-  };
-};
-
 /**
- * "Every Thursday · 8 PM": the days in white and the time in the accent, on one line at the largest
- * size that fits (`px`, then 64, then 56). Too long even then: the days on one line, the time under it.
+ * "Every Thursday · 8 PM": the days in white and the time in the theme's colour, on one line at the
+ * largest size that fits (`px`, then 64, then 56). Too long even then: the days on one line, the time under it.
  */
-const whenRow = (input: PromoEndCardInput, px: number): Row => {
+const whenRow = (input: PromoEndCardInput, theme: PromoTheme, px: number, gapAfter: number): Row => {
   const { days, time } = input.when;
+  const shadow = shadowed(theme.when.shadow);
   const lineH = (size: number) => Math.round(size * 1.15);
   if (!time) {
     return {
       id: "when",
       height: lineH(px),
-      gapAfter: 40,
-      draw: (top) => ({ shapes: [], text: [line(days, top + lineH(px) / 2, font(800, px), WHITE)] }),
+      gapAfter,
+      draw: (top) => ({ shapes: [], text: [line(days, top + lineH(px) / 2, font(800, px), WHITE, shadow)] }),
     };
   }
   const lead = `${days} · `;
@@ -197,12 +124,12 @@ const whenRow = (input: PromoEndCardInput, px: number): Row => {
     return {
       id: "when",
       height: lineH(small) * 2,
-      gapAfter: 40,
+      gapAfter,
       draw: (top) => ({
         shapes: [],
         text: [
-          line(days, top + lineH(small) / 2, font(800, small), WHITE),
-          line(time, top + lineH(small) * 1.5, font(900, small), input.template.accent),
+          line(days, top + lineH(small) / 2, font(800, small), WHITE, shadow),
+          line(time, top + lineH(small) * 1.5, font(900, small), theme.when.timeColor, shadow),
         ],
       }),
     };
@@ -211,19 +138,20 @@ const whenRow = (input: PromoEndCardInput, px: number): Row => {
   return {
     id: "when",
     height: lineH(size),
-    gapAfter: 40,
+    gapAfter,
     draw: (top) => {
       const centerY = top + lineH(size) / 2;
       const x0 = 540 - (w.lead + w.time) / 2;
       return {
         shapes: [],
         text: [
-          line(lead, centerY, font(800, size), WHITE, { x: x0, align: "left", maxWidth: w.lead + 4, fitMinPx: undefined }),
-          line(time, centerY, font(900, size), input.template.accent, {
+          line(lead, centerY, font(800, size), WHITE, { x: x0, align: "left", maxWidth: w.lead + 4, fitMinPx: undefined, ...shadow }),
+          line(time, centerY, font(900, size), theme.when.timeColor, {
             x: x0 + w.lead,
             align: "left",
             maxWidth: w.time + 4,
             fitMinPx: undefined,
+            ...shadow,
           }),
         ],
       };
@@ -231,211 +159,158 @@ const whenRow = (input: PromoEndCardInput, px: number): Row => {
   };
 };
 
-const prizeCardShapes = (top: number, height: number): StoryShapeBlock[] => {
-  const x = 540 - CARD_WIDTH / 2;
-  return [
-    {
-      x,
-      y: top,
-      width: CARD_WIDTH,
-      height,
-      radius: 44,
-      fill: { kind: "linear", x0: x, y0: top, x1: x + CARD_WIDTH, y1: top + height, stops: [{ offset: 0, color: "#FFFFFF" }, { offset: 1, color: "#F1F5F9" }] },
-      shadowColor: "rgba(34, 211, 238, 0.45)",
-      shadowBlur: 80,
-    },
-    {
-      x,
-      y: top,
-      width: CARD_WIDTH,
-      height,
-      radius: 44,
-      fill: {
-        kind: "radial",
-        cx: x + CARD_WIDTH,
-        cy: top,
-        r: CARD_WIDTH * 0.7,
-        stops: [
-          { offset: 0, color: "rgba(34, 211, 238, 0.28)" },
-          { offset: 0.4, color: "rgba(139, 92, 246, 0.16)" },
-          { offset: 1, color: "rgba(255, 255, 255, 0)" },
-        ],
-      },
-    },
-  ];
-};
-
-/** One prize: WIN / the prize, big / how to win. */
-const singlePrizeRow = (prize: PromoEndCardInput["prizes"][number], measure: MeasureText): Row => {
-  const headlineLines = lineCount(measure, prize.headline, font(900, 84), CARD_TEXT_WIDTH, 2);
-  const howLines = lineCount(measure, prize.howToWin, font(700, 40), CARD_TEXT_WIDTH, 2);
-  const pad = 44;
-  const winH = 50;
-  const headlineH = 92 * headlineLines;
-  const howH = 50 * howLines;
-  const height = pad + winH + 12 + headlineH + 16 + howH + pad;
-  return {
-    id: "prize",
-    height,
-    gapAfter: 44,
-    draw: (top) => {
-      const winY = top + pad + winH / 2;
-      const headlineY = top + pad + winH + 12 + headlineH / 2;
-      const howY = top + pad + winH + 12 + headlineH + 16 + howH / 2;
-      return {
-        shapes: prizeCardShapes(top, height),
-        text: [
-          line("WIN", winY, font(900, 40), CARD_LABEL),
-          line(prize.headline, headlineY, font(900, 84), CARD_INK, { maxWidth: CARD_TEXT_WIDTH, maxLines: 2, lineHeight: 92, fitMinPx: 48 }),
-          line(prize.howToWin, howY, font(700, 40), CARD_MUTED, { maxWidth: CARD_TEXT_WIDTH, maxLines: 2, lineHeight: 50 }),
-        ],
-      };
-    },
-  };
-};
-
-/** Two or more prizes: WIN, then each prize on its own line with its how-to-win under it. */
-const prizeListRow = (prizes: PromoEndCardInput["prizes"]): Row => {
-  const listed = prizes.slice(0, MAX_LISTED_PRIZES);
-  const more = prizes.length - listed.length;
-  const pad = 40;
-  const itemH = 56 + 8 + 44;
-  const itemGap = 26;
-  const moreH = more > 0 ? 70 : 0;
-  const height = pad + 50 + 16 + listed.length * itemH + (listed.length - 1) * itemGap + moreH + pad;
-  return {
-    id: "prize",
-    height,
-    gapAfter: 44,
-    draw: (top) => {
-      const text: StoryTextBlock[] = [line("WIN", top + pad + 25, font(900, 40), CARD_LABEL)];
-      listed.forEach((prize, index) => {
-        const itemTop = top + pad + 50 + 16 + index * (itemH + itemGap);
-        text.push(line(prize.headline, itemTop + 28, font(900, 56), CARD_INK, { maxWidth: CARD_TEXT_WIDTH, fitMinPx: 40 }));
-        text.push(line(prize.howToWin, itemTop + 56 + 8 + 22, font(700, 36), CARD_MUTED, { maxWidth: CARD_TEXT_WIDTH }));
-      });
-      if (more > 0) {
-        text.push(line(`+ ${more} more prize${more === 1 ? "" : "s"}`, top + height - pad - 25, font(800, 40), CARD_MUTED));
-      }
-      return { shapes: prizeCardShapes(top, height), text };
-    },
-  };
-};
-
-const venueRow = (venueName: string | null, handle: string | null, accent: string): Row | null => {
-  if (!venueName && !handle) return null;
-  const nameH = venueName ? 64 : 0;
-  const handleH = handle ? 50 : 0;
+const venueRow = (input: PromoEndCardInput, theme: PromoTheme, gapAfter: number): Row | null => {
+  const venueName = input.venueName;
+  const address = input.venueAddress ?? null;
+  const handle = input.instagramHandle;
+  if (!venueName && !address && !handle) return null;
+  const nameH = venueName ? 74 : 0;
+  const addressH = address ? 50 : 0;
+  const handleH = handle ? 52 : 0;
+  const shadow = shadowed(theme.venue.shadow);
   return {
     id: "venue",
-    height: nameH + handleH,
-    gapAfter: 44,
+    height: nameH + addressH + handleH,
+    gapAfter,
     draw: (top) => ({
       shapes: [],
       text: [
-        ...(venueName ? [line(venueName, top + nameH / 2, font(900, 56), WHITE)] : []),
-        ...(handle ? [line(`@${handle}`, top + nameH + handleH / 2, font(700, 40), accent)] : []),
+        ...(venueName ? [line(venueName, top + nameH / 2, font(900, 64), WHITE, shadow)] : []),
+        ...(address ? [line(address, top + nameH + addressH / 2, font(700, 40), theme.venue.addressColor, shadow)] : []),
+        ...(handle ? [line(`@${handle}`, top + nameH + addressH + handleH / 2, font(800, 40), theme.venue.handleColor, shadow)] : []),
       ],
     }),
   };
 };
 
-const ctaRow = (accent: string, measure: MeasureText): Row => {
-  const width = Math.min(CONTENT_WIDTH, measure(SHARE_PLAY_LINE, font(800, 40)) + 96);
-  const height = 88;
+/** Bottom-right, inside the safe zone, below the stack's reserved strip. */
+const followGroup = (theme: PromoTheme, size: { width: number; height: number; safeBottom: number }): PromoEndCardGroup => {
+  const top = size.height - size.safeBottom - FOLLOW_RESERVE + (FOLLOW_RESERVE - FOLLOW_PX) / 2;
+  const centerY = top + FOLLOW_PX / 2;
+  return {
+    id: "follow",
+    top,
+    height: FOLLOW_PX,
+    shapes: [],
+    text: [
+      line(PROMO_FOLLOW_LINE, centerY, font(700, FOLLOW_PX), theme.followColor, {
+        x: size.width - FOLLOW_MARGIN_X,
+        align: "right",
+        maxWidth: size.width - FOLLOW_MARGIN_X * 2,
+      }),
+    ],
+  };
+};
+
+const ctaRow = (theme: PromoTheme, measure: MeasureText): Row => {
+  const ctaFont = font(900, 42);
+  const width = Math.min(CONTENT_WIDTH, measure(SHARE_PLAY_LINE, ctaFont) + 104);
+  const height = 92;
   return {
     id: "cta",
     height,
     gapAfter: 0,
     draw: (top) => {
       const x = 540 - width / 2;
+      const { fill, text, glow, drop } = theme.cta;
       return {
-        // A 3px accent outline: the outline colour, the navy pill on it, then the accent tint.
         shapes: [
-          { x: x - 3, y: top - 3, width: width + 6, height: height + 6, radius: 47, fill: { kind: "solid", color: withAlpha(accent, 0.55) } },
-          { x, y: top, width, height, radius: 44, fill: { kind: "solid", color: "#0E1B38" } },
-          { x, y: top, width, height, radius: 44, fill: { kind: "solid", color: withAlpha(accent, 0.16) } },
+          ...(drop ? [rectShape(x, top + 8, width, height, height / 2, { fill: solid(drop) })] : []),
+          rectShape(x, top, width, height, height / 2, { fill: solid(fill), ...(glow ? { shadowColor: glow, shadowBlur: 36 } : {}) }),
         ],
-        text: [line(SHARE_PLAY_LINE, top + height / 2, font(800, 40), WHITE, { maxWidth: width - 48 })],
+        text: [line(SHARE_PLAY_LINE, top + height / 2, ctaFont, text, { maxWidth: width - 48 })],
       };
     },
   };
 };
 
 const stackHeight = (rows: readonly Row[]): number =>
-  rows.reduce((sum, row, index) => sum + row.height + (index < rows.length - 1 ? row.gapAfter : 0), 0);
+  rows.reduce((sum, entry, index) => sum + entry.height + (index < rows.length - 1 ? entry.gapAfter : 0), 0);
+
+/**
+ * Tighter and tighter until the stack fits the safe zone: smaller title and art and gaps, then two
+ * listed prizes instead of three, then no brand line, and last of all no sample art (the Squares board).
+ */
+const FIT_LEVELS = [
+  { brand: true, title: 1, art: 1, gaps: 1, listed: 3, showArt: true },
+  { brand: true, title: 0.88, art: 0.9, gaps: 0.75, listed: 3, showArt: true },
+  { brand: true, title: 0.88, art: 0.9, gaps: 0.75, listed: 2, showArt: true },
+  { brand: true, title: 0.78, art: 0.8, gaps: 0.6, listed: 2, showArt: true },
+  { brand: false, title: 0.78, art: 0.8, gaps: 0.6, listed: 2, showArt: true },
+  { brand: false, title: 0.7, art: 0.75, gaps: 0.5, listed: 2, showArt: true },
+  { brand: false, title: 0.7, art: 0.75, gaps: 0.5, listed: 2, showArt: false },
+] as const;
 
 export const buildPromoEndCardLayout = (input: PromoEndCardInput): PromoEndCardLayout => {
+  const theme = promoThemeFor(input.template.game);
   const size = STORY_SHARE_SIZES[input.format];
-  const available = size.height - size.safeTop - size.safeBottom;
+  const available = size.height - size.safeTop - size.safeBottom - FOLLOW_RESERVE;
   const hasPrize = input.prizes.length > 0;
-  const prizeRow = !hasPrize
-    ? null
-    : input.prizes.length === 1
-      ? singlePrizeRow(input.prizes[0], input.measure)
-      : prizeListRow(input.prizes);
-  const venue = venueRow(input.venueName, input.instagramHandle, input.template.accent);
+  const showArt = theme.art !== undefined && (theme.art.show === "always" || !hasPrize);
 
-  // Try the full stack, then drop the brand line, then shrink the title, until it fits the safe zone.
-  const build = (withBrand: boolean, titlePx: number): Row[] =>
-    [
-      withBrand ? brandRow() : null,
-      titleRow(input.template, titlePx),
-      whenRow(input, hasPrize ? 64 : 84),
-      prizeRow,
-      venue,
-      ctaRow(input.template.accent, input.measure),
-    ].filter((row): row is Row => row !== null);
-  const attempts: Row[][] = [build(true, 118), build(false, 118), build(false, 96), build(false, 80)];
+  const build = (level: (typeof FIT_LEVELS)[number]): Row[] => {
+    const gap = (px: number) => Math.round(px * level.gaps);
+    const prize = prizePanelRow(theme.prize, input.prizes, input.measure, level.listed);
+    const art = showArt && level.showArt && theme.art ? theme.art.row(level.art, input.measure) : null;
+    return [
+      level.brand ? brandRow(theme, gap(theme.brand.gap.min)) : null,
+      row("title", theme.title(input.template.titleLines, level.title, input.measure), gap(22)),
+      whenRow(input, theme, hasPrize || art ? 64 : 84, gap(36)),
+      art ? row("art", art, gap(30)) : null,
+      prize ? row("prize", prize, gap(38)) : null,
+      venueRow(input, theme, gap(32)),
+      ctaRow(theme, input.measure),
+    ].filter((entry): entry is Row => entry !== null);
+  };
+  const attempts = FIT_LEVELS.map(build);
   const rows = attempts.find((candidate) => stackHeight(candidate) <= available) ?? attempts[attempts.length - 1];
 
-  let top = size.safeTop + Math.max(0, (available - stackHeight(rows)) / 2);
-  const shapes: StoryShapeBlock[] = [
-    {
-      x: 0,
-      y: 0,
-      width: size.width,
-      height: size.height,
-      fill: {
-        kind: "radial",
-        cx: size.width * PROMO_GLOW.x,
-        cy: size.height * PROMO_GLOW.y,
-        r: PROMO_GLOW.r,
-        stops: PROMO_GLOW.stops.map((stop) => ({ ...stop })),
-      },
-    },
-  ];
+  // Room to spare: first the gap under the brand line opens towards the theme's ideal (artwork sits
+  // there on some themes), then the stack is centred.
+  let spare = Math.max(0, available - stackHeight(rows));
+  const brand = rows[0]?.id === "brand" ? rows[0] : null;
+  if (brand) {
+    const grow = Math.min(spare, Math.max(0, theme.brand.gap.ideal - brand.gapAfter));
+    brand.gapAfter += grow;
+    spare -= grow;
+  }
+
+  let top = size.safeTop + spare / 2;
+  const shapes: StoryShapeBlock[] = [];
   const textBlocks: StoryTextBlock[] = [];
   const groups: PromoEndCardGroup[] = [];
-  for (const row of rows) {
-    const drawn = row.draw(top);
+  for (const entry of rows) {
+    const drawn: Blocks = entry.draw(top);
     shapes.push(...drawn.shapes);
     textBlocks.push(...drawn.text);
-    groups.push({ id: row.id, top, height: row.height, ...drawn });
-    top += row.height + row.gapAfter;
+    groups.push({ id: entry.id, top, height: entry.height, ...drawn });
+    top += entry.height + entry.gapAfter;
   }
+  const follow = followGroup(theme, size);
+  textBlocks.push(...follow.text);
+  groups.push(follow);
+
+  const stage: ThemeStage = {
+    width: size.width,
+    height: size.height,
+    safeTop: size.safeTop,
+    safeBottom: size.safeBottom,
+    rows: groups.map(({ id, top: rowTop, height }) => ({ id, top: rowTop, height })),
+  };
+  const backdrop = theme.backdrop(stage);
 
   const spec: StoryRenderSpec = {
     width: size.width,
     height: size.height,
     mirrorPreview: false,
     frameAssetUrl: null,
-    background: {
-      kind: "linear",
-      x0: 0,
-      y0: 0,
-      x1: 0,
-      y1: size.height,
-      stops: [
-        { offset: 0, color: PROMO_NAVY_TOP },
-        { offset: 1, color: PROMO_NAVY_BOTTOM },
-      ],
-    },
+    background: theme.background(size.width, size.height),
+    backdrop: { shapes: backdrop.shapes, textBlocks: backdrop.text },
     shapes,
     images: [],
     textBlocks,
   };
-  return { spec, groups };
+  return { spec, groups, stage };
 };
 
 export const buildPromoEndCardSpec = (input: PromoEndCardInput): StoryRenderSpec => buildPromoEndCardLayout(input).spec;

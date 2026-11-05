@@ -170,6 +170,12 @@ export interface StoryTextBlock {
   fitMinPx?: number;
   /** Centre the wrapped lines vertically on this y instead of starting at `y`. */
   centerY?: number;
+  /** Radians, clockwise, about (`x`, `centerY` ?? `y`). */
+  rotate?: number;
+  /** Extra px between letters (canvas `letterSpacing`; ignored where a browser lacks it). */
+  letterSpacing?: number;
+  /** 0–1. */
+  opacity?: number;
 }
 
 export interface StoryShareVenueAddress {
@@ -189,16 +195,50 @@ export type StoryFill =
   | { kind: "linear"; x0: number; y0: number; x1: number; y1: number; stops: StoryGradientStop[] }
   | { kind: "radial"; cx: number; cy: number; r: number; stops: StoryGradientStop[] };
 
+export interface StoryStroke {
+  color: string;
+  width: number;
+  cap?: CanvasLineCap;
+  join?: CanvasLineJoin;
+  /** As canvas `setLineDash`: [0.1, 29] with a round cap draws dots. */
+  dash?: number[];
+}
+
+/** Draws a block at translate(x, y) · rotate · scale: its own coordinates are then local to (x, y). */
+export interface StoryTransform {
+  x: number;
+  y: number;
+  /** Radians, clockwise. */
+  rotate?: number;
+  scale?: number;
+  /** Vertical scale, when it differs from `scale` (an elliptical glow). */
+  scaleY?: number;
+}
+
+/**
+ * A rounded rect, or any SVG path (`path`), filled and/or stroked. The game-themed Share to social
+ * pictures (docs/game-themes-plan.md Phase 2) draw all their artwork with these, as vectors: no
+ * rasterised SVG, so no font trap and nothing to load before a Reel frame is painted.
+ */
 export interface StoryShapeBlock {
   x: number;
   y: number;
   width: number;
   height: number;
   radius?: number;
-  fill: StoryFill;
+  /** Absent: stroke only. */
+  fill?: StoryFill;
   shadowColor?: string;
   shadowBlur?: number;
   shadowOffsetY?: number;
+  /** SVG path data, drawn instead of the rounded rect (x/y/width/height are then unused). */
+  path?: string;
+  stroke?: StoryStroke;
+  transform?: StoryTransform;
+  /** 0–1. */
+  opacity?: number;
+  /** SVG path data the shape is clipped to, in the shape's own coordinates. */
+  clip?: string;
 }
 
 export interface StoryImageBlock {
@@ -214,7 +254,7 @@ export interface StoryImageBlock {
 }
 
 /**
- * One picture. Drawn in this order: the photo (or `background`), the frame, shapes, images,
+ * One picture. Drawn in this order: the photo (or `background`), the frame, the backdrop, shapes, images,
  * then text — one renderer for every design and size (lib/socialShare/storyCanvas.ts).
  */
 export interface StoryRenderSpec {
@@ -225,8 +265,18 @@ export interface StoryRenderSpec {
   frameAssetUrl: string | null;
   /** Painted when there is no photo (the ready-made designs). */
   background?: StoryFill | null;
+  /**
+   * Decoration behind everything else (a game theme's spotlights, field, letter tiles): painted after
+   * the background and frame, before `shapes`. Not content, so it may run outside the safe zone.
+   */
+  backdrop?: StoryBlocks | null;
   shapes?: StoryShapeBlock[];
   images?: StoryImageBlock[];
+  textBlocks: StoryTextBlock[];
+}
+
+export interface StoryBlocks {
+  shapes: StoryShapeBlock[];
   textBlocks: StoryTextBlock[];
 }
 

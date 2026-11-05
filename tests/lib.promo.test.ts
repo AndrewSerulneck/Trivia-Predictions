@@ -248,11 +248,16 @@ describe("buildPromoEndCardSpec", () => {
     }
   });
 
-  it("four prizes list three and '+ 1 more prize'", () => {
+  it("four prizes list three (two when the picture is tight) and '+ N more'", () => {
     const four = ["A", "B", "C", "D"].map((headline) => ({ headline: `${headline} prize`, howToWin: "Win" }));
-    const all = texts(buildPromoEndCardSpec(input({ prizes: four })));
-    expect(all).toContain("+ 1 more prize");
-    expect(all).not.toContain("D prize");
+    for (const format of ["post", "story"] as const) {
+      const all = texts(buildPromoEndCardSpec(input({ format, prizes: four })));
+      const listed = ["A prize", "B prize", "C prize"].filter((text) => all.includes(text));
+      expect(listed.length).toBeGreaterThanOrEqual(2);
+      const more = 4 - listed.length;
+      expect(all).toContain(`+ ${more} more prize${more === 1 ? "" : "s"}`);
+      expect(all).not.toContain("D prize");
+    }
   });
 });
 
@@ -270,15 +275,34 @@ describe("buildPromoEndCardLayout (the Reel animates these rows into the end car
 
   it("names each row in order, top to bottom", () => {
     const { groups } = buildPromoEndCardLayout(input);
-    expect(groups.map((group) => group.id)).toEqual(["brand", "title", "when", "prize", "venue", "cta"]);
+    expect(groups.map((group) => group.id)).toEqual(["brand", "title", "when", "prize", "venue", "cta", "follow"]);
     for (let i = 1; i < groups.length; i += 1) expect(groups[i].top).toBeGreaterThan(groups[i - 1].top);
+  });
+
+  it("the small follow tag sits bottom-right, inside the safe zone and below the CTA (Andrew, 2026-11-04)", () => {
+    for (const format of ["post", "story"] as const) {
+      const size = STORY_SHARE_SIZES[format];
+      const { groups } = buildPromoEndCardLayout({ ...input, format });
+      const cta = groups.find((group) => group.id === "cta");
+      const follow = groups.find((group) => group.id === "follow");
+      expect(follow?.text[0]).toMatchObject({ text: "Follow @thehightopchallenge", align: "right" });
+      expect(follow!.text[0].x).toBeGreaterThan(size.width / 2);
+      expect(follow!.top).toBeGreaterThanOrEqual(cta!.top + cta!.height);
+      expect(follow!.top + follow!.height).toBeLessThanOrEqual(size.height - size.safeBottom);
+    }
+  });
+
+  it("the address, when ticked, is a line under the bar name", () => {
+    const { groups } = buildPromoEndCardLayout({ ...input, venueAddress: "1010 Pacific St · Brooklyn, NY" });
+    const venue = groups.find((group) => group.id === "venue");
+    expect(venue?.text.map((block) => block.text)).toContain("1010 Pacific St · Brooklyn, NY");
   });
 
   it("the rows hold exactly the picture's blocks, so the Reel's last frame is the Post/Story picture (D17)", () => {
     const { spec, groups } = buildPromoEndCardLayout(input);
     expect(groups.flatMap((group) => group.text)).toEqual(spec.textBlocks);
-    // The background glow is the one shape that isn't in a row.
-    expect(groups.flatMap((group) => group.shapes)).toEqual((spec.shapes ?? []).slice(1));
+    // The game's backdrop artwork is the one layer that isn't in a row (spec.backdrop).
+    expect(groups.flatMap((group) => group.shapes)).toEqual(spec.shapes ?? []);
     expect(buildPromoEndCardSpec(input)).toEqual(spec);
   });
 

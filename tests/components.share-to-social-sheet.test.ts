@@ -113,14 +113,14 @@ describe("ShareToSocialSheet", () => {
     expect(renderPromoPicture).not.toHaveBeenCalled();
   });
 
-  it("open: offers the scheduled game first, with its prize ticked and in the caption", async () => {
+  it("open: offers the scheduled game first, with its prize ticked, and no caption box (Andrew, 2026-11-04)", async () => {
     render(createElement(ShareToSocialSheet, props()));
     const game = screen.getByRole("button", { name: /Live Trivia · Every Thursday · 8 PM/ });
     expect(game.getAttribute("aria-pressed")).toBe("true");
     const prizeChip = screen.getByRole("button", { name: /\$50 gift card/ });
     expect(prizeChip.getAttribute("aria-pressed")).toBe("true");
-    const caption = screen.getByRole("textbox") as HTMLTextAreaElement;
-    expect(caption.value).toContain("Win a $50 gift card.");
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Copy caption" })).toBeNull();
     await waitFor(() => expect(renderPromoPicture).toHaveBeenCalled());
   });
 
@@ -133,16 +133,104 @@ describe("ShareToSocialSheet", () => {
     await waitFor(() => expect(renderPromoPicture).toHaveBeenCalled());
   });
 
-  it("unticking the prize takes it off the caption and the picture", async () => {
+  it("unticking the prize takes it off the picture", async () => {
     render(createElement(ShareToSocialSheet, props()));
     await waitFor(() => expect(renderPromoPicture).toHaveBeenCalled());
     fireEvent.click(screen.getByRole("button", { name: /\$50 gift card/ }));
-    const caption = screen.getByRole("textbox") as HTMLTextAreaElement;
-    expect(caption.value).not.toContain("Win ");
     await waitFor(() => {
       const last = renderPromoPicture.mock.calls.at(-1) as unknown as [{ prizes: unknown[] }] | undefined;
       expect(last?.[0].prizes).toEqual([]);
     });
+  });
+
+  it("On the picture: the bar name and saved handle are ticked, and unticking takes them off this picture only", async () => {
+    render(createElement(ShareToSocialSheet, props()));
+    const handleChip = await screen.findByRole("button", { name: /@thepourhouse/ });
+    expect(handleChip.getAttribute("aria-pressed")).toBe("true");
+    await waitFor(() => {
+      const last = renderPromoPicture.mock.calls.at(-1) as unknown as [{ instagramHandle: string | null }] | undefined;
+      expect(last?.[0].instagramHandle).toBe("thepourhouse");
+    });
+    expect(screen.getByRole("button", { name: /Bar name\s*The Pour House/ }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: /Bar name/ }));
+    fireEvent.click(handleChip);
+    await waitFor(() => {
+      const last = renderPromoPicture.mock.calls.at(-1) as unknown as [{ venueName: string | null; instagramHandle: string | null }] | undefined;
+      expect(last?.[0].venueName).toBeNull();
+      expect(last?.[0].instagramHandle).toBeNull();
+    });
+    // Per post: the venue's setting for players' share pictures is never written.
+    const fetchMock = vi.mocked(fetch);
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === "PATCH")).toBe(false);
+    expect(screen.queryByText("On shared pictures")).toBeNull();
+  });
+
+  it("the venue's players' 'On shared pictures' choices don't set the starting ticks (D33/D36)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ ok: true, details: { ...DETAILS, showName: false, showInstagram: false } }), { status: 200 })),
+    );
+    render(createElement(ShareToSocialSheet, props({ venueId: "v4" })));
+    const handleChip = await screen.findByRole("button", { name: /@thepourhouse/ });
+    expect(handleChip.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: /Bar name/ }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("Address: offered unticked when the venue has one; ticking puts it on the picture", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ ok: true, details: { ...DETAILS, address: "1010 Pacific St · Brooklyn, NY" } }), { status: 200 })),
+    );
+    render(createElement(ShareToSocialSheet, props({ venueId: "v3" })));
+    const chip = await screen.findByRole("button", { name: /Address\s*1010 Pacific St/ });
+    expect(chip.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(chip);
+    await waitFor(() => {
+      const last = renderPromoPicture.mock.calls.at(-1) as unknown as [{ venueAddress: string | null }] | undefined;
+      expect(last?.[0].venueAddress).toBe("1010 Pacific St · Brooklyn, NY");
+    });
+  });
+
+  it("no handle saved: ticking Instagram handle asks for one, only Save puts it on the picture, and Save keeps players' choices", async () => {
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === "PATCH") {
+        const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(JSON.stringify({ ok: true, details: { ...DETAILS, ...body } }), { status: 200 });
+      }
+      return new Response(
+        JSON.stringify({ ok: true, details: { instagramHandle: null, showName: true, showAddress: false, showInstagram: false } }),
+        { status: 200 },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(createElement(ShareToSocialSheet, props({ venueId: "v2" })));
+    const chip = await screen.findByRole("button", { name: /Instagram handle/ });
+    expect(chip.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(chip);
+    fireEvent.change(screen.getByRole("textbox", { name: "Instagram handle" }), { target: { value: "@newbar" } });
+    // Typed but not saved: nothing redraws and the handle is not on the picture.
+    await waitFor(() => expect(renderPromoPicture).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    const callsBeforeSave = renderPromoPicture.mock.calls.length;
+    for (const call of renderPromoPicture.mock.calls as unknown as [{ instagramHandle: string | null }][]) {
+      expect(call[0].instagramHandle).toBeNull();
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await screen.findByRole("button", { name: /@newbar/ });
+    await waitFor(() => {
+      const last = renderPromoPicture.mock.calls.at(-1) as unknown as [{ instagramHandle: string | null }] | undefined;
+      expect(last?.[0].instagramHandle).toBe("newbar");
+    });
+    expect(renderPromoPicture.mock.calls.length).toBe(callsBeforeSave + 1);
+    const patch = fetchMock.mock.calls.find(([, init]) => init?.method === "PATCH");
+    expect(JSON.parse(String(patch?.[1]?.body))).toEqual({
+      venueId: "v2",
+      instagramHandle: "newbar",
+      showName: true,
+      showAddress: false,
+      showInstagram: false,
+    });
+    expect(screen.queryByRole("textbox", { name: "Instagram handle" })).toBeNull();
   });
 
   it("still loading: a loader, no picture", () => {
@@ -191,6 +279,29 @@ describe("ShareToSocialSheet", () => {
     fireEvent.click(screen.getByRole("button", { name: /No music/ }));
     expect(screen.getByRole("button", { name: "Make Reel" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Download" })).toBeNull();
+  });
+
+  it("a failed details load says so, Try again refetches, and the ticks then appear (Phase 12)", async () => {
+    let calls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        calls += 1;
+        return calls === 1
+          ? new Response(JSON.stringify({ ok: false }), { status: 500 })
+          : new Response(JSON.stringify({ ok: true, details: DETAILS }), { status: 200 });
+      }),
+    );
+    render(createElement(ShareToSocialSheet, props({ venueId: "v-retry" })));
+    await screen.findByText("Couldn't load your address and Instagram handle.");
+    expect(screen.queryByRole("button", { name: /Instagram handle/ })).toBeNull();
+    // The rest of the sheet keeps working without them.
+    expect(screen.getByRole("button", { name: /Bar name/ })).toBeTruthy();
+    expect(calls).toBe(1);
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await screen.findByRole("button", { name: /Instagram handle/ });
+    expect(calls).toBe(2);
+    expect(screen.queryByText("Couldn't load your address and Instagram handle.")).toBeNull();
   });
 
   it("never says Reward", () => {

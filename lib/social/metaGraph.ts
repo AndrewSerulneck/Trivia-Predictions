@@ -1,30 +1,50 @@
 import "server-only";
 import { META_GRAPH_VERSION, META_PARTNER_APP_ID, metaAppSecretProof } from "@/lib/social/metaConfig";
-import { classifyGraphError, safeInstagramPermalink, type GraphErrorKind } from "@/lib/social/socialPublishRules";
+import {
+  classifyGraphError,
+  safeFacebookPermalink,
+  safeInstagramPermalink,
+  type FacebookReelStatus,
+  type GraphError,
+} from "@/lib/social/socialPublishRules";
 
-// The Meta Graph API calls Instagram "Post now" makes (docs/partner-social-promo-plan.md Phase 5):
-// Facebook Login for Business with a USER access token configuration (Andrew, 2026-11-04), then the
-// Instagram API with Facebook Login on graph.facebook.com using the linked Page's token.
+// The Meta Graph API calls "Post now" makes (docs/partner-social-promo-plan.md Phases 5–6): Facebook
+// Login for Business with a USER access token configuration (Andrew, 2026-11-04), then the Instagram API
+// with Facebook Login and the Pages API on graph.facebook.com, both with the Page's token.
 //
 // Tokens go in the form body of POSTs and the query of GETs (Meta's documented way), always with
 // appsecret_proof. Nothing here logs: callers log the error `kind` and `code` only, never a token, a
-// URL or Meta's response body. Each call times out after 20 s.
+// URL or Meta's response body. Each call times out after 20 s. A call that gets no readable answer
+// (never reached Meta, timed out, or a 2xx whose body was cut off) is "network": Meta may have done it
+// (socialPublishRules.ts isUnsure).
 
 const GRAPH = `https://graph.facebook.com/${META_GRAPH_VERSION}`;
 const TIMEOUT_MS = 20_000;
 
-export type GraphError = { kind: GraphErrorKind; code: number | null; subcode: number | null; httpStatus: number | null };
+export type { GraphError };
 export type GraphResult<T> = { ok: true; data: T } | { ok: false; error: GraphError };
 
 type RawGraphError = { error?: { code?: unknown; error_subcode?: unknown } };
 
 const toInt = (value: unknown): number | null => (typeof value === "number" && Number.isInteger(value) ? value : null);
 
+const noAnswer = (httpStatus: number | null): GraphError => ({ kind: "network", code: null, subcode: null, httpStatus });
+
+/**
+ * The response's JSON. A 2xx whose body can't be read (cut off, or the 20 s timeout fired mid-body) is
+ * no answer at all: Meta may have done it, so it must never read as a refusal or crash the caller.
+ */
+const readBody = async (response: Response): Promise<{ ok: true; body: unknown } | { ok: false; error: GraphError }> => {
+  const body = (await response.json().catch(() => undefined)) as unknown;
+  if (response.ok && (body === undefined || body === null || typeof body !== "object")) return { ok: false, error: noAnswer(response.status) };
+  return { ok: true, body: body ?? null };
+};
+
 const graphError = (httpStatus: number | null, body: unknown): GraphError => {
   const raw = (body as RawGraphError | null)?.error;
   const code = toInt(raw?.code);
   const subcode = toInt(raw?.error_subcode);
-  // No Meta error object at all (an HTML error page, an empty body): "other", never "network".
+  // A refusal with no Meta error object (an HTML error page, an empty body): "other", never "network".
   return { kind: code === null ? "other" : classifyGraphError(code, subcode), code, subcode, httpStatus };
 };
 
@@ -60,9 +80,11 @@ const call = async <T>(input: CallInput): Promise<GraphResult<T>> => {
             signal: AbortSignal.timeout(TIMEOUT_MS),
           });
   } catch {
-    return { ok: false, error: { kind: "network", code: null, subcode: null, httpStatus: null } };
+    return { ok: false, error: noAnswer(null) };
   }
-  const body = (await response.json().catch(() => null)) as unknown;
+  const read = await readBody(response);
+  if (!read.ok) return read;
+  const body = read.body;
   if (!response.ok || (body as RawGraphError | null)?.error) return { ok: false, error: graphError(response.status, body) };
   return { ok: true, data: body as T };
 };
@@ -93,7 +115,7 @@ export const exchangeMetaCode = async (input: { code: string; redirectUri: strin
     const token = response.ok && body ? readToken(body) : null;
     return token ? { ok: true, data: token } : { ok: false, error: graphError(response.status, body) };
   } catch {
-    return { ok: false, error: { kind: "network", code: null, subcode: null, httpStatus: null } };
+    return { ok: false, error: noAnswer(null) };
   }
 };
 
@@ -111,7 +133,7 @@ export const exchangeLongLivedMetaToken = async (input: { token: string; secret:
     const token = response.ok && body ? readToken(body) : null;
     return token ? { ok: true, data: token } : { ok: false, error: graphError(response.status, body) };
   } catch {
-    return { ok: false, error: { kind: "network", code: null, subcode: null, httpStatus: null } };
+    return { ok: false, error: noAnswer(null) };
   }
 };
 
@@ -134,6 +156,16 @@ export const fetchGrantedPermissions = async (token: string, secret: string): Pr
   return { ok: true, data: granted };
 };
 
+/** One Facebook Page the partner granted, with its Page token and linked Instagram account (if any). */
+export type MetaPage = {
+  pageId: string;
+  pageName: string | null;
+  pageToken: string;
+  /** The partner's tasks on the Page; null when Meta didn't say (then Meta decides at publish time). */
+  tasks: string[] | null;
+  instagram: { id: string; username: string | null } | null;
+};
+
 /** One Facebook Page the partner granted that has an Instagram professional account linked. */
 export type MetaInstagramAccount = {
   pageId: string;
@@ -143,27 +175,57 @@ export type MetaInstagramAccount = {
   username: string | null;
 };
 
-/** The granted Pages with a linked Instagram account (Meta: "Business Login for Instagram", step 4). */
-export const fetchInstagramAccounts = async (userToken: string, secret: string): Promise<GraphResult<MetaInstagramAccount[]>> => {
+/** The granted Pages (GET /me/accounts), one Graph call. Pages Meta returns without a token are skipped. */
+export const fetchMetaPages = async (userToken: string, secret: string): Promise<GraphResult<MetaPage[]>> => {
   const result = await call<{
-    data?: { id?: unknown; name?: unknown; access_token?: unknown; instagram_business_account?: { id?: unknown; username?: unknown } }[];
+    data?: {
+      id?: unknown;
+      name?: unknown;
+      access_token?: unknown;
+      tasks?: unknown;
+      instagram_business_account?: { id?: unknown; username?: unknown };
+    }[];
   }>({
     method: "GET",
     path: "/me/accounts",
-    params: { fields: "id,name,access_token,instagram_business_account{id,username}", limit: "100" },
+    params: { fields: "id,name,access_token,tasks,instagram_business_account{id,username}", limit: "100" },
     token: userToken,
     secret,
   });
   if (!result.ok) return result;
-  const accounts: MetaInstagramAccount[] = [];
+  const pages: MetaPage[] = [];
   for (const page of result.data.data ?? []) {
     const pageId = str(page.id);
     const pageToken = str(page.access_token);
+    if (!pageId || !pageToken) continue;
     const instagramId = str(page.instagram_business_account?.id);
-    if (!pageId || !pageToken || !instagramId) continue;
-    accounts.push({ pageId, pageName: str(page.name), pageToken, instagramId, username: str(page.instagram_business_account?.username) });
+    pages.push({
+      pageId,
+      pageName: str(page.name),
+      pageToken,
+      tasks: Array.isArray(page.tasks) ? page.tasks.map(str).filter((task): task is string => Boolean(task)) : null,
+      instagram: instagramId ? { id: instagramId, username: str(page.instagram_business_account?.username) } : null,
+    });
   }
-  return { ok: true, data: accounts };
+  return { ok: true, data: pages };
+};
+
+/** The Pages with a linked Instagram professional account (Meta: "Business Login for Instagram", step 4). */
+export const instagramAccountsOf = (pages: MetaPage[]): MetaInstagramAccount[] =>
+  pages.flatMap((page) =>
+    page.instagram
+      ? [{ pageId: page.pageId, pageName: page.pageName, pageToken: page.pageToken, instagramId: page.instagram.id, username: page.instagram.username }]
+      : [],
+  );
+
+/** Pages the partner may publish to: CREATE_CONTENT (or MANAGE, which admins have). Unknown tasks = let Meta decide. */
+export const publishablePagesOf = (pages: MetaPage[]): MetaPage[] =>
+  pages.filter((page) => page.tasks === null || page.tasks.includes("CREATE_CONTENT") || page.tasks.includes("MANAGE"));
+
+/** The granted Pages with a linked Instagram account. */
+export const fetchInstagramAccounts = async (userToken: string, secret: string): Promise<GraphResult<MetaInstagramAccount[]>> => {
+  const pages = await fetchMetaPages(userToken, secret);
+  return pages.ok ? { ok: true, data: instagramAccountsOf(pages.data) } : pages;
 };
 
 /**
@@ -250,4 +312,125 @@ export const fetchInstagramPermalink = async (input: { mediaId: string; pageToke
     secret: input.secret,
   });
   return result.ok ? safeInstagramPermalink(result.data.permalink) : null;
+};
+
+// ── Facebook Page publishing (Phase 6) ───────────────────────────────────────────────────
+
+/**
+ * POST /{page-id}/photos url + caption, published now (Pages API, read 2026-11-04). One call: the photo
+ * is on the Page when it returns. Answers the Page post id (permalink = facebook.com/<post id>).
+ */
+export const publishFacebookPhoto = async (input: {
+  pageId: string;
+  pageToken: string;
+  secret: string;
+  imageUrl: string;
+  caption: string;
+}): Promise<GraphResult<{ postId: string; permalink: string | null }>> => {
+  const params: Record<string, string> = { url: input.imageUrl, published: "true" };
+  if (input.caption) params.caption = input.caption;
+  const result = await call<{ id?: unknown; post_id?: unknown }>({
+    method: "POST",
+    path: `/${encodeURIComponent(input.pageId)}/photos`,
+    params,
+    token: input.pageToken,
+    secret: input.secret,
+  });
+  if (!result.ok) return result;
+  const postId = str(result.data.post_id) ?? str(result.data.id);
+  if (!postId) return { ok: false, error: graphError(200, null) };
+  return { ok: true, data: { postId, permalink: safeFacebookPermalink(`https://www.facebook.com/${postId}`) } };
+};
+
+/** Reels step 1: POST /{page-id}/video_reels upload_phase=start → the video id. */
+export const startFacebookReel = async (input: { pageId: string; pageToken: string; secret: string }): Promise<GraphResult<string>> => {
+  const result = await call<{ video_id?: unknown }>({
+    method: "POST",
+    path: `/${encodeURIComponent(input.pageId)}/video_reels`,
+    params: { upload_phase: "start" },
+    token: input.pageToken,
+    secret: input.secret,
+  });
+  if (!result.ok) return result;
+  const id = str(result.data.video_id);
+  return id && /^\d+$/.test(id) ? { ok: true, data: id } : { ok: false, error: graphError(200, null) };
+};
+
+/**
+ * Reels step 2, a HOSTED file: POST rupload.facebook.com/video-upload/<version>/<video-id> with headers
+ * `Authorization: OAuth <page token>` and `file_url` (our 1-hour signed URL). Meta fetches the file.
+ * The token travels in the header, never the URL. appsecret_proof isn't documented for this host.
+ */
+export const uploadFacebookReel = async (input: { videoId: string; pageToken: string; fileUrl: string }): Promise<GraphResult<true>> => {
+  let response: Response;
+  try {
+    response = await fetch(`https://rupload.facebook.com/video-upload/${META_GRAPH_VERSION}/${encodeURIComponent(input.videoId)}`, {
+      method: "POST",
+      headers: { Authorization: `OAuth ${input.pageToken}`, file_url: input.fileUrl },
+      cache: "no-store",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch {
+    return { ok: false, error: noAnswer(null) };
+  }
+  const read = await readBody(response);
+  if (!read.ok) return read;
+  const body = read.body as ({ success?: unknown } & RawGraphError) | null;
+  return response.ok && body?.success === true ? { ok: true, data: true } : { ok: false, error: graphError(response.status, body) };
+};
+
+/** Reels step 3: POST /{page-id}/video_reels upload_phase=finish video_state=PUBLISHED. Meta then processes it. */
+export const finishFacebookReel = async (input: {
+  pageId: string;
+  videoId: string;
+  pageToken: string;
+  secret: string;
+  description: string;
+}): Promise<GraphResult<true>> => {
+  const params: Record<string, string> = { upload_phase: "finish", video_id: input.videoId, video_state: "PUBLISHED" };
+  if (input.description) params.description = input.description;
+  const result = await call<{ success?: unknown }>({
+    method: "POST",
+    path: `/${encodeURIComponent(input.pageId)}/video_reels`,
+    params,
+    token: input.pageToken,
+    secret: input.secret,
+  });
+  if (!result.ok) return result;
+  return result.data.success === true ? { ok: true, data: true } : { ok: false, error: graphError(200, null) };
+};
+
+type RawPhase = { status?: unknown; publish_status?: unknown } | undefined;
+
+/** GET /{video-id}?fields=status,permalink_url — where the Reel is, and its link once published. */
+export const fetchFacebookReelStatus = async (input: {
+  videoId: string;
+  pageToken: string;
+  secret: string;
+}): Promise<GraphResult<{ status: FacebookReelStatus; permalink: string | null }>> => {
+  const result = await call<{
+    status?: { video_status?: unknown; uploading_phase?: RawPhase; processing_phase?: RawPhase; publishing_phase?: RawPhase };
+    permalink_url?: unknown;
+  }>({
+    method: "GET",
+    path: `/${encodeURIComponent(input.videoId)}`,
+    params: { fields: "status,permalink_url" },
+    token: input.pageToken,
+    secret: input.secret,
+  });
+  if (!result.ok) return result;
+  const raw = result.data.status;
+  return {
+    ok: true,
+    data: {
+      status: {
+        videoStatus: str(raw?.video_status),
+        uploading: str(raw?.uploading_phase?.status),
+        processing: str(raw?.processing_phase?.status),
+        publishing: str(raw?.publishing_phase?.status),
+        publishStatus: str(raw?.publishing_phase?.publish_status),
+      },
+      permalink: safeFacebookPermalink(result.data.permalink_url),
+    },
+  };
 };

@@ -1,12 +1,12 @@
 import "server-only";
 import { NextResponse } from "next/server";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
-import { isSocialPublishEnabled } from "@/lib/social/flags";
+import { isSocialPostNowLive } from "@/lib/social/flags";
 
 type OwnerAuth = { ownerId: string; venueIds: string[] };
 
 /**
- * The gate every JSON `/api/owner/social/**` route shares, in this order: flag off → 404, no owner
+ * The gate every JSON `/api/owner/social/**` route shares, in this order: Post now not live (isSocialPostNowLive) → 404, no owner
  * session → requireOwnerAuth's 401, no `venueId` → 400, a venue the owner doesn't hold → 403.
  * The connect / callback routes redirect instead, so they don't use this.
  */
@@ -14,7 +14,7 @@ export const guardOwnerSocialVenue = async (
   request: Request,
   venueId: string,
 ): Promise<{ auth: OwnerAuth } | { response: Response }> => {
-  if (!isSocialPublishEnabled()) {
+  if (!isSocialPostNowLive()) {
     return { response: NextResponse.json({ ok: false, error: "Not found." }, { status: 404 }) };
   }
   let auth: OwnerAuth;

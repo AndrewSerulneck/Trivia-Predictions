@@ -3,9 +3,6 @@ import { loadCanvasFonts, paintStoryBlocks, resolveCanvasFont } from "@/lib/soci
 import {
   buildPromoEndCardLayout,
   PROMO_END_CARD_FONTS,
-  PROMO_GLOW,
-  PROMO_NAVY_BOTTOM,
-  PROMO_NAVY_TOP,
   type PromoEndCardGroup,
   type PromoEndCardInput,
 } from "@/lib/promo/promoEndCard";
@@ -32,6 +29,7 @@ import {
 import { measurePromoText } from "@/lib/promo/promoRender";
 import { promoSoundFor, type PromoSound } from "@/lib/promo/promoSounds";
 import { PROMO_SYNTHS, type SynthKit } from "@/lib/promo/promoSynth";
+import { promoThemeFor } from "@/lib/promo/promoThemes";
 
 // Browser-only: the Share to social Reel (docs/partner-social-promo-plan.md Phase 2, §4.1, §4.3).
 // A port of the approved Phase 0 test page (version 5): frames drawn on a canvas, the sound mixed with
@@ -40,7 +38,10 @@ import { PROMO_SYNTHS, type SynthKit } from "@/lib/promo/promoSynth";
 //
 // The Reel ends on the END CARD: the same layout as the Post/Story picture (buildPromoEndCardLayout).
 // Its title and prize card are animated from the beats into their end-card places, the other rows fade
-// in, and from reelHoldStartS() on every frame is the end card itself, painted once and held.
+// in, and from reelHoldStartS() on every frame is the end card itself, painted once and held. The beats
+// play over the game's own background and backdrop (docs/game-themes-plan.md Phase 2), painted once,
+// with the game's own motion on top (Phase 3: theme.reel.motion, vector blocks per frame). This file
+// never names a game: what moves, and how, lives in the theme.
 
 export type ReelInput = Omit<PromoEndCardInput, "format" | "measure"> & {
   /** A music sound id, or null for "No music" (the sound effects stay). */
@@ -118,6 +119,10 @@ const beatLine = (text: string, centerY: number, fontString: string, color: stri
   baseline: "alphabetic",
   maxLines: 1,
   fitMinPx: 40,
+  // The beats sit on busy game backdrops (a field, a court): a soft shadow keeps them readable.
+  shadowColor: "rgba(0, 0, 0, 0.55)",
+  shadowBlur: 18,
+  shadowOffsetY: 4,
   ...extra,
 });
 
@@ -226,47 +231,86 @@ const mixReel = async (plan: ReelPlan, musicId: string | null): Promise<AudioBuf
 /** Loads the fonts and sounds a Reel needs and lays out its end card. Then draw any frame, or mix. */
 export const prepareReel = async (input: ReelInput): Promise<ReelScene> => {
   const plan = reelPlan(input.prizes.length > 0);
+  const theme = promoThemeFor(input.template.game);
   await loadCanvasFonts([...PROMO_END_CARD_FONTS, ...BEAT_FONTS].map(resolveCanvasFont));
   const layout = buildPromoEndCardLayout({ ...input, format: "story", measure: measurePromoText });
   const groups = new Map(layout.groups.map((group) => [group.id, resolveGroup(group)]));
   const title = groups.get("title");
   const prize = groups.get("prize") ?? null;
-  const arriving = (["when", "venue", "cta"] as const).flatMap((id) => groups.get(id) ?? []);
+  const arriving = (["when", "art", "venue", "cta", "follow"] as const).flatMap((id) => groups.get(id) ?? []);
   const brand = groups.get("brand") ?? null;
   if (!title) throw new Error("The end card has no title.");
 
+  // The game's background + backdrop, painted once: every beat frame starts from it.
+  const backdrop = layout.spec.backdrop
+    ? { shapes: layout.spec.backdrop.shapes, textBlocks: resolveText(layout.spec.backdrop.textBlocks) }
+    : null;
+  const stage = createCanvas(W, H);
+  paintStoryBlocks(context2d(stage), { background: layout.spec.background, width: W, height: H, backdrop });
+
+  // During the beats the game's motion may own part of the backdrop (Pick 'Em's balls fly in): then the
+  // beats start from the theme's beat backdrop, also painted once.
+  const beatBlocks = theme.reel.beatBackdrop?.(layout.stage) ?? null;
+  const beatStage = beatBlocks ? createCanvas(W, H) : stage;
+  if (beatBlocks) {
+    paintStoryBlocks(context2d(beatStage), {
+      background: layout.spec.background,
+      width: W,
+      height: H,
+      backdrop: { shapes: beatBlocks.shapes, textBlocks: resolveText(beatBlocks.text) },
+    });
+  }
+  // The motion's fonts resolve once each, not every frame (resolveCanvasFont reads the page's style).
+  const fonts = new Map<string, string>();
+  const motionFont = (fontString: string): string => {
+    let resolved = fonts.get(fontString);
+    if (resolved === undefined) {
+      resolved = resolveCanvasFont(fontString);
+      fonts.set(fontString, resolved);
+    }
+    return resolved;
+  };
+
   // The end card, painted once: the held frames copy it.
   const endCard = createCanvas(W, H);
-  paintStoryBlocks(context2d(endCard), {
-    background: layout.spec.background,
-    width: W,
-    height: H,
-    shapes: layout.spec.shapes,
-    textBlocks: resolveText(layout.spec.textBlocks),
-  });
+  const endContext = context2d(endCard);
+  endContext.drawImage(stage, 0, 0, W, H);
+  paintStoryBlocks(endContext, { shapes: layout.spec.shapes, textBlocks: resolveText(layout.spec.textBlocks) });
 
   // How big the title can be on its own beat: as on the test page (~210 px), never wider than the frame.
+  // Measured across the whole row, shapes too: Category Blitz spells its first word in letter tiles.
   const measureContext = context2d(createCanvas(8, 8));
-  const titleWidth = Math.max(
-    1,
-    ...title.text.map((block) => {
-      measureContext.font = block.font;
-      return measureContext.measureText(block.text).width;
-    }),
-  );
+  let titleLeft = Infinity;
+  let titleRight = -Infinity;
+  for (const block of title.text) {
+    measureContext.font = block.font;
+    const width = measureContext.measureText(block.text).width;
+    const left = block.align === "center" ? block.x - width / 2 : block.align === "right" ? block.x - width : block.x;
+    titleLeft = Math.min(titleLeft, left);
+    titleRight = Math.max(titleRight, left + width);
+  }
+  for (const shape of title.shapes) {
+    if (shape.path || shape.width <= 0) continue; // Paths (a swoosh, a ball) carry no box: the words and cards set the width.
+    const x = shape.transform?.x ?? 0;
+    const scale = shape.transform?.scale ?? 1;
+    titleLeft = Math.min(titleLeft, x + shape.x * scale);
+    titleRight = Math.max(titleRight, x + (shape.x + shape.width) * scale);
+  }
+  const titleWidth = Math.max(1, titleRight - titleLeft);
   const titleBig = Math.min(1.75, 1000 / titleWidth);
   const titleMid = 1 + (titleBig - 1) * 0.4;
   const prizeBig = prize ? Math.min(1.15, 700 / prize.height) : 1;
 
   const { days, time } = input.when;
   const accent = input.template.accent;
+  const timeColor = theme.when.timeColor;
   // Days too long for one line at 92 px ("Every Monday & Thursday") take two, moved up clear of the time.
   measureContext.font = resolveCanvasFont(font(800, 92));
   const daysTwoLines = measureContext.measureText(days).width > 960;
   const whenBeat: StoryTextBlock[] = time
     ? [
         beatLine(days, daysTwoLines ? 790 : 850, font(800, 92), "#FFFFFF", { maxLines: 2, lineHeight: 104, fitMinPx: 56 }),
-        beatLine(time, 1000, font(900, 150), accent, { fitMinPx: 80 }),
+        beatLine(time, 1000, font(900, 150), timeColor, { fitMinPx: 80 }),
         ...(input.venueName ? [beatLine(`at ${input.venueName}`, 1130, font(700, 64), "rgba(255, 255, 255, 0.8)")] : []),
       ]
     : [
@@ -283,18 +327,8 @@ export const prepareReel = async (input: ReelInput): Promise<ReelScene> => {
     }
     const settle = easeOut((t - plan.end[0]) / REEL_SETTLE_S);
 
-    // Background: navy, a slow glow and moving light bars. Both settle into the end card's still look.
-    const sky = context.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, PROMO_NAVY_TOP);
-    sky.addColorStop(1, PROMO_NAVY_BOTTOM);
-    context.fillStyle = sky;
-    context.fillRect(0, 0, W, H);
-    const gx = lerp(W * (0.75 + 0.1 * Math.sin(t * 0.6)), W * PROMO_GLOW.x, settle);
-    const gy = lerp(H * (0.18 + 0.04 * Math.cos(t * 0.5)), H * PROMO_GLOW.y, settle);
-    const glow = context.createRadialGradient(gx, gy, 0, gx, gy, PROMO_GLOW.r);
-    for (const stop of PROMO_GLOW.stops) glow.addColorStop(stop.offset, stop.color);
-    context.fillStyle = glow;
-    context.fillRect(0, 0, W, H);
+    // Background: the game's own look, with moving light bars that fade as the end card settles.
+    context.drawImage(beatStage, 0, 0, W, H);
     const bars = 0.06 * (1 - settle);
     if (bars > 0.001) {
       context.save();
@@ -309,6 +343,15 @@ export const prepareReel = async (input: ReelInput): Promise<ReelScene> => {
         context.restore();
       }
       context.restore();
+    }
+
+    // The game's own motion (lights, dice, balls, squares, bracket), under the beats' rows.
+    const motion = theme.reel.motion({ t, plan, stage: layout.stage, settle: Math.max(0, settle) });
+    if (motion.shapes.length || motion.text.length) {
+      paintStoryBlocks(context, {
+        shapes: motion.shapes,
+        textBlocks: motion.text.map((block) => ({ ...block, font: motionFont(block.font) })),
+      });
     }
 
     // The brand line sits at the top during the beats (clear of the title), then joins the end card.
