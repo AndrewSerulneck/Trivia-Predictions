@@ -375,6 +375,10 @@ async function getInitialLocation(): Promise<LocationResult> {
   }
 }
 
+// Location worked but no subscribed (visible) venue is in range. The venue-list panel
+// keys its "head to a partner venue" card off this exact notice.
+const NO_VENUE_IN_RANGE_NOTICE = "No partner venue is in range.";
+
 // The browser-settings route out of a hard denial goes through the address bar,
 // which an installed app does not have — following these steps there is a dead
 // end. Standalone gets the device-settings route instead. Resolved in an effect,
@@ -1228,7 +1232,7 @@ export function JoinFlow({
         setLocationNotice(
           nearbyVenues.length > 0
             ? `Found ${nearbyVenues.length} nearby venue(s).`
-            : "No venue is currently in range from your location."
+            : NO_VENUE_IN_RANGE_NOTICE
         );
       } else {
         setVerifiedLocation(null);
@@ -1379,7 +1383,7 @@ export function JoinFlow({
         setLocationNotice(
           nearbyVenues.length > 0
             ? `Found ${nearbyVenues.length} nearby venue(s).`
-            : "No venue is currently in range from your location."
+            : NO_VENUE_IN_RANGE_NOTICE
         );
       } else {
         setVerifiedLocation(null);
@@ -3250,14 +3254,23 @@ export function JoinFlow({
                         isLoading={locationLoading}
                         onRetry={() => void handleGrantLocation("venue-list")}
                       />
+                    ) : !locationNotice || locationNotice === NO_VENUE_IN_RANGE_NOTICE ? (
+                      // Never reached by God Mode (its list holds every venue), so the
+                      // geolocation retry here can't break its zero-location rule.
+                      <LocationStatusCard
+                        tone="slate"
+                        buttonTone="cyan"
+                        heading="No partner venue nearby"
+                        body="Please head to one of our partner venues to access the game library."
+                        buttonLabel="Check Again"
+                        loadingLabel="Checking location..."
+                        isLoading={locationLoading}
+                        onRetry={() => void handleGrantLocation("venue-list")}
+                      />
                     ) : (
                       <div className="space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
                         <p className="font-semibold text-white">Nearby venues only</p>
-                        {locationNotice ? (
-                          <p className="text-sm text-ht-fg-muted">{locationNotice}</p>
-                        ) : (
-                          <p className="text-sm text-ht-fg-muted">No venue is currently in range from your location.</p>
-                        )}
+                        <p className="text-sm text-ht-fg-muted">{locationNotice}</p>
                         <button
                           type="button"
                           onClick={() => router.refresh()}
