@@ -26,8 +26,8 @@ describe("store launch gate", () => {
     expect(smartAppBannerScript(stores, false)).toBeNull();
   });
 
-  it("keeps unverified production URLs empty and the example switch off", () => {
-    expect(STORE_URLS).toEqual({ ios: "", android: "https://play.google.com/store/apps/details?id=com.hightopchallenge.app" });
+  it("ships only verified store URLs and keeps the example switch off", () => {
+    expect(STORE_URLS).toEqual({ ios: "https://apps.apple.com/app/hightop-challenge/id6826962606", android: "https://play.google.com/store/apps/details?id=com.hightopchallenge.app" });
     expect(readFileSync(".env.example", "utf8")).toContain("NEXT_PUBLIC_APP_STORE_LINKS_ENABLED=false");
   });
 

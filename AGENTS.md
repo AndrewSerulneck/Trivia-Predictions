@@ -12,13 +12,23 @@ style, naming rules) and **`SYSTEM_CONTEXT.md`** (architecture, product
 direction) — read both before starting any task. This file does not duplicate
 them; it documents recurring processes and active implementation-plan pointers below.
 
-## Venue Location usability — complete locally
+## Models in phased plans — always
+
+Use the planning agent's own model family and the model Andrew selected for the current session unless
+he explicitly requests another model. **A plan made by GPT-6.1 in Codex names GPT-6.1 (Codex), with an
+appropriate effort level for each phase.** Claude-authored plans use Claude models. Never infer a Claude
+default from the filename `CLAUDE.md`, historical plans or another agent's recommendations.
+Every phase needs a model, effort and one-line reason; keep the plan and handoffs consistent. If the exact
+model is unknown, state the known family and uncertainty instead of inventing a model/version.
+Full phase-complexity guidance: `CLAUDE.md` §Model and effort per phase.
+
+## Venue Location usability — live
 
 Plan: `docs/venue-location-usability-plan.md`; Phases 0–3 and follow-ups accepted by Andrew on 2026-11-05.
 Final handoff: `docs/venue-location-usability-plan_PHASE_3_HANDOFF.md` (168 focused tests pass).
-Includes locked preview, compact copy, signed address relocation and branded Close. Committed locally on
-`after-app-review`; no push or production deployment. Draft PR #10 stays unmerged; main is unchanged.
-Real-device/Google observations remain unperformed. Preserve ignored evidence; App Store branch rules apply.
+Includes locked preview, compact copy, signed address relocation and branded Close. Merged to `main` and
+deployed to production on 2026-11-09 (App Store approved; `after-app-review` retired).
+Real-device/Google observations remain unperformed. Preserve ignored evidence.
 
 ## Phase handoffs and planned Bingo / Pick ’Em work
 

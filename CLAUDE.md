@@ -21,19 +21,22 @@
 > **Domain split** (apex → `play.`) is built in `proxy.ts` via `lib/domainSplit.ts`, behind
 > `NEXT_PUBLIC_DOMAIN_SPLIT_ENABLED` (off = inert). Switch over only by `docs/phase-6-domain-split-runbook.md`.
 > Strategic direction: `SYSTEM_CONTEXT.md` §0 and `docs/partner-dashboard-plan.md`.
->
-> **Branch rule (2026-10-30):** while the App Store review is open, new work goes on `after-app-review`; never push
-> `main`, `supabase db push`, or change Production env until Andrew confirms approval.
 
 ## Model and effort per phase (all coding agents)
-Every multi-phase plan has a table naming each phase's **model and effort level**, with a one-line reason. The model
-matches the agent that will do the phase: a **Claude model when it's Claude** (Andrew's default, so name one when
-unsure), otherwise that agent's own model and effort setting (Codex, Gemini, Cursor, …). The agent doing a phase uses
-the named model, or the equivalent tier of its own family if the plan names another family's, and says so in its
-handoff note if it can't. A new plan can't be finished without the table. Defaults by tier: **top / high** (Claude:
-Opus 5.5) for auth, money, migrations, data changes, shared renderers or engines, or a design that spans several
-files. **Mid / medium** (Claude: Sonnet 5.5) for well-specified UI, copy and tests. **Small / low** (Claude: Haiku 5.5)
-for mechanical edits and doc-only phases. Give a reason for any departure from these.
+Every multi-phase plan has a table naming each phase's **model and effort level**, with a one-line reason.
+**Use the planning agent's own model family and Andrew's selected session model unless he explicitly requests
+another model.** For example, GPT-6.1 planning in Codex names **GPT-6.1 (Codex)**; Claude planning names Claude
+models. There is no cross-family default. The filename `CLAUDE.md`, historical plans and another agent's
+recommendations never override the current session or Andrew's explicit choice. If the exact model is unknown,
+state the known family and uncertainty; do not invent a version or silently substitute another family.
+
+Choose effort by phase: **high** for auth, money, migrations, data changes, shared renderers or engines, or a
+design spanning several files; **medium** for well-specified UI, copy and tests; **low** for mechanical edits
+and doc-only phases. Keep the selected model and vary effort where supported. If Andrew explicitly asks for
+different models by phase, choose suitable models in the requested family. Give a reason for departures.
+Keep model recommendations consistent in the plan and handoffs. An agent executing an older plan written
+for another family uses its own selected model at the appropriate effort and records the substitution in
+the handoff, unless Andrew explicitly requested that other family. A new plan is incomplete without the table.
 
 ## Build and Test Commands
 - Dev server: `npm run dev` (Andrew runs it on :3000 — never use it for tests that write data; never `pkill next`)

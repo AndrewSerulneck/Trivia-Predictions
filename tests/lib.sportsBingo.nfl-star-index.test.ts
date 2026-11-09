@@ -303,12 +303,12 @@ describe("NFL star index — generated snapshot staleness tripwire (Phase 9c)", 
     expect(isNFLStarIndexSnapshotStale("not-a-date")).toBe(true);
   });
 
-  it("the committed snapshot exists, is generated (not hand-edited), and is not itself stale", () => {
+  // Freshness is season-aware and lives in tests/lib.sportsBingo.nfl-star-index-freshness.test.ts.
+  it("the committed snapshot exists and is generated (not hand-edited)", () => {
     expect(fs.existsSync(SNAPSHOT_PATH)).toBe(true);
     const snapshot = JSON.parse(fs.readFileSync(SNAPSHOT_PATH, "utf8"));
     expect(typeof snapshot.generatedAt).toBe("string");
     expect(Array.isArray(snapshot.current?.players)).toBe(true);
     expect(Array.isArray(snapshot.prior?.players)).toBe(true);
-    expect(isNFLStarIndexSnapshotStale(snapshot.generatedAt)).toBe(false);
   });
 });

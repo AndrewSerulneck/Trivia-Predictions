@@ -57,8 +57,8 @@ describe("decideAppLinkDestination", () => {
   it("inside the app goes to the front door, never a store", () => {
     expect(decideAppLinkDestination(APP, LIVE)).toEqual({ kind: "site", path: "/", host: "play" });
   });
-  it("ships only verified live listings: Google Play (approved 2026-10-30), App Store still empty", () => {
-    expect(STORE_URLS).toEqual({ ios: "", android: "https://play.google.com/store/apps/details?id=com.hightopchallenge.app" });
+  it("ships only verified live listings: Google Play (approved 2026-10-30), App Store (live 2026-11-09)", () => {
+    expect(STORE_URLS).toEqual({ ios: "https://apps.apple.com/app/hightop-challenge/id6826962606", android: "https://play.google.com/store/apps/details?id=com.hightopchallenge.app" });
   });
 });
 

@@ -17,7 +17,7 @@ export const APP_DOWNLOAD_DISPLAY_URL = "hightopchallenge.com/app";
  * Store listing URLs. EMPTY until each listing is live (Phase 6 approval); filling one in
  * is the only change needed for that store to start receiving /app taps.
  */
-export const IOS_APP_STORE_URL = "";
+export const IOS_APP_STORE_URL = "https://apps.apple.com/app/hightop-challenge/id6826962606";
 export const ANDROID_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.hightopchallenge.app";
 
 export type StoreUrls = { ios: string; android: string };
