@@ -1251,3 +1251,78 @@ describe("getChallengeCampaignSnapshotForUser — Pick 'Em Prizes (Phase 7.2)", 
     error.mockRestore();
   });
 });
+
+// docs/cancelled-prizes-pick-windows-away-mode-plan.md Phase A1: a retired prize (is_active false,
+// winner_user_id null: archived, or its last game cancelled) never reaches VenueChallengesPanel unless
+// the viewer won it this cycle. Won-out prizes and Pick 'Em Prizes keep their own behaviour (above).
+describe("getChallengeCampaignSnapshotForUser — retired prizes leave the panel (plan A1)", () => {
+  const winRow = (id: string, userId: string, cycleStart = EPOCH_ISO): Row => ({
+    id,
+    challenge_id: "camp-1",
+    cycle_start: cycleStart,
+    winner_user_id: userId,
+    venue_id: VENUE_ID,
+    points_earned: 600,
+    finalized_at: "2026-07-20T10:00:00.000Z",
+    prize_type: "free_appetizer",
+  });
+  const cardsFor = (userId: string) => getChallengeCampaignSnapshotForUser({ userId, venueId: VENUE_ID });
+
+  it("a retired prize nobody won is gone", async () => {
+    store.challenge_campaigns = [campaignRow({ is_active: false })];
+    expect(await cardsFor("u3")).toEqual([]);
+  });
+
+  it("a retired game-winner prize (its last game cancelled) is gone", async () => {
+    store.challenge_campaigns = [campaignRow({ is_active: false, win_condition: "game_winner", winner_quota: 1 })];
+    expect(await cardsFor("u3")).toEqual([]);
+  });
+
+  it("a retired prize others won this cycle is gone for a viewer who didn't win", async () => {
+    store.challenge_campaigns = [campaignRow({ is_active: false })];
+    store.challenge_cycle_winners.push(winRow("w1", "u1"), winRow("w2", "u2"));
+    expect(await cardsFor("u3")).toEqual([]);
+  });
+
+  it("a retired prize the viewer won this cycle stays, so they can claim it", async () => {
+    store.challenge_campaigns = [campaignRow({ is_active: false })];
+    store.challenge_cycle_winners.push(winRow("w1", "u1"));
+    const [card] = await cardsFor("u1");
+    expect(card.id).toBe("camp-1");
+    expect(card.viewerWon).toBe(true);
+    expect(card.prizeEnded).toBe(true);
+  });
+
+  it("a recurring prize the viewer won in an EARLIER week, then archived, is gone (the coupon stays in the wallet)", async () => {
+    store.challenge_campaigns = [
+      campaignRow({ is_active: false, recurring_type: "weekly", active_days: ["monday"], winner_quota: 1 }),
+    ];
+    store.challenge_cycle_winners.push(winRow("w-prior-week", "u1", "2026-07-13T00:00:00.000Z"));
+    expect(await cardsFor("u1")).toEqual([]);
+  });
+
+  it("'viewer won' comes from the ledger, never from winner_user_id", async () => {
+    // A won-out row whose resolved marker names the viewer but no ledger row of theirs: kept (won out,
+    // not retired), and not shown as theirs.
+    store.challenge_campaigns = [campaignRow({ is_active: false, winner_user_id: "u3" })];
+    store.challenge_cycle_winners.push(winRow("w1", "u1"), winRow("w2", "u2"));
+    const [card] = await cardsFor("u3");
+    expect(card.viewerWon).toBe(false);
+    expect(card.prizeEnded).toBeUndefined();
+  });
+
+  it("a won-out prize keeps today's congrats card", async () => {
+    store.challenge_campaigns = [campaignRow({ is_active: false, winner_user_id: "u2" })];
+    store.challenge_cycle_winners.push(winRow("w1", "u1"), winRow("w2", "u2"));
+    const [card] = await cardsFor("u3");
+    expect(card.quotaRemaining).toBe(0);
+    expect(card.winnerUsernames).toEqual(["alice", "bob"]);
+    expect(card.prizeEnded).toBeUndefined();
+  });
+
+  it("an active prize is untouched", async () => {
+    const [card] = await cardsFor("u3");
+    expect(card.id).toBe("camp-1");
+    expect(card.prizeEnded).toBeUndefined();
+  });
+});

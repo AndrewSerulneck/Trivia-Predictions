@@ -4,6 +4,7 @@ import {
   getChallengeCampaignSnapshotForUser,
   listChallengeCampaigns,
 } from "@/lib/challengeCampaigns";
+import { prizeCardEndState } from "@/lib/prizeCardEndState";
 import { attachRankedPlaceCards } from "@/lib/rankedPlaceCardData";
 import { attachRewardDescriptions } from "@/lib/rewards";
 import { resolveRequestUserId } from "@/lib/serverSession";
@@ -72,7 +73,10 @@ export async function GET(request: Request) {
       includeResolved,
     });
 
-    const snapshots = campaigns.map((campaign) => ({ ...campaign, progressPoints: 0 }));
+    // No viewer, so no one "won it": every retired prize leaves the list (lib/prizeCardEndState.ts).
+    const snapshots = campaigns
+      .filter((campaign) => !prizeCardEndState({ campaign, viewerWon: false }).dropCard)
+      .map((campaign) => ({ ...campaign, progressPoints: 0 }));
     const withLeaderboard = await attachLeaderboardSnapshotsToCampaigns({
       campaigns: snapshots,
       venueId,

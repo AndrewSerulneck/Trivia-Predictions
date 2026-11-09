@@ -106,7 +106,7 @@ function VenueChallengesPanelInner({
                 const isExhausted = !isRanked && quotaRemaining <= 0;
                 const winnerUsernames = challenge.winnerUsernames ?? [];
                 const isWon = isWinner || isExhausted;
-                // A Pick 'Em Prize with nothing left to run (its last period settled, or archived).
+                // Nothing left to run (lib/prizeCardEndState.ts). Retired prizes the viewer didn't win never arrive.
                 const isEnded = !isWon && Boolean(challenge.prizeEnded);
                 // A Pick 'Em Prize is won by correct picks, never points: no gauge (plan Phase 7.2).
                 const isPickEmPrize = challenge.rewardDefinitionId === PICKEM_PRIZE_DEFINITION_ID;

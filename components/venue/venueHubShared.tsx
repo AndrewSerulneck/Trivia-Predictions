@@ -72,9 +72,9 @@ export type ChallengeCampaignCard = {
    */
   upcomingStartDate?: string | null;
   /**
-   * A Pick 'Em Prize with nothing more to run: its last period settled (the sweep ended it), it was
-   * archived, or it is long past (getChallengeCampaignSnapshotForUser, plan Phase 7.2). The card says
-   * "Ended" instead of "In Progress".
+   * Nothing more to run (lib/prizeCardEndState.ts): a Pick 'Em Prize whose last period settled or that is
+   * long past, or a retired prize the viewer won this cycle (a retired prize they didn't win never
+   * arrives). The card says "Ended" instead of "In Progress" unless the viewer won it.
    */
   prizeEnded?: boolean;
   /**

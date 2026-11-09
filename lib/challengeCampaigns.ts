@@ -28,6 +28,7 @@ import {
   pickemPrizeCycleStart,
 } from "@/lib/pickemPrizes";
 import { PICKEM_PRIZE_ENDED_CARD_MS, pickemPrizeCardPeriod } from "@/lib/pickemPrizeStandings";
+import { prizeCardEndState } from "@/lib/prizeCardEndState";
 import { normalizePickEmPrizeTiers, serializePickEmPrizeTiers } from "@/lib/pickemPrizeTiers";
 import type { SquaresMoment } from "@/lib/seasonalPoints";
 import type {
@@ -3335,9 +3336,7 @@ export async function getChallengeCampaignSnapshotForUser(params: {
     }
   }
 
-  const baseCampaigns = campaigns
-    .filter((campaign) => !pickemStateById.get(campaign.id)?.dropCard)
-    .map((campaign) => {
+  const baseCampaigns = campaigns.flatMap((campaign) => {
     const cycleState = cycleStateById.get(campaign.id);
     const winners = cycleState?.winners ?? [];
     const viewerWin = winners.find((winner) => winner.winnerUserId === userId) ?? null;
@@ -3352,7 +3351,11 @@ export async function getChallengeCampaignSnapshotForUser(params: {
       : null;
     // A Pick 'Em Prize also says when its next period starts, or that it has ended.
     const pickemState = pickemStateById.get(campaign.id);
-    return {
+    // One rule for every prize (lib/prizeCardEndState.ts): a retired prize the viewer didn't win this
+    // cycle leaves the panel; a Pick 'Em Prize follows its own period.
+    const endState = prizeCardEndState({ campaign, viewerWon: viewerWin !== null, pickemPrize: pickemState });
+    if (endState.dropCard) return [];
+    return [{
       ...campaign,
       progressPoints: progressByChallenge.get(campaign.id) ?? 0,
       prizeClaimedAt,
@@ -3360,8 +3363,8 @@ export async function getChallengeCampaignSnapshotForUser(params: {
       quotaRemaining: Math.max(0, campaign.winnerQuota - winners.length),
       viewerWon: viewerWin !== null,
       ...(pickemState?.upcomingStartDate ? { upcomingStartDate: pickemState.upcomingStartDate } : {}),
-      ...(pickemState?.prizeEnded ? { prizeEnded: true } : {}),
-    };
+      ...(endState.prizeEnded ? { prizeEnded: true } : {}),
+    }];
   });
 
   return attachLeaderboardSnapshotsToCampaigns({
