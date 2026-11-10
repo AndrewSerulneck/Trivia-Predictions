@@ -62,8 +62,10 @@ import {
   updateChallengeCampaign,
 } from "@/lib/challengeCampaigns";
 import {
+  endedOccurrencesFromRows,
   findEndedOccurrences,
   loadOccurrenceFinalStandings,
+  type TriviaScheduleRow,
 } from "@/lib/liveShowdownEngine";
 import {
   occurrenceMatchesSlots,
@@ -196,14 +198,39 @@ function campaignWasLiveForOccurrence(
 }
 
 /**
+ * Narrows a payout sweep to some venues (a partner's own schedule change). Omitted = every venue.
+ * `campaigns` / `schedules`: rows the caller already read for those venues (Phase R7: the settle
+ * reads once). Given them, the sweep reads no campaigns or schedules of its own and filters them
+ * exactly as its own reads would.
+ */
+export type PayoutSweepScope = {
+  venueIds: readonly string[];
+  /** The venues' active, unresolved prizes (listChallengeCampaigns({ venueId })). */
+  campaigns?: readonly ChallengeCampaign[];
+  /** The venues' Live Trivia schedules (loadLiveTriviaSchedulesForVenues). */
+  schedules?: readonly TriviaScheduleRow[];
+};
+
+/** The scope's preloaded schedules narrowed as loadLiveTriviaSchedulesForVenues would (venue filter). */
+export const schedulesInScope = (
+  schedules: readonly TriviaScheduleRow[],
+  venueIds: readonly string[],
+): TriviaScheduleRow[] => {
+  const venues = new Set(venueIds.map((id) => String(id ?? "").trim()).filter(Boolean));
+  return schedules.filter((row) => venues.has(String(row.venue_id ?? "").trim()));
+};
+
+/**
  * Resolve every game-winner reward whose venue finished a Live Trivia game in
  * the lookback window. Safe to run repeatedly (see idempotency note above).
  *
  * One bad occurrence or campaign never aborts the sweep — failures are collected
- * into the report so the rest still resolve.
+ * into the report so the rest still resolve. `scope` limits it to those venues'
+ * games (settleVenueBeforeScheduleChange); the cron passes nothing.
  */
 export async function resolveGameWinnerRewards(
   nowMs: number = Date.now(),
+  scope?: PayoutSweepScope,
 ): Promise<ResolveGameWinnerRewardsReport> {
   const report: ResolveGameWinnerRewardsReport = {
     occurrencesExamined: 0,
@@ -216,7 +243,12 @@ export async function resolveGameWinnerRewards(
   // Oldest game first. A one-off reward can only be spent once, so which game
   // claims it must be deterministic (the earliest eligible one) rather than a
   // function of whatever order the schedule rows came back in.
-  const occurrences = (await findEndedOccurrences(nowMs)).sort((a, b) => a.startMs - b.startMs);
+  const ended = !scope
+    ? await findEndedOccurrences(nowMs)
+    : scope.schedules
+      ? endedOccurrencesFromRows(schedulesInScope(scope.schedules, scope.venueIds), nowMs)
+      : await findEndedOccurrences(nowMs, undefined, scope.venueIds);
+  const occurrences = ended.sort((a, b) => a.startMs - b.startMs);
   report.occurrencesExamined = occurrences.length;
   if (occurrences.length === 0) return report;
 
@@ -226,9 +258,14 @@ export async function resolveGameWinnerRewards(
   // first. Scoping by venue pushes the cap to apply per venue instead (see
   // listChallengeCampaigns's venue_ids overlap filter in challengeCampaigns.ts).
   const venueIds = Array.from(new Set(occurrences.map((occurrence) => occurrence.venueId)));
-  const campaignsByVenue = await Promise.all(
-    venueIds.map((venueId) => listChallengeCampaigns({ venueId })),
-  );
+  // Preloaded prizes are filtered the way listChallengeCampaigns({ venueId }) filters
+  // (at the venue, or global); isLiveTriviaGameWinnerCampaign then drops global ones.
+  const preloaded = scope?.campaigns;
+  const campaignsByVenue = preloaded
+    ? venueIds.map((venueId) =>
+        preloaded.filter((campaign) => campaign.venueIds.length === 0 || campaign.venueIds.includes(venueId)),
+      )
+    : await Promise.all(venueIds.map((venueId) => listChallengeCampaigns({ venueId })));
   const gameWinnerCampaignById = new Map<string, ChallengeCampaign>();
   for (const campaigns of campaignsByVenue) {
     for (const campaign of campaigns) {

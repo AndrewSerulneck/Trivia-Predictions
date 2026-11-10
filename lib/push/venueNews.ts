@@ -2,6 +2,7 @@ import "server-only";
 import { after } from "next/server";
 import { disablePushDevices } from "@/lib/push/devices";
 import { isPushSendingConfigured, sendPushMessages, type PushMessage } from "@/lib/push/fcm";
+import { venuePushPath, type VenuePushPanel } from "@/lib/pushLanding";
 import { describeRewardPrizeInSentence, type RewardPrizeSummaryInput } from "@/lib/rewardDefinitions";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getVenueDisplayName } from "@/lib/venueDisplayName";
@@ -67,30 +68,31 @@ const formatIn = (ms: number, timezone: string, options: Intl.DateTimeFormatOpti
 const joinWords = (words: string[]): string =>
   words.length <= 1 ? (words[0] ?? "") : `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`;
 
-const titleAt = (what: string, venueName: string | null): string =>
-  venueName ? `${what} at ${venueName}` : `${what} at your bar`;
+// Invitations, never "tap to play" (away-mode plan, Phase C2): the phone may be anywhere, and the tap opens
+// Venue Home, view-only when the player isn't at the bar.
+const titleAt = (venueName: string | null): string => (venueName ? `New at ${venueName}` : "New at your bar");
 
-/** Pure: the push for a new game — "Live Trivia every Thursday at 8:00 PM. Tap to see it." */
+/** Pure: the push for a new game — "New at Pacific Street" / "Live Trivia, Thursdays 8:00 PM." */
 export const newGamePush = (
   schedule: Pick<OwnerSchedule, "gameType" | "startTime" | "timezone" | "recurringType" | "recurringDays">,
   venueName: string | null,
 ): { title: string; body: string } => {
   const startMs = Date.parse(schedule.startTime);
   const time = formatIn(startMs, schedule.timezone, { hour: "numeric", minute: "2-digit" });
-  const days = DAY_ORDER.filter((day) => (schedule.recurringDays ?? []).includes(day)).map((day) => DAY_NAME[day]);
+  const days = DAY_ORDER.filter((day) => (schedule.recurringDays ?? []).includes(day)).map((day) => `${DAY_NAME[day]}s`);
   const when =
     schedule.recurringType === "daily"
-      ? `every day at ${time}`
+      ? `every day ${time}`
       : schedule.recurringType === "weekly" && days.length > 0
-        ? `every ${joinWords(days)} at ${time}`
-        : `${formatIn(startMs, schedule.timezone, { weekday: "short", month: "short", day: "numeric" })} at ${time}`;
+        ? `${joinWords(days)} ${time}`
+        : `${formatIn(startMs, schedule.timezone, { weekday: "short", month: "short", day: "numeric" })}, ${time}`;
   return {
-    title: titleAt("New game", venueName),
-    body: `${GAME_NAME[schedule.gameType] ?? "A new game"} ${when}. Tap to see it.`,
+    title: titleAt(venueName),
+    body: `${GAME_NAME[schedule.gameType] ?? "New game"}, ${when}.`,
   };
 };
 
-/** Pure: the push for a new prize — "Win a $25 gift card. Tap to see how." */
+/** Pure: the push for a new prize — "New at Pacific Street" / "Win a $25 gift card." */
 export const newPrizePush = (
   prize: RewardPrizeSummaryInput & { placePrizes?: RewardPrizeSummaryInput[] | null },
   venueName: string | null,
@@ -98,15 +100,16 @@ export const newPrizePush = (
   const places = prize.placePrizes ?? [];
   const body =
     places.length > 1
-      ? `Prizes for the top ${places.length}. Tap to see how to win.`
-      : `Win ${describeRewardPrizeInSentence(places[0] ?? prize)}. Tap to see how.`;
-  return { title: titleAt("New prize", venueName), body };
+      ? `Prizes for the top ${places.length}.`
+      : `Win ${describeRewardPrizeInSentence(places[0] ?? prize)}.`;
+  return { title: titleAt(venueName), body };
 };
 
 const announce = async (input: {
   venueId: string;
   kind: VenueNewsKind;
   sourceId: string;
+  panel: VenuePushPanel;
   compose: (venueName: string | null) => { title: string; body: string };
 }): Promise<VenueNewsReport> => {
   const report: VenueNewsReport = { kind: input.kind, sent: 0, failed: 0, disabledDevices: 0 };
@@ -135,7 +138,7 @@ const announce = async (input: {
     }
 
     const { title, body } = input.compose(await getVenueDisplayName(input.venueId));
-    const path = `/venue/${encodeURIComponent(input.venueId)}`;
+    const path = venuePushPath(input.venueId, input.panel);
     const messages: PushMessage[] = phones.map((phone) => ({ token: phone.token, title, body, path }));
     const results = await sendPushMessages(messages);
     const deadDeviceIds: string[] = [];
@@ -167,6 +170,7 @@ export const announceNewGame = async (schedule: OwnerSchedule, nowMs: number = D
     venueId: schedule.venueId,
     kind: "game",
     sourceId: schedule.id,
+    panel: "games",
     compose: (venueName) => newGamePush(schedule, venueName),
   });
 };
@@ -180,6 +184,7 @@ export const announceNewPrize = async (
     venueId,
     kind: "prize",
     sourceId: campaign.id,
+    panel: "prizes",
     compose: (venueName) => newPrizePush(campaign, venueName),
   });
 

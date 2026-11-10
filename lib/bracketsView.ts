@@ -366,6 +366,8 @@ export const bracketSaveMessage = (outcome: string | null): string => {
       return "Picks just locked. Your last saved picks are the ones that count.";
     case "not_open":
       return "This bracket isn't open yet.";
+    case "not_at_venue":
+      return "Play at the bar.";
     case "wrong_venue":
       return "Open this from the venue you joined.";
     case "rehearsal_only":

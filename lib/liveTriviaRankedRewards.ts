@@ -64,10 +64,11 @@ import {
   type TriviaScheduleRow,
 } from "@/lib/liveShowdownEngine";
 import { loadLiveTriviaWeekTotals, type LiveTriviaGameRef } from "@/lib/liveTriviaWeekTotals";
-import { rankWeekPlaces } from "@/lib/rankedPlaceRewards";
+import { rankWeekPlaces, type RankedPlace } from "@/lib/rankedPlaceRewards";
 import { LIVE_TRIVIA_REWARD_DEFINITION_ID } from "@/lib/rewardDefinitions";
 import { occurrenceMatchesSlots, weekdayForOccurrenceDate } from "@/lib/rewardGameSlots";
 import { getVenueTimezone } from "@/lib/timezone";
+import { schedulesInScope, type PayoutSweepScope } from "@/lib/liveTriviaWinnerRewards";
 import type { ChallengeCampaign } from "@/types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -375,14 +376,191 @@ export const isWeekSettled = (
 const errorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
 
+/** Rank one week from its totals (a read, no write). Shared by the sweep and an early close. */
+const rankRankedWeek = async (
+  campaign: ChallengeCampaign,
+  week: DueRankedWeek,
+): Promise<ReturnType<typeof rankWeekPlaces>> => {
+  const totals = await loadLiveTriviaWeekTotals(week.games);
+  return rankWeekPlaces({
+    totals,
+    placeCount: campaign.placePrizes?.length ?? 0,
+    minPlayers: campaign.minPlayers ?? null,
+  });
+};
+
+/**
+ * Rank one week and pay it through award_ranked_cycle_places — the ONE settle path:
+ * the sweep calls this, and an early close ranks with the same rankRankedWeek and pays
+ * with the same RPC (payPlannedWeekClose). The RPC refuses a week already settled.
+ */
+const settleRankedWeek = async (params: {
+  campaign: ChallengeCampaign;
+  venueId: string;
+  week: DueRankedWeek;
+  now: Date;
+}): Promise<{ status: RankedCycleAwardStatus; ranked: ReturnType<typeof rankWeekPlaces> }> => {
+  const { campaign, venueId, week, now } = params;
+  const ranked = await rankRankedWeek(campaign, week);
+  const { status } = await awardRankedCyclePlaces({
+    campaign,
+    venueId,
+    cycleStart: week.cycleStart,
+    places: ranked.places,
+    participantCount: ranked.participantCount,
+    now,
+  });
+  return { status, ranked };
+};
+
+/**
+ * The CURRENT week's games that have already ended, as a week to close now — for a
+ * weekly places prize a schedule change is about to retire mid-week (Q5 of
+ * docs/cancelled-prizes-pick-windows-away-mode-plan.md, Phase R1). Same game list and
+ * week key as the resolver (planCurrentRankedWeek); only games with `endMs ≤ nowMs`
+ * count. Null when nothing has been played yet, or the reward doesn't count those
+ * nights (D8, judged on the last night played). Pure; throws like planCurrentRankedWeek.
+ */
+export const planEarlyCloseRankedWeek = (params: {
+  campaign: ChallengeCampaign;
+  venueId: string;
+  schedules: readonly TriviaScheduleRow[];
+  timezone: string;
+  nowMs: number;
+}): DueRankedWeek | null => {
+  const { cycleStart, games } = planCurrentRankedWeek(params);
+  const played = games.filter((game) => game.endMs <= params.nowMs);
+  if (played.length === 0) return null;
+  const lastGameEndMs = Math.max(...played.map((game) => game.endMs));
+  if (!rewardCountsWeek(params.campaign, lastGameEndMs)) return null;
+  return { cycleStart, games: played, lastGameEndMs };
+};
+
+/**
+ * A week ranked BEFORE a schedule change (while its answers still exist) and paid only
+ * AFTER the change, if the change really retires the prize (Phase R7). Everything the
+ * award RPC needs, so paying reads nothing.
+ */
+export type RankedWeekClosePlan = {
+  campaignId: string;
+  /** The prize as read before the change: the RPC snapshots its place prizes. */
+  campaign: ChallengeCampaign;
+  venueId: string;
+  cycleStart: Date;
+  places: RankedPlace[];
+  participantCount: number;
+  gameCount: number;
+  tiebreakUnresolved: boolean;
+};
+
+export type RankedWeekEarlyClose =
+  | { outcome: "planned"; plan: RankedWeekClosePlan }
+  | { outcome: "nothing_played" }
+  | { outcome: "already_settled"; cycleStart: string };
+
+/**
+ * Rank a weekly places prize's current week on the nights already played, for a schedule
+ * change that would retire it (R1 step 2c, split by R7). `schedules` are the venue's
+ * schedules BEFORE the change. Reads settlements and the week's totals; writes NOTHING.
+ * The caller pays the plan with payPlannedWeekClose only once the prize is really retired.
+ * Throws on any failure (the caller refuses the change).
+ */
+export const planRankedWeekEarlyClose = async (params: {
+  campaign: ChallengeCampaign;
+  schedules: readonly TriviaScheduleRow[];
+  nowMs: number;
+}): Promise<RankedWeekEarlyClose> => {
+  const { campaign, schedules, nowMs } = params;
+  const configError = rankedRewardConfigError(campaign);
+  if (configError) throw new Error(configError);
+  const venueId = campaign.venueIds[0];
+  const timezone = await getVenueTimezone(venueId);
+  const week = planEarlyCloseRankedWeek({ campaign, venueId, schedules, timezone, nowMs });
+  if (!week) return { outcome: "nothing_played" };
+
+  const settlements = await listChallengeCycleSettlements({
+    challengeIds: [campaign.id],
+    cycleStartFrom: new Date(week.cycleStart.getTime() - SETTLED_WEEK_MATCH_TOLERANCE_MS),
+  });
+  if (isWeekSettled(settlements, campaign.id, week.cycleStart.getTime())) {
+    return { outcome: "already_settled", cycleStart: week.cycleStart.toISOString() };
+  }
+
+  const ranked = await rankRankedWeek(campaign, week);
+  return {
+    outcome: "planned",
+    plan: {
+      campaignId: campaign.id,
+      campaign,
+      venueId,
+      cycleStart: week.cycleStart,
+      places: ranked.places,
+      participantCount: ranked.participantCount,
+      gameCount: week.games.length,
+      tiebreakUnresolved: ranked.tiebreakUnresolved,
+    },
+  };
+};
+
+/**
+ * Pay a planned early close through award_ranked_cycle_places (still the only writer; it
+ * refuses a week already settled, returning "already_resolved"). Every status counts as
+ * paid; a failure throws and the caller keeps the prize active.
+ */
+export const payPlannedWeekClose = async (
+  plan: RankedWeekClosePlan,
+  now: Date,
+): Promise<RankedCycleAwardStatus> => {
+  const { status } = await awardRankedCyclePlaces({
+    campaign: plan.campaign,
+    venueId: plan.venueId,
+    cycleStart: plan.cycleStart,
+    places: plan.places,
+    participantCount: plan.participantCount,
+    now,
+  });
+  console.info("[RankedReward] week-closed-early", {
+    campaignId: plan.campaignId,
+    cycleStart: plan.cycleStart.toISOString(),
+    status,
+    games: plan.gameCount,
+    participantCount: plan.participantCount,
+    places: status === "awarded" ? plan.places.length : 0,
+  });
+  return status;
+};
+
+/**
+ * Preloaded prizes narrowed exactly as listActiveRankedPlaceCampaigns(venueIds) reads them:
+ * ranked places, active, not won out, sharing a venue with `venueIds`, oldest first. Pure.
+ */
+export const rankedPlaceCampaignsInScope = (
+  campaigns: readonly ChallengeCampaign[],
+  venueIds: readonly string[],
+): ChallengeCampaign[] => {
+  const venues = new Set(venueIds.map((id) => String(id ?? "").trim()).filter(Boolean));
+  return campaigns
+    .filter(
+      (campaign) =>
+        campaign.winCondition === "ranked_places" &&
+        campaign.isActive &&
+        !campaign.winnerUserId &&
+        campaign.venueIds.some((venueId) => venues.has(venueId)),
+    )
+    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+};
+
 /**
  * Settle every ranked-places reward week that has ended and isn't settled yet.
  * Safe to run repeatedly (see the header). One bad reward or week never stops the
  * others — failures are collected into the report and logged with
- * `[RankedReward]`; the next sweep retries them.
+ * `[RankedReward]`; the next sweep retries them. `scope` limits it to prizes at
+ * those venues (settleVenueBeforeScheduleChange), and its preloaded `campaigns` /
+ * `schedules` replace this sweep's own reads; the cron passes nothing.
  */
 export async function resolveRankedPlaceRewards(
   nowMs: number = Date.now(),
+  scope?: PayoutSweepScope,
 ): Promise<ResolveRankedPlaceRewardsReport> {
   const report: ResolveRankedPlaceRewardsReport = {
     campaignsExamined: 0,
@@ -401,7 +579,10 @@ export async function resolveRankedPlaceRewards(
     console.error("[RankedReward] sweep-error", { scope, message });
   };
 
-  const campaigns = (await listActiveRankedPlaceCampaigns()).filter(isLiveTriviaRankedCampaign);
+  const listed = scope?.campaigns
+    ? rankedPlaceCampaignsInScope(scope.campaigns, scope.venueIds)
+    : await listActiveRankedPlaceCampaigns(scope?.venueIds);
+  const campaigns = listed.filter(isLiveTriviaRankedCampaign);
   report.campaignsExamined = campaigns.length;
 
   const sweepable: ChallengeCampaign[] = [];
@@ -414,7 +595,10 @@ export async function resolveRankedPlaceRewards(
 
   let schedules: TriviaScheduleRow[];
   try {
-    schedules = await loadLiveTriviaSchedulesForVenues(sweepable.map((campaign) => campaign.venueIds[0]));
+    const venueIds = sweepable.map((campaign) => campaign.venueIds[0]);
+    schedules = scope?.schedules
+      ? schedulesInScope(scope.schedules, venueIds)
+      : await loadLiveTriviaSchedulesForVenues(venueIds);
   } catch (error) {
     fail("schedules", errorMessage(error, "Failed to load Live Trivia schedules."));
     return report;
@@ -457,20 +641,7 @@ export async function resolveRankedPlaceRewards(
       continue;
     }
     try {
-      const totals = await loadLiveTriviaWeekTotals(week.games);
-      const ranked = rankWeekPlaces({
-        totals,
-        placeCount: campaign.placePrizes?.length ?? 0,
-        minPlayers: campaign.minPlayers ?? null,
-      });
-      const { status } = await awardRankedCyclePlaces({
-        campaign,
-        venueId,
-        cycleStart: week.cycleStart,
-        places: ranked.places,
-        participantCount: ranked.participantCount,
-        now,
-      });
+      const { status, ranked } = await settleRankedWeek({ campaign, venueId, week, now });
 
       const awarded = status === "awarded";
       if (status === "already_resolved") report.alreadyResolved += 1;

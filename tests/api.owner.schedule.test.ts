@@ -41,6 +41,7 @@ vi.mock("@/lib/liveShowdownAdmin", () => ({
 import { GET, POST } from "@/app/api/owner/schedule/route";
 import { DELETE, PATCH } from "@/app/api/owner/schedule/[id]/route";
 import { rangesOverlap } from "@/lib/ownerSchedule";
+import { SCHEDULE_CHANGE_SETTLEMENT_MESSAGE, ScheduleChangeSettlementError } from "@/lib/rewardGameSlotCascade";
 
 const OWNER = { ownerId: "owner-1", venueIds: ["venue-1", "venue-2"] };
 
@@ -374,6 +375,22 @@ describe("Phase 4b — Live Trivia scheduling", () => {
     expect(mocks.abandonVenueAutoSession).not.toHaveBeenCalled();
   });
 
+  // Phase R1: a prize this cancel ends couldn't be paid first, so nothing was deleted.
+  it("409s a Live Trivia cancel whose prizes couldn't be paid first", async () => {
+    mocks.getSchedule.mockResolvedValue(null);
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeAdminLive({ id: "lt-1", venueId: "venue-1" })]);
+    mocks.deleteAdminLiveShowdownSchedule.mockRejectedValue(
+      new ScheduleChangeSettlementError([{ campaignId: "ranked-1", message: "sweep down" }]),
+    );
+
+    const res = await DELETE(
+      new Request("http://localhost/api/owner/schedule/lt-1", { method: "DELETE" }),
+      paramsFor("lt-1"),
+    );
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ ok: false, error: SCHEDULE_CHANGE_SETTLEMENT_MESSAGE });
+  });
+
   it("403s deleting a Live Trivia schedule for a venue the owner does not control", async () => {
     mocks.getSchedule.mockResolvedValue(null);
     mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeAdminLive({ id: "lt-x", venueId: "venue-999" })]);
@@ -479,6 +496,19 @@ describe("Phase 3 — owner recurrence (PATCH edit)", () => {
       recurringType: "weekly",
       recurringDays: ["sun", "mon", "tue"],
     });
+  });
+
+  it("409s an edit whose prizes couldn't be paid first (Phase R1)", async () => {
+    mocks.getSchedule.mockResolvedValue(null);
+    mocks.listAdminLiveShowdownSchedules.mockResolvedValue([makeAdminLive({ id: "lt-1", venueId: "venue-1" })]);
+    mocks.updateAdminLiveShowdownSchedule.mockRejectedValue(new ScheduleChangeSettlementError([]));
+
+    const res = await PATCH(
+      patchRequest("lt-1", { ...validPatchBody, recurringType: "weekly", recurringDays: ["tue"] }),
+      paramsFor("lt-1"),
+    );
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ ok: false, error: SCHEDULE_CHANGE_SETTLEMENT_MESSAGE });
   });
 
   it("400s a weekly edit with no selected days", async () => {

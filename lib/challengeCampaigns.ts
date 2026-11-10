@@ -2433,14 +2433,20 @@ export async function loadPickEmPrizeTerms(campaignIds: readonly string[]): Prom
  * rewards exist. Throws on a read error (the sweep must not mistake a failed read
  * for "no ranked rewards").
  */
-export async function listActiveRankedPlaceCampaigns(): Promise<ChallengeCampaign[]> {
+export async function listActiveRankedPlaceCampaigns(venueIds?: readonly string[]): Promise<ChallengeCampaign[]> {
   assertConfigured();
-  const { data, error } = await supabaseAdmin!
+  // `venueIds` narrows to prizes at those venues (a partner's own schedule change,
+  // lib/rewardGameSlotCascade.ts); omitted = every venue (the cron).
+  const venues = venueIds ? [...new Set(venueIds.map((id) => String(id ?? "").trim()).filter(Boolean))] : null;
+  if (venues && venues.length === 0) return [];
+  let query = supabaseAdmin!
     .from("challenge_campaigns")
     .select(CAMPAIGN_SELECT_COLUMNS)
     .eq("win_condition", "ranked_places")
     .eq("is_active", true)
-    .is("winner_user_id", null)
+    .is("winner_user_id", null);
+  if (venues) query = query.overlaps("venue_ids", venues);
+  const { data, error } = await query
     .order("created_at", { ascending: true })
     .returns<ChallengeCampaignRow[]>();
   if (error) throw new Error(error.message ?? "Failed to load ranked-place rewards.");

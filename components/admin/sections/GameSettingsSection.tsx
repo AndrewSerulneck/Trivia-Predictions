@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
+import { PickWindowsPanel } from "@/components/gameSettings/PickWindowsPanel";
 import { adminFieldAccent, adminLabel } from "@/lib/adminStyles";
+import type { PickEmPickWindows } from "@/lib/pickemPickWindow";
 import type { Venue } from "@/types";
 
 type NFLPickEmScoringMode = "standard" | "spread";
@@ -12,6 +14,7 @@ type VenueGameSettings = {
   venueId: string;
   nflPickEmScoringMode: NFLPickEmScoringMode;
   cfbPickEmScoringMode: NFLPickEmScoringMode;
+  pickWindows?: PickEmPickWindows;
   createdAt: string | null;
   updatedAt: string | null;
 };
@@ -308,6 +311,18 @@ export function GameSettingsSection({ venues }: GameSettingsSectionProps) {
           </div>
         );
       })}
+
+      {selectedVenueId ? (
+        <PickWindowsPanel<VenueGameSettings>
+          key={`pick-windows-${selectedVenueId}`}
+          tone="admin"
+          endpoint="/api/admin/game-settings"
+          venueId={selectedVenueId}
+          saved={savedSettings?.pickWindows ?? {}}
+          disabled={loadingSettings || !savedSettings}
+          onSaved={setSavedSettings}
+        />
+      ) : null}
     </div>
   );
 }

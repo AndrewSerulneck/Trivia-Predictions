@@ -6,7 +6,9 @@ import { OwnerShell } from "@/components/owner/OwnerShell";
 import { ShareDetailsPanel } from "@/components/owner/share/ShareDetailsPanel";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { PickWindowsPanel } from "@/components/gameSettings/PickWindowsPanel";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
+import type { PickEmPickWindows } from "@/lib/pickemPickWindow";
 
 type Venue = {
   id: string;
@@ -20,6 +22,7 @@ type VenueGameSettings = {
   venueId: string;
   nflPickEmScoringMode: NFLPickEmScoringMode;
   cfbPickEmScoringMode: NFLPickEmScoringMode;
+  pickWindows?: PickEmPickWindows;
   createdAt: string | null;
   updatedAt: string | null;
 };
@@ -345,6 +348,17 @@ const OwnerGameSettingsPage = () => {
                 </div>
               );
             })}
+
+            <PickWindowsPanel<VenueGameSettings>
+              key={`pick-windows-${selectedVenueId}`}
+              tone="owner"
+              endpoint="/api/owner/game-settings"
+              venueId={selectedVenueId}
+              saved={savedSettings?.pickWindows ?? {}}
+              disabled={loadingSettings || !savedSettings}
+              onSaved={setSavedSettings}
+              onUnauthorized={(code) => router.push(ownerAuthRecoveryPath(code))}
+            />
 
             {/* What players' share pictures show (Phase 9e); also asked in Schedule and Prizes. */}
             <ShareDetailsPanel key={selectedVenueId} venueId={selectedVenueId} />

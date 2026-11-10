@@ -8,12 +8,13 @@ import {
 } from "@/lib/geofence";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-// Server-side presence lease lifetime. Must stay in sync with the client
-// re-check cadence (PRESENCE_CHECK_INTERVAL_MS in
-// components/venue/VenuePresenceBoundary.tsx). Raised from 3 min to 15 min to
-// cut battery/permission churn; see the TRADEOFF note there — a departed user
-// keeps access for up to one TTL. Lower both together to tighten enforcement.
-export const VENUE_PRESENCE_TTL_MS = 15 * 60 * 1000;
+// Server-side presence lease lifetime. It outlives the client re-check cadence
+// (PRESENCE_CHECK_INTERVAL_MS = 15 min in components/venue/VenuePresenceBoundary.tsx)
+// by exactly 1 minute, so the heartbeat renews the lease before it ends and a
+// player at the bar never sees it lapse (R10). See the TRADEOFF note there — a
+// departed user keeps access for up to one TTL. Lower both together (keeping the
+// 1-minute margin) to tighten enforcement.
+export const VENUE_PRESENCE_TTL_MS = 16 * 60 * 1000;
 export const VENUE_PRESENCE_FALSE_POSITIVE_WINDOW_MS = 5 * 60 * 1000;
 
 // God Mode accounts (Andrew, Marc — `accounts.god_mode`) may access any venue from
@@ -181,7 +182,7 @@ export function getVenuePresenceTuningConfig(): VenuePresenceTuningConfig {
   return {
     ttlMs: normalizeIntegerEnv(process.env.VENUE_PRESENCE_TTL_MS, VENUE_PRESENCE_TTL_MS, {
       min: 30_000,
-      max: 15 * 60 * 1000,
+      max: 16 * 60 * 1000,
     }),
     minRadiusMeters: normalizeIntegerEnv(process.env.VENUE_PRESENCE_MIN_RADIUS_METERS, 300, {
       min: 100,
@@ -408,7 +409,10 @@ async function upsertPresence(params: {
         venue_id: params.venueId,
         status: params.status,
         expires_at: params.expiresAt,
-        last_verified_at: params.lastVerifiedAt ?? null,
+        // `last_verified_at` is the player's last check-in at this bar: "Your bars" lists a bar for 90
+        // days after it (lib/recentVenues.ts). A failed check passes no time, so the column is left out
+        // and keeps the last real check-in (an upsert updates only the columns it sends).
+        ...(params.lastVerifiedAt !== undefined ? { last_verified_at: params.lastVerifiedAt } : {}),
         last_distance_meters: normalizeInteger(params.distanceMeters),
         last_accuracy_meters: normalizeInteger(params.accuracyMeters),
         source: params.source,
@@ -643,6 +647,17 @@ export async function getActiveVenuePresence(params: {
     return failure({ code: "VENUE_PRESENCE_REQUIRED", status: "missing" });
   }
 
+  if (presenceRowAllowsPlay(data, Date.now())) {
+    return {
+      ok: true,
+      status: "active",
+      expiresAt: data.expires_at,
+      lastVerifiedAt: data.last_verified_at ?? data.expires_at,
+      distanceMeters: data.last_distance_meters ?? undefined,
+      accuracyMeters: data.last_accuracy_meters ?? undefined,
+    };
+  }
+
   if (data.status !== "active") {
     const code: VenuePresenceCode =
       data.status === "out_of_range"
@@ -666,43 +681,66 @@ export async function getActiveVenuePresence(params: {
     return result;
   }
 
-  const expiresAtMs = Date.parse(data.expires_at);
-  if (!Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
-    await upsertPresence({
-      userId,
-      venueId,
-      status: "expired",
-      expiresAt: data.expires_at,
-      lastVerifiedAt: data.last_verified_at,
-      distanceMeters: data.last_distance_meters,
-      accuracyMeters: data.last_accuracy_meters,
-      source: "server",
-    });
-    const result = failure({
-      code: "VENUE_PRESENCE_EXPIRED",
-      status: "expired",
-      expiresAt: data.expires_at,
-      distanceMeters: data.last_distance_meters ?? undefined,
-      accuracyMeters: data.last_accuracy_meters ?? undefined,
-    });
-    await recordVenuePresenceFailureTelemetry({
-      userId,
-      venueId,
-      source: "server",
-      failure: result,
-    });
-    return result;
-  }
-
-  return {
-    ok: true,
-    status: "active",
+  // An active row the predicate refused has a lapsed (or unreadable) lease.
+  await upsertPresence({
+    userId,
+    venueId,
+    status: "expired",
     expiresAt: data.expires_at,
-    lastVerifiedAt: data.last_verified_at ?? data.expires_at,
+    lastVerifiedAt: data.last_verified_at,
+    distanceMeters: data.last_distance_meters,
+    accuracyMeters: data.last_accuracy_meters,
+    source: "server",
+  });
+  const result = failure({
+    code: "VENUE_PRESENCE_EXPIRED",
+    status: "expired",
+    expiresAt: data.expires_at,
     distanceMeters: data.last_distance_meters ?? undefined,
     accuracyMeters: data.last_accuracy_meters ?? undefined,
-  };
+  });
+  await recordVenuePresenceFailureTelemetry({
+    userId,
+    venueId,
+    source: "server",
+    failure: result,
+  });
+  return result;
 }
+
+/**
+ * The one "at the bar" rule (R10): an `active` row whose lease hasn't ended. Writes (getActiveVenuePresence) and
+ * Category Blitz's poll (isVenuePresenceLive) both decide with it and add no grace of their own. The lease
+ * (VENUE_PRESENCE_TTL_MS, 16 min) outlives the 15-minute heartbeat, so a player who stays never sees it lapse.
+ */
+export const presenceRowAllowsPlay = (
+  row: Pick<VenuePresenceRow, "status" | "expires_at">,
+  nowMs: number
+): boolean => {
+  if (row.status !== "active") return false;
+  const expiresAtMs = Date.parse(row.expires_at);
+  return Number.isFinite(expiresAtMs) && expiresAtMs > nowMs;
+};
+
+/**
+ * Read-only "is this player at the bar right now?" for hot paths that run on every poll (the Category Blitz
+ * game page's session GET, every 15 s). Unlike getActiveVenuePresence it writes nothing and logs no telemetry;
+ * it decides with the same rule (presenceRowAllowsPlay).
+ */
+export const isVenuePresenceLive = async (params: { userId: string; venueId: string }): Promise<boolean> => {
+  const userId = params.userId.trim();
+  const venueId = params.venueId.trim();
+  if (!supabaseAdmin || !userId || !venueId) return false;
+  if (await isGodModeUser(userId)) return true;
+  const { data, error } = await supabaseAdmin
+    .from("venue_presence_sessions")
+    .select("status, expires_at")
+    .eq("user_id", userId)
+    .eq("venue_id", venueId)
+    .maybeSingle<Pick<VenuePresenceRow, "status" | "expires_at">>();
+  if (error || !data) return false;
+  return presenceRowAllowsPlay(data, Date.now());
+};
 
 export async function requireActiveVenuePresence(params: {
   userId: string;

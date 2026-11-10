@@ -17,6 +17,10 @@ type TiebreakerGame = {
   awayTeam: string;
   startsAt: string;
   isLocked: boolean;
+  /** The sport's pick window may close before kickoff (away-mode plan B2). */
+  locksAt?: string;
+  /** Set while the window is shut: "Picks open Mon 12:00 AM" / "Picks closed". */
+  pickWindowMessage?: string;
 };
 
 const MAX_TOTAL = 400;
@@ -142,7 +146,9 @@ export function PickEmPrizeTiebreakerCard({
 
       {game.isLocked ? (
         <p className="mt-3 text-footnote font-bold text-ht-fg-soft">
-          {savedGuess !== null ? `Your guess: ${savedGuess}` : "You didn't answer the tiebreaker."}
+          {savedGuess !== null
+            ? `Your guess: ${savedGuess}`
+            : game.pickWindowMessage ?? "You didn't answer the tiebreaker."}
         </p>
       ) : (
         <>
@@ -181,7 +187,7 @@ export function PickEmPrizeTiebreakerCard({
               Your guess of {savedGuess} is saved
             </p>
           ) : null}
-          <p className="mt-2 text-caption font-semibold text-ht-fg-faint">Locks at {formatKickoff(game.startsAt)}</p>
+          <p className="mt-2 text-caption font-semibold text-ht-fg-faint">Locks at {formatKickoff(game.locksAt ?? game.startsAt)}</p>
         </>
       )}
     </section>

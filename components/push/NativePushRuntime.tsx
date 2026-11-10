@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { onPushTapped, onPushTokenChanged, syncPushRegistration } from "@/lib/nativePush";
+import { savePlayerPanel } from "@/lib/playerViewState";
+import { venuePushLanding } from "@/lib/pushLanding";
 
 // The app's push runtime (docs/native-app-store-plan.md Phase 5.1). Rendered by PlayerRuntime only
 // inside the app, so the website never downloads it. It
@@ -16,7 +18,12 @@ export const NativePushRuntime = (): null => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const stopTaps = onPushTapped((path) => router.push(path));
+    const stopTaps = onPushTapped((path) => {
+      // A game/prize push picks its Venue Home screen first, so it survives a redirect via the sign-in list.
+      const landing = venuePushLanding(path);
+      if (landing) savePlayerPanel(landing.venueId, landing.panel);
+      router.push(path);
+    });
     const stopTokens = onPushTokenChanged(() => void syncPushRegistration({ force: true }));
     return () => {
       stopTaps?.();

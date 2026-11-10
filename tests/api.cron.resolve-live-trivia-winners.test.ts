@@ -46,6 +46,8 @@ describe("resolve-live-trivia-winners cron", () => {
     const body = await res.json();
     expect(body).toEqual({ ok: true, ...gameReport, rankedPlaces: rankedReport, gameStartPushes: pushReport });
     const gameNow = resolveGameWinnerRewards.mock.calls[0][0];
+    // The cron sweeps every venue: no scope argument (Phase R1 adds one only for a partner's change).
+    expect(resolveGameWinnerRewards.mock.calls[0]).toEqual([gameNow]);
     expect(resolveRankedPlaceRewards).toHaveBeenCalledWith(gameNow);
     expect(sendLiveGameStartPushes).toHaveBeenCalledWith(gameNow);
     expect(resolveGameWinnerRewards.mock.invocationCallOrder[0]).toBeLessThan(

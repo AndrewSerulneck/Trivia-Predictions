@@ -737,8 +737,24 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     }
   }
 
+  // The prizes a delete/edit would end or shrink (dry run). Null on any failure: the warning never blocks.
+  const scheduleImpactNotice = async (query: Record<string, string>): Promise<string | null> => {
+    try {
+      const res = await fetch(`/api/admin?${new URLSearchParams({ resource: "live-showdown-schedule-impact", ...query })}`);
+      const payload = (await res.json()) as { ok: boolean; notice?: string | null };
+      return payload.ok ? payload.notice ?? null : null;
+    } catch {
+      return null;
+    }
+  };
+
   async function deleteSchedule(id: string, title: string) {
-    if (!confirm(`Delete "${title}"? All associated questions and answers will also be removed.`))
+    const notice = await scheduleImpactNotice({ id });
+    if (
+      !confirm(
+        `Delete "${title}"? All associated questions and answers will also be removed.${notice ? `\n\n${notice}` : ""}`,
+      )
+    )
       return;
     try {
       const res = await fetch(`/api/admin?resource=live-showdown-schedules&id=${id}`, {
@@ -870,6 +886,20 @@ export function SchedulesSection({ venues }: SchedulesSectionProps) {
     }
     setCreateBusy(true);
     setCreateError("");
+    const notice = await scheduleImpactNotice({
+      id: editingScheduleId,
+      targetDate: formDate,
+      startTime: formTime,
+      timezone: formTz,
+      recurringType: formRecurringType,
+      recurringDays: formRecurringType === "weekly" ? formRecurringDays.join(",") : "",
+      numRounds: String(numRounds),
+      venueId: formVenueId,
+    });
+    if (notice && !confirm(`Save changes?\n\n${notice}`)) {
+      setCreateBusy(false);
+      return;
+    }
     try {
       const res = await fetch("/api/admin", {
         method: "PATCH",

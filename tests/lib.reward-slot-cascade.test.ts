@@ -17,9 +17,31 @@ const mocks = vi.hoisted(() => ({
   listChallengeCampaigns: vi.fn(async (_params: { venueId?: string } = {}): Promise<ChallengeCampaign[]> => []),
   updateChallengeCampaign: vi.fn(async (input: Record<string, unknown>) => input as unknown as ChallengeCampaign),
   deleteChallengeCampaign: vi.fn(async () => ({ deleted: true })),
+  // Rule 4 reads the venue's remaining games. Default: a weekly Tue/Thu game is
+  // still on, so rule 4 retires nothing and these tests see rules 1–3 alone
+  // (rule 4 has its own file: tests/lib.reward-cascade-no-games-left.test.ts).
+  listVenueLiveShowdownSchedules: vi.fn(async () => [
+    {
+      id: "sched-1",
+      title: "Trivia",
+      startTime: "2026-10-01T23:00:00.000Z",
+      timezone: "America/New_York",
+      recurringType: "weekly",
+      recurringDays: ["tue", "thu"],
+      numRounds: 3,
+      venueId: "venue-1",
+      intermissionAdDelaySeconds: 10,
+      lobbyAdEnabled: true,
+      createdAt: "2026-10-01T00:00:00.000Z",
+      updatedAt: "2026-10-01T00:00:00.000Z",
+    },
+  ]),
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/lib/liveShowdownAdmin", () => ({
+  listVenueLiveShowdownSchedules: mocks.listVenueLiveShowdownSchedules,
+}));
 vi.mock("@/lib/challengeCampaigns", () => ({
   listChallengeCampaigns: mocks.listChallengeCampaigns,
   updateChallengeCampaign: mocks.updateChallengeCampaign,
@@ -27,11 +49,17 @@ vi.mock("@/lib/challengeCampaigns", () => ({
 }));
 
 import {
-  applyScheduleChangeToGameWinnerRewards,
+  applyScheduleChangeToGameWinnerRewards as applyUnsettled,
   cascadeScheduleChangeToRewards,
   describeCascadeReport,
   rewardCascadeRecurrence,
 } from "@/lib/rewardGameSlotCascade";
+
+// A real run changes a game-winner prize only when the pre-change settle confirmed it (Phase R7's
+// defence in depth). These tests are about rules 1–3 themselves, so every prize counts as settled.
+const SETTLED = new Set(["camp-1", "camp-broken", "camp-ok", "points", "retired"]);
+const applyScheduleChangeToGameWinnerRewards = (params: Parameters<typeof applyUnsettled>[0]) =>
+  applyUnsettled({ settledCampaignIds: SETTLED, ...params });
 
 function makeCampaign(overrides: Partial<ChallengeCampaign> = {}): ChallengeCampaign {
   return {
@@ -250,7 +278,7 @@ describe("applyScheduleChangeToGameWinnerRewards", () => {
     expect(report.retiredForRecurrenceChange).toEqual([]);
   });
 
-  it("leaves an unpinned (legacy) reward completely alone", async () => {
+  it("leaves an unpinned (legacy) reward completely alone while the venue still has games", async () => {
     // null means "award at every game" — it was never tied to this schedule.
     mocks.listChallengeCampaigns.mockResolvedValue([makeCampaign({ gameWinnerSlots: null })]);
 
@@ -261,10 +289,10 @@ describe("applyScheduleChangeToGameWinnerRewards", () => {
     });
 
     expect(mocks.updateChallengeCampaign).not.toHaveBeenCalled();
-    expect(report).toEqual({ pruned: [], deactivated: [], retiredForRecurrenceChange: [], errors: [] });
+    expect(report).toEqual({ pruned: [], deactivated: [], retiredForRecurrenceChange: [], retiredNoGamesLeft: [], errors: [] });
   });
 
-  it("ignores points-target rewards and already-inactive rewards", async () => {
+  it("ignores points-target rewards (games left) and already-inactive rewards", async () => {
     mocks.listChallengeCampaigns.mockResolvedValue([
       makeCampaign({ id: "points", winCondition: "points_threshold" }),
       makeCampaign({ id: "retired", isActive: false }),
@@ -329,6 +357,29 @@ describe("applyScheduleChangeToGameWinnerRewards", () => {
   });
 });
 
+describe("R7: rules 1–3 change only a prize the pre-change settle confirmed", () => {
+  it("leaves an unconfirmed pinned prize alone and reports it (shrink, retire and recurrence)", async () => {
+    const shrink = await applyUnsettled({ scheduleId: "sched-1", venueId: "venue-1", survivingWeekdays: ["tue"] });
+    const retire = await applyUnsettled({ scheduleId: "sched-1", venueId: "venue-1", survivingWeekdays: [] });
+    const recurrence = await applyUnsettled({
+      scheduleId: "sched-1",
+      venueId: "venue-1",
+      survivingWeekdays: ["tue", "thu"],
+      survivingRecurrence: "none",
+    });
+
+    expect(mocks.updateChallengeCampaign).not.toHaveBeenCalled();
+    for (const report of [shrink, retire, recurrence]) {
+      expect(report.pruned).toEqual([]);
+      expect(report.deactivated).toEqual([]);
+      expect(report.retiredForRecurrenceChange).toEqual([]);
+      expect(report.errors).toEqual([
+        { campaignId: "camp-1", message: "Not retired: its payout wasn't confirmed before the change." },
+      ]);
+    }
+  });
+});
+
 describe("cascadeScheduleChangeToRewards", () => {
   it("never lets a cascade failure surface as a failed schedule change", async () => {
     // The delete/edit already committed; throwing here would invite a retry.
@@ -341,7 +392,7 @@ describe("cascadeScheduleChangeToRewards", () => {
         venueId: "venue-1",
         survivingWeekdays: [],
       }),
-    ).resolves.toEqual({ pruned: [], deactivated: [], retiredForRecurrenceChange: [], errors: [] });
+    ).resolves.toEqual({ pruned: [], deactivated: [], retiredForRecurrenceChange: [], retiredNoGamesLeft: [], errors: [] });
 
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
@@ -413,7 +464,7 @@ describe("rewardCascadeRecurrence", () => {
 });
 
 describe("describeCascadeReport", () => {
-  const base = { pruned: [], deactivated: [], retiredForRecurrenceChange: [], errors: [] };
+  const base = { pruned: [], deactivated: [], retiredForRecurrenceChange: [], retiredNoGamesLeft: [], errors: [] };
 
   it("says nothing when no reward was affected", () => {
     expect(describeCascadeReport(base)).toBeNull();

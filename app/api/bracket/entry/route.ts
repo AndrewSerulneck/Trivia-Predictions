@@ -3,6 +3,7 @@ import { isBracketsEnabled } from "@/lib/seasonalGames";
 import { isBracketKind } from "@/lib/brackets/tree";
 import { BRACKET_SAVE_STATUS, parseBracketPicks, parseBracketTiebreaker, saveBracketEntry } from "@/lib/bracketsEntries";
 import { resolveRequestUserId } from "@/lib/serverSession";
+import { maybeRequireActiveVenuePresence, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
 // POST /api/bracket/entry { venueId, userId, tournamentId, kind, picks[63], tiebreaker } — save
 // (create or replace) the player's bracket, drafts included. The rules (open, lock by the database
@@ -27,6 +28,16 @@ export async function POST(request: Request) {
       { ok: false, error: "venueId, userId, tournamentId, kind (main or second), picks (63) and a tiebreaker (0–400 or null) are required." },
       { status: 400, headers: NO_STORE },
     );
+  }
+
+  // Saving a bracket is played at the bar (away-mode plan, Andrew 2026-11-09).
+  try {
+    await maybeRequireActiveVenuePresence({ userId: actor.userId, venueId });
+  } catch (error) {
+    if (venuePresenceErrorResponse(error)) {
+      return NextResponse.json({ ok: false, outcome: "not_at_venue" }, { status: 403, headers: NO_STORE });
+    }
+    return NextResponse.json({ ok: false, error: "Brackets are unavailable right now." }, { status: 503, headers: NO_STORE });
   }
 
   const result = await saveBracketEntry({ tournamentId, kind: body.kind, userId: actor.userId, venueId, picks, tiebreaker });

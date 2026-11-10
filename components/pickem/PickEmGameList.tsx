@@ -55,6 +55,8 @@ type PickEmGame = {
   // A Pick 'Em Prize's pick limit is used up: a NEW pick is refused (Phase 6).
   pickLimitReached?: boolean;
   pickLimitMessage?: string;
+  // The bar's pick window is shut for this game (away-mode plan B2).
+  pickWindowMessage?: string;
   userPickId?: string;
   userPickTeam?: string;
   userPickStatus?: "pending" | "won" | "lost" | "push" | "canceled";
@@ -83,6 +85,9 @@ type GamesResponse = {
   today?: PickEmTodaySummary;
   collegeScoring?: CollegeScoring;
   prizes?: PickEmGamePrize[];
+  // A sport with a pick window (away-mode plan B2): the day's one line and how far the arrows reach.
+  pickWindow?: { line: string; isOpen: boolean };
+  pickAheadThrough?: string;
   weekOptions?: Array<{ label: string; value: string }>;
   selectedWeekStartDate?: string;
   debug?: {
@@ -203,10 +208,14 @@ function shiftDateKey(dateKey: string, deltaDays: number): string {
   return new Date(parsed + deltaDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
-function isValidPastOrTodayDateKey(value: string): boolean {
+// Pick ahead (away-mode plan B2) reaches at most a week; the server's `pickAheadThrough` decides how far
+// a sport really goes (none without a pick window), and a day past it snaps back to today.
+const PICK_AHEAD_MAX_DAYS = 7;
+
+const isValidStartDateKey = (value: string): boolean => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  return value <= getLocalDateKey();
-}
+  return value <= shiftDateKey(getLocalDateKey(), PICK_AHEAD_MAX_DAYS);
+};
 
 function resultLabel(game: PickEmGame): string {
   if (!game.userPickStatus || game.userPickStatus === "pending") {
@@ -257,13 +266,15 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   const [selectedSportSlug, setSelectedSportSlug] = useState("");
   const normalizedInitialDate = String(initialDate ?? "").trim();
   const [selectedDate, setSelectedDate] = useState(
-    isValidPastOrTodayDateKey(normalizedInitialDate) ? normalizedInitialDate : todayDateKey
+    isValidStartDateKey(normalizedInitialDate) ? normalizedInitialDate : todayDateKey
   );
   const [sport, setSport] = useState<PickEmSport | null>(null);
   const [games, setGames] = useState<PickEmGame[]>([]);
   const latestGameMapRef = useRef<Map<string, PickEmGame>>(new Map());
   const gamesRef = useRef<PickEmGame[]>([]);
   const loadedSportSlugRef = useRef<string>("");
+  // "sport:day" the server already served when it moved the day itself (R9); the effect skips that reload once.
+  const servedDayKeyRef = useRef("");
   const loadGamesRef = useRef<((opts?: { background?: boolean }) => Promise<void>) | null>(null);
   const hasLiveGamesRef = useRef(false);
   const refreshTimerRef = useRef<number | null>(null);
@@ -271,6 +282,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   const [today, setToday] = useState<PickEmTodaySummary | null>(null);
   const [collegeScoring, setCollegeScoring] = useState<CollegeScoring | null>(null);
   const [prizes, setPrizes] = useState<PickEmGamePrize[]>([]);
+  const [pickWindowLine, setPickWindowLine] = useState("");
+  const [pickAheadThrough, setPickAheadThrough] = useState("");
   const [gradedToast, setGradedToast] = useState<{ points: number; id: number } | null>(null);
   const [flashingSportSlug, setFlashingSportSlug] = useState("");
   const [lastDebugProbes, setLastDebugProbes] = useState<
@@ -418,6 +431,13 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           throw new Error(payload.error ?? "Failed to load Pick 'Em games.");
         }
 
+        // The server picks the day (R9): a reply for another day than asked never changes a background
+        // refresh, and a normal load follows the served day without loading it a second time.
+        const servedDate = String(payload.date ?? "").trim();
+        const servedOtherDay = /^\d{4}-\d{2}-\d{2}$/.test(servedDate) && servedDate !== selectedDate;
+        if (servedOtherDay && background) return;
+        if (servedOtherDay) servedDayKeyRef.current = `${selectedSportSlug}:${servedDate}`;
+
         const nextGames = payload.games ?? [];
         const shouldPreserveExistingGames = background && nextGames.length === 0 && gamesRef.current.length > 0;
 
@@ -438,6 +458,10 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         setToday(payload.today ?? null);
         setCollegeScoring(payload.collegeScoring ?? null);
         setPrizes(payload.prizes ?? []);
+        setPickWindowLine(payload.pickWindow?.line ?? "");
+        const reach = payload.pickAheadThrough ?? "";
+        setPickAheadThrough(reach);
+        if (servedOtherDay) setSelectedDate(servedDate);
         setLastDebugProbes(payload.debug?.probes ?? []);
         if (!background) {
           setErrorMessage("");
@@ -462,9 +486,14 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   }, [loadGames]);
 
   useEffect(() => {
-    // Always refresh when the user lands on Pick 'Em.
+    // Always refresh when the user lands on Pick 'Em, except the day the server just served in place of the
+    // one asked for (R9): that load is already on screen.
+    if (servedDayKeyRef.current === `${selectedSportSlug}:${selectedDate}`) {
+      servedDayKeyRef.current = "";
+      return;
+    }
     void loadGames();
-  }, [loadGames]);
+  }, [loadGames, selectedDate, selectedSportSlug]);
 
   useEffect(() => {
     const refreshNow = () => {
@@ -497,6 +526,10 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   }, [games]);
 
   const isViewingToday = selectedDate === todayDateKey;
+  // A future day inside the sport's pick-ahead reach: the live list, pickable while its window is open.
+  const isPickAheadDay = selectedDate > todayDateKey && Boolean(pickAheadThrough) && selectedDate <= pickAheadThrough;
+  const isLiveListDay = isViewingToday || isPickAheadDay;
+  const lastReachableDate = pickAheadThrough && pickAheadThrough > todayDateKey ? pickAheadThrough : todayDateKey;
 
   const toLocalDateKey = useCallback((iso: string) => {
     const ms = Date.parse(iso);
@@ -628,7 +661,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
     async (game: PickEmGame, pickTeam: string) => {
       if (savingGamesRef.current.has(game.id)) return;
       if (!userId || !venueId) { setSubmitMessage("Join a venue first to submit Pick 'Em selections."); return; }
-      if (!isViewingToday) { setSubmitMessage("You can only place picks for today. Switch back to today to make picks."); return; }
+      if (!isLiveListDay) { setSubmitMessage("You can only place picks for today. Switch back to today to make picks."); return; }
       if (venuePresence.isInteractionBlocked) return;
       const previousTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
       const isDeselect = previousTeam === pickTeam;
@@ -660,7 +693,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         setSavingGames(new Set(savingGamesRef.current));
       }
     },
-    [clearPickRequest, submitPickRequest, isViewingToday, optimisticPickByGame, scheduleBackgroundRefresh, userId, venueId, venuePresence.isInteractionBlocked]
+    [clearPickRequest, submitPickRequest, isLiveListDay, optimisticPickByGame, scheduleBackgroundRefresh, userId, venueId, venuePresence.isInteractionBlocked]
   );
 
   useEffect(() => {
@@ -771,12 +804,12 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
               <button
                 type="button"
                 onClick={() => {
-                  if (isViewingToday) return;
+                  if (selectedDate >= lastReachableDate) return;
                   setSelectedDate((current) => shiftDateKey(current, 1));
                   setSubmitMessage("");
                   setErrorMessage("");
                 }}
-                disabled={isViewingToday}
+                disabled={selectedDate >= lastReachableDate}
                 className="tp-player-hit-target tp-player-pressable tp-clean-button relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-ht-pickem-accent/30 bg-ht-chip-fill/55 text-ht-pickem-accent disabled:cursor-not-allowed disabled:opacity-35"
                 aria-label="Next day"
               >
@@ -809,6 +842,10 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                         disabled={isDisabled}
                         onClick={() => {
                           if (!isDisabled) {
+                            // The previous sport's reach must not keep the next-day arrow on, and a future
+                            // day (a deep link) belongs to the old sport: back to today first (R9).
+                            setPickAheadThrough("");
+                            setSelectedDate((current) => (current > todayDateKey ? todayDateKey : current));
                             setSelectedSportSlug(item.slug);
                             setSubmitMessage("");
                             setErrorMessage("");
@@ -855,7 +892,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           </div>
         ) : null}
 
-        {!isViewingToday ? (
+        {!isLiveListDay ? (
           loadingPickHistory ? (
             <HightopLoader size="sm" variant="card" showLabel label="Loading your picks..." />
           ) : historicalPicks.length === 0 ? (
@@ -917,6 +954,11 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           </div>
         ) : (
           <div className="space-y-4 pb-1">
+            {pickWindowLine ? (
+              <p className="px-1 text-caption font-semibold text-ht-fg-muted" data-testid="pickem-pick-window">
+                {pickWindowLine}
+              </p>
+            ) : null}
             {sport.slug === "ncaaf" && collegeScoring?.mode === "spread" ? (
               <p className="px-1 text-caption font-semibold text-ht-fg-muted" data-testid="pickem-spread-explainer">
                 {COLLEGE_FOOTBALL_SPREAD_COPY.explainer}
@@ -962,19 +1004,23 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
                       (renderedPickEmCardCount % 5 === 0 || (isLastGame && renderedPickEmCardCount % 5 !== 0));
                     const sequenceIndex = shouldRenderAdBreak ? Math.ceil(renderedPickEmCardCount / 5) : 1;
                     const displayedPickTeam = optimisticPickByGame[game.id] ?? game.userPickTeam;
-                    const baseDisabled = !sport.isClickable || !userId || !venueId || !isViewingToday;
+                    const baseDisabled = !sport.isClickable || !userId || !venueId || !isLiveListDay;
                     const awaySelected = displayedPickTeam === game.awayTeam;
                     const homeSelected = displayedPickTeam === game.homeTeam;
                     const lineComingSoon = game.lineComingSoon === true;
                     // A used-up prize limit refuses only a NEW pick; changing or clearing one is always allowed.
                     const limitReached = game.pickLimitReached === true && !displayedPickTeam;
-                    const blockedMessage = lineComingSoon
-                      ? COLLEGE_FOOTBALL_SPREAD_COPY.noLineYet
-                      : limitReached
-                        ? game.pickLimitMessage ?? FALLBACK_PRIZE_LIMIT_MESSAGE
-                        : null;
-                    const disableAwaySelection = baseDisabled || lineComingSoon || limitReached;
-                    const disableHomeSelection = baseDisabled || lineComingSoon || limitReached;
+                    // The pick window (B2) blocks making, changing and clearing alike.
+                    const windowShut = Boolean(game.pickWindowMessage);
+                    const blockedMessage = windowShut
+                      ? game.pickWindowMessage ?? null
+                      : lineComingSoon
+                        ? COLLEGE_FOOTBALL_SPREAD_COPY.noLineYet
+                        : limitReached
+                          ? game.pickLimitMessage ?? FALLBACK_PRIZE_LIMIT_MESSAGE
+                          : null;
+                    const disableAwaySelection = baseDisabled || windowShut || lineComingSoon || limitReached;
+                    const disableHomeSelection = baseDisabled || windowShut || lineComingSoon || limitReached;
                     const awayLine = game.scoringMode === "spread" ? formatSpreadLine(game.awaySpread) : null;
                     const homeLine = game.scoringMode === "spread" ? formatSpreadLine(game.homeSpread) : null;
                     const isAwayWinner = game.winnerTeam === game.awayTeam;

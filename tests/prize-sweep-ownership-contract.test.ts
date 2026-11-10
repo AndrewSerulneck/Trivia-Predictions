@@ -64,8 +64,11 @@ describe("prize sweep ownership (plan 6.1)", () => {
   });
 
   it("the Live Trivia weekly places sweep filters its list read", () => {
-    expect(read("lib/liveTriviaRankedRewards.ts")).toMatch(
-      /\(await listActiveRankedPlaceCampaigns\(\)\)\.filter\(isLiveTriviaRankedCampaign\)/,
+    // R7: the list is its own read, or a schedule change's preloaded prizes narrowed the same
+    // way; the ownership filter applies to both.
+    const source = read("lib/liveTriviaRankedRewards.ts");
+    expect(source).toMatch(
+      /const listed = scope\?\.campaigns\s*\? rankedPlaceCampaignsInScope\(scope\.campaigns, scope\.venueIds\)\s*: await listActiveRankedPlaceCampaigns\(scope\?\.venueIds\);\s*const campaigns = listed\.filter\(isLiveTriviaRankedCampaign\);/,
     );
   });
 

@@ -16,6 +16,8 @@
 // bar; only a player of the bar can read or report it; enough distinct reports pause the bar.
 // 10.1: a reporter is a person (account, or profile with none), so two profiles of one account are one
 // report; an admin un-pause marks the reports reviewed and sticks; only later reports count again.
+// C3 (away-mode plan): a "Remind me" opt-in is claimed once and reaches the live phones of its profile and
+// account (whatever the games switch says), never another game's opt-ins; deletes cascade.
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { PGlite } = require(process.env.PUSH_PGLITE_MODULE || "@electric-sql/pglite");
@@ -25,6 +27,7 @@ const MIGRATIONS = [
   "supabase/migrations/20261023141109_push_venue_news.sql",
   "supabase/migrations/20261023145024_push_venue_messages.sql",
   "supabase/migrations/20261026173304_partner_message_report_rules.sql",
+  "supabase/migrations/20261109214742_push_game_reminder_optins.sql",
 ];
 
 const SCHEMA = `
@@ -149,6 +152,80 @@ async function run() {
     await assert.rejects(
       () => db.query(`insert into push_game_reminders(schedule_id, occurrence_date, venue_id, starts_at) values ($1, 'today', 'v1', now())`, [SCHEDULE]),
       /occurrence_date_format/,
+    );
+
+    // ── C3: "Remind me" opt-ins ──────────────────────────────────────────────────────────────
+    const SCHEDULE_2 = id(201);
+    const NO_PHONE = id(10);
+    await db.exec(`
+      insert into trivia_schedules(id) values ('${SCHEDULE_2}');
+      insert into users(id, account_id, venue_id) values ('${NO_PHONE}', null, 'v1');
+    `);
+    const optIn = (userId, scheduleId, date) =>
+      db.query(
+        `insert into push_game_reminder_optins(user_id, schedule_id, occurrence_date, venue_id, starts_at)
+         values ($1, $2, $3, 'v1', now() + interval '1 hour')`,
+        [userId, scheduleId, date],
+      );
+    await optIn(PROFILE_A, SCHEDULE, "2026-11-12");
+    await optIn(LEGACY, SCHEDULE, "2026-11-12");
+    await optIn(NO_PHONE, SCHEDULE, "2026-11-12");
+    await optIn(PROFILE_A, SCHEDULE, "2026-11-19"); // next week's game: not asked for yet
+    await optIn(PROFILE_B, SCHEDULE_2, "2026-11-12"); // another game
+    await assert.rejects(() => optIn(PROFILE_A, SCHEDULE, "2026-11-12"), /duplicate|unique/i, "one opt-in per player per game");
+    await assert.rejects(() => optIn(PROFILE_A, SCHEDULE, "next week"), /occurrence_date_format/);
+    // The player asked, so the games switch is not consulted; a dead phone never gets it.
+    await db.query(`update push_devices set notify_games = false where token = $1`, [token("phone-a")]);
+    const claimOptIns = (scheduleIds, dates) =>
+      rows(`select * from claim_game_reminder_optins($1::uuid[], $2::text[])`, [scheduleIds, dates]);
+    let reminded = await claimOptIns([SCHEDULE], ["2026-11-12"]);
+    assert.deepEqual(
+      reminded.filter((r) => r.user_id === PROFILE_A).map((r) => r.token).sort(),
+      [token("phone-a"), token("phone-b")].sort(),
+      "the account's live phones, switch off or not, never the disabled one",
+    );
+    assert.deepEqual(reminded.filter((r) => r.user_id === LEGACY).map((r) => r.token), [token("legacy")]);
+    assert.equal(reminded.filter((r) => r.user_id === NO_PHONE).length, 0, "no phone, no row");
+    assert.ok(reminded.every((r) => r.schedule_id === SCHEDULE && r.occurrence_date === "2026-11-12"), "only the game asked for");
+    assert.equal(reminded.length, 3);
+    const stampedOptIns = await rows(
+      `select user_id, schedule_id, occurrence_date from push_game_reminder_optins where reminded_at is not null order by user_id`,
+    );
+    assert.deepEqual(
+      stampedOptIns.map((r) => r.user_id).sort(),
+      [PROFILE_A, LEGACY, NO_PHONE].sort(),
+      "every opt-in of the game is stamped, phone or not; other games and dates are not",
+    );
+    assert.deepEqual(await claimOptIns([SCHEDULE], ["2026-11-12"]), [], "a second (overlapping) run sends nothing");
+    // Several games in one call; an empty call is fine.
+    reminded = await claimOptIns([SCHEDULE, SCHEDULE_2], ["2026-11-19", "2026-11-12"]);
+    assert.deepEqual(
+      reminded.map((r) => `${r.schedule_id}|${r.occurrence_date}|${r.token}`).sort(),
+      [
+        `${SCHEDULE}|2026-11-19|${token("phone-a")}`,
+        `${SCHEDULE}|2026-11-19|${token("phone-b")}`,
+        `${SCHEDULE_2}|2026-11-12|${token("phone-a")}`,
+        `${SCHEDULE_2}|2026-11-12|${token("phone-b")}`,
+      ].sort(),
+    );
+    assert.deepEqual(await claimOptIns([], []), []);
+    await assert.rejects(() => claimOptIns([SCHEDULE], []), /same length/);
+    await assert.rejects(
+      () => claimOptIns(Array.from({ length: 201 }, () => SCHEDULE), Array.from({ length: 201 }, () => "2026-11-12")),
+      /at most 200/,
+    );
+    await db.query(`update push_devices set notify_games = true where token = $1`, [token("phone-a")]);
+    // A cancelled game (schedule deleted) and a deleted player take their opt-ins with them.
+    await optIn(NO_PHONE, SCHEDULE_2, "2026-11-26");
+    await db.query(`delete from trivia_schedules where id = $1`, [SCHEDULE_2]);
+    assert.equal(
+      Number((await one(`select count(*)::int as n from push_game_reminder_optins where schedule_id = $1`, [SCHEDULE_2])).n),
+      0,
+    );
+    await db.query(`delete from users where id = $1`, [NO_PHONE]);
+    assert.equal(
+      Number((await one(`select count(*)::int as n from push_game_reminder_optins where user_id = $1`, [NO_PHONE])).n),
+      0,
     );
 
     // ── 5.4: "News from your bars" ────────────────────────────────────────────────────────────
@@ -323,6 +400,7 @@ async function run() {
       "venue_message_report_count(uuid)",
       "venue_message_report_counts(uuid[])",
       "unpause_venue_messages(text)",
+      "claim_game_reminder_optins(uuid[], text[])",
     ]) {
       const canRun = async (role) =>
         (await one(`select has_function_privilege($1, $2, 'execute') as ok`, [role, `public.${signature}`])).ok;
@@ -337,6 +415,7 @@ async function run() {
       "push_venue_messages",
       "push_venue_message_reports",
       "push_venue_message_pauses",
+      "push_game_reminder_optins",
     ]) {
       const priv = async (role, verb) =>
         (await one(`select has_table_privilege($1, $2, $3) as ok`, [role, `public.${table}`, verb])).ok;

@@ -28,16 +28,16 @@ import {
 } from "@/lib/venuePresenceClient";
 
 // How often the client re-verifies venue presence (browser geolocation +
-// server heartbeat). Deliberately coarse (15 min) — paired with the matching
-// server-side lease TTL (VENUE_PRESENCE_TTL_MS in lib/venuePresence.ts) — to
-// avoid the old continuous watchPosition()/45s-heartbeat battery drain and
-// repeated permission prompts.
+// server heartbeat). Deliberately coarse (15 min) to avoid the old continuous
+// watchPosition()/45s-heartbeat battery drain and repeated permission prompts.
+// The server-side lease (VENUE_PRESENCE_TTL_MS in lib/venuePresence.ts, 16 min)
+// outlives this by exactly 1 minute, so the heartbeat — which starts a few
+// seconds after this interval — renews the lease before it ends (R10).
 //
-// TRADEOFF (product sign-off): this widens the window in which a user who has
-// physically LEFT the venue retains access from ~1–3 min (the old TTL) to up to
-// 15 min. That is acceptable for the current casual-venue threat model; if
-// tighter geofence enforcement is ever required, lower this AND
-// VENUE_PRESENCE_TTL_MS together (they must stay in sync).
+// TRADEOFF (product sign-off): a user who has physically LEFT the venue keeps
+// access for up to one lease (16 min). That is acceptable for the current
+// casual-venue threat model; if tighter geofence enforcement is ever required,
+// lower this AND VENUE_PRESENCE_TTL_MS together, keeping the 1-minute margin.
 const PRESENCE_CHECK_INTERVAL_MS = 15 * 60 * 1000;
 const PRESENCE_CHECK_STORAGE_PREFIX = "ht:venue-presence:last-check";
 const GEOLOCATION_PERMISSION_DENIED = 1;
@@ -45,6 +45,8 @@ const GEOLOCATION_PERMISSION_DENIED = 1;
 type VenuePresenceContextValue = {
   capturePresenceFailure: (payload: unknown) => VenuePresenceClientFailure | null;
   isAccessPaused: boolean;
+  /** Venue Home only (`awayMode`): the player is out of range, so the page is view-only, not overlaid. */
+  isAway: boolean;
   isInteractionBlocked: boolean;
   isCheckingAccess: boolean;
   lastFailure: VenuePresenceClientFailure | null;
@@ -54,6 +56,7 @@ type VenuePresenceContextValue = {
 const DEFAULT_CONTEXT: VenuePresenceContextValue = {
   capturePresenceFailure: () => null,
   isAccessPaused: false,
+  isAway: false,
   isInteractionBlocked: false,
   isCheckingAccess: false,
   lastFailure: null,
@@ -93,6 +96,13 @@ function writeLastPresenceCheckAt(userId: string, venueId: string, checkedAt: nu
   window.sessionStorage.setItem(getPresenceCheckStorageKey(userId, venueId), String(checkedAt));
 }
 
+// Away mode (docs/cancelled-prizes-pick-windows-away-mode-plan.md, Phase C1): on Venue Home, being out of
+// range makes the page view-only instead of covering it. Every other failure keeps today's overlay, and
+// game screens never pass `awayMode`, so they keep the overlay for everything.
+export const isVenueAwayFailure = (failure: VenuePresenceClientFailure): boolean => {
+  return failure.code === "VENUE_OUT_OF_RANGE";
+};
+
 function shouldShowVenueAccessOverlay(failure: VenuePresenceClientFailure): boolean {
   return (
     failure.code === "AUTH_REQUIRED" ||
@@ -105,10 +115,13 @@ export function VenuePresenceBoundary({
   children,
   enabled = true,
   venueId: routeVenueId,
+  awayMode = false,
 }: {
   children: ReactNode;
   enabled?: boolean;
   venueId?: string;
+  /** Venue Home only: out of range = view-only (`isAway`), not the blocking overlay. */
+  awayMode?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -119,6 +132,7 @@ export function VenuePresenceBoundary({
   // heartbeat loop so god accounts don't burn battery/network polling location they don't need.
   const [isGodMode, setIsGodMode] = useState(() => getGodMode());
   const [overlay, setOverlay] = useState<VenueAccessOverlayContent | null>(null);
+  const [isAway, setIsAway] = useState(false);
   const [lastFailure, setLastFailure] = useState<VenuePresenceClientFailure | null>(null);
   const [isCheckingAccess, setIsCheckingAccess] = useState(false);
   const lastHeartbeatAtRef = useRef(0);
@@ -143,14 +157,20 @@ export function VenuePresenceBoundary({
 
   const applyFailure = useCallback((failure: VenuePresenceClientFailure) => {
     setLastFailure(failure);
+    if (awayMode && isVenueAwayFailure(failure)) {
+      setOverlay(null);
+      setIsAway(true);
+      return;
+    }
     if (shouldShowVenueAccessOverlay(failure)) {
+      setIsAway(false);
       setOverlay(
         mapVenuePresenceFailureToOverlay(failure, {
           permissionDenied: isPermissionDeniedError(locationErrorRef.current),
         })
       );
     }
-  }, []);
+  }, [awayMode]);
 
   const capturePresenceFailure = useCallback(
     (payload: unknown) => {
@@ -197,6 +217,7 @@ export function VenuePresenceBoundary({
           locationErrorRef.current = null;
           setLastFailure(null);
           setOverlay(null);
+          setIsAway(false);
           lastHeartbeatAtRef.current = Date.now();
           writeLastPresenceCheckAt(userId, activeVenueId, lastHeartbeatAtRef.current);
           return true;
@@ -241,6 +262,7 @@ export function VenuePresenceBoundary({
   useEffect(() => {
     if (!enabled || !userId || !activeVenueId || isGodMode) {
       setOverlay(null);
+      setIsAway(false);
       setLastFailure(null);
       setIsCheckingAccess(false);
       return;
@@ -312,13 +334,14 @@ export function VenuePresenceBoundary({
   const contextValue = useMemo<VenuePresenceContextValue>(
     () => ({
       capturePresenceFailure,
-      isAccessPaused: !isGodMode && Boolean(overlay),
+      isAccessPaused: !isGodMode && (Boolean(overlay) || isAway),
+      isAway: !isGodMode && isAway,
       isInteractionBlocked: !isGodMode && Boolean(overlay),
       isCheckingAccess,
       lastFailure,
       recheckLocation,
     }),
-    [capturePresenceFailure, isCheckingAccess, isGodMode, lastFailure, overlay, recheckLocation]
+    [capturePresenceFailure, isAway, isCheckingAccess, isGodMode, lastFailure, overlay, recheckLocation]
   );
 
   if (!enabled) {

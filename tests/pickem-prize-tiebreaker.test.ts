@@ -10,6 +10,7 @@ const state = vi.hoisted(() => ({
   prizes: [] as Array<Record<string, unknown>>,
   session: { userId: "player-1" as string | null, forbidden: false },
   upserts: [] as Array<Record<string, unknown>>,
+  pickWindows: {} as Record<string, unknown>,
 }));
 
 vi.mock("server-only", () => ({}));
@@ -40,6 +41,9 @@ vi.mock("@/lib/supabaseAdmin", () => ({
   },
 }));
 vi.mock("@/lib/challengeCampaigns", () => ({ listActivePickEmPrizeCampaigns: vi.fn(async () => state.prizes) }));
+vi.mock("@/lib/venueGameSettings", () => ({
+  getVenueGameSettings: vi.fn(async () => ({ pickWindows: state.pickWindows })),
+}));
 vi.mock("@/lib/timezone", () => ({ getVenueTimezone: vi.fn(async () => "America/New_York") }));
 vi.mock("@/lib/serverSession", () => ({ resolveRequestUserId: vi.fn(() => state.session) }));
 vi.mock("@/lib/venuePresence", () => ({
@@ -149,6 +153,20 @@ describe("POST /api/pickem/prize-tiebreaker", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-07T20:00:00Z")); // Saturday 3pm in New York
     state.gamesByDay["2026-11-07"] = [game("sat-late", "2026-11-08T03:30:00Z")];
+    state.pickWindows = {};
+  });
+
+  it("answers 409 while the game's College Football pick window is closed (away-mode plan B1)", async () => {
+    state.prizes = [mostRight];
+    const before = state.upserts.length;
+    state.pickWindows = { ncaaf: { openDay: "mon", openTime: "00:00", closeDay: "wed", closeTime: "23:59" } };
+    const closed = await post({ venueId: "venue-a", campaignId: "c-most", predictedTotal: 51 });
+    expect(closed.status).toBe(409);
+    expect(await closed.json()).toMatchObject({ ok: false, error: "Picks closed." });
+    expect(state.upserts.length).toBe(before);
+
+    state.pickWindows = { ncaaf: { openDay: "fri", openTime: "00:00", closeDay: "sat", closeTime: "23:59" } };
+    expect((await post({ venueId: "venue-a", campaignId: "c-most", predictedTotal: 51 })).status).toBe(200);
   });
 
   it("saves the signed-in player's guess on today's game", async () => {
@@ -192,5 +210,25 @@ describe("POST /api/pickem/prize-tiebreaker", () => {
     const response = await GET(new Request("http://x/api/pickem/prize-tiebreaker?venueId=venue-a&campaignId=c-most"));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ ok: true, game: { gameId: "sat-late", isLocked: false }, guess: null });
+  });
+
+  it("GET shows the card locked while the pick window is shut, and 'Locks at' the window's close (B2)", async () => {
+    state.prizes = [mostRight];
+    const read = async () =>
+      (await (await GET(new Request("http://x/api/pickem/prize-tiebreaker?venueId=venue-a&campaignId=c-most"))).json()) as {
+        game: { isLocked: boolean; locksAt: string; pickWindowMessage?: string; startsAt: string };
+      };
+
+    state.pickWindows = { ncaaf: { openDay: "mon", openTime: "00:00", closeDay: "wed", closeTime: "23:59" } };
+    expect((await read()).game).toMatchObject({ isLocked: true, pickWindowMessage: "Picks closed" });
+
+    // Open, closing Sat 6:00 PM, before the 10:30 PM kickoff: the card locks at the close.
+    state.pickWindows = { ncaaf: { openDay: "fri", openTime: "00:00", closeDay: "sat", closeTime: "18:00" } };
+    expect((await read()).game).toMatchObject({ isLocked: false, locksAt: "2026-11-07T23:00:00.000Z" });
+
+    state.pickWindows = {};
+    const open = (await read()).game;
+    expect(open).toMatchObject({ isLocked: false, locksAt: open.startsAt });
+    expect(open.pickWindowMessage).toBeUndefined();
   });
 });

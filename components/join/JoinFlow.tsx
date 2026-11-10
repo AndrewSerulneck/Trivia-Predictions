@@ -58,6 +58,7 @@ import { ScanQrButton } from "@/components/join/ScanQrButton";
 import { WizardFooter } from "@/components/navigation/WizardFooter";
 import { useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { getVenueById, listVenues, readCachedVenues } from "@/lib/venues";
+import { awayRecentVenues, type RecentVenue } from "@/lib/recentVenues";
 import {
   commitJoinVenueList,
   decideScannedVenue,
@@ -89,6 +90,9 @@ import { markJoinWelcomeSeen, shouldShowJoinWelcome } from "@/lib/joinWelcome";
 import { homeHref } from "@/lib/domainSplit";
 import { useIsNativeApp } from "@/lib/useIsNativeApp";
 import { SWIPE_PANEL_VARIANTS, SWIPE_TWEEN } from "@/lib/swipeTransition";
+import { playerPanelForPushPanel, withVenuePanel, type VenuePushPanel } from "@/lib/pushLanding";
+import { savePlayerPanel } from "@/lib/playerViewState";
+import { awayAutoOpenAllowed, awayAutoOpenTarget, markAwayAutoOpen } from "@/lib/venueAwayMode";
 
 type Status = "idle" | "loading" | "ready" | "saving" | "error";
 type JoinPanel =
@@ -473,9 +477,11 @@ type VenueListItemProps = {
   index: number;
   isPending: boolean;
   onSelect: (venue: Venue) => void;
+  /** "Your bars" row for a bar the player isn't at: opens it view-only (away-mode plan, Phase C1). */
+  viewOnly?: boolean;
 };
 
-const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onSelect }: VenueListItemProps) {
+const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onSelect, viewOnly = false }: VenueListItemProps) {
   const visual = getVenueVisual(venue, index);
   return (
     <li>
@@ -488,10 +494,15 @@ const VenueListItem = memo(function VenueListItem({ venue, index, isPending, onS
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-600 bg-slate-700 text-base font-medium text-white">
             {visual.logoText}
           </span>
-          <span className="font-semibold text-white">
-            {isPending
-              ? `Opening ${getVenueDisplayName(venue)}...`
-              : `Join ${getVenueDisplayName(venue)}`}
+          <span className="text-left">
+            <span className="block font-semibold text-white">
+              {isPending
+                ? `Opening ${getVenueDisplayName(venue)}...`
+                : viewOnly
+                  ? getVenueDisplayName(venue)
+                  : `Join ${getVenueDisplayName(venue)}`}
+            </span>
+            {viewOnly && !isPending ? <span className="block text-caption text-ht-fg-muted">View only</span> : null}
           </span>
         </span>
         <span
@@ -767,9 +778,12 @@ function PasskeyEnrollmentPrompt({ onSetUp, onSkip }: PasskeyEnrollmentPromptPro
 
 export function JoinFlow({
   initialVenueId,
+  initialPanel = null,
   nativeAppRequest = false,
 }: {
   initialVenueId: string;
+  /** The Venue Home screen a push asked for (`?panel=`), carried onto the bar `?v=` names (away-mode plan R3). */
+  initialPanel?: VenuePushPanel | null;
   /** The server saw the app's User-Agent, so even the first paint leaves out the website's Home link. */
   nativeAppRequest?: boolean;
 }) {
@@ -799,6 +813,14 @@ export function JoinFlow({
   // the list was built for the current sign-in (lib/joinVenueList.ts).
   const [venueListState, setVenueListState] = useState(INITIAL_JOIN_VENUE_LIST);
   const venueList = visibleJoinVenueList(venueListState);
+  // "Your bars" (away-mode plan, D6 + Phase C1): the signed-in player's bars from the last 90 days. Those out
+  // of range open view-only; those in range are already in `venueList` and join as usual.
+  const [recentVenues, setRecentVenues] = useState<RecentVenue[]>([]);
+  const [recentVenueRows, setRecentVenueRows] = useState<Venue[]>([]);
+  const [openingAwayVenueId, setOpeningAwayVenueId] = useState<string | null>(null);
+  const recentVenuesStartedRef = useRef(false);
+  const recentVenuesRequestRef = useRef(0);
+  const autoOpenedAwayVenueRef = useRef(false);
   const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
   const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
@@ -878,6 +900,10 @@ export function JoinFlow({
   const discardVenueList = useCallback(() => {
     venueListBuiltRef.current = false;
     beginVenueListBuild();
+    // The next sign-in may be someone else: their bars are fetched fresh.
+    recentVenuesStartedRef.current = false;
+    recentVenuesRequestRef.current += 1;
+    setRecentVenues([]);
   }, [beginVenueListBuild]);
   const enrollmentOptionsRef = useRef<{
     challengeId: string;
@@ -1410,9 +1436,13 @@ export function JoinFlow({
   }, [venue, beginVenueListBuild, commitVenueList]);
 
   const navigateToResolvedVenue = useCallback(
-    async (selectedVenue: Venue, user: User) => {
+    async (selectedVenue: Venue, user: User, options?: { viewOnly?: boolean; automatic?: boolean }) => {
       const preserveGodMode = getGodMode();
       hardClearAuthAndCachePreserveVenue(selectedVenue.id);
+      // The clear above empties sessionStorage, so these are written after it (away-mode plan R3).
+      if (options?.automatic) markAwayAutoOpen(Date.now());
+      const panel = selectedVenue.id === venueParam ? initialPanel : null;
+      if (panel) savePlayerPanel(selectedVenue.id, playerPanelForPushPanel(panel));
       saveVenueId(selectedVenue.id);
       saveUsername(user.username);
       saveUserId(user.id);
@@ -1420,25 +1450,31 @@ export function JoinFlow({
         saveGodMode(true);
       }
       ensureSiteSession();
-      syncUserGeographicData({
-        zipCode: selectedVenue.zipCode,
-        city: selectedVenue.city,
-        stateCode: selectedVenue.state,
-        regionKey: selectedVenue.region,
-        country: selectedVenue.country,
-        dataSource: "geolocation",
-      });
+      // A bar opened view-only is not where the player is: don't record its area as theirs.
+      if (!options?.viewOnly) {
+        syncUserGeographicData({
+          zipCode: selectedVenue.zipCode,
+          city: selectedVenue.city,
+          stateCode: selectedVenue.state,
+          regionKey: selectedVenue.region,
+          country: selectedVenue.country,
+          dataSource: "geolocation",
+        });
+      }
       setSelectedVenueLock(selectedVenue.id);
       setLoginInProgress(selectedVenue.id);
       refreshAuthSession();
       setVenueHomeRouteIntent({ venueId: selectedVenue.id });
       setVenueHomeEntryHandoff({ venueId: selectedVenue.id, userId: user.id });
-      const hardTarget = `/venue/${encodeURIComponent(selectedVenue.id)}?entryUser=${encodeURIComponent(user.id)}&entryVenue=${encodeURIComponent(selectedVenue.id)}&entryAt=${Date.now()}`;
+      const hardTarget = withVenuePanel(
+        `/venue/${encodeURIComponent(selectedVenue.id)}?entryUser=${encodeURIComponent(user.id)}&entryVenue=${encodeURIComponent(selectedVenue.id)}&entryAt=${Date.now()}`,
+        panel
+      );
       void signInAnonymously().catch(() => {});
       setAuthLoginState("navigating");
       window.location.assign(hardTarget);
     },
-    [refreshAuthSession]
+    [initialPanel, refreshAuthSession, venueParam]
   );
 
   const resolveAndNavigate = useCallback(
@@ -1620,6 +1656,88 @@ export function JoinFlow({
     },
     [accountId, resolveAndNavigate, resolveAndNavigateFromSession, verifyVenueAccess]
   );
+
+  // "Your bars": one session-bound read when the signed-in list opens (no geolocation; the server answers
+  // only for the signed session's own account). God Mode skips it: its list already holds every bar.
+  useEffect(() => {
+    if (activePanel !== "venue-list" || recentVenuesStartedRef.current) return;
+    if (DISABLE_GEOFENCE_FOR_TESTING || getGodMode()) return;
+    recentVenuesStartedRef.current = true;
+    const request = ++recentVenuesRequestRef.current;
+    const query = new URLSearchParams();
+    const signedInUserId = (getUserId() || "").trim();
+    if (signedInUserId) query.set("userId", signedInUserId);
+    if (venueParam) query.set("venueId", venueParam);
+    void (async () => {
+      try {
+        const [response, venues] = await Promise.all([
+          fetch(`/api/player/venues?${query.toString()}`, { cache: "no-store" }),
+          listVenues(),
+        ]);
+        const payload = (await response.json().catch(() => null)) as { ok?: boolean; venues?: RecentVenue[] } | null;
+        if (request !== recentVenuesRequestRef.current || !payload?.ok || !Array.isArray(payload.venues)) return;
+        setRecentVenueRows(venues);
+        setRecentVenues(payload.venues);
+      } catch {
+        // No "Your bars" this time; the nearby list works as before.
+      }
+    })();
+  }, [activePanel, venueParam]);
+
+  const awayVenues = useMemo(
+    () => (locationLoading ? [] : awayRecentVenues(recentVenues, recentVenueRows, venueList)),
+    [locationLoading, recentVenues, recentVenueRows, venueList]
+  );
+
+  // Opens a bar the player isn't at, view-only: the server switches the session to the account's own
+  // profile there (never creates one, records no presence), then Venue Home shows away mode.
+  const handleOpenAwayVenue = useCallback(
+    async (selectedVenue: Venue, options?: { automatic?: boolean }) => {
+      if (openingAwayVenueId) return;
+      setOpeningAwayVenueId(selectedVenue.id);
+      setErrorMessage("");
+      const signedInUserId = (getUserId() || "").trim();
+      try {
+        const response = await fetch("/api/player/venues/open", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            venueId: selectedVenue.id,
+            ...(signedInUserId ? { userId: signedInUserId } : {}),
+          }),
+        });
+        const payload = (await response.json().catch(() => null)) as { ok?: boolean; user?: User } | null;
+        if (!response.ok || !payload?.ok || !payload.user) {
+          throw new Error("open-failed");
+        }
+        await navigateToResolvedVenue(selectedVenue, payload.user, { viewOnly: true, automatic: options?.automatic });
+      } catch {
+        setErrorMessage("Couldn't open. Try again.");
+        setOpeningAwayVenueId(null);
+      }
+    },
+    [navigateToResolvedVenue, openingAwayVenueId]
+  );
+
+  // A push or link to a bar the player isn't at (`/?v=X`, signed in elsewhere) opens it view-only by itself,
+  // once, after the location check placed it out of range. In range, it stays a normal tap-to-join row.
+  // At most once a minute per tab: two website tabs on different bars would otherwise keep switching each
+  // other back (each switch sends the other tab's Venue Home to `/?v=`). This only reads the stamp;
+  // navigateToResolvedVenue writes it after its session clear (away-mode plan R3).
+  useEffect(() => {
+    if (autoOpenedAwayVenueRef.current) return;
+    // Only after a real location check built this sign-in's list; the stamp is set only when a bar is chosen,
+    // so Retry succeeding with the bar out of range still auto-opens (R9).
+    const target = awayAutoOpenTarget({
+      venueParam,
+      awayVenues,
+      listBuilt: venueListState.builtForGeneration === venueListState.generation,
+    });
+    if (!target) return;
+    autoOpenedAwayVenueRef.current = true;
+    if (!awayAutoOpenAllowed(Date.now())) return;
+    void handleOpenAwayVenue(target, { automatic: true });
+  }, [awayVenues, handleOpenAwayVenue, venueParam, venueListState]);
 
   // A venue QR scanned on the venue list: the player is already signed in, so a `/?v=` push would just
   // land back on this list (R2, docs/native-app-review-fixes-plan.md). Select it the way a tap does — but
@@ -3280,6 +3398,24 @@ export function JoinFlow({
                         </button>
                       </div>
                     )}
+
+                    {awayVenues.length > 0 ? (
+                      <div className="mt-5" data-your-bars>
+                        <p className="mb-2 text-sm font-black uppercase tracking-[0.14em] text-cyan-300">Your bars</p>
+                        <ul className="space-y-2">
+                          {awayVenues.map((item, index) => (
+                            <VenueListItem
+                              key={item.id}
+                              venue={item}
+                              index={index}
+                              isPending={openingAwayVenueId === item.id}
+                              onSelect={handleOpenAwayVenue}
+                              viewOnly
+                            />
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
 
                     <ScanQrButton
                       className="mt-4"

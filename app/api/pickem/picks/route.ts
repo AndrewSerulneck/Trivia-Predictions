@@ -5,6 +5,7 @@ import {
   settlePendingPickEmPicks,
   submitPickEmPick,
 } from "@/lib/pickem";
+import { isPickEmPickWindowClosedError } from "@/lib/pickemPickWindowGate";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
 import {
   maybeRequireActiveVenuePresence,
@@ -141,6 +142,9 @@ export async function POST(request: Request) {
   } catch (error) {
     const presenceResponse = venuePresenceErrorResponse(error);
     if (presenceResponse) return presenceResponse;
+    if (isPickEmPickWindowClosedError(error)) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
+    }
 
     const message = error instanceof Error ? error.message : "Failed to submit Pick 'Em pick.";
     return NextResponse.json({ ok: false, error: message }, { status: toClientErrorStatus(message) });

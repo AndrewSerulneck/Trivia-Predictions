@@ -361,6 +361,10 @@ export const PICKEM_PRIZE_PARTNER_COPY = {
   limit: "Players at your bar will be limited to {limit} {scope} picks {window}, so everyone plays the same {limit}.",
   mostRight: "One winner {window}: the player with the most {scope} picks right.",
   target: "Up to {quantity} {winners} {window}: the first to get {threshold} {scope} picks right.",
+  /** Pick windows (away-mode plan B4): the prize's days fall outside a sport's window in Game Settings. */
+  pickWindowOutside: "{sport} picks are open {window} only (Game Settings).",
+  /** The prize's first day's picks already closed. */
+  pickWindowClosed: "{sport} picks for {date} closed {closedAt}.",
 } as const;
 
 /**

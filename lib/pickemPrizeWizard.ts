@@ -12,7 +12,10 @@ import {
   PICKEM_PRIZE_WINDOW_MESSAGE,
   describePickEmPrizeScope,
   describePickEmPrizeWindow,
+  addPickEmPrizeDays,
+  formatPickEmPrizeDate,
   normalizePickEmPrizeScope,
+  pickemPrizeWeekdayOf,
   pickemPrizeCampaignCalendar,
   validatePickEmPrizeTerms,
   validatePickEmPrizeWindow,
@@ -20,6 +23,17 @@ import {
   type PickEmPrizeWeekday,
   type PickEmPrizeWinKind,
 } from "@/lib/pickemPrizes";
+import { zonedDateTimeToUtcMs } from "@/lib/categoryBlitzScheduleTime";
+import {
+  PICK_WINDOW_DAYS,
+  pickWindowOpenWeekdays,
+  formatPickWindowInstant,
+  pickWindowInstanceAt,
+  type PickEmPickWindow,
+  type PickEmPickWindows,
+} from "@/lib/pickemPickWindow";
+import { describePickWindow } from "@/lib/pickemPickWindowForm";
+import { pickEmSportBySlug, pickEmSportOfLeague, type PickEmSportSlug } from "@/lib/pickemSports";
 import { PICKEM_PRIZE_PARTNER_COPY } from "@/lib/rewardDefinitions";
 import type { CampaignRecurringType, ChallengeWinCondition, PickEmPrizeScope, PickEmPrizeSportSlug, PickEmPrizeWindow } from "@/types";
 
@@ -233,6 +247,73 @@ export const pickemPickLimitNotice = (limit: number, scope: PickEmPrizeScope, wi
     scope: describePickEmPrizeScope(scope),
     window: describePickEmPrizeWindow(window),
   });
+};
+
+// ── Pick windows (away-mode plan B4) ─────────────────────────────────────────────────────────────
+
+/** The prize's days: its weekdays (at most 7) and its first day on or after `today`. */
+const pickEmPrizeDays = (
+  window: PickEmPrizeWindow,
+  today: string,
+): { weekdays: Set<PickEmPrizeWeekday>; firstDate: string } => {
+  if (window.kind === "day") return { weekdays: new Set([pickemPrizeWeekdayOf(window.date)]), firstDate: window.date };
+  if (window.kind === "weekday") {
+    let firstDate = today;
+    while (pickemPrizeWeekdayOf(firstDate) !== window.weekday) firstDate = addPickEmPrizeDays(firstDate, 1);
+    return { weekdays: new Set([window.weekday]), firstDate };
+  }
+  if (window.kind === "week") return { weekdays: new Set(PICK_WINDOW_DAYS), firstDate: today };
+  const weekdays = new Set<PickEmPrizeWeekday>();
+  for (let date = window.from, n = 0; date <= window.to && n < 7; date = addPickEmPrizeDays(date, 1), n += 1) {
+    weekdays.add(pickemPrizeWeekdayOf(date));
+  }
+  return { weekdays, firstDate: window.from > today ? window.from : today };
+};
+
+/**
+ * The wizard's one line (no block) when a Pick 'Em Prize's days and a scoped sport's pick window
+ * (Game Settings) don't line up: "College Football picks for Sat, Nov 14 closed Wed 11:59 PM." when
+ * the first day's picks have already closed, else "College Football picks are open Mon 12:00 AM – Wed
+ * 11:59 PM only (Game Settings)." when a prize day isn't a window day. Null when nothing to say.
+ */
+export const pickemPrizePickWindowNotice = (params: {
+  scope: PickEmPrizeScope;
+  prizeWindow: PickEmPrizeWindow;
+  pickWindows: PickEmPickWindows;
+  today: string;
+  timeZone: string;
+  nowMs: number;
+}): string | null => {
+  if (!params.today || !params.timeZone) return null;
+  const slugs = new Set<PickEmSportSlug>(params.scope.sports);
+  for (const key of params.scope.leagues) {
+    const sport = pickEmSportOfLeague(key);
+    if (sport) slugs.add(sport.slug);
+  }
+  const { weekdays, firstDate } = pickEmPrizeDays(params.prizeWindow, params.today);
+  let outside: string | null = null;
+  for (const slug of slugs) {
+    const pickWindow = params.pickWindows[slug];
+    if (!pickWindow) continue;
+    const sport = pickEmSportBySlug(slug)?.label ?? slug;
+    const [year, month, day] = firstDate.split("-").map(Number);
+    // A game at 11:59 PM is covered by the latest window instance of the day; if even that one has
+    // closed, every game that day has.
+    const lastKickoffMs = zonedDateTimeToUtcMs(year, month, day, 23, 59, 0, params.timeZone);
+    const instance = pickWindowInstanceAt(pickWindow, lastKickoffMs, params.timeZone);
+    if (instance.closesAtMs <= params.nowMs) {
+      return fill(PICKEM_PRIZE_PARTNER_COPY.pickWindowClosed, {
+        sport,
+        date: formatPickEmPrizeDate(firstDate),
+        closedAt: formatPickWindowInstant(instance.closesAtMs, params.timeZone),
+      });
+    }
+    const open = pickWindowOpenWeekdays(pickWindow);
+    if (!outside && [...weekdays].some((weekday) => !open.has(weekday))) {
+      outside = fill(PICKEM_PRIZE_PARTNER_COPY.pickWindowOutside, { sport, window: describePickWindow(pickWindow) });
+    }
+  }
+  return outside;
 };
 
 /** The terms restated on Confirm: who wins, when. */

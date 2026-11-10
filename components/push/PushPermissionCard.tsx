@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ButtonSpinner } from "@/components/ui/ButtonSpinner";
 import { haptic } from "@/lib/haptics";
-import { dismissPushAsk, enablePush, shouldAskForPush } from "@/lib/nativePush";
+import { dismissPushAsk, enablePush, PUSH_ASK_INLINE_EVENT, PUSH_ENABLED_EVENT, shouldAskForPush } from "@/lib/nativePush";
 import { PUSH_COPY } from "@/lib/pushCategories";
 import { useIsNativeApp } from "@/lib/useIsNativeApp";
 
@@ -27,6 +27,18 @@ export const PushPermissionCard = ({ eligible }: { eligible: boolean }) => {
       cancelled = true;
     };
   }, [isApp, eligible]);
+
+  // Push turned on elsewhere (Remind me, the menu), or the same ask shown inline: this card steps aside.
+  useEffect(() => {
+    if (!isApp) return;
+    const hide = () => setVisible(false);
+    window.addEventListener(PUSH_ENABLED_EVENT, hide);
+    window.addEventListener(PUSH_ASK_INLINE_EVENT, hide);
+    return () => {
+      window.removeEventListener(PUSH_ENABLED_EVENT, hide);
+      window.removeEventListener(PUSH_ASK_INLINE_EVENT, hide);
+    };
+  }, [isApp]);
 
   if (!visible) return null;
 

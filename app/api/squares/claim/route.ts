@@ -3,6 +3,7 @@ import { isSquaresEnabled } from "@/lib/seasonalGames";
 import { isSquaresCell } from "@/lib/squares";
 import { claimSquaresCell, type SquaresClaimOutcome } from "@/lib/squaresBoard";
 import { resolveRequestUserId } from "@/lib/serverSession";
+import { maybeRequireActiveVenuePresence, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
 // POST /api/squares/claim { venueId, userId, cell, action: "claim" | "release" }. The rules (cap,
 // lock, one owner per cell, the player's own venue) are enforced inside the squares_claim RPC —
@@ -43,6 +44,16 @@ export async function POST(request: Request) {
       { ok: false, error: "venueId, userId, cell (0–99) and action (claim or release) are required." },
       { status: 400, headers: NO_STORE },
     );
+  }
+
+  // Claiming or releasing a square is played at the bar (away-mode plan, Andrew 2026-11-09).
+  try {
+    await maybeRequireActiveVenuePresence({ userId: actor.userId, venueId });
+  } catch (error) {
+    if (venuePresenceErrorResponse(error)) {
+      return NextResponse.json({ ok: false, outcome: "not_at_venue" }, { status: 403, headers: NO_STORE });
+    }
+    return NextResponse.json({ ok: false, error: "Squares is unavailable right now." }, { status: 503, headers: NO_STORE });
   }
 
   const result = await claimSquaresCell({ userId: actor.userId, venueId, cell: body.cell as number, action });

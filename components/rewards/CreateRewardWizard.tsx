@@ -132,6 +132,7 @@ import {
   nextPickEmTierDraft,
   pickemEngineTerms,
   pickemPickLimitNotice,
+  pickemPrizePickWindowNotice,
   pickemScopeFromDraft,
   pickemTermsFromDraft,
   pickemWindowDraftFor,
@@ -526,6 +527,21 @@ export function CreateRewardWizard({
     [pickemWindowDraft, pickemToday],
   );
   const pickemWindow = pickemWindowResult.ok ? pickemWindowResult.window : null;
+  // Away-mode plan B4: one line (no block) when the prize's days miss a scoped sport's pick window.
+  const pickemPickWindowNotice = useMemo(
+    () =>
+      pickemScope && pickemWindow && context?.pickem?.pickWindows
+        ? pickemPrizePickWindowNotice({
+            scope: pickemScope,
+            prizeWindow: pickemWindow,
+            pickWindows: context.pickem.pickWindows,
+            today: context.pickem.today,
+            timeZone: context.pickem.timezone,
+            nowMs: Date.now(),
+          })
+        : null,
+    [pickemScope, pickemWindow, context?.pickem],
+  );
   const pickemTermsResult = useMemo(
     () =>
       pickemScope && pickemWindow ? pickemTermsFromDraft(pickemTermsDraft, pickemScope, pickemWindow, pickemToday) : null,
@@ -1432,6 +1448,11 @@ export function CreateRewardWizard({
             </p>
           ) : pickemWindowDraft.kind !== null && !pickemWindowResult.ok ? (
             <div className={s.error}>{pickemWindowResult.message}</div>
+          ) : null}
+          {pickemPickWindowNotice ? (
+            <p className={s.helpText} data-testid="pickem-pick-window-notice">
+              {pickemPickWindowNotice}
+            </p>
           ) : null}
           <WizardFooter
             variant="inline"

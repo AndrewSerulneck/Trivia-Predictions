@@ -8,6 +8,13 @@ import {
   getPickEmPrizeGuess,
   savePickEmPrizeGuess,
 } from "@/lib/pickemPrizeTiebreaker";
+import {
+  assertPickEmPickWindowOpenAtVenue,
+  isPickEmPickWindowClosedError,
+  pickWindowViewAtVenue,
+} from "@/lib/pickemPickWindowGate";
+import type { PickEmPickWindowView } from "@/lib/pickemPickWindow";
+import { pickEmSportOfLeague } from "@/lib/pickemSports";
 import { resolveRequestUserId } from "@/lib/serverSession";
 import { getVenueTimezone } from "@/lib/timezone";
 import { maybeRequireActiveVenuePresence, venuePresenceErrorResponse } from "@/lib/venuePresence";
@@ -47,6 +54,20 @@ async function resolveTiebreaker(venueId: string, campaignId: string): Promise<R
   return { ok: true, campaignId: campaign.id, periodStart, game };
 }
 
+/**
+ * The card's lock follows the sport's pick window too (away-mode plan B2): shut = locked, with the
+ * window's words; open with a close before kickoff = "Locks at" that close. Same rule as the POST.
+ */
+const withPickWindow = <T extends { startsAt: string; isLocked: boolean }>(
+  game: T,
+  window: PickEmPickWindowView | null,
+): T & { locksAt: string; pickWindowMessage?: string } => {
+  if (!window) return { ...game, locksAt: game.startsAt };
+  if (!window.isOpen) return { ...game, isLocked: true, locksAt: game.startsAt, pickWindowMessage: window.line };
+  const locksAt = Date.parse(window.closesAt) < Date.parse(game.startsAt) ? window.closesAt : game.startsAt;
+  return { ...game, locksAt };
+};
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -59,13 +80,18 @@ export async function GET(request: Request) {
     );
     if (!resolved.ok) return NextResponse.json({ ok: false, error: resolved.error }, { status: resolved.status });
 
-    const guess = viewer.userId
-      ? await getPickEmPrizeGuess({ challengeId: resolved.campaignId, periodStart: resolved.periodStart, userId: viewer.userId })
-      : null;
+    const venueId = (searchParams.get("venueId") ?? "").trim();
+    const sportSlug = pickEmSportOfLeague(resolved.game.sportKey)?.slug;
+    const [guess, window] = await Promise.all([
+      viewer.userId
+        ? getPickEmPrizeGuess({ challengeId: resolved.campaignId, periodStart: resolved.periodStart, userId: viewer.userId })
+        : Promise.resolve(null),
+      sportSlug ? pickWindowViewAtVenue({ venueId, sportSlug, startsAt: resolved.game.startsAt }) : Promise.resolve(null),
+    ]);
     return NextResponse.json(
       {
         ok: true,
-        game: resolved.game,
+        game: withPickWindow(resolved.game, window),
         guess: guess ? { predictedTotal: guess.predictedTotal, updatedAt: guess.savedAt } : null,
       },
       { headers: { "Cache-Control": "no-store" } },
@@ -94,6 +120,12 @@ export async function POST(request: Request) {
     const resolved = await resolveTiebreaker(venueId, String(body.campaignId ?? "").trim());
     if (!resolved.ok) return NextResponse.json({ ok: false, error: resolved.error }, { status: resolved.status });
 
+    // A guess locks with its game's pick window too, when that comes before kickoff (away-mode plan B1, §4).
+    const sportSlug = pickEmSportOfLeague(resolved.game.sportKey)?.slug;
+    if (sportSlug) {
+      await assertPickEmPickWindowOpenAtVenue({ venueId, sportSlug, startsAt: resolved.game.startsAt });
+    }
+
     const guess = await savePickEmPrizeGuess({
       challengeId: resolved.campaignId,
       periodStart: resolved.periodStart,
@@ -106,6 +138,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const presenceResponse = venuePresenceErrorResponse(error);
     if (presenceResponse) return presenceResponse;
+    if (isPickEmPickWindowClosedError(error)) return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
     const message = error instanceof Error ? error.message : "";
     if (message === PICKEM_PRIZE_TIEBREAKER_LOCKED_MESSAGE) return NextResponse.json({ ok: false, error: message }, { status: 409 });
     if (message === PICKEM_PRIZE_TIEBREAKER_RANGE_MESSAGE) return NextResponse.json({ ok: false, error: message }, { status: 400 });

@@ -31,6 +31,7 @@ export async function GET(request: Request) {
       userId: userId || undefined,
       venueId: venueId || undefined,
       tzOffsetMinutes,
+      clampToPickAhead: true,
     });
     const settlement = null;
 

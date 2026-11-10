@@ -19,10 +19,19 @@ import {
 import { getLockedNFLPickEmGameLineForSettlement, type NFLPickEmGameLine } from "@/lib/nflPickEm";
 import {
   DEFAULT_CFB_PICKEM_SCORING_MODE,
-  getVenueCollegeFootballPickEmScoringMode,
+  getVenueGameSettings,
   getVenueNFLPickEmScoringMode,
   type NFLPickEmScoringMode,
+  type VenueGameSettings,
 } from "@/lib/venueGameSettings";
+import {
+  assertPickEmPickWindowOpen,
+  assertPickEmPickWindowOpenAtVenue,
+  readVenueGameSettingsForPick,
+} from "@/lib/pickemPickWindowGate";
+import { pickAheadHorizonMs, pickWindowViewForGames, type PickEmPickWindowView } from "@/lib/pickemPickWindow";
+import { getVenueTimezone } from "@/lib/timezone";
+import { countProviderCall } from "@/lib/providerCallCounter";
 import {
   isSpreadLineSportKey,
   loadPickEmGameLines,
@@ -30,6 +39,15 @@ import {
   readPickEmGameLine,
   type PickEmGameLine,
 } from "@/lib/pickemGameLines";
+import {
+  applyVenueFrozenLines,
+  frozenLineForPick,
+  frozenLinePickColumns,
+  lineShownForGame,
+  PICKEM_FROZEN_LINE_FAILED_MESSAGE,
+  recordedPickLine,
+  type PickEmFrozenLine,
+} from "@/lib/pickemFrozenLines";
 
 export type { PickEmSportSlug };
 type PickEmPickStatus = "pending" | "won" | "lost" | "push" | "canceled";
@@ -77,6 +95,11 @@ export type PickEmGame = {
   pickLimitReached?: boolean;
   /** The server's words from the prize that covers THIS game (set with pickLimitReached). */
   pickLimitMessage?: string;
+  /**
+   * The bar's pick window for this sport is shut for this game (away-mode plan B2): "Picks open Mon
+   * 12:00 AM" / "Picks closed". Absent = open, no window, or already started.
+   */
+  pickWindowMessage?: string;
   userPickId?: string;
   userPickTeam?: string;
   userPickStatus?: PickEmPickStatus;
@@ -848,6 +871,7 @@ async function fetchMmaFighterProfileById(fighterId: string): Promise<Record<str
   if (!Number.isFinite(id) || id <= 0 || !BALLDONTLIE_API_KEY) {
     return null;
   }
+  countProviderCall("bdl", `/mma/v1/fighters/${id}`);
   const response = await fetch(`${BALLDONTLIE_API_BASE_URL}/mma/v1/fighters/${id}`, {
     method: "GET",
     headers: { Authorization: BALLDONTLIE_API_KEY },
@@ -1333,6 +1357,7 @@ async function probePathForDebug(sportKey: string, path: string, query: URLSearc
   if (!BALLDONTLIE_API_KEY) {
     return { sportKey, path, url, statusCode: 0, bodyPreview: "BALLDONTLIE_API_KEY missing" };
   }
+  countProviderCall("bdl", path);
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -1732,6 +1757,11 @@ export async function listPickEmGames(params: {
   venueId?: string;
   /** The pick check reads its one line itself; it never needs the list's lines. */
   skipLines?: boolean;
+  /**
+   * Display only (`/api/pickem/games`): a future `date` the venue's pick-ahead reach doesn't cover is served as
+   * today, before any provider call (away-mode plan R9). The pick check never sets it: it must find future games.
+   */
+  clampToPickAhead?: boolean;
 }): Promise<{
   sport: PickEmSport;
   date: string;
@@ -1741,13 +1771,28 @@ export async function listPickEmGames(params: {
   collegeScoring?: { mode: NFLPickEmScoringMode; linesUnavailable: boolean };
   /** The venue's active Pick 'Em Prizes that cover these games (Phase 6); empty when there are none. */
   prizes?: PickEmGamePrize[];
+  /** A sport with a pick window (away-mode plan B2): the first game still to start's window. */
+  pickWindow?: PickEmPickWindowView;
+  /** A sport with a pick window: the last local date the day arrows reach (after today), if any. */
+  pickAheadThrough?: string;
   weekOptions?: Array<{ label: string; value: string }>;
   selectedWeekStartDate?: string;
   debug?: { probes: PickEmDebugProbe[] };
 }> {
   const sport = getSportOrThrow(params.sportSlug);
   const tzOffsetMinutes = parseTimezoneOffset(params.tzOffsetMinutes);
-  const dayRange = buildUtcRangeForLocalDay(params.date, tzOffsetMinutes);
+  let requestedDate = params.date;
+  if (params.clampToPickAhead && sport.slug !== "nfl") {
+    const todayKey = getTodayDateInOffset(tzOffsetMinutes);
+    const asked = parseDateString(requestedDate) ? String(requestedDate).trim() : "";
+    if (asked > todayKey) {
+      const reach = params.venueId?.trim()
+        ? await pickAheadReach({ sportSlug: sport.slug, venueId: params.venueId, tzOffsetMinutes })
+        : undefined;
+      if (!reach?.pickAheadThrough || asked > reach.pickAheadThrough) requestedDate = todayKey;
+    }
+  }
+  const dayRange = buildUtcRangeForLocalDay(requestedDate, tzOffsetMinutes);
   let date = dayRange.date;
   let fromIso = dayRange.fromIso;
   let toIso = dayRange.toIso;
@@ -1910,7 +1955,10 @@ export async function listPickEmGames(params: {
   // shared. The pick check (skipLines) never needs lines or prizes, and NFL Pick 'Em has its own prize.
   const wantsLines = sport.slug === "ncaaf" && !params.skipLines;
   const wantsPrizes = !params.skipLines && sport.slug !== "nfl";
-  const [collegeScoring, prizes, today] = await Promise.all([
+  // The pick window (B2) writes only pickWindowMessage, and its settings read is the college rule's
+  // cached one (the same promise), so it joins the others.
+  const wantsWindow = !params.skipLines && sport.slug !== "nfl" && Boolean(params.venueId?.trim());
+  const [collegeScoring, prizes, today, pickWindowFacts] = await Promise.all([
     wantsLines
       ? applyCollegeFootballLines({
           games,
@@ -1932,10 +1980,15 @@ export async function listPickEmGames(params: {
           tzOffsetMinutes,
         }).catch(() => undefined)
       : Promise.resolve(undefined),
+    wantsWindow
+      ? applyPickWindowToGames({ games, sportSlug: sport.slug, venueId: params.venueId ?? "", tzOffsetMinutes })
+      : Promise.resolve(undefined),
   ]);
 
+  // The empty-day probe (uncached provider calls, never shown on screen) runs for today and earlier
+  // only, so pick-ahead days (B2) add none.
   let debug: { probes: PickEmDebugProbe[] } | undefined;
-  if (games.length === 0) {
+  if (games.length === 0 && date <= getTodayDateInOffset(tzOffsetMinutes)) {
     const probes: PickEmDebugProbe[] = [];
     for (const sportKey of sportKeys) {
       const paths = getPathVariantsForSportKey(sportKey);
@@ -1965,45 +2018,99 @@ export async function listPickEmGames(params: {
     selectedWeekStartDate,
     collegeScoring,
     prizes,
+    pickWindow: pickWindowFacts?.pickWindow,
+    pickAheadThrough: pickWindowFacts?.pickAheadThrough,
     debug,
   };
 }
 
-const COLLEGE_RULE_DISPLAY_CACHE_TTL_MS = 30_000;
-const collegeRuleDisplayCache = new Map<string, { value: Promise<NFLPickEmScoringMode>; expiresAtMs: number }>();
+/**
+ * Pick ahead (away-mode plan B2), in place: a game not yet started whose window is shut gets its words
+ * (`pickWindowMessage`), and the list gets the first game's window and how far ahead the day arrows reach.
+ * A sport with no window (or no readable settings) gets nothing, so it stays today-only. No provider call:
+ * one cached settings read (shared with the college rule) and the cached time zone, only with a window.
+ */
+const applyPickWindowToGames = async (params: {
+  games: PickEmGame[];
+  sportSlug: PickEmSportSlug;
+  venueId: string;
+  tzOffsetMinutes: number;
+}): Promise<{ pickWindow?: PickEmPickWindowView; pickAheadThrough?: string } | undefined> => {
+  const reach = await pickAheadReach(params);
+  if (!reach) return undefined;
+  const { window, timeZone, nowMs } = reach;
+  const { view, closedLines } = pickWindowViewForGames({ window, games: params.games, nowMs, timeZone });
+  for (const game of params.games) {
+    const line = closedLines.get(game.id);
+    if (line) game.pickWindowMessage = line;
+  }
+  return { pickWindow: view ?? undefined, pickAheadThrough: reach.pickAheadThrough };
+};
 
-/** Test hook: forget the cached display rules. */
+/**
+ * How far ahead the day arrows reach for a sport at a venue (R9): the sport's pick window and the last local
+ * date after today it reaches. Undefined = no window (or no readable settings): today only. No provider call;
+ * the settings read is the 30 s display cache and the time zone is cached too.
+ */
+const pickAheadReach = async (params: {
+  sportSlug: PickEmSportSlug;
+  venueId: string;
+  tzOffsetMinutes: number;
+}): Promise<
+  | { window: NonNullable<NonNullable<VenueGameSettings["pickWindows"]>[PickEmSportSlug]>; timeZone: string; nowMs: number; pickAheadThrough?: string }
+  | undefined
+> => {
+  const settings = await readVenueGameSettingsForDisplay(params.venueId);
+  const window = settings?.pickWindows?.[params.sportSlug];
+  if (!window) return undefined;
+  const timeZone = await getVenueTimezone(params.venueId);
+  const nowMs = Date.now();
+  const horizonKey = toLocalDateKey(new Date(pickAheadHorizonMs({ window, nowMs, timeZone })).toISOString(), params.tzOffsetMinutes);
+  const todayKey = getTodayDateInOffset(params.tzOffsetMinutes);
+  return { window, timeZone, nowMs, pickAheadThrough: horizonKey > todayKey ? horizonKey : undefined };
+};
+
+const SETTINGS_DISPLAY_CACHE_TTL_MS = 30_000;
+const settingsDisplayCache = new Map<string, { value: Promise<VenueGameSettings>; expiresAtMs: number }>();
+
+/** Test hook: forget the cached display settings (the college rule and the pick windows). */
 export function clearCollegeScoringModeDisplayCache(): void {
-  collegeRuleDisplayCache.clear();
+  settingsDisplayCache.clear();
 }
 
 /**
- * The venue's college rule, for DISPLAY only; a failed read shows the default (spread) rather than failing the
- * list. Cached 30 s per venue per instance. A failed read is not cached. `submitPickEmPick` reads fresh: that read
- * is the stamp of record for the pick.
+ * The venue's Game Settings for DISPLAY only (the college rule and the pick windows, B2): cached 30 s per
+ * venue per instance, one read shared by both. A failed read is not cached and reads as null (the list
+ * shows the default rule and no window). Pick writes never use this: `submitPickEmPick` reads fresh.
  */
-async function resolveCollegeScoringModeForDisplay(venueId: string | undefined): Promise<NFLPickEmScoringMode> {
+const readVenueGameSettingsForDisplay = async (venueId: string | undefined): Promise<VenueGameSettings | null> => {
   const normalized = String(venueId ?? "").trim();
-  if (!normalized) return DEFAULT_CFB_PICKEM_SCORING_MODE;
+  if (!normalized) return null;
   const nowMs = Date.now();
-  const cached = collegeRuleDisplayCache.get(normalized);
-  if (cached && cached.expiresAtMs > nowMs) return cached.value;
-  for (const [key, entry] of collegeRuleDisplayCache) if (entry.expiresAtMs <= nowMs) collegeRuleDisplayCache.delete(key);
-  const value = getVenueCollegeFootballPickEmScoringMode(normalized);
-  collegeRuleDisplayCache.set(normalized, { value, expiresAtMs: nowMs + COLLEGE_RULE_DISPLAY_CACHE_TTL_MS });
+  const cached = settingsDisplayCache.get(normalized);
+  let value = cached && cached.expiresAtMs > nowMs ? cached.value : null;
+  if (!value) {
+    for (const [key, entry] of settingsDisplayCache) if (entry.expiresAtMs <= nowMs) settingsDisplayCache.delete(key);
+    value = getVenueGameSettings(normalized);
+    settingsDisplayCache.set(normalized, { value, expiresAtMs: nowMs + SETTINGS_DISPLAY_CACHE_TTL_MS });
+  }
   try {
     return await value;
   } catch (error) {
-    collegeRuleDisplayCache.delete(normalized);
-    console.warn(`[Pick 'Em] Could not read the college rule for venue ${normalized}; showing the default.`, error);
-    return DEFAULT_CFB_PICKEM_SCORING_MODE;
+    if (settingsDisplayCache.get(normalized)?.value === value) settingsDisplayCache.delete(normalized);
+    console.warn(`[Pick 'Em] Could not read Game Settings for venue ${normalized}; showing the defaults.`, error);
+    return null;
   }
-}
+};
 
 /**
  * College Football games, in place: each gets the rule it is played by (the player's own pick's
  * stamped rule once picked, else the venue's), and in spread mode its line, or "Line coming soon"
  * (can't be picked) while a not-yet-started game has none. Lines are refreshed only in spread mode.
+ * The line shown is the one the player's pick is graded by (`lineShownForGame`, away-mode plan R2): the
+ * line on the pick's row; a pick without one, the global line; no pick, this bar's frozen line (a bar with
+ * a College Football pick window, B3: frozen here the first time a game is shown inside its open window),
+ * else the global line.
  */
 async function applyCollegeFootballLines(params: {
   games: PickEmGame[];
@@ -2013,16 +2120,17 @@ async function applyCollegeFootballLines(params: {
   fromIso: string;
   toIso: string;
 }): Promise<{ mode: NFLPickEmScoringMode; linesUnavailable: boolean }> {
-  const mode = await resolveCollegeScoringModeForDisplay(params.venueId);
+  const settings = await readVenueGameSettingsForDisplay(params.venueId);
+  const mode = settings?.cfbPickEmScoringMode ?? DEFAULT_CFB_PICKEM_SCORING_MODE;
   const pickModeOf = (game: PickEmGame): NFLPickEmScoringMode => {
     const pick = params.picksByGameId.get(game.id);
     return pick?.scoring_mode ?? mode;
   };
-  const needsLines = params.games.some((game) => pickModeOf(game) === "spread");
+  const spreadGames = params.games.filter((game) => pickModeOf(game) === "spread");
 
   let lines = new Map<string, PickEmGameLine>();
   let linesUnavailable = false;
-  if (needsLines) {
+  if (spreadGames.length > 0) {
     try {
       const result = await loadPickEmGameLines({
         sportKey: COLLEGE_FOOTBALL_SPORT_KEY,
@@ -2040,11 +2148,32 @@ async function applyCollegeFootballLines(params: {
     }
   }
 
+  const venueId = String(params.venueId ?? "").trim();
+  const window = settings?.pickWindows?.ncaaf;
+  let frozen = new Map<string, PickEmFrozenLine>();
+  if (window && venueId && spreadGames.length > 0) {
+    try {
+      frozen = await applyVenueFrozenLines({
+        venueId,
+        sportKey: COLLEGE_FOOTBALL_SPORT_KEY,
+        window,
+        timeZone: await getVenueTimezone(venueId),
+        games: spreadGames,
+        globalLines: lines,
+      });
+    } catch (error) {
+      // The pick freezes (or refuses) on its own, so the list keeps the global lines on screen.
+      console.warn(`[Pick 'Em] Could not freeze college lines for venue ${venueId}; showing the global lines.`, error);
+      linesUnavailable = true;
+    }
+  }
+
   for (const game of params.games) {
     const gameMode = pickModeOf(game);
     game.scoringMode = gameMode;
     if (gameMode !== "spread") continue;
-    const line = lines.get(game.id);
+    const pick = params.picksByGameId.get(game.id);
+    const line = lineShownForGame({ pick, frozen: frozen.get(game.id), global: lines.get(game.id) });
     game.homeSpread = line?.homeSpread ?? null;
     game.awaySpread = line?.awaySpread ?? null;
     game.lineComingSoon = !line && !game.isLocked;
@@ -2098,9 +2227,16 @@ export async function submitPickEmPick(params: {
     throw new Error("Game not found for selected date/sport.");
   }
 
+  // The bar's rules, read once and fresh: the sport's pick window (away-mode plan B1; a failed read
+  // leaves picks open) and, below, the college rule stamped on a new pick (a failed read refuses it).
+  const settings = await readVenueGameSettingsForPick(venueId);
+  const pickWindows = settings?.pickWindows ?? null;
+
+  // Today only, unless the sport has a pick window (B2): then the window decides, and an open window
+  // covers games only until its next opening (under a week). A failed settings read keeps today-only.
   const gameLocalDate = toLocalDateKey(game.startsAt, tzOffsetMinutes);
   const todayLocalDate = getTodayDateInOffset(tzOffsetMinutes);
-  if (gameLocalDate !== todayLocalDate) {
+  if (!pickWindows?.[game.sportSlug] && gameLocalDate !== todayLocalDate) {
     throw new Error("You can only place picks for today.");
   }
 
@@ -2111,6 +2247,13 @@ export async function submitPickEmPick(params: {
   if (pickTeam !== game.homeTeam && pickTeam !== game.awayTeam) {
     throw new Error("pickTeam must match one of the teams in this game.");
   }
+
+  await assertPickEmPickWindowOpen({
+    venueId,
+    sportSlug: game.sportSlug,
+    startsAt: game.startsAt,
+    windows: pickWindows,
+  });
 
   const selectedSide: "home" | "away" = pickTeam === game.homeTeam ? "home" : "away";
   const selectedTeamId = selectedSide === "home" ? game.homeTeamId : game.awayTeamId;
@@ -2143,8 +2286,11 @@ export async function submitPickEmPick(params: {
   }
 
   // College Football: the venue's rule when the pick is first made is stamped on it and decides
-  // its grade (plan §4); switching sides keeps that rule. A spread pick needs a saved line.
-  const scoringMode = await resolvePickScoringMode({ game, venueId, existing });
+  // its grade (plan §4); switching sides keeps that rule. A spread pick needs a saved line, and a NEW
+  // pick at a bar with a pick window records the bar's frozen line, which grades it (away-mode plan B3).
+  // A pick's line is set when it is made (R8): only the insert writes it, never a side switch.
+  const { scoringMode, frozenLine } = await resolvePickScoringMode({ game, venueId, existing, settings });
+  const lineColumns = frozenLine ? frozenLinePickColumns(frozenLine) : {};
 
   // A bar's "X out of N" Pick 'Em Prize gives each player N picks in its games (plan D5). Only a new
   // pick can use one up: switching sides on an existing pick never counts.
@@ -2164,6 +2310,8 @@ export async function submitPickEmPick(params: {
         sport_key: game.sportKey,
         selected_team_id: selectedTeamId,
         ...(scoringMode ? { scoring_mode: scoringMode } : {}),
+        // No line columns (R8): a recorded line stays, and a pick without one stays on the global
+        // line, which is what the list shows (R2) and what settlement grades it by.
       })
       .eq("id", existing.id)
       .select(PICKEM_PICK_SELECT)
@@ -2197,6 +2345,7 @@ export async function submitPickEmPick(params: {
       status: "pending",
       reward_points: PICKEM_REWARD_POINTS,
       ...(scoringMode ? { scoring_mode: scoringMode } : {}),
+      ...lineColumns,
     })
     .select(PICKEM_PICK_SELECT)
     .single<PickEmPickRow>();
@@ -2216,38 +2365,60 @@ export async function submitPickEmPick(params: {
 
 /**
  * The rule a college pick is stamped with (null for every other sport). An existing pick keeps its
- * stamp. A new one takes the venue's rule; if that can't be read the pick is refused rather than
- * stamped with a guess. In spread mode the game must already have a saved line.
+ * stamp. A new one takes the venue's rule from the pick's one settings read; if that read failed
+ * (`settings` null) the pick is refused rather than stamped with a guess. In spread mode the game must
+ * already have a saved line (new pick or side switch). At a bar with a College Football pick window (B3)
+ * a NEW spread pick also gets the bar's frozen line (frozen now if the list didn't), which the pick
+ * records and is graded by; if it can't be frozen the pick is refused, so no windowed pick is saved
+ * without it. A side switch never gets one (R8): the pick keeps the line it was made with.
  */
 async function resolvePickScoringMode(params: {
   game: PickEmGame;
   venueId: string;
   existing: PickEmPickRow | null;
-}): Promise<NFLPickEmScoringMode | null> {
-  if (!isSpreadLineSportKey(params.game.sportKey)) return null;
+  settings: VenueGameSettings | null;
+}): Promise<{ scoringMode: NFLPickEmScoringMode | null; frozenLine: PickEmFrozenLine | null }> {
+  if (!isSpreadLineSportKey(params.game.sportKey)) return { scoringMode: null, frozenLine: null };
 
   let mode = params.existing?.scoring_mode ?? null;
   if (!mode) {
-    try {
-      mode = await getVenueCollegeFootballPickEmScoringMode(params.venueId);
-    } catch (error) {
-      console.warn(`[Pick 'Em] Could not read the college rule for venue ${params.venueId}; refusing the pick.`, error);
+    if (!params.settings) {
+      console.warn(`[Pick 'Em] Could not read the college rule for venue ${params.venueId}; refusing the pick.`);
       throw new Error("We couldn't load this bar's Pick 'Em rules. Please try again.");
     }
+    mode = params.settings.cfbPickEmScoringMode;
+  }
+  if (mode !== "spread") return { scoringMode: mode, frozenLine: null };
+
+  let line: PickEmGameLine | null = null;
+  try {
+    line = await readPickEmGameLine(params.game.sportKey, params.game.id);
+  } catch (error) {
+    console.warn(`[Pick 'Em] Could not read the line for game ${params.game.id}.`, error);
+  }
+  if (!line) {
+    throw new Error(COLLEGE_FOOTBALL_SPREAD_COPY.noLineYet);
   }
 
-  if (mode === "spread") {
-    let line: PickEmGameLine | null = null;
-    try {
-      line = await readPickEmGameLine(params.game.sportKey, params.game.id);
-    } catch (error) {
-      console.warn(`[Pick 'Em] Could not read the line for game ${params.game.id}.`, error);
-    }
-    if (!line) {
-      throw new Error(COLLEGE_FOOTBALL_SPREAD_COPY.noLineYet);
-    }
+  // R8: only a new pick takes a line. Clearing a pick and making it again is a new pick.
+  if (params.existing || !params.settings?.pickWindows?.[params.game.sportSlug]) {
+    return { scoringMode: mode, frozenLine: null };
   }
-  return mode;
+  let frozenLine: PickEmFrozenLine | null = null;
+  try {
+    frozenLine = await frozenLineForPick({
+      venueId: params.venueId,
+      sportKey: params.game.sportKey,
+      game: params.game,
+      globalLine: line,
+    });
+  } catch (error) {
+    console.warn(`[Pick 'Em] frozen-line-failed venue=${params.venueId} game=${params.game.id}; refusing the pick.`, error);
+    throw new Error(PICKEM_FROZEN_LINE_FAILED_MESSAGE);
+  }
+  // Null only when the game started meanwhile (the database clock); the kickoff lock speaks for it.
+  if (!frozenLine) throw new Error("Picks are locked for this game because it has already started.");
+  return { scoringMode: mode, frozenLine };
 }
 
 export async function clearPickEmPick(params: {
@@ -2267,10 +2438,10 @@ export async function clearPickEmPick(params: {
 
   const { data: existing, error: existingError } = await supabaseAdmin
     .from("pickem_picks")
-    .select("id, starts_at, status")
+    .select("id, starts_at, status, venue_id, sport_slug")
     .eq("user_id", userId)
     .eq("game_id", gameId)
-    .maybeSingle<{ id: string; starts_at: string; status: PickEmPickStatus }>();
+    .maybeSingle<{ id: string; starts_at: string; status: PickEmPickStatus; venue_id: string; sport_slug: string }>();
 
   if (existingError) {
     if (isMissingPickEmTablesError(existingError)) {
@@ -2291,6 +2462,13 @@ export async function clearPickEmPick(params: {
   if (existing.status !== "pending") {
     throw new Error("This pick can no longer be modified.");
   }
+
+  // Clearing follows the same pick window as making it (away-mode plan B1).
+  await assertPickEmPickWindowOpenAtVenue({
+    venueId: existing.venue_id,
+    sportSlug: existing.sport_slug,
+    startsAt: existing.starts_at,
+  });
 
   const { error: deleteError } = await supabaseAdmin.from("pickem_picks").delete().eq("id", existing.id);
   if (deleteError) {
@@ -2535,9 +2713,10 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   };
 
   // College spread picks: lock their lines at kickoff (one call; never fetches or creates a line).
-  // A failed lock read leaves those picks waiting; it must never run down the 48-hour cancel.
+  // A failed lock read leaves those picks waiting; it must never run down the 48-hour cancel. A pick that
+  // recorded its bar's frozen line (away-mode plan B3) is graded by that and needs no lock.
   const collegeSpreadGameIds = pending
-    .filter((row) => row.sport_key === COLLEGE_FOOTBALL_SPORT_KEY && row.scoring_mode === "spread")
+    .filter((row) => row.sport_key === COLLEGE_FOOTBALL_SPORT_KEY && row.scoring_mode === "spread" && !recordedPickLine(row))
     .map((row) => row.game_id);
   let collegeLines = new Map<string, PickEmGameLine>();
   let collegeLinesReadFailed = false;
@@ -2717,6 +2896,8 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
       continue;
     }
 
+    // B3: the line a pending spread pick recorded at a windowed bar, which grades it (null otherwise).
+    const recordedLine = recordedPickLine(row);
     let settlement: PickEmSettlementResult;
     if (collegeGate === "cancel" || collegeGate === "called_off") {
       console.warn(
@@ -2731,6 +2912,17 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
         homeSpread: null,
         awaySpread: null,
       };
+    } else if (collegeScoringMode === "spread" && homeScore !== null && awayScore !== null && recordedLine) {
+      // B3: the line this pick was made against at a windowed bar (frozen for the bar, never changed).
+      settlement = resolveSpreadPickEmSettlement({
+        row,
+        scoreEvent,
+        homeScore,
+        awayScore,
+        providerWinnerTeamId,
+        providerWinnerTeamName,
+        line: recordedLine,
+      });
     } else if (collegeScoringMode === "spread" && homeScore !== null && awayScore !== null) {
       const line = collegeLines.get(row.game_id) ?? null;
       const lineGate = collegeLinesReadFailed
@@ -2758,7 +2950,11 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
         });
       }
     } else if (nflScoringMode === "spread") {
-      const line = homeScore !== null && awayScore !== null ? await getLockedNFLLine(row.game_id) : null;
+      // B3: a pick made at a windowed bar is graded by the line it recorded; others by the kickoff lock.
+      const line =
+        homeScore !== null && awayScore !== null
+          ? recordedLine ?? (await getLockedNFLLine(row.game_id))
+          : null;
       if (homeScore === null || awayScore === null || !line) {
         // A spread pick needs BOTH final scores and the line that was locked at
         // kickoff, and either can be permanently absent:

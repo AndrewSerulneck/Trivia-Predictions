@@ -19,8 +19,10 @@ const store = vi.hoisted(() => ({
   collegeMode: "spread" as "spread" | "standard",
   collegeModeFails: false,
   collegeModeGate: null as Promise<void> | null,
+  pickWindows: {} as Record<string, unknown>,
   tablesOpened: [] as string[],
   lockFails: false,
+  freezeFails: false,
   rpcCalls: [] as Array<{ name: string; args: Record<string, unknown> }>,
   checkPickLimit: vi.fn(
     (_params: unknown): Promise<{ ok: true } | { ok: false; message: string }> => Promise.resolve({ ok: true }),
@@ -36,6 +38,29 @@ vi.mock("@/lib/balldontlie", () => ({ fetchBallDontLieList: store.fetchBallDontL
 vi.mock("@/lib/venueGameSettings", () => ({
   DEFAULT_CFB_PICKEM_SCORING_MODE: "spread",
   getVenueNFLPickEmScoringMode: vi.fn(() => Promise.resolve("standard")),
+  // The pick's one fresh settings read (away-mode plan B1): the college rule and the pick windows.
+  // The list's DISPLAY read too (30 s cache, B2), which is where the gate holds it.
+  getVenueGameSettings: vi.fn((venueId: string) =>
+    store.collegeModeGate
+      ? store.collegeModeGate.then(() => ({
+          venueId,
+          nflPickEmScoringMode: "standard",
+          cfbPickEmScoringMode: store.collegeMode,
+          pickWindows: store.pickWindows,
+          createdAt: null,
+          updatedAt: null,
+        }))
+      : store.collegeModeFails
+      ? Promise.reject(new Error("settings down"))
+      : Promise.resolve({
+          venueId,
+          nflPickEmScoringMode: "standard",
+          cfbPickEmScoringMode: store.collegeMode,
+          pickWindows: store.pickWindows,
+          createdAt: null,
+          updatedAt: null,
+        })
+  ),
   getVenueCollegeFootballPickEmScoringMode: vi.fn(() =>
     store.collegeModeGate
       ? store.collegeModeGate.then(() => store.collegeMode)
@@ -54,12 +79,18 @@ vi.mock("@/lib/supabaseAdmin", () => {
     const filters: Array<(row: MockRow) => boolean> = [];
     let patch: MockRow | null = null;
     let insertRows: MockRow[] | null = null;
+    let deleting = false;
     const currentRows = () => (store.tables[table] ??= []);
     const filteredRows = () => currentRows().filter((row) => filters.every((filter) => filter(row)));
     const run = (): { data: MockRow[]; error: null } => {
       if (insertRows) {
         const rows = insertRows.map((row, index) => ({ id: `new-${currentRows().length + index}`, created_at: nowIso(), updated_at: nowIso(), ...row }));
         currentRows().push(...rows);
+        return { data: rows, error: null };
+      }
+      if (deleting) {
+        const rows = filteredRows();
+        store.tables[table] = currentRows().filter((row) => !rows.includes(row));
         return { data: rows, error: null };
       }
       if (patch) {
@@ -98,6 +129,10 @@ vi.mock("@/lib/supabaseAdmin", () => {
       returns: () => builder,
       update: (value: MockRow) => {
         patch = value;
+        return builder;
+      },
+      delete: () => {
+        deleting = true;
         return builder;
       },
       insert: (value: MockRow | MockRow[]) => {
@@ -151,6 +186,21 @@ vi.mock("@/lib/supabaseAdmin", () => {
       }
       return Promise.resolve({ data: rows, error: null });
     }
+    // B3's insert-once freeze, as 20261110014242_pickem_venue_frozen_lines.sql writes it.
+    if (name === "freeze_pickem_venue_lines") {
+      if (store.freezeFails) return Promise.resolve({ data: null, error: { message: "freeze down" } });
+      const frozen = (store.tables.pickem_venue_frozen_lines ??= []);
+      const inputs = args.p_rows as MockRow[];
+      for (const input of inputs) {
+        if (Date.parse(String(input.starts_at)) <= nowMs) continue;
+        const has = frozen.some((row) => row.venue_id === args.p_venue_id && row.sport_key === input.sport_key && row.game_id === input.game_id);
+        if (!has) frozen.push({ venue_id: args.p_venue_id, ...input, frozen_at: nowIso() });
+      }
+      const data = frozen.filter(
+        (row) => row.venue_id === args.p_venue_id && inputs.some((input) => input.sport_key === row.sport_key && input.game_id === row.game_id)
+      );
+      return Promise.resolve({ data, error: null });
+    }
     return Promise.resolve({ data: [], error: null });
   };
 
@@ -168,7 +218,14 @@ import {
   collegeFootballSpreadLineGate,
 } from "@/lib/pickemCollegeFootball";
 import { PICKEM_LINE_REFRESH_MS, resetPickEmLineFetchMemo } from "@/lib/pickemGameLines";
-import { clearCollegeScoringModeDisplayCache, listPickEmGames, settlePendingPickEmPicks, submitPickEmPick } from "@/lib/pickem";
+import {
+  clearCollegeScoringModeDisplayCache,
+  clearPickEmPick,
+  listPickEmGames,
+  settlePendingPickEmPicks,
+  submitPickEmPick,
+} from "@/lib/pickem";
+import { isPickEmPickWindowClosedError } from "@/lib/pickemPickWindowGate";
 
 type Game = (typeof liveSample)[number];
 const odds = oddsFixture.odds as BDLSpreadOddsRow[];
@@ -197,12 +254,14 @@ beforeEach(() => {
   clearCollegeScoringModeDisplayCache();
   vi.clearAllMocks();
   resetPickEmLineFetchMemo();
-  store.tables = { pickem_picks: [], pickem_game_lines: [], notifications: [] };
+  store.tables = { pickem_picks: [], pickem_game_lines: [], notifications: [], pickem_venue_frozen_lines: [] };
   store.collegeMode = "spread";
   store.collegeModeFails = false;
   store.collegeModeGate = null;
+  store.pickWindows = {};
   store.tablesOpened = [];
   store.lockFails = false;
+  store.freezeFails = false;
   store.rpcCalls = [];
   store.checkPickLimit.mockResolvedValue({ ok: true });
   vi.useFakeTimers({ toFake: ["Date"] });
@@ -354,8 +413,9 @@ describe("the games list display reads (7.5.4)", () => {
   const list = () => listPickEmGames({ sportSlug: "ncaaf", date: "2026-10-31", tzOffsetMinutes: EASTERN, venueId: "venue-1" });
 
   it("reads the venue's college rule once within 30 seconds, and again after", async () => {
-    const { getVenueCollegeFootballPickEmScoringMode } = await import("@/lib/venueGameSettings");
-    const read = vi.mocked(getVenueCollegeFootballPickEmScoringMode);
+    // One cached settings read serves the college rule and the pick windows (B2).
+    const { getVenueGameSettings } = await import("@/lib/venueGameSettings");
+    const read = vi.mocked(getVenueGameSettings);
     mockProvider({ games: liveSample, oddsRows: odds });
     read.mockClear();
     await list();
@@ -477,6 +537,401 @@ describe("making a college pick stamps the venue's rule", () => {
     await expect(submit()).rejects.toThrow("couldn't load this bar's Pick 'Em rules");
     expect(store.tables.pickem_picks).toHaveLength(0);
   });
+
+  it("reads the bar's settings once per pick, fresh, for both the rule and the window", async () => {
+    const settingsModule = await import("@/lib/venueGameSettings");
+    store.collegeMode = "standard";
+    mockProvider({ games: liveSample, oddsRows: [] });
+    vi.mocked(settingsModule.getVenueGameSettings).mockClear();
+    vi.mocked(settingsModule.getVenueCollegeFootballPickEmScoringMode).mockClear();
+
+    await submit();
+
+    expect(settingsModule.getVenueGameSettings).toHaveBeenCalledTimes(1);
+    expect(settingsModule.getVenueCollegeFootballPickEmScoringMode).not.toHaveBeenCalled();
+  });
+});
+
+describe("a College Football pick window (away-mode plan B1)", () => {
+  // Saturday 2026-10-31, 11 am Eastern. ECU-Temple kicks off 3 pm Eastern the same day.
+  const ecuGame = (liveSample as Game[]).find((game) => game.id === ECU_TEMPLE)!;
+  const ecuGameId = () =>
+    listPickEmGames({ sportSlug: "ncaaf", date: "2026-10-31", tzOffsetMinutes: EASTERN, skipLines: true }).then(
+      (list) => list.games.find((entry) => entry.id.startsWith(`${ECU_TEMPLE}__`))!.id
+    );
+  const submit = async (pickTeam = ecuGame.home_team.full_name) =>
+    submitPickEmPick({
+      userId: "user-1",
+      venueId: "venue-1",
+      sportSlug: "ncaaf",
+      gameId: await ecuGameId(),
+      pickTeam,
+      date: "2026-10-31",
+      tzOffsetMinutes: EASTERN,
+    });
+  const monToWed = { ncaaf: { openDay: "mon", openTime: "00:00", closeDay: "wed", closeTime: "23:59" } };
+  const thuToSat = { ncaaf: { openDay: "thu", openTime: "00:00", closeDay: "sat", closeTime: "23:59" } };
+
+  beforeEach(() => {
+    store.collegeMode = "standard";
+    mockProvider({ games: liveSample, oddsRows: [] });
+  });
+
+  it("refuses a pick once the game's window has closed", async () => {
+    store.pickWindows = monToWed; // Saturday's game was covered by Mon-Wed; it is closed now
+    const refusal = await submit().catch((error: unknown) => error);
+    expect(isPickEmPickWindowClosedError(refusal)).toBe(true);
+    expect((refusal as Error).message).toBe("Picks closed.");
+    expect(store.tables.pickem_picks).toHaveLength(0);
+  });
+
+  it("allows a pick inside the window, and no window at all is today's behaviour", async () => {
+    store.pickWindows = thuToSat;
+    await expect(submit()).resolves.toMatchObject({ selectedSide: "home" });
+
+    store.tables.pickem_picks = [];
+    store.pickWindows = {};
+    await expect(submit()).resolves.toMatchObject({ selectedSide: "home" });
+  });
+
+  it("changing or clearing a pick follows the same window", async () => {
+    store.pickWindows = thuToSat;
+    await submit();
+    store.pickWindows = monToWed; // the partner moved the window; this game's is now closed
+
+    await expect(submit(ecuGame.visitor_team.full_name)).rejects.toThrow("Picks closed.");
+    await expect(clearPickEmPick({ userId: "user-1", gameId: await ecuGameId() })).rejects.toThrow("Picks closed.");
+    expect(store.tables.pickem_picks).toHaveLength(1);
+    expect(store.tables.pickem_picks[0]).toMatchObject({ selected_side: "home" });
+
+    store.pickWindows = thuToSat;
+    await expect(clearPickEmPick({ userId: "user-1", gameId: await ecuGameId() })).resolves.toEqual({ cleared: true });
+  });
+
+  it("another sport's window doesn't touch College Football", async () => {
+    store.pickWindows = { nba: monToWed.ncaaf, nfl: monToWed.ncaaf };
+    await expect(submit()).resolves.toMatchObject({ selectedSide: "home" });
+  });
+});
+
+describe("pick ahead (away-mode plan B2)", () => {
+  // Thursday 2026-10-29, noon Eastern: Saturday's games are two days ahead.
+  const THURSDAY_NOON = "2026-10-29T16:00:00.000Z";
+  const ecuGame = (liveSample as Game[]).find((game) => game.id === ECU_TEMPLE)!;
+  const saturday = (venueId?: string) =>
+    listPickEmGames({ sportSlug: "ncaaf", date: "2026-10-31", tzOffsetMinutes: EASTERN, venueId, ...(venueId ? {} : { skipLines: true }) });
+  const submitSaturday = async () =>
+    submitPickEmPick({
+      userId: "user-1",
+      venueId: "venue-1",
+      sportSlug: "ncaaf",
+      gameId: (await saturday()).games.find((entry) => entry.id.startsWith(`${ECU_TEMPLE}__`))!.id,
+      pickTeam: ecuGame.home_team.full_name,
+      date: "2026-10-31",
+      tzOffsetMinutes: EASTERN,
+    });
+  const monToWed = { ncaaf: { openDay: "mon", openTime: "00:00", closeDay: "wed", closeTime: "23:59" } };
+  const thuToSat = { ncaaf: { openDay: "thu", openTime: "00:00", closeDay: "sat", closeTime: "23:59" } };
+
+  beforeEach(() => {
+    store.collegeMode = "standard";
+    mockProvider({ games: liveSample, oddsRows: [] });
+    vi.setSystemTime(new Date(THURSDAY_NOON));
+  });
+
+  it("without a window a sport stays today-only: no reach, no line, and a Saturday pick is refused", async () => {
+    const list = await saturday("venue-1");
+    expect(list.pickAheadThrough).toBeUndefined();
+    expect(list.pickWindow).toBeUndefined();
+    expect(list.games.every((game) => game.pickWindowMessage === undefined)).toBe(true);
+    await expect(submitSaturday()).rejects.toThrow("You can only place picks for today.");
+  });
+
+  it("an open window lets players pick Saturday's games on Thursday, and says when picks close", async () => {
+    store.pickWindows = thuToSat;
+    const list = await saturday("venue-1");
+    expect(list.pickWindow).toMatchObject({ isOpen: true, line: "Picks close Sat 11:59 PM" });
+    // Open now: the reach stops where this window's games end (next Thu 12:00 AM EST opens the next one).
+    // The list maps days with the phone's CURRENT offset (EDT, 240) and clocks fall back on Nov 1, so that
+    // instant (Thu 05:00Z) reads as Thu 1 AM: the reach is Thu Nov 5, whose games show "Picks open …".
+    expect(list.pickAheadThrough).toBe("2026-11-05");
+    expect(list.games.every((game) => game.pickWindowMessage === undefined)).toBe(true);
+
+    await expect(submitSaturday()).resolves.toMatchObject({ selectedSide: "home" });
+  });
+
+  it("a shut window marks the games, reaches a full week, and still refuses the pick", async () => {
+    store.pickWindows = monToWed; // Saturday's window was Mon-Wed: closed on Thursday
+    const list = await saturday("venue-1");
+    expect(list.pickWindow).toMatchObject({ isOpen: false, line: "Picks closed" });
+    expect(list.pickAheadThrough).toBe("2026-11-05");
+    const notStarted = list.games.filter((game) => !game.isLocked);
+    expect(notStarted.length).toBeGreaterThan(0);
+    expect(notStarted.every((game) => game.pickWindowMessage === "Picks closed")).toBe(true);
+
+    const refusal = await submitSaturday().catch((error: unknown) => error);
+    expect(isPickEmPickWindowClosedError(refusal)).toBe(true);
+  });
+
+  it("before a window opens, the games say when it does", async () => {
+    store.pickWindows = { ncaaf: { openDay: "fri", openTime: "18:00", closeDay: "sat", closeTime: "12:00" } };
+    vi.setSystemTime(new Date("2026-10-30T16:00:00.000Z")); // Fri noon: opens at 6 PM today
+    const list = await saturday("venue-1");
+    expect(list.pickWindow).toMatchObject({ isOpen: false, line: "Picks open Fri 6:00 PM" });
+  });
+
+  it("the window rides the list's one cached settings read, and the pick check (skipLines) adds none", async () => {
+    const settingsModule = await import("@/lib/venueGameSettings");
+    store.pickWindows = thuToSat;
+    vi.mocked(settingsModule.getVenueGameSettings).mockClear();
+    await saturday("venue-1");
+    await saturday("venue-1");
+    expect(settingsModule.getVenueGameSettings).toHaveBeenCalledTimes(1);
+    const check = await saturday();
+    expect(check.pickWindow).toBeUndefined();
+    expect(settingsModule.getVenueGameSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it("an empty future day makes no debug probe calls to the provider", async () => {
+    store.pickWindows = thuToSat;
+    const before = store.fetchBallDontLieList.mock.calls.length;
+    const list = await listPickEmGames({ sportSlug: "ncaaf", date: "2026-11-02", tzOffsetMinutes: EASTERN, venueId: "venue-1" });
+    expect(list.games).toHaveLength(0);
+    expect(list.debug).toBeUndefined();
+    expect(store.fetchBallDontLieList.mock.calls.length - before).toBeGreaterThan(0); // the day's own games read
+  });
+});
+
+describe("pick ahead is decided before the provider call (away-mode plan R9)", () => {
+  const THURSDAY_NOON = "2026-10-29T16:00:00.000Z"; // Saturday is two days ahead
+  const thuToSat = { ncaaf: { openDay: "thu", openTime: "00:00", closeDay: "sat", closeTime: "23:59" } };
+  const clamped = (venueId = "venue-1") =>
+    listPickEmGames({ sportSlug: "ncaaf", date: "2026-10-31", tzOffsetMinutes: EASTERN, venueId, clampToPickAhead: true });
+
+  beforeEach(() => {
+    store.collegeMode = "standard";
+    mockProvider({ games: liveSample, oddsRows: [] });
+    vi.setSystemTime(new Date(THURSDAY_NOON));
+  });
+
+  it("a sport with no window and a future date: the provider is asked for today only, and date says so", async () => {
+    const list = await clamped();
+    expect(list.date).toBe("2026-10-29");
+    expect(JSON.stringify(store.fetchBallDontLieList.mock.calls)).not.toContain("2026-10-31");
+  });
+
+  it("a sport with a window, within reach: the future day is served", async () => {
+    store.pickWindows = thuToSat;
+    const list = await clamped();
+    expect(list.date).toBe("2026-10-31");
+    expect(list.games.length).toBeGreaterThan(0);
+  });
+
+  it("a day past the reach is served as today", async () => {
+    store.pickWindows = thuToSat;
+    const list = await listPickEmGames({
+      sportSlug: "ncaaf",
+      date: "2026-11-06",
+      tzOffsetMinutes: EASTERN,
+      venueId: "venue-1",
+      clampToPickAhead: true,
+    });
+    expect(list.date).toBe("2026-10-29");
+  });
+
+  it("without the flag (the pick check) a future day is never clamped", async () => {
+    const list = await listPickEmGames({ sportSlug: "ncaaf", date: "2026-10-31", tzOffsetMinutes: EASTERN, skipLines: true });
+    expect(list.date).toBe("2026-10-31");
+    expect(list.games.length).toBeGreaterThan(0);
+  });
+
+  it("only the games route sets the flag", () => {
+    expect(readFileSync("app/api/pickem/games/route.ts", "utf8")).toContain("clampToPickAhead: true");
+    const pickem = readFileSync("lib/pickem.ts", "utf8");
+    expect(pickem).not.toMatch(/skipLines: true,\s*clampToPickAhead/);
+    expect(pickem.match(/clampToPickAhead: true/g)).toBeNull();
+  });
+});
+
+describe("frozen lines at a bar with a pick window (away-mode plan B3)", () => {
+  // Thursday 2026-10-29, noon Eastern; Saturday's games are covered by a Thu–Sat window, open now.
+  const THURSDAY_NOON = "2026-10-29T16:00:00.000Z";
+  const thuToSat = { ncaaf: { openDay: "thu", openTime: "00:00", closeDay: "sat", closeTime: "23:59" } };
+  const ecuGame = (liveSample as Game[]).find((game) => game.id === ECU_TEMPLE)!;
+  const saturday = (venueId?: string) =>
+    listPickEmGames({ sportSlug: "ncaaf", date: "2026-10-31", tzOffsetMinutes: EASTERN, venueId });
+  const ecuOf = (games: Awaited<ReturnType<typeof saturday>>["games"]) =>
+    games.find((game) => game.id.startsWith(`${ECU_TEMPLE}__`))!;
+  const submitEcu = async (venueId = "venue-1", pickTeam = ecuGame.home_team.full_name) =>
+    submitPickEmPick({
+      userId: "user-1",
+      venueId,
+      sportSlug: "ncaaf",
+      gameId: ecuOf((await listPickEmGames({ sportSlug: "ncaaf", date: "2026-10-31", tzOffsetMinutes: EASTERN, skipLines: true })).games).id,
+      pickTeam,
+      date: "2026-10-31",
+      tzOffsetMinutes: EASTERN,
+    });
+  const frozenRows = () => store.tables.pickem_venue_frozen_lines;
+  const moveGlobalEcuLine = (homeSpread: number) => {
+    const row = store.tables.pickem_game_lines.find((entry) => entry.provider_game_id === String(ECU_TEMPLE))!;
+    Object.assign(row, { home_spread: homeSpread, away_spread: -homeSpread, updated_at: new Date().toISOString() });
+  };
+
+  beforeEach(() => {
+    mockProvider({ games: liveSample, oddsRows: odds });
+    vi.setSystemTime(new Date(THURSDAY_NOON));
+    store.pickWindows = thuToSat;
+  });
+
+  it("freezes each line the first time it is shown inside the open window; a later move never shows", async () => {
+    const first = await saturday("venue-1");
+    expect(ecuOf(first.games)).toMatchObject({ homeSpread: -5.5, awaySpread: 5.5 });
+    expect(frozenRows().find((row) => String(row.game_id).startsWith(`${ECU_TEMPLE}__`))).toMatchObject({
+      venue_id: "venue-1",
+      sport_key: "americanfootball_ncaaf",
+      home_spread: -5.5,
+      source_vendor: "fanduel",
+    });
+    expect(rpcNamed("freeze_pickem_venue_lines")).toHaveLength(1);
+
+    moveGlobalEcuLine(-9);
+    const second = await saturday("venue-1");
+    expect(ecuOf(second.games)).toMatchObject({ homeSpread: -5.5, awaySpread: 5.5 });
+    // Everything shown is frozen already: no second write.
+    expect(rpcNamed("freeze_pickem_venue_lines")).toHaveLength(1);
+
+    // Another bar freezes its own line when it first shows the game.
+    expect(ecuOf((await saturday("venue-2")).games)).toMatchObject({ homeSpread: -9 });
+  });
+
+  it("a pick records the bar's frozen line, freezing it if the list didn't", async () => {
+    await saturday(); // the global lines only (no venue, no window): nothing frozen
+    expect(frozenRows()).toHaveLength(0);
+
+    await submitEcu();
+    expect(store.tables.pickem_picks[0]).toMatchObject({ scoring_mode: "spread", home_spread: -5.5, away_spread: 5.5 });
+    expect(frozenRows()).toHaveLength(1);
+
+    // The global line moves; switching sides keeps the frozen number, and asks no freeze (R8).
+    moveGlobalEcuLine(-9);
+    const freezes = rpcNamed("freeze_pickem_venue_lines").length;
+    await submitEcu("venue-1", ecuGame.visitor_team.full_name);
+    expect(rpcNamed("freeze_pickem_venue_lines")).toHaveLength(freezes);
+    expect(store.tables.pickem_picks).toHaveLength(1);
+    expect(store.tables.pickem_picks[0]).toMatchObject({ selected_side: "away", home_spread: -5.5, away_spread: 5.5 });
+
+    // The player's own pending pick shows the line it recorded.
+    const list = await listPickEmGames({ sportSlug: "ncaaf", date: "2026-10-31", tzOffsetMinutes: EASTERN, venueId: "venue-1", userId: "user-1" });
+    expect(ecuOf(list.games)).toMatchObject({ homeSpread: -5.5 });
+  });
+
+  it("a game whose window hasn't opened shows the global line and freezes nothing", async () => {
+    store.pickWindows = { ncaaf: { openDay: "fri", openTime: "18:00", closeDay: "sat", closeTime: "23:59" } };
+    const list = await saturday("venue-1");
+    expect(ecuOf(list.games)).toMatchObject({ homeSpread: -5.5, pickWindowMessage: "Picks open Fri 6:00 PM" });
+    expect(frozenRows()).toHaveLength(0);
+    expect(rpcNamed("freeze_pickem_venue_lines")).toHaveLength(0);
+  });
+
+  it("without a window nothing is frozen or recorded (today's behaviour)", async () => {
+    store.pickWindows = {};
+    vi.setSystemTime(new Date("2026-10-31T15:00:00.000Z")); // Saturday: a today-only pick
+    await saturday("venue-1");
+    await submitEcu();
+    expect(store.tables.pickem_picks[0]).toMatchObject({ scoring_mode: "spread" });
+    expect(store.tables.pickem_picks[0].home_spread ?? null).toBeNull();
+    expect(store.tables.pickem_picks[0].away_spread ?? null).toBeNull();
+    expect(frozenRows()).toHaveLength(0);
+    expect(rpcNamed("freeze_pickem_venue_lines")).toHaveLength(0);
+  });
+
+  it("a failed freeze keeps the list on the global lines and refuses the pick, saving nothing", async () => {
+    store.freezeFails = true;
+    const list = await saturday("venue-1");
+    expect(list.collegeScoring).toEqual({ mode: "spread", linesUnavailable: true });
+    expect(ecuOf(list.games)).toMatchObject({ homeSpread: -5.5 });
+
+    await expect(submitEcu()).rejects.toThrow("We couldn't load this game's line. Please try again.");
+    expect(store.tables.pickem_picks).toHaveLength(0);
+  });
+
+  describe("the line shown is the line the pick is graded by (away-mode plan R2)", () => {
+    const forUser = (userId: string) =>
+      listPickEmGames({ sportSlug: "ncaaf", date: "2026-10-31", tzOffsetMinutes: EASTERN, venueId: "venue-1", userId });
+    // A pick made at 10 AM Saturday, before the partner turned the window on: no line on the row.
+    const pickBeforeTheWindow = async () => {
+      store.pickWindows = {};
+      vi.setSystemTime(new Date("2026-10-31T15:00:00.000Z"));
+      await saturday("venue-1"); // loads the global line (-5.5); nothing frozen without a window
+      await submitEcu();
+      expect(store.tables.pickem_picks[0].home_spread ?? null).toBeNull();
+      expect(frozenRows()).toHaveLength(0);
+      store.pickWindows = thuToSat;
+      vi.setSystemTime(new Date("2026-10-31T15:01:00.000Z")); // past the 30 s Game Settings display cache
+      await saturday("venue-1"); // the bar freezes ECU -5.5
+      expect(frozenRows().find((row) => String(row.game_id).startsWith(`${ECU_TEMPLE}__`))).toMatchObject({ home_spread: -5.5 });
+      moveGlobalEcuLine(-9);
+    };
+
+    it("a pick made before the window shows the global line settlement will use, never the frozen line", async () => {
+      await pickBeforeTheWindow();
+      expect(ecuOf((await forUser("user-1")).games)).toMatchObject({ homeSpread: -9, awaySpread: 9 });
+      // Someone with no pick sees the bar's frozen line.
+      expect(ecuOf((await forUser("user-2")).games)).toMatchObject({ homeSpread: -5.5, awaySpread: 5.5 });
+    });
+
+    // R8 (third review, finding 1): a pick's line is set when it is made; a side switch never changes it.
+    it("switching sides keeps the pick on the global line: the update writes no line and freezes nothing (R8)", async () => {
+      await pickBeforeTheWindow();
+      const freezes = rpcNamed("freeze_pickem_venue_lines").length;
+      await submitEcu("venue-1", ecuGame.visitor_team.full_name);
+      expect(store.tables.pickem_picks).toHaveLength(1);
+      expect(store.tables.pickem_picks[0]).toMatchObject({ selected_side: "away", scoring_mode: "spread" });
+      expect(store.tables.pickem_picks[0].home_spread ?? null).toBeNull();
+      expect(store.tables.pickem_picks[0].away_spread ?? null).toBeNull();
+      expect(rpcNamed("freeze_pickem_venue_lines")).toHaveLength(freezes);
+      // The number on screen doesn't jump: still the global line settlement grades it by.
+      expect(ecuOf((await forUser("user-1")).games)).toMatchObject({ homeSpread: -9, awaySpread: 9 });
+    });
+
+    it("clearing a pick and making it again is a new pick: it takes the bar's frozen line (R8)", async () => {
+      await pickBeforeTheWindow();
+      const gameId = String(store.tables.pickem_picks[0].game_id);
+      await expect(clearPickEmPick({ userId: "user-1", gameId })).resolves.toEqual({ cleared: true });
+      // With the pick cleared, the list shows the frozen line...
+      expect(ecuOf((await forUser("user-1")).games)).toMatchObject({ homeSpread: -5.5 });
+      // ...and the new pick records it.
+      await submitEcu("venue-1", ecuGame.visitor_team.full_name);
+      expect(store.tables.pickem_picks[0]).toMatchObject({ selected_side: "away", home_spread: -5.5, away_spread: 5.5 });
+      expect(ecuOf((await forUser("user-1")).games)).toMatchObject({ homeSpread: -5.5 });
+    });
+
+    it("a side switch with the settings read down keeps its stamp and the global line, freezing nothing (R8)", async () => {
+      await pickBeforeTheWindow();
+      const freezes = rpcNamed("freeze_pickem_venue_lines").length;
+      store.collegeModeFails = true;
+      await submitEcu("venue-1", ecuGame.visitor_team.full_name);
+      expect(store.tables.pickem_picks[0]).toMatchObject({ selected_side: "away", scoring_mode: "spread" });
+      expect(store.tables.pickem_picks[0].home_spread ?? null).toBeNull();
+      expect(rpcNamed("freeze_pickem_venue_lines")).toHaveLength(freezes);
+    });
+
+    it("a graded pick shows the line it was graded by", async () => {
+      await pickBeforeTheWindow();
+      Object.assign(store.tables.pickem_picks[0], { status: "lost", home_spread: -7, away_spread: 7 });
+      expect(ecuOf((await forUser("user-1")).games)).toMatchObject({ homeSpread: -7, awaySpread: 7 });
+    });
+  });
+
+  it("pick-the-winner mode freezes nothing", async () => {
+    store.collegeMode = "standard";
+    await saturday("venue-1");
+    await submitEcu();
+    expect(store.tables.pickem_picks[0]).toMatchObject({ scoring_mode: "standard" });
+    expect(store.tables.pickem_picks[0].home_spread ?? null).toBeNull();
+    expect(rpcNamed("freeze_pickem_venue_lines")).toHaveLength(0);
+  });
 });
 
 describe("settling college spread picks", () => {
@@ -565,6 +1020,33 @@ describe("settling college spread picks", () => {
     expect(store.tables.pickem_picks.map((row) => row.status)).toEqual(["push", "push"]);
   });
 
+  it("a pick that recorded its bar's frozen line (B3) is graded by it, not the kickoff lock", async () => {
+    // Frozen at Georgia Tech +24; the global line moved to +20.5 by kickoff. GT loses by 22: covers +24.
+    const recorded = (id: string, side: "home" | "away") => ({ ...pick(id, side), home_spread: 24, away_spread: -24 });
+    store.tables.pickem_picks = [recorded("gt", "home"), recorded("bc", "away"), pick("bc-global", "away")];
+    store.tables.pickem_game_lines = [line(20.5)];
+
+    const result = await settleAt("2026-10-25T12:00:00.000Z");
+
+    expect(result).toMatchObject({ settledCount: 3, won: 2, lost: 1 });
+    expect(store.tables.pickem_picks[0]).toMatchObject({ status: "won", home_spread: 24, away_spread: -24 });
+    expect(store.tables.pickem_picks[1]).toMatchObject({ status: "lost", home_spread: 24 });
+    // A pick without a recorded line is graded by the kickoff lock, as before.
+    expect(store.tables.pickem_picks[2]).toMatchObject({ status: "won", home_spread: 20.5 });
+    // Only that pick's game is asked of the lock.
+    expect(rpcNamed("lock_pickem_game_lines")).toHaveLength(1);
+  });
+
+  it("a recorded line grades even when the kickoff lock fails, and needs no lock", async () => {
+    store.tables.pickem_picks = [{ ...pick("gt", "home"), home_spread: 24, away_spread: -24 }];
+    store.lockFails = true;
+
+    const result = await settleAt("2026-10-25T12:00:00.000Z");
+
+    expect(result).toMatchObject({ settledCount: 1, won: 1 });
+    expect(rpcNamed("lock_pickem_game_lines")).toHaveLength(0);
+  });
+
   it("a pick stamped 'standard' is graded on the winner, even with a line saved", async () => {
     store.tables.pickem_picks = [pick("gt", "home", "standard")];
     store.tables.pickem_game_lines = [line(24)];
@@ -641,6 +1123,14 @@ describe("settling college spread picks", () => {
 
 describe("the player screen", () => {
   const source = readFileSync("components/pickem/PickEmGameList.tsx", "utf8");
+  it("pick ahead (B2): the arrows reach the server's pickAheadThrough, and a shut window blocks the buttons", () => {
+    expect(source).toContain("payload.pickAheadThrough");
+    expect(source).toContain("disabled={selectedDate >= lastReachableDate}");
+    expect(source).toContain("const isLiveListDay = isViewingToday || isPickAheadDay;");
+    expect(source).toContain("!isLiveListDay");
+    expect(source).toContain("baseDisabled || windowShut ||");
+    expect(source).toContain('data-testid="pickem-pick-window"');
+  });
   it("shows the line on each team button, the explainer, and 'Line coming soon' from the shared copy", () => {
     expect(source).toContain("formatSpreadLine(game.awaySpread)");
     expect(source).toContain("formatSpreadLine(game.homeSpread)");

@@ -1578,6 +1578,31 @@ export async function findStartingOccurrences(
   return targets;
 }
 
+/**
+ * "Remind me" (away-mode plan, Phase C3): the game a player tapped, if it is really on. Finds the venue's
+ * schedule `scheduleId` and its occurrence starting at `startMs` (±1 minute, the start Venue Home showed),
+ * still in the future. Null when the schedule is gone, belongs to another venue, or has no such game.
+ * One schedule read (the venue's rows), the same enumeration the sweep uses.
+ */
+export const findUpcomingScheduleOccurrence = async (
+  venueId: string,
+  scheduleId: string,
+  startMs: number,
+  nowMs: number
+): Promise<(ScheduleOccurrence & { scheduleId: string; venueId: string; timezone: string }) | null> => {
+  const safeVenueId = toSafeVenueId(venueId);
+  if (!safeVenueId || !scheduleId || !Number.isFinite(startMs) || startMs <= nowMs) return null;
+  const rows = await loadScheduleRows(safeVenueId);
+  const row = rows.find((candidate) => candidate.id === scheduleId);
+  if (!row || toSafeVenueId(String(row.venue_id ?? "")) !== safeVenueId) return null;
+  const occurrence = enumerateScheduleOccurrences(row, nowMs).find(
+    (candidate) => candidate.startMs > nowMs && Math.abs(candidate.startMs - startMs) < 60_000
+  );
+  if (!occurrence) return null;
+  const timezone = String(row.timezone ?? "America/New_York").trim() || "America/New_York";
+  return { ...occurrence, scheduleId: row.id, venueId: safeVenueId, timezone };
+};
+
 // How far back the winner-resolver sweep looks for games that have finished but
 // not yet been resolved. Generous relative to the cron's cadence so a few missed
 // runs (deploy, outage) still get picked up — resolution is idempotent, so
@@ -1590,12 +1615,29 @@ const ENDED_OCCURRENCE_LOOKBACK_MS = 6 * 60 * 60 * 1000;
  * (lib/liveTriviaWinnerRewards.ts). Derives occurrences from
  * enumerateScheduleOccurrences so it can never disagree with the seeder or the
  * live-state resolver about when a game ran or which occurrence_date keys it.
+ *
+ * `venueIds` scopes the read to those venues (a partner's schedule change pays
+ * its own venue before the change: lib/rewardGameSlotCascade.ts
+ * settleVenueBeforeScheduleChange). Omitted, every venue is read (the cron).
  */
 export async function findEndedOccurrences(
   nowMs: number,
-  lookbackMs = ENDED_OCCURRENCE_LOOKBACK_MS
+  lookbackMs = ENDED_OCCURRENCE_LOOKBACK_MS,
+  venueIds?: readonly string[]
 ): Promise<LiveOccurrenceSeedTarget[]> {
-  const rows = await loadScheduleRows();
+  const rows = venueIds ? await loadLiveTriviaSchedulesForVenues(venueIds) : await loadScheduleRows();
+  return endedOccurrencesFromRows(rows, nowMs, lookbackMs);
+}
+
+/**
+ * findEndedOccurrences over rows the caller already read (Phase R7: a schedule change's
+ * settle reads its venue's schedules once and hands them to the sweep). Pure.
+ */
+export const endedOccurrencesFromRows = (
+  rows: readonly TriviaScheduleRow[],
+  nowMs: number,
+  lookbackMs = ENDED_OCCURRENCE_LOOKBACK_MS
+): LiveOccurrenceSeedTarget[] => {
   const targets: LiveOccurrenceSeedTarget[] = [];
 
   for (const row of rows) {
@@ -1623,7 +1665,7 @@ export async function findEndedOccurrences(
   }
 
   return targets;
-}
+};
 
 /**
  * Final standings for a finished occurrence: every player who scored, ordered by

@@ -116,6 +116,7 @@ import {
   getAdminLiveShowdownSessionQuestions,
   getLiveShowdownRoundCategories,
   listAdminLiveShowdownSchedules,
+  previewLiveShowdownScheduleChange,
   replaceRoundQuestionsWithCategory,
   replaceSingleSessionQuestion,
   swapSessionQuestion,
@@ -123,7 +124,11 @@ import {
   updateAdminLiveShowdownSchedule,
   updateAdminLiveShowdownSessionQuestions,
 } from "@/lib/liveShowdownAdmin";
-import { describeCascadeReport } from "@/lib/rewardGameSlotCascade";
+import {
+  describeCascadeReport,
+  describeScheduleChangePreview,
+  isScheduleChangeSettlementError,
+} from "@/lib/rewardGameSlotCascade";
 
 export async function GET(request: Request) {
   try {
@@ -490,6 +495,28 @@ export async function GET(request: Request) {
     if (resource === "live-showdown-categories") {
       const categories = await getLiveShowdownRoundCategories();
       return NextResponse.json({ ok: true, categories });
+    }
+
+    if (resource === "live-showdown-schedule-impact") {
+      // Phase A3 warning, mirroring GET /api/owner/schedule/[id]/cancel-impact: a dry
+      // run (no writes, no payouts). With only `id` it previews a delete; with the
+      // PATCH fields (targetDate, startTime, …; recurringDays comma-separated) an edit.
+      const id = String(searchParams.get("id") ?? "").trim();
+      if (!id) return NextResponse.json({ ok: false, error: "id is required." }, { status: 400 });
+      const targetDate = String(searchParams.get("targetDate") ?? "").trim();
+      const edit = targetDate
+        ? {
+            targetDate,
+            startTime: String(searchParams.get("startTime") ?? "").trim(),
+            timezone: String(searchParams.get("timezone") ?? "").trim(),
+            recurringType: String(searchParams.get("recurringType") ?? "none").trim(),
+            recurringDays: String(searchParams.get("recurringDays") ?? "").split(",").filter(Boolean),
+            numRounds: Number(searchParams.get("numRounds")),
+            venueId: String(searchParams.get("venueId") ?? "").trim(),
+          }
+        : null;
+      const preview = await previewLiveShowdownScheduleChange({ scheduleId: id, edit });
+      return NextResponse.json({ ok: true, notice: describeScheduleChangePreview(preview) });
     }
 
     if (resource === "live-showdown-schedules") {
@@ -1318,6 +1345,10 @@ export async function DELETE(request: Request) {
       { status: 400 }
     );
   } catch (error) {
+    // A schedule change refused before any write (Phase R1): a prize couldn't be paid first.
+    if (isScheduleChangeSettlementError(error)) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
+    }
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to delete admin resource." },
       { status: speedTriviaError(error).status }
@@ -1868,6 +1899,10 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ ok: false, error: "Unknown resource." }, { status: 400 });
   } catch (error) {
+    // A schedule change refused before any write (Phase R1): a prize couldn't be paid first.
+    if (isScheduleChangeSettlementError(error)) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
+    }
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to update admin resource." },
       { status: speedTriviaError(error).status }

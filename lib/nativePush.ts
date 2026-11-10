@@ -161,6 +161,12 @@ const register = async (userId: string, token: string): Promise<PushPreferences 
 /** Fired on window when push was turned on on this phone (welcome, card or menu); detail = the switches. */
 export const PUSH_ENABLED_EVENT = "htc:push-enabled";
 
+/**
+ * Fired on window when another control shows the same consent words inline (Remind me, away-mode plan
+ * Phase C3), so `PushPermissionCard` steps aside and the player never sees the ask twice.
+ */
+export const PUSH_ASK_INLINE_EVENT = "htc:push-ask-inline";
+
 export const enablePush = async (): Promise<EnablePushResult> => {
   if (!isPushAvailable()) return { ok: false, reason: "unavailable" };
   const userId = getUserId();

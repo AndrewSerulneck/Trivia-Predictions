@@ -70,6 +70,10 @@ export const PARTNER_MANUAL: {
           heading: "Pick 'Em",
           body: "Your guests compete to pick the most winners across every sport that day. Correct predictions are worth 10 points each.",
         },
+        {
+          heading: "Pick Windows",
+          body: "In Game Settings, you can choose when picks open and close for each sport, for example College Football picks from Monday to Wednesday. While picks are open, guests at your venue can pick that week's games ahead of time. Each game still locks at kickoff.",
+        },
       ],
     },
     {

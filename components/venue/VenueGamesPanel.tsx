@@ -14,6 +14,28 @@ import {
   type LiveTriviaStatus,
   type VenueArrivalStage,
 } from "@/components/venue/venueHubShared";
+import { LiveTriviaReminderRow } from "@/components/venue/LiveTriviaReminderRow";
+import { AWAY_PLAY_LABEL } from "@/lib/venueAwayMode";
+import { isNativeApp, openInSystemBrowser } from "@/lib/nativeApp";
+
+/** Away mode (away-mode plan, Phase C1): the player isn't at the bar, so this panel is view-only. */
+export type VenueAwayView = {
+  /** "1010 Pacific St · Brooklyn, NY", or null when the bar has no address. */
+  addressLine: string | null;
+  directionsUrl: string | null;
+  /** A tap is re-checking location. */
+  checking: boolean;
+};
+
+const openDirections = (url: string) => {
+  if (isNativeApp()) {
+    void openInSystemBrowser(url).then((opened) => {
+      if (!opened) window.location.assign(url);
+    });
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
+};
 
 const WEEKDAY_LABELS: Record<string, string> = {
   sun: "Sunday",
@@ -77,6 +99,10 @@ type VenueGamesPanelProps = {
   onRetryBadges: () => void;
   /** The player has points here (has played a game): the app may ask about push now (Phase 5.1). */
   pushAskEligible?: boolean;
+  /** Set when the player is away from the bar: view-only (away-mode plan, Phase C1). */
+  away?: VenueAwayView | null;
+  /** This bar: Remind me / Add to calendar on the next Live Trivia game (Phase C3). */
+  venueId?: string;
 };
 
 function VenueGamesPanelInner({
@@ -98,7 +124,10 @@ function VenueGamesPanelInner({
   onGoTo,
   onRetryBadges,
   pushAskEligible = false,
+  away = null,
+  venueId,
 }: VenueGamesPanelProps) {
+  const playDisabled = pendingDestination !== null || Boolean(away?.checking);
   return (
     <section className="venue-screen relative m-0 flex w-full shrink-0 basis-full snap-start flex-col items-center p-0 box-border">
       <div className={`venue-home-panel-content venue-home-games-fit w-full px-[clamp(1rem,3.2vw,1.5rem)] pb-4 pt-2 transition-opacity duration-300 ${contentReady ? "opacity-100" : "opacity-0"}`}>
@@ -112,6 +141,34 @@ function VenueGamesPanelInner({
         ) : null}
 
         <div className="mx-auto w-full max-w-[24rem] space-y-3 sm:max-w-md">
+          {away ? (
+            <div
+              data-venue-away-banner
+              className="flex items-center gap-3 rounded-2xl border border-ht-border-hairline bg-ht-surface px-3 py-2.5 shadow-ht-card"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-footnote font-black uppercase tracking-[0.12em] text-ht-fg-primary">View only</p>
+                {away.addressLine ? (
+                  <p className="mt-0.5 truncate text-footnote text-ht-fg-muted">{away.addressLine}</p>
+                ) : null}
+              </div>
+              {away.directionsUrl ? (
+                <a
+                  href={away.directionsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    openDirections(away.directionsUrl ?? "");
+                  }}
+                  className="tp-player-hit-target tp-player-pressable inline-flex min-h-[40px] shrink-0 items-center rounded-xl border border-ht-accent/40 bg-ht-accent/10 px-3 text-base font-black text-ht-accent-soft"
+                >
+                  Directions
+                </a>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="rounded-2xl border border-ht-countdown-edge/60 bg-ht-surface p-3 shadow-ht-card">
             <div className="flex items-stretch gap-3">
               <div className="min-w-0 flex-1">
@@ -159,16 +216,30 @@ function VenueGamesPanelInner({
                 onClick={(event) => {
                   onGoTo("live_trivia", event.currentTarget);
                 }}
-                disabled={pendingDestination !== null}
+                disabled={playDisabled}
                 className={"tp-player-hit-target tp-player-pressable " + (`tp-clean-button min-w-[7.2rem] rounded-[12px] border px-4 py-2 text-lg font-black leading-tight transition-all motion-reduce:transition-none disabled:opacity-60 ${
                   lobbyButtonShouldPulse
                     ? "animate-pulse motion-reduce:animate-none border-ht-danger-fg/60 bg-ht-loss-fg/20 text-ht-danger-soft shadow-[0_0_0_1px_rgb(var(--ht-danger-ring-rgb)/0.3)]"
                     : "border-ht-accent/40 bg-ht-accent/10 text-ht-accent-soft shadow-[0_0_0_1px_rgb(var(--ht-accent-rgb)/0.28)] hover:bg-ht-accent/15"
                 }`)} aria-busy={pendingDestination === "live_trivia"}
               >
-                {pendingDestination === "live_trivia" ? <><ButtonSpinner /><br />Opening…</> : <>Enter<br />lobby</>}
+                {pendingDestination === "live_trivia" ? (
+                  <><ButtonSpinner /><br />Opening…</>
+                ) : away ? (
+                  <span className="block max-w-[7.2rem] text-base font-black">{away.checking ? "Checking…" : AWAY_PLAY_LABEL}</span>
+                ) : (
+                  <>Enter<br />lobby</>
+                )}
               </button>
             </div>
+            {venueId && !liveTriviaStatus.live && liveTriviaStatus.scheduleId && liveTriviaStatus.nextStartAtMs ? (
+              <LiveTriviaReminderRow
+                key={`${liveTriviaStatus.scheduleId}@${liveTriviaStatus.nextStartAtMs}`}
+                venueId={venueId}
+                scheduleId={liveTriviaStatus.scheduleId}
+                startMs={liveTriviaStatus.nextStartAtMs}
+              />
+            ) : null}
           </div>
 
           <PushPermissionCard eligible={pushAskEligible} />
@@ -190,7 +261,7 @@ function VenueGamesPanelInner({
                   onClick={(event) => {
                     onGoTo(card.key, event.currentTarget);
                   }}
-                  disabled={pendingDestination !== null}
+                  disabled={playDisabled}
                   data-venue-game-card={card.key}
                   className={`tp-player-hit-target tp-player-pressable tp-clean-button tp-game-card-btn group relative block w-full overflow-hidden rounded-[22px] text-left text-white shadow-ht-tile [container-type:inline-size] ${theme.surfaceClass} ${isOpening ? "is-opening" : ""}`}
                   aria-busy={isOpening}
@@ -221,10 +292,19 @@ function VenueGamesPanelInner({
 
                   {isOpening ? <span role="status" className="absolute bottom-2 right-3 z-10 inline-flex items-center gap-2 rounded-full bg-black/45 px-3 py-1 text-sm font-black"><ButtonSpinner /> Opening…</span> : null}
 
-                  {statusLabel ? (
-                    <span className="absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-caption font-black uppercase tracking-[0.12em] text-rose-200">
-                      <span className="h-[7px] w-[7px] rounded-full bg-rose-500" />
-                      {statusLabel}
+                  {statusLabel || away ? (
+                    <span className="absolute bottom-2 right-2 z-10 flex items-center gap-1">
+                      {statusLabel ? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-rose-300/60 bg-rose-500/15 px-3 py-1 text-caption font-black uppercase tracking-[0.12em] text-rose-200">
+                          <span className="h-[7px] w-[7px] rounded-full bg-rose-500" />
+                          {statusLabel}
+                        </span>
+                      ) : null}
+                      {away ? (
+                        <span data-venue-away-play className="inline-flex items-center rounded-full bg-black/55 px-3 py-1 text-caption font-black text-white">
+                          {away.checking ? "Checking…" : AWAY_PLAY_LABEL}
+                        </span>
+                      ) : null}
                     </span>
                   ) : null}
 

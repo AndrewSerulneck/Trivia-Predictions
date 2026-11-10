@@ -131,7 +131,15 @@ const fetchMock = vi.fn();
 // The schedule calls only: Review also shows the venue's "On shared pictures" panel (Phase 9e),
 // which reads its own setting once.
 const scheduleCalls = () =>
-  fetchMock.mock.calls.filter(([url]) => !String(url).startsWith("/api/owner/venues/share-details"));
+  fetchMock.mock.calls.filter(
+    ([url]) => !String(url).startsWith("/api/owner/venues/share-details") && !String(url).endsWith("/cancel-impact"),
+  );
+const impactCalls = () => fetchMock.mock.calls.filter(([url]) => String(url).endsWith("/cancel-impact"));
+/** Phase A3: the prize warning answers `notice`; every other call answers `reply`. */
+const routeFetch = (notice: string | null, reply: Record<string, unknown>) =>
+  fetchMock.mockImplementation(async (url: string) => ({
+    json: async () => (String(url).endsWith("/cancel-impact") ? { ok: true, notice } : reply),
+  }));
 
 describe("ScheduleGameFlow", () => {
   beforeEach(() => {
@@ -237,7 +245,7 @@ describe("ScheduleGameFlow", () => {
   });
 
   it("edits an existing game with a PATCH that has no venue or game type", async () => {
-    fetchMock.mockResolvedValue({ json: async () => ({ ok: true, rewardNotice: "1 reward was updated." }) });
+    routeFetch("Covers fewer games: $50 gift card.", { ok: true, rewardNotice: "1 reward was updated." });
     const onChanged = vi.fn();
     const game = makeSchedule({ recurringType: "weekly", recurringDays: ["fri"] });
     render(createElement(Harness, { initialStep: "detail", initialSchedule: game, games: [game], onChanged }));
@@ -247,8 +255,16 @@ describe("ScheduleGameFlow", () => {
     await waitFor(() => expect(heading()).toBe("Review changes"));
     expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Friday Trivia");
     expect(screen.getByText("Game type can't be changed")).toBeTruthy();
+    // Phase A3: the edit's prize warning, a POST dry run with the PATCH's timing fields.
+    await waitFor(() => expect(screen.getByText("Covers fewer games: $50 gift card.")).toBeTruthy());
+    const [impactUrl, impactInit] = impactCalls()[0] as [string, { method: string; body: string }];
+    expect(impactUrl).toBe("/api/owner/schedule/sched-1/cancel-impact");
+    expect(impactInit.method).toBe("POST");
+    expect(JSON.parse(impactInit.body)).toMatchObject({ recurringType: "weekly", recurringDays: ["fri"] });
 
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Friday Night Trivia" } });
+    // Renaming doesn't re-check prizes.
+    expect(impactCalls()).toHaveLength(1);
     fireEvent.click(button("Save changes"));
     await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
 
@@ -266,21 +282,65 @@ describe("ScheduleGameFlow", () => {
     });
   });
 
+  it("Save on an edit waits for the prize warning, and comes back if the check fails", async () => {
+    let answerCheck: (value: unknown) => void = () => {};
+    fetchMock.mockImplementation((url: string) =>
+      String(url).endsWith("/cancel-impact")
+        ? new Promise((resolve) => {
+            answerCheck = resolve;
+          })
+        : Promise.resolve({ json: async () => ({ ok: true }) }),
+    );
+    const game = makeSchedule({ recurringType: "weekly", recurringDays: ["fri"] });
+    render(createElement(Harness, { initialStep: "detail", initialSchedule: game, games: [game] }));
+    fireEvent.click(button("Edit game"));
+    await waitFor(() => expect(heading()).toBe("Review changes"));
+
+    // The dry run is still out: Save is held, and a tap does nothing.
+    const save = button("Save changes") as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    fireEvent.click(save);
+    expect(scheduleCalls()).toHaveLength(0);
+
+    await act(async () => {
+      answerCheck({ json: async () => ({ ok: true, notice: "Covers fewer games: $50 gift card." }) });
+    });
+    await waitFor(() => expect(screen.getByText("Covers fewer games: $50 gift card.")).toBeTruthy());
+    expect((button("Save changes") as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("Save returns when the prize check fails (fails open)", async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (String(url).endsWith("/cancel-impact")) throw new Error("offline");
+      return { json: async () => ({ ok: true }) };
+    });
+    const game = makeSchedule({ recurringType: "weekly", recurringDays: ["fri"] });
+    render(createElement(Harness, { initialStep: "detail", initialSchedule: game, games: [game] }));
+    fireEvent.click(button("Edit game"));
+    await waitFor(() => expect(heading()).toBe("Review changes"));
+    await waitFor(() => expect((button("Save changes") as HTMLButtonElement).disabled).toBe(false));
+  });
+
   it("cancels a game only after confirmation, and passes the reward notice up", async () => {
-    fetchMock.mockResolvedValue({ json: async () => ({ ok: true, rewardNotice: "2 rewards were retired." }) });
+    routeFetch("Also ends: $50 gift card.", { ok: true, rewardNotice: "2 rewards were retired." });
     const onChanged = vi.fn();
     const onClosed = vi.fn();
     const game = makeSchedule();
     render(createElement(Harness, { initialStep: "detail", initialSchedule: game, games: [game], onChanged, onClosed }));
 
     fireEvent.click(button("Cancel game"));
-    expect(fetchMock).not.toHaveBeenCalled();
     expect(screen.getByText(/Players will be returned to the lobby/)).toBeTruthy();
+    // Phase A3: a dry run first; confirming waits for it, so a fast tap can't skip the warning.
+    expect(fetchMock).toHaveBeenCalledWith("/api/owner/schedule/sched-1/cancel-impact", undefined);
+    expect((button("Yes, cancel game") as HTMLButtonElement).disabled).toBe(true);
+    await waitFor(() => expect(screen.getByText("Also ends: $50 gift card.")).toBeTruthy());
+    expect((button("Yes, cancel game") as HTMLButtonElement).disabled).toBe(false);
 
     fireEvent.click(button("Keep game"));
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(scheduleCalls()).toHaveLength(0);
 
     fireEvent.click(button("Cancel game"));
+    await waitFor(() => expect((button("Yes, cancel game") as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(button("Yes, cancel game"));
     await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
     expect(fetchMock).toHaveBeenCalledWith("/api/owner/schedule/sched-1", { method: "DELETE" });

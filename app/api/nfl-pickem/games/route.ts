@@ -8,7 +8,9 @@ import {
   listNFLWeeks,
 } from "@/lib/nflPickEm";
 import { resolveRequestUserId } from "@/lib/serverSession";
-import { getVenueNFLPickEmScoringMode, type NFLPickEmScoringMode } from "@/lib/venueGameSettings";
+import { getVenueGameSettings, type NFLPickEmScoringMode } from "@/lib/venueGameSettings";
+import { pickWindowViewForGames, type PickEmPickWindow, type PickEmPickWindowView } from "@/lib/pickemPickWindow";
+import { getVenueTimezone } from "@/lib/timezone";
 
 export async function GET(request: Request) {
   try {
@@ -41,9 +43,14 @@ export async function GET(request: Request) {
     // 503-ing the venue is also honest but takes the whole week's games down
     // for what is a display-only unknown.
     let scoringMode: NFLPickEmScoringMode | null = venueId ? null : "standard";
+    // The same one settings read also carries the NFL pick window (away-mode plan B2); a failed read
+    // shows no window (picks stay open, as the pick itself fails open).
+    let pickWindowRule: PickEmPickWindow | null = null;
     if (venueId) {
       try {
-        scoringMode = await getVenueNFLPickEmScoringMode(venueId);
+        const settings = await getVenueGameSettings(venueId);
+        scoringMode = settings.nflPickEmScoringMode;
+        pickWindowRule = settings.pickWindows?.nfl ?? null; // "nfl" = NFL Pick 'Em
       } catch (error) {
         console.warn(
           `[NFL Pick 'Em] Could not resolve scoring mode for venue ${venueId}; reporting it as unresolved.`,
@@ -91,15 +98,35 @@ export async function GET(request: Request) {
     // (resolveScoringModeForLineRefresh: refresh the lines anyway, since
     // skipping the refresh for a venue that is actually on spread is what
     // strands picks later).
+    // The time zone is read (cached) only when the venue has an NFL window. With spreads on, the window
+    // also makes the week show this bar's frozen lines (away-mode plan B3).
+    const timeZone = pickWindowRule && venueId ? await getVenueTimezone(venueId) : null;
     const result = await listNFLPickEmGames({
       weekId,
       userId,
       venueId,
       scoringMode: scoringMode ?? undefined,
+      ...(pickWindowRule && timeZone ? { pickWindow: { window: pickWindowRule, timeZone } } : {}),
     });
+
+    // B2: games not yet started whose window is shut say so, and the week gets one line ("Picks close
+    // Wed 11:59 PM").
+    let pickWindow: PickEmPickWindowView | undefined;
+    let closedLines = new Map<string, string>();
+    if (pickWindowRule && timeZone) {
+      const facts = pickWindowViewForGames({
+        window: pickWindowRule,
+        games: result.games,
+        nowMs: Date.now(),
+        timeZone,
+      });
+      pickWindow = facts.view ?? undefined;
+      closedLines = facts.closedLines;
+    }
 
     return NextResponse.json({
       ok: true,
+      pickWindow,
       // null = we could not read the venue's mode on this request. Deliberately
       // not coerced to a mode; see the comment at the read above.
       scoringMode,
@@ -128,6 +155,7 @@ export async function GET(request: Request) {
       // than showing none.
       games: result.games.map((game) => ({
         ...game,
+        pickWindowMessage: closedLines.get(game.id),
         homeSpread: scoringMode === "spread" ? game.homeSpread ?? null : undefined,
         awaySpread: scoringMode === "spread" ? game.awaySpread ?? null : undefined,
       })),

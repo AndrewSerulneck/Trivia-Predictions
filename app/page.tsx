@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { JoinFlow } from "@/components/join/JoinFlow";
 import { isNativeUserAgent } from "@/lib/nativeApp";
+import { venuePushPanelFromValue } from "@/lib/pushLanding";
 
 export const metadata: Metadata = {
   robots: {
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ v?: string }>;
+  searchParams: Promise<{ v?: string; panel?: string | string[] }>;
 }) {
   const params = await searchParams;
   // The page is already dynamic (searchParams), so reading the UA costs nothing.
@@ -23,7 +24,11 @@ export default async function HomePage({
   const nativeAppRequest = isNativeUserAgent((await headers()).get("user-agent"));
   return (
     <div className="space-y-4">
-      <JoinFlow initialVenueId={params.v ?? ""} nativeAppRequest={nativeAppRequest} />
+      <JoinFlow
+        initialVenueId={params.v ?? ""}
+        initialPanel={typeof params.panel === "string" ? venuePushPanelFromValue(params.panel) : null}
+        nativeAppRequest={nativeAppRequest}
+      />
     </div>
   );
 }

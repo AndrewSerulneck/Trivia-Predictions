@@ -1,5 +1,8 @@
 import "server-only";
 
+import type { PickEmPickWindows } from "@/lib/pickemPickWindow";
+import { getVenueGameSettings } from "@/lib/venueGameSettings";
+
 import {
   computeUpcomingCycleStart,
   createChallengeCampaign,
@@ -50,9 +53,11 @@ import {
   listVenueLiveShowdownSchedules,
   type AdminLiveShowdownSchedule,
 } from "@/lib/liveShowdownAdmin";
-import { getCurrentOrNextScheduleWindow } from "@/lib/categoryBlitzScheduleTime";
-import { liveTriviaDurationMinutes } from "@/lib/liveTriviaShared";
-import { coerceRecurringType } from "@/lib/ownerSchedule";
+import {
+  hasLiveOrUpcomingOccurrence,
+  rewardRecurringType,
+  toGameScheduleShapes,
+} from "@/lib/liveTriviaScheduleSlots";
 import {
   getRewardDefinition,
   isSupportedRewardCadence,
@@ -281,33 +286,7 @@ function scheduleWeekdays(schedule: AdminLiveShowdownSchedule): string[] {
   return scheduleRunWeekdays(schedule);
 }
 
-/**
- * Whether a schedule has a game that is live right now or still has a future
- * occurrence ahead of it. A one-off schedule is a single occurrence — once its
- * window ends the game no longer exists, even though its `trivia_schedules` row
- * is never deleted. Reuses the same occurrence-window math the owner schedule
- * page uses to bucket a schedule as "Upcoming" vs. "Past"
- * (getCurrentOrNextScheduleWindow), so "scheduled" here means the exact same
- * thing it means to the partner looking at their own schedule.
- */
-function hasLiveOrUpcomingOccurrence(schedule: AdminLiveShowdownSchedule, now: Date): boolean {
-  const startMs = Date.parse(schedule.startTime);
-  if (!Number.isFinite(startMs)) return false;
-  const windowMinutes = liveTriviaDurationMinutes(schedule.numRounds);
-  const endTime = new Date(startMs + windowMinutes * 60_000).toISOString();
-  const window = getCurrentOrNextScheduleWindow(
-    {
-      startTime: schedule.startTime,
-      endTime,
-      timezone: schedule.timezone,
-      recurringType: coerceRecurringType(schedule.recurringType),
-      recurringDays: schedule.recurringDays,
-      windowMinutes,
-    },
-    now,
-  );
-  return window !== null;
-}
+// hasLiveOrUpcomingOccurrence lives in lib/liveTriviaScheduleSlots.ts (shared with the cascade).
 
 /**
  * Live-or-upcoming Live Trivia schedules for one venue (source of truth:
@@ -380,6 +359,8 @@ export type RewardPickEmContext = {
   today: string;
   /** The venue's IANA time zone. */
   timezone: string;
+  /** The venue's Pick 'Em pick windows (Game Settings), for the wizard's one-line notice (away-mode plan B4). */
+  pickWindows?: PickEmPickWindows;
 };
 
 /** What the wizard may say about the brackets a March Madness prize can pay. */
@@ -958,13 +939,10 @@ export async function attachRewardWinDescriptions<T extends ChallengeCampaignWin
  * ("1 every month") against a game that only ever plays once. The
  * owner-facing scheduler (app/owner/schedule/page.tsx) already hides
  * Monthly/Yearly for this exact reason.
+ *
+ * rewardRecurringType itself lives in lib/liveTriviaScheduleSlots.ts, shared with
+ * the schedule-change cascade.
  */
-function rewardRecurringType(schedule: AdminLiveShowdownSchedule): CampaignRecurringType {
-  const declared = schedule.recurringType;
-  if (declared === "none" && schedule.recurringDays.length > 0) return "weekly";
-  if (declared === "monthly" || declared === "yearly") return "none";
-  return declared;
-}
 
 /** Reduce a venue's live-or-upcoming schedules to the terms-sentence inputs. */
 function toScheduleShapes(schedules: AdminLiveShowdownSchedule[]): RewardScheduleShape[] {
@@ -976,37 +954,7 @@ function toScheduleShapes(schedules: AdminLiveShowdownSchedule[]): RewardSchedul
   }));
 }
 
-/**
- * Reduce the same schedules to the game-picker inputs: same recurrence reading,
- * but keyed by schedule id and carrying the weekdays themselves, because a
- * game-winner reward is pinned to individual `{scheduleId, weekday}` slots
- * rather than to a count. See lib/rewardGameSlots.ts.
- */
-export function toGameScheduleShapes(
-  schedules: AdminLiveShowdownSchedule[],
-): RewardGameScheduleShape[] {
-  return schedules.map((schedule) => ({
-    scheduleId: schedule.id,
-    title: schedule.title,
-    recurringType: rewardRecurringType(schedule),
-    weekdays: scheduleWeekdays(schedule),
-    startTime: schedule.startTime,
-    timezone: schedule.timezone,
-  }));
-}
-
-/**
- * The individual Live Trivia games at a venue that a game-winner reward can be
- * pinned to. Same schedule source as the terms sentence
- * (getVenueLiveTriviaSchedules), so the picker can never offer a game the venue
- * doesn't actually have live or upcoming.
- */
-export async function getVenueGameSlots(
-  venueId: string,
-  now: Date = new Date(),
-): Promise<RewardGameSlot[]> {
-  return enumerateGameSlots(toGameScheduleShapes(await getVenueLiveTriviaSchedules(venueId, now)));
-}
+export { toGameScheduleShapes };
 
 /** The terms facts for a context DTO, on either side of the wire. */
 export function rewardScheduleFacts(context: {
@@ -1093,7 +1041,14 @@ export async function resolveRewardCreationContext(
   // Gated on nothing the venue schedules: Pick 'Em is always on. One read (cached): the venue's
   // time zone, which every window is judged in.
   if (definition.id === PICKEM_PRIZE_DEFINITION_ID) {
-    const timezone = await getVenueTimezone(venueId);
+    // Plus the venue's pick windows (one small row; a failed read just drops the wizard's notice).
+    const [timezone, pickWindows] = await Promise.all([
+      getVenueTimezone(venueId),
+      getVenueGameSettings(venueId).then(
+        (settings) => settings.pickWindows,
+        (): PickEmPickWindows => ({}),
+      ),
+    ]);
     return {
       definitionId: definition.id,
       scheduled: true,
@@ -1104,7 +1059,7 @@ export async function resolveRewardCreationContext(
       scheduleShapes: [],
       gameSlots: [],
       nflSeason: null,
-      pickem: { today: getLocalDateKey(new Date(), timezone), timezone },
+      pickem: { today: getLocalDateKey(new Date(), timezone), timezone, pickWindows },
     };
   }
 

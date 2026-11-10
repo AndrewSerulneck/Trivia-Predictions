@@ -6,6 +6,37 @@ import { categoryBlitzChannelName } from "@/lib/categoryBlitzShared";
 import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
 import { listSchedules, getNextScheduleOccurrence, openScheduleWindowEnd } from "@/lib/categoryBlitzSchedules";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
+import { isVenuePresenceLive, isVenuePresenceMutationEnforcementEnabled } from "@/lib/venuePresence";
+
+/**
+ * The look-only reply: the room's session (continuous timing merged in, `venueId`
+ * concealed as the real venue), the next scheduled window, the realtime channel and
+ * whether a round is in play. Reads only; never creates or starts anything. Shared by
+ * `peek=1` and the not-at-the-bar branch so the two can't drift.
+ */
+const buildPeekPayload = async ({ roomId, venueId, now }: { roomId: string; venueId: string; now: Date }) => {
+  const peek = await peekCategoryBlitz(roomId, now);
+  const nextOcc = peek.continuousConfig ? null : getNextScheduleOccurrence(await listSchedules(roomId), now);
+  const session = peek.session
+    ? {
+        ...peek.session,
+        ...(peek.continuousConfig
+          ? {
+              roundDurationSeconds: peek.continuousConfig.roundDurationSeconds,
+              intermissionSeconds: peek.continuousConfig.intermissionSeconds,
+            }
+          : {}),
+        venueId, // concealment, as below
+      }
+    : null;
+  return {
+    ok: true as const,
+    session,
+    nextWindowAt: nextOcc ? nextOcc.windowStart.toISOString() : null,
+    realtimeChannel: categoryBlitzChannelName(roomId),
+    live: peek.awake,
+  };
+};
 
 /**
  * GET /api/category-blitz/sessions?venueId=...
@@ -52,32 +83,33 @@ export async function GET(request: Request) {
 
     const now = new Date();
 
-    if (searchParams.get("peek") === "1") {
-      const peek = await peekCategoryBlitz(roomId, now);
-      let nextWindowAt: string | null = null;
-      if (!peek.continuousConfig) {
-        const nextOcc = getNextScheduleOccurrence(await listSchedules(roomId), now);
-        nextWindowAt = nextOcc ? nextOcc.windowStart.toISOString() : null;
-      }
-      const session = peek.session
-        ? {
-            ...peek.session,
-            ...(peek.continuousConfig
-              ? {
-                  roundDurationSeconds: peek.continuousConfig.roundDurationSeconds,
-                  intermissionSeconds: peek.continuousConfig.intermissionSeconds,
-                }
-              : {}),
-            venueId, // concealment, as below
-          }
-        : null;
+    // The player this poll is for: the signed session's, and only when it matches the claimed userId.
+    const requestedUserId = (searchParams.get("userId") ?? "").trim();
+    const sessionUserId = readSession(request);
+    const resolvedUserId = isSessionEnforced()
+      ? sessionUserId && sessionUserId === requestedUserId ? sessionUserId : ""
+      : requestedUserId;
+
+    // Starting or waking a round is playing, so it needs the player at the bar like every other write
+    // (away-mode plan, Andrew 2026-11-09). With VENUE_PRESENCE_ENFORCEMENT on, a poll from a player who
+    // isn't verified there only LOOKS: it sees a round already running but never starts one, and doesn't
+    // count toward the room's players. One read-only presence row per poll, no telemetry.
+    if (
+      searchParams.get("peek") !== "1" &&
+      isVenuePresenceMutationEnforcementEnabled() &&
+      !(resolvedUserId && (await isVenuePresenceLive({ userId: resolvedUserId, venueId })))
+    ) {
+      const { live: _live, ...lookOnly } = await buildPeekPayload({ roomId, venueId, now });
       return NextResponse.json({
-        ok: true,
-        session,
-        nextWindowAt,
-        realtimeChannel: categoryBlitzChannelName(roomId),
-        live: peek.awake,
+        ...lookOnly,
+        scheduleWindowEndAt: null,
+        serverReceivedAtMs: now.getTime(),
+        serverNowMs: Date.now(),
       });
+    }
+
+    if (searchParams.get("peek") === "1") {
+      return NextResponse.json(await buildPeekPayload({ roomId, venueId, now }));
     }
 
     // Continuous mode is driven by a separate engine and has no schedule
@@ -124,11 +156,6 @@ export async function GET(request: Request) {
     // Registered against the room (session.venueId), so every venue's players
     // pool into one `playerCount` and the min-player scoring gate can clear.
     if (session && session.status !== "complete") {
-      const requestedUserId = (searchParams.get("userId") ?? "").trim();
-      const sessionUserId = readSession(request);
-      const resolvedUserId = isSessionEnforced()
-        ? sessionUserId && sessionUserId === requestedUserId ? sessionUserId : ""
-        : requestedUserId;
       if (resolvedUserId) {
         await registerSessionPresence({
           sessionId: session.id,

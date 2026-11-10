@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { submitNFLPickEmPick, clearNFLPick } from "@/lib/nflPickEm";
+import { isPickEmPickWindowClosedError } from "@/lib/pickemPickWindowGate";
 import { resolveRequestUserId } from "@/lib/serverSession";
+import { maybeRequireActiveVenuePresence, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
 export async function POST(request: Request) {
   try {
@@ -23,6 +25,9 @@ export async function POST(request: Request) {
       );
     }
     
+    // Picks are made at the bar only (away-mode plan D4): making, changing or clearing one needs presence.
+    await maybeRequireActiveVenuePresence({ userId, venueId: String(venueId).trim() });
+
     // Clear pick action
     if (action === "clear") {
       await clearNFLPick({ userId, gameId });
@@ -55,6 +60,11 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
+    const presenceResponse = venuePresenceErrorResponse(error);
+    if (presenceResponse) return presenceResponse;
+    if (isPickEmPickWindowClosedError(error)) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
+    }
     console.error("[NFL Pick 'Em] Error submitting pick:", error);
     return NextResponse.json(
       { 

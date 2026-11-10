@@ -227,6 +227,8 @@ export const squaresClaimMessage = (outcome: string | null): string => {
       return "The board isn't open yet.";
     case "rehearsal_only":
       return "This board is a test game and isn't open at this venue.";
+    case "not_at_venue":
+      return "Play at the bar.";
     case "wrong_venue":
     case "user_not_found":
       return "We couldn't match you to this venue. Go back to the venue and try again.";

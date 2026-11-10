@@ -89,12 +89,14 @@ vi.mock("@/lib/challengeCampaigns", () => ({
 
 vi.mock("@/lib/liveShowdownEngine", () => ({
   findEndedOccurrences: vi.fn(async () => store.occurrences),
+  endedOccurrencesFromRows: vi.fn(() => store.occurrences),
   loadOccurrenceFinalStandings: vi.fn(
     async (scheduleId: string, occurrenceDate: string) =>
       store.standings.get(`${scheduleId}@${occurrenceDate}`) ?? []
   ),
 }));
 
+import { endedOccurrencesFromRows, findEndedOccurrences, type TriviaScheduleRow } from "@/lib/liveShowdownEngine";
 import {
   GAME_WINNER_TIE_QUOTA_CAP,
   resolveGameWinnerRewards,
@@ -161,6 +163,47 @@ beforeEach(() => {
 });
 
 describe("resolveGameWinnerRewards", () => {
+  // Phase R1: a partner's schedule change sweeps only its own venue; the cron reads every venue.
+  it("reads only the scoped venues' games when given a scope, and every venue otherwise", async () => {
+    await resolveGameWinnerRewards(NOW, { venueIds: ["venue-1"] });
+    expect(vi.mocked(findEndedOccurrences)).toHaveBeenLastCalledWith(NOW, undefined, ["venue-1"]);
+
+    await resolveGameWinnerRewards(NOW);
+    expect(vi.mocked(findEndedOccurrences).mock.lastCall).toEqual([NOW]);
+  });
+
+  // Phase R7: the settle reads its venue once and hands the rows to the sweep.
+  it("reads no campaigns or schedules of its own when given the settle's rows", async () => {
+    const row = (id: string, venueId: string): TriviaScheduleRow => ({
+      id,
+      title: "Trivia",
+      start_time: "2026-07-01T23:00:00.000Z",
+      timezone: "America/New_York",
+      recurring_type: "weekly",
+      recurring_days: ["mon"],
+      num_rounds: 4,
+      venue_id: venueId,
+      intermission_ad_delay_seconds: null,
+      lobby_ad_enabled: null,
+    });
+    vi.mocked(findEndedOccurrences).mockClear();
+    listChallengeCampaigns.mockClear();
+    vi.mocked(endedOccurrencesFromRows).mockClear();
+
+    const report = await resolveGameWinnerRewards(NOW, {
+      venueIds: ["venue-1"],
+      campaigns: [makeCampaign(), makeCampaign({ id: "elsewhere", venueIds: ["venue-2"] })],
+      schedules: [row("sched-1", "venue-1"), row("sched-other", "venue-2")],
+    });
+
+    expect(findEndedOccurrences).not.toHaveBeenCalled();
+    expect(listChallengeCampaigns).not.toHaveBeenCalled();
+    // Narrowed to the scope's venues, as loadLiveTriviaSchedulesForVenues would.
+    expect(vi.mocked(endedOccurrencesFromRows).mock.calls[0][0].map((r) => r.id)).toEqual(["sched-1"]);
+    expect(report.campaignsExamined).toBe(1);
+    expect(report.resolutions.map((resolution) => resolution.campaignId)).toEqual(["camp-1"]);
+  });
+
   it("finds a venue's game-winner campaign even with >200 active campaigns systemwide", async () => {
     // 200 noise campaigns (other venues) fill the simulated global cap, then the
     // venue-1 game-winner campaign is appended after it — an unscoped

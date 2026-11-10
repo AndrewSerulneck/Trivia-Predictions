@@ -18,7 +18,8 @@ export default async function VenuePage({
   return (
     <PageShell title="" noContainer showPageTitle={false} showBranding={false} showUserStatus={false} showAlerts>
       <div className="min-h-0 w-full overflow-x-hidden">
-        <VenuePresenceBoundary venueId={venue.id}>
+        {/* Away from the bar, Venue Home is view-only instead of overlaid (away-mode plan, Phase C1). */}
+        <VenuePresenceBoundary venueId={venue.id} awayMode>
           <VenueHubClient venue={venue} />
         </VenuePresenceBoundary>
       </div>

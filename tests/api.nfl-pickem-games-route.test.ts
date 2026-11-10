@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   listNFLWeeks: vi.fn(),
   resolveRequestUserId: vi.fn(),
   getVenueNFLPickEmScoringMode: vi.fn(),
+  pickWindows: {} as Record<string, unknown>,
 }));
 
 vi.mock("@/lib/nflPickEm", () => ({
@@ -26,9 +27,18 @@ vi.mock("@/lib/serverSession", () => ({
   resolveRequestUserId: mocks.resolveRequestUserId,
 }));
 
+// The route's one settings read (away-mode plan B2: it also carries the NFL pick window). These tests
+// set the mode through getVenueNFLPickEmScoringMode; the window through mocks.pickWindows.
 vi.mock("@/lib/venueGameSettings", () => ({
-  getVenueNFLPickEmScoringMode: mocks.getVenueNFLPickEmScoringMode,
+  getVenueGameSettings: vi.fn(async (venueId: string) => ({
+    venueId,
+    nflPickEmScoringMode: await mocks.getVenueNFLPickEmScoringMode(venueId),
+    cfbPickEmScoringMode: "spread",
+    pickWindows: mocks.pickWindows,
+  })),
 }));
+
+vi.mock("@/lib/timezone", () => ({ getVenueTimezone: vi.fn(async () => "America/New_York") }));
 
 import { GET } from "@/app/api/nfl-pickem/games/route";
 
@@ -248,5 +258,51 @@ describe("NFL Pick 'Em games route scoring mode", () => {
       expect(body.scoringMode).toBe(mode);
       expect(body.scoringModeUnresolved).toBeUndefined();
     }
+  });
+});
+
+describe("NFL Pick 'Em games route pick window (away-mode plan B2)", () => {
+  beforeEach(() => {
+    mocks.resolveRequestUserId.mockReturnValue({ forbidden: false, userId: "user-1" });
+    mocks.getNFLWeekById.mockResolvedValue({ id: "week-1", season: 2026, weekNumber: 1, status: "open" });
+    mocks.isNFLWeekOpenForPicks.mockReturnValue(true);
+    mocks.getVenueNFLPickEmScoringMode.mockResolvedValue("standard");
+    mocks.listNFLPickEmGames.mockResolvedValue({
+      week: { id: "week-1", weekNumber: 1, status: "open" },
+      games: [
+        { id: "thu", startsAt: "2026-11-13T01:15:00.000Z", isLocked: false }, // Thu 8:15 PM EST
+        { id: "sun", startsAt: "2026-11-15T18:00:00.000Z", isLocked: false }, // Sun 1 PM EST
+      ],
+      spreadLinesUnavailable: false,
+    });
+    vi.useFakeTimers({ toFake: ["Date"] });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    mocks.pickWindows = {};
+  });
+
+  const get = async () => {
+    const response = await GET(new Request("http://localhost/api/nfl-pickem/games?weekId=week-1&venueId=venue-1"));
+    return (await response.json()) as {
+      pickWindow?: { line: string; isOpen: boolean };
+      games: Array<{ id: string; pickWindowMessage?: string }>;
+    };
+  };
+
+  it("no window: no line and no game marked", async () => {
+    vi.setSystemTime(new Date("2026-11-11T17:00:00Z"));
+    const body = await get();
+    expect(body.pickWindow).toBeUndefined();
+    expect(body.games.every((game) => game.pickWindowMessage === undefined)).toBe(true);
+  });
+
+  it("a shut window marks the week's games and says when picks open", async () => {
+    mocks.pickWindows = { nfl: { openDay: "mon", openTime: "00:00", closeDay: "wed", closeTime: "23:59" } };
+    vi.setSystemTime(new Date("2026-11-12T17:00:00Z")); // Thu noon EST: Mon-Wed is shut
+    const body = await get();
+    expect(body.pickWindow).toMatchObject({ isOpen: false, line: "Picks closed" });
+    expect(body.games.map((game) => game.pickWindowMessage)).toEqual(["Picks closed", "Picks closed"]);
   });
 });

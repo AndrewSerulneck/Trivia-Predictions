@@ -8,6 +8,20 @@ import { bestSpreadLinesByGame, type BDLSpreadOddsRow, type NormalizedSpreadLine
 import { getLocalDateKey, getEasternDayOfWeek } from "@/lib/timezone";
 import { type PickEmPick, type PickEmGame } from "@/lib/pickem";
 import { getVenueNFLPickEmScoringMode, type NFLPickEmScoringMode } from "@/lib/venueGameSettings";
+import {
+  assertPickEmPickWindowOpen,
+  assertPickEmPickWindowOpenAtVenue,
+  readVenueGameSettingsForPick,
+} from "@/lib/pickemPickWindowGate";
+import {
+  applyVenueFrozenLines,
+  frozenLineForPick,
+  frozenLinePickColumns,
+  lineShownForGame,
+  PICKEM_FROZEN_LINE_FAILED_MESSAGE,
+  type PickEmFrozenLine,
+} from "@/lib/pickemFrozenLines";
+import type { PickEmPickWindow } from "@/lib/pickemPickWindow";
 
 // DEV-ONLY TEST DATA SEED: when scripts/seed-nfl-pickem-test-data.cjs has
 // created this flag file, fetchNFLGamesFromBDL returns fake games instead of
@@ -905,6 +919,16 @@ function mapGameLineRow(row: NFLPickEmGameLineRow): NFLPickEmGameLine {
   };
 }
 
+/** The sportsbook a saved NFL line came from (its provider minus the "balldontlie:" prefix), for a frozen line. */
+const nflLineVendor = (provider: string): string => provider.replace(/^balldontlie:/, "") || provider;
+
+/** A saved NFL line as the frozen-line code takes it (away-mode plan B3). */
+const toFreezableNFLLine = (line: NFLPickEmGameLine) => ({
+  homeSpread: line.homeSpread,
+  awaySpread: line.awaySpread,
+  sourceVendor: nflLineVendor(line.provider),
+});
+
 // See the arithmetic in fetchNFLSpreadLinesFromBDL for why 8.
 const NFL_SPREAD_LINES_MAX_PAGES = 8;
 
@@ -1242,6 +1266,12 @@ export async function listNFLPickEmGames(params: {
    * *are* on spread.
    */
   scoringMode?: NFLPickEmScoringMode;
+  /**
+   * The venue's NFL pick window and time zone (away-mode plan B3), from a caller that read them. At a
+   * spread venue the week then shows this bar's frozen lines, freezing a game's line the first time it
+   * is shown inside its open window. Omitted = global lines, as before.
+   */
+  pickWindow?: { window: PickEmPickWindow; timeZone: string };
 }): Promise<{
   week: NFLWeek;
   games: NFLPickEmGame[];
@@ -1306,6 +1336,25 @@ export async function listNFLPickEmGames(params: {
     }
   }
 
+  // B3: a windowed spread venue shows (and freezes) its own line per game. A failure keeps the global
+  // lines on screen and reports lines unavailable; the pick freezes or refuses on its own.
+  let frozenLines = new Map<string, PickEmFrozenLine>();
+  if (params.pickWindow && params.venueId && scoringMode === "spread" && !spreadLinesUnavailable) {
+    try {
+      frozenLines = await applyVenueFrozenLines({
+        venueId: params.venueId,
+        sportKey: NFL_PICKEM_SPORT_KEY,
+        window: params.pickWindow.window,
+        timeZone: params.pickWindow.timeZone,
+        games: games.map((game) => ({ id: toNFLPickEmGameId(game), startsAt: game.startsAt })),
+        globalLines: new Map(Array.from(gameLines, ([gameId, line]) => [gameId, toFreezableNFLLine(line)])),
+      });
+    } catch (error) {
+      spreadLinesUnavailable = true;
+      console.warn(`[NFL Pick 'Em] Could not freeze lines for venue ${params.venueId}; showing the global lines.`, error);
+    }
+  }
+
   // Transform to NFLPickEmGame format
   const gameDates = games.map(game => new Date(game.startsAt));
   const dayGroupKeys = gameDates.map(gameDate => getLocalDateKey(gameDate, EASTERN_TZ));
@@ -1317,7 +1366,8 @@ export async function listNFLPickEmGames(params: {
   const nflGames: NFLPickEmGame[] = games.map((game, index) => {
     const gameDate = gameDates[index];
     const gameId = toNFLPickEmGameId(game);
-    const gameLine = gameLines.get(gameId);
+    // R2: no pick is attached yet; the pick loop below re-chooses for a game the player picked.
+    const gameLine = lineShownForGame({ pick: null, frozen: frozenLines.get(gameId), global: gameLines.get(gameId) });
     const dayOfWeek = getEasternDayOfWeek(gameDate);
     const dayGroupKey = dayGroupKeys[index];
 
@@ -1395,6 +1445,11 @@ export async function listNFLPickEmGames(params: {
         game.userPickStatus = pick.status as PickEmPick["status"];
         game.userPickRewardPoints = pick.reward_points;
         game.userPickRewardClaimedAt = pick.reward_claimed_at;
+        // R2: the line this pick is graded by (its own line, else the global line; never the bar's
+        // frozen line for a pick that didn't record it).
+        const line = lineShownForGame({ pick, frozen: frozenLines.get(game.id), global: gameLines.get(game.id) });
+        game.homeSpread = line?.homeSpread ?? null;
+        game.awaySpread = line?.awaySpread ?? null;
       }
     }
   }
@@ -1547,11 +1602,16 @@ export async function submitNFLPickEmPick(params: {
     throw new Error("NFL Week not found");
   }
   
+  // One fresh settings read: the NFL pick window (away-mode plan B1; a failed read leaves picks open)
+  // and the scoring mode the games list would otherwise read again.
+  const settings = await readVenueGameSettingsForPick(params.venueId);
+
   // Get the game details
   const { games } = await listNFLPickEmGames({
     weekId: params.weekId,
     userId: params.userId,
     venueId: params.venueId,
+    ...(settings ? { scoringMode: settings.nflPickEmScoringMode } : {}),
   });
   
   const game = games.find(g => g.id === params.gameId);
@@ -1568,7 +1628,14 @@ export async function submitNFLPickEmPick(params: {
   if (params.pickTeam !== game.homeTeam && params.pickTeam !== game.awayTeam) {
     throw new Error(`pickTeam must be either "${game.homeTeam}" or "${game.awayTeam}"`);
   }
-  
+
+  await assertPickEmPickWindowOpen({
+    venueId: params.venueId,
+    sportSlug: NFL_PICKEM_SPORT_SLUG,
+    startsAt: game.startsAt,
+    windows: settings?.pickWindows ?? null,
+  });
+
   const selectedSide: "home" | "away" = params.pickTeam === game.homeTeam ? "home" : "away";
   const selectedTeamId = selectedSide === "home" ? game.homeTeamId : game.awayTeamId;
   const gameLabel = `${game.awayTeam} vs ${game.homeTeam}`;
@@ -1607,6 +1674,8 @@ export async function submitNFLPickEmPick(params: {
         league: game.league,
         sport_key: game.sportKey,
         selected_team_id: selectedTeamId,
+        // No line columns (R8): a recorded line stays, and a pick without one stays on the global
+        // line, which is what the list shows (R2) and what settlement grades it by.
         updated_at: new Date().toISOString(),
       })
       .eq("id", existing.id)
@@ -1627,6 +1696,11 @@ export async function submitNFLPickEmPick(params: {
     return mapPickRowToPick(data);
   }
   
+  // B3 + R8: a NEW pick at a spread venue with an NFL pick window records the bar's frozen line (frozen
+  // now if the list didn't) and is graded by it; a side switch above never changes the line. A game with
+  // no line at all is picked as before (no record).
+  const lineColumns = await nflFrozenLineColumnsForPick({ venueId: params.venueId, game, settings });
+
   // Insert new pick
   const { data, error } = await supabaseAdmin
     .from("pickem_picks")
@@ -1648,6 +1722,7 @@ export async function submitNFLPickEmPick(params: {
       starts_at: game.startsAt,
       status: "pending",
       reward_points: PICKEM_REWARD_POINTS,
+      ...lineColumns,
     })
     .select(PICKEM_PICK_SELECT)
     .single<PickEmPickRow>();
@@ -1665,6 +1740,38 @@ export async function submitNFLPickEmPick(params: {
   
   return mapPickRowToPick(data);
 }
+
+/**
+ * The line columns a NEW NFL pick saves (B3, R8): the bar's frozen line at a spread venue with an NFL
+ * pick window, else nothing. A failed read or freeze refuses the pick, so no windowed pick is saved
+ * without the line it is graded by.
+ *
+ * When the pick's settings read failed (`settings` null), the bar's window and mode are unknown (B1
+ * leaves the window open). Then only the bar's STORED frozen line is looked up, read-only: found →
+ * recorded (the list showed it); none → no line (a list shows a frozen line only after storing it, so
+ * the player saw the global line); the lookup fails → refused. Nothing is frozen without the rules.
+ */
+const nflFrozenLineColumnsForPick = async (params: {
+  venueId: string;
+  game: NFLPickEmGame;
+  settings: Awaited<ReturnType<typeof readVenueGameSettingsForPick>>;
+}): Promise<{ home_spread?: number; away_spread?: number }> => {
+  if (params.settings && (params.settings.nflPickEmScoringMode !== "spread" || !params.settings.pickWindows?.nfl)) return {};
+  let frozen: PickEmFrozenLine | null;
+  try {
+    const globalLine = params.settings ? await getNFLPickEmGameLine(params.game.id) : null;
+    frozen = await frozenLineForPick({
+      venueId: params.venueId,
+      sportKey: NFL_PICKEM_SPORT_KEY,
+      game: params.game,
+      globalLine: globalLine ? toFreezableNFLLine(globalLine) : null,
+    });
+  } catch (error) {
+    console.warn(`[NFL Pick 'Em] frozen-line-failed venue=${params.venueId} game=${params.game.id}; refusing the pick.`, error);
+    throw new Error(PICKEM_FROZEN_LINE_FAILED_MESSAGE);
+  }
+  return frozen ? frozenLinePickColumns(frozen) : {};
+};
 
 /**
  * The stored week whose Tue→Tue span contains `startsAt`, or null. Candidates
@@ -1727,6 +1834,13 @@ export async function clearNFLPick(params: {
   if (isGameLocked(pick.starts_at)) {
     throw new Error("Cannot clear pick - game has already started");
   }
+
+  // Clearing follows the same pick window as making it (away-mode plan B1).
+  await assertPickEmPickWindowOpenAtVenue({
+    venueId: String(pick.venue_id ?? ""),
+    sportSlug: NFL_PICKEM_SPORT_SLUG,
+    startsAt: String(pick.starts_at),
+  });
   
   // Delete the pick
   const { error } = await supabaseAdmin

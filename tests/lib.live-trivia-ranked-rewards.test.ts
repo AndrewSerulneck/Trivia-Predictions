@@ -113,12 +113,17 @@ vi.mock("@/lib/liveTriviaWeekTotals", () => ({ loadLiveTriviaWeekTotals }));
 
 vi.mock("@/lib/timezone", () => ({ getVenueTimezone: vi.fn(async () => "America/New_York") }));
 
-import { computeCycleStart } from "@/lib/challengeCampaigns";
+import { computeCycleStart, listActiveRankedPlaceCampaigns } from "@/lib/challengeCampaigns";
+import { loadLiveTriviaSchedulesForVenues } from "@/lib/liveShowdownEngine";
 import {
+  payPlannedWeekClose,
   planBackfillRankedWeeks,
   planDueRankedWeeks,
+  planRankedWeekEarlyClose,
+  rankedPlaceCampaignsInScope,
   rankedRewardConfigError,
   resolveRankedPlaceRewards,
+  type RankedWeekClosePlan,
 } from "@/lib/liveTriviaRankedRewards";
 
 const TZ = "America/New_York";
@@ -548,5 +553,179 @@ describe("resolveRankedPlaceRewards", () => {
     } finally {
       warn.mockRestore();
     }
+  });
+});
+
+// Phase R1 of docs/cancelled-prizes-pick-windows-away-mode-plan.md: a schedule change that retires a
+// weekly places prize mid-week closes the week on the nights already played (Q5). Phase R7 splits it:
+// the week is RANKED before the change (planRankedWeekEarlyClose, no write) and PAID after it
+// (payPlannedWeekClose), only if the prize is really retired.
+describe("planRankedWeekEarlyClose + payPlannedWeekClose (R7: rank before, pay after)", () => {
+  // Thursday 2026-10-08, noon EDT: Wednesday's game is played, Thursday's and Friday's are not.
+  const THU_NOON = Date.parse("2026-10-08T16:00:00.000Z");
+  const info = () => vi.spyOn(console, "info").mockImplementation(() => undefined);
+  const planned = async (): Promise<RankedWeekClosePlan> => {
+    const result = await planRankedWeekEarlyClose({ campaign: makeCampaign(), schedules: [makeSchedule()], nowMs: THU_NOON });
+    if (result.outcome !== "planned") throw new Error(`expected a plan, got ${result.outcome}`);
+    return result.plan;
+  };
+
+  it("ranks the week on the nights played, under the resolver's own week key, and writes nothing", async () => {
+    const plan = await planned();
+
+    expect(plan.cycleStart.toISOString()).toBe(OCT7_WEEK_KEY);
+    expect(plan.campaignId).toBe("camp-1");
+    expect(plan.venueId).toBe("venue-1");
+    expect(plan.gameCount).toBe(1);
+    expect(plan.places.map((place) => place.userId)).toEqual(["u-snooker", "u-kuch", "u-fast"]);
+    expect(loadLiveTriviaWeekTotals).toHaveBeenCalledWith([
+      expect.objectContaining({ scheduleId: "sched-1", occurrenceDate: "2026-10-07" }),
+    ]);
+    expect(awardRankedCyclePlaces).not.toHaveBeenCalled();
+    expect(store.settlements).toEqual([]);
+  });
+
+  it("pays the plan through the one award RPC, with no read of its own", async () => {
+    const plan = await planned();
+    loadLiveTriviaWeekTotals.mockClear();
+    listChallengeCycleSettlements.mockClear();
+    const spy = info();
+    try {
+      const status = await payPlannedWeekClose(plan, new Date(THU_NOON));
+
+      expect(status).toBe("awarded");
+      expect(loadLiveTriviaWeekTotals).not.toHaveBeenCalled();
+      expect(listChallengeCycleSettlements).not.toHaveBeenCalled();
+      const call = awardRankedCyclePlaces.mock.calls[0][0];
+      expect(call.cycleStart.toISOString()).toBe(OCT7_WEEK_KEY);
+      expect(call.places.map((place) => place.userId)).toEqual(["u-snooker", "u-kuch", "u-fast"]);
+      expect(spy).toHaveBeenCalledWith("[RankedReward] week-closed-early", expect.objectContaining({ campaignId: "camp-1" }));
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("the cron never pays a paid early close a second time", async () => {
+    const spy = info();
+    try {
+      await payPlannedWeekClose(await planned(), new Date(THU_NOON));
+      const awards = awardRankedCyclePlaces.mock.calls.length;
+
+      const report = await resolveRankedPlaceRewards(AFTER_FRIDAY);
+
+      expect(awardRankedCyclePlaces.mock.calls.slice(awards).map(([p]) => p.cycleStart.toISOString())).not.toContain(
+        OCT7_WEEK_KEY,
+      );
+      expect(report.weeksAlreadySettled).toBeGreaterThanOrEqual(1);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("an unpaid plan leaves the week to the cron, which pays all three nights", async () => {
+    await planned(); // planned, then dropped: the change didn't retire the prize
+
+    const report = await resolveRankedPlaceRewards(AFTER_FRIDAY);
+
+    expect(report.settlements.map((settlement) => [settlement.cycleStart, settlement.gameCount])).toContainEqual([
+      OCT7_WEEK_KEY,
+      3,
+    ]);
+  });
+
+  it("a paid-again plan is refused by the RPC (already_resolved), still counted as paid", async () => {
+    const plan = await planned();
+    const spy = info();
+    try {
+      await payPlannedWeekClose(plan, new Date(THU_NOON));
+      await expect(payPlannedWeekClose(plan, new Date(THU_NOON))).resolves.toBe("already_resolved");
+      expect(store.settlements).toHaveLength(1);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("plans nothing before the week's first game has ended", async () => {
+    const result = await planRankedWeekEarlyClose({
+      campaign: makeCampaign(),
+      schedules: [makeSchedule()],
+      nowMs: Date.parse("2026-10-07T23:30:00.000Z"), // Wednesday's game still running
+    });
+
+    expect(result).toEqual({ outcome: "nothing_played" });
+    expect(loadLiveTriviaWeekTotals).not.toHaveBeenCalled();
+  });
+
+  it("skips a week already settled (a retried cancel)", async () => {
+    store.settlements.push({
+      challengeId: "camp-1",
+      cycleStart: OCT7_WEEK_KEY,
+      venueId: "venue-1",
+      outcome: "awarded",
+      participantCount: 4,
+      winnerCount: 3,
+      minPlayers: null,
+      settledAt: "2026-10-08T15:00:00.000Z",
+    });
+
+    const result = await planRankedWeekEarlyClose({ campaign: makeCampaign(), schedules: [makeSchedule()], nowMs: THU_NOON });
+
+    expect(result).toEqual({ outcome: "already_settled", cycleStart: OCT7_WEEK_KEY });
+    expect(loadLiveTriviaWeekTotals).not.toHaveBeenCalled();
+  });
+
+  it("throws (the caller refuses the change) when the totals read fails", async () => {
+    store.failTotalsForSchedule = "sched-1";
+
+    await expect(
+      planRankedWeekEarlyClose({ campaign: makeCampaign(), schedules: [makeSchedule()], nowMs: THU_NOON }),
+    ).rejects.toThrow("totals RPC failed");
+  });
+
+  it("a failed award throws (the cascade keeps the prize active)", async () => {
+    const plan = await planned();
+    awardRankedCyclePlaces.mockRejectedValueOnce(new Error("award RPC failed"));
+
+    await expect(payPlannedWeekClose(plan, new Date(THU_NOON))).rejects.toThrow("award RPC failed");
+  });
+
+  it("a scoped sweep reads only that venue's prizes; the cron's read is unscoped", async () => {
+    await resolveRankedPlaceRewards(AFTER_FRIDAY, { venueIds: ["venue-1"] });
+    expect(vi.mocked(listActiveRankedPlaceCampaigns)).toHaveBeenLastCalledWith(["venue-1"]);
+
+    await resolveRankedPlaceRewards(AFTER_FRIDAY);
+    expect(vi.mocked(listActiveRankedPlaceCampaigns)).toHaveBeenLastCalledWith(undefined);
+  });
+
+  it("a sweep given the settle's campaigns and schedules reads neither (R7)", async () => {
+    vi.mocked(listActiveRankedPlaceCampaigns).mockClear();
+    vi.mocked(loadLiveTriviaSchedulesForVenues).mockClear();
+
+    const report = await resolveRankedPlaceRewards(AFTER_FRIDAY, {
+      venueIds: ["venue-1"],
+      campaigns: [makeCampaign()],
+      schedules: [makeSchedule()],
+    });
+
+    expect(listActiveRankedPlaceCampaigns).not.toHaveBeenCalled();
+    expect(loadLiveTriviaSchedulesForVenues).not.toHaveBeenCalled();
+    expect(report.settlements.map((settlement) => settlement.cycleStart)).toContain(OCT7_WEEK_KEY);
+  });
+
+  it("filters preloaded prizes exactly as listActiveRankedPlaceCampaigns reads them", () => {
+    const kept = rankedPlaceCampaignsInScope(
+      [
+        makeCampaign({ id: "newer", createdAt: "2026-09-01T00:00:00.000Z" }),
+        makeCampaign({ id: "older", createdAt: "2026-08-01T00:00:00.000Z" }),
+        makeCampaign({ id: "inactive", isActive: false }),
+        makeCampaign({ id: "won", winnerUserId: "u1" }),
+        makeCampaign({ id: "points", winCondition: "points_threshold" }),
+        makeCampaign({ id: "elsewhere", venueIds: ["venue-2"] }),
+        makeCampaign({ id: "global", venueIds: [] }),
+      ],
+      ["venue-1"],
+    );
+
+    expect(kept.map((campaign) => campaign.id)).toEqual(["older", "newer"]);
   });
 });

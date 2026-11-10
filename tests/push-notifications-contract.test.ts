@@ -201,3 +201,61 @@ describe("push: the native shells", () => {
     expect(manifest).not.toMatch(/usesCleartextTraffic/);
   });
 });
+
+describe("push: invitations that land on Venue Home (away-mode plan, Phase C2)", () => {
+  it("no automatic push assumes the player is at the bar", () => {
+    for (const file of ["lib/push/venueNews.ts", "lib/push/gameReminders.ts"]) {
+      const code = read(file).replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, "");
+      expect(code, file).not.toMatch(/Tap to/i);
+    }
+  });
+
+  it("game pushes open the Games screen, prize pushes the Prizes screen, through the one path builder", () => {
+    const news = read("lib/push/venueNews.ts");
+    expect(news).toMatch(/const path = venuePushPath\(input\.venueId, input\.panel\);/);
+    expect(news.slice(news.indexOf("export const announceNewGame"))).toMatch(/panel: "games"/);
+    expect(news.slice(news.indexOf("export const announceNewPrize"))).toMatch(/panel: "prizes"/);
+    expect(read("lib/push/gameReminders.ts")).toMatch(/const path = venuePushPath\(occurrence\.venueId, "games"\);/);
+    expect(filesMatching(/`\/venue\/\$\{encodeURIComponent\(/).filter((file) => file.startsWith("lib/push/"))).toEqual([
+      "lib/push/venueMessages.ts",
+    ]);
+  });
+
+  it("a tap saves the push's screen before navigating, and Venue Home reads ?panel=", () => {
+    const runtime = read("components/push/NativePushRuntime.tsx");
+    expect(runtime.indexOf("savePlayerPanel(landing.venueId, landing.panel)")).toBeGreaterThan(-1);
+    expect(runtime.indexOf("savePlayerPanel(landing.venueId, landing.panel)")).toBeLessThan(runtime.indexOf("router.push(path)"));
+    expect(read("components/venue/VenueHubClient.tsx")).toContain("<VenuePanelFromUrl onPanel={goToScreen} />");
+  });
+});
+
+describe("push: Remind me + Add to calendar (away-mode plan, Phase C3)", () => {
+  it("only lib/gameReminderOptIns.ts writes the opt-ins, and only the sweep claims them", () => {
+    const writers = APP_CODE.filter((file) =>
+      /from\(\s*["']push_game_reminder_optins["']\s*\)\s*\.\s*(insert|update|upsert|delete)/.test(read(file).replace(/\s+/g, " ")),
+    );
+    expect(writers).toEqual(["lib/gameReminderOptIns.ts"]);
+    expect(filesMatching(/["']claim_game_reminder_optins["']/)).toEqual(["lib/push/gameReminders.ts"]);
+  });
+
+  it("the route binds the player to the signed session, refuses without one, and never asks where they are", () => {
+    const route = read("app/api/push/game-reminders/route.ts");
+    expect(route).toMatch(/resolveRequestUserId\(request/);
+    expect(route).toMatch(/if \(!isSessionEnforced\(\)\)/);
+    // Remind me is for players away from the bar (C1): no presence check, and it touches no game.
+    expect(route).not.toMatch(/maybeRequireActiveVenuePresence|isVenuePresenceLive/);
+    expect(read("lib/gameReminderOptIns.ts")).toMatch(/profile\.venue_id !== input\.venueId/);
+  });
+
+  it("one schedule read per sweep serves both the 30-minute push and Remind me", () => {
+    const sweep = read("lib/push/gameReminders.ts");
+    expect(sweep.match(/findStartingOccurrences\(/g)).toHaveLength(1);
+    expect(sweep).toMatch(/OPT_IN_REMINDER_LEAD_MS = 60 \* 60_000/);
+  });
+
+  it("the calendar file takes only the game's ids from the URL; every word comes from the database", () => {
+    const route = read("app/api/trivia/live/calendar/route.ts");
+    const params = [...route.matchAll(/searchParams\.get\("([^"]+)"\)/g)].map((match) => match[1]).sort();
+    expect(params).toEqual(["scheduleId", "start", "venueId"]);
+  });
+});

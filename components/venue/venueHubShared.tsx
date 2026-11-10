@@ -28,6 +28,8 @@ export type LiveTriviaStatus = {
   failureReason: LiveTriviaPayloadFailureReason | "network" | null;
   recurringType: string | null;
   recurringDays: string[];
+  /** The next game's schedule (upcoming only), for Remind me / Add to calendar (away-mode plan, Phase C3). */
+  scheduleId?: string | null;
 };
 
 export type ChallengeCampaignCard = {

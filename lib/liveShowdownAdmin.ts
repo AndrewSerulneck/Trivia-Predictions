@@ -8,13 +8,22 @@ import {
   djb2,
   getLiveShowdownState,
   loadActiveLiveTriviaSeedQuestionPool,
+  type TriviaScheduleRow as EngineScheduleRow,
 } from "@/lib/liveShowdownEngine";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { broadcastLiveTrivia } from "@/lib/liveTriviaBroadcast";
 import {
   cascadeScheduleChangeToRewards,
+  emptyCascadeReport,
+  mergeScheduleChangePreviews,
+  previewScheduleChangeToRewards,
   rewardCascadeRecurrence,
+  settleVenueBeforeScheduleChange,
+  type CascadeRecurrence,
   type GameSlotCascadeReport,
+  type PendingScheduleChange,
+  type ScheduleChangePreview,
+  type ScheduleChangeSettlement,
 } from "@/lib/rewardGameSlotCascade";
 import { scheduleRunWeekdays } from "@/lib/rewardGameSlots";
 
@@ -496,7 +505,7 @@ const VENUE_SCHEDULE_ONE_OFF_LOOKBACK_MS = 24 * 60 * 60_000;
  * should fail loudly here (the description degrades to "no time"). Used by the reward picker,
  * createReward and the reward descriptions on every venue-home load
  * (docs/reward-descriptions-plan.md). The caller still decides which occurrences
- * count (hasLiveOrUpcomingOccurrence in lib/rewards.ts).
+ * count (hasLiveOrUpcomingOccurrence in lib/liveTriviaScheduleSlots.ts).
  */
 export async function listVenueLiveShowdownSchedules(
   venueIds: readonly string[],
@@ -520,6 +529,33 @@ export async function listVenueLiveShowdownSchedules(
   }
   return ((data ?? []) as TriviaScheduleRow[]).map(mapScheduleRow);
 }
+
+/**
+ * listVenueLiveShowdownSchedules over rows already read (Phase R7: a schedule change's
+ * settle reads its venue's schedules once, with loadLiveTriviaSchedulesForVenues). The SQL
+ * filters in JS: the venues, every recurring row (`recurring_type <> 'none'`, so a null type
+ * is out, as in SQL) plus one-offs that started within the last day or are still ahead;
+ * newest first, at most `limit`. Pure.
+ */
+export const venueSchedulesFromRows = (
+  rows: readonly EngineScheduleRow[],
+  venueIds: readonly string[],
+  now: Date = new Date(),
+  limit = 200,
+): AdminLiveShowdownSchedule[] => {
+  const ids = new Set(venueIds.map((id) => String(id ?? "").trim()).filter(Boolean));
+  const oneOffCutoffMs = now.getTime() - VENUE_SCHEDULE_ONE_OFF_LOOKBACK_MS;
+  const safeLimit = Math.max(1, Math.min(500, Math.floor(limit)));
+  return rows
+    .filter((row) => ids.has(String(row.venue_id ?? "").trim()))
+    .filter(
+      (row) =>
+        (row.recurring_type != null && row.recurring_type !== "none") || Date.parse(row.start_time) >= oneOffCutoffMs,
+    )
+    .sort((a, b) => Date.parse(b.start_time) - Date.parse(a.start_time))
+    .slice(0, safeLimit)
+    .map((row) => mapScheduleRow({ ...row, created_at: "", updated_at: "" }));
+};
 
 /**
  * The IANA timezone of each given schedule, in ONE trivia_schedules read — for
@@ -563,13 +599,7 @@ export async function createAdminLiveShowdownSchedule(params: {
   const targetDate = String(params.targetDate ?? "").trim();
   const startTime = String(params.startTime ?? "").trim();
   const timezone = String(params.timezone ?? "America/New_York").trim() || "America/New_York";
-  const recurringType =
-    params.recurringType === "daily" ||
-    params.recurringType === "weekly" ||
-    params.recurringType === "monthly" ||
-    params.recurringType === "yearly"
-      ? params.recurringType
-      : "none";
+  const recurringType = normalizeScheduleRecurringType(params.recurringType);
   const recurringDays = normalizeRecurringDays(params.recurringDays);
   const venueId = String(params.venueId ?? "").trim();
   const numRounds = clampRounds(Number(params.numRounds));
@@ -684,6 +714,162 @@ export async function resetLiveShowdownAnswersForSchedule(scheduleIdRaw: string)
   return { deleted: Array.isArray(data) ? data.length : 0 };
 }
 
+const normalizeScheduleRecurringType = (value: unknown): AdminLiveShowdownSchedule["recurringType"] =>
+  value === "daily" || value === "weekly" || value === "monthly" || value === "yearly" ? value : "none";
+
+/** What the cascade is told after an edit; shared by the real edit and its preview. */
+const editCascadeInputs = (edit: {
+  recurringType: AdminLiveShowdownSchedule["recurringType"];
+  recurringDays: string[];
+  startTimeIso: string;
+  timezone: string;
+}): { survivingWeekdays: string[]; survivingRecurrence: CascadeRecurrence } => {
+  return {
+    survivingWeekdays: scheduleRunWeekdays({
+      recurringType: edit.recurringType,
+      recurringDays: edit.recurringDays,
+      startTime: edit.startTimeIso,
+      timezone: edit.timezone,
+    }),
+    survivingRecurrence: rewardCascadeRecurrence(edit),
+  };
+};
+
+/** A cancel, from the cascade's side: nothing survives. */
+const cancelChange = (): PendingScheduleChange => ({ survivingWeekdays: [], survivingRecurrence: null, schedule: null });
+
+/**
+ * Every venue an edit touches, with what its cascade is told: the schedule's venue
+ * after the edit and, on a move, the venue it left (from there the game is simply
+ * gone). The ONE list the A3 preview and the R1 pre-change settle both use.
+ */
+const venueChangesForEdit = (params: {
+  previousVenueId: string | null;
+  venueId: string;
+  schedule: NonNullable<PendingScheduleChange["schedule"]>;
+  cascade: { survivingWeekdays: string[]; survivingRecurrence: CascadeRecurrence };
+}): Array<{ venueId: string; change: PendingScheduleChange }> => {
+  const here = { venueId: params.venueId, change: { ...params.cascade, schedule: params.schedule } };
+  if (!params.previousVenueId || params.previousVenueId === params.venueId) return [here];
+  return [
+    here,
+    {
+      venueId: params.previousVenueId,
+      change: { survivingWeekdays: [], survivingRecurrence: null, schedule: params.schedule },
+    },
+  ];
+};
+
+/**
+ * Phase R1: pay what each touched venue owes BEFORE the schedule, its questions or
+ * its answers are touched. Throws ScheduleChangeSettlementError (nothing written yet)
+ * when a payout can't be confirmed; returns the prizes rule 4 may then retire.
+ */
+const settleBeforeScheduleChange = async (
+  scheduleId: string,
+  venues: ReadonlyArray<{ venueId: string | null; change: PendingScheduleChange }>,
+): Promise<ScheduleChangeSettlement> => {
+  const settled: ScheduleChangeSettlement = { settledCampaignIds: new Set(), weekCloses: new Map() };
+  const nowMs = Date.now();
+  for (const { venueId, change } of venues) {
+    const result = await settleVenueBeforeScheduleChange({ venueId, scheduleId, change, nowMs });
+    for (const id of result.settledCampaignIds) settled.settledCampaignIds.add(id);
+    for (const [id, plan] of result.weekCloses) settled.weekCloses.set(id, plan);
+  }
+  return settled;
+};
+
+/** The columns that decide when a schedule's games run; read before an edit (R7). */
+const SCHEDULE_TIMING_COLUMNS = "start_time, timezone, recurring_type, recurring_days, num_rounds, venue_id";
+
+type ScheduleTimingRow = Pick<
+  TriviaScheduleRow,
+  "start_time" | "timezone" | "recurring_type" | "recurring_days" | "num_rounds" | "venue_id"
+>;
+
+/**
+ * Does an edit move any game: its start, zone, recurrence, days, length (rounds) or venue?
+ * A title or ad edit doesn't, so it settles, cascades and previews nothing (R7). A missing
+ * stored row counts as moved. Pure.
+ */
+export const scheduleEditMovesGames = (
+  stored: ScheduleTimingRow | null,
+  edit: {
+    startTimeIso: string;
+    timezone: string;
+    recurringType: AdminLiveShowdownSchedule["recurringType"];
+    recurringDays: string[];
+    numRounds: number;
+    venueId: string;
+  },
+): boolean => {
+  if (!stored) return true;
+  const days = (value: unknown) => [...normalizeRecurringDays(value)].sort().join(",");
+  return (
+    Date.parse(String(stored.start_time ?? "")) !== Date.parse(edit.startTimeIso) ||
+    String(stored.timezone ?? "").trim() !== edit.timezone ||
+    normalizeScheduleRecurringType(stored.recurring_type) !== edit.recurringType ||
+    days(stored.recurring_days) !== days(edit.recurringDays) ||
+    clampRounds(Number(stored.num_rounds)) !== edit.numRounds ||
+    String(stored.venue_id ?? "").trim() !== edit.venueId
+  );
+};
+
+/**
+ * What cancelling (`edit: null`) or editing a Live Trivia schedule WOULD do to its
+ * venue's prizes (Phase A3 warning). Mirrors deleteAdminLiveShowdownSchedule and
+ * updateAdminLiveShowdownSchedule's cascade calls, including a move to another
+ * venue, as a dry run: no writes, no payouts. One venue_id read plus the cascade's
+ * own reads.
+ */
+export const previewLiveShowdownScheduleChange = async (params: {
+  scheduleId: string;
+  edit: {
+    targetDate: string;
+    startTime: string;
+    timezone: string;
+    recurringType?: string;
+    recurringDays?: string[];
+    numRounds: number;
+    venueId: string;
+  } | null;
+}): Promise<ScheduleChangePreview> => {
+  const scheduleId = String(params.scheduleId ?? "").trim();
+  if (!scheduleId) throw new Error("scheduleId is required.");
+  const { data: existing, error } = await getAdminClient()
+    .from("trivia_schedules")
+    .select(SCHEDULE_TIMING_COLUMNS)
+    .eq("id", scheduleId)
+    .maybeSingle<ScheduleTimingRow>();
+  if (error) throw new Error(error.message || "Failed to fetch existing schedule.");
+  const previousVenueId = String(existing?.venue_id ?? "").trim() || null;
+
+  if (!params.edit) {
+    return previewScheduleChangeToRewards({ scheduleId, venueId: previousVenueId, ...cancelChange() });
+  }
+
+  const timezone = String(params.edit.timezone ?? "").trim() || "America/New_York";
+  const recurringType = normalizeScheduleRecurringType(params.edit.recurringType);
+  const recurringDays = normalizeRecurringDays(params.edit.recurringDays);
+  const venueId = String(params.edit.venueId ?? "").trim();
+  const startTimeIso = zonedDateTimeToUtcIso(params.edit.targetDate, params.edit.startTime, timezone);
+  const numRounds = clampRounds(Number(params.edit.numRounds));
+  if (!scheduleEditMovesGames(existing, { startTimeIso, timezone, recurringType, recurringDays, numRounds, venueId })) {
+    return { ending: [], shrinking: [] };
+  }
+  const schedule = { startTime: startTimeIso, timezone, recurringType, recurringDays, numRounds, venueId };
+  const previews: ScheduleChangePreview[] = [];
+  for (const target of venueChangesForEdit({
+    previousVenueId,
+    venueId,
+    schedule,
+    cascade: editCascadeInputs({ recurringType, recurringDays, startTimeIso, timezone }),
+  })) {
+    previews.push(await previewScheduleChangeToRewards({ scheduleId, venueId: target.venueId, ...target.change }));
+  }
+  return mergeScheduleChangePreviews(...previews);
+};
+
 export async function updateAdminLiveShowdownSchedule(params: {
   id: string;
   title: string;
@@ -707,13 +893,7 @@ export async function updateAdminLiveShowdownSchedule(params: {
   const targetDate = String(params.targetDate ?? "").trim();
   const startTime = String(params.startTime ?? "").trim();
   const timezone = String(params.timezone ?? "America/New_York").trim() || "America/New_York";
-  const recurringType =
-    params.recurringType === "daily" ||
-    params.recurringType === "weekly" ||
-    params.recurringType === "monthly" ||
-    params.recurringType === "yearly"
-      ? params.recurringType
-      : "none";
+  const recurringType = normalizeScheduleRecurringType(params.recurringType);
   const recurringDays = normalizeRecurringDays(params.recurringDays);
   const venueId = String(params.venueId ?? "").trim();
   const numRounds = clampRounds(Number(params.numRounds));
@@ -733,14 +913,14 @@ export async function updateAdminLiveShowdownSchedule(params: {
 
   const startTimeIso = zonedDateTimeToUtcIso(targetDate, startTime, timezone);
 
-  // Fetch the existing schedule to check if numRounds changed. venue_id comes
-  // along so a schedule MOVED to another venue can retire the rewards the old
-  // venue pinned to it — from that venue's side the game is simply gone.
+  // The existing row's timing columns: whether rounds changed, whether the edit moves
+  // any game at all (R7), and venue_id so a schedule MOVED to another venue can retire
+  // the rewards the old venue pinned to it — from that venue's side the game is gone.
   const { data: existing, error: fetchError } = await admin
     .from("trivia_schedules")
-    .select("num_rounds, venue_id")
+    .select(SCHEDULE_TIMING_COLUMNS)
     .eq("id", scheduleId)
-    .maybeSingle<{ num_rounds: number; venue_id: string | null }>();
+    .maybeSingle<ScheduleTimingRow>();
 
   if (fetchError) {
     throw new Error(fetchError.message || "Failed to fetch existing schedule.");
@@ -749,16 +929,45 @@ export async function updateAdminLiveShowdownSchedule(params: {
   const previousVenueId = String(existing?.venue_id ?? "").trim() || null;
   const oldNumRounds = clampRounds(Number(existing?.num_rounds ?? 1));
   const roundsChanged = oldNumRounds !== numRounds;
+  const movesGames = scheduleEditMovesGames(existing, {
+    startTimeIso,
+    timezone,
+    recurringType,
+    recurringDays,
+    numRounds,
+    venueId,
+  });
+  // One set of inputs for the settle and the cascade after the write (R7).
+  const cascadeInputs = editCascadeInputs({ recurringType, recurringDays, startTimeIso, timezone });
 
-  // If rounds changed, rebuild the question matrix
-  if (roundsChanged) {
-    const newQuestionSlugs = await buildLiveShowdownQuestionMatrix({
-      numRounds,
-      venueId,
-      occurrenceDate: targetDate,
-      scheduleSeed: `admin-update:${scheduleId}`,
-    });
+  // Built before the settle: a read with no writes, so a failure refuses the edit with
+  // nothing paid or written (R7).
+  const newQuestionSlugs = roundsChanged
+    ? await buildLiveShowdownQuestionMatrix({
+        numRounds,
+        venueId,
+        occurrenceDate: targetDate,
+        scheduleSeed: `admin-update:${scheduleId}`,
+      })
+    : null;
 
+  // Phase R1: pay what's owed while the schedule still reads as it is now. Throws
+  // (nothing written) when a payout can't be confirmed. An edit that moves no game
+  // (a title or ad change) owes nothing new and skips it.
+  const settlement = movesGames
+    ? await settleBeforeScheduleChange(
+        scheduleId,
+        venueChangesForEdit({
+          previousVenueId,
+          venueId,
+          schedule: { startTime: startTimeIso, timezone, recurringType, recurringDays, numRounds, venueId },
+          cascade: cascadeInputs,
+        }),
+      )
+    : null;
+
+  // If rounds changed, replace the question matrix
+  if (newQuestionSlugs) {
     // Delete existing session questions
     const { error: deleteQuestionsError } = await admin
       .from("trivia_session_questions")
@@ -797,7 +1006,9 @@ export async function updateAdminLiveShowdownSchedule(params: {
     }
   }
 
-  // Update the schedule row
+  // Update the schedule row. No fallback for a database without the recurrence
+  // columns: production has them (checked 2026-11-10), and a missing column now
+  // fails like any other update (R7).
   const updateResult = await admin
     .from("trivia_schedules")
     .update({
@@ -815,47 +1026,13 @@ export async function updateAdminLiveShowdownSchedule(params: {
     .select("id, title, start_time, timezone, recurring_type, recurring_days, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
     .single();
 
-  if (updateResult.error && isMissingRecurringColumnError(updateResult.error.message)) {
-    const legacyUpdate = await admin
-      .from("trivia_schedules")
-      .update({
-        title,
-        start_time: startTimeIso,
-        timezone,
-        num_rounds: numRounds,
-        venue_id: venueId,
-        intermission_ad_delay_seconds: intermissionAdDelaySeconds,
-        lobby_ad_enabled: lobbyAdEnabled,
-      })
-      .eq("id", scheduleId)
-      .select("id, title, start_time, timezone, num_rounds, venue_id, intermission_ad_delay_seconds, lobby_ad_enabled, created_at, updated_at")
-      .single();
-
-    if (legacyUpdate.error || !legacyUpdate.data) {
-      throw new Error(legacyUpdate.error?.message || "Failed to update Live Showdown schedule.");
-    }
-    // No recurrence columns on this database: the schedule is a single dated
-    // game, so the only surviving slot is its own start weekday.
-    const legacyCascade = await cascadeScheduleChangeToRewards({
-      scheduleId,
-      venueId,
-      survivingWeekdays: scheduleRunWeekdays({
-        recurringType: "none",
-        recurringDays: [],
-        startTime: startTimeIso,
-        timezone,
-      }),
-      survivingRecurrence: "none",
-    });
-    await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId });
-    return {
-      ...mapScheduleRow({ ...(legacyUpdate.data as TriviaScheduleRowLegacy), recurring_type: "none", recurring_days: null }),
-      rewardCascade: legacyCascade,
-    };
-  }
-
   if (updateResult.error || !updateResult.data) {
     throw new Error(updateResult.error?.message || "Failed to update Live Showdown schedule.");
+  }
+
+  if (!settlement) {
+    await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId });
+    return { ...mapScheduleRow(updateResult.data as TriviaScheduleRow), rewardCascade: emptyCascadeReport() };
   }
 
   // An edit that drops weekdays (Tue+Thu → Tue) retires the games on the days it
@@ -866,13 +1043,8 @@ export async function updateAdminLiveShowdownSchedule(params: {
   const cascade = await cascadeScheduleChangeToRewards({
     scheduleId,
     venueId,
-    survivingWeekdays: scheduleRunWeekdays({
-      recurringType,
-      recurringDays,
-      startTime: startTimeIso,
-      timezone,
-    }),
-    survivingRecurrence: rewardCascadeRecurrence({ recurringType, recurringDays }),
+    ...cascadeInputs,
+    ...settlement,
   });
   if (previousVenueId && previousVenueId !== venueId) {
     // The schedule left this venue entirely, so from its rewards' point of view
@@ -883,10 +1055,12 @@ export async function updateAdminLiveShowdownSchedule(params: {
       venueId: previousVenueId,
       survivingWeekdays: [],
       survivingRecurrence: null,
+      ...settlement,
     });
     cascade.pruned.push(...transferCascade.pruned);
     cascade.deactivated.push(...transferCascade.deactivated);
     cascade.retiredForRecurrenceChange.push(...transferCascade.retiredForRecurrenceChange);
+    cascade.retiredNoGamesLeft.push(...transferCascade.retiredNoGamesLeft);
     cascade.errors.push(...transferCascade.errors);
   }
 
@@ -903,13 +1077,20 @@ export async function deleteAdminLiveShowdownSchedule(
     throw new Error("scheduleId is required.");
   }
 
-  // Fetch venue_id before deleting so we can notify that venue's lobby.
-  const { data: existingSchedule } = await admin
+  // Fetch venue_id before deleting so we can notify that venue's lobby and pay
+  // its prizes first. A failed read stops here: without the venue nothing can be
+  // settled, and the delete would take the game's answers with it.
+  const { data: existingSchedule, error: fetchError } = await admin
     .from("trivia_schedules")
     .select("venue_id")
     .eq("id", scheduleId)
     .maybeSingle<{ venue_id: string }>();
+  if (fetchError) throw new Error(fetchError.message || "Failed to fetch existing schedule.");
   const venueId = existingSchedule?.venue_id ?? null;
+
+  // Phase R1: pay what's owed while the game and its answers still exist. Throws
+  // (nothing deleted) when a payout can't be confirmed.
+  const settlement = await settleBeforeScheduleChange(scheduleId, [{ venueId, change: cancelChange() }]);
 
   const { error: deleteSessionQuestionsError } = await admin
     .from("trivia_session_questions")
@@ -943,11 +1124,13 @@ export async function deleteAdminLiveShowdownSchedule(
   // games survives with a smaller quota; one that covered only this game is
   // DEACTIVATED, never deleted — see lib/rewardGameSlotCascade.ts rule 2. The
   // schedule is gone, so there is no surviving recurrence to compare against.
+  // A week the settle ranked for an early close is paid here, after the delete (R7).
   const cascade = await cascadeScheduleChangeToRewards({
     scheduleId,
     venueId,
     survivingWeekdays: [],
     survivingRecurrence: null,
+    ...settlement,
   });
 
   if (venueId) await broadcastLiveTrivia(venueId, "schedule_updated", { scheduleId });

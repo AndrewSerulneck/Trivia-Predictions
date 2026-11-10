@@ -471,13 +471,22 @@ export const HistoryScreen = ({ games, nowMs }: { games: ScheduleGames; nowMs: n
 export const GameDetailScreen = ({
   schedule,
   onEdit,
+  onStartCancel,
   onCancelGame,
+  impactNotice,
+  checkingImpact,
   busy,
   error,
 }: {
   schedule: OwnerSchedule;
   onEdit: () => void;
+  /** The partner tapped Cancel game: check which prizes it would end. */
+  onStartCancel: () => void;
   onCancelGame: () => void;
+  /** e.g. "Also ends: $50 gift card." Null when no prize would end. */
+  impactNotice: string | null;
+  /** The prize check is still running; confirming waits for it. */
+  checkingImpact: boolean;
   busy: boolean;
   error: string | null;
 }) => {
@@ -505,6 +514,7 @@ export const GameDetailScreen = ({
           <p className="text-sm font-bold text-ht-rose-300">
             Cancel this game? Players will be returned to the lobby if it&apos;s live.
           </p>
+          {impactNotice ? <p className="text-sm font-black text-ht-rose-300">{impactNotice}</p> : null}
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -517,7 +527,7 @@ export const GameDetailScreen = ({
             <button
               type="button"
               onClick={onCancelGame}
-              disabled={busy}
+              disabled={busy || checkingImpact}
               className="min-h-11 rounded-xl border border-ht-rose-500/40 bg-ht-rose-500/20 px-3 text-sm font-black text-ht-rose-300 disabled:opacity-50"
             >
               {busy ? "Cancelling…" : "Yes, cancel game"}
@@ -535,7 +545,10 @@ export const GameDetailScreen = ({
           </button>
           <button
             type="button"
-            onClick={() => setConfirming(true)}
+            onClick={() => {
+              setConfirming(true);
+              onStartCancel();
+            }}
             className="min-h-11 rounded-xl border border-ht-rose-500/30 bg-ht-rose-500/10 px-3 text-sm font-black text-ht-rose-300 transition active:translate-y-px"
           >
             Cancel game

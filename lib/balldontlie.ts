@@ -1,5 +1,7 @@
 import "server-only";
 
+import { countProviderCall } from "@/lib/providerCallCounter";
+
 const BALLDONTLIE_API_BASE_URL = process.env.BALLDONTLIE_API_BASE_URL?.trim() ?? "https://api.balldontlie.io";
 const BALLDONTLIE_API_KEY = process.env.BALLDONTLIE_API_KEY?.trim() ?? "";
 
@@ -23,6 +25,7 @@ export async function fetchBallDontLieJson(path: string, query?: URLSearchParams
   const qs = query?.toString() ?? "";
   const url = qs ? `${BALLDONTLIE_API_BASE_URL}${path}?${qs}` : `${BALLDONTLIE_API_BASE_URL}${path}`;
 
+  countProviderCall("bdl", path);
   let response: Response;
   try {
     response = await fetch(url, {

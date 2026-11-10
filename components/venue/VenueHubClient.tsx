@@ -10,6 +10,8 @@ import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from "@simp
 import type { Venue, LeaderboardEntry } from "@/types";
 import { AccountDrawer } from "@/components/navigation/AccountDrawer";
 import { PartnerMessageSheet } from "@/components/push/PartnerMessageSheet";
+import { VenuePanelFromUrl } from "@/components/venue/VenuePanelFromUrl";
+import { signInListPath } from "@/lib/pushLanding";
 import { PushWelcomeScreen } from "@/components/push/PushWelcomeScreen";
 import { AccountMenuList } from "@/components/navigation/AccountMenuList";
 import { getAccountId, getUserId, getUsername, getVenueId, saveUserId, saveVenueId, clearVenueSession } from "@/lib/storage";
@@ -37,7 +39,10 @@ import { runVenueGameOpenTransition } from "@/lib/venueGameTransition";
 import { hasSeenTutorialRecently, markTutorialSeen } from "@/lib/gameOnboarding";
 import { minimizeNativeApp, useNativeBackHandler } from "@/components/navigation/nativeBackButton";
 import { VenueHubHeaderBar } from "@/components/venue/VenueHubHeaderBar";
-import { VenueGamesPanel } from "@/components/venue/VenueGamesPanel";
+import { VenueGamesPanel, type VenueAwayView } from "@/components/venue/VenueGamesPanel";
+import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
+import { AWAY_PLAY_LABEL, playWhenPresent, venueDirectionsUrl } from "@/lib/venueAwayMode";
+import { formatVenueAddressLine } from "@/lib/venueShareDetails";
 import { CategoryBlitzOnboardingOverlay } from "@/components/venue/CategoryBlitzOnboardingOverlay";
 import { VenueChallengesPanel } from "@/components/venue/VenueChallengesPanel";
 import { VenueLeaderboardPanel } from "@/components/venue/VenueLeaderboardPanel";
@@ -309,6 +314,10 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   // on the server (no sessionStorage) vs. the client, causing a hydration mismatch.
   const bootstrapSnapshotRef = useRef<VenueHomeBootstrapSnapshot | null>(null);
   const entryHandoffRef = useRef(false);
+  // The URL this Venue Home opened with, read once during the first client render: VenuePanelFromUrl (a child,
+  // so its effect runs first) drops `?panel=` before the redirects below run. They carry it to the sign-in list
+  // via signInListPath (away-mode plan R3). A ref never reaches the markup, so this can't break hydration.
+  const mountSearchRef = useRef(typeof window === "undefined" ? "" : window.location.search);
   const [pendingDestination, setPendingDestination] = useState<VenueGameKey | null>(null);
   const [pendingChallengeRedeemId, setPendingChallengeRedeemId] = useState<string | null>(null);
   // All state below is initialized to server-safe "no bootstrap" defaults.
@@ -483,7 +492,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
     const storedVenueId = (getVenueId() ?? "").trim();
     if (storedUserId) {
       if (storedVenueId && storedVenueId !== venue.id) {
-        const target = `/?v=${venue.id}`;
+        const target = signInListPath(venue.id, mountSearchRef.current);
         logAuthIncident("venue-hub-guard", "redirect-stored-venue-mismatch", {
           venueId: venue.id,
           storedVenueId,
@@ -508,7 +517,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       const lateVenueId = (getVenueId() ?? "").trim();
       if (lateUserId) {
         if (lateVenueId && lateVenueId !== venue.id) {
-          const target = `/?v=${venue.id}`;
+          const target = signInListPath(venue.id, mountSearchRef.current);
           logAuthIncident("venue-hub-guard", "redirect-late-venue-mismatch", {
             venueId: venue.id,
             lateVenueId,
@@ -519,7 +528,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         return;
       }
       if (!hasUserTokenInCookie()) {
-        const target = `/?v=${venue.id}`;
+        const target = signInListPath(venue.id, mountSearchRef.current);
         logAuthIncident("venue-hub-guard", "redirect-missing-user-cookie", {
           venueId: venue.id,
           redirectDelay,
@@ -975,6 +984,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         state?: {
           isGameActive?: boolean;
           nextSchedule?: {
+            id?: string;
             startTime?: string;
             timezone?: string;
             recurringType?: string;
@@ -1017,6 +1027,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           failureReason: null,
           recurringType: evaluation.scheduleRecurringType || null,
           recurringDays: evaluation.scheduleRecurringDays,
+          scheduleId: String(payload?.state?.nextSchedule?.id ?? "").trim() || null,
         });
         return;
       }
@@ -1147,7 +1158,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         const localVenueId = (getVenueId() ?? "").trim();
         if (!localUserId || !localVenueId || localVenueId !== venue.id || !hasUserTokenInCookie()) {
           if (!cancelled) {
-            const target = `/?v=${encodeURIComponent(venue.id)}`;
+            const target = signInListPath(venue.id, mountSearchRef.current);
             logAuthIncident("venue-hub-guard", "redirect-arrival-missing-identity", {
               venueId: venue.id,
               hasLocalUser: Boolean(localUserId),
@@ -1224,7 +1235,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
         return;
       }
       clearVenueSession();
-      const target = `/?v=${encodeURIComponent(venue.id)}`;
+      const target = signInListPath(venue.id, mountSearchRef.current);
       logAuthIncident("venue-hub-guard", "redirect-arrival-watchdog-reset", {
         venueId: venue.id,
         recoveryAttempts,
@@ -1487,11 +1498,27 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const retryChallenges = useCallback(() => {
     void loadChallengeCampaigns();
   }, [loadChallengeCampaigns]);
+  // Away mode (away-mode plan, Phase C1): away from the bar Venue Home is view-only. Every play control
+  // goes through here: away, a tap re-checks location once and opens the game only if the player is there.
+  const venuePresence = useVenuePresence();
+  const isAway = venuePresence.isAway;
+  const recheckLocation = venuePresence.recheckLocation;
+  const awayView = useMemo<VenueAwayView | null>(
+    () =>
+      isAway
+        ? {
+            addressLine: formatVenueAddressLine(venue),
+            directionsUrl: venueDirectionsUrl(venue),
+            checking: venuePresence.isCheckingAccess,
+          }
+        : null,
+    [isAway, venue, venuePresence.isCheckingAccess]
+  );
   const handleGoTo = useCallback(
     (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
-      void goTo(dest, sourceElement);
+      void playWhenPresent(isAway, recheckLocation, () => void goTo(dest, sourceElement));
     },
-    [goTo]
+    [goTo, isAway, recheckLocation]
   );
   const leaderboardInitialEntries = leaderboardBootstrapEntries.length > 0 ? leaderboardBootstrapEntries : initialEntries;
   const nextLiveTriviaCountdownSeconds =
@@ -1573,9 +1600,12 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
   const playChallengeGame = useCallback(
     (dest: VenueGameKey, sourceElement: HTMLElement | null) => {
       setSelectedChallengeId(null);
-      void goTo(dest, sourceElement, { persistCardSnapshot: false });
+      // Away, the modal's button is gone by the time the location check answers: open from no element.
+      void playWhenPresent(isAway, recheckLocation, () =>
+        void goTo(dest, isAway ? null : sourceElement, { persistCardSnapshot: false })
+      );
     },
-    [goTo]
+    [goTo, isAway, recheckLocation]
   );
   const orderedHomeCards = useMemo(() => {
     const byKey = new Map(homeCards.map((card) => [card.key, card] as const));
@@ -1640,6 +1670,8 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
           onGoTo={handleGoTo}
           onRetryBadges={retryBadges}
           pushAskEligible={menuPoints > 0}
+          away={awayView}
+          venueId={venue.id}
         />
 
         <VenueLeaderboardPanel
@@ -1669,6 +1701,11 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
       {/* A partner's message opened from its push (?message=, native app plan Phase 5.5). */}
       <Suspense fallback={null}>
         <PartnerMessageSheet />
+      </Suspense>
+
+      {/* A game or prize push lands on its own screen (?panel=, away-mode plan Phase C2). */}
+      <Suspense fallback={null}>
+        <VenuePanelFromUrl onPanel={goToScreen} />
       </Suspense>
 
       <AccountDrawer open={isMenuOpen} onClose={() => setIsMenuOpen(false)} scrollLockId="venue-hub-menu">
@@ -1822,7 +1859,7 @@ function VenueHubClientInner({ venue, initialEntries = [] }: { venue: Venue; ini
                     color: selectedChallengeDetail.iconStyle.ctaTextColor,
                   }}
                 >
-                  Play Now!
+                  {isAway ? AWAY_PLAY_LABEL : "Play Now!"}
                 </button>
               ) : null}
             </motion.div>

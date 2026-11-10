@@ -688,6 +688,9 @@ Plan: `docs/pickem-college-football-and-prize-plan.md` (Andrew's decisions in §
   `lib/pickemGameLines.ts`. One sportsbook rule for NFL + college: `lib/spreadLines.ts`. Provider asked ≤ once per
   10 min (`PICKEM_LINE_REFRESH_MS`). No line = "Line coming soon", can't pick; final with no locked line → cancelled at
   48 h; a failed lock read never cancels. Tests `tests/lib.pickem-college-spreads.test.ts`, `npm run test:pickem-lines-sql`.
+- **Frozen lines per bar (away-mode plan B3, 2026-11-09, migration `20261110014242` not yet applied):** at a bar with a pick window
+  and spreads on, a pending pick's `home_spread` / `away_spread` hold the bar's frozen line it was made against, and settlement grades
+  it by that before the kickoff-locked line. Rules: `docs/cancelled-prizes-pick-windows-away-mode-plan.md` standing rule B3.
 - **Pick 'Em Prize data + rules (Phase 4a, 2026-10-31, migration `20261031200417` applied; the wizard offers it
   since Phase 5, `isPickEmPrizeOffered` = true).** Definition `pickem_challenge`, `game_types ['pickem']`. Its terms are the
   `challenge_campaigns.pickem_*` columns (NOT in `CAMPAIGN_SELECT_COLUMNS`; read only via `listActivePickEmPrizeCampaigns` /

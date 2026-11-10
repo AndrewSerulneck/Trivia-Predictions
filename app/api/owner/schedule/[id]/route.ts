@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { datetimeLocalValueToUtcIso } from "@/lib/categoryBlitzScheduleTime";
 import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
-import { describeCascadeReport } from "@/lib/rewardGameSlotCascade";
+import { describeCascadeReport, isScheduleChangeSettlementError } from "@/lib/rewardGameSlotCascade";
 import {
   OWNER_SCHEDULE_INVALID_RECURRENCE_MESSAGE,
   OWNER_SCHEDULE_OVERLAP_MESSAGE,
@@ -66,6 +66,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       rewardNotice: rewardCascade ? describeCascadeReport(rewardCascade) : null,
     });
   } catch (error) {
+    // A prize this cancel ends couldn't be paid first (Phase R1): nothing was deleted.
+    if (isScheduleChangeSettlementError(error)) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 409 });
+    }
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to delete schedule." },
       { status: 500 },
@@ -141,7 +145,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to update schedule.";
     const status =
-      message === OWNER_SCHEDULE_OVERLAP_MESSAGE
+      message === OWNER_SCHEDULE_OVERLAP_MESSAGE || isScheduleChangeSettlementError(error)
         ? 409
         : isTimeValidationError(message) || isRecurrenceValidationError(message)
           ? 400

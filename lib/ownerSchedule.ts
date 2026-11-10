@@ -12,6 +12,7 @@ import {
   createAdminLiveShowdownSchedule,
   deleteAdminLiveShowdownSchedule,
   listAdminLiveShowdownSchedules,
+  previewLiveShowdownScheduleChange,
   updateAdminLiveShowdownSchedule,
   type AdminLiveShowdownSchedule,
 } from "@/lib/liveShowdownAdmin";
@@ -22,7 +23,10 @@ import {
 } from "@/lib/categoryBlitzScheduleTime";
 import { liveTriviaDurationMinutes } from "@/lib/liveTriviaShared";
 import type { OwnerAuthContext } from "@/lib/requireOwnerAuth";
-import type { GameSlotCascadeReport } from "@/lib/rewardGameSlotCascade";
+import {
+  describeScheduleChangePreview,
+  type GameSlotCascadeReport,
+} from "@/lib/rewardGameSlotCascade";
 import type { CategoryBlitzRecurringType, OwnerSchedule, OwnerScheduleGameType } from "@/types";
 
 /** The timing subset `listScheduleWindowOccurrences` needs — satisfied by OwnerSchedule and by the create/update candidate objects. */
@@ -469,6 +473,45 @@ export async function updateOwnerSchedule(
   });
   return { ...schedule, gameType: "category_blitz" };
 }
+
+/**
+ * The one-line prize warning before a partner confirms cancelling (`edit` omitted)
+ * or editing a game (Phase A3), or null when no prize would end or shrink. A dry
+ * run of the same cascade the delete/edit runs; Category Blitz has no prizes
+ * pinned to it, so it is always null. Assumes ownership is already verified, and
+ * normalizes an edit exactly as updateOwnerSchedule does (it throws the same
+ * validation messages).
+ */
+export const previewOwnerScheduleChangeNotice = async (
+  schedule: OwnerSchedule,
+  edit?: { startTimeIso: string; timezone: string; rounds?: number; recurringType?: string; recurringDays?: string[] },
+): Promise<string | null> => {
+  if (schedule.gameType !== "live_trivia") return null;
+  if (!edit) {
+    return describeScheduleChangePreview(
+      await previewLiveShowdownScheduleChange({ scheduleId: schedule.id, edit: null }),
+    );
+  }
+  const { recurringType, recurringDays } = normalizeOwnerRecurrence(
+    schedule.gameType,
+    edit.recurringType,
+    edit.recurringDays,
+  );
+  const [targetDate, startClock] = utcIsoToDatetimeLocalValue(edit.startTimeIso, edit.timezone).split("T");
+  const preview = await previewLiveShowdownScheduleChange({
+    scheduleId: schedule.id,
+    edit: {
+      targetDate,
+      startTime: startClock,
+      timezone: edit.timezone,
+      recurringType,
+      recurringDays,
+      numRounds: Math.max(1, Math.floor(Number(edit.rounds)) || 1),
+      venueId: schedule.venueId,
+    },
+  });
+  return describeScheduleChangePreview(preview);
+};
 
 /**
  * Delete a schedule on behalf of an owner, routing to the right engine by game

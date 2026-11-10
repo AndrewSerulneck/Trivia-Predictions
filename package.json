@@ -17,6 +17,7 @@
     "test:push-sql": "node scripts/test-push-sql.cjs",
     "test:pickem-points-sql": "node scripts/test-pickem-points-sql.cjs",
     "test:pickem-lines-sql": "node scripts/test-pickem-lines-sql.cjs",
+    "test:pickem-frozen-lines-sql": "node scripts/test-pickem-frozen-lines-sql.cjs",
     "test:pickem-prizes-sql": "node scripts/test-pickem-prizes-sql.cjs",
     "test:pickem-prize-awards-sql": "node scripts/test-pickem-prize-awards-sql.cjs",
     "test:pickem-prize-lease-sql": "node scripts/test-pickem-prize-lease-sql.cjs",

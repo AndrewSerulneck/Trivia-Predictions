@@ -12,6 +12,8 @@ export type NFLGame = {
   homeSpread?: number | null;
   awaySpread?: number | null;
   isLocked: boolean;
+  /** The bar's NFL pick window is shut for this game (away-mode plan B2). Absent = open or no window. */
+  pickWindowMessage?: string;
   status: "scheduled" | "live" | "final";
   homeScore: number | null;
   awayScore: number | null;

@@ -16,7 +16,14 @@ vi.mock("@/lib/venueDisplayName", () => ({ getVenueDisplayName: mocks.getVenueDi
 
 import { buildFcmMessage, classifyFcmError, resetFcmCacheForTests, sendPushMessages } from "@/lib/push/fcm";
 import { pushesFromClaimedRows, sendPendingNotificationPushes } from "@/lib/push/outbox";
-import { gameReminderBody, sendLiveGameStartPushes, GAME_REMINDER_TITLE } from "@/lib/push/gameReminders";
+import {
+  gameReminderBody,
+  sendLiveGameStartPushes,
+  GAME_REMINDER_LEAD_MS,
+  GAME_REMINDER_TITLE,
+  OPT_IN_REMINDER_LEAD_MS,
+  OPT_IN_REMINDER_TITLE,
+} from "@/lib/push/gameReminders";
 import {
   announceNewGame,
   announceNewPrize,
@@ -220,8 +227,8 @@ describe("Live Trivia starts soon", () => {
   const START = Date.parse("2026-10-24T00:00:00Z"); // 8:00 PM in New York
 
   it("says the local start time and the venue", () => {
-    expect(gameReminderBody(START, "America/New_York", "Pacific Street")).toBe("8:00 PM at Pacific Street. Tap to play.");
-    expect(gameReminderBody(START, "Not/AZone", null)).toBe("Starts at 8:00 PM. Tap to play.");
+    expect(gameReminderBody(START, "America/New_York", "Pacific Street")).toBe("8:00 PM at Pacific Street.");
+    expect(gameReminderBody(START, "Not/AZone", null)).toBe("Starts at 8:00 PM.");
   });
 
   it("claims each game once and sends only to that venue's opted-in phones", async () => {
@@ -252,8 +259,8 @@ describe("Live Trivia starts soon", () => {
     expect(JSON.parse(String(sent?.[1]?.body))).toMatchObject({
       message: {
         token: TOKEN(1),
-        notification: { title: GAME_REMINDER_TITLE, body: "8:00 PM at Pacific Street. Tap to play." },
-        data: { path: "/venue/v1" },
+        notification: { title: GAME_REMINDER_TITLE, body: "8:00 PM at Pacific Street." },
+        data: { path: "/venue/v1?panel=games" },
       },
     });
   });
@@ -262,6 +269,121 @@ describe("Live Trivia starts soon", () => {
     delete process.env.FCM_SERVICE_ACCOUNT_JSON;
     expect(await sendLiveGameStartPushes()).toMatchObject({ skipped: "not-configured" });
     expect(mocks.findStartingOccurrences).not.toHaveBeenCalled();
+  });
+});
+
+describe("Remind me (away-mode plan, Phase C3)", () => {
+  const START = Date.parse("2026-10-24T00:00:00Z"); // 8:00 PM in New York
+  const occurrence = (scheduleId: string, startMs: number) => ({
+    scheduleId,
+    occurrenceDate: "2026-10-23",
+    venueId: "v1",
+    numRounds: 3,
+    startMs,
+    endMs: startMs + 1,
+    timezone: "America/New_York",
+  });
+
+  beforeEach(() => {
+    mocks.rpc.mockReset();
+    mocks.from.mockReset();
+    mocks.findStartingOccurrences.mockReset();
+    mocks.getVenueDisplayName.mockResolvedValue("Pacific Street");
+  });
+
+  it("one schedule read looks an hour ahead; the 30-minute push keeps its own audience", async () => {
+    const now = START - 50 * 60_000;
+    // s1 starts in 20 minutes (both pushes), s3 in 50 minutes (Remind me only).
+    mocks.findStartingOccurrences.mockResolvedValue([occurrence("s1", now + 20 * 60_000), occurrence("s3", START)]);
+    const upsert = vi.fn(() => ({ select: vi.fn().mockResolvedValue({ data: [], error: null }) }));
+    mocks.from.mockImplementation((table: string) => (table === "push_game_reminders" ? { upsert } : {}));
+    mocks.rpc.mockResolvedValue({ data: [], error: null });
+
+    await sendLiveGameStartPushes(now);
+    expect(mocks.findStartingOccurrences).toHaveBeenCalledTimes(1);
+    expect(mocks.findStartingOccurrences).toHaveBeenCalledWith(now, Math.max(GAME_REMINDER_LEAD_MS, OPT_IN_REMINDER_LEAD_MS));
+    expect(OPT_IN_REMINDER_LEAD_MS).toBe(60 * 60_000);
+    const ledgerRows = (upsert.mock.calls[0] as unknown as [Array<{ schedule_id: string }>])[0];
+    expect(ledgerRows.map((row) => row.schedule_id)).toEqual(["s1"]);
+    expect(mocks.rpc).toHaveBeenCalledWith("claim_game_reminder_optins", {
+      p_schedule_ids: ["s1", "s3"],
+      p_occurrence_dates: ["2026-10-23", "2026-10-23"],
+    });
+  });
+
+  it("sends one push per phone per game to the players who asked, and retires dead phones", async () => {
+    mocks.findStartingOccurrences.mockResolvedValue([occurrence("s3", START)]);
+    const disable = { in: vi.fn().mockResolvedValue({ error: null }) };
+    const update = vi.fn(() => disable);
+    mocks.from.mockImplementation((table: string) => (table === "push_devices" ? { update } : {}));
+    mocks.rpc.mockResolvedValue({
+      data: [
+        { schedule_id: "s3", occurrence_date: "2026-10-23", user_id: "u1", device_id: "d1", token: TOKEN(1) },
+        // Two profiles of one account both asked: the shared phone hears it once.
+        { schedule_id: "s3", occurrence_date: "2026-10-23", user_id: "u2", device_id: "d2", token: TOKEN(2) },
+        { schedule_id: "s3", occurrence_date: "2026-10-23", user_id: "u3", device_id: "d2", token: TOKEN(2) },
+        { schedule_id: "s3", occurrence_date: "2026-10-23", user_id: "u4", device_id: "d4", token: TOKEN(4) },
+      ],
+      error: null,
+    });
+    const fetchMock = stubGoogle((token) =>
+      token === TOKEN(4)
+        ? jsonResponse(404, {
+            error: { status: "NOT_FOUND", details: [{ "@type": "type.googleapis.com/google.firebase.fcm.v1.FcmError", errorCode: "UNREGISTERED" }] },
+          })
+        : jsonResponse(200, {}),
+    );
+
+    const report = await sendLiveGameStartPushes(START - 55 * 60_000);
+    expect(report.upcoming).toBe(0);
+    expect(report.optIn).toEqual({ games: 1, claimed: 4, sent: 2, failed: 1 });
+    expect(report.disabledDevices).toBe(1);
+    expect(disable.in).toHaveBeenCalledWith("id", ["d4"]);
+    const sends = fetchMock.mock.calls.filter(([url]) => String(url).includes("fcm.googleapis.com"));
+    expect(sends).toHaveLength(3);
+    expect(JSON.parse(String(sends[0]?.[1]?.body))).toMatchObject({
+      message: {
+        token: TOKEN(1),
+        notification: { title: OPT_IN_REMINDER_TITLE, body: "8:00 PM at Pacific Street." },
+        data: { path: "/venue/v1?panel=games" },
+      },
+    });
+  });
+
+  it("a failed claim is reported, never thrown, and sends nothing", async () => {
+    mocks.findStartingOccurrences.mockResolvedValue([occurrence("s3", START)]);
+    mocks.rpc.mockResolvedValue({ data: null, error: { message: "function missing" } });
+    const fetchMock = stubGoogle(() => jsonResponse(200, {}));
+    const report = await sendLiveGameStartPushes(START - 40 * 60_000);
+    expect(report.optIn).toMatchObject({ games: 1, sent: 0, error: "function missing" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("claims in chunks of at most 200 games; a failed chunk is reported and the others still send", async () => {
+    const now = START - 40 * 60_000;
+    const games = Array.from({ length: 450 }, (_, index) => occurrence(`s${index}`, START));
+    mocks.findStartingOccurrences.mockResolvedValue(games);
+    const claimRow = (scheduleId: string) => ({ schedule_id: scheduleId, occurrence_date: "2026-10-23", user_id: "u1", device_id: "d1", token: TOKEN(1) });
+    mocks.rpc
+      .mockResolvedValueOnce({ data: [claimRow("s0")], error: null })
+      .mockResolvedValueOnce({ data: null, error: { message: "too many games" } })
+      .mockResolvedValueOnce({ data: [claimRow("s0"), claimRow("s400")], error: null });
+    const fetchMock = stubGoogle(() => jsonResponse(200, {}));
+
+    const report = await sendLiveGameStartPushes(now);
+    expect(mocks.rpc).toHaveBeenCalledTimes(3);
+    const sizes = mocks.rpc.mock.calls.map(([, args]) => (args as { p_schedule_ids: string[] }).p_schedule_ids.length);
+    expect(sizes).toEqual([200, 200, 50]);
+    expect(report.optIn).toMatchObject({ games: 450, claimed: 2, sent: 2, failed: 0, error: "too many games" });
+    // One push per game for the one phone: s0 once (not twice) and s400 once.
+    const sends = fetchMock.mock.calls.filter(([url]) => String(url).includes("fcm.googleapis.com"));
+    expect(sends).toHaveLength(2);
+  });
+
+  it("no game inside the hour: no claim", async () => {
+    mocks.findStartingOccurrences.mockResolvedValue([]);
+    await sendLiveGameStartPushes(START - 2 * 60 * 60_000);
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 });
 
@@ -288,23 +410,26 @@ describe("News from your bars (Phase 5.4)", () => {
 
   it("says what is new, when, and where", () => {
     expect(newGamePush(schedule(), "Pacific Street")).toEqual({
-      title: "New game at Pacific Street",
-      body: "Live Trivia Thu, Oct 29 at 8:00 PM. Tap to see it.",
+      title: "New at Pacific Street",
+      body: "Live Trivia, Thu, Oct 29, 8:00 PM.",
     });
     expect(newGamePush(schedule({ recurringType: "weekly", recurringDays: ["thu", "tue"] }), null)).toEqual({
-      title: "New game at your bar",
-      body: "Live Trivia every Tuesday and Thursday at 8:00 PM. Tap to see it.",
+      title: "New at your bar",
+      body: "Live Trivia, Tuesdays and Thursdays 8:00 PM.",
     });
+    expect(newGamePush(schedule({ recurringType: "weekly", recurringDays: ["thu"] }), "Pacific Street").body).toBe(
+      "Live Trivia, Thursdays 8:00 PM.",
+    );
     expect(newGamePush(schedule({ recurringType: "daily", gameType: "category_blitz" }), "X").body).toBe(
-      "Category Blitz every day at 8:00 PM. Tap to see it.",
+      "Category Blitz, every day 8:00 PM.",
     );
     expect(newPrizePush({ prizeKind: "gift_card", prizeGiftCertificateAmount: 25 }, "Pacific Street")).toEqual({
-      title: "New prize at Pacific Street",
-      body: "Win a $25 gift card. Tap to see how.",
+      title: "New at Pacific Street",
+      body: "Win a $25 gift card.",
     });
     const place = { prizeKind: "gift_card" as const, prizeGiftCertificateAmount: 10 };
-    expect(newPrizePush({ placePrizes: [place, place, place] }, null).body).toBe("Prizes for the top 3. Tap to see how to win.");
-    expect(newPrizePush({ placePrizes: [place] }, null).body).toBe("Win a $10 gift card. Tap to see how.");
+    expect(newPrizePush({ placePrizes: [place, place, place] }, null).body).toBe("Prizes for the top 3.");
+    expect(newPrizePush({ placePrizes: [place] }, null).body).toBe("Win a $10 gift card.");
   });
 
   it("claims through the RPC with the one cap, then sends once to every claimed phone", async () => {
@@ -325,7 +450,7 @@ describe("News from your bars (Phase 5.4)", () => {
     const sends = fetchMock.mock.calls.filter(([url]) => String(url).includes("fcm.googleapis.com"));
     expect(sends).toHaveLength(2);
     expect(JSON.parse(String(sends[0][1]?.body))).toMatchObject({
-      message: { notification: { title: "New game at Pacific Street" }, data: { path: "/venue/v1" } },
+      message: { notification: { title: "New at Pacific Street" }, data: { path: "/venue/v1?panel=games" } },
     });
   });
 

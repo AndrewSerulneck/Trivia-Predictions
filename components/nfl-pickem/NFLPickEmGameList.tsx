@@ -112,6 +112,8 @@ export function NFLPickEmGameList({
     spreadsUnavailable: boolean | undefined;
     games: NFLGame[];
     userSummary?: UserSummary;
+    /** The bar's NFL pick window (away-mode plan B2): one muted line under the weeks. */
+    pickWindowLine?: string;
   } | null>(null);
 
   // UI state
@@ -237,6 +239,7 @@ export function NFLPickEmGameList({
             spreadsUnavailable: data.spreadsUnavailable === true ? true : undefined,
             games: data.games,
             userSummary: data.userSummary,
+            pickWindowLine: typeof data.pickWindow?.line === "string" ? data.pickWindow.line : undefined,
           });
 
           // Clear optimistic picks for this week
@@ -281,7 +284,7 @@ export function NFLPickEmGameList({
     }
 
     if (game.isLocked || Date.parse(game.startsAt) <= Date.now()) {
-      setError("Picks are locked for this game");
+      setError(game.pickWindowMessage ?? "Picks are locked for this game");
       return;
     }
 
@@ -355,9 +358,9 @@ export function NFLPickEmGameList({
       userPickTeam: optimisticPicks[game.id] !== undefined
         ? optimisticPicks[game.id]
         : game.userPickTeam,
-      // Locked if the server says so OR kickoff has passed on the client's
-      // clock — display concern only, the server remains authoritative on writes.
-      isLocked: game.isLocked || Date.parse(game.startsAt) <= now,
+      // Locked if the server says so, the bar's pick window is shut (B2), OR kickoff
+      // has passed on the client's clock — display only; the server decides writes.
+      isLocked: game.isLocked || Boolean(game.pickWindowMessage) || Date.parse(game.startsAt) <= now,
     }));
   }, [weekData, optimisticPicks, now]);
 
@@ -486,6 +489,12 @@ export function NFLPickEmGameList({
             </p>
           </section>
         )}
+        {weekData?.pickWindowLine ? (
+          <p className="px-1 text-caption font-semibold text-ht-fg-muted" data-testid="nfl-pickem-pick-window">
+            {weekData.pickWindowLine}
+          </p>
+        ) : null}
+
         {/* Weekly Summary */}
         {weekData && displaySummary && (
           <WeeklySummary

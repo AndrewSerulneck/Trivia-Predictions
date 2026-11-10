@@ -276,6 +276,40 @@ describe("settlePendingPickEmPicks NFL scoring modes", () => {
     });
   });
 
+  it("grades a pick that recorded its bar's frozen line (away-mode plan B3) by it, never the kickoff lock", async () => {
+    // Frozen at home -3.5; the global line moved to -0.5 by kickoff. Home wins 21-20: the away pick covers -3.5.
+    store.tables.pickem_picks = [makePick({ home_spread: -3.5, away_spread: 3.5 })];
+    store.modes.set("venue-1", "spread");
+    mockFinalScore(21, 20);
+    mockLockedLine(-0.5, 0.5);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 1, lost: 0 });
+    expect(getLockedNFLPickEmGameLineForSettlement).not.toHaveBeenCalled();
+    expect(store.tables.pickem_picks[0]).toMatchObject({ status: "won", scoring_mode: "spread", home_spread: -3.5, away_spread: 3.5 });
+  });
+
+  it("grades a recorded line even when no global line row exists", async () => {
+    store.tables.pickem_picks = [makePick({ home_spread: -3.5, away_spread: 3.5, selected_side: "home", selected_team: "Home Team", selected_team_id: "home-id" })];
+    store.modes.set("venue-1", "spread");
+    mockFinalScore(21, 20);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 0, lost: 1 });
+  });
+
+  it("a recorded line is ignored at a venue now on pick-the-winner", async () => {
+    store.tables.pickem_picks = [makePick({ home_spread: -3.5, away_spread: 3.5 })];
+    mockFinalScore(21, 20);
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(result).toMatchObject({ settledCount: 1, won: 0, lost: 1 });
+    expect(store.tables.pickem_picks[0]).toMatchObject({ scoring_mode: "standard", home_spread: null });
+  });
+
   it("keeps spread NFL picks pending inside the staleness window when no line row exists", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(kickoffPlusHours(1));

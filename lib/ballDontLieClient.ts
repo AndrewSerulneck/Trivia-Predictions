@@ -1,5 +1,7 @@
 import "server-only";
 
+import { countProviderCall } from "@/lib/providerCallCounter";
+
 // Shared balldontlie HTTP client. Extracted verbatim out of lib/sportsBingo.ts in Phase 2 of
 // docs/prop-bingo-nfl-plan.md so lib/sportsBingoOdds.ts can reuse it without importing
 // lib/sportsBingo.ts (which imports the odds module — that would be a cycle).
@@ -50,6 +52,7 @@ export async function fetchBallDontLieJson(
     throw new Error("BALLDONTLIE_API_KEY is not configured.");
   }
 
+  countProviderCall("bdl", path);
   let response: Response;
   try {
     response = await fetch(`${BALLDONTLIE_API_BASE_URL}${path}?${query.toString()}`, {

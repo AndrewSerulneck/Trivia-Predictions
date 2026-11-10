@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     venueId?: string;
     nflPickEmScoringMode?: unknown;
     cfbPickEmScoringMode?: unknown;
+    pickWindows?: unknown;
   };
 
   const venueId = String(body.venueId ?? "").trim();
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
   const changes = readGameSettingsChanges(body);
   if (!changes) {
     return NextResponse.json(
-      { ok: false, error: "nflPickEmScoringMode or cfbPickEmScoringMode must be 'standard' or 'spread'." },
+      { ok: false, error: "Send nflPickEmScoringMode or cfbPickEmScoringMode ('standard' or 'spread'), or valid pickWindows." },
       { status: 400 },
     );
   }

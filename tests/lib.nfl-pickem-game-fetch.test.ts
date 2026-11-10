@@ -24,6 +24,16 @@ const db = vi.hoisted(() => ({
   // the underlying row directly (as the "other" writer would) and reports zero
   // matched rows to *this* caller, exactly like Postgres would under a real race.
   raceGameId: null as string | null,
+  freezeCalls: 0,
+  // Tables whose reads fail (away-mode plan R8: the frozen-line lookup).
+  failReads: [] as string[],
+  // The pick's one fresh settings read (lib/pickemPickWindowGate.ts); null = the read failed.
+  readSettings: vi.fn((): Promise<unknown> => Promise.resolve(null)),
+}));
+
+vi.mock("@/lib/pickemPickWindowGate", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/pickemPickWindowGate")>()),
+  readVenueGameSettingsForPick: db.readSettings,
 }));
 
 vi.mock("@/lib/supabaseAdmin", () => {
@@ -33,8 +43,15 @@ vi.mock("@/lib/supabaseAdmin", () => {
     let pendingUpdate: MockRow | null = null;
     let updateTargets: MockRow[] | null = null;
     let updateGameId: unknown = undefined;
+    let deleting = false;
+    const readError = () => (db.failReads.includes(table) ? { message: `${table} down` } : null);
 
     const applyPendingUpdate = () => {
+      if (deleting) {
+        db.tables[table] = (db.tables[table] ?? []).filter((row) => !result.includes(row));
+        deleting = false;
+        return;
+      }
       if (!pendingUpdate || !updateTargets) return;
       for (const row of updateTargets) {
         Object.assign(row, pendingUpdate);
@@ -77,8 +94,25 @@ vi.mock("@/lib/supabaseAdmin", () => {
         }
         return builder;
       },
+      lt: (column: string, value: unknown) => {
+        result = result.filter((row) => Date.parse(String(row[column])) < Date.parse(String(value)));
+        return builder;
+      },
+      // A chain awaited without .single()/.returns() (the week list's own picks read).
+      then: (resolve: (value: { data: MockRow[]; error: null }) => unknown) => {
+        applyPendingUpdate();
+        return Promise.resolve({ data: result, error: null }).then(resolve);
+      },
       in: (column: string, values: unknown[]) => {
         result = result.filter((row) => values.includes(row[column]));
+        return builder;
+      },
+      gte: (column: string, value: unknown) => {
+        result = result.filter((row) => Date.parse(String(row[column])) >= Date.parse(String(value)));
+        return builder;
+      },
+      lte: (column: string, value: unknown) => {
+        result = result.filter((row) => Date.parse(String(row[column])) <= Date.parse(String(value)));
         return builder;
       },
       order: () => builder,
@@ -86,6 +120,19 @@ vi.mock("@/lib/supabaseAdmin", () => {
       update: (patch: MockRow) => {
         pendingUpdate = patch;
         updateTargets = db.tables[table] ?? [];
+        return builder;
+      },
+      insert: (payload: MockRow | MockRow[]) => {
+        const tableRows = (db.tables[table] ??= []);
+        result = (Array.isArray(payload) ? payload : [payload]).map((row, index) => ({
+          id: `${table}-new-${tableRows.length + index}`,
+          ...row,
+        }));
+        tableRows.push(...result);
+        return builder;
+      },
+      delete: () => {
+        deleting = true;
         return builder;
       },
       upsert: (payload: MockRow | MockRow[], options?: { onConflict?: string }) => {
@@ -117,7 +164,8 @@ vi.mock("@/lib/supabaseAdmin", () => {
       },
       returns: () => {
         applyPendingUpdate();
-        return Promise.resolve({ data: result, error: null });
+        const error = readError();
+        return Promise.resolve(error ? { data: null, error } : { data: result, error: null });
       },
       single: () =>
         Promise.resolve(
@@ -142,12 +190,25 @@ vi.mock("@/lib/supabaseAdmin", () => {
   return {
     supabaseAdmin: {
       from: (table: string) => createBuilder(table),
-      rpc: () => Promise.resolve({ data: null, error: null }),
+      // B3's insert-once freeze, as 20261110014242_pickem_venue_frozen_lines.sql writes it.
+      rpc: (name: string, args: Record<string, unknown>) => {
+        if (name !== "freeze_pickem_venue_lines") return Promise.resolve({ data: null, error: null });
+        db.freezeCalls += 1;
+        const frozen = (db.tables.pickem_venue_frozen_lines ??= []);
+        const inputs = args.p_rows as MockRow[];
+        for (const input of inputs) {
+          if (Date.parse(String(input.starts_at)) <= Date.now()) continue;
+          const has = frozen.some((row) => row.venue_id === args.p_venue_id && row.game_id === input.game_id && row.sport_key === input.sport_key);
+          if (!has) frozen.push({ venue_id: args.p_venue_id, ...input, frozen_at: new Date().toISOString() });
+        }
+        const data = frozen.filter((row) => row.venue_id === args.p_venue_id && inputs.some((input) => input.game_id === row.game_id));
+        return Promise.resolve({ data, error: null });
+      },
     },
   };
 });
 
-import { listNFLPickEmGames } from "@/lib/nflPickEm";
+import { clearNFLPick, listNFLPickEmGames, submitNFLPickEmPick } from "@/lib/nflPickEm";
 import { fetchBallDontLieList } from "@/lib/balldontlie";
 
 const WEEK_ROW: MockRow = {
@@ -189,7 +250,10 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime("2026-09-09T12:00:00.000Z");
   vi.clearAllMocks();
-  db.tables = { nfl_pickem_weeks: [WEEK_ROW], nfl_pickem_game_lines: [] };
+  db.tables = { nfl_pickem_weeks: [WEEK_ROW], nfl_pickem_game_lines: [], pickem_venue_frozen_lines: [] };
+  db.freezeCalls = 0;
+  db.failReads = [];
+  db.readSettings.mockResolvedValue(null);
 
   // Behave like the real endpoint rather than returning everything regardless:
   // a `dates[]` query returns only games on that UTC date, which is precisely
@@ -866,5 +930,232 @@ describe("listNFLPickEmGames chronological ordering + day-group labels", () => {
       expect(game.dayGroupLabel).toBe("Thursday, Nov 26");
       expect(game.isThursdayNightSection).toBe(false);
     }
+  });
+});
+
+describe("listNFLPickEmGames frozen lines at a windowed spread venue (away-mode plan B3)", () => {
+  // Now = Wed Sep 9, 8 AM Eastern. A Tue 12:00 AM – Wed 11:59 PM window covers all of Week 1 and is open.
+  const pickWindow = {
+    window: { openDay: "tue", openTime: "00:00", closeDay: "wed", closeTime: "23:59" },
+    timeZone: "America/New_York",
+  } as const;
+  const opener = (games: Array<{ id: string; homeSpread?: number | null }>) => games.find((game) => game.id.startsWith("1__"));
+  const moveOdds = (homeSpread: string, awaySpread: string) => {
+    const original = vi.mocked(fetchBallDontLieList).getMockImplementation()!;
+    vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query, ...rest) => {
+      if (path !== "/nfl/v1/odds") return original(path, query, ...rest);
+      return WEEK_1_GAMES.map((game, index) => ({
+        id: 2000 + index,
+        game_id: game.id,
+        vendor: "fanduel",
+        spread_home_value: homeSpread,
+        spread_away_value: awaySpread,
+        updated_at: "2026-09-09T13:00:00.000Z",
+      }));
+    });
+  };
+
+  it("freezes each line the first time it is shown inside the open window, and keeps showing it", async () => {
+    const first = await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-1", scoringMode: "spread", pickWindow });
+    expect(opener(first.games)).toMatchObject({ homeSpread: -3.5, awaySpread: 3.5 });
+    expect(db.tables.pickem_venue_frozen_lines).toHaveLength(3);
+    expect(db.tables.pickem_venue_frozen_lines[0]).toMatchObject({
+      venue_id: "venue-1",
+      sport_key: "americanfootball_nfl",
+      source_vendor: "fanduel",
+    });
+    expect(db.freezeCalls).toBe(1);
+
+    // The global line moves; this bar keeps its frozen number and writes nothing more.
+    moveOdds("-7", "7");
+    const second = await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-1", scoringMode: "spread", pickWindow });
+    expect(db.tables.nfl_pickem_game_lines.find((row) => String(row.game_id).startsWith("1__"))).toMatchObject({ home_spread: -7 });
+    expect(opener(second.games)).toMatchObject({ homeSpread: -3.5, awaySpread: 3.5 });
+    expect(db.freezeCalls).toBe(1);
+
+    // Without a window (or at another bar's first view) the week shows the global line.
+    expect(opener((await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-1", scoringMode: "spread" })).games)).toMatchObject({ homeSpread: -7 });
+    expect(opener((await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-2", scoringMode: "spread", pickWindow })).games)).toMatchObject({ homeSpread: -7 });
+  });
+
+  describe("the line shown is the line the pick is graded by (away-mode plan R2)", () => {
+    const OPENER_ID = "1__2026-09-10T00:20:00.000Z__New England Patriots__Seattle Seahawks";
+    const pickRow = (userId: string, fields: MockRow): MockRow => ({
+      id: `pick-${userId}`,
+      user_id: userId,
+      venue_id: "venue-1",
+      sport_slug: "nfl",
+      game_id: OPENER_ID,
+      starts_at: "2026-09-10T00:20:00.000Z",
+      selected_team: "Seattle Seahawks",
+      status: "pending",
+      reward_points: 10,
+      reward_claimed_at: null,
+      home_spread: null,
+      away_spread: null,
+      ...fields,
+    });
+    const openerFor = async (userId: string) =>
+      opener((await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-1", userId, scoringMode: "spread", pickWindow })).games);
+
+    beforeEach(async () => {
+      await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-1", scoringMode: "spread", pickWindow }); // freezes -3.5
+      moveOdds("-7", "7");
+    });
+
+    it("a pick made before the window shows the global line settlement will use, never the frozen line", async () => {
+      db.tables.pickem_picks = [pickRow("user-1", {})];
+      expect(await openerFor("user-1")).toMatchObject({ homeSpread: -7, awaySpread: 7 });
+      expect(await openerFor("user-2")).toMatchObject({ homeSpread: -3.5, awaySpread: 3.5 }); // no pick: the frozen line
+    });
+
+    it("a windowed pick shows its recorded line; a graded pick shows the line it was graded by", async () => {
+      db.tables.pickem_picks = [
+        pickRow("user-1", { home_spread: -3.5, away_spread: 3.5 }),
+        pickRow("user-3", { status: "won", home_spread: -6.5, away_spread: 6.5 }),
+      ];
+      expect(await openerFor("user-1")).toMatchObject({ homeSpread: -3.5, awaySpread: 3.5 });
+      expect(await openerFor("user-3")).toMatchObject({ homeSpread: -6.5, awaySpread: 6.5 });
+    });
+  });
+
+  it("freezes nothing before the window opens, or at a pick-the-winner venue", async () => {
+    const later = { ...pickWindow, window: { openDay: "thu", openTime: "00:00", closeDay: "sat", closeTime: "23:59" } } as const;
+    await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-1", scoringMode: "spread", pickWindow: later });
+    await listNFLPickEmGames({ weekId: "week-1", venueId: "venue-1", scoringMode: "standard", pickWindow });
+    expect(db.tables.pickem_venue_frozen_lines).toEqual([]);
+    expect(db.freezeCalls).toBe(0);
+  });
+});
+
+describe("submitNFLPickEmPick: a pick's line is set when it's made (away-mode plan R8)", () => {
+  // Now = Wed Sep 9, 8 AM Eastern; a Tue–Wed window covers Week 1 and is open (as in the B3 block).
+  const window = { openDay: "tue", openTime: "00:00", closeDay: "wed", closeTime: "23:59" } as const;
+  const OPENER_ID = "1__2026-09-10T00:20:00.000Z__New England Patriots__Seattle Seahawks";
+  const windowedSpreadBar = {
+    venueId: "venue-1",
+    nflPickEmScoringMode: "spread",
+    cfbPickEmScoringMode: "spread",
+    pickWindows: { nfl: window },
+    createdAt: null,
+    updatedAt: null,
+  };
+  const pick = (pickTeam: string) =>
+    submitNFLPickEmPick({ userId: "user-1", venueId: "venue-1", weekId: "week-1", gameId: OPENER_ID, pickTeam });
+  const row = () => (db.tables.pickem_picks ?? []).find((entry) => entry.user_id === "user-1" && entry.game_id === OPENER_ID);
+  const openerFor = async (userId: string) =>
+    (await listNFLPickEmGames({
+      weekId: "week-1",
+      venueId: "venue-1",
+      userId,
+      scoringMode: "spread",
+      pickWindow: { window, timeZone: "America/New_York" },
+    })).games.find((game) => game.id === OPENER_ID);
+  const moveOdds = (homeSpread: string, awaySpread: string) => {
+    const original = vi.mocked(fetchBallDontLieList).getMockImplementation()!;
+    vi.mocked(fetchBallDontLieList).mockImplementation(async (path, query, ...rest) => {
+      if (path !== "/nfl/v1/odds") return original(path, query, ...rest);
+      return WEEK_1_GAMES.map((game, index) => ({
+        id: 3000 + index,
+        game_id: game.id,
+        vendor: "fanduel",
+        spread_home_value: homeSpread,
+        spread_away_value: awaySpread,
+        updated_at: "2026-09-09T13:00:00.000Z",
+      }));
+    });
+  };
+  // A pending pick made before the bar had a window: no line on its row.
+  const pickWithoutALine = (): MockRow => ({
+    id: "pick-1",
+    user_id: "user-1",
+    venue_id: "venue-1",
+    sport_slug: "nfl",
+    game_id: OPENER_ID,
+    starts_at: "2026-09-10T00:20:00.000Z",
+    selected_team: "Seattle Seahawks",
+    selected_side: "home",
+    status: "pending",
+    reward_points: 10,
+    reward_claimed_at: null,
+    home_spread: null,
+    away_spread: null,
+  });
+
+  beforeEach(async () => {
+    db.tables.pickem_picks = [];
+    db.tables.venue_game_settings = [{ venue_id: "venue-1", nfl_pickem_scoring_mode: "spread" }];
+    db.readSettings.mockResolvedValue(windowedSpreadBar);
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.mocked(console.warn).mockRestore();
+  });
+
+  describe("with the bar's line frozen at -3.5 and the global line moved to -7", () => {
+    beforeEach(async () => {
+      await openerFor("nobody"); // the list freezes -3.5 for venue-1
+      moveOdds("-7", "7");
+      await listNFLPickEmGames({ weekId: "week-1", scoringMode: "spread" }); // the global line becomes -7
+      expect(db.tables.nfl_pickem_game_lines.find((line) => line.game_id === OPENER_ID)).toMatchObject({ home_spread: -7 });
+    });
+
+    it("switching a pick with no line writes no line and freezes nothing; the list still shows the global line (finding 1)", async () => {
+      db.tables.pickem_picks = [pickWithoutALine()];
+      const freezes = db.freezeCalls;
+      await pick("New England Patriots");
+      expect(row()).toMatchObject({ selected_team: "New England Patriots", selected_side: "away", home_spread: null, away_spread: null });
+      expect(db.freezeCalls).toBe(freezes);
+      expect(await openerFor("user-1")).toMatchObject({ homeSpread: -7, awaySpread: 7 });
+    });
+
+    it("switching a pick that recorded a line keeps that line", async () => {
+      db.tables.pickem_picks = [{ ...pickWithoutALine(), home_spread: -3.5, away_spread: 3.5 }];
+      await pick("New England Patriots");
+      expect(row()).toMatchObject({ selected_side: "away", home_spread: -3.5, away_spread: 3.5 });
+      expect(await openerFor("user-1")).toMatchObject({ homeSpread: -3.5, awaySpread: 3.5 });
+    });
+
+    it("a new pick records the bar's frozen line, and clearing and picking again takes it too", async () => {
+      await pick("Seattle Seahawks");
+      expect(row()).toMatchObject({ status: "pending", home_spread: -3.5, away_spread: 3.5 });
+
+      db.tables.pickem_picks = [pickWithoutALine()];
+      await clearNFLPick({ userId: "user-1", gameId: OPENER_ID });
+      expect(row()).toBeUndefined();
+      expect(await openerFor("user-1")).toMatchObject({ homeSpread: -3.5 }); // cleared: the frozen line shows
+      await pick("New England Patriots");
+      expect(row()).toMatchObject({ selected_side: "away", home_spread: -3.5, away_spread: 3.5 });
+    });
+
+    describe("when the pick's settings read fails (finding 3)", () => {
+      beforeEach(() => {
+        db.readSettings.mockResolvedValue(null);
+      });
+
+      it("a new pick records the bar's stored frozen line, read-only", async () => {
+        const freezes = db.freezeCalls;
+        await pick("Seattle Seahawks");
+        expect(row()).toMatchObject({ home_spread: -3.5, away_spread: 3.5 });
+        expect(db.freezeCalls).toBe(freezes);
+      });
+
+      it("a failed frozen-line lookup refuses the pick and saves nothing", async () => {
+        db.failReads = ["pickem_venue_frozen_lines"];
+        await expect(pick("Seattle Seahawks")).rejects.toThrow("We couldn't load this game's line. Please try again.");
+        expect(row()).toBeUndefined();
+      });
+    });
+  });
+
+  it("with the settings read down and no frozen line, a new pick saves with no line and freezes nothing (finding 3)", async () => {
+    db.readSettings.mockResolvedValue(null);
+    await pick("Seattle Seahawks");
+    expect(row()).toMatchObject({ status: "pending" });
+    expect(row()?.home_spread ?? null).toBeNull();
+    expect(row()?.away_spread ?? null).toBeNull();
+    expect(db.tables.pickem_venue_frozen_lines).toEqual([]);
+    expect(db.freezeCalls).toBe(0);
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { WizardFooter } from "@/components/navigation/WizardFooter";
 import {
   AllGamesScreen,
@@ -78,6 +78,25 @@ const readReply = async (res: Response, fallback: string): Promise<ServerReply> 
   }
 };
 
+/** A prize warning for one exact change (`key`): what it would end or shrink, null for nothing. */
+type ImpactNotice = { key: string; notice: string | null };
+
+// Phase A3: a dry run of the prize cascade before the partner confirms. Fails open: no line.
+const fetchImpactNotice = async (scheduleId: string, editBody?: unknown): Promise<string | null> => {
+  try {
+    const res = await fetch(
+      `/api/owner/schedule/${scheduleId}/cancel-impact`,
+      editBody === undefined
+        ? undefined
+        : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editBody) },
+    );
+    const reply = (await res.json()) as { ok?: boolean; notice?: string | null };
+    return reply.ok ? reply.notice ?? null : null;
+  } catch {
+    return null;
+  }
+};
+
 const freshForm = (): ScheduleFormState =>
   initialScheduleFormState({ gameOptions: GAME_OPTIONS, browserTimeZone: detectBrowserTimeZone() });
 
@@ -115,6 +134,11 @@ export const ScheduleGameFlow = ({
   // A save or cancel went through: once the sheet has slid away, start over, so the
   // browser's Forward can't reopen a spent Review stuck on "Scheduling…".
   const [finished, setFinished] = useState(false);
+  // The latest prize warnings: one for cancelling the open game, one for the edit on Review.
+  const [cancelImpact, setCancelImpact] = useState<ImpactNotice | null>(null);
+  const [editImpact, setEditImpact] = useState<ImpactNotice | null>(null);
+  // Only the latest cancel check may answer: an older one resolving late must not replace it.
+  const cancelImpactRequestRef = useRef(0);
 
   const open = nav.sheet === "schedule";
   const isEditing = editing !== null;
@@ -149,6 +173,41 @@ export const ScheduleGameFlow = ({
     message: isEditing ? "Your edits to this game won't be saved." : "Nothing is saved until you schedule it.",
     onDiscard: nav.closeSheet,
   });
+
+  // An edit's prize warning, re-checked whenever the timing on Review changes (not the name).
+  const editRequest =
+    editing && editing.gameType === "live_trivia" && current === "review"
+      ? buildScheduleRequest({ venueId, editingId: editing.id, form })
+      : null;
+  const editImpactBody = editRequest?.ok ? { ...editRequest.body, title: undefined } : null;
+  const editImpactKey = editing && editImpactBody ? `${editing.id}:${JSON.stringify(editImpactBody)}` : null;
+  useEffect(() => {
+    if (!editing || !editImpactKey || !editImpactBody) return;
+    let live = true;
+    void fetchImpactNotice(editing.id, editImpactBody).then((notice) => {
+      if (live) setEditImpact({ key: editImpactKey, notice });
+    });
+    return () => {
+      live = false;
+    };
+    // editImpactBody is captured by its key.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editImpactKey]);
+  const editNotice = editImpact && editImpact.key === editImpactKey ? editImpact.notice : null;
+  // Hold Save until the warning is in, so a fast tap can't skip it. A failed check still sets the key, so Save returns.
+  const editChecking = editImpactKey !== null && editImpact?.key !== editImpactKey;
+
+  const startCancel = (schedule: OwnerSchedule) => {
+    if (schedule.gameType !== "live_trivia") return;
+    setCancelImpact(null);
+    const request = ++cancelImpactRequestRef.current;
+    void fetchImpactNotice(schedule.id).then((notice) => {
+      if (request === cancelImpactRequestRef.current) setCancelImpact({ key: schedule.id, notice });
+    });
+  };
+  const cancelNotice = selected && cancelImpact?.key === selected.id ? cancelImpact.notice : null;
+  // Hold "Yes, cancel game" until the warning is in, so a fast tap can't skip it.
+  const cancelChecking = selected?.gameType === "live_trivia" && cancelImpact?.key !== selected.id;
 
   const change: ScheduleFormChange = (patch) => {
     setForm((prev) => ({ ...prev, ...patch }));
@@ -200,7 +259,7 @@ export const ScheduleGameFlow = ({
   };
 
   const save = async () => {
-    if (busy) return;
+    if (busy || editChecking) return;
     const request = buildScheduleRequest({ venueId, editingId: editing?.id ?? null, form });
     if (!request.ok) {
       setError(request.error);
@@ -287,6 +346,7 @@ export const ScheduleGameFlow = ({
               onChangeStep={changeStep}
               error={error}
             />
+            {editNotice ? <p className="text-sm font-bold text-ht-rose-300">{editNotice}</p> : null}
             {/* A venue setting, saved on its own (Phase 9e): asked here and in the Prize wizard. */}
             <ShareDetailsPanel venueId={venueId} />
           </div>
@@ -302,7 +362,10 @@ export const ScheduleGameFlow = ({
           <GameDetailScreen
             schedule={selected}
             onEdit={() => startEdit(selected)}
+            onStartCancel={() => startCancel(selected)}
             onCancelGame={() => void cancelGame(selected)}
+            impactNotice={cancelNotice}
+            checkingImpact={cancelChecking}
             busy={busy}
             error={error}
           />
@@ -336,6 +399,7 @@ export const ScheduleGameFlow = ({
           nextLabel={isEditing ? "Save changes" : "Schedule game"}
           nextBusyLabel={isEditing ? "Saving…" : "Scheduling…"}
           nextBusy={busy}
+          nextDisabled={editChecking}
           nextHideChevron
         />
       );

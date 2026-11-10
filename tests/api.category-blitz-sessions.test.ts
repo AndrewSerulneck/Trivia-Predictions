@@ -9,6 +9,16 @@ const mocks = vi.hoisted(() => ({
   registerSessionPresence: vi.fn(),
   listSchedules: vi.fn(),
   resolveContinuousConfig: vi.fn(),
+  isVenuePresenceLive: vi.fn(),
+  presenceEnforced: vi.fn(),
+  resolveRoomId: vi.fn(),
+}));
+vi.mock("@/lib/venuePresence", () => ({
+  isVenuePresenceLive: mocks.isVenuePresenceLive,
+  isVenuePresenceMutationEnforcementEnabled: mocks.presenceEnforced,
+}));
+vi.mock("@/lib/categoryBlitzRoom", () => ({
+  resolveCategoryBlitzRoomId: mocks.resolveRoomId,
 }));
 
 vi.mock("@/lib/categoryBlitz", () => ({
@@ -69,6 +79,11 @@ describe("GET /api/category-blitz/sessions", () => {
     mocks.registerSessionPresence.mockReset();
     mocks.listSchedules.mockReset();
     mocks.resolveContinuousConfig.mockReset();
+    mocks.isVenuePresenceLive.mockReset();
+    mocks.presenceEnforced.mockReset();
+    mocks.presenceEnforced.mockReturnValue(false);
+    mocks.resolveRoomId.mockReset();
+    mocks.resolveRoomId.mockImplementation((venueId: string) => venueId);
     // Default: continuous mode off, so the route takes the scheduled path.
     mocks.resolveContinuousConfig.mockResolvedValue(null);
   });
@@ -261,6 +276,42 @@ describe("GET /api/category-blitz/sessions", () => {
       const body = (await response.json()) as { live: boolean };
 
       expect(body.live).toBe(true);
+    });
+
+    it("both look-only branches conceal a shared room id and share one payload", async () => {
+      vi.setSystemTime(new Date("2026-07-02T12:00:00.000Z"));
+      mocks.resolveRoomId.mockReturnValue("hc-cbz-live");
+      mocks.presenceEnforced.mockReturnValue(true);
+      mocks.isVenuePresenceLive.mockResolvedValue(false);
+      mocks.peekCategoryBlitz.mockResolvedValue({
+        continuousConfig,
+        session: { ...openSession, venueId: "hc-cbz-live" },
+        latestRound: null,
+        awake: true,
+      });
+
+      const away = await (
+        await GET(new Request("http://localhost/api/category-blitz/sessions?venueId=venue-1&userId=user-1"))
+      ).json();
+      const peek = await (
+        await GET(new Request("http://localhost/api/category-blitz/sessions?venueId=venue-1&peek=1"))
+      ).json();
+
+      expect(away.session.venueId).toBe("venue-1");
+      expect(peek.session.venueId).toBe("venue-1");
+      expect(JSON.stringify(away)).not.toContain("hc-cbz-live");
+      expect(JSON.stringify(peek)).not.toContain("hc-cbz-live");
+      expect(away.realtimeChannel).toBe(peek.realtimeChannel);
+      expect(away.session).toEqual(peek.session);
+      expect(away.nextWindowAt).toBe(peek.nextWindowAt);
+      // The away shape is unchanged: no `live`, plus the null window end and the two clocks.
+      expect(away).not.toHaveProperty("live");
+      expect(away.scheduleWindowEndAt).toBeNull();
+      expect(typeof away.serverReceivedAtMs).toBe("number");
+      expect(typeof away.serverNowMs).toBe("number");
+      expect(peek.live).toBe(true);
+      expect(mocks.driveContinuousCategoryBlitz).not.toHaveBeenCalled();
+      expect(mocks.registerSessionPresence).not.toHaveBeenCalled();
     });
 
     it("without peek, the game page's call still drives the continuous engine", async () => {
