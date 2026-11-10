@@ -14,12 +14,13 @@ them; it documents recurring processes and active implementation-plan pointers b
 
 ## Models in phased plans — always
 
-Use the planning agent's own model family and the model Andrew selected for the current session unless
-he explicitly requests another model. **A plan made by GPT-6.1 in Codex names GPT-6.1 (Codex), with an
-appropriate effort level for each phase.** Claude-authored plans use Claude models. Never infer a Claude
-default from the filename `CLAUDE.md`, historical plans or another agent's recommendations.
-Every phase needs a model, effort and one-line reason; keep the plan and handoffs consistent. If the exact
-model is unknown, state the known family and uncertainty instead of inventing a model/version.
+Name models from the **planning agent's own family** (Claude → Claude models, Codex → Codex/GPT models, any
+other agent → its own). Within that family, pick the **most token-efficient model that can do each phase
+correctly** — mixing models and tiers across phases is fine (e.g. a top model for a migration, a small one for
+doc edits). Every phase names **both
+the model and its effort/reasoning level**, with a one-line reason; keep the plan and handoffs consistent.
+If Andrew names a model, use it. If the exact model is unknown, state the family and uncertainty instead of
+inventing a version. An agent that can't run the named model uses the nearest equivalent and says so in its handoff.
 Full phase-complexity guidance: `CLAUDE.md` §Model and effort per phase.
 
 ## Venue Location usability — live

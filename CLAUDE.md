@@ -23,20 +23,18 @@
 > Strategic direction: `SYSTEM_CONTEXT.md` §0 and `docs/partner-dashboard-plan.md`.
 
 ## Model and effort per phase (all coding agents)
-Every multi-phase plan has a table naming each phase's **model and effort level**, with a one-line reason.
-**Use the planning agent's own model family and Andrew's selected session model unless he explicitly requests
-another model.** For example, GPT-6.1 planning in Codex names **GPT-6.1 (Codex)**; Claude planning names Claude
-models. There is no cross-family default. The filename `CLAUDE.md`, historical plans and another agent's
-recommendations never override the current session or Andrew's explicit choice. If the exact model is unknown,
-state the known family and uncertainty; do not invent a version or silently substitute another family.
+Every multi-phase plan has a table naming each phase's **model AND effort level**, with a one-line reason.
+**Name models from the planning agent's own family** — Claude plans name Claude models, Codex plans name
+Codex/GPT models, any other agent names its own. Within that family, **choose the most token-efficient model
+that will do the phase correctly**; phases in one plan may use different models and tiers. Cheaper isn't efficient if it causes rework:
+use a top model where mistakes are costly. If Andrew names a model, use it.
 
-Choose effort by phase: **high** for auth, money, migrations, data changes, shared renderers or engines, or a
-design spanning several files; **medium** for well-specified UI, copy and tests; **low** for mechanical edits
-and doc-only phases. Keep the selected model and vary effort where supported. If Andrew explicitly asks for
-different models by phase, choose suitable models in the requested family. Give a reason for departures.
-Keep model recommendations consistent in the plan and handoffs. An agent executing an older plan written
-for another family uses its own selected model at the appropriate effort and records the substitution in
-the handoff, unless Andrew explicitly requested that other family. A new plan is incomplete without the table.
+Guide by phase: **top model / high effort** for auth, money, migrations, data changes, shared renderers or
+engines, or a design spanning several files; **mid model / medium** for well-specified UI, copy and tests;
+**small model / low** for mechanical edits and doc-only phases. Give a reason for departures. If the exact model
+is unknown, state the family and uncertainty; never invent a version. An agent that can't run the named model
+uses the nearest equivalent tier and records the substitution in its handoff. A new plan is incomplete without
+the table.
 
 ## Build and Test Commands
 - Dev server: `npm run dev` (Andrew runs it on :3000 — never use it for tests that write data; never `pkill next`)
