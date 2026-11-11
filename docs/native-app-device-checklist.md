@@ -287,3 +287,30 @@ this in Safari / Chrome on the phone AND in the app. Note the phone model and ho
 | # | iPhone | Android | Notes |
 |---|---|---|---|
 | 76–83 | | | |
+
+## Q. Share Your Win — the app's Instagram Story button sends the video (NEEDS AN APP REBUILD; added 2026-11-11)
+
+Plan: `docs/share-win-celebration-plan.md` Phases 3–3.2. Only a NEW app build (with this change) does this; until it is
+installed, item 80 above still applies. Do §P first. Install the new build from TestFlight / Play internal testing.
+Instagram must be installed and signed in.
+
+84. **Video, one tap:** in the app, Share my win → Fireworks → **Animated** → wait for the video → **Instagram Story**.
+    Instagram opens straight in the Story editor with the video playing as the background (no share sheet). It is
+    5 s and silent. Note whether Instagram stretches or crops it.
+85. **The link still pastes (iPhone):** in that Story editor, add a **Link** sticker → Paste. The caption + link from
+    the sheet is there (same as the picture, 9f.2).
+86. **Picture still works:** back on the sheet, tap **Still** → **Instagram Story** → the picture opens in the Story
+    editor as before.
+87. **No Instagram:** uninstall Instagram (or use a phone without it) → Animated → **Instagram Story** opens the
+    phone's share sheet with the video, never an error.
+88. **Old build:** on a phone still running the previous app build, Animated → **Instagram Story** opens the share
+    sheet (item 80), never Instagram with a blank or broken Story.
+89. **No crash on repeat (Android):** share an Animated Story 3 times in a row, alternating **Instagram Story** and
+    **More**. No crash and no long freeze.
+90. **One video in the cache (Android, for a developer; Andrew can skip):** on the same phone,
+    `adb shell run-as com.hightopchallenge.app ls -la cache/hightop-share` shows at most one `.mp4`.
+
+| # | iPhone | Android | Notes |
+|---|---|---|---|
+| 84–88 | | | |
+| 89–90 | n/a | | |

@@ -13,8 +13,9 @@ import { SHARE_DESTINATION_COPY, SHARE_DESTINATION_VIDEO_COPY } from "./copyPres
  * - Save downloads the picture on the website; in the app it is the share sheet ("Save Image"),
  *   because the app's web view can't download.
  *
- * An animated Story (a video) goes the same way, except that the app's direct Instagram Story button
- * sends pictures only (docs/share-win-celebration-plan.md Phase 3, later): a video takes the share sheet.
+ * An animated Story (a video) goes the same way. The app's direct Instagram Story button takes a video
+ * only on builds whose plugin says so (docs/share-win-celebration-plan.md Phase 3,
+ * `instagramStoryVideoDirect`); on older builds a video takes the share sheet.
  */
 
 export const SHARE_DESTINATIONS = [
@@ -34,6 +35,8 @@ export type ShareDestinationAction = "instagram-story-native" | "share-sheet" | 
 export type ShareDestinationEnv = {
   /** In the app, this build has the plugin and Instagram is installed (asked once when the sheet opens). */
   instagramStoryDirect: boolean;
+  /** …and this build's plugin also hands Instagram a video (Phase 3 builds; older builds: false). */
+  instagramStoryVideoDirect?: boolean;
   /** The phone can hand this picture to its share sheet (Web Share with files, or the app's native share). */
   canSharePicture: boolean;
   /** Inside the iPhone/Android app. */
@@ -48,17 +51,21 @@ export type ShareDestinationPlan = {
   action: ShareDestinationAction;
   /** What the sheet says after the tap. */
   hint: string;
+  /** Only on the app's direct Instagram Story: what the sheet says when Instagram didn't open (video or picture wording). */
+  failHint?: string;
 };
 
 export const shareDestinationLabel = (destination: ShareDestination): string => SHARE_DESTINATION_COPY[destination].label;
 
-const videoCopy = (destination: ShareDestination): { direct?: string; viaSheet?: string } =>
+const videoCopy = (destination: ShareDestination): { direct?: string; viaSheet?: string; directFailed?: string } =>
   destination in SHARE_DESTINATION_VIDEO_COPY ? SHARE_DESTINATION_VIDEO_COPY[destination as keyof typeof SHARE_DESTINATION_VIDEO_COPY] : {};
 
 export const planShareDestination = (destination: ShareDestination, env: ShareDestinationEnv): ShareDestinationPlan => {
   const copy = env.video ? { ...SHARE_DESTINATION_COPY[destination], ...videoCopy(destination) } : SHARE_DESTINATION_COPY[destination];
-  if (destination === "instagram-story" && env.instagramStoryDirect && !env.video) {
-    return { copyCaption: true, action: "instagram-story-native", hint: copy.direct };
+  const instagramDirect = env.instagramStoryDirect && (!env.video || env.instagramStoryVideoDirect === true);
+  if (destination === "instagram-story" && instagramDirect) {
+    const failHint = env.video ? SHARE_DESTINATION_VIDEO_COPY["instagram-story"].directFailed : SHARE_DESTINATION_COPY["instagram-story"].directFailed;
+    return { copyCaption: true, action: "instagram-story-native", hint: copy.direct, failHint };
   }
   if (destination === "x" && !env.canSharePicture) {
     return { copyCaption: true, action: "x-intent", hint: copy.direct };

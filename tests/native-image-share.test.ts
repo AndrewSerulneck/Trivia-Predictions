@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { shareImageNatively } from "@/lib/nativeImageShare";
+import { SHARE_FILE_PIECE_BYTES, shareImageNatively, writeShareFileNatively } from "@/lib/nativeImageShare";
 import { shareStoryImage } from "@/lib/socialShare/sharePipeline";
 
 type NativeCall = (plugin: string, method: string, options?: Record<string, unknown>) => Promise<unknown>;
@@ -95,6 +95,105 @@ describe("native image share", () => {
   });
 });
 
+describe("share-win plan Phase 3.2 — the file crosses the bridge in pieces; the cache keeps one video", () => {
+  type Call = [string, string, Record<string, unknown>];
+  const recorder = (listing: unknown = { files: [] }, fail: (plugin: string, method: string) => boolean = () => false) =>
+    vi.fn(async (plugin: string, method: string, _options?: Record<string, unknown>): Promise<unknown> => {
+      if (fail(plugin, method)) throw new Error(`${method} failed`);
+      if (method === "readdir") return listing;
+      if (method === "writeFile") return { uri: "file:///cache/hightop-share/win.mp4" };
+      return {};
+    });
+  const calls = (fn: ReturnType<typeof recorder>): Call[] => fn.mock.calls as unknown as Call[];
+  const bytes = (size: number): Uint8Array<ArrayBuffer> => {
+    const out = new Uint8Array(new ArrayBuffer(size));
+    for (let i = 0; i < size; i += 1) out[i] = (i * 7 + 3) % 256;
+    return out;
+  };
+
+  it("the piece size is a multiple of 3, so no piece's base64 has padding mid-file", () => {
+    expect(SHARE_FILE_PIECE_BYTES).toBe(786_432);
+    expect(SHARE_FILE_PIECE_BYTES % 3).toBe(0);
+  });
+
+  it("a 2 MB video: one writeFile, then appendFile pieces that join back into the original bytes", async () => {
+    const original = bytes(2 * 1024 * 1024);
+    const nativePromise = recorder();
+    stubApp(["Share", "Filesystem"], nativePromise);
+    const uri = await writeShareFileNatively(new Blob([original], { type: "video/mp4" }), "win.mp4");
+    expect(uri).toBe("file:///cache/hightop-share/win.mp4");
+    const writes = calls(nativePromise).filter(([, method]) => method === "writeFile" || method === "appendFile");
+    expect(writes.map(([, method]) => method)).toEqual(["writeFile", "appendFile", "appendFile"]);
+    expect(writes[0][2]).toMatchObject({ path: "hightop-share/win.mp4", directory: "CACHE", recursive: true });
+    for (const [, , options] of writes) {
+      expect(options).toMatchObject({ path: "hightop-share/win.mp4", directory: "CACHE" });
+      expect(options).not.toHaveProperty("encoding");
+    }
+    const pieces = writes.map(([, , options]) => Buffer.from(String(options.data), "base64"));
+    for (const piece of pieces.slice(0, -1)) expect(piece.length).toBe(SHARE_FILE_PIECE_BYTES);
+    expect(pieces.slice(0, -1).every((piece, i) => !String(writes[i][2].data).endsWith("="))).toBe(true);
+    expect(Buffer.concat(pieces).equals(Buffer.from(original))).toBe(true);
+  });
+
+  it("a small picture is one writeFile and never touches the folder listing", async () => {
+    const nativePromise = recorder();
+    stubApp(["Share", "Filesystem"], nativePromise);
+    await writeShareFileNatively(blob(), "win.png");
+    expect(calls(nativePromise).map(([, method]) => method)).toEqual(["writeFile"]);
+  });
+
+  it("before a video is written, every OTHER .mp4 is deleted (not pictures, not its own name)", async () => {
+    const nativePromise = recorder({
+      files: [{ name: "old-trivia.mp4" }, { name: "instagram-story.mp4" }, { name: "win.mp4" }, { name: "win.png" }, { name: "instagram-story.png" }, "legacy.MP4"],
+    });
+    stubApp(["Share", "Filesystem"], nativePromise);
+    await writeShareFileNatively(new Blob(["mp4"], { type: "video/mp4" }), "win.mp4");
+    const methods = calls(nativePromise).map(([, method, options]) => `${method} ${String(options.path)}`);
+    expect(methods).toEqual([
+      "readdir hightop-share",
+      "deleteFile hightop-share/old-trivia.mp4",
+      "deleteFile hightop-share/instagram-story.mp4",
+      "deleteFile hightop-share/legacy.MP4",
+      "writeFile hightop-share/win.mp4",
+    ]);
+  });
+
+  it("a failed cleanup (no folder yet, or a delete that fails) still writes the video", async () => {
+    const noFolder = recorder(undefined, (_plugin, method) => method === "readdir");
+    stubApp(["Share", "Filesystem"], noFolder);
+    expect(await writeShareFileNatively(new Blob(["mp4"], { type: "video/mp4" }), "win.mp4")).toBe("file:///cache/hightop-share/win.mp4");
+    const stuck = recorder({ files: [{ name: "a.mp4" }, { name: "b.mp4" }] }, (_plugin, method) => method === "deleteFile");
+    stubApp(["Share", "Filesystem"], stuck);
+    expect(await writeShareFileNatively(new Blob(["mp4"], { type: "video/mp4" }), "win.mp4")).toBe("file:///cache/hightop-share/win.mp4");
+    expect(calls(stuck).filter(([, method]) => method === "deleteFile")).toHaveLength(2);
+  });
+
+  it("a failed write or append is null, and the share sheet reports `failed`", async () => {
+    stubApp(["Share", "Filesystem"], recorder(undefined, (_plugin, method) => method === "appendFile"));
+    expect(await writeShareFileNatively(new Blob([bytes(SHARE_FILE_PIECE_BYTES + 1)], { type: "video/mp4" }), "win.mp4")).toBeNull();
+    const nativePromise = recorder(undefined, (_plugin, method) => method === "writeFile");
+    stubApp(["Share", "Filesystem"], nativePromise);
+    expect(await shareImageNatively({ blob: new Blob(["mp4"], { type: "video/mp4" }), fileName: "win.mp4" })).toBe("failed");
+    expect(calls(nativePromise).some(([plugin]) => plugin === "Share")).toBe(false);
+  });
+
+  it("a long name is shortened without losing its extension", async () => {
+    const nativePromise = recorder();
+    stubApp(["Share", "Filesystem"], nativePromise);
+    await writeShareFileNatively(new Blob(["mp4"], { type: "video/mp4" }), `hightop-live-trivia-${"x".repeat(120)}.mp4`);
+    const path = String(calls(nativePromise).find(([, method]) => method === "writeFile")?.[2].path);
+    expect(path.endsWith(".mp4")).toBe(true);
+    expect(path.length).toBe("hightop-share/".length + 80);
+  });
+
+  it("without the Filesystem plugin nothing is written", async () => {
+    const nativePromise = recorder();
+    stubApp(["Share"], nativePromise);
+    expect(await writeShareFileNatively(blob(), "win.png")).toBeNull();
+    expect(nativePromise).not.toHaveBeenCalled();
+  });
+});
+
 describe("shareStoryImage in the app", () => {
   it("uses the shell when the web view can't share files (Android)", async () => {
     const nativePromise = vi.fn(async (plugin: string) => (plugin === "Filesystem" ? { uri: "file:///x.png" } : {}));
@@ -124,5 +223,7 @@ describe("wiring", () => {
     expect(read("native/ios/App/CapApp-SPM/Package.swift")).toContain("CapacitorFilesystem");
     expect(read("native/android/capacitor.settings.gradle")).toContain("capacitor-filesystem");
     expect(read("lib/socialShare/sharePipeline.ts")).not.toMatch(/callNative\(/);
+    // The Instagram bridge writes its video with the same writer; it never calls Filesystem itself.
+    expect(read("lib/nativeInstagramStories.ts")).not.toMatch(/callNative\("Filesystem"/);
   });
 });

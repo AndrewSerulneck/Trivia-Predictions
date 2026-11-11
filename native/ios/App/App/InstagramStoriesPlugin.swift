@@ -9,6 +9,12 @@ import Capacitor
 /// Writing the picture replaces the whole pasteboard, so the caption + link the share sheet copied
 /// a moment earlier travels in the SAME item as plain text (Phase 9f.2): Paste in Instagram's link
 /// sticker still finds it.
+/// An animated Story (docs/share-win-celebration-plan.md Phases 3 and 3.2): `mediaType: "video"` puts the MP4
+/// under `backgroundVideo` instead (Meta: H.264, up to 20 s, under 50 MB; ours is 5 s, about 4 MB). The web
+/// writes the video to `<Caches>/hightop-share/` with @capacitor/filesystem and sends only its file URL as
+/// `path` (never base64); this plugin reads only files inside that folder. `isAvailable` answers
+/// `videoFile: true` so the web side knows this build reads a path; older builds don't, and the website
+/// sends their videos through the share sheet.
 /// Read by lib/nativeInstagramStories.ts; same plugin and methods on Android
 /// (InstagramStoriesPlugin.java). Registered in HightopBridgeViewController.capacitorDidLoad.
 @objc(InstagramStoriesPlugin)
@@ -29,15 +35,47 @@ public class InstagramStoriesPlugin: CAPPlugin, CAPBridgedPlugin {
     @objc func isAvailable(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
             let available = self.storyURL.map { UIApplication.shared.canOpenURL($0) } ?? false
-            call.resolve(["available": available])
+            call.resolve(["available": available, "videoFile": available])
         }
     }
 
+    /// The video the web wrote, only if it is a file inside `<Caches>/hightop-share/` (symlinks and `..` resolved).
+    private func shareFolderFile(_ path: String) -> URL? {
+        guard let url = URL(string: path), url.isFileURL,
+              let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
+        let folder = caches.appendingPathComponent("hightop-share", isDirectory: true)
+            .resolvingSymlinksInPath().standardizedFileURL.path + "/"
+        let file = url.resolvingSymlinksInPath().standardizedFileURL
+        var isDirectory: ObjCBool = false
+        guard file.path.hasPrefix(folder),
+              FileManager.default.fileExists(atPath: file.path, isDirectory: &isDirectory), !isDirectory.boolValue else { return nil }
+        return file
+    }
+
     @objc func shareToStory(_ call: CAPPluginCall) {
-        guard let base64 = call.getString("data"), let image = Data(base64Encoded: base64), !image.isEmpty else {
+        if call.getString("mediaType") == "video" {
+            guard let file = shareFolderFile(call.getString("path") ?? "") else {
+                call.reject("Could not prepare the video.")
+                return
+            }
+            // A 4 MB read stays off the main thread.
+            DispatchQueue.global(qos: .userInitiated).async {
+                guard let media = try? Data(contentsOf: file), !media.isEmpty else {
+                    call.reject("Could not prepare the video.")
+                    return
+                }
+                self.openStory(call, media: media, backgroundKey: "com.instagram.sharedSticker.backgroundVideo")
+            }
+            return
+        }
+        guard let base64 = call.getString("data"), let media = Data(base64Encoded: base64), !media.isEmpty else {
             call.reject("A picture is required.")
             return
         }
+        openStory(call, media: media, backgroundKey: "com.instagram.sharedSticker.backgroundImage")
+    }
+
+    private func openStory(_ call: CAPPluginCall, media: Data, backgroundKey: String) {
         let topColor = call.getString("topColor") ?? "#020617"
         let bottomColor = call.getString("bottomColor") ?? "#020617"
         let caption = call.getString("caption") ?? ""
@@ -47,7 +85,7 @@ public class InstagramStoriesPlugin: CAPPlugin, CAPBridgedPlugin {
                 return
             }
             var item: [String: Any] = [
-                "com.instagram.sharedSticker.backgroundImage": image,
+                backgroundKey: media,
                 "com.instagram.sharedSticker.backgroundTopColor": topColor,
                 "com.instagram.sharedSticker.backgroundBottomColor": bottomColor
             ]

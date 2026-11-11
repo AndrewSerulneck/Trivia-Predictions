@@ -45,6 +45,14 @@ describe("Phase 9d — what one tap does", () => {
     expect(plan.hint.length).toBeGreaterThan(0);
   });
 
+  it("the native Instagram Story plan carries the failure hint, in picture or video words", () => {
+    expect(planShareDestination("instagram-story", APP_WITH_INSTAGRAM).failHint).toBe("Instagram didn't open. Tap More to share the picture.");
+    expect(planShareDestination("instagram-story", { ...APP_WITH_INSTAGRAM, instagramStoryVideoDirect: true, video: true }).failHint).toBe(
+      "Instagram didn't open. Tap More to share the video.",
+    );
+    expect(planShareDestination("instagram-story", OLD_APP).failHint).toBeUndefined();
+  });
+
   it("Instagram tells the player where the link goes", () => {
     expect(planShareDestination("instagram-story", APP_WITH_INSTAGRAM).hint).toContain("link sticker");
     expect(planShareDestination("instagram-story", WEBSITE).hint).toContain("link sticker");

@@ -12,7 +12,7 @@ import { buildLiveTriviaStorySharePayload } from "@/lib/socialShare/storyPayload
 const mocks = vi.hoisted(() => ({
   isNativeApp: vi.fn(() => false),
   openInSystemBrowser: vi.fn(async () => true),
-  canShareToInstagramStory: vi.fn(async () => false),
+  getInstagramStorySupport: vi.fn(async (): Promise<{ picture: boolean; video: boolean }> => ({ picture: false, video: false })),
   shareToInstagramStory: vi.fn(async (): Promise<"opened" | "unavailable" | "failed"> => "opened"),
   canShareFile: vi.fn(() => true),
   shareImage: vi.fn(async () => ({ status: "shared" as const, fallbackRecommended: false })),
@@ -23,7 +23,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/nativeApp", () => ({ isNativeApp: mocks.isNativeApp, openInSystemBrowser: mocks.openInSystemBrowser }));
 vi.mock("@/lib/nativeInstagramStories", () => ({
-  canShareToInstagramStory: mocks.canShareToInstagramStory,
+  getInstagramStorySupport: mocks.getInstagramStorySupport,
+  NO_INSTAGRAM_STORY: { picture: false, video: false },
   shareToInstagramStory: mocks.shareToInstagramStory,
 }));
 vi.mock("@/lib/nativeImageShare", () => ({ canShareImageNatively: () => false }));
@@ -78,7 +79,7 @@ const tap = (label: string) => fireEvent.click(screen.getByRole("button", { name
 beforeEach(() => {
   mocks.isNativeApp.mockReturnValue(false);
   mocks.canShareFile.mockReturnValue(true);
-  mocks.canShareToInstagramStory.mockResolvedValue(false);
+  mocks.getInstagramStorySupport.mockResolvedValue({ picture: false, video: false });
   mocks.shareToInstagramStory.mockResolvedValue("opened");
   mocks.shareImage.mockResolvedValue({ status: "shared", fallbackRecommended: false });
   mocks.copyText.mockResolvedValue(true);
@@ -135,11 +136,11 @@ describe("Phase 9f.1 R2 — two taps in one frame run one share", () => {
 
   it("two Instagram Story taps run the plugin once", async () => {
     mocks.isNativeApp.mockReturnValue(true);
-    mocks.canShareToInstagramStory.mockResolvedValue(true);
+    mocks.getInstagramStorySupport.mockResolvedValue({ picture: true, video: false });
     let finish: (outcome: "opened") => void = () => {};
     mocks.shareToInstagramStory.mockImplementation(() => new Promise((resolve) => (finish = resolve)));
     await openSheet();
-    await waitFor(() => expect(mocks.canShareToInstagramStory).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.getInstagramStorySupport).toHaveBeenCalled());
     await act(async () => {});
     const story = screen.getByRole("button", { name: "Instagram Story" });
     act(() => {
@@ -159,7 +160,7 @@ describe("Phase 9f.1 R2 — two taps in one frame run one share", () => {
 describe("Phase 9f.1 R3 — no share sheet after an await", () => {
   it.each(["unavailable", "failed"] as const)("Instagram outcome %s shows the hint and does not open the sheet", async (outcome) => {
     mocks.isNativeApp.mockReturnValue(true);
-    mocks.canShareToInstagramStory.mockResolvedValue(true);
+    mocks.getInstagramStorySupport.mockResolvedValue({ picture: true, video: false });
     mocks.shareToInstagramStory.mockResolvedValue(outcome);
     await openSheet();
     await act(async () => {});
@@ -174,7 +175,7 @@ describe("Phase 9f.1 R3 — no share sheet after an await", () => {
 
   it("an opened Story keeps its own hint", async () => {
     mocks.isNativeApp.mockReturnValue(true);
-    mocks.canShareToInstagramStory.mockResolvedValue(true);
+    mocks.getInstagramStorySupport.mockResolvedValue({ picture: true, video: false });
     await openSheet();
     await act(async () => {});
     tap("Instagram Story");
@@ -186,7 +187,7 @@ describe("Phase 9f.1 R3 — no share sheet after an await", () => {
 describe("Phase 9f.2 — the in-app Story shortcut keeps the copied caption", () => {
   it("copies first, then hands the plugin the same caption + link", async () => {
     mocks.isNativeApp.mockReturnValue(true);
-    mocks.canShareToInstagramStory.mockResolvedValue(true);
+    mocks.getInstagramStorySupport.mockResolvedValue({ picture: true, video: false });
     const order: string[] = [];
     mocks.copyText.mockImplementation(async () => {
       await Promise.resolve();
@@ -202,14 +203,14 @@ describe("Phase 9f.2 — the in-app Story shortcut keeps the copied caption", ()
     tap("Instagram Story");
     await screen.findByText(SHARE_DESTINATION_COPY["instagram-story"].direct);
     expect(mocks.copyText).toHaveBeenCalledWith(story.shareText);
-    expect(mocks.shareToInstagramStory).toHaveBeenCalledWith(expect.any(Blob), { caption: story.shareText });
+    expect(mocks.shareToInstagramStory).toHaveBeenCalledWith(expect.any(Blob), { caption: story.shareText, fileName: expect.stringMatching(/\.png$/) });
     // Our write can never land after the plugin's and wipe the picture.
     expect(order).toEqual(["copied", "plugin"]);
   });
 
   it("a failed copy is still reported as failed", async () => {
     mocks.isNativeApp.mockReturnValue(true);
-    mocks.canShareToInstagramStory.mockResolvedValue(true);
+    mocks.getInstagramStorySupport.mockResolvedValue({ picture: true, video: false });
     mocks.copyText.mockResolvedValue(false);
     await openSheet();
     await act(async () => {});

@@ -246,6 +246,7 @@ export const SHARE_DESTINATION_COPY = {
 
 /** Where a destination's hint says "picture", an animated Story says "video". */
 export const SHARE_DESTINATION_VIDEO_COPY = {
+  "instagram-story": { directFailed: "Instagram didn't open. Tap More to share the video." },
   x: { viaSheet: "Pick X. Your caption goes with the video." },
   messages: {
     direct: "Pick Messages or WhatsApp. Your caption goes with the video.",

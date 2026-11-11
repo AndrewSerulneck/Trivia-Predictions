@@ -37,7 +37,7 @@ import { copyText } from "@/lib/copyText";
 import { haptic } from "@/lib/haptics";
 import { isNativeApp, openInSystemBrowser } from "@/lib/nativeApp";
 import { canShareImageNatively } from "@/lib/nativeImageShare";
-import { canShareToInstagramStory, shareToInstagramStory } from "@/lib/nativeInstagramStories";
+import { getInstagramStorySupport, NO_INSTAGRAM_STORY, shareToInstagramStory, type InstagramStorySupport } from "@/lib/nativeInstagramStories";
 import {
   SHARE_CAPTION_COPIED,
   SHARE_CAPTION_COPY_FAILED,
@@ -236,8 +236,9 @@ export function StoryCaptureModal({
   const [destinationHint, setDestinationHint] = useState<string | null>(null);
   // Mirrors destinationBusyRef so the row and the copy button show disabled while a tap is running.
   const [destinationBusy, setDestinationBusy] = useState(false);
-  // In the app: this build has the Instagram Stories plugin and Instagram is installed. Asked once per open.
-  const [instagramStoryDirect, setInstagramStoryDirect] = useState(false);
+  // In the app: this build has the Instagram Stories plugin and Instagram is installed, and whether the
+  // plugin also takes a video (share-win plan Phase 3). Asked once per open.
+  const [instagramStory, setInstagramStory] = useState<InstagramStorySupport>(NO_INSTAGRAM_STORY);
   const sessionRef = useRef<StoryCameraSession | null>(null);
   // A still copy of the captured camera frame, so switching an effect redraws the same selfie.
   const snapshotRef = useRef<HTMLCanvasElement | null>(null);
@@ -530,7 +531,8 @@ export function StoryCaptureModal({
       const fileName = getStoryShareFileName(activePreparedStory, size, animated);
       const file = webStoryPlatform.createShareFile({ blob: shareBlob, fileName });
       const plan = planShareDestination(destination, {
-        instagramStoryDirect,
+        instagramStoryDirect: instagramStory.picture,
+        instagramStoryVideoDirect: instagramStory.video,
         canSharePicture: webStoryPlatform.canShareFile(file) || canShareImageNatively(),
         inApp: isNativeApp(),
         video: animated,
@@ -556,10 +558,10 @@ export function StoryCaptureModal({
       }
       if (plan.action === "instagram-story-native") {
         trackStoryShareAttempted(analyticsContext);
-        // Our copy lands first; on iPhone the plugin's picture then replaces the pasteboard and carries
-        // the caption + link along in the same item (9f.2), so Paste in the link sticker still has it.
+        // Our copy lands first; on iPhone the plugin's picture (or video) then replaces the pasteboard and
+        // carries the caption + link along in the same item (9f.2), so Paste in the link sticker still has it.
         const captionCopied = await copied;
-        const outcome = await shareToInstagramStory(shareBlob, { caption: activePreparedStory.shareText });
+        const outcome = await shareToInstagramStory(shareBlob, { caption: activePreparedStory.shareText, fileName });
         trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "deep-link", externalAppTarget: "instagram", resultReason: `${destination}: ${outcome}` });
         if (outcome === "opened") {
           setDestinationHint(captionCopied ? plan.hint : SHARE_CAPTION_COPY_FAILED);
@@ -567,8 +569,9 @@ export function StoryCaptureModal({
         }
         // Instagram was removed since the sheet opened, or the plugin failed. The share sheet can't open
         // now (the awaits above spent the tap; WKWebView refuses it), so the next tap does, on More.
-        setInstagramStoryDirect(false);
-        setDestinationHint(SHARE_DESTINATION_COPY["instagram-story"].directFailed);
+        // A failed video keeps the one-tap picture; a failed picture (or a removed Instagram) drops both.
+        setInstagramStory(animated && outcome === "failed" ? (current) => ({ ...current, video: false }) : NO_INSTAGRAM_STORY);
+        setDestinationHint(plan.failHint ?? SHARE_DESTINATION_COPY["instagram-story"].directFailed);
         return;
       }
       const result = await shareCapturedStory(destination);
@@ -580,7 +583,7 @@ export function StoryCaptureModal({
       destinationBusyRef.current = false;
       setDestinationBusy(false);
     }
-  }, [activePreparedStory, analyticsContext, animated, instagramStoryDirect, nativeShareState, shareBlob, shareCapturedStory, size, venueReady]);
+  }, [activePreparedStory, analyticsContext, animated, instagramStory, nativeShareState, shareBlob, shareCapturedStory, size, venueReady]);
 
   const chooseDesign = useCallback((next: StoryShareDesign) => {
     setChosenDesign(next);
@@ -680,12 +683,12 @@ export function StoryCaptureModal({
     trackStoryShareOpened(analyticsContextRef.current);
   }, [isOpen]);
 
-  // In the app only (zero work on the website): one bridge call per open — is Instagram installed?
+  // In the app only (zero work on the website): one bridge call per open — is Instagram installed, and can this build send it a video?
   useEffect(() => {
     if (!isOpen || !isNativeApp()) return;
     let canceled = false;
-    void canShareToInstagramStory().then((available) => {
-      if (!canceled) setInstagramStoryDirect(available);
+    void getInstagramStorySupport().then((support) => {
+      if (!canceled) setInstagramStory(support);
     });
     return () => {
       canceled = true;

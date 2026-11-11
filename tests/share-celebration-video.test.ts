@@ -174,12 +174,27 @@ describe("moving effects stay off the content (every moving frame)", () => {
 });
 
 describe("sharing the video", () => {
-  it("never takes the app's picture-only Instagram Story shortcut (Phase 3, later): the share sheet does", () => {
+  it("an app build from before Phase 3 (picture-only plugin) sends the video through the share sheet", () => {
     const plan = planShareDestination("instagram-story", { instagramStoryDirect: true, canSharePicture: true, inApp: true, video: true });
     expect(plan.action).toBe("share-sheet");
     expect(planShareDestination("instagram-story", { instagramStoryDirect: true, canSharePicture: true, inApp: true }).action).toBe(
       "instagram-story-native"
     );
+  });
+
+  it("a Phase 3 app build sends the video straight to Instagram's Story editor", () => {
+    const env = { instagramStoryDirect: true, instagramStoryVideoDirect: true, canSharePicture: true, inApp: true };
+    expect(planShareDestination("instagram-story", { ...env, video: true })).toEqual({
+      copyCaption: true,
+      action: "instagram-story-native",
+      hint: SHARE_DESTINATION_COPY["instagram-story"].direct,
+      failHint: "Instagram didn't open. Tap More to share the video.",
+    });
+    // Video support never turns the shortcut on by itself, and only Instagram Story uses it.
+    expect(planShareDestination("instagram-story", { ...env, instagramStoryDirect: false, video: true }).action).toBe("share-sheet");
+    for (const destination of SHARE_DESTINATIONS.filter((each) => each !== "instagram-story")) {
+      expect(planShareDestination(destination, { ...env, video: true }).action, destination).not.toBe("instagram-story-native");
+    }
   });
 
   it("hints say video, never picture; Save still downloads on the website", () => {

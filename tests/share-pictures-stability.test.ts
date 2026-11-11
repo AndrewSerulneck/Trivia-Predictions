@@ -20,6 +20,9 @@ const mocks = vi.hoisted(() => ({
   encodeVideo: vi.fn(async (_input: unknown, _options?: { signal?: AbortSignal; onProgress?: (fraction: number) => void }) =>
     new Blob(["mp4"], { type: "video/mp4" })),
   shareImage: vi.fn(async (_request: { blob: Blob; fileName?: string }) => ({ status: "shared" as const, fallbackRecommended: false })),
+  isNativeApp: vi.fn(() => false),
+  instagramSupport: vi.fn(async () => ({ picture: false, video: false })),
+  shareToInstagramStory: vi.fn(async (_media: Blob, _options?: { caption?: string; fileName?: string }): Promise<"opened" | "unavailable" | "failed"> => "unavailable"),
 }));
 
 vi.mock("@/lib/socialShare/platform/webStoryPlatform", () => ({
@@ -47,10 +50,11 @@ vi.mock("@/lib/storage", () => ({
   getUsername: mocks.getUsername,
   getVenueId: mocks.getVenueId,
 }));
-vi.mock("@/lib/nativeApp", () => ({ isNativeApp: () => false, openInSystemBrowser: async () => true }));
+vi.mock("@/lib/nativeApp", () => ({ isNativeApp: mocks.isNativeApp, openInSystemBrowser: async () => true }));
 vi.mock("@/lib/nativeInstagramStories", () => ({
-  canShareToInstagramStory: async () => false,
-  shareToInstagramStory: async () => "unavailable",
+  getInstagramStorySupport: mocks.instagramSupport,
+  NO_INSTAGRAM_STORY: { picture: false, video: false },
+  shareToInstagramStory: mocks.shareToInstagramStory,
 }));
 vi.mock("@/lib/nativeImageShare", () => ({ canShareImageNatively: () => false }));
 vi.mock("@/lib/copyText", () => ({ copyText: async () => true }));
@@ -105,6 +109,12 @@ beforeEach(() => {
   mocks.encodeVideo.mockReset();
   mocks.encodeVideo.mockImplementation(async () => new Blob(["mp4"], { type: "video/mp4" }));
   mocks.shareImage.mockClear();
+  mocks.isNativeApp.mockReset();
+  mocks.isNativeApp.mockReturnValue(false);
+  mocks.instagramSupport.mockReset();
+  mocks.instagramSupport.mockResolvedValue({ picture: false, video: false });
+  mocks.shareToInstagramStory.mockReset();
+  mocks.shareToInstagramStory.mockResolvedValue("unavailable");
   vi.stubGlobal(
     "URL",
     Object.assign(URL, {
@@ -411,6 +421,64 @@ describe("animated Story (docs/share-win-celebration-plan.md Phase 2)", () => {
     expect(signals[1].aborted).toBe(true);
     expect(screen.getByRole("button", { name: "Still" }).getAttribute("aria-pressed")).toBe("true");
     expect(signals).toHaveLength(2);
+  });
+
+  // Phase 3: the app's Instagram Story button sends the video itself on builds whose plugin says so.
+  const makeVideoInApp = async (support: { picture: boolean; video: boolean }) => {
+    mocks.isNativeApp.mockReturnValue(true);
+    mocks.instagramSupport.mockResolvedValue(support);
+    mocks.canMakeVideo.mockResolvedValue(true);
+    await openSheet();
+    await waitFor(() => expect(mocks.instagramSupport).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole("button", { name: "Fireworks" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Animated" }).hasAttribute("disabled")).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: "Animated" }));
+    await waitFor(() => expect(facebookDisabled()).toBe(false));
+    await settle();
+  };
+
+  it("in a Phase 3.2 app build, Instagram Story hands the plugin the MP4 (no share sheet)", async () => {
+    mocks.shareToInstagramStory.mockResolvedValue("opened");
+    await makeVideoInApp({ picture: true, video: true });
+    fireEvent.click(screen.getByRole("button", { name: "Instagram Story" }));
+    await waitFor(() => expect(mocks.shareToInstagramStory).toHaveBeenCalledTimes(1));
+    expect(mocks.shareToInstagramStory.mock.calls[0][0].type).toBe("video/mp4");
+    // The story's own file name, so the share-sheet path and the one-tap path reuse one cache file (3.2).
+    expect(mocks.shareToInstagramStory.mock.calls[0][1]).toMatchObject({ fileName: expect.stringMatching(/^hightop-.+\.mp4$/) });
+    expect(mocks.shareImage).not.toHaveBeenCalled();
+  });
+
+  it("in an older app build, the video takes the share sheet and the plugin is never called", async () => {
+    await makeVideoInApp({ picture: true, video: false });
+    fireEvent.click(screen.getByRole("button", { name: "Instagram Story" }));
+    await waitFor(() => expect(mocks.shareImage).toHaveBeenCalledTimes(1));
+    expect(mocks.shareImage.mock.calls[0][0].blob.type).toBe("video/mp4");
+    expect(mocks.shareToInstagramStory).not.toHaveBeenCalled();
+  });
+
+  it("when Instagram doesn't open, the hint says video and the next tap takes the share sheet", async () => {
+    mocks.shareToInstagramStory.mockResolvedValue("failed");
+    await makeVideoInApp({ picture: true, video: true });
+    fireEvent.click(screen.getByRole("button", { name: "Instagram Story" }));
+    await screen.findByText("Instagram didn't open. Tap More to share the video.");
+    expect(mocks.shareImage).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Instagram Story" }));
+    await waitFor(() => expect(mocks.shareImage).toHaveBeenCalledTimes(1));
+    expect(mocks.shareToInstagramStory).toHaveBeenCalledTimes(1);
+  });
+
+  it("a failed video keeps the one-tap picture; a removed Instagram drops both", async () => {
+    mocks.shareToInstagramStory.mockResolvedValue("failed");
+    await makeVideoInApp({ picture: true, video: true });
+    fireEvent.click(screen.getByRole("button", { name: "Instagram Story" }));
+    await screen.findByText("Instagram didn't open. Tap More to share the video.");
+    fireEvent.click(screen.getByRole("button", { name: "Still" }));
+    await waitFor(() => expect(facebookDisabled()).toBe(false));
+    mocks.shareToInstagramStory.mockClear();
+    mocks.shareToInstagramStory.mockResolvedValue("opened");
+    fireEvent.click(screen.getByRole("button", { name: "Instagram Story" }));
+    await waitFor(() => expect(mocks.shareToInstagramStory).toHaveBeenCalledTimes(1));
+    expect(mocks.shareToInstagramStory.mock.calls[0][0].type).toBe("image/png");
   });
 
   it("a failed video says so and Try again makes it afresh", async () => {

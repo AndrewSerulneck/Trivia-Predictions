@@ -1987,7 +1987,9 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   (`planShareDestination`); words in `copyPresets.ts`. The clipboard write starts inside the tap before any await (browsers
   allow it only then; `lib/copyText.ts`), and the picture still goes with NO `url` field. In the app, Instagram Story uses
   our plugin `InstagramStories` (`native/…/InstagramStoriesPlugin.{swift,java}`, Meta App ID in
-  `native/capacitor.config.json`; web side `lib/nativeInstagramStories.ts`, capability-checked; old builds → share sheet). On iPhone the picture REPLACES
+  `native/capacitor.config.json`; web side `lib/nativeInstagramStories.ts`, capability-checked; old builds → share sheet; an animated Story video
+  goes through it only on builds whose `isAvailable` says `videoFile`, as a cache file path written in pieces by
+  `writeShareFileNatively` (`lib/nativeImageShare.ts`), never base64 — `docs/share-win-celebration-plan.md` Phases 3–3.2). On iPhone the picture REPLACES
   the pasteboard, so the caption goes to the plugin and rides in the same item (9f.2) — never a picture-only `setItems`.
   Next: the 9f review's fix phases (9f.1–9f.4 built 2026-10-22; 9f.5–9f.6; 9f.2's iPhone check is section J item 33) (plan; handoff `docs/native-app-store-plan_PHASE_9F_HANDOFF.md`), then 9g.
 - **What a share shows (Phase 9e, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9E_HANDOFF.md`).** ONE choice per venue

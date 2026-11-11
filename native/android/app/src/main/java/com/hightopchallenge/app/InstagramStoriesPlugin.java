@@ -24,6 +24,12 @@ import java.io.IOException;
  * declares <queries> for com.instagram.android, or Android 11+ can't see Instagram.
  * Read by lib/nativeInstagramStories.ts; same plugin and methods on iOS
  * (InstagramStoriesPlugin.swift). Registered in MainActivity.
+ * An animated Story (docs/share-win-celebration-plan.md Phases 3 and 3.2): the web writes the MP4 to
+ * cache/hightop-share/ with @capacitor/filesystem (in pieces, keeping one video at most) and sends only its
+ * file:// URI as "path", never base64; this plugin shares only files inside that folder, as video/mp4
+ * (Meta: H.264, up to 20 s; ours is 5 s, about 4 MB), and writes no video of its own. isAvailable answers
+ * "videoFile" from whether Instagram takes a video/mp4 Story, so the web side knows this build reads a
+ * path; older builds don't answer it, and the website sends their videos through the share sheet.
  */
 @CapacitorPlugin(name = "InstagramStories")
 public class InstagramStoriesPlugin extends Plugin {
@@ -31,65 +37,90 @@ public class InstagramStoriesPlugin extends Plugin {
     private static final String INSTAGRAM_PACKAGE = "com.instagram.android";
     private static final String ADD_TO_STORY = "com.instagram.share.ADD_TO_STORY";
     private static final String SHARE_FOLDER = "hightop-share";
-    private static final String FILE_NAME = "instagram-story.png";
+    private static final String PICTURE_FILE = "instagram-story.png";
+    private static final String PICTURE_TYPE = "image/png";
+    private static final String VIDEO_TYPE = "video/mp4";
 
-    private Intent storyIntent(Uri picture, String topColor, String bottomColor) {
+    private Intent storyIntent(Uri media, String mimeType, String topColor, String bottomColor) {
         Intent intent = new Intent(ADD_TO_STORY);
         intent.setPackage(INSTAGRAM_PACKAGE);
         intent.putExtra("source_application", getConfig().getString("facebookAppId", ""));
-        if (picture != null) {
-            intent.setDataAndType(picture, "image/png");
+        if (media != null) {
+            intent.setDataAndType(media, mimeType);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         } else {
-            intent.setType("image/png");
+            intent.setType(mimeType);
         }
         intent.putExtra("top_background_color", topColor);
         intent.putExtra("bottom_background_color", bottomColor);
         return intent;
     }
 
-    private boolean instagramCanTakeStory() {
+    private boolean instagramCanTakeStory(String mimeType) {
         Activity activity = getActivity();
         String appId = getConfig().getString("facebookAppId", "");
         return activity != null && appId != null && !appId.isEmpty()
-            && activity.getPackageManager().resolveActivity(storyIntent(null, "#020617", "#020617"), 0) != null;
+            && activity.getPackageManager().resolveActivity(storyIntent(null, mimeType, "#020617", "#020617"), 0) != null;
     }
 
     @PluginMethod
     public void isAvailable(PluginCall call) {
+        boolean available = instagramCanTakeStory(PICTURE_TYPE);
         JSObject result = new JSObject();
-        result.put("available", instagramCanTakeStory());
+        result.put("available", available);
+        result.put("videoFile", available && instagramCanTakeStory(VIDEO_TYPE));
         call.resolve(result);
+    }
+
+    /** The video the web wrote, only if it is an existing file inside cache/hightop-share/ (symlinks and .. resolved). */
+    private File shareFolderFile(Activity activity, String path) throws IOException {
+        if (path == null || path.isEmpty()) return null;
+        Uri uri = Uri.parse(path);
+        if (!"file".equals(uri.getScheme()) || uri.getPath() == null) return null;
+        File file = new File(uri.getPath());
+        String folder = new File(activity.getCacheDir(), SHARE_FOLDER).getCanonicalPath() + File.separator;
+        return file.getCanonicalPath().startsWith(folder) && file.isFile() ? file : null;
     }
 
     @PluginMethod
     public void shareToStory(PluginCall call) {
-        String data = call.getString("data", "");
+        boolean isVideo = "video".equals(call.getString("mediaType", "image"));
+        String mimeType = isVideo ? VIDEO_TYPE : PICTURE_TYPE;
+        String data = isVideo ? call.getString("path", "") : call.getString("data", "");
         if (data == null || data.isEmpty()) {
-            call.reject("A picture is required.");
+            call.reject(isVideo ? "A video is required." : "A picture is required.");
             return;
         }
-        if (!instagramCanTakeStory()) {
+        if (!instagramCanTakeStory(mimeType)) {
             call.reject("Instagram is not installed.", "NOT_INSTALLED");
             return;
         }
         Activity activity = getActivity();
-        Uri picture;
+        Uri media;
         try {
-            byte[] bytes = Base64.decode(data, Base64.DEFAULT);
-            File folder = new File(activity.getCacheDir(), SHARE_FOLDER);
-            if (!folder.isDirectory() && !folder.mkdirs()) throw new IOException("Could not create the share folder.");
-            File file = new File(folder, FILE_NAME);
-            try (FileOutputStream out = new FileOutputStream(file)) {
-                out.write(bytes);
+            File file;
+            if (isVideo) {
+                file = shareFolderFile(activity, data);
+                if (file == null) throw new IOException("The video is not in the share folder.");
+            } else {
+                File folder = new File(activity.getCacheDir(), SHARE_FOLDER);
+                if (!folder.isDirectory() && !folder.mkdirs()) throw new IOException("Could not create the share folder.");
+                file = new File(folder, PICTURE_FILE);
+                try (FileOutputStream out = new FileOutputStream(file)) {
+                    out.write(Base64.decode(data, Base64.DEFAULT));
+                }
             }
-            picture = FileProvider.getUriForFile(activity, activity.getPackageName() + ".fileprovider", file);
+            media = FileProvider.getUriForFile(activity, activity.getPackageName() + ".fileprovider", file);
         } catch (IllegalArgumentException | IOException ex) {
-            call.reject("Could not prepare the picture.", ex);
+            call.reject(isVideo ? "Could not prepare the video." : "Could not prepare the picture.", ex);
+            return;
+        } catch (OutOfMemoryError ex) {
+            // A low-memory phone: decoding a large picture is an Error, not an Exception, and would crash the app.
+            call.reject("Could not prepare the picture.");
             return;
         }
-        Intent intent = storyIntent(picture, call.getString("topColor", "#020617"), call.getString("bottomColor", "#020617"));
-        activity.grantUriPermission(INSTAGRAM_PACKAGE, picture, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        Intent intent = storyIntent(media, mimeType, call.getString("topColor", "#020617"), call.getString("bottomColor", "#020617"));
+        activity.grantUriPermission(INSTAGRAM_PACKAGE, media, Intent.FLAG_GRANT_READ_URI_PERMISSION);
         try {
             activity.startActivity(intent);
             call.resolve();
