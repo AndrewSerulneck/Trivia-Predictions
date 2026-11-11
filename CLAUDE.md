@@ -131,4 +131,5 @@ the table.
 | PWA / bingo landscape | `docs/bingo-fullscreen-pwa-plan.md` | No service worker ever; manifest `start_url` stays `/`, no `orientation`. Run `npm run test:pwa-contract`. |
 | Super Bowl Squares + March Madness Bracket | `docs/squares-and-brackets-plan.md` | Seasonal points only via `creditSeasonalPoints`; prize cycle keys only via their helper. |
 | Game themes (Venue Home buttons, Share to social looks) | `docs/game-themes-plan.md` | Every Venue Home game = one `GAME_TILE_THEMES` entry; every Share to social game (`PromoGameId`) = one `PROMO_THEMES` entry; a theme styles the name, never rewords it; vector art only, no logos. |
+| Share Your Win celebration effects + Animated Story | `docs/share-win-celebration-plan.md` | Effects never cover a `keepOut` box (words, QR, panel, face) in any frame; a shared picture's `effectsKey` must match the chips; the video ends on the still. |
 | Share to social (partner posts / Reels) | `docs/partner-social-promo-plan.md` | A new schedulable game or prize challenge needs a Share to social design too (`lib/promo/promoTemplates.ts`); prizes ride on the game's design. |

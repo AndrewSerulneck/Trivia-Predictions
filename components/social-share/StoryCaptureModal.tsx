@@ -20,7 +20,18 @@ import {
   type StoryCameraSessionError,
 } from "@/lib/socialShare/cameraSession";
 import { setScrollLock } from "@/lib/scrollLock";
-import { StoryCanvasRenderError } from "@/lib/socialShare/storyCanvas";
+import { StoryCanvasRenderError, snapshotStorySource } from "@/lib/socialShare/storyCanvas";
+import {
+  CELEBRATION_EFFECT_ORDER,
+  celebrationEffectsKey,
+  normalizeCelebrationEffects,
+  type CelebrationEffect,
+} from "@/lib/socialShare/celebrationEffects";
+import {
+  canMakeCelebrationVideo,
+  encodeCelebrationVideo,
+  type CelebrationVideoInput,
+} from "@/lib/socialShare/celebrationVideo";
 import { APP_DOWNLOAD_URL } from "@/lib/appDownloadLink";
 import { copyText } from "@/lib/copyText";
 import { haptic } from "@/lib/haptics";
@@ -32,14 +43,22 @@ import {
   SHARE_CAPTION_COPY_FAILED,
   SHARE_DESIGN_NAMES,
   SHARE_DESTINATION_COPY,
+  SHARE_EFFECT_NAMES,
+  SHARE_MOTION_NAMES,
   SHARE_SIZE_NAMES,
   SHARE_VENUE_LOADING,
+  SHARE_VIDEO_CANCEL,
+  SHARE_VIDEO_FAILED,
+  SHARE_VIDEO_MAKING,
+  SHARE_VIDEO_RETRY,
   shareTagNudge,
 } from "@/lib/socialShare/copyPresets";
 import { planShareDestination, xIntentUrl, type ShareDestination } from "@/lib/socialShare/shareDestinations";
 import {
   STORY_SHARE_SIZE_ORDER,
   STORY_SHARE_SIZES,
+  buildShareDesignAnimation,
+  buildShareDesignSpec,
   readyMadeDesignsFor,
   type StoryShareDesign,
   type StoryShareSize,
@@ -80,6 +99,13 @@ type StoryCaptureState = "idle" | "capturing" | "captured" | "failed";
 /** Ready-made designs first (Andrew: the camera is never required); the selfie is an extra. */
 type StoryShareMode = "designs" | "camera";
 type StoryNativeShareState = "idle" | "sharing" | "shared" | "fallback";
+/** Still picture, or the animated Story (docs/share-win-celebration-plan.md Phase 2; Story size only). */
+type StoryMotion = keyof typeof SHARE_MOTION_NAMES;
+/** The animated Story for one `input` (an object made per choice: a new choice is a new object). */
+type StoryVideo =
+  | { input: CelebrationVideoInput; status: "making"; progress: number }
+  | { input: CelebrationVideoInput; status: "ready"; blob: Blob; url: string }
+  | { input: CelebrationVideoInput; status: "failed" };
 
 function cameraErrorToState(error: StoryCameraSessionError): CameraViewportState {
   if (error.code === "permission-denied") return "denied";
@@ -139,14 +165,14 @@ function openInNewTab(url: string): boolean {
   return tab !== null;
 }
 
-function getStoryShareFileName(preparedStory: PreparedStorySharePayload, size: StoryShareSize): string {
+function getStoryShareFileName(preparedStory: PreparedStorySharePayload, size: StoryShareSize, video = false): string {
   const game = `${storyShareGame(preparedStory.payload.gameType).fileSlug}${size === "post" ? "-post" : ""}`;
   const safeUsername = preparedStory.payload.username
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  return `hightop-${game}${safeUsername ? `-${safeUsername}` : ""}.png`;
+  return `hightop-${game}${safeUsername ? `-${safeUsername}` : ""}.${video ? "mp4" : "png"}`;
 }
 
 function buildStoryShareAnalyticsContext(
@@ -194,6 +220,18 @@ export function StoryCaptureModal({
   const [mode, setMode] = useState<StoryShareMode>("designs");
   const [size, setSize] = useState<StoryShareSize>("story");
   const [chosenDesign, setChosenDesign] = useState<StoryShareDesign | null>(null);
+  // The celebration effects the guest switched on (docs/share-win-celebration-plan.md): all off at open.
+  const [effects, setEffects] = useState<CelebrationEffect[]>([]);
+  // Which effects the captured selfie was drawn with; Share waits while a redraw catches up.
+  const [capturedEffectsKey, setCapturedEffectsKey] = useState<string | null>(null);
+  const [motion, setMotion] = useState<StoryMotion>("still");
+  // Can this browser make the video? Asked once per open, loading nothing; no → Animated never shows.
+  const [videoSupported, setVideoSupported] = useState(false);
+  const [video, setVideo] = useState<StoryVideo | null>(null);
+  // Bumped by "Try again" after a failed video, so the same choice is made afresh.
+  const [videoAttempt, setVideoAttempt] = useState(0);
+  // The captured selfie's still copy, as state too: the animated selfie is made from it.
+  const [selfieSnapshot, setSelfieSnapshot] = useState<HTMLCanvasElement | null>(null);
   // What the sheet says after a destination or the copy button is tapped (Phase 9d).
   const [destinationHint, setDestinationHint] = useState<string | null>(null);
   // Mirrors destinationBusyRef so the row and the copy button show disabled while a tap is running.
@@ -201,6 +239,9 @@ export function StoryCaptureModal({
   // In the app: this build has the Instagram Stories plugin and Instagram is installed. Asked once per open.
   const [instagramStoryDirect, setInstagramStoryDirect] = useState(false);
   const sessionRef = useRef<StoryCameraSession | null>(null);
+  // A still copy of the captured camera frame, so switching an effect redraws the same selfie.
+  const snapshotRef = useRef<HTMLCanvasElement | null>(null);
+  const selfieRenderIdRef = useRef(0);
   const requestIdRef = useRef(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const wasOpenRef = useRef(false);
@@ -236,10 +277,47 @@ export function StoryCaptureModal({
   ), [basePreparedStory, caption, size]);
   const readyMadeDesigns = readyMadeDesignsFor(basePreparedStory);
   const design = chosenDesign && readyMadeDesigns.includes(chosenDesign) ? chosenDesign : readyMadeDesigns[0];
-  const { pictures, failed: picturesFailed } = useSharePictures(basePreparedStory, size, design, isOpen && mode === "designs");
+  const effectsKey = celebrationEffectsKey(effects);
+  const { pictures, failed: picturesFailed } = useSharePictures(basePreparedStory, size, design, isOpen && mode === "designs", effects);
   const designPicture = pictures[design] ?? null;
+  // Shown while a redraw with new effects is on its way, but never shared.
+  const designReady = designPicture !== null && designPicture.effectsKey === effectsKey;
   // What Share hands over: the chosen ready-made picture, or the captured selfie.
-  const shareBlob = mode === "designs" ? designPicture?.blob ?? null : capturedBlob;
+  const stillBlob = mode === "designs"
+    ? (designReady ? designPicture.blob : null)
+    : (capturedEffectsKey === effectsKey ? capturedBlob : null);
+  // Animated: a Story with at least one effect, from a design or a captured selfie.
+  const motionAvailable = videoSupported && size === "story" && (mode === "designs" || selfieSnapshot !== null);
+  const animated = motionAvailable && motion === "animated" && effects.length > 0;
+  const videoInput = useMemo<CelebrationVideoInput | null>(() => {
+    if (!animated) return null;
+    const chosen = normalizeCelebrationEffects(effectsKey.split("+"));
+    if (mode === "camera") {
+      if (!selfieSnapshot) return null;
+      const animation = buildShareDesignAnimation(activePreparedStory, "selfie", "story", {
+        mirrorPreview: activePreparedStory.renderSpec.mirrorPreview,
+        effects: chosen,
+      });
+      return { ...animation, source: selfieSnapshot };
+    }
+    // As useSharePictures draws the ready-made pictures.
+    const prepared = prepareStorySharePayload(basePreparedStory.payload, { templateVariant: basePreparedStory.templateVariant, size: "story" });
+    return { ...buildShareDesignAnimation(prepared, design, "story", { effects: chosen }), source: null };
+    // videoAttempt: "Try again" makes a new input, so the effect below runs again.
+  }, [activePreparedStory, animated, basePreparedStory, design, effectsKey, mode, selfieSnapshot, videoAttempt]); // eslint-disable-line react-hooks/exhaustive-deps
+  const currentVideo = video && video.input === videoInput ? video : null;
+  const readyVideo = currentVideo?.status === "ready" ? currentVideo : null;
+  const videoFailed = currentVideo?.status === "failed";
+  const videoMaking = videoInput !== null && !readyVideo && !videoFailed;
+  const videoProgress = currentVideo?.status === "making" ? currentVideo.progress : 0;
+  // What Share hands over: the picture, or (Animated) the video once it is made.
+  const shareBlob = animated ? (readyVideo?.blob ?? null) : stillBlob;
+  const selfieSpecFor = useCallback((chosen: readonly CelebrationEffect[]) => buildShareDesignSpec(
+    activePreparedStory,
+    "selfie",
+    size,
+    { mirrorPreview: activePreparedStory.renderSpec.mirrorPreview, effects: chosen }
+  ), [activePreparedStory, size]);
   const analyticsContext = useMemo(
     () => buildStoryShareAnalyticsContext(activePreparedStory, storyShareId),
     [activePreparedStory, storyShareId]
@@ -262,6 +340,10 @@ export function StoryCaptureModal({
   }, [onClose, stopSession]);
 
   const resetCapturedImage = useCallback(() => {
+    snapshotRef.current = null;
+    setSelfieSnapshot(null);
+    selfieRenderIdRef.current += 1;
+    setCapturedEffectsKey(null);
     setCapturedBlob(null);
     setCapturedImageUrl((currentUrl) => {
       if (currentUrl) {
@@ -349,21 +431,24 @@ export function StoryCaptureModal({
       });
 
       try {
-        const blob = await webStoryPlatform.captureFrame({
-          source: video,
-          spec: activePreparedStory.renderSpec,
-        });
+        selfieRenderIdRef.current += 1;
+        const snapshot = snapshotStorySource(video);
+        snapshotRef.current = snapshot;
+        setSelfieSnapshot(snapshot);
+        const spec = selfieSpecFor(effects);
+        const blob = await webStoryPlatform.captureFrame({ source: snapshot, spec });
         const objectUrl = URL.createObjectURL(blob);
         setCapturedBlob(blob);
         setCapturedImageUrl(objectUrl);
+        setCapturedEffectsKey(effectsKey);
         setCaptureState("captured");
         setNativeShareState("idle");
         setShareResult(null);
         setFallbackOpen(false);
         trackStoryCaptureCompleted({
           ...analyticsContext,
-          imageWidth: activePreparedStory.renderSpec.width,
-          imageHeight: activePreparedStory.renderSpec.height,
+          imageWidth: spec.width,
+          imageHeight: spec.height,
         });
         onCaptureComplete?.(blob);
       } catch (unknownError) {
@@ -377,7 +462,7 @@ export function StoryCaptureModal({
     } finally {
       captureStoryImagePendingRef.current = false;
     }
-  }, [activePreparedStory.renderSpec, analyticsContext, onCaptureComplete, state]);
+  }, [analyticsContext, effects, effectsKey, onCaptureComplete, selfieSpecFor, state]);
 
   const shareCapturedStory = useCallback(async (destination: ShareDestination = "more"): Promise<StorySharePipelineResult | null> => {
     if (shareCapturedStoryPendingRef.current) return null;
@@ -393,7 +478,7 @@ export function StoryCaptureModal({
 
       const result = await webStoryPlatform.shareImage({
         blob: shareBlob,
-        fileName: getStoryShareFileName(activePreparedStory, size),
+        fileName: getStoryShareFileName(activePreparedStory, size, animated),
         title: activePreparedStory.headline,
         text: activePreparedStory.shareText,
       });
@@ -419,7 +504,7 @@ export function StoryCaptureModal({
     } finally {
       shareCapturedStoryPendingRef.current = false;
     }
-  }, [activePreparedStory, analyticsContext, nativeShareState, shareBlob, size]);
+  }, [activePreparedStory, analyticsContext, animated, nativeShareState, shareBlob, size]);
 
   const resetShareState = useCallback(() => {
     setNativeShareState("idle");
@@ -442,12 +527,13 @@ export function StoryCaptureModal({
     destinationBusyRef.current = true;
     setDestinationBusy(true);
     try {
-      const fileName = getStoryShareFileName(activePreparedStory, size);
+      const fileName = getStoryShareFileName(activePreparedStory, size, animated);
       const file = webStoryPlatform.createShareFile({ blob: shareBlob, fileName });
       const plan = planShareDestination(destination, {
         instagramStoryDirect,
         canSharePicture: webStoryPlatform.canShareFile(file) || canShareImageNatively(),
         inApp: isNativeApp(),
+        video: animated,
       });
       haptic("selection");
       // Started inside the tap, before any await: browsers allow a clipboard write (and the share
@@ -458,7 +544,7 @@ export function StoryCaptureModal({
       if (plan.action === "download") {
         const result = webStoryPlatform.saveImage({ blob: shareBlob, fileName });
         trackStoryShareFallbackUsed({ ...analyticsContext, fallbackMode: "download", resultReason: `${destination}: ${result.reason ?? result.status}` });
-        setDestinationHint(result.status === "saved" ? plan.hint : "Couldn't save the picture. Try More instead.");
+        setDestinationHint(result.status === "saved" ? plan.hint : `Couldn't save the ${animated ? "video" : "picture"}. Try More instead.`);
         return;
       }
       if (plan.action === "x-intent") {
@@ -488,16 +574,46 @@ export function StoryCaptureModal({
       const result = await shareCapturedStory(destination);
       // No share sheet at all (most desktops): the "Share options" panel takes over, so no app hint.
       if (!result || result.status === "unsupported" || result.status === "failed") return;
-      const sheetPlan = planShareDestination(destination, { instagramStoryDirect: false, canSharePicture: true, inApp: isNativeApp() });
+      const sheetPlan = planShareDestination(destination, { instagramStoryDirect: false, canSharePicture: true, inApp: isNativeApp(), video: animated });
       setDestinationHint(plan.copyCaption && !(await copied) ? SHARE_CAPTION_COPY_FAILED : sheetPlan.hint);
     } finally {
       destinationBusyRef.current = false;
       setDestinationBusy(false);
     }
-  }, [activePreparedStory, analyticsContext, instagramStoryDirect, nativeShareState, shareBlob, shareCapturedStory, size, venueReady]);
+  }, [activePreparedStory, analyticsContext, animated, instagramStoryDirect, nativeShareState, shareBlob, shareCapturedStory, size, venueReady]);
 
   const chooseDesign = useCallback((next: StoryShareDesign) => {
     setChosenDesign(next);
+    resetShareState();
+  }, [resetShareState]);
+
+  const toggleEffect = useCallback((effect: CelebrationEffect) => {
+    const next = normalizeCelebrationEffects(effects.includes(effect) ? effects.filter((on) => on !== effect) : [...effects, effect]);
+    setEffects(next);
+    resetShareState();
+    // A captured selfie is redrawn from its still copy; the ready-made pictures redraw in useSharePictures.
+    const snapshot = snapshotRef.current;
+    if (mode !== "camera" || !snapshot) return;
+    const renderId = selfieRenderIdRef.current + 1;
+    selfieRenderIdRef.current = renderId;
+    webStoryPlatform.captureFrame({ source: snapshot, spec: selfieSpecFor(next) }).then((blob) => {
+      if (renderId !== selfieRenderIdRef.current) return;
+      const objectUrl = URL.createObjectURL(blob);
+      setCapturedBlob(blob);
+      setCapturedImageUrl((currentUrl) => {
+        if (currentUrl) URL.revokeObjectURL(currentUrl);
+        return objectUrl;
+      });
+      setCapturedEffectsKey(celebrationEffectsKey(next));
+    }, (unknownError: unknown) => {
+      if (renderId !== selfieRenderIdRef.current) return;
+      setCaptureError(unknownError instanceof StoryCanvasRenderError ? unknownError.message : "Story capture failed unexpectedly.");
+      setCaptureState("failed");
+    });
+  }, [effects, mode, resetShareState, selfieSpecFor]);
+
+  const chooseMotion = useCallback((next: StoryMotion) => {
+    setMotion(next);
     resetShareState();
   }, [resetShareState]);
 
@@ -575,6 +691,43 @@ export function StoryCaptureModal({
       canceled = true;
     };
   }, [isOpen]);
+
+  // Can this browser make the animated Story? One cheap check per open; nothing is downloaded.
+  useEffect(() => {
+    if (!isOpen) return;
+    let canceled = false;
+    void canMakeCelebrationVideo().then((supported) => {
+      if (!canceled) setVideoSupported(supported);
+    });
+    return () => {
+      canceled = true;
+    };
+  }, [isOpen]);
+
+  // Animated: make the video on the phone for the current choice. A new choice (design, effect, selfie,
+  // size, Still, closing) cancels the one being made.
+  useEffect(() => {
+    if (!videoInput) return;
+    const controller = new AbortController();
+    void encodeCelebrationVideo(videoInput, {
+      signal: controller.signal,
+      onProgress: (progress) => {
+        if (!controller.signal.aborted) setVideo({ input: videoInput, status: "making", progress });
+      },
+    }).then((blob) => {
+      if (controller.signal.aborted) return;
+      setVideo({ input: videoInput, status: "ready", blob, url: URL.createObjectURL(blob) });
+    }, () => {
+      if (!controller.signal.aborted) setVideo({ input: videoInput, status: "failed" });
+    });
+    return () => controller.abort();
+  }, [videoInput]);
+
+  // Each video's object URL is released when it is replaced or the sheet closes.
+  const readyVideoUrl = video?.status === "ready" ? video.url : null;
+  useEffect(() => () => {
+    if (readyVideoUrl) URL.revokeObjectURL(readyVideoUrl);
+  }, [readyVideoUrl]);
 
   // The camera's permission state is read only once the player asks for a selfie.
   useEffect(() => {
@@ -663,9 +816,12 @@ export function StoryCaptureModal({
   const canCopyCaption = venueReady && !destinationBusy;
   const shareStatusCopy = getShareStatusCopy(nativeShareState, shareResult);
   const captureStatusCopy = getCaptureStatusCopy(captureState, captureError);
-  const statusCopy = destinationHint ?? (!venueReady ? SHARE_VENUE_LOADING : null) ?? (inCamera
+  // While the video is made (or failed) its panel over the picture says so; the line stays quiet.
+  const statusCopy = destinationHint ?? (!venueReady ? SHARE_VENUE_LOADING : null) ?? (animated && !readyVideo
+    ? null
+    : inCamera
     ? shareStatusCopy ?? captureStatusCopy ?? getStatusCopy(state, error)
-    : shareStatusCopy ?? getDesignStatusCopy(designPicture !== null, picturesFailed));
+    : shareStatusCopy ?? getDesignStatusCopy(designReady, picturesFailed));
   const captureButtonLabel = captureState === "capturing" ? "Capturing" : captureState === "captured" ? "Retake" : "Capture";
   const tagNudge = shareTagNudge(activePreparedStory.payload.venueName, activePreparedStory.payload.venueInstagram);
   const showFallbackActions = fallbackOpen && shareBlob !== null;
@@ -673,6 +829,78 @@ export function StoryCaptureModal({
   const statusIsAlert = Boolean(
     captureError || (inCamera && error) || shareResult?.status === "failed" || (!inCamera && picturesFailed && !designPicture)
   );
+
+  const effectChips = (
+    // Two by two on the narrowest phones, one row from 340px.
+    <div className="grid shrink-0 grid-cols-2 gap-2 min-[340px]:flex min-[340px]:flex-wrap min-[340px]:justify-center" role="group" aria-label="Effects">
+      {CELEBRATION_EFFECT_ORDER.map((effect) => {
+        const on = effects.includes(effect);
+        return (
+          <button
+            key={effect}
+            type="button"
+            onClick={() => toggleEffect(effect)}
+            aria-pressed={on}
+            disabled={nativeShareState === "sharing" || captureState === "capturing"}
+            className={`tp-player-pressable tp-clean-button h-9 rounded-full px-4 text-sm font-black transition ${
+              on ? "bg-white text-slate-950" : "bg-white/[0.08] text-slate-300 hover:text-white"
+            }`}
+          >
+            {SHARE_EFFECT_NAMES[effect]}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const motionToggle = motionAvailable ? (
+    <div className="flex shrink-0 justify-center" role="group" aria-label="Motion">
+      <div className="inline-flex rounded-full bg-white/[0.08] p-1">
+        {(Object.keys(SHARE_MOTION_NAMES) as StoryMotion[]).map((option) => {
+          // Animated needs an effect to move.
+          const selected = option === "animated" ? animated : !animated;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => chooseMotion(option)}
+              aria-pressed={selected}
+              disabled={nativeShareState === "sharing" || captureState === "capturing" || (option === "animated" && effects.length === 0)}
+              className={`tp-player-pressable tp-clean-button h-9 rounded-full px-4 text-sm font-black transition disabled:opacity-50 ${
+                selected ? "bg-white text-slate-950" : "text-slate-300 hover:text-white"
+              }`}
+            >
+              {SHARE_MOTION_NAMES[option]}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  ) : null;
+
+  // Over the picture while the video is made: progress and Cancel (back to Still), or Try again.
+  const videoPanel = animated && !readyVideo ? (
+    <div className="absolute inset-x-0 bottom-3 z-[6] mx-auto flex w-[min(12rem,calc(100%-1.5rem))] flex-col items-center gap-2 rounded-2xl bg-slate-950/[0.88] p-3 text-center shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
+      <p role={videoFailed ? "alert" : "status"} className="text-sm font-black text-white">
+        {videoMaking ? `${SHARE_VIDEO_MAKING} ${Math.round(videoProgress * 100)}%` : SHARE_VIDEO_FAILED}
+      </p>
+      {videoMaking ? (
+        <progress
+          max={100}
+          value={Math.round(videoProgress * 100)}
+          aria-label={SHARE_VIDEO_MAKING}
+          className="h-2 w-full overflow-hidden rounded-full [&::-moz-progress-bar]:bg-cyan-300 [&::-webkit-progress-bar]:bg-white/[0.12] [&::-webkit-progress-value]:bg-cyan-300"
+        />
+      ) : null}
+      <button
+        type="button"
+        onClick={() => (videoMaking ? chooseMotion("still") : setVideoAttempt((attempt) => attempt + 1))}
+        className="tp-player-pressable tp-clean-button h-9 rounded-full bg-white/[0.12] px-4 text-sm font-black text-white transition hover:bg-white/[0.18]"
+      >
+        {videoMaking ? SHARE_VIDEO_CANCEL : SHARE_VIDEO_RETRY}
+      </button>
+    </div>
+  ) : null;
 
   const sizeToggle = (
     <div className="flex shrink-0 justify-center" role="group" aria-label="Picture size">
@@ -719,7 +947,8 @@ export function StoryCaptureModal({
         <main className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-3 pb-3">
           {inCamera ? (
             <>
-              <div className="relative flex min-h-0 flex-1">
+              {/* Never collapses on a short phone once the effect chips show: the sheet scrolls instead. */}
+              <div className="relative flex min-h-[14rem] flex-1">
                 <CameraViewport
                   stream={stream}
                   state={state}
@@ -733,19 +962,38 @@ export function StoryCaptureModal({
                 </CameraViewport>
                 {capturedImageUrl ? (
                   <div className="absolute inset-0 z-[5] overflow-hidden rounded-[32px] border border-emerald-200/40 bg-slate-950">
-                    <img
-                      src={capturedImageUrl}
-                      alt="Captured story preview"
-                      className="h-full w-full object-contain"
-                    />
+                    {animated && readyVideo ? (
+                      <video
+                        key={readyVideo.url}
+                        src={readyVideo.url}
+                        poster={capturedImageUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        aria-label="Captured story preview"
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <img
+                        src={capturedImageUrl}
+                        alt="Captured story preview"
+                        className="h-full w-full object-contain"
+                      />
+                    )}
                     <div className="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-emerald-200/30 bg-emerald-400 px-3 py-1.5 text-caption font-black uppercase tracking-[0.12em] text-slate-950">
                       <Check className="h-4 w-4" aria-hidden="true" />
                       Captured
                     </div>
+                    {videoPanel}
                   </div>
                 ) : null}
               </div>
-              {sizeToggle}
+              <div className="flex shrink-0 flex-wrap justify-center gap-2">
+                {sizeToggle}
+                {motionToggle}
+              </div>
+              {capturedImageUrl ? effectChips : null}
               <StoryOverlayEditor
                 preparedStory={activePreparedStory}
                 caption={caption}
@@ -756,8 +1004,22 @@ export function StoryCaptureModal({
           ) : (
             <>
               {/* Never collapses on a short phone (iPhone SE): the sheet scrolls instead. */}
-              <div className="flex min-h-[14rem] flex-1 items-center justify-center">
-                {designPicture ? (
+              <div className="relative flex min-h-[14rem] flex-1 items-center justify-center">
+                {animated && readyVideo ? (
+                  <video
+                    key={readyVideo.url}
+                    src={readyVideo.url}
+                    poster={designPicture?.url}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    width={sizeSpec.width}
+                    height={sizeSpec.height}
+                    aria-label={activePreparedStory.winLine}
+                    className="h-full max-h-full w-auto max-w-full rounded-2xl object-contain shadow-[0_18px_44px_rgba(0,0,0,0.5)]"
+                  />
+                ) : designPicture ? (
                   <img
                     src={designPicture.url}
                     alt={activePreparedStory.winLine}
@@ -773,8 +1035,12 @@ export function StoryCaptureModal({
                     aria-hidden="true"
                   />
                 )}
+                {videoPanel}
               </div>
-              {sizeToggle}
+              <div className="flex shrink-0 flex-wrap justify-center gap-2">
+                {sizeToggle}
+                {motionToggle}
+              </div>
               <div className="flex shrink-0 justify-center gap-3" role="radiogroup" aria-label="Design">
                 {readyMadeDesigns.map((option) => {
                   const picture = pictures[option];
@@ -804,6 +1070,7 @@ export function StoryCaptureModal({
                   );
                 })}
               </div>
+              {effectChips}
               <ShareCaption caption={activePreparedStory.shareText} onCopy={() => void copyCaption()} disabled={!canCopyCaption} />
             </>
           )}
@@ -813,7 +1080,7 @@ export function StoryCaptureModal({
           {showFallbackActions ? (
             <ShareActionsSheet
               imageBlob={shareBlob}
-              fileName={getStoryShareFileName(activePreparedStory, size)}
+              fileName={getStoryShareFileName(activePreparedStory, size, animated)}
               shareResult={shareResult}
               analyticsContext={analyticsContext}
               onRetryNativeShare={() => void shareCapturedStory()}

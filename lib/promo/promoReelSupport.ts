@@ -8,8 +8,16 @@ import { REEL_FPS, REEL_HEIGHT, REEL_VIDEO_BITRATE, REEL_WIDTH } from "@/lib/pro
 export const REEL_AVC_CODEC = "avc1.640028";
 
 export const canMakeReel = async (): Promise<boolean> => {
-  if (typeof window === "undefined") return false;
-  if (typeof VideoEncoder !== "function" || typeof OfflineAudioContext !== "function") return false;
+  if (typeof window === "undefined" || typeof OfflineAudioContext !== "function") return false;
+  return canEncodeStoryVideo();
+};
+
+/**
+ * Can this browser encode a silent 1080×1920 H.264 video? The guests' animated Story
+ * (lib/socialShare/celebrationVideo.ts) has no sound, so it needs only this half of `canMakeReel`.
+ */
+export const canEncodeStoryVideo = async (): Promise<boolean> => {
+  if (typeof window === "undefined" || typeof VideoEncoder !== "function") return false;
   try {
     const result = await VideoEncoder.isConfigSupported({
       codec: REEL_AVC_CODEC,

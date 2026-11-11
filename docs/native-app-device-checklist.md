@@ -263,3 +263,27 @@ profile expires **2027-10-23T12:00:55Z**; the free-build warning at the top is h
     provisioning profile only removes the old free-build expiry problem; it does not prove session persistence.
 
 Handoffs: `docs/native-app-store-plan_PHASE_4C_HANDOFF.md`, `docs/native-app-store-plan_PHASE_2B_HANDOFF.md`.
+
+## P. Share Your Win — effects and Animated Story (web deploy only; no rebuild; added 2026-11-11)
+
+Plan: `docs/share-win-celebration-plan.md` (Phases 1–2). Win any game (or open a won prize) → **Share my win**. Do
+this in Safari / Chrome on the phone AND in the app. Note the phone model and how long step 79 takes.
+
+76. **Effects:** the four chips (Fireworks, Lasers, Confetti, Clapping) start off. Tap each: the big picture and the
+    three small designs redraw within a second or two; nothing covers the words, the QR or the bar's panel.
+77. **Still / Animated:** shows only on **Story** (Post hides it). **Animated** is greyed out until an effect is on.
+78. **Making it:** turn on Fireworks + Lasers → **Animated** → "Making your Story… N%" with a bar → **Cancel** goes
+    back to Still. Tap **Animated** again and let it finish.
+79. **The video:** it plays on the sheet (about 5 s, no sound): lasers sweep in, fireworks launch and burst,
+    confetti falls, hands clap, and it ends on the still picture. Write down how long making it took.
+80. **Instagram Story:** tap it → the phone's share sheet opens with the video → Instagram → Story → the video plays
+    there. (In the app the one-tap Instagram button sends pictures only; a video uses the share sheet, Phase 3.)
+81. **Save:** Safari/Chrome downloads `hightop-…mp4` ("Video saved."); in the app the share sheet → **Save Video**
+    puts it in Photos / Gallery. It plays there.
+82. **Selfie:** Take a selfie instead → Capture → turn on Confetti → Animated → the video shows your photo still
+    with the confetti moving over it, never over your face.
+83. **Old phone:** on an older phone (or iOS below 16.4) Still / Animated doesn't appear at all — that's correct.
+
+| # | iPhone | Android | Notes |
+|---|---|---|---|
+| 76–83 | | | |

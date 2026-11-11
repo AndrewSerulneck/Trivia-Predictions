@@ -239,6 +239,19 @@ export interface StoryShapeBlock {
   opacity?: number;
   /** SVG path data the shape is clipped to, in the shape's own coordinates. */
   clip?: string;
+  /** How it mixes with what is under it: "lighter" adds light (a laser's glow). Absent: painted over. */
+  composite?: "lighter" | "screen";
+}
+
+/**
+ * The celebration effects a guest switched on (lib/socialShare/celebrationEffects.ts), split by
+ * where they sit in the picture: `behind` the design (lasers), `middle` over the design's shapes
+ * but under its pictures and words (fireworks, confetti), `front` over everything (clapping hands).
+ */
+export interface StoryEffectLayers {
+  behind: StoryShapeBlock[];
+  middle: StoryShapeBlock[];
+  front: StoryShapeBlock[];
 }
 
 export interface StoryImageBlock {
@@ -254,8 +267,9 @@ export interface StoryImageBlock {
 }
 
 /**
- * One picture. Drawn in this order: the photo (or `background`), the frame, the backdrop, shapes, images,
- * then text — one renderer for every design and size (lib/socialShare/storyCanvas.ts).
+ * One picture. Drawn in this order: the photo (or `background`), `effects.behind`, the frame, the backdrop,
+ * shapes, `effects.middle`, images, text, then `effects.front` — one renderer for every design and size
+ * (lib/socialShare/storyCanvas.ts).
  */
 export interface StoryRenderSpec {
   width: number;
@@ -273,6 +287,8 @@ export interface StoryRenderSpec {
   shapes?: StoryShapeBlock[];
   images?: StoryImageBlock[];
   textBlocks: StoryTextBlock[];
+  /** The guest's celebration effects; absent or null = none (today's picture). */
+  effects?: StoryEffectLayers | null;
 }
 
 export interface StoryBlocks {

@@ -1,7 +1,16 @@
 import { APP_DOWNLOAD_DISPLAY_URL } from "@/lib/appDownloadLink";
 import { PRIZE_CARD_PICTURE } from "@/lib/themeTokens";
+import {
+  celebrationLayers,
+  normalizeCelebrationEffects,
+  planCelebration,
+  type CelebrationEffect,
+  type CelebrationStage,
+  type EffectRect,
+} from "./celebrationEffects";
 import { SHARE_PLAY_LINE, SHARE_SCAN_LINE, shareInstagramMention } from "./copyPresets";
 import type {
+  StoryEffectLayers,
   StoryFill,
   StoryImageBlock,
   StoryRenderSpec,
@@ -87,6 +96,8 @@ interface DesignParts {
   shapes: StoryShapeBlock[];
   images: StoryImageBlock[];
   textBlocks: StoryTextBlock[];
+  /** Content drawn as shapes (the venue panel, the gift card): celebration effects stay off it. */
+  contentShapes: EffectRect[];
 }
 
 interface Frame {
@@ -108,6 +119,7 @@ const frameOf = (size: StoryShareSize): Frame => {
 interface VenuePanel extends Pick<DesignParts, "shapes" | "images" | "textBlocks"> {
   /** The panel's top edge: content above must end before it. */
   top: number;
+  rect: EffectRect;
 }
 
 const venuePanel = (
@@ -210,6 +222,7 @@ const venuePanel = (
 
   return {
     top,
+    rect: { x, y: top, width, height: panelHeight },
     shapes: [{ x, y: top, width, height: panelHeight, radius: 40, fill: { kind: "solid", color: options.panelFill } }],
     images: [{ src: SHARE_QR_SRC, x: qrX, y: qrY, width: QR_SIZE, height: QR_SIZE, radius: 18, smoothing: false }],
     textBlocks,
@@ -328,6 +341,7 @@ const spotlight = (prepared: PreparedStorySharePayload, frame: Frame): DesignPar
       usernameBlock(prepared, frame, usernameY),
       ...panel.textBlocks,
     ],
+    contentShapes: [panel.rect],
   };
 };
 
@@ -482,6 +496,7 @@ const card = (prepared: PreparedStorySharePayload, frame: Frame): DesignParts =>
       usernameBlock(prepared, frame, usernameY),
       ...panel.textBlocks,
     ],
+    contentShapes: [panel.rect, { x: cardX, y: cardY, width: cardWidth, height: cardHeight }],
   };
 };
 
@@ -549,6 +564,7 @@ const night = (prepared: PreparedStorySharePayload, frame: Frame): DesignParts =
       usernameBlock(prepared, frame, usernameY),
       ...panel.textBlocks,
     ],
+    contentShapes: [panel.rect],
   };
 };
 
@@ -657,6 +673,7 @@ const selfie = (prepared: PreparedStorySharePayload, frame: Frame, size: StorySh
       usernameBlock(prepared, frame, usernameY, readable),
       ...panel.textBlocks,
     ],
+    contentShapes: [panel.rect],
   };
 };
 
@@ -664,25 +681,149 @@ const selfie = (prepared: PreparedStorySharePayload, frame: Frame, size: StorySh
 export const readyMadeDesignsFor = (prepared: Pick<PreparedStorySharePayload, "payload">): StoryShareDesign[] =>
   prepared.payload.prize ? ["card", "spotlight", "night"] : ["spotlight", "card", "night"];
 
-/** THE picture for a design and size. */
-export const buildShareDesignSpec = (
+// ── Celebration effects (docs/share-win-celebration-plan.md Phase 1) ──
+
+/** Rough glyph advance for Nunito, on the generous side so the estimate never undershoots. */
+const ESTIMATED_EM_PER_CHAR = 0.6;
+
+const blockPx = (font: string): number => Number(/(\d+(?:\.\d+)?)px/.exec(font)?.[1] ?? 0);
+
+/**
+ * Where a text block's ink lands, estimated without a canvas (the effects are planned in pure code).
+ * Wraps the words as the renderer does, measured at the starting size, so it errs large.
+ */
+export const estimateTextBox = (block: StoryTextBlock): EffectRect => {
+  const px = blockPx(block.font);
+  const charWidth = px * ESTIMATED_EM_PER_CHAR + (block.letterSpacing ?? 0);
+  const measure = (line: string) => Math.min(block.maxWidth, line.length * charWidth);
+  const maxLines = block.maxLines ?? 1;
+  const lines: string[] = [];
+  if (maxLines <= 1) {
+    lines.push(block.text);
+  } else {
+    let current = "";
+    for (const word of block.text.trim().split(/\s+/)) {
+      const next = current ? `${current} ${word}` : word;
+      if (!current || next.length * charWidth <= block.maxWidth) current = next;
+      else {
+        lines.push(current);
+        current = word;
+      }
+    }
+    if (current) lines.push(current);
+  }
+  const shown = lines.slice(0, maxLines);
+  const lineHeight = block.lineHeight ?? px * 1.2;
+  // Wrapped text may break anywhere up to its full width (the real face is narrower than the estimate,
+  // so it fits more on a line): a block that wraps claims all of it.
+  const width = shown.length > 1 ? block.maxWidth : Math.max(...shown.map(measure));
+  const firstBaseline = block.centerY == null
+    ? block.y
+    : block.centerY - (lineHeight * (shown.length - 1)) / 2 + px * 0.35;
+  const top = firstBaseline - px * 0.85;
+  const bottom = firstBaseline + lineHeight * (shown.length - 1) + px * 0.3;
+  const align = block.align ?? "left";
+  const left = align === "center" ? block.x - width / 2 : align === "right" || align === "end" ? block.x - width : block.x;
+  return { x: left, y: top, width, height: bottom - top };
+};
+
+/** What the effects must keep clear of on this picture, and the colours they take from the game. */
+const celebrationStage = (
   prepared: PreparedStorySharePayload,
   design: StoryShareDesign,
   size: StoryShareSize,
-  options: { mirrorPreview?: boolean } = {}
-): StoryRenderSpec => {
+  parts: DesignParts
+): CelebrationStage => {
+  const sizeSpec = STORY_SHARE_SIZES[size];
+  const game = storyShareGame(prepared.payload.gameType);
+  // The face zone is drawn for a Story; a Post crops the same photo around its centre.
+  const hint = prepared.visual.faceSafeZoneHint;
+  const face = design === "selfie"
+    ? { x: hint.x, y: hint.y + (sizeSpec.height - STORY_SHARE_SIZES.story.height) / 2, width: hint.width, height: hint.height }
+    : null;
+  return {
+    width: sizeSpec.width,
+    height: sizeSpec.height,
+    safeTop: sizeSpec.safeTop,
+    safeBottom: sizeSpec.safeBottom,
+    keepOut: [
+      ...parts.textBlocks.map(estimateTextBox),
+      ...parts.images.map(({ x, y, width, height }) => ({ x, y, width, height })),
+      ...parts.contentShapes,
+      ...(face ? [face] : []),
+    ].map(({ x, y, width, height }) => ({ x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) })),
+    face,
+    palette: { primary: game.colors.primary, secondary: game.colors.secondary, light: game.colors.textSecondary, gold: game.colors.champion },
+    seed: `${design}:${size}:${prepared.winLine}`,
+  };
+};
+
+const designParts = (prepared: PreparedStorySharePayload, design: StoryShareDesign, size: StoryShareSize): DesignParts => {
   const frame = frameOf(size);
-  const parts = design === "spotlight"
+  return design === "spotlight"
     ? spotlight(prepared, frame)
     : design === "card"
     ? card(prepared, frame)
     : design === "night"
     ? night(prepared, frame)
     : selfie(prepared, frame, size);
+};
+
+/** THE picture for a design and size, with the celebration effects the guest switched on. */
+export const buildShareDesignSpec = (
+  prepared: PreparedStorySharePayload,
+  design: StoryShareDesign,
+  size: StoryShareSize,
+  options: { mirrorPreview?: boolean; effects?: readonly CelebrationEffect[] } = {}
+): StoryRenderSpec => {
+  const parts = designParts(prepared, design, size);
+  const effects = normalizeCelebrationEffects(options.effects);
   return {
-    width: frame.width,
-    height: frame.height,
+    width: STORY_SHARE_SIZES[size].width,
+    height: STORY_SHARE_SIZES[size].height,
     mirrorPreview: options.mirrorPreview ?? true,
-    ...parts,
+    background: parts.background,
+    frameAssetUrl: parts.frameAssetUrl,
+    shapes: parts.shapes,
+    images: parts.images,
+    textBlocks: parts.textBlocks,
+    effects: effects.length > 0 ? celebrationLayers(planCelebration(celebrationStage(prepared, design, size, parts)), effects) : null,
+  };
+};
+
+/** The stage a picture's effects are planned on (tests and the visual check). */
+export const shareDesignCelebrationStage = (
+  prepared: PreparedStorySharePayload,
+  design: StoryShareDesign,
+  size: StoryShareSize
+): CelebrationStage => celebrationStage(prepared, design, size, designParts(prepared, design, size));
+
+/**
+ * An animated Story (docs/share-win-celebration-plan.md Phase 2): the picture without effects, plus the
+ * chosen effects at any moment `t` (s). At `CELEBRATION_HERO_T` and after, `effectsAt` is exactly the
+ * still picture's effects, so the video ends on the picture `buildShareDesignSpec` draws.
+ */
+export const buildShareDesignAnimation = (
+  prepared: PreparedStorySharePayload,
+  design: StoryShareDesign,
+  size: StoryShareSize,
+  options: { mirrorPreview?: boolean; effects?: readonly CelebrationEffect[] } = {}
+): { spec: StoryRenderSpec; effectsAt: (t: number) => StoryEffectLayers } => {
+  const parts = designParts(prepared, design, size);
+  const effects = normalizeCelebrationEffects(options.effects);
+  const plan = planCelebration(celebrationStage(prepared, design, size, parts));
+  return {
+    spec: {
+      width: STORY_SHARE_SIZES[size].width,
+      height: STORY_SHARE_SIZES[size].height,
+      mirrorPreview: options.mirrorPreview ?? true,
+      background: parts.background,
+      frameAssetUrl: parts.frameAssetUrl,
+      shapes: parts.shapes,
+      images: parts.images,
+      textBlocks: parts.textBlocks,
+      effects: null,
+    },
+    effectsAt: (t) => celebrationLayers(plan, effects, t),
   };
 };

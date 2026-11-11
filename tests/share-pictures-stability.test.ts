@@ -16,6 +16,10 @@ const mocks = vi.hoisted(() => ({
   getUserId: vi.fn((): string | null => "user-1"),
   getUsername: vi.fn((): string | null => "ace"),
   getVenueId: vi.fn((): string | null => "venue-1"),
+  canMakeVideo: vi.fn(async () => false),
+  encodeVideo: vi.fn(async (_input: unknown, _options?: { signal?: AbortSignal; onProgress?: (fraction: number) => void }) =>
+    new Blob(["mp4"], { type: "video/mp4" })),
+  shareImage: vi.fn(async (_request: { blob: Blob; fileName?: string }) => ({ status: "shared" as const, fallbackRecommended: false })),
 }));
 
 vi.mock("@/lib/socialShare/platform/webStoryPlatform", () => ({
@@ -23,7 +27,7 @@ vi.mock("@/lib/socialShare/platform/webStoryPlatform", () => ({
     renderDesign: mocks.renderDesign,
     createShareFile: ({ blob }: { blob: Blob }) => blob,
     canShareFile: () => true,
-    shareImage: async () => ({ status: "shared" as const, fallbackRecommended: false }),
+    shareImage: mocks.shareImage,
     saveImage: () => ({ status: "saved" as const }),
     detectCapabilities: () => ({ hasMediaDevices: false }),
     getCameraPermissionState: async () => "prompt",
@@ -34,6 +38,10 @@ vi.mock("@/lib/socialShare/shareVenue", async (importOriginal) => ({
   readShareVenue: mocks.readShareVenue,
 }));
 vi.mock("@/lib/venues", () => ({ fetchVenueById: mocks.fetchVenueById }));
+vi.mock("@/lib/socialShare/celebrationVideo", () => ({
+  canMakeCelebrationVideo: mocks.canMakeVideo,
+  encodeCelebrationVideo: mocks.encodeVideo,
+}));
 vi.mock("@/lib/storage", () => ({
   getUserId: mocks.getUserId,
   getUsername: mocks.getUsername,
@@ -92,6 +100,11 @@ beforeEach(() => {
   mocks.getUserId.mockReturnValue("user-1");
   mocks.getUsername.mockClear();
   mocks.getVenueId.mockClear();
+  mocks.canMakeVideo.mockReset();
+  mocks.canMakeVideo.mockResolvedValue(false);
+  mocks.encodeVideo.mockReset();
+  mocks.encodeVideo.mockImplementation(async () => new Blob(["mp4"], { type: "video/mp4" }));
+  mocks.shareImage.mockClear();
   vi.stubGlobal(
     "URL",
     Object.assign(URL, {
@@ -258,5 +271,159 @@ describe("9f.4 — a deep-link share waits for the venue read", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create story" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Facebook" }).hasAttribute("disabled")).toBe(false));
     expect(screen.queryByText(/The High Top/)).toBeNull();
+  });
+});
+
+describe("celebration effects (docs/share-win-celebration-plan.md Phase 1)", () => {
+  type Spec = { effects?: { behind: unknown[]; middle: unknown[]; front: unknown[] } | null };
+  const lastSpec = (): Spec => mocks.renderDesign.mock.calls.at(-1)?.[0 as never] as unknown as Spec;
+  const openSheet = async () => {
+    render(createElement(StoryShareLauncher, { payload: payloadAt("2026-10-22T10:00:00.000Z") }));
+    fireEvent.click(screen.getByRole("button", { name: "Create story" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Facebook" }).hasAttribute("disabled")).toBe(false));
+  };
+
+  it("four chips, all off when the sheet opens: today's picture", async () => {
+    await openSheet();
+    for (const label of ["Fireworks", "Lasers", "Confetti", "Clapping"]) {
+      expect(screen.getByRole("button", { name: label }).getAttribute("aria-pressed"), label).toBe("false");
+    }
+    for (const [spec] of mocks.renderDesign.mock.calls as unknown as Array<[Spec]>) expect(spec.effects ?? null).toBeNull();
+  });
+
+  it("a tap redraws the pictures with that effect, once (no redraw loop); a second tap takes it off", async () => {
+    await openSheet();
+    const before = mocks.renderDesign.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: "Fireworks" }));
+    await waitFor(() => expect(mocks.renderDesign.mock.calls.length).toBe(before + 3));
+    await settle();
+    expect(mocks.renderDesign.mock.calls.length).toBe(before + 3);
+    expect(screen.getByRole("button", { name: "Fireworks" }).getAttribute("aria-pressed")).toBe("true");
+    expect(lastSpec().effects?.middle.length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Facebook" }).hasAttribute("disabled")).toBe(false);
+
+    fireEvent.click(screen.getByRole("button", { name: "Fireworks" }));
+    await waitFor(() => expect(mocks.renderDesign.mock.calls.length).toBe(before + 6));
+    expect(lastSpec().effects ?? null).toBeNull();
+  });
+
+  it("while the new picture draws, the old one stays on screen but can't be shared", async () => {
+    await openSheet();
+    const shown = screen.getByRole("img").getAttribute("src");
+    let finish: (blob: Blob) => void = () => {};
+    mocks.renderDesign.mockImplementationOnce(() => new Promise<Blob>((resolve) => { finish = resolve; }));
+    fireEvent.click(screen.getByRole("button", { name: "Confetti" }));
+    await settle();
+    expect(screen.getByRole("img").getAttribute("src")).toBe(shown);
+    expect(revoked.has(shown!)).toBe(false);
+    expect(screen.getByRole("button", { name: "Facebook" }).hasAttribute("disabled")).toBe(true);
+
+    await act(async () => finish(new Blob(["png"], { type: "image/png" })));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Facebook" }).hasAttribute("disabled")).toBe(false));
+    expect(screen.getByRole("img").getAttribute("src")).not.toBe(shown);
+    // The replaced picture is released once, after its replacement landed.
+    expect(revoked.has(shown!)).toBe(true);
+  });
+});
+
+describe("animated Story (docs/share-win-celebration-plan.md Phase 2)", () => {
+  const openSheet = async () => {
+    render(createElement(StoryShareLauncher, { payload: payloadAt("2026-10-22T10:00:00.000Z") }));
+    fireEvent.click(screen.getByRole("button", { name: "Create story" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Facebook" }).hasAttribute("disabled")).toBe(false));
+  };
+  const facebookDisabled = () => screen.getByRole("button", { name: "Facebook" }).hasAttribute("disabled");
+
+  it("a browser that can't make video never sees Still / Animated, and nothing is encoded", async () => {
+    await openSheet();
+    await settle();
+    expect(mocks.canMakeVideo).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Animated" })).toBeNull();
+    expect(mocks.encodeVideo).not.toHaveBeenCalled();
+  });
+
+  it("Still at open; Animated needs an effect; Post hides it", async () => {
+    mocks.canMakeVideo.mockResolvedValue(true);
+    await openSheet();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Animated" })).toBeTruthy());
+    expect(screen.getByRole("button", { name: "Still" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Animated" }).hasAttribute("disabled")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Post" }));
+    await settle();
+    expect(screen.queryByRole("button", { name: "Animated" })).toBeNull();
+    expect(mocks.encodeVideo).not.toHaveBeenCalled();
+  });
+
+  it("Animated makes the video once, shares it as an MP4, and Still goes back to the picture", async () => {
+    mocks.canMakeVideo.mockResolvedValue(true);
+    let finish: (blob: Blob) => void = () => {};
+    mocks.encodeVideo.mockImplementationOnce(async (_input, options) => {
+      options?.onProgress?.(0.4);
+      return new Promise<Blob>((resolve) => { finish = resolve; });
+    });
+    await openSheet();
+    fireEvent.click(screen.getByRole("button", { name: "Fireworks" }));
+    await waitFor(() => expect(facebookDisabled()).toBe(false));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Animated" }).hasAttribute("disabled")).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: "Animated" }));
+    await waitFor(() => expect(screen.getByText(/Making your Story… 40%/)).toBeTruthy());
+    // Nothing to share until the video is made.
+    expect(facebookDisabled()).toBe(true);
+    expect(mocks.encodeVideo).toHaveBeenCalledTimes(1);
+
+    await act(async () => finish(new Blob(["mp4"], { type: "video/mp4" })));
+    await waitFor(() => expect(facebookDisabled()).toBe(false));
+    await settle();
+    expect(mocks.encodeVideo).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("video")).not.toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Facebook" }));
+    await waitFor(() => expect(mocks.shareImage).toHaveBeenCalledTimes(1));
+    const shared = mocks.shareImage.mock.calls[0][0];
+    expect(shared.blob.type).toBe("video/mp4");
+    expect(shared.fileName).toMatch(/\.mp4$/);
+
+    fireEvent.click(screen.getByRole("button", { name: "Still" }));
+    await settle();
+    expect(document.querySelector("video")).toBeNull();
+    expect(facebookDisabled()).toBe(false);
+  });
+
+  it("a new effect while the video is made cancels it and makes the new one; Cancel goes back to Still", async () => {
+    mocks.canMakeVideo.mockResolvedValue(true);
+    const signals: AbortSignal[] = [];
+    mocks.encodeVideo.mockImplementation((_input, options) => {
+      signals.push(options!.signal!);
+      return new Promise<Blob>(() => {});
+    });
+    await openSheet();
+    fireEvent.click(screen.getByRole("button", { name: "Lasers" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Animated" }).hasAttribute("disabled")).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: "Animated" }));
+    await waitFor(() => expect(signals).toHaveLength(1));
+    fireEvent.click(screen.getByRole("button", { name: "Confetti" }));
+    await waitFor(() => expect(signals).toHaveLength(2));
+    expect(signals[0].aborted).toBe(true);
+    expect(signals[1].aborted).toBe(false);
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await settle();
+    expect(signals[1].aborted).toBe(true);
+    expect(screen.getByRole("button", { name: "Still" }).getAttribute("aria-pressed")).toBe("true");
+    expect(signals).toHaveLength(2);
+  });
+
+  it("a failed video says so and Try again makes it afresh", async () => {
+    mocks.canMakeVideo.mockResolvedValue(true);
+    mocks.encodeVideo.mockRejectedValueOnce(new Error("encoder broke"));
+    await openSheet();
+    fireEvent.click(screen.getByRole("button", { name: "Clapping" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Animated" }).hasAttribute("disabled")).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: "Animated" }));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/Couldn't make the video/));
+    expect(facebookDisabled()).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(facebookDisabled()).toBe(false));
+    expect(mocks.encodeVideo).toHaveBeenCalledTimes(2);
   });
 });

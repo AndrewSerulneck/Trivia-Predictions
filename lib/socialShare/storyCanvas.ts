@@ -1,4 +1,4 @@
-import type { StoryBlocks, StoryFill, StoryImageBlock, StoryRenderSpec, StoryShapeBlock, StoryTextBlock, StoryTransform } from "./contracts";
+import type { StoryBlocks, StoryEffectLayers, StoryFill, StoryImageBlock, StoryRenderSpec, StoryShapeBlock, StoryTextBlock, StoryTransform } from "./contracts";
 
 export type StoryCanvasErrorCode =
   | "missing-video-dimensions"
@@ -402,6 +402,7 @@ function drawShape(context: CanvasRenderingContext2D, shape: StoryShapeBlock): v
   if ((shape.path || shape.clip) && !canDrawPaths()) return;
   context.save();
   if (shape.opacity != null) context.globalAlpha *= shape.opacity;
+  if (shape.composite) context.globalCompositeOperation = shape.composite;
   if (shape.transform) applyTransform(context, shape.transform);
   if (shape.clip) context.clip(new Path2D(shape.clip));
   if (shape.shadowColor) {
@@ -505,15 +506,39 @@ export function paintStoryBlocks(
   for (const block of blocks.textBlocks ?? []) drawTextBlock(context, block);
 }
 
-export async function renderStoryImage({
+/**
+ * A still copy of a camera frame, so the selfie can be redrawn (new effects) after the camera moves on.
+ * Same pixels as the video at that moment; `renderStoryImage` crops and mirrors it as it would the video.
+ */
+export function snapshotStorySource(source: CanvasImageSource): HTMLCanvasElement {
+  const { width, height } = getSourceDimensions(source);
+  const canvas = createExportCanvas(width, height);
+  getCanvasContext(canvas).drawImage(source, 0, 0, width, height);
+  return canvas;
+}
+
+/**
+ * A picture split into the layers the celebration effects slot between, each painted synchronously once
+ * its images and fonts are loaded. `renderStoryImage` paints them once for a still; an animated Story
+ * (lib/socialShare/celebrationVideo.ts) caches each layer and paints the moving effects between them.
+ */
+export interface StoryPainter {
+  width: number;
+  height: number;
+  /** The photo (cropped, mirrored if asked) or the spec's background. */
+  paintBase: (context: CanvasRenderingContext2D) => void;
+  /** The frame artwork, the backdrop and the shapes. */
+  paintDesign: (context: CanvasRenderingContext2D) => void;
+  /** The images (QR, logo) and the words. */
+  paintContent: (context: CanvasRenderingContext2D) => void;
+}
+
+/** Loads what a spec needs (images, fonts) and returns its painter. The spec's own `effects` are ignored. */
+export async function prepareStoryPainter({
   source,
   spec,
   exportMirrored = false,
-  outputType = DEFAULT_OUTPUT_TYPE,
-  quality,
-}: RenderStoryImageInput): Promise<Blob> {
-  const canvas = createExportCanvas(spec.width, spec.height);
-  const context = getCanvasContext(canvas);
+}: Pick<RenderStoryImageInput, "source" | "spec" | "exportMirrored">): Promise<StoryPainter> {
   const crop = source
     ? (() => {
         const dimensions = getSourceDimensions(source);
@@ -530,28 +555,64 @@ export async function renderStoryImage({
   ]);
   const images = new Map(loaded);
 
-  context.clearRect(0, 0, spec.width, spec.height);
-  if (source && crop) {
-    drawCoverSource(context, source, crop, exportMirrored);
-  } else if (spec.background) {
-    context.fillStyle = fillStyleOf(context, spec.background);
-    context.fillRect(0, 0, spec.width, spec.height);
-  }
-  if (spec.frameAssetUrl) {
-    const frameImage = images.get(spec.frameAssetUrl);
-    if (frameImage) context.drawImage(frameImage, 0, 0, spec.width, spec.height);
-  }
-  if (backdrop) paintBackdrop(context, backdrop);
-  for (const shape of spec.shapes ?? []) {
-    drawShape(context, shape);
-  }
-  for (const block of imageBlocks) {
-    const image = images.get(block.src);
-    if (image) drawImageBlock(context, block, image);
-  }
-  for (const textBlock of textBlocks) {
-    drawTextBlock(context, textBlock);
-  }
+  return {
+    width: spec.width,
+    height: spec.height,
+    paintBase: (context) => {
+      if (source && crop) {
+        drawCoverSource(context, source, crop, exportMirrored);
+      } else if (spec.background) {
+        context.fillStyle = fillStyleOf(context, spec.background);
+        context.fillRect(0, 0, spec.width, spec.height);
+      }
+    },
+    paintDesign: (context) => {
+      if (spec.frameAssetUrl) {
+        const frameImage = images.get(spec.frameAssetUrl);
+        if (frameImage) context.drawImage(frameImage, 0, 0, spec.width, spec.height);
+      }
+      if (backdrop) paintBackdrop(context, backdrop);
+      for (const shape of spec.shapes ?? []) drawShape(context, shape);
+    },
+    paintContent: (context) => {
+      for (const block of imageBlocks) {
+        const image = images.get(block.src);
+        if (image) drawImageBlock(context, block, image);
+      }
+      for (const textBlock of textBlocks) drawTextBlock(context, textBlock);
+    },
+  };
+}
 
+/** Effect shapes (one layer of `StoryEffectLayers`), drawn as the still picture draws them. */
+export function paintEffectShapes(context: CanvasRenderingContext2D, shapes: readonly StoryShapeBlock[]): void {
+  for (const shape of shapes) drawShape(context, shape);
+}
+
+/**
+ * The one drawing order: photo/background, `effects.behind`, frame + backdrop + shapes, `effects.middle`,
+ * images + text, `effects.front`.
+ */
+export function paintStoryPicture(context: CanvasRenderingContext2D, painter: StoryPainter, effects: StoryEffectLayers | null | undefined): void {
+  painter.paintBase(context);
+  paintEffectShapes(context, effects?.behind ?? []);
+  painter.paintDesign(context);
+  paintEffectShapes(context, effects?.middle ?? []);
+  painter.paintContent(context);
+  paintEffectShapes(context, effects?.front ?? []);
+}
+
+export async function renderStoryImage({
+  source,
+  spec,
+  exportMirrored = false,
+  outputType = DEFAULT_OUTPUT_TYPE,
+  quality,
+}: RenderStoryImageInput): Promise<Blob> {
+  const canvas = createExportCanvas(spec.width, spec.height);
+  const context = getCanvasContext(canvas);
+  const painter = await prepareStoryPainter({ source, spec, exportMirrored });
+  context.clearRect(0, 0, spec.width, spec.height);
+  paintStoryPicture(context, painter, spec.effects);
   return exportCanvasBlob(canvas, outputType, quality);
 }

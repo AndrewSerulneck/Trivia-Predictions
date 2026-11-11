@@ -171,6 +171,21 @@ export const SHARE_DESIGN_NAMES = {
 /** The size toggle. */
 export const SHARE_SIZE_NAMES = { story: "Story", post: "Post" } as const;
 
+/** The celebration effect chips (docs/share-win-celebration-plan.md Phase 1). Labels only. */
+export const SHARE_EFFECT_NAMES = {
+  fireworks: "Fireworks",
+  lasers: "Lasers",
+  confetti: "Confetti",
+  clapping: "Clapping",
+} as const;
+
+/** Still picture or animated Story (Phase 2). The video is made on the phone; Cancel goes back to Still. */
+export const SHARE_MOTION_NAMES = { still: "Still", animated: "Animated" } as const;
+export const SHARE_VIDEO_MAKING = "Making your Story…";
+export const SHARE_VIDEO_FAILED = "Couldn't make the video.";
+export const SHARE_VIDEO_RETRY = "Try again";
+export const SHARE_VIDEO_CANCEL = "Cancel";
+
 // ── The share sheet (Phase 9d) ──
 
 /** The caption box's button. */
@@ -227,6 +242,17 @@ export const SHARE_DESTINATION_COPY = {
     direct: "Pick an app. Your caption goes with the picture.",
     viaSheet: "Pick an app. Your caption goes with the picture.",
   },
+} as const;
+
+/** Where a destination's hint says "picture", an animated Story says "video". */
+export const SHARE_DESTINATION_VIDEO_COPY = {
+  x: { viaSheet: "Pick X. Your caption goes with the video." },
+  messages: {
+    direct: "Pick Messages or WhatsApp. Your caption goes with the video.",
+    viaSheet: "Pick Messages or WhatsApp. Your caption goes with the video.",
+  },
+  save: { direct: "Video saved.", viaSheet: "Choose Save Video." },
+  more: { direct: "Pick an app. Your caption goes with the video.", viaSheet: "Pick an app. Your caption goes with the video." },
 } as const;
 
 export const SHARE_CAPTION_COPIED = "Caption + link copied.";

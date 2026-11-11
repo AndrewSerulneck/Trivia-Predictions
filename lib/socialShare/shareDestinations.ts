@@ -1,4 +1,4 @@
-import { SHARE_DESTINATION_COPY } from "./copyPresets";
+import { SHARE_DESTINATION_COPY, SHARE_DESTINATION_VIDEO_COPY } from "./copyPresets";
 
 /**
  * The share sheet's destinations (docs/native-app-store-plan.md Phase 9d). Pure: which apps the
@@ -12,6 +12,9 @@ import { SHARE_DESTINATION_COPY } from "./copyPresets";
  * - X with no picture share (most desktops) opens x.com's post page with the caption + link;
  * - Save downloads the picture on the website; in the app it is the share sheet ("Save Image"),
  *   because the app's web view can't download.
+ *
+ * An animated Story (a video) goes the same way, except that the app's direct Instagram Story button
+ * sends pictures only (docs/share-win-celebration-plan.md Phase 3, later): a video takes the share sheet.
  */
 
 export const SHARE_DESTINATIONS = [
@@ -35,6 +38,8 @@ export type ShareDestinationEnv = {
   canSharePicture: boolean;
   /** Inside the iPhone/Android app. */
   inApp: boolean;
+  /** The file is the animated Story (an MP4), not a picture. */
+  video?: boolean;
 };
 
 export type ShareDestinationPlan = {
@@ -47,9 +52,12 @@ export type ShareDestinationPlan = {
 
 export const shareDestinationLabel = (destination: ShareDestination): string => SHARE_DESTINATION_COPY[destination].label;
 
+const videoCopy = (destination: ShareDestination): { direct?: string; viaSheet?: string } =>
+  destination in SHARE_DESTINATION_VIDEO_COPY ? SHARE_DESTINATION_VIDEO_COPY[destination as keyof typeof SHARE_DESTINATION_VIDEO_COPY] : {};
+
 export const planShareDestination = (destination: ShareDestination, env: ShareDestinationEnv): ShareDestinationPlan => {
-  const copy = SHARE_DESTINATION_COPY[destination];
-  if (destination === "instagram-story" && env.instagramStoryDirect) {
+  const copy = env.video ? { ...SHARE_DESTINATION_COPY[destination], ...videoCopy(destination) } : SHARE_DESTINATION_COPY[destination];
+  if (destination === "instagram-story" && env.instagramStoryDirect && !env.video) {
     return { copyCaption: true, action: "instagram-story-native", hint: copy.direct };
   }
   if (destination === "x" && !env.canSharePicture) {

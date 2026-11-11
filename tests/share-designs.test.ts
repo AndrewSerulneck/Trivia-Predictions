@@ -214,6 +214,7 @@ describe("share game registry", () => {
       "lib/socialShare/shareDesigns.ts",
       "lib/socialShare/copyPresets.ts",
       "lib/socialShare/storyCanvas.ts",
+      "lib/socialShare/celebrationEffects.ts",
       ...readdirSync(join(process.cwd(), "components/social-share")).map((file) => `components/social-share/${file}`),
     ];
     for (const file of files) {

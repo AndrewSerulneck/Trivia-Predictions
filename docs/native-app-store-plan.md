@@ -1974,7 +1974,8 @@ screen anywhere in the app. Partners use the website. Read the plan before any n
   `shareWinHeadline` (`copyPresets.ts`). Every picture carries the bar (name + street + city, no directions) and the QR file
   `public/share/app-download-qr-v1.png` = `APP_DOWNLOAD_URL` (`npm run share:qr`; new value = new file name). Canvas text ≥ 34px
   (= 12px on a phone). The hub remembers its venue for the games (`rememberShareVenue`, zero requests). Visual check:
-  `npm run share-card:render -- --sheet` (also decodes every QR).
+  `npm run share-card:render -- --sheet` (also decodes every QR). **Celebration effects** (Fireworks / Lasers /
+  Confetti / Clapping chips, 2026-11-11): rules in `docs/share-win-celebration-plan.md` "Standing rules".
 - **"Share my win" (Phase 9c, 2026-10-22; handoff `docs/native-app-store-plan_PHASE_9C_HANDOFF.md`).** ONE button,
   `components/social-share/ShareWinButton.tsx` (wraps `StoryShareLauncher variant="button"`; reads the player from storage, makes
   no request). A new win screen adds it and is listed in `tests/share-win-button.test.ts`. It only appears on a result the screen

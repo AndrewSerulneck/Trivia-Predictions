@@ -33,20 +33,20 @@ type FallbackStatus = {
   target?: StoryExternalAppTarget;
 };
 
-function getFallbackIntro(shareResult?: StorySharePipelineResult | null): string {
+function getFallbackIntro(shareResult: StorySharePipelineResult | null | undefined, noun: string): string {
   if (!shareResult) {
-    return "Save the image or open an app manually.";
+    return `Save the ${noun} or open an app manually.`;
   }
   if (shareResult.status === "unsupported") {
-    return "This browser cannot hand the image to the native share sheet.";
+    return `This browser cannot hand the ${noun} to the native share sheet.`;
   }
   if (shareResult.status === "canceled") {
-    return "The share sheet was dismissed. Your image is still available.";
+    return `The share sheet was dismissed. Your ${noun} is still available.`;
   }
   if (shareResult.status === "failed") {
-    return "Native sharing did not complete. Your image is still available.";
+    return `Native sharing did not complete. Your ${noun} is still available.`;
   }
-  return "Your image is ready.";
+  return `Your ${noun} is ready.`;
 }
 
 function getDownloadFileName(fileName: string | undefined): string {
@@ -73,7 +73,10 @@ export function ShareActionsSheet({
   const resolvedCapabilities = useMemo(() => capabilities ?? webStoryPlatform.detectCapabilities(), [capabilities]);
   const deepLinkOptions = useMemo(() => webStoryPlatform.getExternalAppOptions(resolvedCapabilities), [resolvedCapabilities]);
   const downloadFileName = getDownloadFileName(fileName);
-  const intro = getFallbackIntro(shareResult);
+  // The animated Story (docs/share-win-celebration-plan.md Phase 2) comes here as an MP4.
+  const isVideo = imageBlob?.type.startsWith("video/") ?? false;
+  const noun = isVideo ? "video" : "image";
+  const intro = getFallbackIntro(shareResult, noun);
 
   useEffect(() => {
     let canceled = false;
@@ -143,7 +146,7 @@ export function ShareActionsSheet({
           <p className="text-caption font-black uppercase leading-none tracking-[0.14em] text-cyan-100/80">
             Share options
           </p>
-          <h2 className="mt-1 text-lg font-black leading-tight text-white">Keep your story image</h2>
+          <h2 className="mt-1 text-lg font-black leading-tight text-white">Keep your story {noun}</h2>
         </div>
         {onClose ? (
           <button
@@ -162,7 +165,9 @@ export function ShareActionsSheet({
 
       <div className="mt-4 grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3">
         <div className="flex aspect-[9/16] items-center justify-center overflow-hidden rounded-xl border border-white/[0.12] bg-white/[0.06]">
-          {objectUrl ? (
+          {objectUrl && isVideo ? (
+            <video src={objectUrl} muted playsInline aria-label="Captured story" className="h-full w-full object-cover" />
+          ) : objectUrl ? (
             <img src={objectUrl} alt="Captured story" className="h-full w-full object-cover" />
           ) : (
             <ImageIcon className="h-7 w-7 text-slate-500" aria-hidden="true" />
@@ -176,7 +181,7 @@ export function ShareActionsSheet({
             className="tp-player-hit-target tp-player-pressable tp-clean-button inline-flex h-11 items-center justify-center gap-2 rounded-full border border-cyan-200/40 bg-cyan-300 px-4 text-sm font-black text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.12] disabled:text-slate-400 "
           >
             <Download className="h-4 w-4" aria-hidden="true" />
-            Save image
+            Save {noun}
           </button>
           {onRetryNativeShare ? (
             <button
@@ -220,12 +225,12 @@ export function ShareActionsSheet({
       <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200/[0.18] bg-amber-300/[0.08] px-3 py-2.5 text-amber-100">
         <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <p className="text-xs font-bold leading-snug">
-          Browser links can open an app, but they cannot guarantee a direct story upload. Saving the image keeps the fallback reliable.
+          Browser links can open an app, but they cannot guarantee a direct story upload. Saving the {noun} keeps the fallback reliable.
         </p>
       </div>
 
       {status.kind === "downloaded" ? (
-        <p role="status" className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-emerald-300">Image saved</p>
+        <p role="status" className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-emerald-300">{isVideo ? "Video saved" : "Image saved"}</p>
       ) : status.kind === "download_failed" ? (
         <p role="status" className="mt-3 text-center text-xs font-black uppercase tracking-[0.12em] text-rose-300">Save failed</p>
       ) : status.kind === "opened" ? (
