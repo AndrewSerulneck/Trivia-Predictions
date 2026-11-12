@@ -2,6 +2,13 @@
 
 ## For Andrew (plain English)
 
+> **Released 2026-11-11 on Andrew's word ("Release … can we just release the thing?"), full rollout, no staging,
+> before §Q results were reported.** iOS 2.0.1 (3) submitted to App Review (submission
+> `4eef4a13-fa56-4a0c-be28-4d147fc0be3e`, state WAITING_FOR_REVIEW, release type AFTER_APPROVAL = goes live on
+> approval). Android code 3 promoted internal → production at 100% (status completed; Google review then live).
+> If one-tap video misbehaves: `NEXT_PUBLIC_INSTAGRAM_STORY_VIDEO_OFF` = `ios` / `android` / `all` + redeploy.
+
+
 **What changed:** Phases 3, 3.1 and 3.2 (the app's Instagram Story button sends the Animated video) are committed and
 the website is deployed. New app builds are made: **version 2.0.1**, iOS build **3**, Android code **3**.
 
