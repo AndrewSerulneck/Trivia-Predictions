@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { GAME_TILE_THEMES } from "@/components/game-themes/gameTileThemes";
+import { ShineSweep } from "@/components/venue-screen/fx/ShineSweep";
+import { useFx } from "@/components/venue-screen/fx/useFx";
+import type { VenueGameKey } from "@/lib/venueGameCards";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -27,7 +31,38 @@ export type NextGame = {
   /** Replaces the time line for a game with no start time (e.g. "Play anytime"). */
   kicker?: string;
   countdownText?: string;
+  /** Seconds to the start when `countdownText` is a live countdown (drives the flip and heartbeat). */
+  remainingSeconds?: number;
+  /** Takes the game's colours and vector art from GAME_TILE_THEMES. */
+  gameKey?: VenueGameKey;
 };
+
+/** The idle "moment" (logo shine + burst) fires on every wall-clock slot of this length. */
+export const IDLE_MOMENT_MS = 75_000;
+/** Digits flip under an hour; the pill beats under five minutes. */
+export const IDLE_FLIP_UNDER_S = 3_600;
+export const IDLE_HEARTBEAT_UNDER_S = 300;
+
+const GAME_ACCENT: Partial<Record<VenueGameKey, string>> = {
+  live_trivia: "#22d3ee",
+  "category-blitz": "#4ade80",
+};
+
+/** One countdown character; it flips in when its value changes (transform + opacity only). */
+function FlipChar({ char, flip }: { char: string; flip: boolean }) {
+  return (
+    <motion.span
+      key={char}
+      className="inline-block"
+      initial={flip ? { opacity: 0, rotateX: -80, y: -10 } : false}
+      animate={{ opacity: 1, rotateX: 0, y: 0 }}
+      transition={{ duration: 0.35, ease: EASE }}
+      style={{ transformPerspective: 400 }}
+    >
+      {char}
+    </motion.span>
+  );
+}
 
 export type TvIdleAttractProps = {
   venueName: string;
@@ -70,6 +105,16 @@ export function TvIdleAttract({
   driftPx = 26,
 }: TvIdleAttractProps) {
   const reduceMotion = useReducedMotion();
+  const fx = useFx();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // The 75 s moment: keyed on the wall-clock slot, so two TVs fire together and a reload doesn't add one.
+  const momentKey = Math.floor(nowMs / IDLE_MOMENT_MS);
+  const [firstMomentKey] = useState(momentKey);
+  useEffect(() => {
+    if (momentKey === firstMomentKey) return;
+    fx.burst({ key: `idle:${momentKey}`, at: cardRef.current, coins: 10, sparks: 26 });
+  }, [fx, momentKey, firstMomentKey]);
 
   const games = useMemo(() => nextGames.filter(Boolean), [nextGames]);
 
@@ -83,6 +128,12 @@ export function TvIdleAttract({
         x: Math.sin((nowMs / DRIFT_X_MS) * Math.PI * 2) * driftPx,
         y: Math.cos((nowMs / DRIFT_Y_MS) * Math.PI * 2) * driftPx * 0.7,
       };
+
+  const theme = game?.gameKey ? GAME_TILE_THEMES[game.gameKey] : undefined;
+  const accent = game?.gameKey ? GAME_ACCENT[game.gameKey] : undefined;
+  const remaining = game?.remainingSeconds;
+  const flipDigits = remaining !== undefined && remaining < IDLE_FLIP_UNDER_S;
+  const heartbeat = remaining !== undefined && remaining < IDLE_HEARTBEAT_UNDER_S;
 
   const clock = new Date(nowMs).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
@@ -117,11 +168,17 @@ export function TvIdleAttract({
           {/* ---- Left: wordmark ---- */}
           <div className="flex flex-col justify-center" style={{ width: 860 }}>
             <motion.div
+              className="relative -mx-4 -my-4 overflow-hidden px-4 py-4"
               animate={reduceMotion ? undefined : { scale: [1, 1.014, 1], opacity: [0.94, 1, 0.94] }}
               transition={reduceMotion ? undefined : { duration: 7.5, repeat: Infinity, ease: "easeInOut" }}
               style={{ transformOrigin: "left center" }}
             >
-              <div
+              <ShineSweep periodMs={IDLE_MOMENT_MS} delayMs={0} durationMs={1_400} tint="rgba(255,255,255,0.35)" />
+              <motion.div
+                key={reduceMotion ? momentKey : "wordmark"}
+                initial={reduceMotion && momentKey !== firstMomentKey ? { opacity: 0.6 } : false}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.2, ease: EASE }}
                 style={{
                   fontSize: 168,
                   fontWeight: 900,
@@ -134,7 +191,7 @@ export function TvIdleAttract({
                 }}
               >
                 Hightop
-              </div>
+              </motion.div>
             </motion.div>
 
             <div
@@ -174,17 +231,18 @@ export function TvIdleAttract({
               <span style={{ fontSize: 30, fontWeight: 800, color: BRAND.slate, fontVariantNumeric: "tabular-nums" }}>{clock}</span>
             </div>
 
-            <div className="relative w-full" style={{ maxWidth: 720, height: 400 }}>
+            <div ref={cardRef} className="relative w-full" style={{ maxWidth: 720, height: 400 }}>
               <AnimatePresence mode="wait" initial={false}>
                 {game && (
                   <motion.div
                     key={`${index}-${game.label}`}
-                    className="absolute inset-0 flex flex-col justify-center"
+                    className={`absolute inset-0 flex flex-col justify-center overflow-hidden ${theme ? theme.surfaceClass : ""}`}
                     style={{
                       padding: "56px 56px",
+                      paddingRight: theme ? 230 : 56,
                       borderRadius: 32,
-                      background: "rgba(15,23,42,0.55)",
-                      border: "1px solid rgba(34,211,238,0.20)",
+                      background: theme ? undefined : "rgba(15,23,42,0.55)",
+                      border: `1px solid ${accent ? `${accent}55` : "rgba(34,211,238,0.20)"}`,
                       boxShadow: "0 0 90px rgba(6,182,212,0.10)",
                     }}
                     initial={reduceMotion ? false : { opacity: 0, y: 26 }}
@@ -192,17 +250,27 @@ export function TvIdleAttract({
                     exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -26 }}
                     transition={{ duration: reduceMotion ? 0.15 : 0.85, ease: EASE }}
                   >
-                    <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "0.32em", textTransform: "uppercase", color: BRAND.slate }}>
+                    {theme?.backdrop}
+                    {theme ? (
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center" style={{ width: 230, padding: "40px 28px 40px 0" }}>
+                        {theme.art}
+                      </div>
+                    ) : null}
+
+                    <div className="relative" style={{ fontSize: 24, fontWeight: 800, letterSpacing: "0.32em", textTransform: "uppercase", color: BRAND.slate }}>
                       {game.kicker ?? (game.startsAt !== undefined ? formatTime(game.startsAt) : "")}
                     </div>
 
-                    <div style={{ fontSize: 72, fontWeight: 900, lineHeight: 1.04, letterSpacing: "-0.03em", marginTop: 12 }}>
+                    <div
+                      className="relative"
+                      style={{ fontSize: game.label.length > 14 ? 54 : 72, fontWeight: 900, lineHeight: 1.04, letterSpacing: "-0.03em", marginTop: 12 }}
+                    >
                       {game.label}
                     </div>
 
                     {game.countdownText && (
                       <motion.div
-                        className="inline-flex items-center self-start"
+                        className="relative inline-flex items-center self-start"
                         style={{
                           marginTop: 30,
                           gap: 16,
@@ -211,12 +279,39 @@ export function TvIdleAttract({
                           background: "rgba(245,158,11,0.10)",
                           border: `1px solid ${BRAND.amber}55`,
                         }}
-                        animate={reduceMotion ? undefined : { opacity: [0.72, 1, 0.72], scale: [1, 1.012, 1] }}
-                        transition={reduceMotion ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                        animate={reduceMotion ? undefined : heartbeat ? { scale: [1, 1.07, 1, 1.04, 1] } : { opacity: [0.72, 1, 0.72], scale: [1, 1.012, 1] }}
+                        transition={
+                          reduceMotion
+                            ? undefined
+                            : heartbeat
+                              ? { duration: 1.2, repeat: Infinity, ease: "easeOut", times: [0, 0.12, 0.3, 0.42, 1] }
+                              : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }
+                        }
                       >
+                        {heartbeat ? (
+                          <motion.span
+                            aria-hidden
+                            data-testid="idle-heartbeat"
+                            className="pointer-events-none absolute inset-0 will-change-transform"
+                            style={{ borderRadius: 999, border: `2px solid ${accent ?? BRAND.amberLight}`, opacity: 0 }}
+                            animate={reduceMotion ? undefined : { scale: [1, 1.22], opacity: [0.7, 0] }}
+                            transition={reduceMotion ? undefined : { duration: 1.2, repeat: Infinity, ease: "easeOut" }}
+                          />
+                        ) : null}
                         <span style={{ width: 12, height: 12, borderRadius: 999, background: BRAND.amberLight }} />
                         <span style={{ fontSize: 36, fontWeight: 800, color: BRAND.amberLight, fontVariantNumeric: "tabular-nums" }}>
-                          {game.countdownText}
+                          {flipDigits ? (
+                            <>
+                              <span className="sr-only">{game.countdownText}</span>
+                              <span aria-hidden="true">
+                                {[...game.countdownText].map((char, i, all) => (
+                                  <FlipChar key={`${all.length - i}:${char}`} char={char} flip={!reduceMotion} />
+                                ))}
+                              </span>
+                            </>
+                          ) : (
+                            game.countdownText
+                          )}
                         </span>
                       </motion.div>
                     )}
