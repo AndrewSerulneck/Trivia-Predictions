@@ -33,6 +33,8 @@ export type ResultsDayEntry =
   | { kind: "game"; game: ResultsGameRow; rewards: ResultsRewardItem[] }
   | { kind: "reward"; reward: ResultsRewardItem };
 
+const rewardEntry = (reward: ResultsRewardItem): ResultsDayEntry => ({ kind: "reward", reward });
+
 export type ResultsDayGroup = { date: string; label: string; entries: ResultsDayEntry[] };
 
 type GroupBase = { key: string; label: string; gameCount: number; rewardCount: number; complete: boolean };
@@ -156,7 +158,7 @@ export const groupResultsTimeline = (
         game,
         rewards: slot.cardRewards.get(gameKeyOf(game.competitionId, game.gameKey)) ?? [],
       })),
-      ...slot.dayRewards.map((reward): ResultsDayEntry => ({ kind: "reward", reward })),
+      ...slot.dayRewards.map(rewardEntry),
     ];
     if (entries.length > 0) weekGroup.days.push({ date, label: formatOccurrenceDate(date, year), entries });
     weekGroup.weekRewards.push(...slot.weekRewards);
@@ -170,6 +172,26 @@ export const groupResultsTimeline = (
   }
   return years;
 };
+
+/** A flat, newest-first list under each month. Reuse attachment/fallback rules so no prize is lost. */
+export const groupResultsMonths = (input: {
+  games: ReadonlyArray<ResultsGameRow>;
+  rewards: ReadonlyArray<ResultsRewardItem>;
+}): Array<{ key: string; label: string; entries: ResultsDayEntry[] }> =>
+  groupResultsTimeline(input, { byYear: false, completeFrom: null }).flatMap((year) =>
+    year.months.map((month) => ({
+      key: month.key,
+      label: month.label,
+      entries: month.weeks.flatMap((week) => [
+        ...week.days.flatMap((day) => day.entries),
+        ...week.weekRewards.map(rewardEntry),
+      ]).sort((a, b) => {
+        const dateA = a.kind === "game" ? a.game.date : a.reward.date;
+        const dateB = b.kind === "game" ? b.game.date : b.reward.date;
+        return dateB.localeCompare(dateA);
+      }),
+    })),
+  );
 
 /** The groups open when the list first shows: the newest year, its newest month and that month's newest week. */
 export const defaultOpenResultsKeys = (years: ReadonlyArray<ResultsYearGroup>): Set<string> => {

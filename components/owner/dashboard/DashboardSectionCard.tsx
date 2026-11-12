@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 
 // Shared chrome for the Partner Dashboard's two section cards
 // (docs/partner-dashboard-app-redesign-plan.md §4c): the card + header, the
-// skeleton, the error row, the dashed empty card and the dashed "add another" row.
+// skeleton, the error row, the empty card and the dashed "add another" row.
 
-// NOTE: the dashed buttons use `!` (important) modifiers because globals.css styles every
+// NOTE: button borders use `!` (important) modifiers because globals.css styles every
 // bare <button> with an un-layered `border: 1px solid …` + 12px radius that beats plain
 // Tailwind utilities — without them the "dashed" outline renders as a faint solid line.
 
@@ -81,7 +81,7 @@ export const SectionEmpty = ({
   <button
     type="button"
     onClick={onAdd}
-    className="flex min-h-11 w-full flex-col items-center gap-2 !rounded-[14px] !border-2 !border-dashed !border-slate-500 px-4 py-8 text-center transition active:translate-y-px"
+    className="flex min-h-11 w-full flex-col items-center gap-2 !rounded-[14px] !border-0 px-4 py-8 text-center transition active:translate-y-px"
   >
     <span
       aria-hidden

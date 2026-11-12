@@ -14,7 +14,7 @@ import {
   type EffectRect,
 } from "@/lib/socialShare/celebrationEffects";
 import type { StorySharePayload } from "@/lib/socialShare/contracts";
-import { SHARE_EFFECT_NAMES } from "@/lib/socialShare/copyPresets";
+import { SHARE_EFFECT_NAMES, SHARE_PLAY_LINE } from "@/lib/socialShare/copyPresets";
 import {
   buildShareDesignSpec,
   shareDesignCelebrationStage,
@@ -156,13 +156,13 @@ describe("every combination on every design and size", () => {
     }
   });
 
-  it("the content boxes cover the headline, the panel and the QR", () => {
+  it("the content boxes cover the headline and the venue panel", () => {
     const prepared = prepareStorySharePayload(gamePayload());
     for (const design of DESIGNS) {
       const stage = shareDesignCelebrationStage(prepared, design, "story");
       const spec = buildShareDesignSpec(prepared, design, "story");
-      const qr = spec.images!.find((image) => image.src.includes("qr"))!;
-      expect(stage.keepOut.some((rect) => rect.x <= qr.x && rect.y <= qr.y && rect.x + rect.width >= qr.x + qr.width), design).toBe(true);
+      const panel = spec.textBlocks.find((block) => block.text === SHARE_PLAY_LINE)!;
+      expect(stage.keepOut.some((rect) => rect.x <= panel.x && rect.y <= panel.y && rect.y + rect.height >= panel.y), design).toBe(true);
       const headline = spec.textBlocks.find((block) => block.text === prepared.winLine)!;
       const headlineY = headline.centerY ?? headline.y;
       expect(stage.keepOut.some((rect) => rect.y <= headlineY && rect.y + rect.height >= headlineY && rect.x <= 120), design).toBe(true);

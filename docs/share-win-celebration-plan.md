@@ -4,8 +4,8 @@
 `docs/share-win-celebration-plan_PHASE_1_HANDOFF.md`, `docs/share-win-celebration-plan_PHASE_2_HANDOFF.md`, which
 has the commit and deploy state). Waiting on Andrew's phone check (`docs/native-app-device-checklist.md` §P).
 **Phases 3–3.2 are committed (`b761190e`) and deployed (web).** **Phase 3.3:** app 2.0.1 built (iOS build 3,
-Android code 3), signed, on TestFlight and Play internal testing; iOS 2.0.1 prepared, not submitted (handoff `docs/share-win-celebration-plan_PHASE_3_3_HANDOFF.md`).
-**Next:** Andrew installs both, runs checklist §Q 84–89 on test builds, then releases.
+Android code 3), signed, on TestFlight and Play internal testing; **released 2026-11-11**: iOS in App Review, Android production 100% (handoff `docs/share-win-celebration-plan_PHASE_3_3_HANDOFF.md`).
+**Next:** §Q 84–89 on the store builds; flip `NEXT_PUBLIC_INSTAGRAM_STORY_VIDEO_OFF` if one-tap video fails.
 **Phase 4 (guide clip): rendered 2026-11-11**, 44 s, `Guest Share Celebration clip 16x9/9x16.mp4`; waiting on Andrew's
 review (handoff `docs/share-win-celebration-plan_PHASE_4_HANDOFF.md`).
 

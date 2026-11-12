@@ -14,9 +14,10 @@ import {
 } from "@/lib/socialShare/shareQr";
 import { buildLiveTriviaStorySharePayload, buildPrizeStorySharePayload, prepareStorySharePayload } from "@/lib/socialShare/storyPayloads";
 
-// docs/native-app-store-plan.md Phase 9a/9b: every share picture's QR is the permanent
-// `hightopchallenge.com/app` link. A posted Story can't be updated, so the committed file is
-// decoded here and must equal the one constant; every design must draw that file.
+// docs/native-app-store-plan.md Phase 9a/9b: the app-download QR file is the permanent
+// `hightopchallenge.com/app` link (pictures posted before 2026-11-11 carry it, and the desktop
+// app-store promotion shows it), so the committed file is decoded here and must equal the one
+// constant. Since 2026-11-11 no share picture draws it.
 
 const decode = async (): Promise<string | null> => {
   const { data, info } = await sharp(readFileSync(join(process.cwd(), "public", SHARE_QR_SRC)))
@@ -46,7 +47,7 @@ describe("share card QR", () => {
     expect(width).toBe(SHARE_QR_MODULES * SHARE_QR_PX_PER_MODULE);
   });
 
-  it("every design at every size draws that QR, unsmoothed, and nothing else encodes a link", () => {
+  it("no share picture draws a QR (Andrew, 2026-11-11: nobody seeing a post is at the bar)", () => {
     const payloads = [
       buildLiveTriviaStorySharePayload({ venueId: "v1", venueName: "The Pour House", userId: "u1", username: "ace", finalRank: 1 }),
       buildPrizeStorySharePayload({
@@ -61,11 +62,9 @@ describe("share card QR", () => {
       for (const size of STORY_SHARE_SIZE_ORDER) {
         const prepared = prepareStorySharePayload(payload, { size });
         for (const design of DESIGNS) {
-          const images = buildShareDesignSpec(prepared, design, size).images ?? [];
-          const qr = images.filter((image) => image.src === SHARE_QR_SRC);
-          expect(qr, `${design} ${size}`).toHaveLength(1);
-          expect(qr[0].smoothing).toBe(false);
-          expect(qr[0].width % SHARE_QR_MODULES, `${design} ${size}: whole px per module`).toBe(0);
+          const spec = buildShareDesignSpec(prepared, design, size);
+          expect((spec.images ?? []).filter((image) => image.src === SHARE_QR_SRC), `${design} ${size}`).toHaveLength(0);
+          expect(spec.textBlocks.map((block) => block.text), `${design} ${size}`).not.toContain("Scan to play");
         }
       }
     }

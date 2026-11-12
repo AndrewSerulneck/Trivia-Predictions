@@ -54,6 +54,9 @@
   --ht-cyan-500:  #06b6d4;
   --ht-cyan-600:  #0891b2;
 
+  /* Partner Results: cyan-300 month headings, cyan-200 winners.
+     Dates and prize details stay neutral; mirrored in RESULTS_THEME. */
+
   /* Emerald — Speed Trivia "answering" state, success, +points     */
   --ht-emerald-200: #a7f3d0;
   --ht-emerald-300: #6ee7b7;

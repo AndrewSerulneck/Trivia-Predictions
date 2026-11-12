@@ -3,6 +3,7 @@ import {
   defaultOpenResultsKeys,
   groupCountLabel,
   groupResultsTimeline,
+  groupResultsMonths,
   matchesPlayerSearch,
   rewardWinnersLine,
   scoreLabel,
@@ -134,5 +135,22 @@ describe("rewardTitleAt — the same prize more than once on one game", () => {
     expect(rewardTitleAt(half, [half, final, trivia], { compact: true })).toBe("Halftime");
     expect(rewardTitleAt(trivia, [half, final, trivia], { compact: true })).toBe("Live Trivia Challenge");
     expect(rewardTitleAt(half, [half])).toBe("Super Bowl Squares Challenge");
+  });
+});
+
+
+describe("groupResultsMonths", () => {
+  it("keeps every dated row newest first, with attached prizes once and year-qualified months", () => {
+    const g = game("2026-10-16");
+    const attached = reward(g.date, { kind: "game", competitionId: g.competitionId, gameKey: g.gameKey });
+    const weekly = reward("2026-10-18", { kind: "week", weekStart: "2026-10-12" }, "weekly");
+    const orphan = reward("2026-10-15", { kind: "game", competitionId: "test_cup", gameKey: "missing" }, "orphan");
+    const months = groupResultsMonths({ games: [game("2025-10-16"), g, game("2026-10-02")], rewards: [attached, weekly, orphan] });
+    expect(months.map((month) => month.label)).toEqual(["October 2026", "October 2025"]);
+    expect(months[0].entries.map((entry) => entry.kind === "game" ? entry.game.date : entry.reward.date))
+      .toEqual(["2026-10-18", "2026-10-16", "2026-10-15", "2026-10-02"]);
+    expect(months[0].entries[1]).toMatchObject({ kind: "game", rewards: [attached] });
+    expect(months[0].entries[0]).toEqual({ kind: "reward", reward: weekly });
+    expect(groupResultsMonths({ games: [], rewards: [weekly] })[0].entries).toHaveLength(1);
   });
 });

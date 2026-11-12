@@ -136,13 +136,10 @@ describe("share picture layout", () => {
     expect(texts).not.toContain("1010 Pacific St");
   });
 
-  it("on a Story, the QR and the venue panel stay out of Instagram's top 250 / bottom 340 px", () => {
+  it("on a Story, the venue panel stays out of Instagram's top 250 / bottom 340 px, with no QR", () => {
     const { safeTop, safeBottom, height } = STORY_SHARE_SIZES.story;
     for (const { design, spec } of everySpec().filter(({ size }) => size === "story")) {
-      const qr = (spec.images ?? []).find((image) => image.src === SHARE_QR_SRC);
-      expect(qr, design).toBeDefined();
-      expect(qr!.y, design).toBeGreaterThanOrEqual(safeTop);
-      expect(qr!.y + qr!.height, design).toBeLessThanOrEqual(height - safeBottom);
+      expect((spec.images ?? []).find((image) => image.src === SHARE_QR_SRC), design).toBeUndefined();
       for (const text of ["The Pour House", APP_DOWNLOAD_DISPLAY_URL, SHARE_PLAY_LINE]) {
         const block = spec.textBlocks.find((candidate) => candidate.text === text);
         if (!block) continue;

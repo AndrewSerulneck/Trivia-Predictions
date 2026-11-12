@@ -7,6 +7,23 @@ Results code.
 Each phase ends with a handoff note `docs/partner-results-page-plan_PHASE_<N>_HANDOFF.md` (global CLAUDE.md
 rule); update this line to point at the latest one.
 
+**Layout update (2026-11-12, accepted; commit/push/merge authorized, deployment unverified):** Andrew approved a flatter
+Results timeline: plain month/year headings, all loaded rows visible newest first, no year/week/day
+accordions or outlined cards. Each game is one tap target showing date, title, winner and one muted
+prize summary (multiple prize cycles show a count). Follow-up approved the same day: brand cyan month
+headings and winner lines, with neutral dates and prize details (`RESULTS_THEME` in `lib/themeTokens.ts`).
+Scores, player counts and full prize details remain
+in the game screen. Standalone prizes show their name, cycle/date range and winner count; tapping
+opens existing history. This supersedes R3's nested grouping and the older mockup below. Server reads,
+paging, prize attachment, privacy and detail navigation are unchanged; no recurring cost change.
+Verification: 77 focused tests, TypeScript and changed-file ESLint pass. Static component previews at
+350/390/1280 px use synthetic data only; no horizontal overflow or row borders. Evidence is ignored
+under `tmp/results-layout-2026-11-12/`. The page title also carries 🏆 (Andrew’s explicit request, overriding
+the general no-heading-emoji guideline). Full application/device verification remains unperformed.
+Release includes the separately approved Share Your Win QR removal and Phase 4 documentation; the
+private backfill log with 37 player records remains local. No database or native release action is part
+of this publication.
+
 ## 1. Plain-English summary (for Andrew)
 
 Today the Partner Dashboard's **Game Results** sheet says "Game Results" twice and splits into two tabs, **Live
@@ -392,9 +409,11 @@ None blocking. Phase 2 may surface reward rows that don't fit §5b. If so, the a
 ### Partner Results page (Partner Dashboard menu → Results; built 2026-10-16)
 
 Plan + decisions: `docs/partner-results-page-plan.md` (phases 1–5, handoffs `…_PHASE_<N>_HANDOFF.md`).
-One timeline of a venue's games (Month → Week → Day, newest first): each game card shows its winner and the
-rewards won at it; a weekly reward is a row at the end of its week (Andrew, 2026-10-16: single-night weekly
-rewards too); tap a game for the FULL standings with a "Find a player" search; tap a player for each question
+One timeline of a venue's games, newest first under plain month/year headings (Andrew, 2026-11-12).
+No nested year/week/day toggles, repeated competition prefix, emoji or bordered timeline cards. Each game
+shows its date, title, winner and one muted prize summary; multiple prize cycles show a count. Standalone
+prizes retain their dated placement and show their name, date/range and winner count, including single-night
+weekly prizes. Tap a game for scores, player counts, full prize details and the FULL standings with a "Find a player" search; tap a player for each question
 (right/wrong, points, question text). Read-only, no tabs, no CSV, usernames and points only.
 - **A competition is a registry entry, not a screen.** `lib/results/competitions.ts` (labels, score unit,
   `hasBreakdown`) + one adapter under `lib/results/adapters/` + one line in `adapters/index.ts` (+ a placement
