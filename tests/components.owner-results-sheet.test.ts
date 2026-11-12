@@ -2,6 +2,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createElement, useState } from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ResultsRewardRow } from "@/components/owner/results/ResultsRewardRow";
+import type { ResultsRewardItem } from "@/lib/results/types";
 import { ResultsSheet } from "@/components/owner/results/ResultsSheet";
 import type { OwnerSheetId } from "@/lib/ownerSheetParams";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
@@ -151,22 +153,25 @@ describe("ResultsSheet", () => {
     const fetchMock = makeFetch();
     vi.stubGlobal("fetch", fetchMock);
     render(createElement(Host, { initiallyOpen: true }));
-    await screen.findByText(/Live Trivia · Friday Night Trivia/);
+    await screen.findByText(/Friday Night Trivia/);
     expect(urls(fetchMock)).toEqual(["/api/owner/results?venueId=venue-1"]);
     expect(screen.getByText("Garden State Bar")).toBeTruthy();
     expect(screen.queryByRole("tab")).toBeNull(); // no tabs
-    expect(screen.getByText("14 players")).toBeTruthy();
-    expect(screen.getByText(/🏆 bobby_t · 1,240 pts/)).toBeTruthy(); // unit from the registry
-    expect(screen.getByText("🎁 Free appetizer → bobby_t")).toBeTruthy(); // a reward won AT the game
-    expect(screen.getByText("🎁 Top players this week")).toBeTruthy();
-    expect(screen.getByText("1st bobby_t · 2nd kate99")).toBeTruthy();
+    expect(screen.queryByText("14 players")).toBeNull();
+    expect(screen.queryByRole("button", { expanded: true })).toBeNull();
+    expect(screen.getByRole("heading", { name: "October 2026" })).toBeTruthy();
+    expect(screen.getByText("Winner: bobby_t")).toBeTruthy();
+    expect(screen.queryByText(/1,240 pts/)).toBeNull();
+    expect(screen.getByText("Free appetizer · bobby_t")).toBeTruthy(); // a reward won AT the game
+    expect(screen.getByText("Top players this week")).toBeTruthy();
+    expect(screen.getByText("2 winners")).toBeTruthy();
   });
 
   it("opens a game on tap with ONE request: the full standings, the search, a non-tappable deleted player", async () => {
     const fetchMock = makeFetch();
     vi.stubGlobal("fetch", fetchMock);
     render(createElement(Host, { initiallyOpen: true }));
-    fireEvent.click(await screen.findByRole("button", { name: /Live Trivia · Friday Night Trivia/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Friday Night Trivia/ }));
     await screen.findByText("player_12");
     expect(urls(fetchMock)[1]).toBe("/api/owner/results/games/live_trivia/sched-1%3A2026-10-16?venueId=venue-1");
     expect(urls(fetchMock)).toHaveLength(2);
@@ -189,7 +194,7 @@ describe("ResultsSheet", () => {
     const fetchMock = makeFetch();
     vi.stubGlobal("fetch", fetchMock);
     render(createElement(Host, { initiallyOpen: true }));
-    fireEvent.click(await screen.findByRole("button", { name: /Live Trivia · Friday Night Trivia/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /Friday Night Trivia/ }));
     await screen.findByText("player_12");
     fireEvent.change(screen.getByLabelText("Find a player"), { target: { value: "player_3" } });
     fireEvent.click(screen.getByText("player_3").closest("button") as HTMLElement);
@@ -215,10 +220,8 @@ describe("ResultsSheet", () => {
     const fetchMock = makeFetch();
     vi.stubGlobal("fetch", fetchMock);
     render(createElement(Host, { initiallyOpen: true }));
-    await screen.findByText(/Live Trivia · Friday Night Trivia/);
-    expect(screen.queryByText("🎁 NFL Pick 'Em")).toBeNull(); // its week (Oct 5 – 11) starts folded shut
-    fireEvent.click(screen.getByRole("button", { name: /Oct 5 – 11/ }));
-    await screen.findByText("🎁 NFL Pick 'Em");
+    await screen.findByText(/Friday Night Trivia/);
+    expect(screen.getByText("NFL Pick 'Em")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /NFL Pick 'Em/ }));
     await screen.findByText(/Not redeemed yet/);
     expect(urls(fetchMock)[1]).toBe("/api/owner/history/rewards/rw-nfl?venueId=venue-1");
@@ -229,14 +232,14 @@ describe("ResultsSheet", () => {
     vi.stubGlobal("fetch", makeFetch());
     render(createElement(Host, { initiallyOpen: true, initialStep: "reward" }));
     await waitFor(() => expect(screen.getByTestId("step").textContent).toBe("list"));
-    await screen.findByText(/Live Trivia · Friday Night Trivia/);
+    await screen.findByText(/Friday Night Trivia/);
   });
 
   it("a reload on a detail step the page forgot corrects to the timeline", async () => {
     vi.stubGlobal("fetch", makeFetch());
     render(createElement(Host, { initiallyOpen: true, initialStep: "player" }));
     await waitFor(() => expect(screen.getByTestId("step").textContent).toBe("list"));
-    await screen.findByText(/Live Trivia · Friday Night Trivia/);
+    await screen.findByText(/Friday Night Trivia/);
   });
 
   it("shows the empty state, and a failed first page can be retried", async () => {
@@ -251,6 +254,21 @@ describe("ResultsSheet", () => {
     render(createElement(Host, { initiallyOpen: true }));
     fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
     await screen.findByText(/No results yet/);
+  });
+
+  it("Show more appends visible older games under month headings without extra taps", async () => {
+    const older = { ...GAME, gameKey: "old", date: "2025-10-02", title: "Older trivia" };
+    const paged = vi.fn(async (url: string) => url.includes("before=")
+      ? json({ ok: true, games: [older], rewards: [], nextBefore: null })
+      : json({ ok: true, games: [GAME], rewards: [], nextBefore: GAME.date }));
+    vi.stubGlobal("fetch", paged);
+    render(createElement(Host, { initiallyOpen: true }));
+    fireEvent.click(await screen.findByRole("button", { name: "Show more" }));
+    await screen.findByText(/Older trivia/);
+    expect(screen.getByRole("heading", { name: "October 2025" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "October 2026" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Show more" })).toBeNull();
+    expect(paged).toHaveBeenCalledTimes(2);
   });
 
   it("Show more asks for the page before the cursor; one that lands after a close and reopen never replaces the fresh page", async () => {
@@ -278,4 +296,13 @@ describe("ResultsSheet", () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(screen.queryByText(/Old Timers Night/)).toBeNull();
   });
+});
+
+
+it("labels weekly prize ranges across month and year boundaries without shifting local dates", () => {
+  const base = { ...WEEK_REWARD, attach: { kind: "week", weekStart: "2026-10-26" } } as ResultsRewardItem;
+  const view = render(createElement(ResultsRewardRow, { reward: base, onOpen: () => {} }));
+  expect(screen.getByText("Oct 26–Nov 1")).toBeTruthy();
+  view.rerender(createElement(ResultsRewardRow, { reward: { ...base, attach: { kind: "week", weekStart: "2026-12-28" } }, onOpen: () => {} }));
+  expect(screen.getByText("Dec 28–Jan 3")).toBeTruthy();
 });

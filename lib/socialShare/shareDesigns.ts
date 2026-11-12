@@ -8,7 +8,7 @@ import {
   type CelebrationStage,
   type EffectRect,
 } from "./celebrationEffects";
-import { SHARE_PLAY_LINE, SHARE_SCAN_LINE, shareInstagramMention } from "./copyPresets";
+import { SHARE_PLAY_LINE, shareInstagramMention } from "./copyPresets";
 import type {
   StoryEffectLayers,
   StoryFill,
@@ -18,7 +18,6 @@ import type {
   StoryTextBlock,
 } from "./contracts";
 import { storyShareGame } from "./shareGames";
-import { SHARE_QR_MODULES, SHARE_QR_SRC } from "./shareQr";
 import { getStoryFrameAssetUrl } from "./storyAssets";
 import type { PreparedStorySharePayload as PreparedPayload } from "./storyPayloads";
 
@@ -31,9 +30,10 @@ type PreparedStorySharePayload = Omit<PreparedPayload, "renderSpec">;
  * post (1080×1350) size. One spec builder, drawn by the one renderer (storyCanvas.ts).
  *
  * Every design carries the bar (name + @handle + street + city, each as the venue chose —
- * applyShareVenue, Phase 9e; never directions) and the app (a QR to
- * `hightopchallenge.com/app` + "Play on Hightop Challenge"). On a Story the QR and venue
- * panel stay inside Instagram's safe zone (clear of the top 250 and bottom 340 px).
+ * applyShareVenue, Phase 9e; never directions) and the app ("Play on Hightop Challenge" +
+ * `hightopchallenge.com/app`). No QR code (Andrew, 2026-11-11: people seeing a post aren't at
+ * the bar, so there is nothing for them to scan). On a Story the venue panel stays inside
+ * Instagram's safe zone (clear of the top 250 and bottom 340 px).
  * No text is smaller than STORY_TEXT_FLOOR_PX (the app's 12px floor at phone width).
  * No game id is named here — what differs per game is its registry entry (shareGames.ts).
  */
@@ -63,8 +63,6 @@ export const STORY_SHARE_SIZE_ORDER: readonly StoryShareSize[] = ["story", "post
 export const STORY_TEXT_FLOOR_PX = 34;
 
 const LOGO_SRC = "/brand/web/htc-logo-192.webp";
-/** The QR drawn at a whole 6px per module, never smoothed. */
-const QR_SIZE = SHARE_QR_MODULES * 6;
 const MARGIN = 64;
 const PANEL_PAD = 48;
 const WHITE = "#FFFFFF";
@@ -148,16 +146,13 @@ const venuePanel = (
   const urlBaseline = playBaseline + 50;
   const textHeight = urlBaseline + 44;
 
-  const qrBlockHeight = QR_SIZE + 62;
-  const panelHeight = Math.max(textHeight, qrBlockHeight + PANEL_PAD * 2);
+  const panelHeight = textHeight;
   const x = MARGIN;
   const width = frame.width - MARGIN * 2;
   const top = frame.bottom - panelHeight;
-  const textTop = top + (panelHeight - textHeight) / 2;
-  const qrX = x + width - PANEL_PAD - QR_SIZE;
-  const qrY = top + (panelHeight - qrBlockHeight) / 2;
+  const textTop = top;
   const textX = x + PANEL_PAD;
-  const textWidth = qrX - 40 - textX;
+  const textWidth = width - PANEL_PAD * 2;
   const readable = options.stroke
     ? { shadowColor: "rgba(0, 0, 0, 0.4)", shadowBlur: 6, shadowOffsetY: 2 }
     : {};
@@ -207,16 +202,6 @@ const venuePanel = (
       fitMinPx: STORY_TEXT_FLOOR_PX,
       color: SOFT_WHITE,
       ...readable,
-    }),
-    text({
-      text: SHARE_SCAN_LINE,
-      x: qrX + QR_SIZE / 2,
-      y: qrY + QR_SIZE + 50,
-      maxWidth: QR_SIZE + 40,
-      font: bodyFont(700, STORY_TEXT_FLOOR_PX),
-      color: SOFT_WHITE,
-      align: "center",
-      ...readable,
     })
   );
 
@@ -224,7 +209,7 @@ const venuePanel = (
     top,
     rect: { x, y: top, width, height: panelHeight },
     shapes: [{ x, y: top, width, height: panelHeight, radius: 40, fill: { kind: "solid", color: options.panelFill } }],
-    images: [{ src: SHARE_QR_SRC, x: qrX, y: qrY, width: QR_SIZE, height: QR_SIZE, radius: 18, smoothing: false }],
+    images: [],
     textBlocks,
   };
 };

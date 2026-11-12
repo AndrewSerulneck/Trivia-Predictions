@@ -1,10 +1,12 @@
 /**
- * The QR code printed on every share picture (docs/native-app-store-plan.md Phase 9b).
+ * The app-download QR file (docs/native-app-store-plan.md Phase 9b). It was printed on every
+ * share picture until 2026-11-11, when Andrew took it off (people seeing a post aren't at the
+ * bar); tests/share-card-qr.test.ts now pins that no share picture draws it. The same file is
+ * still shown on the desktop app-store promotion (components/native/AppStorePromotion.tsx).
  * Pure data, safe in the browser; also read by scripts/generate-share-qr.cjs.
  *
- * It encodes ONLY `APP_DOWNLOAD_URL` (Phase 9a's permanent `/app` link): a posted Story
- * lives in camera rolls forever, so the value can never move. The picture is drawn on the
- * player's phone from this pre-generated file — no encoder in the bundle, no server work.
+ * It encodes ONLY `APP_DOWNLOAD_URL` (Phase 9a's permanent `/app` link): pictures posted before
+ * 2026-11-11 carry it in camera rolls forever, so the value can never move.
  * tests/share-card-qr.test.ts decodes the file and fails if it drifts from the constant.
  * Changing the value means `npm run share:qr` AND a new file name (old pictures keep theirs).
  */

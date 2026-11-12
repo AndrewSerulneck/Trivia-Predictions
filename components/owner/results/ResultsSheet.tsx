@@ -20,25 +20,18 @@ import {
   timelineUrl,
   useLoaded,
 } from "@/components/owner/results/resultsApi";
-import { EMPTY_CLASS, GroupHeader, ListError, ShowMore } from "@/components/owner/results/resultsUi";
+import { EMPTY_CLASS, ListError, ShowMore } from "@/components/owner/results/resultsUi";
 import { OwnerSheet } from "@/components/owner/sheet/OwnerSheet";
 import { SlideSteps } from "@/components/owner/sheet/SlideSteps";
 import { HightopLoader } from "@/components/ui/HightopLoader";
-import { groupsByYear } from "@/lib/ownerHistoryDisplay";
-import {
-  defaultOpenResultsKeys,
-  groupCountLabel,
-  groupResultsTimeline,
-  rewardItemKey,
-  type ResultsWeekGroup,
-  type ResultsMonthGroup,
-} from "@/lib/results/resultsDisplay";
+import { groupResultsMonths, rewardItemKey } from "@/lib/results/resultsDisplay";
+import { RESULTS_THEME } from "@/lib/themeTokens";
 import type { ResultsGameRow, ResultsRewardItem, ResultsStanding, ResultsTimelinePage } from "@/lib/results/types";
 import type { UseOwnerSheetResult } from "@/lib/useOwnerSheet";
 
 // The Partner Dashboard's "Results" sheet (docs/partner-results-page-plan.md Phase 4): ONE timeline of
-// the venue's games, newest first (Year → Month → Week → Day), each game showing its winner and the
-// rewards won at it, with a week's rewards as a row at the end of the week. No tabs.
+// the venue's games, newest first under plain month headings. Each game shows its winner and a
+// compact prize summary. Standalone prizes keep their dates and open their history. No tabs.
 //
 //   list    the timeline
 //   game    one game: "Find a player" + the FULL standings + rewards won at it
@@ -86,12 +79,6 @@ type GameSelection = { game: ResultsGameRow; nonce: number };
 type PlayerSelection = { standing: ResultsStanding; nonce: number };
 type RewardSelection = { reward: ResultsRewardItem; nonce: number; from: "list" | "game" };
 
-/** Today on the partner's device, YYYY-MM-DD (their phone is in the venue's timezone in practice). */
-const todayIso = (): string => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-};
-
 export type ResultsSheetProps = {
   nav: UseOwnerSheetResult;
   /** The dashboard's selected venue; null while venues load or on an account with none. */
@@ -106,8 +93,6 @@ export const ResultsSheet = ({ nav, venue }: ResultsSheetProps) => {
   const [playerSel, setPlayerSel] = useState<PlayerSelection | null>(null);
   const [rewardSel, setRewardSel] = useState<RewardSelection | null>(null);
   const [query, setQuery] = useState("");
-  // Groups the partner folded open or shut, against each group's default (only the newest open).
-  const [toggledGroups, setToggledGroups] = useState<ReadonlySet<string>>(() => new Set());
   const taps = useRef(0);
 
   // Each open shows a fresh timeline: a game that ended since the last look must appear.
@@ -120,7 +105,6 @@ export const ResultsSheet = ({ nav, venue }: ResultsSheetProps) => {
       setPlayerSel(null);
       setRewardSel(null);
       setQuery("");
-      setToggledGroups(new Set());
     }
   }
   // Bumped on every open/close: a "Show more" still in flight from an earlier open must not land on the
@@ -218,87 +202,26 @@ export const ResultsSheet = ({ nav, venue }: ResultsSheetProps) => {
     nav.goToStep("prize");
   };
 
-  const toggleGroup = (key: string) =>
-    setToggledGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-
-  const renderTimeline = (): ReactNode => {
-    const dates = [...timeline.games.map((game) => game.date), ...timeline.rewards.map((reward) => reward.date)];
-    const oldestLoaded = dates.length > 0 ? dates.reduce((min, date) => (date < min ? date : min)) : null;
-    // An unknown first date falls back to what is loaded: rows already spanning a year group by year.
-    const byYear = groupsByYear(timeline.firstGameDate ?? oldestLoaded, todayIso());
-    const years = groupResultsTimeline(
-      { games: timeline.games, rewards: timeline.rewards },
-      { byYear, completeFrom: timeline.nextBefore },
-    );
-    const defaults = defaultOpenResultsKeys(years);
-    const isOpen = (key: string) => defaults.has(key) !== toggledGroups.has(key);
-
-    const renderWeek = (week: ResultsWeekGroup) => (
-      <li key={week.key}>
-        <GroupHeader level="week" label={week.label} count={groupCountLabel(week)} open={isOpen(week.key)} onToggle={() => toggleGroup(week.key)} />
-        {isOpen(week.key) ? (
-          <div className="space-y-3 pb-2 pl-2">
-            {week.days.map((day) => (
-              <div key={day.date} className="space-y-1.5">
-                <p className="px-1 text-caption font-black uppercase tracking-wider text-ht-muted">{day.label}</p>
-                <ul className="space-y-2">
-                  {day.entries.map((item) =>
-                    item.kind === "game" ? (
-                      <li key={`${item.game.competitionId}:${item.game.gameKey}`}>
-                        <ResultsGameCard
-                          game={item.game}
-                          rewards={item.rewards}
-                          onOpenGame={() => openGame(item.game)}
-                          onOpenReward={(reward) => openReward(reward, "list")}
-                        />
-                      </li>
-                    ) : (
-                      <li key={rewardItemKey(item.reward)}>
-                        <ResultsRewardRow reward={item.reward} onOpen={() => openReward(item.reward, "list")} />
-                      </li>
-                    ),
-                  )}
-                </ul>
-              </div>
+  const renderTimeline = (): ReactNode => (
+    <div className="space-y-6">
+      {groupResultsMonths(timeline).map((month) => (
+        <section key={month.key} aria-label={month.label} className="space-y-2">
+          <h2 className={`text-base font-extrabold ${RESULTS_THEME.month}`}>{month.label}</h2>
+          <ul className="space-y-1">
+            {month.entries.map((item) => (
+              <li key={item.kind === "game" ? `${item.game.competitionId}:${item.game.gameKey}` : rewardItemKey(item.reward)}>
+                {item.kind === "game" ? (
+                  <ResultsGameCard game={item.game} rewards={item.rewards} onOpenGame={() => openGame(item.game)} />
+                ) : (
+                  <ResultsRewardRow reward={item.reward} onOpen={() => openReward(item.reward, "list")} />
+                )}
+              </li>
             ))}
-            {week.weekRewards.length > 0 ? (
-              <ul className="space-y-2">
-                {week.weekRewards.map((reward) => (
-                  <li key={rewardItemKey(reward)}>
-                    <ResultsRewardRow reward={reward} onOpen={() => openReward(reward, "list")} />
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        ) : null}
-      </li>
-    );
-
-    const renderMonth = (month: ResultsMonthGroup) => (
-      <li key={month.key} className="space-y-1">
-        <GroupHeader level="month" label={month.label} count={groupCountLabel(month)} open={isOpen(month.key)} onToggle={() => toggleGroup(month.key)} />
-        {isOpen(month.key) ? <ul className="pl-1">{month.weeks.map(renderWeek)}</ul> : null}
-      </li>
-    );
-
-    if (!byYear) return <ul className="space-y-2">{years.flatMap((year) => year.months).map(renderMonth)}</ul>;
-    return (
-      <ul className="space-y-2">
-        {years.map((year) => (
-          <li key={year.key} className="space-y-2">
-            <GroupHeader level="year" label={year.label} count={groupCountLabel(year)} open={isOpen(year.key)} onToggle={() => toggleGroup(year.key)} />
-            {isOpen(year.key) ? <ul className="space-y-2">{year.months.map(renderMonth)}</ul> : null}
-          </li>
-        ))}
-      </ul>
-    );
-  };
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
 
   const renderList = (): ReactNode => {
     if (!venue) return <p className={EMPTY_CLASS}>Choose a venue to see its results.</p>;
@@ -354,7 +277,7 @@ export const ResultsSheet = ({ nav, venue }: ResultsSheetProps) => {
     screen === "list" ? undefined : <WizardFooter variant="inline" tone="dark" onBack={() => nav.goBack(previous)} />;
 
   return (
-    <OwnerSheet open={open} onRequestClose={nav.closeSheet} title="Results" footer={footer} scrollKey={screen}>
+    <OwnerSheet open={open} onRequestClose={nav.closeSheet} title={<><span aria-hidden="true">🏆</span> Results</>} footer={footer} scrollKey={screen}>
       <SlideSteps steps={SCREENS} current={screen} renderStep={renderScreen} />
     </OwnerSheet>
   );

@@ -2,10 +2,10 @@
 /**
  * Draws the share pictures (docs/native-app-store-plan.md Phase 9b) with the REAL renderer —
  * lib/socialShare/storyCanvas.ts, bundled by esbuild — in Playwright's Chromium, with no dev
- * server and nothing touching proxy.ts. Public files (logo, QR, frames) are served from
+ * server and nothing touching proxy.ts. Public files (logo, frames) are served from
  * public/; the page loads the local Nunito face and the same --ht-font-* aliases
- * used in the app. Every picture's QR is then decoded (jsQR)
- * and must equal APP_DOWNLOAD_URL, so this is also an end-to-end check of the QR.
+ * used in the app. Every picture is then scanned (jsQR) and must hold NO QR code
+ * (Andrew, 2026-11-11: people seeing a post aren't at the bar).
  *
  * Usage:
  *   npm run share-card:render                 → tmp/share-cards/<case>-<design>-<size>.png
@@ -15,8 +15,8 @@
  *   npm run share-card:render -- --video      → the animated Story (Phase 2) instead: real MP4s made by
  *                                               lib/socialShare/celebrationVideo.ts in Google Chrome
  *                                               (Playwright's Chromium has no H.264), decoded back and
- *                                               checked (5 s, 30 fps, 1080×1920, H.264, no sound, the QR
- *                                               scans in the held frame), plus tmp/share-cards/video-strip.png
+ *                                               checked (5 s, 30 fps, 1080×1920, H.264, no sound, no QR
+ *                                               in the held frame), plus tmp/share-cards/video-strip.png
  * The selfie has no photo here, so it is drawn on a grey stand-in.
  * Effect pictures are named <case>-<design>-<size>-fx-<effects>.png (docs/share-win-celebration-plan.md).
  */
@@ -164,11 +164,11 @@ const renderVideos = async (page) => {
     if (video.width !== 1080 || video.height !== 1920) problems.push(`${video.width}x${video.height}`);
     if (!String(video.codec).startsWith("avc1")) problems.push(`codec ${video.codec}`);
     if (video.hasAudio) problems.push("has a sound track");
-    // The held frame is the still picture: its QR scans, and it looks like the still.
+    // The held frame is the still picture: it has no QR, and it looks like the still.
     const last = Buffer.from(video.frames.at(-1).data.split(",")[1], "base64");
     const { data: raw, info } = await sharp(last).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
     const qr = jsQR(new Uint8ClampedArray(raw), info.width, info.height)?.data ?? null;
-    if (qr !== "https://hightopchallenge.com/app") problems.push(`held-frame QR=${qr}`);
+    if (qr !== null) problems.push(`held-frame QR=${qr}`);
     const still = await sharp(Buffer.from(video.still.split(",")[1], "base64")).ensureAlpha().raw().toBuffer();
     let diff = 0;
     for (let i = 0; i < raw.length; i += 4) diff += Math.abs(raw[i] - still[i]) + Math.abs(raw[i + 1] - still[i + 1]) + Math.abs(raw[i + 2] - still[i + 2]);
@@ -235,7 +235,7 @@ const renderVideos = async (page) => {
       writeFileSync(join(OUT, file), buffer);
       const { data: raw, info } = await sharp(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
       const decoded = jsQR(new Uint8ClampedArray(raw), info.width, info.height)?.data ?? null;
-      const ok = decoded === "https://hightopchallenge.com/app";
+      const ok = decoded === null;
       if (!ok) failures += 1;
       console.log(`${ok ? "ok " : "BAD"} ${file}  ${info.width}x${info.height}  QR=${decoded}`);
     }

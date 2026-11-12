@@ -152,10 +152,13 @@ describe("owner dashboard body", () => {
     }
   });
 
-  it("Phase 6: the dashed add-cards use a border that clears 3:1 against the card", () => {
+  it("empty cards have no border; add-another rows retain their contrasting dashed border", () => {
     const card = read("components/owner/dashboard/DashboardSectionCard.tsx");
     expect(card).not.toContain("border-ht-soft");
-    expect(card.match(/!border-dashed !border-slate-500/g)).toHaveLength(2);
+    const emptyCard = card.split("export const SectionEmpty")[1].split("export const SectionAddRow")[0];
+    expect(emptyCard).toContain("!border-0");
+    expect(emptyCard).not.toContain("!border-dashed");
+    expect(card.match(/!border-dashed !border-slate-500/g)).toHaveLength(1);
   });
 
   it("Phase 6: the first-visit ☰ pulse respects reduced motion", () => {

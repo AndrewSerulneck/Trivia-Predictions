@@ -351,3 +351,11 @@ export const VENUE_LOCATION = {
   // Explicit height preserves the 48px target under the legacy small-phone min-height override.
   editAction: "mt-3 h-[48px] min-h-[48px] w-full rounded-xl bg-ht-cyan-400 px-4 text-sm font-black text-slate-950 transition hover:bg-ht-cyan-300 active:bg-ht-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ht-cyan-500 disabled:opacity-60",
 } as const;
+
+/** Partner Results uses the existing brand cyan palette, with neutral supporting details.
+ * See design-system/hightop-challenge-design-system/project/colors_and_type.css. */
+export const RESULTS_THEME = {
+  month: "text-ht-cyan-300",
+  winner: "text-ht-cyan-200",
+  secondary: "text-ht-muted",
+} as const;

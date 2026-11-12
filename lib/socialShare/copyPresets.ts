@@ -93,11 +93,8 @@ export function resolveStoryCaptionPreset(payload: StorySharePayload): string {
 
 // ── The headline on every share picture (Andrew, 2026-10-22, plan Phases 9a–9f decision 4) ──
 
-/** The app line on every picture, beside the QR code. */
+/** The app line on every picture (no QR code since 2026-11-11). */
 export const SHARE_PLAY_LINE = "Play on Hightop Challenge";
-
-/** Under the QR code. */
-export const SHARE_SCAN_LINE = "Scan to play";
 
 const atVenue = (venueName: string | null | undefined): string => {
   const name = venueName?.trim();

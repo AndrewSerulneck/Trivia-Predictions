@@ -1,60 +1,40 @@
 import { BARE_BUTTON_CLASS, Chevron } from "@/components/owner/results/resultsUi";
-import { playerCountLabel, winnersLabel } from "@/lib/ownerHistoryDisplay";
-import { getResultsCompetition } from "@/lib/results/competitions";
-import { rewardTitleAt, rewardWinnerInline, scoreLabel } from "@/lib/results/resultsDisplay";
+import { formatOccurrenceDate, winnersLabel } from "@/lib/ownerHistoryDisplay";
+import { rewardWinnerInline } from "@/lib/results/resultsDisplay";
+import { RESULTS_THEME } from "@/lib/themeTokens";
 import type { ResultsGameRow, ResultsRewardItem } from "@/lib/results/types";
 
-// One game on the timeline: "<competition> · <game>", the player count, the winner, and any reward won
-// at this game as a line of its own. The competition label and score unit come from the registry
-// (lib/results/competitions.ts); the card never branches on which competition it is.
-//
-// Two taps, never nested buttons: the game body opens the game screen, each reward line opens that reward.
-
-const resultLine = (game: ResultsGameRow, unit: string): string => {
+// One compact button per game. Scores, participants and all prize details live in its standings screen.
+const resultLine = (game: ResultsGameRow): string => {
   if (game.inProgress) return "Playing now";
   if (game.winners.length === 0) return "Nobody scored";
-  return `🏆 ${winnersLabel(game.winners)} · ${scoreLabel(game.topScore, unit)}`;
+  return `${game.winners.length === 1 ? "Winner" : "Winners"}: ${winnersLabel(game.winners)}`;
 };
 
-const rewardLine = (reward: ResultsRewardItem, all: ReadonlyArray<ResultsRewardItem>): string =>
-  `🎁 ${rewardTitleAt(reward, all, { compact: true })} → ${reward.winners.length > 0 ? reward.winners.map(rewardWinnerInline).join(", ") : "No winner"}`;
+const prizeSummary = (rewards: ReadonlyArray<ResultsRewardItem>): string => {
+  if (rewards.length !== 1) return `${rewards.length} prizes`;
+  const reward = rewards[0];
+  const winner = reward.winners.length === 1 ? rewardWinnerInline(reward.winners[0]) :
+    reward.winners.length > 1 ? `${reward.winners.length} winners` : "No winner";
+  return `${reward.name} · ${winner}`;
+};
 
-export const ResultsGameCard = ({
-  game,
-  rewards,
-  onOpenGame,
-  onOpenReward,
-}: {
+export const ResultsGameCard = ({ game, rewards, onOpenGame }: {
   game: ResultsGameRow;
   rewards: ReadonlyArray<ResultsRewardItem>;
   onOpenGame: () => void;
-  onOpenReward: (reward: ResultsRewardItem) => void;
-}) => {
-  const competition = getResultsCompetition(game.competitionId);
-  return (
-    <div className="overflow-hidden rounded-[14px] border border-ht-hairline bg-ht-elevated/40">
-      <button type="button" onClick={onOpenGame} className={BARE_BUTTON_CLASS}>
-        <div className="flex items-center gap-3 p-3">
-          <div className="min-w-0 flex-1">
-            <div className="truncate font-black text-ht-primary">{competition ? `${competition.label} · ${game.title}` : game.title}</div>
-            <div className="mt-0.5 text-footnote font-semibold text-ht-muted">{playerCountLabel(game.playerCount)}</div>
-            <div className={`mt-1 text-footnote font-bold ${game.winners.length > 0 ? "text-ht-emerald-300" : "text-ht-muted"}`}>
-              {resultLine(game, competition?.scoreUnit ?? "")}
-            </div>
-          </div>
-          <Chevron />
+}) => (
+  <button type="button" onClick={onOpenGame} className={BARE_BUTTON_CLASS}>
+    <div className="flex min-h-11 items-center gap-3 py-3">
+      <div className="min-w-0 flex-1">
+        <div className="break-words font-extrabold text-ht-primary">
+          <span className="font-semibold text-ht-muted">{formatOccurrenceDate(game.date, Number(game.date.slice(0, 4)))} · </span>
+          {game.title}
         </div>
-      </button>
-      {rewards.map((reward) => (
-        <div key={`${reward.rewardId}:${reward.cycleStart}`} className="border-t border-ht-hairline">
-          <button type="button" onClick={() => onOpenReward(reward)} className={BARE_BUTTON_CLASS}>
-            <div className="flex min-h-11 items-center gap-3 px-3 py-2">
-              <span className="min-w-0 flex-1 truncate text-footnote font-bold text-ht-emerald-300">{rewardLine(reward, rewards)}</span>
-              <Chevron />
-            </div>
-          </button>
-        </div>
-      ))}
+        <div className={`mt-1 break-words text-footnote font-semibold ${!game.inProgress && game.winners.length > 0 ? RESULTS_THEME.winner : RESULTS_THEME.secondary}`}>{resultLine(game)}</div>
+        {rewards.length > 0 ? <div className="mt-0.5 break-words text-footnote font-semibold text-ht-muted">{prizeSummary(rewards)}</div> : null}
+      </div>
+      <Chevron />
     </div>
-  );
-};
+  </button>
+);
