@@ -9,14 +9,13 @@ the website is deployed. New app builds are made: **version 2.0.1**, iOS build *
 - **Website: yes** (commit `b761190e`, Vercel production, Ready 2026-11-11). On its own it changes nothing visible:
   it waits for an app build that says it can send a video. Android app users' **More** button now saves the video
   in small pieces (Phase 3.2) — watch for "Couldn't share" reports on Android.
-- **App: not yet.** The builds exist on this Mac but are **not uploaded**. Guests get the one-tap video only after
+- **App: not yet.** iOS build 3 is uploaded to App Store Connect (processing); the Android bundle is on this Mac, not uploaded. Guests get the one-tap video only after
   you upload, test, and release them, and they update the app.
 
 **Needs you (in order):**
 1. **Upload Android:** Play Console → Testing → Internal testing → Create new release → upload
    `~/Downloads/Hightop-Challenge-2.0.1-3.aab`.
-2. **Upload iOS:** open the Transporter app, sign in, drag in `~/Downloads/Hightop-Challenge-2.0.1-3.ipa`, Deliver.
-   (Or Xcode → Window → Organizer → the 2.0.1 (3) archive → Distribute App → App Store Connect.)
+2. **iOS: already uploaded** (2026-11-11). Wait for the "build 3 is ready" email, then add yourself to an internal TestFlight group and install.
 3. Install both from TestFlight / Play internal testing and run checklist **§Q items 84–89**
    (`docs/native-app-device-checklist.md`).
 4. If item 84 fails on iPhone only: tell the agent; it runs
@@ -77,7 +76,7 @@ moving pictures to file paths.
 - Live: `https://play.hightopchallenge.com/` and `https://hightopchallenge.com/info` → 200 after deploy.
 - Android: signed `~/Downloads/Hightop-Challenge-2.0.1-3.aab`, `signatureVerified: true`, upload cert SHA-256
   `E4:1C:A0:44:…:EC:B4`, file SHA-256 `3dd46e50aad762a3870ffd01cf39ee66ae191ec1546f9a16609d5d1e200e6cec`.
-- iOS: `ARCHIVE SUCCEEDED` → `~/Library/Caches/hightop-native/releases/Hightop-Challenge-2.0.1-3.xcarchive`;
+- iOS: `ARCHIVE SUCCEEDED` → `~/Library/Caches/hightop-native/releases/Hightop-Challenge-2.0.1-3.xcarchive`; **uploaded to App Store Connect 2026-11-11 19:18 ET** (`-exportArchive` with `destination` upload → "Upload succeeded", processing);
   `EXPORT SUCCEEDED` (options plist per the runbook, `destination` export) →
   `~/Library/Caches/hightop-native/releases/ios-app-store-2.0.1-3/App.ipa`, copied to
   `~/Downloads/Hightop-Challenge-2.0.1-3.ipa`, SHA-256 `33b4f827bec57ce70676162f9519dd33509f6cdbe4a1ce577f4bef97d3fc899f`.
@@ -85,7 +84,7 @@ moving pictures to file paths.
   valid, Apple Distribution: Hightop Challenge LLC (2U7HMXGQM3), `get-task-allow` false, `aps-environment` production,
   associated domains `applinks:play.hightopchallenge.com` + `webcredentials:hightopchallenge.com`, location purpose
   string present (ITMS-90683 fix from `4b4bbcdd`), UA `HightopChallengeApp/2.0.1 (ios)`, binary contains
-  `com.instagram.sharedSticker.backgroundVideo` and "Could not prepare the video." (the 3.2 plugin). **Not uploaded.**
+  `com.instagram.sharedSticker.backgroundVideo` and "Could not prepare the video." (the 3.2 plugin).
 - **Unverified:** everything in §Q (device-only).
 
 ### 7. Open questions for Andrew
