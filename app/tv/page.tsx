@@ -5,6 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { ExplodingLogo } from "@/components/ui/ExplodingLogo";
 import { TvPairingDisplay } from "@/components/venue-screen/TvPairingDisplay";
 import { gameUrl, marketingUrl } from "@/lib/domainSplit";
+import { useKeepScreenAwake } from "@/lib/useKeepScreenAwake";
 
 // This is the ONE page owners type on a TV remote (hightopchallenge.com/tv), so
 // it's public (no auth cookies exist on a TV) and built for across-the-room
@@ -30,6 +31,7 @@ const EXPIRED_REMINT_DELAY_MS = 2500;
 type Phase = "booting" | "resuming" | "minting" | "pending" | "claimed" | "expired" | "error";
 
 const TvPairPage = () => {
+  useKeepScreenAwake();
   const [phase, setPhase] = useState<Phase>("booting");
   const [code, setCode] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");

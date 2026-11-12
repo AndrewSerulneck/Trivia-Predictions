@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { BracketTvScreen } from "@/components/venue-screen/BracketTvScreen";
 import { CategoryBlitzIntermissionScreen } from "@/components/venue-screen/CategoryBlitzIntermissionScreen";
 import { CategoryBlitzScreen } from "@/components/venue-screen/CategoryBlitzScreen";
@@ -11,10 +11,12 @@ import { LiveTriviaScreen } from "@/components/venue-screen/LiveTriviaScreen";
 import { SquaresTvScreen } from "@/components/venue-screen/SquaresTvScreen";
 import { ScreenTransition } from "@/components/venue-screen/ScreenTransition";
 import { TvGoLiveTakeover, type GameLabel } from "@/components/venue-screen/TvGoLiveTakeover";
+import { TvIntroStinger } from "@/components/venue-screen/TvIntroStinger";
 import { VenueScreenStatus } from "@/components/venue-screen/VenueScreenStatus";
 import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 import { getVenueScreenTheme, type VenueScreenMode } from "@/lib/venueScreenBrand";
 import type { VenueScreenState } from "@/lib/venueScreen";
+import { useKeepScreenAwake } from "@/lib/useKeepScreenAwake";
 import {
   getVenueScreenBurnInTransform,
   getVenueScreenPollIntervalMs,
@@ -26,6 +28,8 @@ type VenueScreenClientProps = {
   venueId: string;
   initialState: VenueScreenState;
   debugMode?: VenueScreenDebugMode | null;
+  /** Play the intro stinger on open. False only for the dashboard thumbnail (`intro=0`). */
+  intro?: boolean;
 };
 
 const VENUE_SCREEN_FETCH_TIMEOUT_MS = 10_000;
@@ -195,8 +199,13 @@ function getRefreshErrorMessage(error: unknown): string {
   return "Unable to refresh venue screen. Keeping the last venue screen live.";
 }
 
-export function VenueScreenClient({ venueId, initialState, debugMode = null }: VenueScreenClientProps) {
+export function VenueScreenClient({ venueId, initialState, debugMode = null, intro = true }: VenueScreenClientProps) {
   const [state, setState] = useState(initialState);
+  // The intro stinger plays over the screen on every open (docs/venue-display-hype-and-intro-stinger-plan.md
+  // §8); the poll loop runs underneath. A go-live takeover that lands meanwhile waits for it.
+  const [introPlaying, setIntroPlaying] = useState(intro);
+  const endIntro = useCallback(() => setIntroPlaying(false), []);
+  useKeepScreenAwake();
   const [error, setError] = useState<string | null>(null);
   const [failureCount, setFailureCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -310,63 +319,67 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
       ? getVenueScreenBurnInTransform(nowMs) : "translate3d(0, 0, 0)";
 
   return (
-    <ViewportFitCanvas>
-      {/* Sizing is relative to the fixed canvas above (h-full/w-full), not the
-          raw viewport — ViewportFitCanvas handles fitting the canvas to the
-          actual device. The `min-h-0` further down the flex chain is load
-          bearing: without it a flex item's default `min-height: auto` lets the
-          column grow past the canvas instead of overflowing, which is what
-          AutoScaleToFit needs to see. */}
-      <main className="h-full w-full overflow-hidden bg-slate-950 text-white">
-        <div className="relative flex h-full flex-col" style={{ background: theme.stageGradient }}>
-          <div
-            className="flex h-full flex-col will-change-transform"
-            style={{ transform: screenTransform }}
-          >
-            {state.mode !== "idle" ? <VenueTitle state={state} accent={theme.accent} /> : null}
-            {state.mode === "live-trivia" || state.mode === "category-blitz" ? (
-              <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
-                {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} nowMs={nowMs} /> : null}
-                {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} nowMs={nowMs} /> : null}
-              </ScreenTransition>
-            ) : null}
-            {state.mode === "squares" ? (
-              <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
-                <SquaresTvScreen state={state} accent={theme.accent} />
-              </ScreenTransition>
-            ) : null}
-            {state.mode === "bracket" ? (
-              <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
-                <BracketTvScreen state={state} accent={theme.accent} />
-              </ScreenTransition>
-            ) : null}
-            {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} /> : null}
-          </div>
-          {liveTakeover ? (
-            <TvGoLiveTakeover
-              key={liveTakeover.key}
-              gameLabel={liveTakeover.gameLabel}
-              venueName={state.venue.displayName ?? state.venue.name}
-              onComplete={() => setLiveTakeover(null)}
-            />
-          ) : null}
-          {error || debugMode ? (
-            <VenueScreenStatus
-              updatedAt={state.updatedAt}
-              nowMs={nowMs}
-              error={error}
-              failureCount={failureCount}
-              isRefreshing={isRefreshing}
-              debugMode={debugMode}
-            />
-          ) : null}
-          {error ? (
-            <div className="fixed bottom-5 right-5 z-30 max-w-[min(42rem,calc(100vw-2.5rem))] rounded-lg border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-lg font-bold text-amber-100">
-              {error}
+    <>
+      <ViewportFitCanvas>
+        {/* Sizing is relative to the fixed canvas above (h-full/w-full), not the
+            raw viewport — ViewportFitCanvas handles fitting the canvas to the
+            actual device. The `min-h-0` further down the flex chain is load
+            bearing: without it a flex item's default `min-height: auto` lets the
+            column grow past the canvas instead of overflowing, which is what
+            AutoScaleToFit needs to see. */}
+        <main className="h-full w-full overflow-hidden bg-slate-950 text-white">
+          <div className="relative flex h-full flex-col" style={{ background: theme.stageGradient }}>
+            <div
+              className="flex h-full flex-col will-change-transform"
+              style={{ transform: screenTransform }}
+            >
+              {state.mode !== "idle" ? <VenueTitle state={state} accent={theme.accent} /> : null}
+              {state.mode === "live-trivia" || state.mode === "category-blitz" ? (
+                <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
+                  {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} nowMs={nowMs} /> : null}
+                  {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} nowMs={nowMs} /> : null}
+                </ScreenTransition>
+              ) : null}
+              {state.mode === "squares" ? (
+                <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
+                  <SquaresTvScreen state={state} accent={theme.accent} />
+                </ScreenTransition>
+              ) : null}
+              {state.mode === "bracket" ? (
+                <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
+                  <BracketTvScreen state={state} accent={theme.accent} />
+                </ScreenTransition>
+              ) : null}
+              {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} /> : null}
             </div>
-          ) : null}
-        </div>
-      </main>
-    </ViewportFitCanvas>
+            {liveTakeover && !introPlaying ? (
+              <TvGoLiveTakeover
+                key={liveTakeover.key}
+                gameLabel={liveTakeover.gameLabel}
+                venueName={state.venue.displayName ?? state.venue.name}
+                onComplete={() => setLiveTakeover(null)}
+              />
+            ) : null}
+            {error || debugMode ? (
+              <VenueScreenStatus
+                updatedAt={state.updatedAt}
+                nowMs={nowMs}
+                error={error}
+                failureCount={failureCount}
+                isRefreshing={isRefreshing}
+                debugMode={debugMode}
+              />
+            ) : null}
+            {error ? (
+              <div className="fixed bottom-5 right-5 z-30 max-w-[min(42rem,calc(100vw-2.5rem))] rounded-lg border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-lg font-bold text-amber-100">
+                {error}
+              </div>
+            ) : null}
+          </div>
+        </main>
+      </ViewportFitCanvas>
+      {/* Outside the scaled canvas: a fixed element inside a transformed parent isn't viewport-fixed. */}
+      {introPlaying ? <TvIntroStinger onDone={endIntro} /> : null}
+    </>
   );
 }
