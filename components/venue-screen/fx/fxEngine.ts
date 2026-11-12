@@ -5,7 +5,8 @@
 // Cost rules it enforces (plan §3): the loop runs only while something is drawing and stops when the tab is
 // hidden; the canvas shrinks to 1×1 when idle (no full-screen layer, no backing memory); ambient-only frames
 // draw at ~30 fps; glows are baked into sprites once (fxSprites.ts), never blurred per frame; a frame-time watchdog steps the tier
-// down full → lite → off. Fail open: an emitter that throws is dropped, never the screen.
+// down full → lite → off, one tier per slow spell, and retries one tier up later with backoff (Phase 6: a single slow
+// spell used to switch effects off for the rest of the night). Fail open: an emitter that throws is dropped, never the screen.
 
 import { getFxSprite } from "@/components/venue-screen/fx/fxSprites";
 import { isEmitterAlive, type FxDrawOp, type FxEmitter } from "@/components/venue-screen/fx/fxEmitters";
@@ -14,8 +15,11 @@ import {
   createFrameWatchdog,
   fxBackingScale,
   fxDensity,
+  fxTierRetryDelayMs,
+  FX_TIER_HOLD_MS,
   initialFxTier,
   lowerFxTier,
+  raiseFxTier,
   type FxTier,
 } from "@/components/venue-screen/fx/fxQuality";
 
@@ -28,13 +32,15 @@ export const FX_AMBIENT_FRAME_MS = 33;
 export type FxEngine = {
   /** Fire a one-off effect under an identity key (see fxGate.ts). `build` gets the tier's particle density. */
   fire: (key: string, build: (density: number) => FxEmitter) => FxFireResult;
-  /** Start an ambient effect (not keyed); returns its stop function. No-op when the tier is off. */
+  /** Start an ambient effect (not keyed); returns its stop function. Draws nothing while the tier is off; restarts when it's back. */
   startAmbient: (build: (density: number) => FxEmitter) => () => void;
   /** Claim a moment's identity key without drawing canvas particles (CSS moments); same gate as `fire`. */
   claim: (key: string) => FxGateDecision;
   /** Remember `value` under `scope` for the page's life; returns the value it replaced (undefined the first time). */
   remember: (scope: string, value: string) => string | undefined;
   tier: () => FxTier;
+  /** Listen for tier changes (e.g. the watchdog dropping to `off`); returns the unsubscribe function. */
+  subscribeTier: (listener: () => void) => () => void;
   /** From now on new keys play (FxProvider calls this a beat after the intro stinger). */
   arm: () => void;
   /** Bind to the canvas element; returns the detach function. Browser only. */
@@ -44,6 +50,7 @@ export type FxEngine = {
 };
 
 type Live = { emitter: FxEmitter; start: number; ambient: boolean };
+type Ambient = { build: (density: number) => FxEmitter; item: Live | null };
 
 const drawOps = (ctx: CanvasRenderingContext2D, ops: FxDrawOp[]) => {
   for (const op of ops) {
@@ -86,6 +93,16 @@ export const createFxEngine = (): FxEngine => {
   const memory = new Map<string, string>();
   const watchdog = createFrameWatchdog();
   let tier: FxTier = "full";
+  /** The best tier this device / motion preference allows; watchdog retries never go above it. */
+  let ceiling: FxTier = "full";
+  let drops = 0;
+  let holdUntil = 0;
+  let retryTimer = 0;
+  const ambients = new Set<Ambient>();
+  const tierListeners = new Set<() => void>();
+  const notifyTier = () => {
+    for (const listener of tierListeners) listener();
+  };
   let canvas: HTMLCanvasElement | null = null;
   let ctx: CanvasRenderingContext2D | null = null;
   let scale = 1;
@@ -131,16 +148,37 @@ export const createFxEngine = (): FxEngine => {
     lastFrame = 0;
   };
 
+  const clearRetry = () => {
+    if (retryTimer) window.clearTimeout(retryTimer);
+    retryTimer = 0;
+  };
+
   const setTier = (next: FxTier) => {
     if (next === tier) return;
+    const wasOff = tier === "off";
     tier = next;
+    notifyTier();
     if (tier === "off") {
       live = [];
+      for (const ambient of ambients) ambient.item = null;
       stopLoop();
       hide();
       return;
     }
     if (shown) fit();
+    if (wasOff) for (const ambient of ambients) startAmbientItem(ambient);
+  };
+
+  // Climb back one tier at a time after a watchdog drop; a device that is really too slow drops again (one tier per
+  // slow spell) and the next retry waits twice as long, capped at FX_TIER_RETRY_MAX_MS.
+  const scheduleRetry = () => {
+    clearRetry();
+    if (tier === ceiling) return;
+    retryTimer = window.setTimeout(() => {
+      retryTimer = 0;
+      setTier(raiseFxTier(tier, ceiling));
+      scheduleRetry();
+    }, fxTierRetryDelayMs(drops));
   };
 
   const draw = (now: number) => {
@@ -170,9 +208,13 @@ export const createFxEngine = (): FxEngine => {
     if (!canvas || !ctx || !visible || tier === "off") return;
     const frameMs = lastFrame ? now - lastFrame : 0;
     lastFrame = now;
-    if (frameMs && watchdog.sample(frameMs, now)) {
+    if (frameMs && now >= holdUntil && watchdog.sample(frameMs, now)) {
       const lower = lowerFxTier(tier);
+      drops += 1;
+      holdUntil = now + FX_TIER_HOLD_MS;
+      watchdog.reset();
       setTier(lower);
+      scheduleRetry();
       if (lower === "off") return;
     }
     const ambientOnly = live.every((item) => item.ambient);
@@ -200,7 +242,20 @@ export const createFxEngine = (): FxEngine => {
     ensureLoop();
   };
 
-  const now = (): number => (typeof performance !== "undefined" ? performance.now() : Date.now());
+  function startAmbientItem(ambient: Ambient) {
+    if (tier === "off") return;
+    try {
+      ambient.item = { emitter: ambient.build(fxDensity(tier)), start: now(), ambient: true };
+    } catch {
+      ambient.item = null;
+      return;
+    }
+    add(ambient.item);
+  }
+
+  function now(): number {
+    return typeof performance !== "undefined" ? performance.now() : Date.now();
+  }
 
   return {
     fire: (key, build) => {
@@ -215,16 +270,14 @@ export const createFxEngine = (): FxEngine => {
       }
     },
     startAmbient: (build) => {
-      if (tier === "off") return () => undefined;
-      let item: Live;
-      try {
-        item = { emitter: build(fxDensity(tier)), start: now(), ambient: true };
-      } catch {
-        return () => undefined;
-      }
-      add(item);
+      const ambient: Ambient = { build, item: null };
+      ambients.add(ambient);
+      startAmbientItem(ambient);
       return () => {
-        live = live.filter((entry) => entry !== item);
+        ambients.delete(ambient);
+        const { item } = ambient;
+        if (item) live = live.filter((entry) => entry !== item);
+        ambient.item = null;
       };
     },
     claim: (key) => gate.decide(key),
@@ -234,6 +287,12 @@ export const createFxEngine = (): FxEngine => {
       return previous;
     },
     tier: () => tier,
+    subscribeTier: (listener) => {
+      tierListeners.add(listener);
+      return () => {
+        tierListeners.delete(listener);
+      };
+    },
     arm: () => gate.arm(),
     liveCount: () => live.length,
     attach: (element) => {
@@ -247,9 +306,16 @@ export const createFxEngine = (): FxEngine => {
         typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
       const pickTier = () =>
         initialFxTier({ hardwareConcurrency: navigator.hardwareConcurrency, reducedMotion: Boolean(motionQuery?.matches) });
-      tier = ctx ? pickTier() : "off";
+      ceiling = ctx ? pickTier() : "off";
+      tier = ceiling;
+      notifyTier();
 
-      const onMotion = () => setTier(ctx ? pickTier() : "off");
+      const onMotion = () => {
+        ceiling = ctx ? pickTier() : "off";
+        drops = 0;
+        clearRetry();
+        setTier(ceiling);
+      };
       const onVisibility = () => {
         visible = !document.hidden;
         if (!visible) {
@@ -270,10 +336,12 @@ export const createFxEngine = (): FxEngine => {
 
       return () => {
         stopLoop();
+        clearRetry();
         motionQuery?.removeEventListener?.("change", onMotion);
         document.removeEventListener("visibilitychange", onVisibility);
         window.removeEventListener("resize", onResize);
         live = [];
+        for (const ambient of ambients) ambient.item = null;
         canvas = null;
         ctx = null;
         shown = false;

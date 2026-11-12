@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { OneShotShine } from "@/components/venue-screen/fx/MomentOverlays";
 import { stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
@@ -106,6 +107,9 @@ export function TvAnswerReveal({
   const total = Math.max(totalSeconds ?? span.total, live, 1);
   const fraction = Math.min(1, live / total);
   const settled = reduceMotion || span.late;
+  // Whether the one-shot bloom exists: hydration-safe (see useReducedMotionAfterHydration).
+  const hideMotionOnly = useReducedMotionAfterHydration();
+  const showBloom = !hideMotionOnly && !span.late;
 
   const qType = questionType(question.length);
   const aSize = answerType(correctAnswer.length);
@@ -131,7 +135,7 @@ export function TvAnswerReveal({
           measuring it would drag the auto-fit scale around for the ~1s it is
           on screen. Here it is simply clipped by the root's overflow-hidden,
           which is what it always looked like anyway. */}
-      {!settled && (
+      {showBloom && (
         <motion.div
           className="pointer-events-none absolute"
           style={{

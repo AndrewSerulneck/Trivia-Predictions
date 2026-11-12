@@ -1,0 +1,127 @@
+// Phase 6 long run: accelerated 3 h idle + 3 mocked game nights on ONE page (fake clock).
+// Checks: heap (after GC), canvas count, DOM nodes and live fx emitters stay flat; moments keep firing; no errors.
+import { chromium } from "playwright";
+
+const BASE = process.env.BASE ?? "http://127.0.0.1:3181";
+const IDLE_SLOTS = +(process.env.N ?? 144); // 144 × 75 s = 3 h
+const NIGHTS = +(process.env.NIGHTS ?? 3);
+const errs = [];
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 } });
+const p = await ctx.newPage();
+let phaseTag = "load";
+p.on("console", (m) => { if (m.type() === "error") errs.push(`[${phaseTag}] ${m.text().slice(0, 60)}`); });
+p.on("pageerror", (e) => errs.push(e.message.slice(0, 120)));
+
+const get = async (name) => (await fetch(`${BASE}/api/venue-screen/state?venueId=fx:${name}`)).json();
+const idle = await get("idle-2");
+const ltB = await get("lt-intermission");
+const cbB = await get("cb-results");
+const cur = { state: idle };
+// Stamp times from the PAGE's (fake) clock, not node's, or every reveal looks expired.
+await p.route("**/api/venue-screen/state*", async (r) => {
+  const now = await p.evaluate(() => Date.now()).catch(() => Date.now());
+  const s = cur.state;
+  const live = s.liveTrivia && s.liveTrivia.phase === "reveal" ? { ...s.liveTrivia, revealEndsAt: new Date((cur.revealAt ?? now) + 9_000).toISOString() } : s.liveTrivia;
+  await r.fulfill({ json: { ...s, liveTrivia: live, updatedAt: now } });
+});
+
+const cdp = await ctx.newCDPSession(p);
+await cdp.send("Performance.enable");
+const snap = async (label) => {
+  await cdp.send("HeapProfiler.collectGarbage");
+  const m = await cdp.send("Performance.getMetrics");
+  const heap = m.metrics.find((x) => x.name === "JSHeapUsedSize").value / 1e6;
+  const info = await p.evaluate(() => ({
+    canvases: document.querySelectorAll("canvas").length,
+    nodes: document.querySelectorAll("*").length,
+    live: window.__fx.liveCount(),
+    fired: window.__n,
+  }));
+  const row = { label, heapMB: +heap.toFixed(2), ...info };
+  console.log(JSON.stringify(row));
+  return row;
+};
+
+const T0 = Math.floor(Date.now() / 75_000) * 75_000 + 75_000 - 20_000;
+await p.clock.install({ time: T0 });
+await p.goto(`${BASE}/tv/fx-baseline/idle-2`, { waitUntil: "load" });
+await p.clock.runFor(3000);
+// Count fx fires: rising edges of the live emitter count (clone-only window.__fx), sampled on the fake clock.
+await p.evaluate(() => {
+  window.__n = 0; let prev = window.__fx.liveCount();
+  setInterval(() => { const v = window.__fx.liveCount(); if (v > prev) window.__n += v - prev; prev = v; }, 20);
+});
+const rows = [await snap("start")];
+// Advance the fake clock in 250 ms steps with a short real pause, so poll fetches (real network) land before
+// their fake-clock abort timer fires.
+// Game nights run on the real clock (the fake clock stalls React/framer screen changes in this harness).
+const tick = (ms) => p.waitForTimeout(ms);
+const fired = async (fn) => { const a = await p.evaluate(() => window.__n); await fn(); return (await p.evaluate(() => window.__n)) - a; };
+
+// ---- 3 h idle ----
+phaseTag = "idle";
+await p.clock.runFor(17_000);
+let idleMiss = 0;
+for (let k = 0; k < IDLE_SLOTS; k += 1) {
+  const n = await fired(async () => { for (let i = 0; i < 6; i += 1) await p.clock.runFor(500); });
+  if (n < 1) idleMiss += 1;
+  await p.clock.fastForward(75_000 - 3_000);
+  if ((k + 1) % 48 === 0) rows.push(await snap(`idle ${((k + 1) * 75) / 3600} h`));
+}
+console.log("idle slots without a burst:", idleMiss, "of", IDLE_SLOTS);
+
+// ---- game nights ----
+await p.clock.resume();
+const lt = (phase, round, secs, leader) => {
+  const board = ltB.liveTrivia.leaderboard.map((r) => ({ ...r }));
+  const i = board.findIndex((r) => r.username === leader);
+  if (i > 0) [board[0], board[i]] = [board[i], board[0]];
+  return { ...ltB, liveTrivia: { ...ltB.liveTrivia, gameId: `night-${night}`, phase, roundNumber: round, totalRounds: 8,
+    secondsRemaining: secs,
+    question: phase === "question" || phase === "reveal" ? `Round ${round}: which 1993 film features a T. rex chasing a Jeep?` : null,
+    correctAnswer: phase === "reveal" ? "Jurassic Park" : null,
+    revealEndsAt: phase === "reveal" ? new Date(Date.now() + 9_000).toISOString() : null,
+    leaderboard: phase === "question" ? null : board } };
+};
+const LETTERS = "MBSTPCRL";
+const cb = (phase, k) => ({ ...cbB, categoryBlitz: { ...cbB.categoryBlitz, phase, roundId: `night-${night}-cb-${k}`,
+  letter: LETTERS[k % LETTERS.length], secondsRemaining: phase === "round" ? 40 : 12,
+  leaderboard: phase === "round" ? null : cbB.categoryBlitz.leaderboard } });
+const LEADERS = ["QuizWhiz", "TriviaTom", "BarFly22", "NerdAlert"];
+
+let night = 0;
+const momentLog = [];
+for (night = 1; night <= NIGHTS; night += 1) {
+  phaseTag = `night ${night}`;
+  cur.state = lt("question", 1, 30, LEADERS[0]);
+  const golive = await fired(() => tick(24_000)); // idle poll is 20 s
+  const perRound = [];
+  for (let r = 1; r <= 8; r += 1) {
+    const q = r === 1 ? golive : await fired(async () => { cur.state = lt("question", r, 30, LEADERS[0]); await tick(4_000); });
+    cur.state = lt("question", r, 5, LEADERS[0]); await tick(2_000);
+    const rev = await fired(async () => { cur.revealAt = await p.evaluate(() => Date.now()); cur.state = lt("reveal", r, 0, LEADERS[0]); await tick(4_000); });
+    const brk = await fired(async () => { cur.state = lt("intermission", r, 10, LEADERS[r % LEADERS.length]); await tick(6_000); });
+    perRound.push([q, rev, brk]);
+  }
+  const fin = await fired(async () => { cur.state = lt("final", 8, 0, LEADERS[1]); await tick(12_000); });
+  const cbs = [];
+  for (let k = 0; k < 8; k += 1) {
+    const slam = await fired(async () => { cur.state = cb("round", k); await tick(6_000); });
+    const res = await fired(async () => { cur.state = cb("results", k); await tick(6_000); });
+    cur.state = cb("intermission", k); await tick(3_000);
+    cbs.push([slam, res]);
+  }
+  cur.state = idle; await tick(10_000);
+  momentLog.push({ night, golive, perRound, fin, cbs });
+  rows.push(await snap(`after night ${night}`));
+}
+// a further hour of idle after the games (fake clock again)
+await p.clock.pauseAt(await p.evaluate(() => Date.now() + 1000));
+for (let k = 0; k < 48; k += 1) { await p.clock.runFor(3_000); await p.clock.fastForward(72_000); }
+rows.push(await snap("idle +1 h after games"));
+
+console.log("moments per night [question, reveal, break] / final / [slam, results]:");
+for (const m of momentLog) console.log(JSON.stringify(m));
+console.log("errors:", errs.length, errs.slice(0, 5));
+await b.close();

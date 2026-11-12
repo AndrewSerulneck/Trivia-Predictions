@@ -17,11 +17,15 @@ import { createFxGate } from "@/components/venue-screen/fx/fxGate";
 import { wallClockDelayS, wallClockElapsedS } from "@/components/venue-screen/fx/fxClock";
 import {
   FX_FRAME_BUDGET_MS,
+  FX_TIER_HOLD_MS,
+  FX_WATCHDOG_WINDOW_MS,
   createFrameWatchdog,
   fxBackingScale,
   fxDensity,
+  fxTierRetryDelayMs,
   initialFxTier,
   lowerFxTier,
+  raiseFxTier,
 } from "@/components/venue-screen/fx/fxQuality";
 
 // Venue display effects engine — docs/venue-display-hype-and-intro-stinger-plan.md §4 Phase 0 and §8.
@@ -168,7 +172,30 @@ describe("quality tiers", () => {
     expect(initialFxTier({ hardwareConcurrency: 8, reducedMotion: true })).toBe("off");
   });
 
-  it("steps down full → lite → off and stays off", () => {
+  it("climbs back one tier at a time, never above the ceiling", () => {
+    expect(raiseFxTier("off", "full")).toBe("lite");
+    expect(raiseFxTier("lite", "full")).toBe("full");
+    expect(raiseFxTier("full", "full")).toBe("full");
+    expect(raiseFxTier("off", "lite")).toBe("lite");
+    expect(raiseFxTier("lite", "lite")).toBe("lite");
+    expect(raiseFxTier("off", "off")).toBe("off");
+  });
+
+  it("retries a watchdog drop after 1 min, doubling per drop, capped at 32 min", () => {
+    expect([1, 2, 3, 6, 7, 20].map(fxTierRetryDelayMs)).toEqual([60_000, 120_000, 240_000, 1_920_000, 1_920_000, 1_920_000]);
+    expect(FX_TIER_HOLD_MS).toBeGreaterThan(FX_WATCHDOG_WINDOW_MS);
+  });
+
+  it("engine: one tier per slow spell, retry scheduled, ambients restart after off (Phase 6 long run)", () => {
+    const engine = read("components/venue-screen/fx/fxEngine.ts");
+    expect(engine).toMatch(/now >= holdUntil && watchdog\.sample\(frameMs, now\)/);
+    expect(engine).toMatch(/holdUntil = now \+ FX_TIER_HOLD_MS;/);
+    expect(engine).toMatch(/setTier\(lower\);\s*scheduleRetry\(\);/);
+    expect(engine).toMatch(/setTier\(raiseFxTier\(tier, ceiling\)\)/);
+    expect(engine).toMatch(/if \(wasOff\) for \(const ambient of ambients\) startAmbientItem\(ambient\);/);
+  });
+
+  it("steps down full → lite → off", () => {
     expect(lowerFxTier("full")).toBe("lite");
     expect(lowerFxTier("lite")).toBe("off");
     expect(lowerFxTier("off")).toBe("off");

@@ -1,16 +1,10 @@
 # Venue Display — Brand Hype, Effects & Intro Stinger — PLAN
 
-> **Status:** Phase 1 (intro stinger) + keep-awake built 2026-11-12, **not committed or deployed** — see
-> `venue-display-hype-and-intro-stinger-plan_PHASE_1_HANDOFF.md`. Phase 0 not started (Andrew asked for Phase 1 first).
-> **Phase 2 (sound)** built 2026-11-12 with Andrew's own sound files — see `venue-display-hype-and-intro-stinger-plan_PHASE_2_HANDOFF.md`.
-> **Phase 3 (brand chrome)** redone 2026-11-12 on top of the Phase 0 engine, browser-verified, not committed — see
-> `venue-display-hype-and-intro-stinger-plan_PHASE_3_HANDOFF.md`; pictures/frame times in `docs/venue-display-hype_PHASE_3_after/`. **Phases 0 + 3 committed (`d71c2e92`).**
-> **Phase 4 (idle screen)** built + browser-verified 2026-11-12, not committed — see
-> `venue-display-hype-and-intro-stinger-plan_PHASE_4_HANDOFF.md`; pictures/results in `docs/venue-display-hype_PHASE_4_after/`. Next: Phase 5.
-> **Phase 0 (baseline + effects engine)** done 2026-11-12, not committed — see
-> `venue-display-hype-and-intro-stinger-plan_PHASE_0_HANDOFF.md`; baseline in `docs/venue-display-hype_PHASE_0_baseline/`.
-> **Phase 5 (game moments)** built 2026-11-12, browser-verified, not committed — see
-> `venue-display-hype-and-intro-stinger-plan_PHASE_5_HANDOFF.md`; pictures/counts in `docs/venue-display-hype_PHASE_5_after/`. Next: Phase 6.
+> **Status (2026-11-12):** Phases 0–6 built. Phases 0–5 committed (`4b4cc05f`, `d71c2e92`, `b395bb25`, `252fa61d`); Phase 6
+> (verification + three fixes) committed on `feature/venue-display-intro-stinger`, PR #12 — see
+> `venue-display-hype-and-intro-stinger-plan_PHASE_6_HANDOFF.md`; results in `docs/venue-display-hype_PHASE_6_after/`.
+> **Not yet in production:** waiting on Andrew to merge PR #12 and run the real-TV checklist
+> (`docs/tv-display-physical-device-checklist.md` §F). Earlier handoffs: `…_PHASE_<0–5>_HANDOFF.md`.
 > Created 2026-11-12. Owner: Andrew. Each phase ends with a handoff note `venue-display-hype-and-intro-stinger-plan_PHASE_<N>_HANDOFF.md`
 > next to this file, and this status line is updated to point at it.
 >
@@ -339,5 +333,13 @@ Device CPU/GPU use rises a little during effects; that's on the venue's hardware
   reload never replays one, because keys claimed before the gate arms are swallowed.
 - State-driven cues are not moments: the last-5-s edge glow (`EdgeGlow`) and ring heartbeat follow the timer and are
   CSS only (transform/opacity); they show on a reload mid-countdown, by design.
+- Server-rendered panels never gate an element's existence on framer's `useReducedMotion()` (React #418 on every
+  reduced-motion TV); use `useReducedMotionAfterHydration()` for that and framer's hook only for animation values
+  (`tests/venue-screen-reduced-motion-hydration-contract.test.ts`).
+- The quality tier is shared: canvas effects and the `BrandStage` drift both follow it (`useFxTier()`). The watchdog
+  drops one tier per slow spell (`FX_TIER_HOLD_MS`) and retries one tier up with backoff (`fxTierRetryDelayMs`),
+  never above the reduced-motion / core-count ceiling; ambient effects restart when the tier leaves `off`. A slow
+  spell must never end effects for the night.
+- The stinger's sound is all-or-nothing: if the boom is blocked, the shine doesn't play either.
 - The display and `/tv` keep the TV awake via `useKeepScreenAwake()` only; it does nothing when embedded (the dashboard
   preview iframes), so an owner's phone is never held awake.

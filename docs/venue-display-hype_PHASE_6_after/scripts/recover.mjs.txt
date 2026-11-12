@@ -1,0 +1,35 @@
+// Phase 6: the watchdog drops one tier per slow spell and climbs back after the retry delay; twinkles restart.
+import { chromium } from "playwright";
+const BASE = "http://127.0.0.1:3181";
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 } });
+const p = await ctx.newPage();
+const errs = [];
+p.on("pageerror", (e) => errs.push(e.message.slice(0, 80)));
+p.on("console", (m) => { if (m.type() === "error") errs.push(m.text().slice(0, 80)); });
+await p.goto(`${BASE}/tv/fx-baseline/lt-question`, { waitUntil: "load" });
+await p.waitForTimeout(3000);
+await p.evaluate(() => { const fx = window.__fx; const t0 = performance.now(); window.__tiers = [];
+  fx.subscribeTier(() => window.__tiers.push(`${Math.round((performance.now() - t0) / 1000)}s ${fx.tier()}`)); });
+const st = () => p.evaluate(() => ({ tier: window.__fx.tier(), live: window.__fx.liveCount() }));
+const cdp = await ctx.newCDPSession(p);
+console.log("start", await st());
+// A. one short slow spell (2.5 s) → exactly one tier down
+await cdp.send("Emulation.setCPUThrottlingRate", { rate: 40 });
+await p.waitForTimeout(2500);
+await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+await p.waitForTimeout(500);
+console.log("A after 2.5 s spell", await st());
+await p.waitForTimeout(62_000);
+console.log("A after 62 s", await st());
+// B. long slow spell (12 s) → off; recovers to lite after 4 min (3rd drop → 240 s), twinkles back
+await cdp.send("Emulation.setCPUThrottlingRate", { rate: 40 });
+await p.waitForTimeout(12_000);
+await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+await p.waitForTimeout(500);
+console.log("B after 12 s spell", await st());
+await p.waitForTimeout(245_000);
+console.log("B after 245 s", await st());
+console.log("tier log", JSON.stringify(await p.evaluate(() => window.__tiers)));
+console.log("errors", errs);
+await b.close();

@@ -105,14 +105,20 @@ describe("stinger sound", () => {
   it("plays once at animation start, never throws or prompts when autoplay is blocked", () => {
     const stinger = read("components/venue-screen/TvIntroStinger.tsx");
     expect(stinger).toMatch(/makeAudio\(STINGER_SOUND_SRC\)/);
-    expect(stinger).toMatch(/\.catch\(\(\) => undefined\)/);
-    expect(stinger).toMatch(/playStingerSound\(audio\)/);
+    expect(stinger).toMatch(/\.catch\(\(\) => onBlocked\?\.\(\)\)/);
+    expect(stinger).toMatch(/playStingerSound\(audio, \(\) => \{\s*soundBlocked = true;/);
     expect(stinger).toMatch(/clip\?\.pause\(\)/);
   });
 
   it("plays the shine sound when the tagline starts (T_TAG), not before", () => {
     const stinger = read("components/venue-screen/TvIntroStinger.tsx");
-    expect(stinger).toMatch(/t >= T_TAG\)\s*\{\s*shinePlayed = true;\s*playStingerSound\(shine\)/);
+    expect(stinger).toMatch(/t >= T_TAG\)\s*\{\s*shinePlayed = true;\s*if \(!soundBlocked\) playStingerSound\(shine\)/);
+  });
+
+  it("stays silent when the boom is blocked: the shine never plays on its own", () => {
+    const stinger = read("components/venue-screen/TvIntroStinger.tsx");
+    expect(stinger).toMatch(/let soundBlocked = false;/);
+    expect(stinger).toMatch(/if \(!soundBlocked\) playStingerSound\(shine\)/);
   });
 
   it("ships small AAC files under immutable /brand/web names", () => {

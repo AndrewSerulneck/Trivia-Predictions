@@ -61,14 +61,14 @@ const makeAudio = (src: string): HTMLAudioElement | null => {
   }
 };
 
-/** Best-effort: TV browsers usually block unprompted sound; any failure stays silent. */
-const playStingerSound = (audio: HTMLAudioElement | null) => {
+/** Best-effort: TV browsers usually block unprompted sound; any failure stays silent and calls `onBlocked`. */
+const playStingerSound = (audio: HTMLAudioElement | null, onBlocked?: () => void) => {
   if (!audio) return;
   try {
     const played = audio.play();
-    if (played && typeof played.catch === "function") played.catch(() => undefined);
+    if (played && typeof played.catch === "function") played.catch(() => onBlocked?.());
   } catch {
-    // Silent fallback.
+    onBlocked?.();
   }
 };
 
@@ -471,6 +471,8 @@ export function TvIntroStinger({ onDone }: { onDone: () => void }) {
     const audio = makeAudio(STINGER_SOUND_SRC);
     const shine = makeAudio(STINGER_SHINE_SRC);
     let shinePlayed = false;
+    // A blocked boom means a silent stinger: the shine never plays on its own.
+    let soundBlocked = false;
 
     const fit = () => {
       const canvas = canvasRef.current;
@@ -492,12 +494,14 @@ export function TvIntroStinger({ onDone }: { onDone: () => void }) {
           start = now;
           // The canvas now paints the navy stage itself, so it can fade to reveal the screen.
           if (rootRef.current) rootRef.current.style.background = "transparent";
-          playStingerSound(audio);
+          playStingerSound(audio, () => {
+            soundBlocked = true;
+          });
         }
         const t = (now - start) / 1000;
         if (!shinePlayed && t >= T_TAG) {
           shinePlayed = true;
-          playStingerSound(shine);
+          if (!soundBlocked) playStingerSound(shine);
         }
         if (t >= T_REVEAL_END) {
           finish();

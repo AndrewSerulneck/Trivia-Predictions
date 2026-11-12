@@ -2,6 +2,7 @@
 
 import { useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE, getPodiumAccent } from "@/lib/venueScreenBrand";
@@ -53,6 +54,7 @@ const PODIUM_BAR_STYLE = [
 
 export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp = 5 }: TvFinalStandingsProps) {
   const reduceMotion = useReducedMotion();
+  const hideMotionOnly = useReducedMotionAfterHydration();
 
   const ranked = useMemo(() => [...leaderboard].sort((a, b) => b.score - a.score), [leaderboard]);
   const champion = ranked[0];
@@ -153,7 +155,7 @@ export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp 
         {/* ---- Podium ---- */}
         <div className="relative flex items-end justify-center" style={{ gap: 40, marginTop: 24, height: 520 }}>
           {/* Spotlight cone behind first place */}
-          {!reduceMotion && (
+          {!hideMotionOnly && (
             <motion.div
               className="pointer-events-none absolute"
               style={{

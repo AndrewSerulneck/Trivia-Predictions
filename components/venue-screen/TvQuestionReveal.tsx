@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { EdgeGlow, LightStreak } from "@/components/venue-screen/fx/MomentOverlays";
 import { useFxMoment } from "@/components/venue-screen/fx/useFx";
@@ -66,6 +67,7 @@ export function TvQuestionReveal({
   gameId,
 }: TvQuestionRevealProps) {
   const reduceMotion = useReducedMotion();
+  const hideMotionOnly = useReducedMotionAfterHydration();
   const streak = useFxMoment(gameId ? `${gameId}:${roundNumber}` : null);
 
   /* Reveal identity. Changing this remounts the animated subtree, so the
@@ -122,7 +124,7 @@ export function TvQuestionReveal({
 
       {/* Top accent bar + glow sweep */}
       <div className="absolute inset-x-0 top-0" style={{ height: 10, background: GRADIENT }}>
-        {!reduceMotion && (
+        {!hideMotionOnly && (
           <motion.div
             key={`sweep-${revealKey}`}
             className="absolute bottom-0 top-0"

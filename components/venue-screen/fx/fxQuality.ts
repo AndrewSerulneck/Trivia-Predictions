@@ -4,6 +4,9 @@
 //   full — every particle, backing store up to 2× DPR
 //   lite — half the particles, backing store at 1× (cheaper fills on TV sticks)
 //   off  — no canvas effects at all (reduced motion, or a device too slow even for lite)
+//
+// The watchdog steps down; a drop it caused is retried one tier up later (fxTierRetryDelayMs), never above the
+// ceiling set by reduced motion / core count.
 
 export type FxTier = "full" | "lite" | "off";
 
@@ -29,6 +32,20 @@ export const initialFxTier = ({
 };
 
 export const lowerFxTier = (tier: FxTier): FxTier => (tier === "full" ? "lite" : "off");
+
+/** One tier up, never above `ceiling` (the tier the device and motion preference allow). */
+export const raiseFxTier = (tier: FxTier, ceiling: FxTier): FxTier => {
+  const order: FxTier[] = ["off", "lite", "full"];
+  return order[Math.min(order.indexOf(tier) + 1, order.indexOf(ceiling))] ?? tier;
+};
+
+/** After a drop, frames aren't judged for this long, so one slow spell costs one tier, not two. */
+export const FX_TIER_HOLD_MS = 3_000;
+/** A watchdog drop is retried one tier up after this, doubling per drop (a slow spell mustn't end effects for the night). */
+export const FX_TIER_RETRY_MS = 60_000;
+export const FX_TIER_RETRY_MAX_MS = 32 * 60_000;
+export const fxTierRetryDelayMs = (drops: number): number =>
+  Math.min(FX_TIER_RETRY_MS * 2 ** Math.max(0, drops - 1), FX_TIER_RETRY_MAX_MS);
 
 /** Particle multiplier for emitters. */
 export const fxDensity = (tier: FxTier): number => (tier === "full" ? 1 : tier === "lite" ? 0.5 : 0);

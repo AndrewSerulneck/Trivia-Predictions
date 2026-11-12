@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { FxContext } from "@/components/venue-screen/fx/FxCanvas";
 import type { FxGateDecision } from "@/components/venue-screen/fx/fxGate";
 import type { FxEngine, FxFireResult } from "@/components/venue-screen/fx/fxEngine";
@@ -236,4 +236,13 @@ export const useFxAt = (active: boolean, delayMs: number, fire: (fx: FxApi) => v
     const id = window.setTimeout(() => fireRef.current(fx), delayMs);
     return () => window.clearTimeout(id);
   }, [fx, active, delayMs]);
+};
+
+const subscribeNothing = () => () => undefined;
+const fullTier = (): FxTier => "full";
+
+/** The effects quality tier, re-rendering when it changes. "full" on the server and outside an FxProvider. */
+export const useFxTier = (): FxTier => {
+  const engine = useContext(FxContext);
+  return useSyncExternalStore(engine ? engine.subscribeTier : subscribeNothing, engine ? engine.tier : fullTier, fullTier);
 };

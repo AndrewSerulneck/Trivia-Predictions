@@ -1,0 +1,7 @@
+start { tier: 'full', live: 1 }
+A after 2.5 s spell { tier: 'lite', live: 1 }
+A after 62 s { tier: 'full', live: 1 }
+B after 12 s spell { tier: 'off', live: 0 }
+B after 245 s { tier: 'lite', live: 1 }
+tier log ["1s lite","61s full","66s lite","70s off","310s lite"]
+errors []

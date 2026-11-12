@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { pointIn, stageScale, useFx } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE, getPodiumAccent, withAlpha } from "@/lib/venueScreenBrand";
@@ -79,6 +80,7 @@ export function TvRoundBreak({
   gameId,
 }: TvRoundBreakProps) {
   const reduceMotion = useReducedMotion();
+  const hideMotionOnly = useReducedMotionAfterHydration();
   const fx = useFx();
 
   /* Countdown interpolated purely from props (see file header). */
@@ -101,6 +103,8 @@ export function TvRoundBreak({
     setLateGuard({ round: roundNumber, late: secondsRemaining < span - 2.5 });
   }
   const skipHandoff = reduceMotion || lateGuard.late;
+  // Whether the handoff elements exist: hydration-safe (see useReducedMotionAfterHydration).
+  const showHandoff = !hideMotionOnly && !lateGuard.late;
 
   const t0 = skipHandoff ? 0 : 0.85;
 
@@ -138,7 +142,7 @@ export function TvRoundBreak({
       <div className="absolute inset-x-0 top-0" style={{ height: 10, background: GRADIENT }} />
 
       {/* ---- Handoff: the closing question lifts away, a gradient wipe passes ---- */}
-      {!skipHandoff && outgoingQuestion && (
+      {showHandoff && outgoingQuestion && (
         <motion.div
           key={`handoff-${roundNumber}`}
           className="absolute inset-0 z-20 flex items-center"
@@ -158,7 +162,7 @@ export function TvRoundBreak({
         </motion.div>
       )}
 
-      {!skipHandoff && (
+      {showHandoff && (
         <motion.div
           key={`wipe-${roundNumber}`}
           className="pointer-events-none absolute inset-x-0 z-30"

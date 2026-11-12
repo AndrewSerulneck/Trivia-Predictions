@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { OneShotShine } from "@/components/venue-screen/fx/MomentOverlays";
 import { pointIn, stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
@@ -110,6 +111,7 @@ export function TvBlitzResults({
   roundId,
 }: TvBlitzResultsProps) {
   const reduceMotion = useReducedMotion();
+  const hideMotionOnly = useReducedMotionAfterHydration();
   // Winner row shine + a small burst when the results board lands: once per round, only while the room is watching.
   const winMoment = useFxMoment(phase === "results" && roundId != null ? `${roundId}:results` : null);
   const winnerRowRef = useRef<HTMLDivElement>(null);
@@ -282,7 +284,7 @@ export function TvBlitzResults({
                   className="relative overflow-hidden"
                   style={{ width: 900, height: 14, borderRadius: 999, background: "rgba(148,163,184,0.14)" }}
                 >
-                  {!reduceMotion && (
+                  {!hideMotionOnly && (
                     <motion.div
                       className="absolute inset-y-0"
                       style={{

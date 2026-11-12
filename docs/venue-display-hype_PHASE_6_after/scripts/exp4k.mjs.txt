@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+const BASE="http://127.0.0.1:3181";
+const b=await chromium.launch();
+const measure=(p,ms)=>p.evaluate((ms)=>new Promise(res=>{const d=[];let l=performance.now();const e=l+ms;const f=n=>{d.push(n-l);l=n;if(n<e)requestAnimationFrame(f);else res(d.slice(1))};requestAnimationFrame(f)}),ms);
+const st=d=>{const m=d.reduce((a,b)=>a+b,0)/d.length;let run=0,maxRun=0;for(const x of d){if(x>33.4){run+=x;maxRun=Math.max(maxRun,run)}else run=0}return `${m.toFixed(1)}ms ${(1000/m).toFixed(0)}fps longest<30fps-stretch ${Math.round(maxRun)}ms`};
+for (const [vw,vh] of [[3840,2160],[1920,1080]]) for (const state of ["lt-question","idle-2"]) for (const mode of ["as-is","no-brandstage","no-twinkle-canvas"]) {
+  const ctx=await b.newContext({viewport:{width:vw,height:vh}});const p=await ctx.newPage();
+  await p.goto(`${BASE}/tv/fx-baseline/${state}`,{waitUntil:"load"});await p.waitForTimeout(2500);
+  if(mode==="no-brandstage")await p.addStyleTag({content:"[data-testid=brand-stage]{display:none!important}"});
+  if(mode==="no-twinkle-canvas")await p.addStyleTag({content:"[data-testid=fx-canvas]{display:none!important}"});
+  const cdp=await ctx.newCDPSession(p);await cdp.send("Emulation.setCPUThrottlingRate",{rate:6});
+  const d=await measure(p,5000);const tier=await p.evaluate(()=>window.__fx.tier());
+  console.log(vw,state.padEnd(12),mode.padEnd(18),st(d),"tier",tier);await ctx.close();}
+await b.close();
