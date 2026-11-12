@@ -10,12 +10,12 @@
     ]
   },
   "ios": {
-    "appendUserAgent": "HightopChallengeApp/2.0.0 (ios)",
+    "appendUserAgent": "HightopChallengeApp/2.0.1 (ios)",
     "contentInset": "never",
     "backgroundColor": "#020617"
   },
   "android": {
-    "appendUserAgent": "HightopChallengeApp/2.0.0 (android)",
+    "appendUserAgent": "HightopChallengeApp/2.0.1 (android)",
     "backgroundColor": "#020617"
   },
   "plugins": {
