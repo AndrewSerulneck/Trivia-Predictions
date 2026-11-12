@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
+import { OneShotShine } from "@/components/venue-screen/fx/MomentOverlays";
+import { stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 import { questionType } from "@/lib/tvType";
 
@@ -48,6 +50,8 @@ export type TvAnswerRevealProps = {
   category?: string;
   /** Length of the reveal hold, for the depleting rail + late-mount guard. */
   totalSeconds?: number;
+  /** The game's stable id; with the round it keys the correct-answer moment (plan §4 Phase 5). */
+  gameId?: string;
 };
 
 const GRADIENT = `linear-gradient(90deg, ${SCREEN_COLORS.cyan500} 0%, ${SCREEN_COLORS.blue600} 52%, ${SCREEN_COLORS.violet600} 100%)`;
@@ -71,9 +75,17 @@ export function TvAnswerReveal({
   totalRounds,
   category,
   totalSeconds,
+  gameId,
 }: TvAnswerRevealProps) {
   const reduceMotion = useReducedMotion();
   const revealKey = `${questionId ?? question}`;
+  // Shockwave + sparks from the check badge and one shine across the answer, once per reveal, only while the room
+  // is watching (a reload mid-reveal settles without them).
+  const moment = useFxMoment(gameId ? `${gameId}:${roundNumber}:reveal` : null);
+  const badgeRef = useRef<HTMLDivElement>(null);
+  useFxAt(moment, 560, (fx) => {
+    fx.burst({ key: `${gameId}:${roundNumber}:reveal:burst`, at: badgeRef.current, size: 460 * stageScale(), coins: 10, sparks: 26, shockwave: true, sparkColors: ["#6ee7b7", "#34d399", "#67e8f9", "#fde68a"] });
+  });
 
   /* Depletion interpolated purely from props (see file header). */
   const elapsedSinceUpdate = Math.max(0, (nowMs - updatedAtMs) / 1000);
@@ -182,7 +194,7 @@ export function TvAnswerReveal({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.45, ease: EASE, delay: T.eyebrow }}
           >
-            <CheckBadge settled={settled} delay={T.eyebrow + 0.08} />
+            <CheckBadge settled={settled} delay={T.eyebrow + 0.08} badgeRef={badgeRef} />
             <span style={{ fontSize: 34, fontWeight: 900, letterSpacing: "0.36em", textTransform: "uppercase", color: EMERALD.light }}>
               Correct answer
             </span>
@@ -205,6 +217,11 @@ export function TvAnswerReveal({
             transition={{ duration: 0.6, ease: EASE, delay: T.answer }}
           >
             {correctAnswer}
+            {moment ? (
+              <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                <OneShotShine delayS={T.answer + 0.6} tint="rgba(209,250,229,0.5)" />
+              </span>
+            ) : null}
           </motion.div>
 
           <motion.div
@@ -254,9 +271,10 @@ export function TvAnswerReveal({
 
 /* ---------------------------- badge ---------------------------- */
 
-function CheckBadge({ settled, delay }: { settled: boolean; delay: number }) {
+function CheckBadge({ settled, delay, badgeRef }: { settled: boolean; delay: number; badgeRef: React.RefObject<HTMLDivElement | null> }) {
   return (
     <motion.div
+      ref={badgeRef}
       className="flex shrink-0 items-center justify-center"
       style={{
         width: 58,

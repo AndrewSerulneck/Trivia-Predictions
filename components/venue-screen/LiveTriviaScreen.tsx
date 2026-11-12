@@ -25,6 +25,7 @@ export function LiveTriviaScreen({ state, nowMs }: LiveTriviaScreenProps) {
         secondsRemaining={live.secondsRemaining}
         nowMs={nowMs}
         updatedAtMs={state.updatedAt}
+        gameId={live.gameId}
       />
     </section>
   );

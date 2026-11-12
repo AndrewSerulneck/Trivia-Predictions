@@ -4,6 +4,8 @@ import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
+import { EdgeGlow, LightStreak } from "@/components/venue-screen/fx/MomentOverlays";
+import { useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as ease } from "@/lib/venueScreenBrand";
 import { questionType } from "@/lib/tvType";
 
@@ -36,6 +38,8 @@ export type TvQuestionRevealProps = {
   questionId?: string | number;
   /** Full length of the timer. Falls back to the first value seen. */
   totalSeconds?: number;
+  /** The game's stable id; with the round it keys the "question appears" light streak (plan §4 Phase 5). */
+  gameId?: string;
 };
 
 const GRADIENT = `linear-gradient(90deg, ${SCREEN_COLORS.cyan500} 0%, ${SCREEN_COLORS.blue600} 52%, ${SCREEN_COLORS.violet600} 100%)`;
@@ -59,8 +63,10 @@ export function TvQuestionReveal({
   updatedAtMs,
   questionId,
   totalSeconds,
+  gameId,
 }: TvQuestionRevealProps) {
   const reduceMotion = useReducedMotion();
+  const streak = useFxMoment(gameId ? `${gameId}:${roundNumber}` : null);
 
   /* Reveal identity. Changing this remounts the animated subtree, so the
      entrance plays exactly once per question and a cold mount behaves
@@ -109,6 +115,10 @@ export function TvQuestionReveal({
             "radial-gradient(900px 620px at 92% 112%, rgba(124,58,237,0.18), transparent 60%)",
         }}
       />
+
+      {/* Moments: a light streak when the question appears; the stage edge breathes in the last 5 s. */}
+      {streak ? <LightStreak color="rgba(103,232,249,0.55)" /> : null}
+      {live > 0 && live <= 5 ? <EdgeGlow color={tone.main} /> : null}
 
       {/* Top accent bar + glow sweep */}
       <div className="absolute inset-x-0 top-0" style={{ height: 10, background: GRADIENT }}>
@@ -279,6 +289,8 @@ function CountdownRing({
   const c = size / 2;
   const rOuter = 132;
   const rInner = 108;
+  // Last 5 s: the ring beats like a pulse (transform only; reduced motion holds still).
+  const critical = tone.key === "critical" && !reduceMotion && shown > 0;
 
   return (
     <motion.div
@@ -288,6 +300,11 @@ function CountdownRing({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.66, ease, delay: 0.06 }}
     >
+      <motion.div
+        className="absolute inset-0"
+        animate={critical ? { scale: [1, 1.06, 1, 1.035, 1] } : { scale: 1 }}
+        transition={critical ? { duration: 1, repeat: Infinity, ease: "easeOut", times: [0, 0.12, 0.3, 0.42, 1] } : { duration: 0.2 }}
+      >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {Array.from({ length: SEGMENTS }).map((_, i) => {
           const a = (-90 + i * (360 / SEGMENTS)) * (Math.PI / 180);
@@ -341,6 +358,7 @@ function CountdownRing({
           Seconds
         </span>
       </div>
+      </motion.div>
     </motion.div>
   );
 }

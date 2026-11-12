@@ -1,7 +1,8 @@
 "use client";
 
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { FxContext } from "@/components/venue-screen/fx/FxCanvas";
+import type { FxGateDecision } from "@/components/venue-screen/fx/fxGate";
 import type { FxEngine, FxFireResult } from "@/components/venue-screen/fx/fxEngine";
 import {
   combineEmitters,
@@ -76,11 +77,25 @@ export type FxApi = {
   shockwave: (options: FxShockwaveOptions) => FxFireResult;
   /** Ambient twinkle field until the returned stop() or the component unmounts. */
   twinkles: (options?: FxTwinkleOptions) => () => void;
+  /** Claim a CSS moment's identity key (see useFxMoment). Outside a provider: always "swallow". */
+  moment: (key: string) => FxGateDecision;
+  /** Remember a value per scope for the page's life; returns the previous one (undefined the first time). */
+  remember: (scope: string, value: string) => string | undefined;
   tier: () => FxTier;
 };
 
 const isElement = (value: unknown): value is Element =>
   typeof Element !== "undefined" && value instanceof Element;
+
+/** A point inside an element, as fractions of its box (0.16, 0.5 = just right of its left edge), for a burst beside a row's name. */
+export const pointIn = (el: Element | null, fx: number, fy = 0.5): FxPoint | null => {
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return { x: r.left + r.width * fx, y: r.top + r.height * fy };
+};
+
+/** The 2304×1296 stage's scale in this viewport (same maths as ViewportFitCanvas), for sizing a moment to the stage. */
+export const stageScale = (): number => Math.min(window.innerWidth / 2304, window.innerHeight / 1296);
 
 const viewportRect = (): FxRect => ({ x: 0, y: 0, w: window.innerWidth, h: window.innerHeight });
 
@@ -109,6 +124,8 @@ export const NOOP_FX: FxApi = {
   shower: off,
   shockwave: off,
   twinkles: () => () => undefined,
+  moment: () => "swallow",
+  remember: () => undefined,
   tier: () => "off",
 };
 
@@ -168,6 +185,8 @@ const buildApi = (engine: FxEngine, ambientStops: Set<() => void>): FxApi => ({
       return () => undefined;
     }
   },
+  moment: (key) => engine.claim(key),
+  remember: (scope, value) => engine.remember(scope, value),
   tier: () => engine.tier(),
 });
 
@@ -184,4 +203,37 @@ export const useFx = (): FxApi => {
   );
 
   return useMemo(() => (engine ? buildApi(engine, ambientStops) : NOOP_FX), [engine, ambientStops]);
+};
+
+/**
+ * True once, and only if `key` is a moment that happens while someone is watching: the same gate as `burst`
+ * (never twice per page load, never for what was already on screen at load or under the intro stinger).
+ * Use it to mount a one-shot CSS moment; `null` = nothing to claim yet.
+ */
+export const useFxMoment = (key: string | null | undefined): boolean => {
+  const fx = useFx();
+  const [played, setPlayed] = useState<string | null>(null);
+  useEffect(() => {
+    if (!key) return undefined;
+    // Claimed in a timer callback (not the effect body): a panel unmounted in the same tick never claims the key.
+    const id = window.setTimeout(() => {
+      if (fx.moment(key) === "play") setPlayed(key);
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [fx, key]);
+  return Boolean(key) && played === key;
+};
+
+/** While `active` (a moment this panel claimed), runs `fire` once after `delayMs`; cleared if the panel goes away first. */
+export const useFxAt = (active: boolean, delayMs: number, fire: (fx: FxApi) => void): void => {
+  const fx = useFx();
+  const fireRef = useRef(fire);
+  useEffect(() => {
+    fireRef.current = fire;
+  });
+  useEffect(() => {
+    if (!active) return undefined;
+    const id = window.setTimeout(() => fireRef.current(fx), delayMs);
+    return () => window.clearTimeout(id);
+  }, [fx, active, delayMs]);
 };

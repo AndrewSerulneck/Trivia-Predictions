@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -38,17 +39,33 @@ export type TvGoLiveTakeoverProps = {
   gameLabel: GameLabel;
   venueName: string;
   onComplete?: () => void;
+  /** The takeover's identity (the caller's `liveTakeover.key`); keys its burst so it fires once. */
+  momentKey?: string | number;
 };
 
 const TOTAL = 1.85; // seconds, end to end
+
+/** Spark mix per game for the mini stinger burst (coins stay gold, as in the ads). */
+const SPARKS: Record<GameLabel, readonly string[]> = {
+  "Live Trivia": ["#67e8f9", "#22d3ee", "#a5b4fc", "#fde68a"],
+  "Category Blitz": ["#f0abfc", "#e879f9", "#c4b5fd", "#fde68a"],
+};
 
 const RAMPS: Record<GameLabel, [string, string, string]> = {
   "Live Trivia": [SCREEN_COLORS.cyan500, SCREEN_COLORS.blue600, SCREEN_COLORS.violet600],
   "Category Blitz": [SCREEN_COLORS.fuchsia400, SCREEN_COLORS.violet500, SCREEN_COLORS.violet600],
 };
 
-export function TvGoLiveTakeover({ gameLabel, venueName, onComplete }: TvGoLiveTakeoverProps) {
+export function TvGoLiveTakeover({ gameLabel, venueName, onComplete, momentKey }: TvGoLiveTakeoverProps) {
   const reduceMotion = useReducedMotion();
+  // A mini version of the stinger's burst (no tagline) at the end of the wipe, in the game's colours.
+  const moment = useFxMoment(momentKey !== undefined ? `golive:${momentKey}` : null);
+  useFxAt(moment, 340, (fx) => {
+    fx.burst({
+      key: `golive:${momentKey}:burst`, size: 520 * stageScale(), coins: 14, sparks: 30, shockwave: true,
+      sparkColors: SPARKS[gameLabel] ?? SPARKS["Live Trivia"],
+    });
+  });
   const ramp = RAMPS[gameLabel] ?? RAMPS["Live Trivia"];
   const gradient = `linear-gradient(115deg, ${ramp[0]} 0%, ${ramp[1]} 52%, ${ramp[2]} 100%)`;
 

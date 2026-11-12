@@ -1,0 +1,131 @@
+// Phase 5 browser verification: game moments fire once, never on polls or reloads.
+import { chromium } from "playwright";
+import fs from "node:fs";
+
+const BASE = process.env.BASE ?? "http://127.0.0.1:3171";
+const OUT = process.argv[2] ?? "shots";
+fs.mkdirSync(OUT, { recursive: true });
+const errs = []; let sect = "0";
+const b = await chromium.launch();
+
+const mk = async (opts = {}) => {
+  const ctx = await b.newContext({ viewport: { width: 1920, height: 1080 }, ...opts });
+  const p = await ctx.newPage();
+  p.on("console", (m) => { if (m.type() === "error") errs.push(`[s${sect}] ${p.url().replace(BASE, "")} :: ${m.text().slice(0, 90)}`); });
+  p.on("pageerror", (e) => errs.push(`[s${sect}] ${p.url().replace(BASE, "")} :: ${e.message.slice(0, 90)}`));
+  return { ctx, p };
+};
+const base = async (name) => (await fetch(`${BASE}/api/venue-screen/state?venueId=fx:${name}`)).json();
+
+// Mutable "server": polls answer with whatever `cur.state` is.
+const serve = async (p, cur) => {
+  await p.route("**/api/venue-screen/state*", (r) => r.fulfill({ json: { ...cur.state, updatedAt: Date.now() } }));
+};
+const px = (p) => p.evaluate(() => {
+  const c = document.querySelector("[data-testid=fx-canvas]");
+  if (!c || getComputedStyle(c).visibility !== "visible") return 0;
+  const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+  let n = 0;
+  for (let i = 3; i < d.length; i += 64) if (d[i] > 8) n++;
+  return n;
+});
+const count = (p, sel) => p.evaluate((s) => document.querySelectorAll(s).length, sel);
+// Max canvas px seen over `ms`, sampling every 50 ms.
+const maxPx = async (p, ms) => {
+  let m = 0;
+  const end = Date.now() + ms;
+  while (Date.now() < end) { m = Math.max(m, await px(p)); await p.waitForTimeout(50); }
+  return m;
+};
+const track = (p) => p.evaluate(() => {
+  window.__adds = {};
+  new MutationObserver((l) => {
+    for (const m of l) for (const n of m.addedNodes) {
+      if (n.nodeType !== 1) continue;
+      for (const id of ["moment-streak", "moment-shine", "edge-glow"]) {
+        if (n.matches?.(`[data-testid=${id}]`) || n.querySelector?.(`[data-testid=${id}]`)) window.__adds[id] = (window.__adds[id] ?? 0) + 1;
+      }
+    }
+  }).observe(document.querySelector("main"), { childList: true, subtree: true });
+});
+const adds = (p) => p.evaluate(() => ({ ...window.__adds }));
+const shot = (p, name) => p.screenshot({ path: `${OUT}/${name}.jpg`, type: "jpeg", quality: 80 });
+const log = (...a) => console.log(...a);
+// Canvas effects fired: an in-page 20 ms sampler counts rising edges of the engine's live emitter count
+// (clone-only window.__fx); `since(p, mark)` = effects fired since `mark`. Twinkles (ambient) count once.
+const startCounter = (p) => p.evaluate(() => {
+  window.__n = 0; let prev = window.__fx.liveCount();
+  setInterval(() => { const v = window.__fx.liveCount(); if (v > prev) window.__n += v - prev; prev = v; }, 20);
+});
+const mark = (p) => p.evaluate(() => window.__n);
+const fires = async (p, ms) => { const m = await mark(p); await p.waitForTimeout(ms); return (await mark(p)) - m; };
+const show = async (p, cur, state, text) => {
+  cur.state = state;
+  await p.waitForFunction((t) => document.body.innerText.toLowerCase().includes(t.toLowerCase()), text, { timeout: 15000 });
+};
+
+const ltBase = await base("lt-intermission");
+const withLeader = (state, first) => {
+  const rows = state.liveTrivia.leaderboard.map((r) => ({ ...r }));
+  const top = rows.findIndex((r) => r.username === first);
+  [rows[0], rows[top]] = [rows[top], rows[0]];
+  rows[0].points = 9999;
+  return { ...state, liveTrivia: { ...state.liveTrivia, leaderboard: rows } };
+};
+const lt = (phase, round, extra = {}) => {
+  const live = { ...ltBase.liveTrivia, phase, roundNumber: round, secondsRemaining: 40, question: phase === "intermission" || phase === "final" ? null : "Which 1993 film features a T. rex chasing a Jeep through a park?",
+    correctAnswer: phase === "reveal" ? "Jurassic Park" : null, revealEndsAt: phase === "reveal" ? new Date(Date.now() + 9000).toISOString() : null,
+    leaderboard: phase === "question" ? null : ltBase.liveTrivia.leaderboard, ...extra };
+  return { ...ltBase, liveTrivia: live };
+};
+
+// One step: change what the server says, wait for the screen, optionally screenshot, and report the canvas
+// effects fired since the change (the sampler runs the whole time, so early effects aren't missed).
+const step = async (p, cur, state, text, ms, shotName, shotAt = 700) => {
+  const m = await mark(p);
+  await show(p, cur, state, text);
+  if (shotName) { await p.waitForTimeout(shotAt); await shot(p, shotName); await p.waitForTimeout(Math.max(0, ms - shotAt)); }
+  else await p.waitForTimeout(ms);
+  return (await mark(p)) - m;
+};
+
+
+sect = "m";
+{ // glow
+  const { ctx, p } = await mk();
+  const cur = { state: lt("question", 3, { secondsRemaining: 40 }) };
+  await serve(p, cur);
+  await p.goto(`${BASE}/tv/fx-baseline/lt-question`, { waitUntil: "load" });
+  await p.waitForTimeout(1500);
+  cur.state = lt("question", 3, { secondsRemaining: 4 });
+  await p.waitForSelector("[data-testid=edge-glow]", { timeout: 5000 });
+  await p.waitForTimeout(500); await shot(p, "1080-last5-glow"); await p.waitForTimeout(500); await shot(p, "1080-last5-glow-b");
+  await ctx.close();
+}
+{ // round break pop
+  const { ctx, p } = await mk();
+  const cur = { state: lt("intermission", 3) };
+  await serve(p, cur);
+  await p.goto(`${BASE}/tv/fx-baseline/lt-intermission`, { waitUntil: "load" });
+  await p.waitForTimeout(2500); await startCounter(p);
+  await step(p, cur, lt("question", 4), "1993", 800);
+  const n = await step(p, cur, withLeader(lt("intermission", 4), "TriviaTom"), "Round break", 4500, "1080-roundbreak-pop", 1850);
+  log("round break pop fires", n);
+  await ctx.close();
+}
+{ // blitz winner
+  const { ctx, p } = await mk();
+  const cbBase = await base("cb-round");
+  const board = (await base("cb-results")).categoryBlitz.leaderboard;
+  const cb = (phase, id) => ({ ...cbBase, categoryBlitz: { ...cbBase.categoryBlitz, phase, roundId: id, leaderboard: phase === "round" ? null : board } });
+  const cur = { state: cb("intermission", "r-7") };
+  await serve(p, cur);
+  await p.goto(`${BASE}/tv/fx-baseline/cb-intermission`, { waitUntil: "load" });
+  await p.waitForTimeout(2500); await startCounter(p);
+  await step(p, cur, cb("round", "r-8"), "Your letter", 800);
+  const n = await step(p, cur, cb("results", "r-8"), "Round results", 3000, "1080-blitz-winner", 1150);
+  log("blitz winner fires", n);
+  await ctx.close();
+}
+log("errors", errs);
+await b.close();

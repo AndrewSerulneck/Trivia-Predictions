@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
+import { pointIn, stageScale, useFx } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE, getPodiumAccent, withAlpha } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -46,6 +47,8 @@ export type TvRoundBreakProps = {
   outgoingQuestion?: string;
   /** Rows shown before the list is capped. */
   maxRows?: number;
+  /** The game's stable id; scopes "who led last time" for the coin pop when a player takes 1st (plan §4 Phase 5). */
+  gameId?: string;
 };
 
 const GRADIENT = `linear-gradient(90deg, ${SCREEN_COLORS.cyan500} 0%, ${SCREEN_COLORS.blue600} 52%, ${SCREEN_COLORS.violet600} 100%)`;
@@ -73,8 +76,10 @@ export function TvRoundBreak({
   totalSeconds,
   outgoingQuestion,
   maxRows = 8,
+  gameId,
 }: TvRoundBreakProps) {
   const reduceMotion = useReducedMotion();
+  const fx = useFx();
 
   /* Countdown interpolated purely from props (see file header). */
   const elapsedSinceUpdate = Math.max(0, (nowMs - updatedAtMs) / 1000);
@@ -103,6 +108,21 @@ export function TvRoundBreak({
     () => [...leaderboard].sort((a, b) => b.score - a.score).slice(0, maxRows),
     [leaderboard, maxRows],
   );
+
+  // A player who moves into 1st since the last round break gets a coin pop on their row. The previous leader is
+  // remembered by the fx engine for the page's life, so a reload (nothing remembered) never pops.
+  const leaderId = ranked[0]?.id;
+  const leaderRowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!gameId || !leaderId) return undefined;
+    const previous = fx.remember(`leader:${gameId}`, leaderId);
+    if (previous === undefined || previous === leaderId) return undefined;
+    const id = window.setTimeout(
+      () => fx.burst({ key: `${gameId}:${roundNumber}:first:${leaderId}`, at: pointIn(leaderRowRef.current, 0.16), size: 300 * stageScale(), coins: 9, sparks: 14, gravity: false }),
+      Math.round((t0 + 0.28 + 0.4) * 1000),
+    );
+    return () => window.clearTimeout(id);
+  }, [fx, gameId, leaderId, roundNumber, t0]);
 
   return (
     <div className="relative h-full min-h-0 w-full overflow-hidden" style={{ color: "#f8fafc" }}>
@@ -246,6 +266,7 @@ export function TvRoundBreak({
               return (
                 <motion.div
                   key={entry.id}
+                  ref={i === 0 ? leaderRowRef : undefined}
                   layout={!reduceMotion}
                   className="flex items-center"
                   style={{

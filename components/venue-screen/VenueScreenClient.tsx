@@ -399,6 +399,7 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null, int
             {liveTakeover && !introPlaying ? (
               <TvGoLiveTakeover
                 key={liveTakeover.key}
+                momentKey={liveTakeover.key}
                 gameLabel={liveTakeover.gameLabel}
                 venueName={state.venue.displayName ?? state.venue.name}
                 onComplete={() => setLiveTakeover(null)}

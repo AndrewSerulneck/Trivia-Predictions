@@ -30,6 +30,10 @@ export type FxEngine = {
   fire: (key: string, build: (density: number) => FxEmitter) => FxFireResult;
   /** Start an ambient effect (not keyed); returns its stop function. No-op when the tier is off. */
   startAmbient: (build: (density: number) => FxEmitter) => () => void;
+  /** Claim a moment's identity key without drawing canvas particles (CSS moments); same gate as `fire`. */
+  claim: (key: string) => FxGateDecision;
+  /** Remember `value` under `scope` for the page's life; returns the value it replaced (undefined the first time). */
+  remember: (scope: string, value: string) => string | undefined;
   tier: () => FxTier;
   /** From now on new keys play (FxProvider calls this a beat after the intro stinger). */
   arm: () => void;
@@ -79,6 +83,7 @@ const drawOps = (ctx: CanvasRenderingContext2D, ops: FxDrawOp[]) => {
 
 export const createFxEngine = (): FxEngine => {
   const gate = createFxGate();
+  const memory = new Map<string, string>();
   const watchdog = createFrameWatchdog();
   let tier: FxTier = "full";
   let canvas: HTMLCanvasElement | null = null;
@@ -221,6 +226,12 @@ export const createFxEngine = (): FxEngine => {
       return () => {
         live = live.filter((entry) => entry !== item);
       };
+    },
+    claim: (key) => gate.decide(key),
+    remember: (scope, value) => {
+      const previous = memory.get(scope);
+      memory.set(scope, value);
+      return previous;
     },
     tier: () => tier,
     arm: () => gate.arm(),

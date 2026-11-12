@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
+import { OneShotShine } from "@/components/venue-screen/fx/MomentOverlays";
+import { pointIn, stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -57,6 +59,8 @@ export type TvBlitzResultsProps = {
   totalRounds?: number;
   totalSeconds?: number;
   maxRows?: number;
+  /** The round just played; keys the winner-row moment on the results board (plan §4 Phase 5). */
+  roundId?: string | number;
 };
 
 const BRAND = {
@@ -103,8 +107,15 @@ export function TvBlitzResults({
   totalRounds,
   totalSeconds,
   maxRows = 8,
+  roundId,
 }: TvBlitzResultsProps) {
   const reduceMotion = useReducedMotion();
+  // Winner row shine + a small burst when the results board lands: once per round, only while the room is watching.
+  const winMoment = useFxMoment(phase === "results" && roundId != null ? `${roundId}:results` : null);
+  const winnerRowRef = useRef<HTMLDivElement>(null);
+  useFxAt(winMoment, 800, (fx) => {
+    fx.burst({ key: `${roundId}:results:burst`, at: pointIn(winnerRowRef.current, 0.16), size: 320 * stageScale(), coins: 8, sparks: 18, gravity: false, sparkColors: ["#fde68a", "#f0abfc", "#e879f9"] });
+  });
   const glyph = (letter ?? "").trim().slice(0, 1).toUpperCase();
 
   /* Countdown interpolated purely from props (see file header). */
@@ -297,8 +308,9 @@ export function TvBlitzResults({
                     return (
                       <motion.div
                         key={entry.id}
+                        ref={i === 0 ? winnerRowRef : undefined}
                         layout={!reduceMotion}
-                        className="flex items-center"
+                        className={i === 0 ? "relative flex items-center overflow-hidden" : "flex items-center"}
                         style={{
                           gap: 28,
                           padding: "0 38px",
@@ -318,6 +330,7 @@ export function TvBlitzResults({
                           layout: { duration: 0.62, ease: EASE },
                         }}
                       >
+                        {i === 0 && winMoment ? <OneShotShine delayS={0.7} tint="rgba(253,230,138,0.4)" /> : null}
                         <span
                           style={{
                             width: 68,

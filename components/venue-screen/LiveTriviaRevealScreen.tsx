@@ -44,6 +44,7 @@ export function LiveTriviaRevealScreen({ state, nowMs }: LiveTriviaRevealScreenP
         totalSeconds={REVEAL_HOLD_SECONDS}
         nowMs={nowMs}
         updatedAtMs={updatedAtMs}
+        gameId={live.gameId}
       />
     </section>
   );

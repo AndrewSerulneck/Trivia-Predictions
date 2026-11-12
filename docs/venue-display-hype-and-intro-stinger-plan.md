@@ -9,6 +9,8 @@
 > `venue-display-hype-and-intro-stinger-plan_PHASE_4_HANDOFF.md`; pictures/results in `docs/venue-display-hype_PHASE_4_after/`. Next: Phase 5.
 > **Phase 0 (baseline + effects engine)** done 2026-11-12, not committed — see
 > `venue-display-hype-and-intro-stinger-plan_PHASE_0_HANDOFF.md`; baseline in `docs/venue-display-hype_PHASE_0_baseline/`.
+> **Phase 5 (game moments)** built 2026-11-12, browser-verified, not committed — see
+> `venue-display-hype-and-intro-stinger-plan_PHASE_5_HANDOFF.md`; pictures/counts in `docs/venue-display-hype_PHASE_5_after/`. Next: Phase 6.
 > Created 2026-11-12. Owner: Andrew. Each phase ends with a handoff note `venue-display-hype-and-intro-stinger-plan_PHASE_<N>_HANDOFF.md`
 > next to this file, and this status line is updated to point at it.
 >
@@ -330,5 +332,12 @@ Device CPU/GPU use rises a little during effects; that's on the venue's hardware
 - Every effect has a reduced-motion version and degrades through the `full → lite → off` tiers.
 - The screen never waits on an effect: stinger hard-stops at 5 s; effect errors drop the effect, not the screen.
 - No new network requests for effects beyond immutable-cached assets loaded once per device.
+- Game moments (plan §4 Phase 5) claim their identity through the engine's gate: canvas effects via `useFx` (`burst`,
+  `shower`), CSS ones via `useFxMoment(key)` (`LightStreak`, `OneShotShine` in `fx/MomentOverlays.tsx`). Keys:
+  `gameId:round` (question), `gameId:round:reveal`, `gameId:final`, `roundId` (letter slam), `roundId:results`,
+  `golive:<takeover key>`; the round-break coin pop compares `fx.remember("leader:<gameId>")` with the new leader. A
+  reload never replays one, because keys claimed before the gate arms are swallowed.
+- State-driven cues are not moments: the last-5-s edge glow (`EdgeGlow`) and ring heartbeat follow the timer and are
+  CSS only (transform/opacity); they show on a reload mid-countdown, by design.
 - The display and `/tv` keep the TV awake via `useKeepScreenAwake()` only; it does nothing when embedded (the dashboard
   preview iframes), so an owner's phone is never held awake.
