@@ -1,0 +1,36 @@
+import { chromium } from "playwright";
+const BASE="http://127.0.0.1:3157"; const errs=[];
+const b=await chromium.launch();
+const mk=async(opts={})=>{const ctx=await b.newContext({viewport:{width:1920,height:1080},...opts});const p=await ctx.newPage();
+ p.on("console",m=>{if(m.type()==="error")errs.push(m.text())});p.on("pageerror",e=>errs.push(e.message));return {ctx,p}};
+const canvasInfo=(p)=>p.evaluate(()=>{const c=document.querySelector('[data-testid=fx-canvas]');if(!c)return null;const vis=getComputedStyle(c).visibility;let px=0;
+ if(vis==="visible"){const x=c.getContext("2d");const d=x.getImageData(0,0,c.width,c.height).data;for(let i=3;i<d.length;i+=4*16)if(d[i]>8)px++;}return {w:c.width,h:c.height,vis,px}});
+
+// 1. Screens at 1080p + 4K + reduced motion
+for (const [vp,tag,extra] of [[{width:1920,height:1080},"1080",{}],[{width:3840,height:2160},"4k",{}],[{width:1920,height:1080},"reduced",{reducedMotion:"reduce"}]]){
+ for (const s of ["idle-1","lt-question","lt-final","cb-round","squares","bracket"]){
+  if(tag!=="1080"&&!["idle-1","bracket"].includes(s))continue;
+  const {ctx,p}=await mk({viewport:vp,...extra});await p.goto(`${BASE}/tv/fx-baseline/${s}`,{waitUntil:"load"});await p.waitForTimeout(3500);
+  await p.screenshot({path:`shots/${tag}-${s}.jpg`,type:"jpeg",quality:80});
+  console.log(tag,s,JSON.stringify(await canvasInfo(p)));await ctx.close();}
+}
+// 2. /tv pairing
+{const {ctx,p}=await mk();await p.route("**/api/tv-pair",r=>r.fulfill({json:{ok:true,code:"K7Q4"}}));await p.route("**/api/tv-pair/*",r=>r.fulfill({json:{status:"pending"}}));
+ await p.goto(`${BASE}/tv`,{waitUntil:"load"});await p.waitForTimeout(3000);await p.screenshot({path:"shots/1080-tv-pairing.jpg",type:"jpeg",quality:80});await ctx.close();}
+// 3. Bracket: load must not burst; a NEW upset on a poll bursts once; same upset on later poll doesn't. + remounts across polls
+{const {ctx,p}=await mk();let n=0;
+ await p.route("**/api/venue-screen/state*",async r=>{n++;const res=await r.fetch();const j=await res.json();
+  if(n>=2){j.bracket.upset={...j.bracket.upset,winner:{...j.bracket.upset.winner,name:"Gonzaga"}}}
+  await r.fulfill({json:j});});
+ await p.goto(`${BASE}/tv/fx-baseline/bracket`,{waitUntil:"load"});await p.waitForTimeout(2500);
+ const atLoad=await canvasInfo(p);
+ await p.evaluate(()=>{window.__adds=0;window.__rowIds=[...document.querySelectorAll('[data-testid=bracket-tv] ol > li')];const mo=new MutationObserver(l=>{for(const m of l)for(const x of m.addedNodes)if(x.nodeType===1)window.__adds++});mo.observe(document.querySelector('main'),{childList:true,subtree:true})});
+ // poll 1 (n=1 unchanged) at ~30s, poll 2 (changed upset) at ~60s
+ await p.waitForResponse(r=>r.url().includes("/api/venue-screen/state"),{timeout:45000});await p.waitForTimeout(700);
+ const afterSame=await canvasInfo(p);const addsSame=await p.evaluate(()=>window.__adds);
+ await p.waitForResponse(r=>r.url().includes("/api/venue-screen/state"),{timeout:45000});await p.waitForTimeout(500);
+ const afterNew=await canvasInfo(p);await p.screenshot({path:"shots/1080-bracket-upset-burst.jpg",type:"jpeg",quality:80});
+ await p.waitForTimeout(6000);const settled=await canvasInfo(p);
+ const rowsSame=await p.evaluate(()=>[...document.querySelectorAll('[data-testid=bracket-tv] ol > li')].every((e,i)=>e===window.__rowIds[i]));
+ console.log("bracket load",JSON.stringify(atLoad),"\n same-poll",JSON.stringify(afterSame),"adds",addsSame,"\n new-upset",JSON.stringify(afterNew),"\n settled",JSON.stringify(settled),"rows same nodes",rowsSame);await ctx.close();}
+console.log("errors",errs);await b.close();

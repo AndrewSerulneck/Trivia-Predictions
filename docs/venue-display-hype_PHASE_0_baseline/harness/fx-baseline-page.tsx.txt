@@ -1,0 +1,19 @@
+import { notFound } from "next/navigation";
+import { VenueScreenClient } from "@/components/venue-screen/VenueScreenClient";
+import { fxBaselineState } from "@/lib/fxBaselineFixtures";
+
+export const dynamic = "force-dynamic";
+
+export default async function FxBaselinePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ name: string }>;
+  searchParams?: Promise<{ intro?: string }>;
+}) {
+  const { name } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const state = fxBaselineState(name, Date.now(), false);
+  if (!state) notFound();
+  return <VenueScreenClient venueId={`fx:${name}`} initialState={state} intro={sp.intro === "1"} />;
+}

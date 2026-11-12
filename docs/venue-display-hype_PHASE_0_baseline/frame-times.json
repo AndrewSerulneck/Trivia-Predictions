@@ -1,0 +1,349 @@
+{
+  "capturedAt": "2026-11-12T18:39:10.173Z",
+  "base": "git HEAD 4b4cc05f (no Phase 3)",
+  "viewport": "1920x1080 @1x",
+  "browser": "Playwright Chromium 149.0.7827.55 headless",
+  "throttle": "CPU ×6 (CDP Emulation.setCPUThrottlingRate)",
+  "window": "5000 ms of rAF deltas",
+  "states": {
+    "idle-0": {
+      "unthrottled": {
+        "frames": 195,
+        "meanMs": 10.3,
+        "p50Ms": 8.3,
+        "p95Ms": 16.7,
+        "maxMs": 17.5,
+        "fps": 97.5,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 457,
+        "meanMs": 11,
+        "p50Ms": 8.7,
+        "p95Ms": 17.2,
+        "maxMs": 24.9,
+        "fps": 91.3,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "idle-1": {
+      "unthrottled": {
+        "frames": 158,
+        "meanMs": 12.7,
+        "p50Ms": 15.7,
+        "p95Ms": 17,
+        "maxMs": 25.1,
+        "fps": 78.7,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 371,
+        "meanMs": 13.5,
+        "p50Ms": 15.9,
+        "p95Ms": 17.7,
+        "maxMs": 25.6,
+        "fps": 74.1,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "idle-2": {
+      "unthrottled": {
+        "frames": 164,
+        "meanMs": 12.2,
+        "p50Ms": 8.8,
+        "p95Ms": 16.7,
+        "maxMs": 17.2,
+        "fps": 82,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 384,
+        "meanMs": 13,
+        "p50Ms": 15.7,
+        "p95Ms": 17.6,
+        "maxMs": 25.9,
+        "fps": 76.7,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "lt-question": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9,
+        "maxMs": 9.3,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "lt-reveal": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.3,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "lt-intermission": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.1,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "lt-final": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.3,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.1,
+        "maxMs": 9.5,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "cb-round": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "cb-intermission": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.1,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "cb-results": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9,
+        "maxMs": 9.3,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.1,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "squares": {
+      "unthrottled": {
+        "frames": 240,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9,
+        "maxMs": 9.4,
+        "fps": 120.2,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120.2,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "bracket": {
+      "unthrottled": {
+        "frames": 240,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "golive-takeover": {
+      "throttled": {
+        "frames": 199,
+        "meanMs": 12.7,
+        "p50Ms": 9,
+        "p95Ms": 25.9,
+        "maxMs": 41.6,
+        "fps": 79,
+        "pctOver33": 3,
+        "pctOver50": 0
+      }
+    },
+    "intro-stinger": {
+      "throttled": {
+        "frames": 32,
+        "meanMs": 141.9,
+        "p50Ms": 183.3,
+        "p95Ms": 242.5,
+        "maxMs": 266.7,
+        "fps": 7,
+        "pctOver33": 75,
+        "pctOver50": 75
+      }
+    },
+    "tv-pairing": {
+      "unthrottled": {
+        "frames": 239,
+        "meanMs": 8.4,
+        "p50Ms": 8.3,
+        "p95Ms": 9,
+        "maxMs": 16.6,
+        "fps": 119.5,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 13.5,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    }
+  },
+  "consoleErrors": []
+}

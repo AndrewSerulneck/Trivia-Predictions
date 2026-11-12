@@ -3,6 +3,10 @@
 > **Status:** Phase 1 (intro stinger) + keep-awake built 2026-11-12, **not committed or deployed** — see
 > `venue-display-hype-and-intro-stinger-plan_PHASE_1_HANDOFF.md`. Phase 0 not started (Andrew asked for Phase 1 first).
 > **Phase 2 (sound)** built 2026-11-12 with Andrew's own sound files — see `venue-display-hype-and-intro-stinger-plan_PHASE_2_HANDOFF.md`.
+> **Phase 3 (brand chrome)** redone 2026-11-12 on top of the Phase 0 engine, browser-verified, not committed — see
+> `venue-display-hype-and-intro-stinger-plan_PHASE_3_HANDOFF.md`; pictures/frame times in `docs/venue-display-hype_PHASE_3_after/`. Next: Phase 4.
+> **Phase 0 (baseline + effects engine)** done 2026-11-12, not committed — see
+> `venue-display-hype-and-intro-stinger-plan_PHASE_0_HANDOFF.md`; baseline in `docs/venue-display-hype_PHASE_0_baseline/`.
 > Created 2026-11-12. Owner: Andrew. Each phase ends with a handoff note `venue-display-hype-and-intro-stinger-plan_PHASE_<N>_HANDOFF.md`
 > next to this file, and this status line is updated to point at it.
 >

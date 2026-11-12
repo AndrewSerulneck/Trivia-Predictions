@@ -24,6 +24,7 @@ import {
   type StingerGeometry,
   type StingerParticles,
 } from "@/components/venue-screen/stingerTimeline";
+import { coinSprite, ctx2d, glowStarSprite, makeCanvas, type Ctx, type Sprite } from "@/components/venue-screen/fx/fxSprites";
 import { SCREEN_COLORS } from "@/lib/venueScreenBrand";
 import { loadCanvasFonts, resolveCanvasFont } from "@/lib/socialShare/storyCanvas";
 
@@ -74,77 +75,6 @@ const playStingerSound = (audio: HTMLAudioElement | null) => {
 /** Backing-store cap: keeps the full-screen fills affordable on TV sticks at 4K. */
 const MAX_CANVAS_LONG_SIDE = 2880;
 const TAG_FONT = (size: number) => resolveCanvasFont(`900 ${Math.round(size)}px var(--ht-font-body)`);
-
-type Ctx = CanvasRenderingContext2D;
-type Sprite = { canvas: HTMLCanvasElement; half: number; unit: number };
-
-const makeCanvas = (w: number, h: number): HTMLCanvasElement => {
-  const c = document.createElement("canvas");
-  c.width = Math.max(1, Math.ceil(w));
-  c.height = Math.max(1, Math.ceil(h));
-  return c;
-};
-
-const ctx2d = (c: HTMLCanvasElement): Ctx => {
-  const context = c.getContext("2d");
-  if (!context) throw new Error("2d context unavailable");
-  return context;
-};
-
-const starPath = (ctx: Ctx, r: number) => {
-  ctx.beginPath();
-  for (let i = 0; i < 8; i++) {
-    const rr = i % 2 === 0 ? r : r * 0.22;
-    const ang = (i * Math.PI) / 4 - Math.PI / 2;
-    ctx.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr);
-  }
-  ctx.closePath();
-};
-
-/** 4-point star with its glow baked in (stinger.html star4: shadowBlur = r × 2.2). */
-const glowStarSprite = (color: string, unit: number): Sprite => {
-  const half = unit * 3.6;
-  const canvas = makeCanvas(half * 2, half * 2);
-  const ctx = ctx2d(canvas);
-  ctx.translate(half, half);
-  ctx.fillStyle = color;
-  ctx.shadowColor = color;
-  ctx.shadowBlur = unit * 2.2;
-  starPath(ctx, unit);
-  ctx.fill();
-  return { canvas, half, unit };
-};
-
-/** Gold coin face (stinger.html coin(), no squash — squash/tilt are applied per frame). */
-const coinSprite = (unit: number): Sprite => {
-  const half = unit + 2;
-  const canvas = makeCanvas(half * 2, half * 2);
-  const ctx = ctx2d(canvas);
-  ctx.translate(half, half);
-  const r = unit;
-  const g = ctx.createLinearGradient(-r, -r, r, r);
-  g.addColorStop(0, "#fff3b0");
-  g.addColorStop(0.45, "#fbbf24");
-  g.addColorStop(1, "#b45309");
-  ctx.fillStyle = "#92400e";
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 0.86, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(255, 248, 200, 0.85)";
-  ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const rr = i % 2 === 0 ? r * 0.5 : r * 0.22;
-    const ang = (i * Math.PI) / 5 - Math.PI / 2;
-    ctx.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr);
-  }
-  ctx.closePath();
-  ctx.fill();
-  return { canvas, half, unit };
-};
 
 /** The logo at size L with its cyan glow baked in. */
 const logoGlowSprite = (logo: HTMLImageElement, L: number): Sprite => {

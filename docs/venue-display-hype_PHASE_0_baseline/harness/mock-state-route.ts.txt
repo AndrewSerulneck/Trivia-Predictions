@@ -1,0 +1,10 @@
+// Scratchpad clone only: answers every poll from fixtures (no database).
+import { NextResponse } from "next/server";
+import { fxBaselineState } from "@/lib/fxBaselineFixtures";
+
+export async function GET(request: Request) {
+  const venueId = new URL(request.url).searchParams.get("venueId") ?? "";
+  const state = fxBaselineState(venueId.replace(/^fx:/, ""), Date.now(), true);
+  if (!state) return NextResponse.json({ ok: false, error: "Venue not found." }, { status: 404 });
+  return NextResponse.json(state, { headers: { "Cache-Control": "no-store" } });
+}

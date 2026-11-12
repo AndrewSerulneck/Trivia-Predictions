@@ -1,0 +1,124 @@
+// Phase 0 baseline: screenshots + throttled frame times of the venue display, from the scratchpad clone.
+import { chromium } from "playwright";
+import fs from "node:fs";
+import path from "node:path";
+
+const BASE = process.env.BASE ?? "http://127.0.0.1:3157";
+const OUT = process.argv[2];
+const THROTTLE = 6;
+const MEASURE_MS = 5000;
+fs.mkdirSync(OUT, { recursive: true });
+
+const STATES = ["idle-0", "idle-1", "idle-2", "lt-question", "lt-reveal", "lt-intermission", "lt-final",
+  "cb-round", "cb-intermission", "cb-results", "squares", "bracket"];
+
+const stats = (d) => {
+  if (!d.length) return null;
+  const s = [...d].sort((a, b) => a - b);
+  const q = (p) => s[Math.min(s.length - 1, Math.floor(p * s.length))];
+  const mean = d.reduce((a, b) => a + b, 0) / d.length;
+  return {
+    frames: d.length, meanMs: +mean.toFixed(1), p50Ms: +q(0.5).toFixed(1), p95Ms: +q(0.95).toFixed(1),
+    maxMs: +s[s.length - 1].toFixed(1), fps: +(1000 / mean).toFixed(1),
+    pctOver33: +((100 * d.filter((x) => x > 33.4).length) / d.length).toFixed(1),
+    pctOver50: +((100 * d.filter((x) => x > 50).length) / d.length).toFixed(1),
+  };
+};
+
+const measure = (page, ms) => page.evaluate((ms) => new Promise((res) => {
+  const d = []; let last = performance.now(); const end = last + ms;
+  const f = (now) => { d.push(now - last); last = now; if (now < end) requestAnimationFrame(f); else res(d.slice(1)); };
+  requestAnimationFrame(f);
+}), ms);
+
+// Elements added under <main> during a window: 0 means polls don't remount anything.
+const countAdds = (page, ms) => page.evaluate((ms) => new Promise((res) => {
+  let n = 0; const root = document.querySelector("main") ?? document.body;
+  const mo = new MutationObserver((list) => { for (const m of list) for (const node of m.addedNodes) if (node.nodeType === 1) n += 1; });
+  mo.observe(root, { childList: true, subtree: true });
+  setTimeout(() => { mo.disconnect(); res(n); }, ms);
+}), ms);
+
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
+const results = { capturedAt: new Date().toISOString(), base: "git HEAD 4b4cc05f (no Phase 3)", viewport: "1920x1080 @1x",
+  browser: `Playwright Chromium ${browser.version()} headless`, throttle: `CPU ×${THROTTLE} (CDP Emulation.setCPUThrottlingRate)`,
+  window: `${MEASURE_MS} ms of rAF deltas`, states: {} };
+const errors = [];
+
+const run = async (name, url, { waitMs = 2500, shots = [[waitMs, name]], measureMs = MEASURE_MS, adds = 0, before } = {}) => {
+  const page = await ctx.newPage();
+  page.on("console", (m) => { if (m.type() === "error") errors.push(`${name}: ${m.text()}`); });
+  page.on("pageerror", (e) => errors.push(`${name}: ${e.message}`));
+  if (before) await before(page);
+  const t0 = Date.now();
+  await page.goto(BASE + url, { waitUntil: "load" });
+  for (const [at, file] of shots) {
+    const wait = at - (Date.now() - t0);
+    if (wait > 0) await page.waitForTimeout(wait);
+    await page.screenshot({ path: path.join(OUT, `${file}.jpg`), type: "jpeg", quality: 82 });
+  }
+  const cdp = await ctx.newCDPSession(page);
+  const entry = {};
+  entry.unthrottled = stats(await measure(page, 2000));
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE });
+  entry.throttled = stats(await measure(page, measureMs));
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+  if (adds) entry.elementsAddedOverMs = { ms: adds, count: await countAdds(page, adds) };
+  results.states[name] = entry;
+  await page.close();
+};
+
+for (const s of STATES) {
+  await run(s, `/tv/fx-baseline/${s}`, { adds: s.startsWith("lt-") || s.startsWith("cb-") ? 5000 : 0 });
+  console.log("done", s);
+}
+
+// Go-live takeover: page starts idle, first poll (20 s idle interval) flips to Live Trivia.
+{
+  const page = await ctx.newPage();
+  page.on("pageerror", (e) => errors.push(`golive: ${e.message}`));
+  await page.goto(BASE + "/tv/fx-baseline/golive", { waitUntil: "load" });
+  const cdp = await ctx.newCDPSession(page);
+  await page.waitForResponse((r) => r.url().includes("/api/venue-screen/state"), { timeout: 40000 });
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: path.join(OUT, "golive-takeover-0.6s.jpg"), type: "jpeg", quality: 82 });
+  await page.waitForTimeout(3000);
+  // Second flip run with throttle for frame timing.
+  await page.close();
+  const p2 = await ctx.newPage();
+  await p2.goto(BASE + "/tv/fx-baseline/golive", { waitUntil: "load" });
+  const cdp2 = await ctx.newCDPSession(p2);
+  await cdp2.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE });
+  await p2.waitForResponse((r) => r.url().includes("/api/venue-screen/state"), { timeout: 40000 });
+  results.states["golive-takeover"] = { throttled: stats(await measure(p2, 2500)) };
+  await p2.close();
+  void cdp;
+  console.log("done golive");
+}
+
+// Intro stinger (Phase 1, already on the branch): frames during its 4.3 s, plus stills.
+await run("intro-stinger", "/tv/fx-baseline/idle-2?intro=1", {
+  shots: [[1300, "intro-stinger-1.2s"], [2700, "intro-stinger-2.6s"]], measureMs: 1, waitMs: 0,
+});
+{
+  const page = await ctx.newPage();
+  const cdp = await ctx.newCDPSession(page);
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: THROTTLE });
+  await page.goto(BASE + "/tv/fx-baseline/idle-2?intro=1", { waitUntil: "commit" });
+  results.states["intro-stinger"] = { throttled: stats(await measure(page, 4500)) };
+  await page.close();
+}
+
+// /tv pairing screen with mocked pairing API.
+await run("tv-pairing", "/tv", {
+  before: async (page) => {
+    await page.route("**/api/tv-pair", (r) => r.fulfill({ json: { ok: true, code: "K7Q4" } }));
+    await page.route("**/api/tv-pair/*", (r) => r.fulfill({ json: { status: "pending" } }));
+  },
+});
+
+results.consoleErrors = errors;
+fs.writeFileSync(path.join(OUT, "frame-times.json"), JSON.stringify(results, null, 2));
+await browser.close();
+console.log(JSON.stringify(results, null, 1).slice(0, 400));
