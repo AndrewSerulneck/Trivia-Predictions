@@ -171,6 +171,30 @@ to Production rather than uploading its already-used version code again. Keep on
 current bundle in the release to avoid lower-code shadowing. Initial code 2 is already in Production
 review; don't discard it or create a second launch release just to match the earlier internal-track plan.
 
+## Automated uploads and releases (set up 2026-11-11)
+
+`native/scripts/store-release.cjs` (no dependencies) talks to both stores with keys kept **outside Git** in
+`~/Library/Application Support/Hightop Challenge/signing/` (mode 600; never print or copy them):
+- Google Play: service account `hightop-challenge-a1e76242aee3.json` (Play Console user with release-to-testing and
+  release-to-production rights on this app only).
+- App Store Connect: API key `AuthKey_AFVL66FJLV.p8`, Key ID `AFVL66FJLV`, Issuer ID
+  `e8e0f94c-bb12-41fc-b555-feb2a1ba0956` (App Manager role).
+
+```sh
+node native/scripts/store-release.cjs play-status                       # tracks + highest uploaded code
+node native/scripts/store-release.cjs play-upload <signed.aab>          # upload + internal track (never production)
+node native/scripts/store-release.cjs play-release --code N             # already-uploaded code -> internal track
+node native/scripts/store-release.cjs play-promote --code N --fraction 0.2   # tested internal code -> production (staged)
+node native/scripts/store-release.cjs asc-status                        # versions, builds, TestFlight groups
+node native/scripts/store-release.cjs asc-testflight                    # internal group "Team" with every ASC user
+node native/scripts/store-release.cjs asc-prepare --version X --build N --notes "What's New"
+node native/scripts/store-release.cjs asc-submit --version X            # App Review submission
+```
+
+iOS upload itself stays `xcodebuild -exportArchive` with an options plist whose `destination` is `upload`. Order:
+build → upload both → testers install → device checks → **Andrew's go-ahead** → `asc-submit` / `play-promote`.
+Never submit or promote before the device checks pass and Andrew says so.
+
 ## Release timing and recovery
 
 For updates, use Apple phased release or a Google staged rollout where available and appropriate.

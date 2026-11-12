@@ -4,8 +4,10 @@
 `docs/share-win-celebration-plan_PHASE_1_HANDOFF.md`, `docs/share-win-celebration-plan_PHASE_2_HANDOFF.md`, which
 has the commit and deploy state). Waiting on Andrew's phone check (`docs/native-app-device-checklist.md` §P).
 **Phases 3–3.2 are committed (`b761190e`) and deployed (web).** **Phase 3.3:** app 2.0.1 built (iOS build 3,
-Android code 3), signed; iOS uploaded (processing), Android not uploaded (handoff `docs/share-win-celebration-plan_PHASE_3_3_HANDOFF.md`).
-**Next:** Andrew uploads Android, runs checklist §Q 84–89 on test builds, then releases. Phase 4 (the guide clip) is independent.
+Android code 3), signed, on TestFlight and Play internal testing; iOS 2.0.1 prepared, not submitted (handoff `docs/share-win-celebration-plan_PHASE_3_3_HANDOFF.md`).
+**Next:** Andrew installs both, runs checklist §Q 84–89 on test builds, then releases.
+**Phase 4 (guide clip): rendered 2026-11-11**, 44 s, `Guest Share Celebration clip 16x9/9x16.mp4`; waiting on Andrew's
+review (handoff `docs/share-win-celebration-plan_PHASE_4_HANDOFF.md`).
 
 ## 1. Summary for Andrew
 
@@ -387,6 +389,8 @@ caches by name), e.g. `Subscribe and Setup Guide/Guest Share Celebration clip 16
 - **Effects are part of the picture's key** (`useSharePictures` `effectsKey`); a picture drawn with other effects
   may stay on screen while the redraw lands, but is never shared (`designReady` / `capturedEffectsKey`).
 - **Drawn vector paths only** — no emoji, no images, no text in an effect (test).
+- **No QR code on any share picture** (Andrew, 2026-11-11: people seeing a post aren't at the bar). The venue panel is
+  text only (`venuePanel`, `shareDesigns.ts`); `tests/share-card-qr.test.ts` and `npm run share-card:render` fail on a QR.
 
 
 ## Standing rules (Phase 2, 2026-11-11)

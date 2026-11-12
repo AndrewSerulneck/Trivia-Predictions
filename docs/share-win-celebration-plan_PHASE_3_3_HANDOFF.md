@@ -9,21 +9,21 @@ the website is deployed. New app builds are made: **version 2.0.1**, iOS build *
 - **Website: yes** (commit `b761190e`, Vercel production, Ready 2026-11-11). On its own it changes nothing visible:
   it waits for an app build that says it can send a video. Android app users' **More** button now saves the video
   in small pieces (Phase 3.2) — watch for "Couldn't share" reports on Android.
-- **App: not yet.** iOS build 3 is uploaded to App Store Connect (processing); the Android bundle is on this Mac, not uploaded. Guests get the one-tap video only after
-  you upload, test, and release them, and they update the app.
+- **App: ready to test, not released (2026-11-11).** Both stores now run from `native/scripts/store-release.cjs`
+  (runbook "Automated uploads and releases"):
+  - iOS build 3 is **VALID** in App Store Connect. A TestFlight internal group **"Team"** (all builds) was created with
+    the one App Store Connect user in it. Version **2.0.1** exists in **Prepare for Submission** with build 3 attached
+    and What's New "Share your win to Instagram Stories as a video in one tap." **Not submitted.**
+  - Android code 3 (2.0.1) is on **Internal testing**, status completed. Production is still code 2. **Not promoted.**
+  - (iOS 2.0.0 is already live, so 2.0.1 was required.)
 
 **Needs you (in order):**
-1. **Upload Android:** Play Console → Testing → Internal testing → Create new release → upload
-   `~/Downloads/Hightop-Challenge-2.0.1-3.aab`.
-2. **iOS: already uploaded** (2026-11-11). Wait for the "build 3 is ready" email, then add yourself to an internal TestFlight group and install.
-3. Install both from TestFlight / Play internal testing and run checklist **§Q items 84–89**
-   (`docs/native-app-device-checklist.md`).
-4. If item 84 fails on iPhone only: tell the agent; it runs
-   `vercel env add NEXT_PUBLIC_INSTAGRAM_STORY_VIDEO_OFF production` (value `ios`) and redeploys. Videos then use the
-   share sheet on iPhone. Release anyway.
-5. **Release:** App Store Connect → new version **2.0.1** → pick build 3 → "What's New" (e.g. "Share your win to
-   Instagram Stories as a video in one tap.") → Submit for Review. Play Console → promote the internal release to
-   Production (staged rollout if offered).
+1. Install both test builds: iPhone → TestFlight app (the invite email); Android → Play Console → Testing → Internal
+   testing → Testers tab → make sure your email is on the list → copy the opt-in link and open it on the phone.
+2. Run checklist **§Q items 84–89** (`docs/native-app-device-checklist.md`) and send the agent the results.
+3. If item 84 fails on iPhone only: the agent sets `NEXT_PUBLIC_INSTAGRAM_STORY_VIDEO_OFF=ios` and redeploys; release anyway.
+4. Say "release": the agent runs `asc-submit --version 2.0.1` and `play-promote --code 3 --fraction 0.2` (staged 20%;
+   say another % if you prefer), then raises the Android rollout after a few quiet days on your word.
 
 **Cost:** none on the server.
 
@@ -92,6 +92,8 @@ moving pictures to file paths.
 - Rollout size for Play (staged %) and whether to use Apple phased release.
 
 ### 8. Next steps (Opus 5.5 high for anything native; Sonnet 5.5 medium just to record results)
+0. Store state lives in the stores: check with `node native/scripts/store-release.cjs asc-status` and `play-status`
+   before acting. Submit/promote only on Andrew's word after §Q passes.
 1. When Andrew reports §Q: record results in the checklist table and the plan status.
 2. If 84 fails on iPhone: `vercel env add NEXT_PUBLIC_INSTAGRAM_STORY_VIDEO_OFF production` → `ios`, then redeploy
    (`NEXT_PUBLIC_*` is build-time). Android fail → value `android`; both → `all`.
