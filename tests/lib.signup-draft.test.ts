@@ -66,6 +66,7 @@ afterEach(() => {
 
 const filledDraft = (over: Partial<SignupDraft> = {}): SignupDraft => ({
   ...BLANK_SIGNUP_DRAFT,
+  businessType: "bar_restaurant",
   name: "Alex Rivera",
   email: "alex@murphys.com",
   password: "correct-horse-battery",

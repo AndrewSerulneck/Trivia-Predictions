@@ -322,6 +322,7 @@ const venueFixture = (
 });
 
 const VALID_BODY = {
+  businessType: "bar_restaurant",
   name: "Dana Fitzgerald",
   email: "dana@example.com",
   password: "correct-horse",
@@ -1074,5 +1075,37 @@ describe("claim guards (Phase 1)", () => {
     expect(stamp?.filters).toMatchObject({ id: "venue-abandoned" });
     expect(typeof stamp?.payload.self_serve_created_at).toBe("string");
     expect(stamp?.payload).not.toHaveProperty("hidden");
+  });
+});
+
+describe("business type (docs/partner-business-type-plan.md Phase 1)", () => {
+  it("writes a valid type onto the venue_owners insert", async () => {
+    const POST = await load();
+    const response = await POST(post({ ...VALID_BODY, businessType: "trivia_dj" }));
+
+    expect(response.status).toBe(200);
+    expect(insertsTo("venue_owners")[0]?.payload).toMatchObject({ business_type: "trivia_dj" });
+  });
+
+  it("400s a MISSING type before any account work (required since Phase 4)", async () => {
+    const POST = await load();
+
+    for (const businessType of [undefined, null, "", "   "]) {
+      const response = await POST(post({ ...VALID_BODY, businessType }));
+      expect(response.status).toBe(400);
+    }
+    expect(mocks.createUser).not.toHaveBeenCalled();
+    expect(mocks.inserts).toHaveLength(0);
+  });
+
+  it("400s an unknown type before any account work — never guesses", async () => {
+    const POST = await load();
+
+    for (const businessType of ["bar", "Bar/Restaurant", "TRIVIA_DJ", 3, ["hotel"]]) {
+      const response = await POST(post({ ...VALID_BODY, businessType }));
+      expect(response.status).toBe(400);
+    }
+    expect(mocks.createUser).not.toHaveBeenCalled();
+    expect(mocks.inserts).toHaveLength(0);
   });
 });

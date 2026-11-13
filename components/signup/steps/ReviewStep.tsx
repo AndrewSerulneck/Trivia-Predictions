@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SignupQuestion } from "@/components/signup/SignupQuestion";
 import { SignupStaggerItem } from "@/components/signup/SignupStagger";
 import { DEFAULT_VENUE_COUNTRY } from "@/lib/adminVenueForm";
+import { businessTypeLabel } from "@/lib/partnerBusinessType";
 import { SIGNUP_CHECKOUT_COPY, hasSignupPin, type SignupDraft } from "@/lib/selfServeSignup";
 
 // Step 6 of 6 — confirm, then pay.
@@ -80,6 +81,7 @@ export function ReviewStep({ draft, duplicate, submitting, onClaim, onEditLocati
           ) : null}
 
           <dl className="divide-y divide-white/[0.06]">
+            <ReviewRow label="Business" value={businessTypeLabel(draft.businessType || null)} />
             <ReviewRow label="Venue" value={draft.venueName || "—"} />
             <ReviewRow
               label="Address"

@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { MapPin } from "lucide-react";
 import type { AddressPrediction } from "@/components/admin/useAddressLookup";
+import { isTriviaDj } from "@/lib/partnerBusinessType";
 import { SignupQuestion } from "@/components/signup/SignupQuestion";
 import { SignupStaggerItem } from "@/components/signup/SignupStagger";
 import { SignupTextField } from "@/components/signup/SignupTextField";
@@ -73,6 +74,7 @@ export function AddressStep({ draft, onPatch, onPinSource, onEnter }: AddressSte
   // The same rule the step gate uses (signupStepIssue's "address" branch) — one
   // shared predicate, not a fourth copy (Finding #13).
   const hasAddress = hasSignupAddress(draft);
+  const firstVenue = isTriviaDj(draft.businessType);
 
   const handleSelect = useCallback(
     async (prediction: AddressPrediction) => {
@@ -134,8 +136,8 @@ export function AddressStep({ draft, onPatch, onPinSource, onEnter }: AddressSte
 
   return (
     <SignupQuestion
-      eyebrow="Your venue"
-      title="Where is your venue?"
+      eyebrow={firstVenue ? "Your first venue" : "Your venue"}
+      title={firstVenue ? "Where's your first venue?" : "Where is your venue?"}
       helper="Start typing the business name — we'll fill in the rest."
     >
       <SignupTextField
