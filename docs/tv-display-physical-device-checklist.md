@@ -2,6 +2,8 @@
 
 > **Purpose:** Everything in Phases 8–11 was verified in headless Chromium at 1920×1080 (rendering, animation idempotency, `prefers-reduced-motion`, the `/tv` pairing flow, the answer-reveal beat, and the Category Blitz next-round countdown). **This checklist covers only what a headless browser cannot judge:** real-panel color, across-the-room legibility, QR scan-ability, pairing on an actual TV remote, and multi-hour burn-in. It must be run by someone physically on-site with the hardware. Claude cannot execute it.
 >
+> **2026-11 update:** section F covers the intro stinger, its sound, keep-awake and the new effects (`docs/venue-display-hype-and-intro-stinger-plan.md`).
+>
 > Companion: `docs/tv-display-brand-and-animation-plan.md` (§0 has the automated-coverage summary).
 
 ## Device matrix (test each you intend to support)
@@ -50,6 +52,46 @@ Record for each: device, browser/engine + version, panel size, and viewing dista
 - [ ] After the long idle run, check the panel for image retention of static elements (header text, logo). LCD retention usually clears; OLED is the real risk.
 - [ ] Confirm the screen recovers gracefully from a network blip (unplug/replug Wi-Fi): it keeps the last frame and resumes polling, no crash-to-blank.
 - [ ] Confirm a live game that ends returns the screen to idle (or the next scheduled/continuous state) without manual intervention.
+
+## F. Intro stinger, sound and effects (2026-11 hype update)
+
+Plan: `docs/venue-display-hype-and-intro-stinger-plan.md` (§8 Standing rules). Headless results:
+`docs/venue-display-hype_PHASE_6_after/README.md`. Test on a **Fire TV Stick first** (the weakest target).
+
+**Intro stinger (every time the display opens)**
+- [ ] Power on the TV / reopen the display URL → the logo bursts in with coins, then **"IT'S GAME TIME."**, then the
+  navy fades away to the venue screen in about 4–5 s. It never gets stuck (worst case it vanishes at 5 s).
+- [ ] The stinger runs smoothly enough to read as one motion. If it stutters badly, note how many seconds of
+  stutter and the device (this is the heaviest thing on the screen).
+- [ ] Reload while a game is live → the stinger plays, the game is fully visible right after it, and no game effect
+  (burst, streak, confetti) replays for what was already on screen.
+- [ ] Dashboard (`/owner/display`): the small preview **never** plays the stinger; **Expand** does.
+
+**Sound**
+- [ ] On the TV: the stinger is usually **silent** (TV browsers block sound that starts by itself). That's expected;
+  the screen must still play normally. If the TV does play sound, note whether the boom (logo hit) and shine
+  ("IT'S GAME TIME.") are in sync and not too loud for the room.
+- [ ] On a phone (Chrome and iOS Safari): tap **Expand** on `/owner/display` → the boom plays with the logo hit and
+  the shine with the tagline.
+
+**Keep-awake**
+- [ ] Leave the display on an evening with nobody touching the remote → no screensaver, no dimming, no sleep.
+- [ ] The dashboard preview on a phone does **not** keep the phone awake.
+
+**Effects (each should play once, never on the next refresh)**
+- [ ] Idle screen: every ~75 s a shine crosses "Hightop" and coins burst from the Next-up card. Two TVs in the same
+  venue burst at the same moment.
+- [ ] Live Trivia: light streak on each new question; red edge glow and pulsing timer in the last 5 s; coin/spark
+  burst from the green check on the answer; coin pop on the round-break row when a new player takes 1st; coins and
+  confetti on final standings.
+- [ ] Category Blitz: rings and sparks when the letter slams; winner row shines on results.
+- [ ] Go-live: gold coin burst as "We're live" lands.
+- [ ] None of the above replays while the screen sits on the same question/round (it refreshes every 1–4 s).
+- [ ] Effects never cover the question or answer text for more than a moment.
+- [ ] Reduced motion (if the TV has the setting): no bursts, streaks or confetti; text still fades in; nothing
+  missing.
+- [ ] After a full game night plus a few hours idle, effects still play and the screen isn't slower than at the
+  start (if it is, note how long it had been running).
 
 ## Reporting
 For each failure, note: device + browser version, phase, viewing distance, and a photo. File findings back against `docs/tv-display-brand-and-animation-plan.md`. Legibility/overscan issues usually mean a spacing/scale tweak in the relevant `components/venue-screen/Tv*.tsx`; color banding is usually a panel setting, not a code bug.

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
+import { withIntroDisabled } from "@/components/venue-screen/stingerTimeline";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { gameUrl } from "@/lib/domainSplit";
@@ -145,7 +146,7 @@ const OwnerDisplayPage = () => {
               </p>
               <p className="mt-2 text-sm font-semibold text-ht-secondary">
                 On the TV&apos;s browser, go to <span className="font-mono text-ht-primary">hightopchallenge.com/tv</span>.
-              md   It&apos;ll show that TV&apos;s own one-time code — enter it below to link it to{" "}
+                It&apos;ll show that TV&apos;s own one-time code — enter it below to link it to{" "}
                 {selectedVenue?.name ?? "your venue"}.
               </p>
               <p className="mt-1.5 text-xs font-semibold text-ht-muted">
@@ -386,6 +387,7 @@ function FullscreenExpander({
             <iframe
               src={url}
               title="Venue display full screen"
+              allow="autoplay; fullscreen"
               className="pointer-events-none absolute left-0 top-0 h-full w-full max-w-none border-0"
             />
             <button
@@ -424,6 +426,8 @@ function ScaledPreview({ url, paused }: { url: string; paused: boolean }) {
   // fully in the box, instead of assuming the container is already a perfect
   // 16:9 (aspect-ratio CSS support/rounding can't be relied on for that).
   const scale = Math.min(box.width / PREVIEW_SOURCE_WIDTH, box.height / PREVIEW_SOURCE_HEIGHT);
+  // The thumbnail skips the intro stinger; the owner sees it when they tap Expand.
+  const previewUrl = withIntroDisabled(url);
   const left = (box.width - PREVIEW_SOURCE_WIDTH * scale) / 2;
   const top = (box.height - PREVIEW_SOURCE_HEIGHT * scale) / 2;
 
@@ -435,7 +439,7 @@ function ScaledPreview({ url, paused }: { url: string; paused: boolean }) {
     >
       {scale > 0 && !paused ? (
         <iframe
-          src={url}
+          src={previewUrl}
           title="Venue display preview"
           loading="lazy"
           className="pointer-events-none absolute origin-top-left border-0"

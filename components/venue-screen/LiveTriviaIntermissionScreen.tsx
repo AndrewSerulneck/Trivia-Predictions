@@ -43,6 +43,7 @@ export function LiveTriviaIntermissionScreen({ state, nowMs }: LiveTriviaIntermi
       secondsRemaining={live.secondsRemaining}
       nowMs={nowMs}
       updatedAtMs={state.updatedAt}
+      gameId={live.gameId}
     />
   );
 }

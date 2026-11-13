@@ -197,6 +197,11 @@ const config: Config = {
           "0%": { opacity: "0.95" },
           "100%": { opacity: "0" },
         },
+        // TvIntroStinger's no-JS fail-safe (STINGER_COVER_FAILSAFE_MS in components/venue-screen/stingerTimeline.ts).
+        "stinger-cover-failsafe": {
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0", visibility: "hidden" },
+        },
       },
       animation: {
         shake: "shake 0.55s ease-in-out",
@@ -216,6 +221,7 @@ const config: Config = {
         "coupon-shimmer": "coupon-shimmer 2.6s linear infinite",
         "coupon-spark": "coupon-spark 0.6s ease-out forwards",
         "coupon-flash": "coupon-flash 0.5s ease-out forwards",
+        "stinger-cover-failsafe": "stinger-cover-failsafe 0.4s ease-out 7s forwards",
       },
       colors: {
         ht: {

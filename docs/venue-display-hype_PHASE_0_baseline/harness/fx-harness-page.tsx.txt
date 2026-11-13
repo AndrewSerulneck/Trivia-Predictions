@@ -1,0 +1,30 @@
+"use client";
+// Scratchpad-only harness for the Phase 0 engine. Not in the repo.
+import { useEffect, useState } from "react";
+import { FxProvider } from "@/components/venue-screen/fx/FxCanvas";
+import { useFx } from "@/components/venue-screen/fx/useFx";
+import { BrandStage } from "@/components/venue-screen/fx/BrandStage";
+import { VenueScreenClient } from "@/components/venue-screen/VenueScreenClient";
+import { fxBaselineState } from "@/lib/fxBaselineFixtures";
+
+function Expose() {
+  const fx = useFx();
+  useEffect(() => {
+    (window as unknown as Record<string, unknown>).__fx = fx;
+  }, [fx]);
+  return <div id="anchor" className="pointer-events-none fixed" style={{ left: 700, top: 300, width: 500, height: 300 }} />;
+}
+
+export default function FxHarness() {
+  const [state] = useState(() => fxBaselineState("lt-reveal", Date.now(), false));
+  if (!state) return null;
+  return (
+    <FxProvider armed>
+      <VenueScreenClient venueId="fx:lt-reveal" initialState={state} intro={false} />
+      <div id="stage" className="pointer-events-none fixed inset-0" style={{ zIndex: 1 }}>
+        <BrandStage ambientA="rgba(14,165,233,0.30)" ambientB="rgba(124,58,237,0.32)" />
+      </div>
+      <Expose />
+    </FxProvider>
+  );
+}

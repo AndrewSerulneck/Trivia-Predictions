@@ -30,6 +30,7 @@ export function CategoryBlitzIntermissionScreen({ state, nowMs }: CategoryBlitzI
       secondsRemaining={blitz.secondsRemaining}
       nowMs={nowMs}
       updatedAtMs={state.updatedAt}
+      roundId={blitz.roundId ?? undefined}
     />
   );
 }

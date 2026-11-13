@@ -75,6 +75,13 @@ export function getIdleGameDisplay(
   return { kind: "schedule", value: formatScheduleDays(recurringDays, startsAt, nowMs) };
 }
 
+const remainingSeconds = (
+  display: ReturnType<typeof getIdleGameDisplay>,
+  startsAt: string,
+  nowMs: number,
+): number | undefined =>
+  display?.kind === "countdown" ? Math.max(0, Math.ceil((Date.parse(startsAt) - nowMs) / 1_000)) : undefined;
+
 // Idle / attract-mode screen (Prompt F, authored via Claude Web UI + wired
 // in). Replaces the previous side-by-side game tiles with a rotating
 // "Next up" carousel — all timing (drift, breathing wash, card rotation)
@@ -92,6 +99,8 @@ export function IdleVenueScreen({ state, nowMs }: IdleVenueScreenProps) {
       label: liveTrivia.title || "Live Trivia",
       startsAt: liveTrivia.startsAt,
       countdownText: display?.value,
+      remainingSeconds: remainingSeconds(display, liveTrivia.startsAt, nowMs),
+      gameKey: "live_trivia",
     });
   }
   const categoryBlitz = state.idle.nextCategoryBlitz;
@@ -101,6 +110,8 @@ export function IdleVenueScreen({ state, nowMs }: IdleVenueScreenProps) {
       label: "Category Blitz",
       startsAt: categoryBlitz.startsAt,
       countdownText: display?.value,
+      remainingSeconds: remainingSeconds(display, categoryBlitz.startsAt, nowMs),
+      gameKey: "category-blitz",
     });
   } else if (state.idle.categoryBlitzOnDemand) {
     // Continuous Category Blitz is on but asleep — it only runs while a player
@@ -109,6 +120,7 @@ export function IdleVenueScreen({ state, nowMs }: IdleVenueScreenProps) {
       label: "Category Blitz",
       kicker: "Play anytime",
       countdownText: "Start it on your phone",
+      gameKey: "category-blitz",
     });
   }
 

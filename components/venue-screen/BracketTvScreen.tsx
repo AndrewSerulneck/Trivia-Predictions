@@ -1,5 +1,13 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { CountUp } from "@/components/venue-screen/fx/CountUp";
+import { ShineSweep } from "@/components/venue-screen/fx/ShineSweep";
+import { useFx } from "@/components/venue-screen/fx/useFx";
 import type { BracketTvTeam } from "@/lib/bracketsTv";
 import type { VenueScreenState } from "@/lib/venueScreen";
+import { getPodiumAccent, SCREEN_EASE } from "@/lib/venueScreenBrand";
 
 type BracketTvState = Extract<VenueScreenState, { mode: "bracket" }>;
 
@@ -10,11 +18,31 @@ type BracketTvScreenProps = {
 
 const seeded = (team: BracketTvTeam): string => (team.seed !== null ? `${team.seed} ${team.name}` : team.name);
 
+/** Row keys that follow a player when the standings reorder; repeated names (users without one show as "Player") get a suffix. */
+export const bracketRowKeys = (usernames: readonly string[]): string[] => {
+  const seen = new Map<string, number>();
+  return usernames.map((name) => {
+    const n = (seen.get(name) ?? 0) + 1;
+    seen.set(name, n);
+    return n === 1 ? name : `${name}\n${n}`;
+  });
+};
+
 // March Madness on the venue TV (Phase 9b): the venue's top 10 in the bracket most people here filled
 // out, the biggest upset busting brackets here, and today's games. Everything arrives in the screen's
 // own poll (lib/bracketsTv.ts); this component only draws it.
 export function BracketTvScreen({ state, accent }: BracketTvScreenProps) {
+  const reduceMotion = useReducedMotion();
   const { bracket } = state;
+  const fx = useFx();
+  const upsetRef = useRef<HTMLDivElement>(null);
+  const { upset } = bracket;
+  // One burst per upset: the key names the game, so a poll or a reload never replays it (fx gate).
+  const rowKeys = bracketRowKeys(bracket.standings.map((row) => row.username));
+  const upsetKey = upset ? `upset:${bracket.key}:${upset.round}:${upset.winner.name}>${upset.loser.name}` : null;
+  useEffect(() => {
+    if (upsetKey && upsetRef.current) fx.burst({ key: upsetKey, at: upsetRef.current, shockwave: true });
+  }, [fx, upsetKey]);
 
   return (
     <div className="flex min-h-0 flex-1 gap-12 px-12 pb-10" data-testid="bracket-tv">
@@ -26,29 +54,49 @@ export function BracketTvScreen({ state, accent }: BracketTvScreenProps) {
           </p>
         </div>
         <ol className="flex flex-col gap-2">
-          {bracket.standings.map((row) => (
-            <li
-              key={`${row.rank}-${row.username}`}
-              className="grid grid-cols-[5rem_1fr_auto] items-center gap-6 rounded-2xl bg-white/[0.06] px-8 py-3"
-            >
-              <span className="text-4xl font-black" style={{ color: row.rank <= 3 ? accent : "#cbd5e1" }}>
-                {row.rank}
-              </span>
-              <span className="min-w-0 truncate text-4xl font-black text-white">{row.username}</span>
-              <span className="text-right">
-                <span className="block text-4xl font-black text-white">{row.score.toLocaleString("en-US")}</span>
-                {!bracket.complete ? (
-                  <span className="block text-2xl font-semibold text-slate-400">best {row.maxPossible.toLocaleString("en-US")}</span>
-                ) : null}
-              </span>
-            </li>
-          ))}
+          {bracket.standings.map((row, index) => {
+            const podium = getPodiumAccent(row.rank);
+            return (
+              <motion.li
+                key={rowKeys[index]}
+                className="relative grid grid-cols-[5rem_1fr_auto] items-center gap-6 overflow-hidden rounded-2xl border-2 bg-white/[0.06] px-8 py-3"
+                style={{ borderColor: podium ? podium.ring : "transparent" }}
+                initial={reduceMotion ? false : { opacity: 0, x: -40 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.45, ease: SCREEN_EASE, delay: 0.1 + index * 0.06 }}
+              >
+                <span className="text-4xl font-black" style={{ color: podium ? podium.text : "#cbd5e1" }}>
+                  {row.rank}
+                </span>
+                <span className="min-w-0 truncate text-4xl font-black text-white">{row.username}</span>
+                <span className="text-right">
+                  <CountUp
+                    className="block text-4xl font-black text-white"
+                    value={row.score}
+                    format={(n) => n.toLocaleString("en-US")}
+                  />
+                  {!bracket.complete ? (
+                    <span className="block text-2xl font-semibold text-slate-400">best {row.maxPossible.toLocaleString("en-US")}</span>
+                  ) : null}
+                </span>
+                {podium ? <ShineSweep periodMs={24_000} delayMs={5_000 + index * 2_500} tint={podium.glow} /> : null}
+              </motion.li>
+            );
+          })}
         </ol>
       </section>
 
       <section className="flex w-[52rem] shrink-0 flex-col gap-6">
         {bracket.upset ? (
-          <div className="rounded-3xl border-2 px-8 py-6" style={{ borderColor: `${accent}55`, background: `${accent}14` }}>
+          <motion.div
+            ref={upsetRef}
+            className="relative overflow-hidden rounded-3xl border-2 px-8 py-6"
+            style={{ borderColor: `${accent}55`, background: `${accent}14` }}
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 220, damping: 15 }}
+          >
+            <ShineSweep periodMs={30_000} delayMs={1_200} tint={`${accent}88`} />
             <p className="text-2xl font-black uppercase tracking-[0.2em]" style={{ color: accent }}>
               Upset · {bracket.upset.round}
             </p>
@@ -58,7 +106,7 @@ export function BracketTvScreen({ state, accent }: BracketTvScreenProps) {
             <p className="mt-2 text-3xl font-bold text-slate-300">
               Busted {bracket.upset.busted} of {bracket.upset.of} {bracket.upset.of === 1 ? "bracket" : "brackets"} here
             </p>
-          </div>
+          </motion.div>
         ) : null}
 
         {bracket.games.length > 0 ? (

@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { BrandStage } from "@/components/venue-screen/fx/BrandStage";
+import { ShineSweep } from "@/components/venue-screen/fx/ShineSweep";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -58,14 +60,11 @@ export function TvPairingDisplay({ code, qrValue: _qrValue, phase, qrMatrix, ren
 
   return (
     <div className="relative h-full w-full overflow-hidden" style={{ color: "#f8fafc" }}>
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(1100px 720px at 18% 8%, rgba(6,182,212,0.14), transparent 62%)," +
-            "radial-gradient(900px 640px at 92% 100%, rgba(124,58,237,0.14), transparent 62%)",
-        }}
-      />
+      <BrandStage ambientA="rgba(6,182,212,0.18)" ambientB="rgba(124,58,237,0.18)" />
+      <div className="absolute left-[110px] top-12 size-24 overflow-hidden rounded-2xl">
+        <img src="/brand/web/htc-logo-192.webp" alt="" className="size-full object-contain" />
+        <ShineSweep periodMs={20_000} delayMs={2_500} />
+      </div>
       <div
         className="absolute inset-x-0 top-0"
         style={{ height: 10, background: `linear-gradient(90deg, ${BRAND.cyan}, ${BRAND.blue} 55%, ${BRAND.violet})` }}
@@ -141,7 +140,7 @@ export function TvPairingDisplay({ code, qrValue: _qrValue, phase, qrMatrix, ren
                     }}
                     initial={reduceMotion ? false : { opacity: 0, y: 40, scale: 0.9 }}
                     animate={{ opacity: phase === "expired" ? 0.45 : 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.5, ease: EASE, delay: 0.18 + i * 0.06 }}
+                    transition={{ type: "spring", stiffness: 240, damping: 13, delay: 0.18 + i * 0.07 }}
                   >
                     <span
                       style={{

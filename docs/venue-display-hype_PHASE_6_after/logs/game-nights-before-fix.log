@@ -1,0 +1,12 @@
+{"label":"start","heapMB":4.22,"canvases":1,"nodes":122,"live":1,"fired":0}
+{"label":"after night 1","heapMB":5.98,"canvases":1,"nodes":122,"live":0,"fired":23}
+{"label":"after night 2","heapMB":6.14,"canvases":1,"nodes":121,"live":0,"fired":23}
+{"label":"after night 3","heapMB":6.16,"canvases":1,"nodes":122,"live":0,"fired":23}
+{"label":"idle 2.5 min after games","heapMB":6.3,"canvases":1,"nodes":122,"live":0,"fired":23}
+moments per night [question, reveal, break] / final / [slam, results]:
+{"night":1,"golive":1,"perRound":[[1,1,0],[0,1,1],[0,1,1],[0,1,1],[0,1,1],[0,1,1],[0,1,1],[0,1,1]],"fin":2,"cbs":[[1,1],[1,1],[1,0],[0,0],[0,0],[0,0],[0,0],[0,0]]}
+{"night":2,"golive":0,"perRound":[[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]],"fin":0,"cbs":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]}
+{"night":3,"golive":0,"perRound":[[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]],"fin":0,"cbs":[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]}
+tier changes: [{"atS":195,"tier":"lite","tag":"n1 cb2"},{"atS":196,"tier":"off","tag":"n1 cb2"}]
+errors: 0 []
+done 0

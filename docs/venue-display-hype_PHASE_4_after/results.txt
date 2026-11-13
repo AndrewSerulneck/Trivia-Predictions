@@ -1,0 +1,12 @@
+rest px 58 at load, no burst expected
+slot 0 peak 2552 t 13s
+slot 24 peak 1218 t 53s
+slot 48 peak 1285 t 93s
+slot 72 peak 1152 t 133s
+slot 96 peak 1123 t 173s
+slot 120 peak 1158 t 213s
+bursts min/med/max px 1117 1185 2552 missed 0 of 144
+heap MB start/end 4.5 5.7 { canvases: 1, nodes: 122 }
+drift translate3d(-22.5101px, 15.9874px, 0px) -> translate3d(15.5686px, -8.78405px, 0px)
+reload mid-slot: base 158 peak before boundary 144 peak after boundary 1152
+real-clock errors 0 []

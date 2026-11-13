@@ -1,6 +1,11 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
+import { CountUp } from "@/components/venue-screen/fx/CountUp";
 import { SQUARES_MOMENT_LABELS } from "@/lib/squaresView";
 import { cellOf, type SquaresMoment } from "@/lib/squares";
 import type { VenueScreenState } from "@/lib/venueScreen";
+import { SCREEN_EASE } from "@/lib/venueScreenBrand";
 
 type SquaresTvState = Extract<VenueScreenState, { mode: "squares" }>;
 
@@ -18,6 +23,7 @@ const shortName = (name: string): string => (name.length > MAX_NAME_CHARS ? `${n
 // that is winning right now and who won each moment. Everything arrives in the screen's own poll
 // (lib/squaresTv.ts); this component only draws it.
 export function SquaresTvScreen({ state, accent }: SquaresTvScreenProps) {
+  const reduceMotion = useReducedMotion();
   const { squares } = state;
   const owners = new Map(squares.claims.map((claim) => [claim.cell, claim.username]));
   const winners = new Map(squares.winningCells.map((entry) => [entry.cell, entry.moments]));
@@ -82,12 +88,16 @@ export function SquaresTvScreen({ state, accent }: SquaresTvScreenProps) {
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-6 text-center">
             <div>
               <p className="text-3xl font-black uppercase tracking-[0.18em] text-slate-300">{squares.colTeam.abbreviation}</p>
-              <p className="text-[8rem] font-black leading-none text-white">{hasScore ? score.col : "–"}</p>
+              <p className="text-[8rem] font-black leading-none text-white">
+                {hasScore ? <CountUp value={score.col as number} /> : "–"}
+              </p>
             </div>
             <p className="text-5xl font-black text-slate-500">–</p>
             <div>
               <p className="text-3xl font-black uppercase tracking-[0.18em] text-slate-300">{squares.rowTeam.abbreviation}</p>
-              <p className="text-[8rem] font-black leading-none text-white">{hasScore ? score.row : "–"}</p>
+              <p className="text-[8rem] font-black leading-none text-white">
+                {hasScore ? <CountUp value={score.row as number} /> : "–"}
+              </p>
             </div>
           </div>
           <p className="mt-4 text-center text-3xl font-bold text-slate-300">{isFinal ? "Final" : (score?.status ?? "Waiting for kickoff")}</p>
@@ -103,8 +113,14 @@ export function SquaresTvScreen({ state, accent }: SquaresTvScreenProps) {
         ) : null}
 
         <section className="flex flex-col gap-3">
-          {squares.moments.map((moment) => (
-            <div key={moment.moment} className="flex items-center justify-between gap-6 rounded-2xl bg-white/[0.06] px-8 py-4">
+          {squares.moments.map((moment, index) => (
+            <motion.div
+              key={moment.moment}
+              className="flex items-center justify-between gap-6 rounded-2xl bg-white/[0.06] px-8 py-4"
+              initial={reduceMotion ? false : { opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, ease: SCREEN_EASE, delay: 0.25 + index * 0.1 }}
+            >
               <p className="text-4xl font-black text-white">{SQUARES_MOMENT_LABELS[moment.moment]}</p>
               <p className="min-w-0 truncate text-4xl font-bold text-amber-200">
                 {moment.state === "won" && moment.winner
@@ -113,7 +129,7 @@ export function SquaresTvScreen({ state, accent }: SquaresTvScreenProps) {
                     ? "No winner here"
                     : `${moment.points} pts`}
               </p>
-            </div>
+            </motion.div>
           ))}
         </section>
       </div>

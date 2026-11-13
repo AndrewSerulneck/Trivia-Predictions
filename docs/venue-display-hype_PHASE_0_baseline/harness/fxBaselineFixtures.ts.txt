@@ -1,0 +1,145 @@
+// Scratchpad-only fixtures for the Phase 0 baseline captures. Not in the repo.
+import type { VenueScreenState, VenueScreenVenue, ScreenLeaderboardEntry } from "@/lib/venueScreen";
+
+const venue: VenueScreenVenue = { id: "fx-venue", name: "The Hightop Tavern", displayName: null };
+const board: ScreenLeaderboardEntry[] = [
+  { rank: 1, username: "QuizWhiz", points: 4200 },
+  { rank: 2, username: "TriviaTom", points: 3900 },
+  { rank: 3, username: "BarFly22", points: 3650 },
+  { rank: 4, username: "NerdAlert", points: 3100 },
+  { rank: 5, username: "HoppyHour", points: 2800 },
+  { rank: 6, username: "PubMaster", points: 2550 },
+  { rank: 7, username: "LastCall", points: 2100 },
+  { rank: 8, username: "Pinty", points: 1900 },
+];
+
+const lt = (nowMs: number, phase: "question" | "reveal" | "intermission" | "final"): VenueScreenState => ({
+  ok: true,
+  mode: "live-trivia",
+  venue,
+  liveTrivia: {
+    phase,
+    gameId: "fx-schedule:2026-11-12",
+    roundNumber: 3,
+    totalRounds: 6,
+    category: "Movies",
+    question: phase === "question" || phase === "reveal" ? "Which 1993 film features a T. rex chasing a Jeep through a park?" : null,
+    correctAnswer: phase === "reveal" ? "Jurassic Park" : null,
+    secondsRemaining: 42,
+    revealEndsAt: phase === "reveal" ? new Date(nowMs + 9_000).toISOString() : null,
+    leaderboard: phase === "intermission" || phase === "final" || phase === "reveal" ? board : null,
+  },
+  categoryBlitz: null,
+  idle: null,
+  updatedAt: nowMs,
+});
+
+const cb = (nowMs: number, phase: "round" | "intermission" | "results"): VenueScreenState => ({
+  ok: true,
+  mode: "category-blitz",
+  venue,
+  liveTrivia: null,
+  categoryBlitz: {
+    phase,
+    roundId: "fx-round-7",
+    letter: "M",
+    categories: ["Movies", "Things in a Kitchen", "Mountains", "Mascots", "Famous Musicians", "Cocktails"],
+    secondsRemaining: 51,
+    leaderboard: phase === "round" ? null : board,
+  },
+  idle: null,
+  updatedAt: nowMs,
+});
+
+const idle = (nowMs: number, games: 0 | 1 | 2): VenueScreenState => ({
+  ok: true,
+  mode: "idle",
+  venue,
+  liveTrivia: null,
+  categoryBlitz: null,
+  idle: {
+    nextLiveTrivia:
+      games >= 1
+        ? { startsAt: new Date(nowMs + 45 * 60_000).toISOString(), title: "Thursday Trivia", firstRoundCategory: "History", recurringDays: ["thu"] }
+        : null,
+    nextCategoryBlitz: games >= 2 ? { startsAt: new Date(nowMs + 15 * 60_000).toISOString(), recurringDays: ["thu"] } : null,
+    sponsorSlots: [],
+  },
+  updatedAt: nowMs,
+});
+
+const squares = (nowMs: number): VenueScreenState => ({
+  ok: true,
+  mode: "squares",
+  venue,
+  liveTrivia: null,
+  categoryBlitz: null,
+  idle: null,
+  squares: {
+    eventId: "fx-sb",
+    phase: "drawn",
+    colTeam: { abbreviation: "KC", name: "Kansas City Chiefs" },
+    rowTeam: { abbreviation: "SEA", name: "Seattle Seahawks" },
+    colDigits: [3, 7, 0, 9, 1, 4, 8, 2, 6, 5],
+    rowDigits: [6, 2, 9, 0, 5, 1, 3, 8, 4, 7],
+    liveScore: { col: 17, row: 14, status: "Q3 8:12" },
+    leadingCell: 37,
+    claims: board.map((b, i) => ({ cell: i * 9 + 1, username: b.username })),
+    winningCells: [{ cell: 10, moments: ["q1"] }],
+    moments: [
+      { moment: "q1", label: "Q1", points: 50, state: "won", winner: { username: "QuizWhiz" } },
+      { moment: "half", label: "Half", points: 100, state: "nobody", winner: null },
+      { moment: "q3", label: "Q3", points: 50, state: "pending", winner: null },
+      { moment: "final", label: "Final", points: 200, state: "pending", winner: null },
+    ],
+  },
+  updatedAt: nowMs,
+});
+
+const bracket = (nowMs: number): VenueScreenState => ({
+  ok: true,
+  mode: "bracket",
+  venue,
+  liveTrivia: null,
+  categoryBlitz: null,
+  idle: null,
+  bracket: {
+    title: "Men's bracket 2027",
+    key: "fx-t:main",
+    complete: false,
+    entries: 24,
+    standings: board.map((b, i) => ({ rank: b.rank, username: b.username, score: 120 - i * 10, maxPossible: 1500 - i * 60 })),
+    games: [
+      { round: "Round of 32", tipAt: new Date(nowMs + 3_600_000).toISOString(), status: null, home: { name: "Duke", seed: 1, score: null }, away: { name: "Baylor", seed: 8, score: null }, winnerSide: null },
+      { round: "Round of 32", tipAt: new Date(nowMs - 1_800_000).toISOString(), status: "2nd 4:10", home: { name: "Kansas", seed: 2, score: 61 }, away: { name: "Iowa", seed: 7, score: 58 }, winnerSide: null },
+      { round: "Round of 32", tipAt: new Date(nowMs - 9_000_000).toISOString(), status: "Final", home: { name: "Purdue", seed: 3, score: 70 }, away: { name: "Drake", seed: 11, score: 74 }, winnerSide: "away" },
+    ],
+    upset: { round: "Round of 32", winner: { name: "Drake", seed: 11, score: 74 }, loser: { name: "Purdue", seed: 3, score: 70 }, busted: 17, of: 24 },
+  },
+  updatedAt: nowMs,
+});
+
+export const FX_BASELINE_FIXTURES = [
+  "idle-0", "idle-1", "idle-2", "lt-question", "lt-reveal", "lt-intermission", "lt-final",
+  "cb-round", "cb-intermission", "cb-results", "squares", "bracket", "golive",
+] as const;
+
+/** `golive`: the page starts idle; the state route answers with a Live Trivia question (first poll flips it). */
+export const fxBaselineState = (name: string, nowMs: number, forPoll: boolean): VenueScreenState | null => {
+  switch (name) {
+    case "idle-0": return idle(nowMs, 0);
+    case "idle-1": return idle(nowMs, 1);
+    case "idle-2": return idle(nowMs, 2);
+    case "lt-question": return lt(nowMs, "question");
+    case "lt-reveal": return lt(nowMs, "reveal");
+    case "lt-intermission": return lt(nowMs, "intermission");
+    case "lt-final": return lt(nowMs, "final");
+    case "cb-round": return cb(nowMs, "round");
+    case "cb-intermission": return cb(nowMs, "intermission");
+    case "cb-results": return cb(nowMs, "results");
+    case "squares": return squares(nowMs);
+    case "bracket": return bracket(nowMs);
+    case "golive": return forPoll ? lt(nowMs, "question") : idle(nowMs, 2);
+    default: return null;
+  }
+};

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { BracketTvScreen } from "@/components/venue-screen/BracketTvScreen";
 import { CategoryBlitzIntermissionScreen } from "@/components/venue-screen/CategoryBlitzIntermissionScreen";
 import { CategoryBlitzScreen } from "@/components/venue-screen/CategoryBlitzScreen";
@@ -8,13 +9,19 @@ import { IdleVenueScreen } from "@/components/venue-screen/IdleVenueScreen";
 import { LiveTriviaIntermissionScreen } from "@/components/venue-screen/LiveTriviaIntermissionScreen";
 import { LiveTriviaRevealScreen } from "@/components/venue-screen/LiveTriviaRevealScreen";
 import { LiveTriviaScreen } from "@/components/venue-screen/LiveTriviaScreen";
+import { BrandStage } from "@/components/venue-screen/fx/BrandStage";
+import { FxProvider } from "@/components/venue-screen/fx/FxCanvas";
+import { StageTwinkles } from "@/components/venue-screen/fx/StageTwinkles";
+import { ShineSweep } from "@/components/venue-screen/fx/ShineSweep";
 import { SquaresTvScreen } from "@/components/venue-screen/SquaresTvScreen";
 import { ScreenTransition } from "@/components/venue-screen/ScreenTransition";
 import { TvGoLiveTakeover, type GameLabel } from "@/components/venue-screen/TvGoLiveTakeover";
+import { TvIntroStinger } from "@/components/venue-screen/TvIntroStinger";
 import { VenueScreenStatus } from "@/components/venue-screen/VenueScreenStatus";
 import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
-import { getVenueScreenTheme, type VenueScreenMode } from "@/lib/venueScreenBrand";
+import { getVenueScreenTheme, type VenueScreenMode, type VenueScreenTheme } from "@/lib/venueScreenBrand";
 import type { VenueScreenState } from "@/lib/venueScreen";
+import { useKeepScreenAwake } from "@/lib/useKeepScreenAwake";
 import {
   getVenueScreenBurnInTransform,
   getVenueScreenPollIntervalMs,
@@ -26,6 +33,8 @@ type VenueScreenClientProps = {
   venueId: string;
   initialState: VenueScreenState;
   debugMode?: VenueScreenDebugMode | null;
+  /** Play the intro stinger on open. False only for the dashboard thumbnail (`intro=0`). */
+  intro?: boolean;
 };
 
 const VENUE_SCREEN_FETCH_TIMEOUT_MS = 10_000;
@@ -98,7 +107,9 @@ function ViewportFitCanvas({ children }: { children: ReactNode }) {
   );
 }
 
-function VenueTitle({ state, accent }: { state: VenueScreenState; accent: string }) {
+function VenueTitle({ state, theme }: { state: VenueScreenState; theme: VenueScreenTheme }) {
+  const reduceMotion = useReducedMotion();
+  const { accent, accentSoft } = theme;
   const modeLabel =
     state.mode === "live-trivia"
       ? "Live Trivia"
@@ -110,25 +121,60 @@ function VenueTitle({ state, accent }: { state: VenueScreenState; accent: string
             ? BRACKET_GAME_NAME
             : state.mode;
   return (
-    <header className="flex w-full items-center justify-between gap-8 px-8 py-6 lg:px-10">
-      <div className="min-w-0">
-        <p
-          className="text-xl font-black uppercase tracking-[0.24em] lg:text-2xl"
-          style={{ color: accent, textShadow: `0 0 26px ${accent}66` }}
-        >
-          Hightop Challenge
-        </p>
-        <h1 className="mt-2 truncate text-5xl font-black leading-none text-white lg:text-6xl">
-          {state.venue.displayName ?? state.venue.name}
-        </h1>
+    <>
+      <header className="flex w-full items-center justify-between gap-8 px-8 py-6 lg:px-10">
+        <div className="flex min-w-0 items-center gap-6">
+          <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl">
+            <img src="/brand/web/htc-logo-192.webp" alt="" className="size-full object-contain" />
+            <ShineSweep periodMs={45_000} delayMs={6_000} />
+          </div>
+          <div className="min-w-0">
+            <p
+              className="bg-clip-text text-xl font-black uppercase tracking-[0.24em] text-transparent lg:text-2xl"
+              style={{ backgroundImage: `linear-gradient(90deg, ${accent}, ${accentSoft})` }}
+            >
+              Hightop Challenge
+            </p>
+            <h1
+              className="-mx-12 -mb-6 -mt-4 truncate px-12 py-6 text-5xl font-black leading-none text-white lg:text-6xl"
+              style={{ textShadow: `0 0 44px ${accent}55` }}
+            >
+              {state.venue.displayName ?? state.venue.name}
+            </h1>
+          </div>
+        </div>
+        <div className="relative shrink-0">
+          <motion.div
+            aria-hidden
+            className="absolute -inset-2 rounded-3xl"
+            style={{ background: `radial-gradient(closest-side, ${accent}66, transparent)` }}
+            animate={reduceMotion ? undefined : { opacity: [0.35, 0.85, 0.35] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <div
+            className="relative rounded-2xl p-[3px]"
+            style={{ backgroundImage: `linear-gradient(135deg, ${accent}, ${accentSoft})` }}
+          >
+            <div className="rounded-[0.85rem] bg-slate-950/90 px-5 py-3 text-xl font-black uppercase tracking-[0.12em] text-slate-50 lg:text-2xl">
+              {modeLabel}
+            </div>
+          </div>
+        </div>
+      </header>
+      <div aria-hidden className="relative mx-8 h-1 shrink-0 overflow-hidden rounded-full lg:mx-10">
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{ backgroundImage: `linear-gradient(90deg, transparent, ${accent}, ${accentSoft}, transparent)` }}
+        />
+        {/* Same markup under reduced motion (parked off the left edge) so hydration matches. */}
+        <motion.div
+          className="absolute inset-y-0 left-0 w-1/6 will-change-transform"
+          style={{ backgroundImage: `linear-gradient(90deg, transparent, ${accent}, transparent)`, x: "-100%" }}
+          animate={reduceMotion ? undefined : { x: ["-100%", "600%"] }}
+          transition={{ duration: 3.2, repeat: Infinity, repeatDelay: 9, ease: "easeInOut" }}
+        />
       </div>
-      <div
-        className="shrink-0 rounded-2xl border px-5 py-3 text-xl font-black uppercase tracking-[0.12em] lg:text-2xl"
-        style={{ borderColor: `${accent}44`, background: `${accent}1f`, color: "#f8fafc" }}
-      >
-        {modeLabel}
-      </div>
-    </header>
+    </>
   );
 }
 
@@ -195,8 +241,13 @@ function getRefreshErrorMessage(error: unknown): string {
   return "Unable to refresh venue screen. Keeping the last venue screen live.";
 }
 
-export function VenueScreenClient({ venueId, initialState, debugMode = null }: VenueScreenClientProps) {
+export function VenueScreenClient({ venueId, initialState, debugMode = null, intro = true }: VenueScreenClientProps) {
   const [state, setState] = useState(initialState);
+  // The intro stinger plays over the screen on every open (docs/venue-display-hype-and-intro-stinger-plan.md
+  // §8); the poll loop runs underneath. A go-live takeover that lands meanwhile waits for it.
+  const [introPlaying, setIntroPlaying] = useState(intro);
+  const endIntro = useCallback(() => setIntroPlaying(false), []);
+  useKeepScreenAwake();
   const [error, setError] = useState<string | null>(null);
   const [failureCount, setFailureCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -310,63 +361,70 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null }: V
       ? getVenueScreenBurnInTransform(nowMs) : "translate3d(0, 0, 0)";
 
   return (
-    <ViewportFitCanvas>
-      {/* Sizing is relative to the fixed canvas above (h-full/w-full), not the
-          raw viewport — ViewportFitCanvas handles fitting the canvas to the
-          actual device. The `min-h-0` further down the flex chain is load
-          bearing: without it a flex item's default `min-height: auto` lets the
-          column grow past the canvas instead of overflowing, which is what
-          AutoScaleToFit needs to see. */}
-      <main className="h-full w-full overflow-hidden bg-slate-950 text-white">
-        <div className="relative flex h-full flex-col" style={{ background: theme.stageGradient }}>
-          <div
-            className="flex h-full flex-col will-change-transform"
-            style={{ transform: screenTransform }}
-          >
-            {state.mode !== "idle" ? <VenueTitle state={state} accent={theme.accent} /> : null}
-            {state.mode === "live-trivia" || state.mode === "category-blitz" ? (
-              <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
-                {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} nowMs={nowMs} /> : null}
-                {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} nowMs={nowMs} /> : null}
-              </ScreenTransition>
-            ) : null}
-            {state.mode === "squares" ? (
-              <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
-                <SquaresTvScreen state={state} accent={theme.accent} />
-              </ScreenTransition>
-            ) : null}
-            {state.mode === "bracket" ? (
-              <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
-                <BracketTvScreen state={state} accent={theme.accent} />
-              </ScreenTransition>
-            ) : null}
-            {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} /> : null}
-          </div>
-          {liveTakeover ? (
-            <TvGoLiveTakeover
-              key={liveTakeover.key}
-              gameLabel={liveTakeover.gameLabel}
-              venueName={state.venue.displayName ?? state.venue.name}
-              onComplete={() => setLiveTakeover(null)}
-            />
-          ) : null}
-          {error || debugMode ? (
-            <VenueScreenStatus
-              updatedAt={state.updatedAt}
-              nowMs={nowMs}
-              error={error}
-              failureCount={failureCount}
-              isRefreshing={isRefreshing}
-              debugMode={debugMode}
-            />
-          ) : null}
-          {error ? (
-            <div className="fixed bottom-5 right-5 z-30 max-w-[min(42rem,calc(100vw-2.5rem))] rounded-lg border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-lg font-bold text-amber-100">
-              {error}
+    <FxProvider armed={!introPlaying}>
+      <ViewportFitCanvas>
+        {/* Sizing is relative to the fixed canvas above (h-full/w-full), not the
+            raw viewport — ViewportFitCanvas handles fitting the canvas to the
+            actual device. The `min-h-0` further down the flex chain is load
+            bearing: without it a flex item's default `min-height: auto` lets the
+            column grow past the canvas instead of overflowing, which is what
+            AutoScaleToFit needs to see. */}
+        <main className="h-full w-full overflow-hidden bg-slate-950 text-white">
+          <div className="relative flex h-full flex-col" style={{ background: theme.stageGradient }}>
+            <BrandStage ambientA={theme.ambientA} ambientB={theme.ambientB} />
+            {introPlaying ? null : <StageTwinkles />}
+            <div
+              className="flex h-full flex-col will-change-transform"
+              style={{ transform: screenTransform }}
+            >
+              {state.mode !== "idle" ? <VenueTitle state={state} theme={theme} /> : null}
+              {state.mode === "live-trivia" || state.mode === "category-blitz" ? (
+                <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
+                  {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} nowMs={nowMs} /> : null}
+                  {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} nowMs={nowMs} /> : null}
+                </ScreenTransition>
+              ) : null}
+              {state.mode === "squares" ? (
+                <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
+                  <SquaresTvScreen state={state} accent={theme.accent} />
+                </ScreenTransition>
+              ) : null}
+              {state.mode === "bracket" ? (
+                <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
+                  <BracketTvScreen state={state} accent={theme.accent} />
+                </ScreenTransition>
+              ) : null}
+              {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} /> : null}
             </div>
-          ) : null}
-        </div>
-      </main>
-    </ViewportFitCanvas>
+            {liveTakeover && !introPlaying ? (
+              <TvGoLiveTakeover
+                key={liveTakeover.key}
+                momentKey={liveTakeover.key}
+                gameLabel={liveTakeover.gameLabel}
+                venueName={state.venue.displayName ?? state.venue.name}
+                onComplete={() => setLiveTakeover(null)}
+              />
+            ) : null}
+            {error || debugMode ? (
+              <VenueScreenStatus
+                updatedAt={state.updatedAt}
+                nowMs={nowMs}
+                error={error}
+                failureCount={failureCount}
+                isRefreshing={isRefreshing}
+                debugMode={debugMode}
+              />
+            ) : null}
+            {error ? (
+              <div className="fixed bottom-5 right-5 z-30 max-w-[min(42rem,calc(100vw-2.5rem))] rounded-lg border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-lg font-bold text-amber-100">
+                {error}
+              </div>
+            ) : null}
+          </div>
+        </main>
+      </ViewportFitCanvas>
+      {/* Outside the scaled canvas: a fixed element inside a transformed parent isn't viewport-fixed. */}
+      {introPlaying ? <TvIntroStinger onDone={endIntro} /> : null}
+    </FxProvider>
   );
 }

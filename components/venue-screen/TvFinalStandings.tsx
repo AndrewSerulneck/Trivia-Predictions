@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
+import { stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE, getPodiumAccent } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -40,26 +42,6 @@ const CONFETTI_COLORS = [
   SCREEN_COLORS.amber500,
 ];
 
-/* Deterministic randomness so a remount reproduces the same burst
-   rather than reshuffling the screen in front of the room. */
-function hash(str: string) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-function mulberry32(seed: number) {
-  return () => {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 // Bar height/background stay local layout choices (per-rank gradient
 // treatment, not a flat accent color); accent + border colors come from the
 // shared getPodiumAccent() (lib/venueScreenBrand.ts) instead of a hand-rolled
@@ -72,6 +54,7 @@ const PODIUM_BAR_STYLE = [
 
 export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp = 5 }: TvFinalStandingsProps) {
   const reduceMotion = useReducedMotion();
+  const hideMotionOnly = useReducedMotionAfterHydration();
 
   const ranked = useMemo(() => [...leaderboard].sort((a, b) => b.score - a.score), [leaderboard]);
   const champion = ranked[0];
@@ -82,28 +65,16 @@ export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp 
      same final board changes nothing; a genuine new game replays it. */
   const revealKey = `${gameId ?? champion?.id ?? "final"}`;
 
-  const confetti = useMemo(() => {
-    if (reduceMotion) return [];
-    const rnd = mulberry32(hash(revealKey));
-    return Array.from({ length: 72 }).map((_, i) => {
-      const angle = (rnd() - 0.5) * Math.PI * 1.5;
-      const power = 340 + rnd() * 620;
-      return {
-        id: i,
-        color: CONFETTI_COLORS[Math.floor(rnd() * CONFETTI_COLORS.length)],
-        w: 10 + rnd() * 16,
-        h: 14 + rnd() * 22,
-        xMid: Math.sin(angle) * power * 0.55,
-        xEnd: Math.sin(angle) * power,
-        peak: -(300 + rnd() * 360),
-        fall: 420 + rnd() * 520,
-        rot: (rnd() - 0.5) * 900,
-        delay: 0.42 + rnd() * 0.5,
-        duration: 2.4 + rnd() * 1.5,
-        round: rnd() > 0.72,
-      };
-    });
-  }, [revealKey, reduceMotion]);
+  // The champion moment: the stinger's coin explosion around the crown, then confetti raining in the game colours.
+  // Once per game, only while the room is watching (a reload on the final shows the settled podium).
+  const moment = useFxMoment(`${revealKey}:final`);
+  const crownRef = useRef<HTMLDivElement>(null);
+  useFxAt(moment, 600, (fx) => {
+    fx.shower({ key: `${revealKey}:final:shower`, kind: "mixed", colors: CONFETTI_COLORS, count: 64, duration: 3.6 });
+  });
+  useFxAt(moment, 1000, (fx) => {
+    fx.burst({ key: `${revealKey}:final:burst`, at: crownRef.current, size: 520 * stageScale(), coins: 22, sparks: 34, shockwave: true });
+  });
 
   /* Podium bars settle before the runner-up strip arrives. */
   const t = { crown: 0.9, bars: [0.62, 0.28, 0.44], strip: 1.55 };
@@ -132,43 +103,6 @@ export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp 
           background: `linear-gradient(90deg, ${SCREEN_COLORS.cyan500}, ${SCREEN_COLORS.blue600} 52%, ${SCREEN_COLORS.violet600})`,
         }}
       />
-
-      {/* Confetti: one burst from above the podium, then it settles out.
-          Anchored at the panel root, OUTSIDE AutoScaleToFit's measured content
-          — each piece translates up to ~940px down and ~960px sideways, so
-          measuring it would swing the auto-fit scale for the few seconds it is
-          in flight. The root's overflow-hidden clips it exactly as before. */}
-      {confetti.length > 0 && (
-        <div className="pointer-events-none absolute" style={{ left: "50%", top: 300, width: 0, height: 0 }}>
-          {confetti.map((p) => (
-            <motion.div
-              key={p.id}
-              className="absolute"
-              style={{
-                width: p.w,
-                height: p.round ? p.w : p.h,
-                borderRadius: p.round ? 999 : 3,
-                background: p.color,
-                boxShadow: `0 0 14px ${p.color}66`,
-              }}
-              initial={{ x: 0, y: 0, opacity: 0, rotate: 0 }}
-              animate={{
-                x: [0, p.xMid, p.xEnd],
-                y: [0, p.peak, p.fall],
-                rotate: [0, p.rot],
-                opacity: [0, 1, 1, 0],
-              }}
-              transition={{
-                duration: p.duration,
-                delay: p.delay,
-                ease: [0.2, 0.7, 0.4, 1],
-                times: [0, 0.34, 1],
-                opacity: { duration: p.duration, delay: p.delay, times: [0, 0.06, 0.72, 1] },
-              }}
-            />
-          ))}
-        </div>
-      )}
 
       <AutoScaleToFit className="relative">
         {/* ---- Header ---- */}
@@ -221,7 +155,7 @@ export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp 
         {/* ---- Podium ---- */}
         <div className="relative flex items-end justify-center" style={{ gap: 40, marginTop: 24, height: 520 }}>
           {/* Spotlight cone behind first place */}
-          {!reduceMotion && (
+          {!hideMotionOnly && (
             <motion.div
               className="pointer-events-none absolute"
               style={{
@@ -253,6 +187,7 @@ export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp 
                 {/* Crown */}
                 {first && (
                   <motion.div
+                    ref={crownRef}
                     initial={reduceMotion ? false : { opacity: 0, y: -50, scale: 0.6, rotate: -12 }}
                     animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
                     transition={{ duration: 0.7, ease: EASE, delay: t.crown }}

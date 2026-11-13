@@ -1,0 +1,20 @@
+import { chromium } from "playwright";
+const browser = await chromium.launch();
+const out = {};
+for (const [label, rate, gpu] of [["x1", 1], ["x6", 6]]) {
+  const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+  const page = await ctx.newPage();
+  const cdp = await ctx.newCDPSession(page);
+  await page.goto("http://127.0.0.1:3157/tv/fx-baseline/idle-2?intro=0", { waitUntil: "load" });
+  await page.waitForTimeout(1500); // warm caches: logo, fonts, JS
+  await page.goto("http://127.0.0.1:3157/tv/fx-baseline/idle-2?intro=1", { waitUntil: "load" });
+  await page.waitForFunction(() => { const c = document.querySelector('[data-testid="tv-intro-stinger"] canvas'); return c && c.width > 1; }, null, { timeout: 5000, polling: 10 });
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate });
+  const d = await page.evaluate(() => new Promise((res) => { const d = []; let last = performance.now(); const f = (now) => { d.push(now - last); last = now; if (document.querySelector('[data-testid="tv-intro-stinger"]')) requestAnimationFrame(f); else res(d.slice(1)); }; requestAnimationFrame(f); }));
+  const mean = d.reduce((a, b) => a + b, 0) / d.length;
+  const s = [...d].sort((a, b) => a - b);
+  out[label] = { frames: d.length, meanMs: +mean.toFixed(1), p95Ms: +s[Math.floor(0.95 * s.length)].toFixed(1), fps: +(1000 / mean).toFixed(1) };
+  await ctx.close();
+}
+console.log(JSON.stringify(out));
+await browser.close();

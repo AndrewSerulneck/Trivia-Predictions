@@ -1,0 +1,51 @@
+// Phase 6: stinger sound. (1) autoplay blocked → silent, no console error, screen fine.
+// (2) autoplay allowed → both sounds start (boom at once, shine at ~2.15 s). (3) intro=0 → no audio at all.
+// (4) Expand-style iframe at phone portrait → stinger + sound inside the iframe, no errors.
+import { chromium } from "playwright";
+import fs from "node:fs";
+
+const BASE = process.env.BASE ?? "http://127.0.0.1:3181";
+const OUT = process.argv[2] ?? "sound";
+fs.mkdirSync(OUT, { recursive: true });
+// Record every HTMLMediaElement.play() call and its outcome, in every frame.
+const INIT = () => {
+  window.__plays = [];
+  const orig = HTMLMediaElement.prototype.play;
+  HTMLMediaElement.prototype.play = function (...a) {
+    const rec = { src: this.currentSrc || this.src, at: Math.round(performance.now()), result: "pending" };
+    window.__plays.push(rec);
+    const pr = orig.apply(this, a);
+    pr.then(() => { rec.result = "played"; }, (e) => { rec.result = e.name; });
+    return pr;
+  };
+};
+const run = async (label, policy, url, viewport = { width: 1920, height: 1080 }, frame = false) => {
+  const b = await chromium.launch({ args: [`--autoplay-policy=${policy}`] });
+  const ctx = await b.newContext({ viewport });
+  await ctx.addInitScript(INIT);
+  const p = await ctx.newPage();
+  const errs = [];
+  p.on("console", (m) => { if (m.type() === "error") errs.push(m.text().slice(0, 120)); });
+  p.on("pageerror", (e) => errs.push(e.message.slice(0, 120)));
+  if (frame) {
+    await p.route(`${BASE}/__expand`, (r) => r.fulfill({ contentType: "text/html", body:
+      `<!doctype html><body style="margin:0;background:#000"><iframe src="${url}" allow="autoplay; fullscreen" style="position:fixed;inset:0;width:100%;height:100%;border:0"></iframe></body>` }));
+    await p.goto(`${BASE}/__expand`, { waitUntil: "load" });
+  } else await p.goto(url, { waitUntil: "load" });
+  await p.waitForTimeout(1200);
+  await p.screenshot({ path: `${OUT}/${label}-1.2s.jpg`, type: "jpeg", quality: 80 });
+  await p.waitForTimeout(4500);
+  await p.screenshot({ path: `${OUT}/${label}-5.7s.jpg`, type: "jpeg", quality: 80 });
+  const plays = [];
+  for (const f of p.frames()) { try { plays.push(...(await f.evaluate(() => window.__plays ?? []))); } catch { /* detached */ } }
+  const audio = plays.filter((x) => /m4a/.test(x.src)).map((x) => ({ file: x.src.split("/").pop(), atMs: x.at, result: x.result }));
+  console.log(label, JSON.stringify({ audio, errors: errs }));
+  await b.close();
+};
+
+const U = `${BASE}/tv/fx-baseline/lt-question`;
+await run("blocked", "document-user-activation-required", `${U}?intro=1`);
+await run("allowed", "no-user-gesture-required", `${U}?intro=1`);
+await run("intro0", "no-user-gesture-required", `${U}?intro=0`);
+await run("expand-phone", "no-user-gesture-required", `${U}?intro=1`, { width: 390, height: 844 }, true);
+await run("expand-phone-blocked", "document-user-activation-required", `${U}?intro=1`, { width: 390, height: 844 }, true);

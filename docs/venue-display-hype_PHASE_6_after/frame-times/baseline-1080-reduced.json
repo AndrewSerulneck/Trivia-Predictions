@@ -1,0 +1,354 @@
+{
+  "capturedAt": "2026-11-12T20:34:05.269Z",
+  "base": "git HEAD 4b4cc05f (baseline)",
+  "viewport": "1920x1080 @1x reduced-motion",
+  "browser": "Playwright Chromium 149.0.7827.55 headless",
+  "throttle": "CPU ×6 (CDP Emulation.setCPUThrottlingRate)",
+  "window": "5000 ms of rAF deltas",
+  "states": {
+    "idle-0": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 8.9,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "idle-1": {
+      "unthrottled": {
+        "frames": 240,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 8.8,
+        "maxMs": 9.3,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "idle-2": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 598,
+        "meanMs": 8.4,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 16.9,
+        "fps": 119.4,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "lt-question": {
+      "unthrottled": {
+        "frames": 240,
+        "meanMs": 8.4,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 16.7,
+        "fps": 119.5,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 600,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.3,
+        "maxMs": 12.6,
+        "fps": 119.8,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "lt-reveal": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.1,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "lt-intermission": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.1,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "lt-final": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 8.7,
+        "maxMs": 9.3,
+        "fps": 119.9,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 119.9,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "cb-round": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 8.7,
+        "maxMs": 9.3,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "cb-intermission": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 8.5,
+        "maxMs": 9.3,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "cb-results": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.1,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "elementsAddedOverMs": {
+        "ms": 5000,
+        "count": 0
+      }
+    },
+    "squares": {
+      "unthrottled": {
+        "frames": 240,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9,
+        "maxMs": 9.3,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 600,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "bracket": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 8.9,
+        "maxMs": 9.3,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    },
+    "golive-takeover": {
+      "throttled": {
+        "frames": 281,
+        "meanMs": 9,
+        "p50Ms": 8.3,
+        "p95Ms": 16.5,
+        "maxMs": 41.8,
+        "fps": 110.9,
+        "pctOver33": 0.4,
+        "pctOver50": 0
+      }
+    },
+    "intro-stinger": {
+      "throttled": {
+        "frames": 189,
+        "meanMs": 24,
+        "p50Ms": 24.9,
+        "p95Ms": 34.1,
+        "maxMs": 175,
+        "fps": 41.6,
+        "pctOver33": 6.3,
+        "pctOver50": 2.1
+      }
+    },
+    "tv-pairing": {
+      "unthrottled": {
+        "frames": 241,
+        "meanMs": 8.4,
+        "p50Ms": 8.3,
+        "p95Ms": 8.9,
+        "maxMs": 16.7,
+        "fps": 119.5,
+        "pctOver33": 0,
+        "pctOver50": 0
+      },
+      "throttled": {
+        "frames": 601,
+        "meanMs": 8.3,
+        "p50Ms": 8.3,
+        "p95Ms": 9.2,
+        "maxMs": 9.4,
+        "fps": 120,
+        "pctOver33": 0,
+        "pctOver50": 0
+      }
+    }
+  },
+  "consoleErrors": [
+    "lt-question: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "lt-intermission: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "lt-final: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "cb-round: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  ]
+}

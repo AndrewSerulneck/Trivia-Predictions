@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
+import { EdgeGlow } from "@/components/venue-screen/fx/MomentOverlays";
+import { stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -83,6 +85,12 @@ export function TvLetterReveal({
   const reduceMotion = useReducedMotion();
 
   const revealKey = `${roundId ?? ""}::${letter}`;
+  // The slam moment (rings + sparks at the slam frame): once per round, only while the room is watching.
+  const slam = useFxMoment(roundId != null ? String(roundId) : null);
+  const impactRef = useRef<HTMLDivElement>(null);
+  useFxAt(slam, 320, (fx) => {
+    fx.burst({ key: `${roundId}:burst`, at: impactRef.current, size: 520 * stageScale(), coins: 0, sparks: 34, sparkColors: ["#f0abfc", "#e879f9", "#c4b5fd", "#fdf4ff"] });
+  });
   const glyph = (letter ?? "").trim().slice(0, 1).toUpperCase();
 
   /* Countdown interpolated purely from props (see file header). */
@@ -124,53 +132,31 @@ export function TvLetterReveal({
         style={{ height: 10, background: `linear-gradient(90deg, ${BRAND.deep}, ${BRAND.mid} 60%, ${BRAND.glow})` }}
       />
 
-      {/* ---- Impact burst: fires at screen centre on the slam, then gone ---- */}
-      {!reduceMotion && (
-        <div className="pointer-events-none absolute" style={{ left: CENTER.x, top: CENTER.y, width: 0, height: 0, zIndex: 30 }}>
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              style={{
-                left: -420,
-                top: -420,
-                width: 840,
-                height: 840,
-                borderRadius: 999,
-                border: `${6 - i}px solid ${BRAND.light}`,
-              }}
-              initial={{ scale: 0.12, opacity: 0 }}
-              animate={{ scale: [0.12, 1.15 + i * 0.22], opacity: [0.85, 0] }}
-              transition={{ duration: 0.9 + i * 0.16, ease: "easeOut", delay: 0.3 + i * 0.07 }}
-            />
-          ))}
-          {Array.from({ length: 14 }).map((_, i) => {
-            const a = (i / 14) * Math.PI * 2;
-            return (
+      {/* ---- Impact: shockwave rings at screen centre on the slam (sparks come from the fx canvas) ---- */}
+      <div ref={impactRef} className="pointer-events-none absolute" style={{ left: CENTER.x, top: CENTER.y, width: 0, height: 0, zIndex: 30 }}>
+        {slam && !reduceMotion
+          ? [0, 1, 2].map((i) => (
               <motion.div
-                key={`spoke-${i}`}
+                key={i}
                 className="absolute"
                 style={{
-                  width: 5,
-                  height: 150,
+                  left: -420,
+                  top: -420,
+                  width: 840,
+                  height: 840,
                   borderRadius: 999,
-                  background: `linear-gradient(to bottom, ${BRAND.glow}, transparent)`,
-                  transformOrigin: "top center",
-                  rotate: `${(a * 180) / Math.PI}deg`,
+                  border: `${6 - i}px solid ${BRAND.light}`,
                 }}
-                initial={{ x: 0, y: 0, opacity: 0, scaleY: 0.3 }}
-                animate={{
-                  x: Math.sin(a) * 460,
-                  y: -Math.cos(a) * 460,
-                  opacity: [0, 0.9, 0],
-                  scaleY: [0.3, 1.6, 0.4],
-                }}
-                transition={{ duration: 0.78, ease: "easeOut", delay: 0.32 }}
+                initial={{ scale: 0.12, opacity: 0 }}
+                animate={{ scale: [0.12, 1.15 + i * 0.22], opacity: [0.85, 0] }}
+                transition={{ duration: 0.9 + i * 0.16, ease: "easeOut", delay: 0.3 + i * 0.07 }}
               />
-            );
-          })}
-        </div>
-      )}
+            ))
+          : null}
+      </div>
+
+      {/* Last 5 s: the stage edge breathes in the timer's colour. */}
+      {live > 0 && live <= 5 ? <EdgeGlow color={tone.main} /> : null}
 
       <AutoScaleToFit className="relative" style={{ padding: "54px 96px 56px" }}>
         {/* ---- Header ---- */}
@@ -360,6 +346,8 @@ function TimerRing({
   const c = size / 2;
   const rInner = 96;
   const rOuter = 118;
+  // Last 5 s: the ring beats like a pulse (transform only; reduced motion holds still).
+  const critical = tone.main === BRAND.red && !reduceMotion && shown > 0;
 
   return (
     <motion.div
@@ -369,6 +357,11 @@ function TimerRing({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6, ease: EASE, delay: 0.05 }}
     >
+      <motion.div
+        className="absolute inset-0"
+        animate={critical ? { scale: [1, 1.06, 1, 1.035, 1] } : { scale: 1 }}
+        transition={critical ? { duration: 1, repeat: Infinity, ease: "easeOut", times: [0, 0.12, 0.3, 0.42, 1] } : { duration: 0.2 }}
+      >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {Array.from({ length: SEGMENTS }).map((_, i) => {
           const a = (-90 + i * (360 / SEGMENTS)) * (Math.PI / 180);
@@ -412,6 +405,7 @@ function TimerRing({
           Seconds
         </span>
       </div>
+      </motion.div>
     </motion.div>
   );
 }
