@@ -133,3 +133,14 @@ clone (harness as in §5, plus the clone-only `window.__fx` line); browser scrip
 so the go-live script shortens that one timer in the page to land the poll under the stinger.
 
 Next steps are unchanged (§8): Andrew's merge decision and the real-TV checklist §F.
+
+## Release (2026-11-13)
+
+Andrew said to do every remaining step: the sound licence is confirmed. PR #12 was merged as `1ee2e002`, and both
+production deployments (`hightop-challenge`, `trivia-predictions`) are READY. One CI `validate` run hit a Node
+out-of-memory error during the build (a flaky runner; the other run on the same commit passed) and passed on rerun.
+Production check: `play.hightopchallenge.com/venue/venue-riverside/screen` played the stinger, then the idle screen,
+with 0 console errors. The new assets return 200.
+
+Left: (1) the real-TV checklist §F (needs a person and a TV); (2) around 2026-11-20, compare Vercel usage for
+`/api/venue-screen/state` and bandwidth for the week before vs the week after (§6).
