@@ -32,9 +32,10 @@ describe("business type step", () => {
     expect(onSelect).toHaveBeenCalledWith("trivia_dj");
   });
 
-  it("the client step requires a value; the whole-draft server gate does not (deploy skew)", () => {
+  it("the client step and the whole-draft server gate both require a value (Phase 4)", () => {
     expect(signupStepIssue("business", BLANK_SIGNUP_DRAFT)).toBeTruthy();
     expect(signupStepIssue("business", { ...BLANK_SIGNUP_DRAFT, businessType: "hotel" })).toBeNull();
+    expect(validateSignupDraft({ ...BLANK_SIGNUP_DRAFT, name: "Alex Rivera" })).not.toBeNull();
     expect(
       validateSignupDraft({
         ...BLANK_SIGNUP_DRAFT,

@@ -1087,15 +1087,15 @@ describe("business type (docs/partner-business-type-plan.md Phase 1)", () => {
     expect(insertsTo("venue_owners")[0]?.payload).toMatchObject({ business_type: "trivia_dj" });
   });
 
-  it("accepts a MISSING type during deploy skew and leaves the column out (NULL = unknown)", async () => {
+  it("400s a MISSING type before any account work (required since Phase 4)", async () => {
     const POST = await load();
 
     for (const businessType of [undefined, null, "", "   "]) {
-      mocks.inserts = [];
       const response = await POST(post({ ...VALID_BODY, businessType }));
-      expect(response.status).toBe(200);
-      expect(insertsTo("venue_owners")[0]?.payload).not.toHaveProperty("business_type");
+      expect(response.status).toBe(400);
     }
+    expect(mocks.createUser).not.toHaveBeenCalled();
+    expect(mocks.inserts).toHaveLength(0);
   });
 
   it("400s an unknown type before any account work — never guesses", async () => {

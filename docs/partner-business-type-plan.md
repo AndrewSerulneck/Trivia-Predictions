@@ -1,9 +1,11 @@
 # Partner Business Type Plan — "What kind of business are you?" at sign-up
 
-**Status:** Phases 1–3 released 2026-11-13 (migration applied 2026-11-12; 4 partners backfilled to `bar_restaurant`).
-Admin Activate-a-Venue item dropped (it creates venues, not partners). **Phase 4 (make the type required) waits until
-the sign-up question has been live ≥ 1 day.** Latest handoff: `docs/partner-business-type-plan_PHASE_3_HANDOFF.md`.
-Each phase ends with a handoff note `docs/partner-business-type-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest one.
+**Status:** Phase 1 done 2026-11-12: migration applied to production (4 partners backfilled to
+`bar_restaurant`); code uncommitted, not deployed. Phase 3 (admin show/edit) done 2026-11-12, uncommitted; Activate-a-Venue
+item dropped (it creates venues, not partners). Phase 2 (wizard step) done 2026-11-12, uncommitted. Phase 4 (type required
+server-side) done 2026-11-12, uncommitted — **do not deploy until Phase 2 has been live ≥ 1 day** (§4). Plan complete
+pending deploy. Latest handoff: `docs/partner-business-type-plan_PHASE_4_HANDOFF.md`. Each phase ends with a handoff note
+`docs/partner-business-type-plan_PHASE_<N>_HANDOFF.md`; update this line to point at the latest one.
 
 ---
 
@@ -105,3 +107,14 @@ None — all answered 2026-11-12 (§2).
 ## 7. Out of scope
 
 Different prices, dashboards, or game lists by type; any player-facing change; the Trivia DJs video.
+
+## 8. Standing rules
+
+- **The type is required at sign-up** (`SIGNUP_BUSINESS_TYPE_REQUIRED = true`, `lib/selfServeSignup.ts`). A missing
+  or unknown value is a 400 before any account work. Do not set it back to `false` without a reason.
+- **Deploy gate:** the flip must not reach production until the wizard step (Phase 2) has been live for at least one
+  day. Earlier wizard tabs have no question and would be refused.
+- **Single list:** the five values and labels live only in `lib/partnerBusinessType.ts`.
+- **`NULL` means unknown,** never Bar/Restaurant. Legacy `/owner/register` and any pre-Phase-4 row may still be `NULL`;
+  admin can set them in Partner Billing.
+- **Nothing reads the type for behaviour.** Pricing, reporting and marketing by type are future work.
