@@ -269,8 +269,7 @@ export const hasSignupAddress = (draft: SignupDraft): boolean =>
 export function signupStepIssue(step: SignupStep, draft: SignupDraft): string | null {
   switch (step) {
     case "business": {
-      // The client always asks, so it is required here; the SERVER gate is resolveSignupBusinessType
-      // (optional until Phase 4, for deploy skew) — validateSignupDraft skips this step.
+      // Same rule as the server gate (resolveSignupBusinessType, required since Phase 4).
       const result = resolveSignupBusinessType(draft.businessType, true);
       return result.ok ? null : result.error;
     }
@@ -333,12 +332,12 @@ export function signupStepIssue(step: SignupStep, draft: SignupDraft): string | 
 // --- Business type (docs/partner-business-type-plan.md) ---------------------
 
 /**
- * Deploy skew: the server ships before wizard tabs opened earlier have closed,
- * so a MISSING type is accepted and stored as NULL (unknown). Phase 4 flips this
- * to `true` once the wizard step has been live for at least a day.
- * A PRESENT but invalid value is always rejected.
+ * Phase 4: a MISSING type is refused. Set to `true` only after the wizard step
+ * (Phase 2) has been live for at least a day, so wizard tabs opened before that
+ * deploy have had time to close. Before then a missing type was accepted and
+ * stored as NULL (unknown). A PRESENT but invalid value is always rejected.
  */
-export const SIGNUP_BUSINESS_TYPE_REQUIRED = false;
+export const SIGNUP_BUSINESS_TYPE_REQUIRED = true;
 
 export const SIGNUP_BUSINESS_TYPE_ISSUE = "Pick what kind of business you are.";
 
@@ -373,8 +372,6 @@ export const resolveSignupBusinessType = (
  */
 export function validateSignupDraft(draft: SignupDraft): string | null {
   for (const step of SIGNUP_STEPS) {
-    // The type's server rule lives in resolveSignupBusinessType (optional during deploy skew).
-    if (step === "business") continue;
     const issue = signupStepIssue(step, draft);
     if (issue) return issue;
   }

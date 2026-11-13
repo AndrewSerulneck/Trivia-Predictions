@@ -2425,6 +2425,10 @@ ones. No Haiku phase — nothing here is bulk transformation.
 
 ### Partner Self-Serve Signup (`/owner/signup`, flag-gated)
 
+- **The sign-up asks "What kind of business are you?" first, and the answer is required server-side.** Rules, list
+  and deploy gate: `docs/partner-business-type-plan.md` §8. `resolveSignupBusinessType` in `lib/selfServeSignup.ts`
+  is the only server gate for it.
+
 - **A partner can now subscribe without an admin pre-activating their venue.**
   The full-screen wizard at `/owner/signup` (six steps: name → email → password →
   address → geofence → review → Stripe Checkout) creates its own `venues` row

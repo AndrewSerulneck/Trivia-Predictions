@@ -117,11 +117,10 @@ describe("signup route", () => {
     );
   });
 
-  it("accepts a missing type until Phase 4, and always refuses an unknown one", () => {
-    // Phase 4 flips this and updates this assertion.
-    expect(SIGNUP_BUSINESS_TYPE_REQUIRED).toBe(false);
-    expect(resolveSignupBusinessType(undefined)).toEqual({ ok: true, businessType: null });
-    expect(resolveSignupBusinessType(undefined, true).ok).toBe(false);
+  it("refuses a missing or unknown type (required since Phase 4)", () => {
+    expect(SIGNUP_BUSINESS_TYPE_REQUIRED).toBe(true);
+    expect(resolveSignupBusinessType(undefined).ok).toBe(false);
+    expect(resolveSignupBusinessType(undefined, false)).toEqual({ ok: true, businessType: null });
     expect(resolveSignupBusinessType("hotel", true)).toEqual({ ok: true, businessType: "hotel" });
     expect(resolveSignupBusinessType("motel").ok).toBe(false);
   });
