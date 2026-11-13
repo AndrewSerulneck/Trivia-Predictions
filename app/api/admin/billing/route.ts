@@ -34,6 +34,7 @@ import {
 import { ADMIN_GRANT_ON_PARTNER_BILL_MESSAGES, ON_PARTNER_BILL_CODE, onPartnerBillMessageKey } from "@/lib/multiVenueBilling";
 import { billRateFromMirror, monthlyTotalCents, rateBreakdown, rateMonthlyTotalCents } from "@/lib/venuePricing";
 import { settleStaleVenueChangesForBill } from "@/lib/venueRemoval";
+import { parseBusinessType, type BusinessType } from "@/lib/partnerBusinessType";
 
 /**
  * Admin-only manual billing controls (Phase 1 of the check/offline-payment plan).
@@ -55,7 +56,7 @@ import { settleStaleVenueChangesForBill } from "@/lib/venueRemoval";
 type OwnerLinkRow = {
   owner_id: string;
   venue_id: string;
-  venue_owners: { email: string; name: string } | null;
+  venue_owners: { email: string; name: string; business_type: string | null } | null;
   venues: { id: string; name: string; display_name: string | null } | null;
 };
 
@@ -120,7 +121,7 @@ export async function GET(request: Request) {
   const { data: links, error: linkError } = await supabaseAdmin
     .from("venue_owner_venues")
     .select(
-      "owner_id, venue_id, venue_owners ( email, name ), venues ( id, name, display_name )"
+      "owner_id, venue_id, venue_owners ( email, name, business_type ), venues ( id, name, display_name )"
     )
     .returns<OwnerLinkRow[]>();
 
@@ -212,6 +213,8 @@ export async function GET(request: Request) {
         ownerId: link.owner_id,
         ownerEmail: link.venue_owners?.email ?? "",
         ownerName: link.venue_owners?.name ?? "",
+        // null = unknown (never Bar/Restaurant); an unrecognised stored value reads as unknown too.
+        businessType: parseBusinessType(link.venue_owners?.business_type) as BusinessType | null,
         bill: sub ? billOf(link.venue_id, sub) : null,
         comped: !sub && unbilled.byVenue.get(link.venue_id)?.kind === "comped",
         // Phase 6.7: its own bill was cancelled (so `sub` is that dead bill) and the partner pays on another.
@@ -342,9 +345,12 @@ type PostBody = {
     | "remove-discount"
     | "set-custom-price"
     | "set-standard-price"
-    | "attach-venue";
-  /** attach-venue: the partner account to give the venue to. */
+    | "attach-venue"
+    | "set-business-type";
+  /** attach-venue: the partner account to give the venue to. set-business-type: the partner to change. */
   ownerId?: string;
+  /** set-business-type: one of the five values (lib/partnerBusinessType.ts). */
+  businessType?: string;
   /** attach-venue: "bill" (Add to their bill) or "comped" (Free). */
   mode?: string;
   /** attach-venue: true = say what would happen, change nothing. */
@@ -401,6 +407,29 @@ const notAnchorResponse = (row: { venue_id: string }, venueId: string): NextResp
         { status: 409 }
       );
 
+/** action: "set-business-type" — an admin sets or changes a partner's business type. Never clears it to unknown. */
+async function handleSetBusinessType(body: PostBody, adminUsername: string): Promise<NextResponse> {
+  const ownerId = (body.ownerId ?? "").trim();
+  const businessType = parseBusinessType(body.businessType);
+  if (!ownerId || !businessType) {
+    return NextResponse.json({ ok: false, error: "Pick a business type." }, { status: 400 });
+  }
+  const { data, error } = await supabaseAdmin!
+    .from("venue_owners")
+    .update({ business_type: businessType })
+    .eq("id", ownerId)
+    .select("id")
+    .maybeSingle<{ id: string }>();
+  if (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+  if (!data) {
+    return NextResponse.json({ ok: false, error: "Partner not found." }, { status: 404 });
+  }
+  console.log(`[AdminBilling] set-business-type admin=${adminUsername} owner=${ownerId} type=${businessType}`);
+  return NextResponse.json({ ok: true, businessType });
+}
+
 /**
  * POST /api/admin/billing — grant or revoke offline/manual access for a venue.
  *
@@ -421,6 +450,12 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json().catch(() => ({}))) as PostBody;
+
+  // Partner-level (no venue): the type is stored on `venue_owners`, so it is keyed by the partner.
+  if (body.action === "set-business-type") {
+    return handleSetBusinessType(body, auth.adminUsername);
+  }
+
   const venueId = (body.venueId ?? "").trim();
   if (!venueId) {
     return NextResponse.json({ ok: false, error: "Venue is required." }, { status: 400 });

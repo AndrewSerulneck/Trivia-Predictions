@@ -1,5 +1,6 @@
 "use client";
 
+import { parseBusinessType } from "@/lib/partnerBusinessType";
 import {
   BLANK_SIGNUP_DRAFT,
   SIGNUP_RADIUS_MAX,
@@ -69,6 +70,7 @@ export function readSignupDraft(): SignupDraft {
     const parsed = JSON.parse(raw) as Partial<PersistedDraft> | null;
     if (!parsed || typeof parsed !== "object") return { ...BLANK_SIGNUP_DRAFT };
     return {
+      businessType: parseBusinessType(parsed.businessType) ?? "",
       name: asText(parsed.name),
       email: asText(parsed.email),
       password: "",
@@ -114,6 +116,7 @@ export function clearSignupDraft(): void {
 /** True when the partner has typed anything worth warning them about losing. */
 export function signupDraftHasAnswers(draft: SignupDraft): boolean {
   return Boolean(
+    draft.businessType ||
     draft.name.trim() ||
       draft.email.trim() ||
       draft.password ||

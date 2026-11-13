@@ -58,6 +58,7 @@ vi.mock("@/components/signup/steps/GeofenceStep", () => ({ GeofenceStep: () => n
 
 const draft: SignupDraft = {
   ...BLANK_SIGNUP_DRAFT,
+  businessType: "bar_restaurant",
   name: "Alex Rivera",
   email: "alex@thecorner.example",
   password: "correct-horse",
