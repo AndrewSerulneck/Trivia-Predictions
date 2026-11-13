@@ -4,12 +4,14 @@ import { createAdminVenue } from "@/lib/admin";
 import { DEFAULT_VENUE_COUNTRY } from "@/lib/adminVenueForm";
 import { findNearbyVenue, venueAddressLabel, venueHasOwner } from "@/lib/nearbyVenue";
 import { OWNER_EMAIL_TAKEN_MESSAGE } from "@/lib/ownerEmailAvailability";
+import { parseBusinessType } from "@/lib/partnerBusinessType";
 import { createOwnerSessionCookie } from "@/lib/ownerSession";
 import { classifyEmailForSignup, purgePendingSignup } from "@/lib/pendingSignup";
 import { rateLimitResponse, rateLimitSignupSubmit } from "@/lib/rateLimit";
 import {
   SIGNUP_MAX_BODY_BYTES,
   isSelfServeSignupEnabled,
+  resolveSignupBusinessType,
   validateSignupDraft,
   type SignupDraft,
 } from "@/lib/selfServeSignup";
@@ -57,6 +59,11 @@ type SignupBody = {
   latitude?: unknown;
   longitude?: unknown;
   radius?: unknown;
+  /**
+   * docs/partner-business-type-plan.md. Optional until Phase 4 (deploy skew):
+   * missing → NULL, present but not one of the five → 400.
+   */
+  businessType?: unknown;
   /** Set only on the second POST, after the client showed "Is this your venue?". */
   claimVenueId?: unknown;
 };
@@ -129,6 +136,8 @@ async function readBoundedBody(request: Request): Promise<string | null> {
  */
 function draftFromBody(body: SignupBody): SignupDraft {
   return {
+    // Validated separately by resolveSignupBusinessType (optional until Phase 4); never trusted raw.
+    businessType: parseBusinessType(body.businessType) ?? "",
     name: text(body.name),
     email: text(body.email).toLowerCase(),
     password: text(body.password),
@@ -231,6 +240,13 @@ export async function POST(request: Request) {
   // screen the partner would have seen.
   const issue = validateSignupDraft(draft);
   if (issue) return fail(issue, 400);
+
+  // Partner business type — lib/partnerBusinessType.ts is the only list.
+  // Missing is allowed (NULL = unknown) until Phase 4 flips
+  // SIGNUP_BUSINESS_TYPE_REQUIRED; an unknown value is always a 400.
+  const businessTypeResult = resolveSignupBusinessType(body.businessType);
+  if (!businessTypeResult.ok) return fail(businessTypeResult.error, 400);
+  const businessType = businessTypeResult.businessType;
 
   // Mirrors normalizeVenueId() inside createAdminVenue: a name with no letters
   // or digits generates no venue id. Caught here so it is a 400 the partner can
@@ -441,10 +457,18 @@ export async function POST(request: Request) {
   }
   authUserId = created.data.user.id;
 
-  // 2. Owner profile.
+  // 2. Owner profile. `business_type` is sent only when the partner answered:
+  //    a missing answer leaves the column at its NULL default, so this insert
+  //    never names the column until a wizard that asks is live (Phase 2) — an
+  //    app deployed ahead of the migration cannot break signup through it.
   const ownerRow = await supabaseAdmin
     .from("venue_owners")
-    .insert({ auth_id: authUserId, email: draft.email, name: draft.name })
+    .insert({
+      auth_id: authUserId,
+      email: draft.email,
+      name: draft.name,
+      ...(businessType ? { business_type: businessType } : {}),
+    })
     .select("id")
     .single<{ id: string }>();
 

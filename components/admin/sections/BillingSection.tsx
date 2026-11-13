@@ -8,6 +8,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { LinkVenueToPartner } from "@/components/admin/billing/LinkVenueToPartner";
 import { LAPSED_LINE, billSummaryLine, removedFromLine, type AdminPartnerBill, type AdminRemovedFrom } from "@/lib/adminBillView";
 import { venuePriceBandsLabel } from "@/lib/venuePricing";
+import { BUSINESS_TYPES, BUSINESS_TYPE_LABELS, BUSINESS_TYPE_UNKNOWN_LABEL, businessTypeLabel, type BusinessType } from "@/lib/partnerBusinessType";
 
 // Mirrors lib/billingCustomPrice.ts's MIN/MAX_CUSTOM_PRICE_DOLLARS — that file
 // is "server-only" and cannot be imported from this client component, so the
@@ -65,6 +66,8 @@ type Partner = {
   ownerId: string;
   ownerEmail: string;
   ownerName: string;
+  /** What kind of business the partner is; null = unknown (shown "—"). */
+  businessType: BusinessType | null;
   /** The bill this venue is on (multi-venue billing Phase 6): venue count, bands, total. */
   bill: AdminPartnerBill | null;
   /** Never on any bill, linked to a partner who pays for another venue = free. */
@@ -333,6 +336,40 @@ export function BillingSection() {
       setError("Network error. Please try again.");
     }
   };
+
+  const setBusinessType = async (partner: Partner, businessType: BusinessType) => {
+    setError("");
+    try {
+      const res = await fetch("/api/admin/billing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set-business-type", ownerId: partner.ownerId, businessType }),
+      });
+      const payload = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !payload.ok) {
+        setError(payload.error ?? "Failed to save.");
+        return;
+      }
+      await fetchPartners(search);
+    } catch {
+      setError("Network error. Please try again.");
+    }
+  };
+
+  const businessTypePicker = (partner: Partner) => (
+    <AdminSelect<BusinessType | "">
+      ariaLabel={`Business type for ${partner.ownerEmail || partner.venueName}`}
+      className={adminSelectField}
+      value={partner.businessType ?? ""}
+      onChange={(value) => {
+        if (value) void setBusinessType(partner, value);
+      }}
+      options={[
+        ...(partner.businessType ? [] : [{ value: "" as const, label: BUSINESS_TYPE_UNKNOWN_LABEL, disabled: true }]),
+        ...BUSINESS_TYPES.map((type) => ({ value: type, label: BUSINESS_TYPE_LABELS[type] })),
+      ]}
+    />
+  );
 
   const openDiscount = (partner: Partner) => {
     setActiveDiscountVenueId(partner.venueId);
@@ -674,6 +711,7 @@ export function BillingSection() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-slate-900">{partner.venueName}</p>
                       <p className="truncate text-xs text-slate-500">{partner.ownerEmail || "No owner email"}</p>
+                      <p className="truncate text-xs text-slate-500">{businessTypeLabel(partner.businessType)}</p>
                       {billLine(partner) ? <p className="text-xs text-slate-500">{billLine(partner)}</p> : null}
                     </div>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${badge.className}`}>
@@ -694,6 +732,7 @@ export function BillingSection() {
               <tr>
                 <th className="px-3 py-2">Venue</th>
                 <th className="px-3 py-2">Owner</th>
+                <th className="px-3 py-2">Type</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2">Paid through</th>
                 <th className="px-3 py-2 text-right">Actions</th>
@@ -710,6 +749,7 @@ export function BillingSection() {
                       {billLine(partner) ? <p className="text-xs text-slate-500">{billLine(partner)}</p> : null}
                     </td>
                     <td className="px-3 py-2 text-slate-600">{partner.ownerEmail || "—"}</td>
+                    <td className="min-w-[11rem] px-3 py-2">{businessTypePicker(partner)}</td>
                     <td className="px-3 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${badge.className}`}>
                         {badge.label}
@@ -806,6 +846,7 @@ export function BillingSection() {
                 </p>
               ) : null}
               {billLine(partner) ? <p className="text-xs text-slate-500">{billLine(partner)}</p> : null}
+              {businessTypePicker(partner)}
 
               {isOnOthersBill(partner) ? (
                 <p className="text-xs text-slate-500">Billing actions are on the bill&apos;s first venue.</p>

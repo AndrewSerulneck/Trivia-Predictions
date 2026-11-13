@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SignupShell } from "@/components/signup/SignupShell";
+import { BusinessTypeStep } from "@/components/signup/steps/BusinessTypeStep";
 import { AddressStep } from "@/components/signup/steps/AddressStep";
 import { EmailStep } from "@/components/signup/steps/EmailStep";
 import { GeofenceStep } from "@/components/signup/steps/GeofenceStep";
@@ -17,6 +18,7 @@ import {
 } from "@/components/signup/signupDraft";
 import { homeHref } from "@/lib/domainSplit";
 import { isNativeApp } from "@/lib/nativeApp";
+import type { BusinessType } from "@/lib/partnerBusinessType";
 import type { GeofenceEditorValue, PinSource } from "@/lib/geofenceEditor";
 import {
   BLANK_SIGNUP_DRAFT,
@@ -142,6 +144,7 @@ export function SignupWizard() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            businessType: draft.businessType,
             name: draft.name.trim(),
             email: draft.email.trim().toLowerCase(),
             password: draft.password,
@@ -315,6 +318,16 @@ export function SignupWizard() {
       nextDisabled={submitting || checkingEmail}
       {...(hint ? { footerHint: hint } : {})}
     >
+      {step === "business" ? (
+        <BusinessTypeStep
+          value={draft.businessType}
+          onSelect={(businessType: BusinessType) => {
+            patch({ businessType });
+            setIndex((prev) => prev + 1);
+          }}
+        />
+      ) : null}
+
       {step === "name" ? (
         <NameStep value={draft.name} onChange={(name) => patch({ name })} onEnter={advance} />
       ) : null}

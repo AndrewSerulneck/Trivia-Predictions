@@ -11,6 +11,7 @@
 // every /api/signup/* route 404s.
 
 import type { RadiusPreset } from "@/lib/geofenceEditor";
+import { parseBusinessType, type BusinessType } from "@/lib/partnerBusinessType";
 
 const truthy = (value: string | undefined): boolean => {
   const v = (value ?? "").trim().toLowerCase();
@@ -100,6 +101,7 @@ export const SIGNUP_CHECKOUT_COPY = {
 // written to the DB before that). Phase 3/4 render these; Phase 5 validates the
 // assembled draft server-side.
 export const SIGNUP_STEPS = [
+  "business",
   "name",
   "email",
   "password",
@@ -116,6 +118,9 @@ export type SignupStep = (typeof SIGNUP_STEPS)[number];
 // the form — EXCEPT `password`, which is held in memory only and never written
 // to storage (Phase 4).
 export type SignupDraft = {
+  // Step 0: what kind of business (docs/partner-business-type-plan.md). "" until answered.
+  businessType: BusinessType | "";
+
   // Step 1–3: the owner account.
   name: string;
   email: string;
@@ -144,6 +149,7 @@ export type SignupDraft = {
 
 /** A fresh, empty draft. */
 export const BLANK_SIGNUP_DRAFT: SignupDraft = {
+  businessType: "",
   name: "",
   email: "",
   password: "",
@@ -262,6 +268,12 @@ export const hasSignupAddress = (draft: SignupDraft): boolean =>
  */
 export function signupStepIssue(step: SignupStep, draft: SignupDraft): string | null {
   switch (step) {
+    case "business": {
+      // The client always asks, so it is required here; the SERVER gate is resolveSignupBusinessType
+      // (optional until Phase 4, for deploy skew) — validateSignupDraft skips this step.
+      const result = resolveSignupBusinessType(draft.businessType, true);
+      return result.ok ? null : result.error;
+    }
     case "name":
       if (draft.name.trim().length < 2) return "Add your name so we know who to address.";
       return signupFieldTooLong("name", draft.name, "Your name");
@@ -318,6 +330,39 @@ export function signupStepIssue(step: SignupStep, draft: SignupDraft): string | 
   }
 }
 
+// --- Business type (docs/partner-business-type-plan.md) ---------------------
+
+/**
+ * Deploy skew: the server ships before wizard tabs opened earlier have closed,
+ * so a MISSING type is accepted and stored as NULL (unknown). Phase 4 flips this
+ * to `true` once the wizard step has been live for at least a day.
+ * A PRESENT but invalid value is always rejected.
+ */
+export const SIGNUP_BUSINESS_TYPE_REQUIRED = false;
+
+export const SIGNUP_BUSINESS_TYPE_ISSUE = "Pick what kind of business you are.";
+
+export type SignupBusinessTypeResult =
+  | { ok: true; businessType: BusinessType | null }
+  | { ok: false; error: string };
+
+/**
+ * The submitted business type → the value to store, or the reason to refuse.
+ * `POST /api/owner/signup` is the server gate; the wizard's step (Phase 2)
+ * should call it with `required = true`, since the client always asks.
+ */
+export const resolveSignupBusinessType = (
+  value: unknown,
+  required: boolean = SIGNUP_BUSINESS_TYPE_REQUIRED
+): SignupBusinessTypeResult => {
+  const missing = value === undefined || value === null || (typeof value === "string" && !value.trim());
+  if (missing) {
+    return required ? { ok: false, error: SIGNUP_BUSINESS_TYPE_ISSUE } : { ok: true, businessType: null };
+  }
+  const businessType = parseBusinessType(value);
+  return businessType ? { ok: true, businessType } : { ok: false, error: SIGNUP_BUSINESS_TYPE_ISSUE };
+};
+
 /**
  * Every step's rule, in order — the whole-draft gate.
  *
@@ -328,6 +373,8 @@ export function signupStepIssue(step: SignupStep, draft: SignupDraft): string | 
  */
 export function validateSignupDraft(draft: SignupDraft): string | null {
   for (const step of SIGNUP_STEPS) {
+    // The type's server rule lives in resolveSignupBusinessType (optional during deploy skew).
+    if (step === "business") continue;
     const issue = signupStepIssue(step, draft);
     if (issue) return issue;
   }

@@ -1,3 +1,5 @@
+import type { BusinessType } from "@/lib/partnerBusinessType";
+
 export type AdSlot =
   | "header"
   | "inline-content"
@@ -696,6 +698,8 @@ export interface VenueOwner {
   authId: string;
   email: string;
   name: string;
+  /** `venue_owners.business_type`; `null` = unknown, never Bar/Restaurant. List: lib/partnerBusinessType.ts. */
+  businessType?: BusinessType | null;
   createdAt?: string;
 }
 
