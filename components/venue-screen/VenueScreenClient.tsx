@@ -136,7 +136,7 @@ function VenueTitle({ state, theme }: { state: VenueScreenState; theme: VenueScr
               Hightop Challenge
             </p>
             <h1
-              className="-mx-12 -my-6 mt-2 truncate px-12 py-6 text-5xl font-black leading-none text-white lg:text-6xl"
+              className="-mx-12 -mb-6 -mt-4 truncate px-12 py-6 text-5xl font-black leading-none text-white lg:text-6xl"
               style={{ textShadow: `0 0 44px ${accent}55` }}
             >
               {state.venue.displayName ?? state.venue.name}

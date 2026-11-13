@@ -50,6 +50,8 @@ export type FxEngine = {
 };
 
 type Live = { emitter: FxEmitter; start: number; ambient: boolean };
+
+const now = (): number => (typeof performance !== "undefined" ? performance.now() : Date.now());
 type Ambient = { build: (density: number) => FxEmitter; item: Live | null };
 
 const drawOps = (ctx: CanvasRenderingContext2D, ops: FxDrawOp[]) => {
@@ -242,7 +244,7 @@ export const createFxEngine = (): FxEngine => {
     ensureLoop();
   };
 
-  function startAmbientItem(ambient: Ambient) {
+  const startAmbientItem = (ambient: Ambient) => {
     if (tier === "off") return;
     try {
       ambient.item = { emitter: ambient.build(fxDensity(tier)), start: now(), ambient: true };
@@ -251,11 +253,18 @@ export const createFxEngine = (): FxEngine => {
       return;
     }
     add(ambient.item);
-  }
+  };
 
-  function now(): number {
-    return typeof performance !== "undefined" ? performance.now() : Date.now();
-  }
+  // Rebuild every ambient effect at the current tier and viewport: on attach (ambients started by child components'
+  // effects, which run before attach, were built before the real tier was known) and on resize (fields are laid out
+  // for the viewport they started in).
+  const restartAmbients = () => {
+    live = live.filter((item) => !item.ambient);
+    for (const ambient of ambients) {
+      ambient.item = null;
+      startAmbientItem(ambient);
+    }
+  };
 
   return {
     fire: (key, build) => {
@@ -307,8 +316,10 @@ export const createFxEngine = (): FxEngine => {
       const pickTier = () =>
         initialFxTier({ hardwareConcurrency: navigator.hardwareConcurrency, reducedMotion: Boolean(motionQuery?.matches) });
       ceiling = ctx ? pickTier() : "off";
-      tier = ceiling;
-      notifyTier();
+      if (tier !== ceiling) {
+        tier = ceiling;
+        notifyTier();
+      }
 
       const onMotion = () => {
         ceiling = ctx ? pickTier() : "off";
@@ -327,11 +338,13 @@ export const createFxEngine = (): FxEngine => {
       };
       const onResize = () => {
         if (shown) fit();
+        restartAmbients();
       };
       visible = !document.hidden;
       motionQuery?.addEventListener?.("change", onMotion);
       document.addEventListener("visibilitychange", onVisibility);
       window.addEventListener("resize", onResize);
+      restartAmbients();
       ensureLoop();
 
       return () => {

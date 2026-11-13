@@ -10,7 +10,7 @@ import { motion, useReducedMotion } from "framer-motion";
 type OverlayProps = { color: string };
 
 /** A light streak crossing the whole panel once. The parent must be `relative overflow-hidden`. */
-export function LightStreak({ color, delayS = 0 }: OverlayProps & { delayS?: number }) {
+export const LightStreak = ({ color, delayS = 0 }: OverlayProps & { delayS?: number }) => {
   const reduceMotion = useReducedMotion();
   if (reduceMotion) return null;
   return (
@@ -23,10 +23,10 @@ export function LightStreak({ color, delayS = 0 }: OverlayProps & { delayS?: num
       transition={{ duration: 0.9, ease: [0.65, 0, 0.35, 1], delay: delayS }}
     />
   );
-}
+};
 
 /** One diagonal shine across a box (the winner row, the correct answer). The parent must be `relative overflow-hidden`. */
-export function OneShotShine({ delayS = 0, tint = "rgba(255,255,255,0.45)" }: { delayS?: number; tint?: string }) {
+export const OneShotShine = ({ delayS = 0, tint = "rgba(255,255,255,0.45)" }: { delayS?: number; tint?: string }) => {
   const reduceMotion = useReducedMotion();
   if (reduceMotion) return null;
   return (
@@ -39,10 +39,10 @@ export function OneShotShine({ delayS = 0, tint = "rgba(255,255,255,0.45)" }: { 
       transition={{ duration: 1.1, ease: "easeInOut", delay: delayS }}
     />
   );
-}
+};
 
 /** The stage edge breathing in `color` once a second. The parent must be `relative`. */
-export function EdgeGlow({ color }: OverlayProps) {
+export const EdgeGlow = ({ color }: OverlayProps) => {
   const reduceMotion = useReducedMotion();
   return (
     <motion.div
@@ -55,4 +55,4 @@ export function EdgeGlow({ color }: OverlayProps) {
       transition={reduceMotion ? { duration: 0.2 } : { duration: 1, repeat: Infinity, ease: "easeInOut" }}
     />
   );
-}
+};

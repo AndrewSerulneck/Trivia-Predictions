@@ -1,8 +1,9 @@
 # Venue Display — Brand Hype, Effects & Intro Stinger — PLAN
 
-> **Status (2026-11-12):** Phases 0–6 built. Phases 0–5 committed (`4b4cc05f`, `d71c2e92`, `b395bb25`, `252fa61d`); Phase 6
+> **Status (2026-11-13):** Phases 0–6 built. Phases 0–5 committed (`4b4cc05f`, `d71c2e92`, `b395bb25`, `252fa61d`); Phase 6
 > (verification + three fixes) committed on `feature/venue-display-intro-stinger`, PR #12 — see
 > `venue-display-hype-and-intro-stinger-plan_PHASE_6_HANDOFF.md`; results in `docs/venue-display-hype_PHASE_6_after/`.
+> Code review of PR #12 (2026-11-13): 9 of 10 findings fixed, `main` merged in — see the handoff's "Code review" section.
 > **Not yet in production:** waiting on Andrew to merge PR #12 and run the real-TV checklist
 > (`docs/tv-display-physical-device-checklist.md` §F). Earlier handoffs: `…_PHASE_<0–5>_HANDOFF.md`.
 > Created 2026-11-12. Owner: Andrew. Each phase ends with a handoff note `venue-display-hype-and-intro-stinger-plan_PHASE_<N>_HANDOFF.md`
@@ -324,13 +325,18 @@ Device CPU/GPU use rises a little during effects; that's on the venue's hardware
 - Canvas effects use pre-rendered sprites and the single `FxCanvas` loop; no per-frame `shadowBlur`, no animated CSS
   `filter`/`box-shadow`.
 - Every effect has a reduced-motion version and degrades through the `full → lite → off` tiers.
-- The screen never waits on an effect: stinger hard-stops at 5 s; effect errors drop the effect, not the screen.
+- The screen never waits on an effect: the stinger hard-stops 5 s after its first animation frame (at most 6.5 s after
+  load, counting the logo wait); if scripts never run, its navy cover fades itself by CSS at 7 s
+  (`STINGER_COVER_FAILSAFE_MS`); effect errors drop the effect, not the screen.
 - No new network requests for effects beyond immutable-cached assets loaded once per device.
 - Game moments (plan §4 Phase 5) claim their identity through the engine's gate: canvas effects via `useFx` (`burst`,
   `shower`), CSS ones via `useFxMoment(key)` (`LightStreak`, `OneShotShine` in `fx/MomentOverlays.tsx`). Keys:
   `gameId:round` (question), `gameId:round:reveal`, `gameId:final`, `roundId` (letter slam), `roundId:results`,
   `golive:<takeover key>`; the round-break coin pop compares `fx.remember("leader:<gameId>")` with the new leader. A
-  reload never replays one, because keys claimed before the gate arms are swallowed.
+  reload never replays one, because keys claimed before the gate arms are swallowed. The gate arms as the stinger
+  ends (or 1 s after load with `intro=0`, `FX_ARM_SETTLE_MS` counted from mount), so a go-live held back by the
+  stinger still gets its burst. A moment that needs `remember` + a delayed fire puts the old value back if it's
+  cleared before firing.
 - State-driven cues are not moments: the last-5-s edge glow (`EdgeGlow`) and ring heartbeat follow the timer and are
   CSS only (transform/opacity); they show on a reload mid-countdown, by design.
 - Server-rendered panels never gate an element's existence on framer's `useReducedMotion()` (React #418 on every

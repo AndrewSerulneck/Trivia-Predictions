@@ -53,7 +53,8 @@ describe("venue display brand chrome", () => {
     const source = read("components/venue-screen/BracketTvScreen.tsx");
     expect(source).toContain("fx.burst({ key: upsetKey");
     expect(source).toContain("upset:${bracket.key}");
-    expect(source).toContain("key={row.username}");
+    expect(source).toContain("bracketRowKeys(bracket.standings.map((row) => row.username))");
+    expect(source).toContain("key={rowKeys[index]}");
   });
 
   it("the logo file exists", () => {

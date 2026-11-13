@@ -14,7 +14,7 @@ type CountUpProps = {
 
 const defaultFormat = (n: number): string => String(n);
 
-export function CountUp({ value, format = defaultFormat, className }: CountUpProps) {
+export const CountUp = ({ value, format = defaultFormat, className }: CountUpProps) => {
   const reduceMotion = useReducedMotion();
   const motionValue = useMotionValue(value);
   const text = useTransform(motionValue, (n) => format(Math.round(n)));
@@ -29,4 +29,4 @@ export function CountUp({ value, format = defaultFormat, className }: CountUpPro
   }, [value, reduceMotion, motionValue]);
 
   return <motion.span className={className}>{text}</motion.span>;
-}
+};

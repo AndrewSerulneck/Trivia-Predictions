@@ -22,7 +22,7 @@ Written 2026-11-12 by Claude Opus 5.5 (the plan's model for Phase 6; run at medi
   1. **Say whether to merge PR #12** (that's the production deploy). You can test the preview link on a TV first.
   2. **Run the real-TV check:** `docs/tv-display-physical-device-checklist.md` section F (Fire TV Stick first): the
      intro after power-on, sound, leave idle running an evening, watch a game.
-  3. Still open from Phase 2: confirm you're allowed to use the two sound files on a website.
+  3. Sound licence: confirmed by Andrew 2026-11-13.
 
 ## For the next agent
 
@@ -105,3 +105,31 @@ Andrew asks: new effects, stinger redesign. Candidate follow-ups are in §7.
 1. `gh pr view 12`; confirm CI checks are green and `main` hasn't moved (rebase if it has, then re-run `npm run test`).
 2. Merge only on Andrew's word; watch the production deploy; open `/venue/<id>/screen` once to confirm the stinger.
 3. A week later, compare Vercel usage as in §6 and report.
+
+## Code review of PR #12 (2026-11-13, Claude Opus 5.5, `/code-review high`)
+
+**For Andrew:** an independent review found 10 issues. 9 are fixed. None changed how the display looks except the
+venue name in the header, which now sits 24 px higher, as originally intended. The tenth is a cost trade-off, kept
+on purpose (below). `main` (PR #13/#14, partner business type) is merged into the branch. Still not live.
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | Hard stop counted from mount, so a slow logo (up to 1.5 s) cut the exit fade at 5 s | `TvIntroStinger`: hard stop re-armed at the first animation frame (`STINGER_HARD_STOP_MS` from there; `LOGO_TIMEOUT + HARD_STOP` before it). Browser: 1.2 s slow logo → stinger ran 5.97 s to its end |
+| 2 | Navy cover only removed by JS: a TV whose scripts fail stays navy forever | CSS fail-safe `animate-stinger-cover-failsafe` (tailwind keyframes; 7 s, `STINGER_COVER_FAILSAFE_MS`). Browser with JS off: opacity 0 / hidden at 8 s |
+| 3 | Bracket row key `username` alone; nameless users all show "Player" → duplicate keys | `bracketRowKeys()` in `BracketTvScreen.tsx` (repeat names get a suffix) |
+| 4 | `attach()` set the tier without rebuilding ambients started earlier by child effects (StageTwinkles with `intro=0`) → duplicate infinite twinkle emitter after a motion change; full density on 2-core | `fxEngine.ts` `restartAmbients()` on attach. Browser: reduced → 0 live, motion back → 1 (not 2) |
+| 5 | Twinkle field kept the viewport it started in | Area resolved inside the build (`useFx.ts`); engine rebuilds ambients on resize. Browser: resize keeps 1 live emitter |
+| 6 | Go-live held back by the stinger lost its burst (gate armed 1 s after the stinger) | `FxCanvas.tsx`: gate arms when `armed` AND 1 s since mount (`mountedAt`), synchronously in the effect. Browser: go-live polled at 3 s and 4.8 s both fire the burst after the stinger |
+| 7 | Round-break leader pop: `remember` ran before the delayed burst; if cleared first, the change was used up | `TvRoundBreak.tsx`: cleanup puts the previous leader back unless `popped` |
+| 8 | Header `h1`: `-my-6 mt-2` — `mt-2` wins in Tailwind 3, so 24 px of padding wasn't cancelled | `-mb-6 -mt-4` (computed: margin-top −16 px, bottom −24 px) |
+| 9 | New components used `function` declarations (CLAUDE.md: arrow functions) | Converted: `StageTwinkles`, `FxProvider`, `BrandStage`, `ShineSweep`, `CountUp`, `LightStreak`, `OneShotShine`, `EdgeGlow`, `TvIntroStinger`, `FlipChar`, engine helpers. Pre-existing ones left alone |
+| 10 | StageTwinkles keeps the fx loop running (~30 fps full-viewport canvas) all night, also in dashboard thumbnails | **Not changed:** the always-on twinkle field is a Phase 3 design choice, its cost is in the Phase 6 frame times, and the watchdog turns it off on a struggling device. Revisit if the real-TV run shows heat/stutter, or skip twinkles when embedded |
+
+Tests: new `tests/venue-screen-review-fixes.test.ts` (engine behaviour with stubbed browser globals, stinger
+fail-safes, gate timing, leader restore, row keys, title margins); `tests/venue-screen-brand-chrome-contract.test.ts`
+updated for the row keys. Full suite 7,039 passed; `tsc` and `eslint` clean; production build passed in a scratch
+clone (harness as in §5, plus the clone-only `window.__fx` line); browser scripts in
+`docs/venue-display-hype_PHASE_6_after/scripts/review-*.mjs.txt` (port 3183). Note: the idle screen polls every 20 s,
+so the go-live script shortens that one timer in the page to land the poll under the stinger.
+
+Next steps are unchanged (§8): Andrew's merge decision and the real-TV checklist §F.

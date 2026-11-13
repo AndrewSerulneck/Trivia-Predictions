@@ -169,10 +169,10 @@ const buildApi = (engine: FxEngine, ambientStops: Set<() => void>): FxApi => ({
   },
   twinkles: (o = {}) => {
     try {
-      const area = resolveFxArea(o.area);
+      // The area is measured each time the engine (re)builds the field, so a resize re-lays it out.
       const stopEngine = engine.startAmbient((density) =>
         createTwinkleField({
-          area, seed: o.seed ?? STINGER_SEED, count: o.count, starSize: o.starSize, colors: o.colors, density,
+          area: resolveFxArea(o.area), seed: o.seed ?? STINGER_SEED, count: o.count, starSize: o.starSize, colors: o.colors, density,
         }),
       );
       const stop = () => {

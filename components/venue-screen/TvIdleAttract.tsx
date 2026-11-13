@@ -49,7 +49,7 @@ const GAME_ACCENT: Partial<Record<VenueGameKey, string>> = {
 };
 
 /** One countdown character; it flips in when its value changes (transform + opacity only). */
-function FlipChar({ char, flip }: { char: string; flip: boolean }) {
+const FlipChar = ({ char, flip }: { char: string; flip: boolean }) => {
   return (
     <motion.span
       key={char}
@@ -62,7 +62,7 @@ function FlipChar({ char, flip }: { char: string; flip: boolean }) {
       {char}
     </motion.span>
   );
-}
+};
 
 export type TvIdleAttractProps = {
   venueName: string;

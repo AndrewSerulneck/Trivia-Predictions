@@ -430,7 +430,7 @@ const loadLogo = (src: string, timeoutMs: number): Promise<HTMLImageElement | nu
     );
   });
 
-export function TvIntroStinger({ onDone }: { onDone: () => void }) {
+export const TvIntroStinger = ({ onDone }: { onDone: () => void }) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const onDoneRef = useRef(onDone);
@@ -449,8 +449,9 @@ export function TvIntroStinger({ onDone }: { onDone: () => void }) {
       window.cancelAnimationFrame(raf);
       onDoneRef.current();
     };
-    // Fail open: never hold the screen longer than this, whatever happens below.
-    const hardStop = window.setTimeout(finish, STINGER_HARD_STOP_MS);
+    // Fail open: never hold the screen longer than this, whatever happens below. Re-armed from the first animation
+    // frame, so a slow logo decode doesn't cut the exit fade short.
+    let hardStop = window.setTimeout(finish, STINGER_LOGO_TIMEOUT_MS + STINGER_HARD_STOP_MS);
 
     // Skip: fade the server-rendered navy cover away, then unmount.
     const skip = () => {
@@ -492,6 +493,8 @@ export function TvIntroStinger({ onDone }: { onDone: () => void }) {
         if (!canvas || !scene) throw new Error("stinger canvas missing");
         if (!start) {
           start = now;
+          window.clearTimeout(hardStop);
+          hardStop = window.setTimeout(finish, STINGER_HARD_STOP_MS);
           // The canvas now paints the navy stage itself, so it can fade to reveal the screen.
           if (rootRef.current) rootRef.current.style.background = "transparent";
           playStingerSound(audio, () => {
@@ -562,17 +565,18 @@ export function TvIntroStinger({ onDone }: { onDone: () => void }) {
     };
   }, []);
 
-  // Server-rendered navy cover so the live screen never flashes before the stinger starts.
+  // Server-rendered navy cover so the live screen never flashes before the stinger starts. If scripts never run, it
+  // fades itself out by CSS at STINGER_COVER_FAILSAFE_MS (fail open).
   return (
     <div
       ref={rootRef}
       aria-hidden="true"
       data-testid="tv-intro-stinger"
-      className="pointer-events-none fixed inset-0"
+      className="pointer-events-none fixed inset-0 animate-stinger-cover-failsafe"
       style={{ zIndex: 80, background: SCREEN_COLORS.canvas }}
     >
       <canvas ref={canvasRef} className="absolute left-0 top-0 block" />
     </div>
   );
-}
+};
 

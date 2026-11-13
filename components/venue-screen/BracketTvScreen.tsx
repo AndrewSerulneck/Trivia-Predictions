@@ -18,6 +18,16 @@ type BracketTvScreenProps = {
 
 const seeded = (team: BracketTvTeam): string => (team.seed !== null ? `${team.seed} ${team.name}` : team.name);
 
+/** Row keys that follow a player when the standings reorder; repeated names (users without one show as "Player") get a suffix. */
+export const bracketRowKeys = (usernames: readonly string[]): string[] => {
+  const seen = new Map<string, number>();
+  return usernames.map((name) => {
+    const n = (seen.get(name) ?? 0) + 1;
+    seen.set(name, n);
+    return n === 1 ? name : `${name}\n${n}`;
+  });
+};
+
 // March Madness on the venue TV (Phase 9b): the venue's top 10 in the bracket most people here filled
 // out, the biggest upset busting brackets here, and today's games. Everything arrives in the screen's
 // own poll (lib/bracketsTv.ts); this component only draws it.
@@ -28,6 +38,7 @@ export function BracketTvScreen({ state, accent }: BracketTvScreenProps) {
   const upsetRef = useRef<HTMLDivElement>(null);
   const { upset } = bracket;
   // One burst per upset: the key names the game, so a poll or a reload never replays it (fx gate).
+  const rowKeys = bracketRowKeys(bracket.standings.map((row) => row.username));
   const upsetKey = upset ? `upset:${bracket.key}:${upset.round}:${upset.winner.name}>${upset.loser.name}` : null;
   useEffect(() => {
     if (upsetKey && upsetRef.current) fx.burst({ key: upsetKey, at: upsetRef.current, shockwave: true });
@@ -47,7 +58,7 @@ export function BracketTvScreen({ state, accent }: BracketTvScreenProps) {
             const podium = getPodiumAccent(row.rank);
             return (
               <motion.li
-                key={row.username}
+                key={rowKeys[index]}
                 className="relative grid grid-cols-[5rem_1fr_auto] items-center gap-6 overflow-hidden rounded-2xl border-2 bg-white/[0.06] px-8 py-3"
                 style={{ borderColor: podium ? podium.ring : "transparent" }}
                 initial={reduceMotion ? false : { opacity: 0, x: -40 }}

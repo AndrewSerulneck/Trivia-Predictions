@@ -26,7 +26,7 @@ type BrandStageProps = {
   ambientB: string;
 };
 
-export function BrandStage({ ambientA, ambientB }: BrandStageProps) {
+export const BrandStage = ({ ambientA, ambientB }: BrandStageProps) => {
   const reduceMotion = useReducedMotion();
   const tier = useFxTier();
   const still = Boolean(reduceMotion) || tier === "off";
@@ -58,4 +58,4 @@ export function BrandStage({ ambientA, ambientB }: BrandStageProps) {
       />
     </div>
   );
-}
+};

@@ -18,12 +18,12 @@ type ShineSweepProps = {
   tint?: string;
 };
 
-export function ShineSweep({
+export const ShineSweep = ({
   periodMs = 45_000,
   delayMs = 4_000,
   durationMs = 1_100,
   tint = "rgba(255,255,255,0.5)",
-}: ShineSweepProps) {
+}: ShineSweepProps) => {
   const reduceMotion = useReducedMotion();
   // Read once on mount: only the animation's start delay uses it, never the markup.
   const [firstDelayS] = useState(() => wallClockDelayS(periodMs, delayMs, Date.now()));
@@ -44,4 +44,4 @@ export function ShineSweep({
       }}
     />
   );
-}
+};

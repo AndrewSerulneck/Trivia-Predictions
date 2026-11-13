@@ -8,10 +8,11 @@ import { createFxEngine, type FxEngine } from "@/components/venue-screen/fx/fxEn
 // 2304×1296 stage and particles stay sharp at 4K. Panels fire effects with useFx().
 //
 // `armed`: pass `!introPlaying`. Keys fired before the gate arms (the page's first render, a reload mid-reveal,
-// anything under the intro stinger) are remembered but never played; the gate arms FX_ARM_SETTLE_MS after
-// `armed` turns true.
+// anything under the intro stinger) are remembered but never played. The gate arms when `armed` is true AND
+// FX_ARM_SETTLE_MS have passed since mount: right as the stinger ends (panels on screen at load claimed their keys
+// under it, so a go-live held back by the stinger still gets its burst), or 1 s after load with `intro=0`.
 
-/** Grace after `armed` turns true, so panels' first-render keys are swallowed even with `intro=0`. */
+/** Least time after mount before the gate arms, so panels' first-render keys are swallowed even with `intro=0`. */
 export const FX_ARM_SETTLE_MS = 1_000;
 
 /** Above the stage and the go-live takeover, below the intro stinger (z 80). */
@@ -19,10 +20,11 @@ export const FX_CANVAS_Z_INDEX = 60;
 
 export const FxContext = createContext<FxEngine | null>(null);
 
-export function FxProvider({ armed, children }: { armed: boolean; children: ReactNode }) {
+export const FxProvider = ({ armed, children }: { armed: boolean; children: ReactNode }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Creating the engine touches no browser API (safe on the server); attach() does, in an effect.
   const [engine] = useState(createFxEngine);
+  const [mountedAt] = useState(() => (typeof performance !== "undefined" ? performance.now() : 0));
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -32,9 +34,15 @@ export function FxProvider({ armed, children }: { armed: boolean; children: Reac
 
   useEffect(() => {
     if (!armed) return undefined;
-    const id = window.setTimeout(engine.arm, FX_ARM_SETTLE_MS);
+    const wait = FX_ARM_SETTLE_MS - (performance.now() - mountedAt);
+    // Synchronous when the settle has passed: this effect runs before any panel's claim timer (useFxMoment) fires.
+    if (wait <= 0) {
+      engine.arm();
+      return undefined;
+    }
+    const id = window.setTimeout(engine.arm, wait);
     return () => window.clearTimeout(id);
-  }, [armed, engine]);
+  }, [armed, engine, mountedAt]);
 
   return (
     <FxContext.Provider value={engine}>
@@ -50,4 +58,4 @@ export function FxProvider({ armed, children }: { armed: boolean; children: Reac
       />
     </FxContext.Provider>
   );
-}
+};

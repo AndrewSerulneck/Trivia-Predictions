@@ -114,18 +114,23 @@ export function TvRoundBreak({
   );
 
   // A player who moves into 1st since the last round break gets a coin pop on their row. The previous leader is
-  // remembered by the fx engine for the page's life, so a reload (nothing remembered) never pops.
+  // remembered by the fx engine for the page's life, so a reload (nothing remembered) never pops. If the panel goes
+  // away (or re-runs) before the pop, the old leader is put back so the change isn't used up unseen.
   const leaderId = ranked[0]?.id;
   const leaderRowRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!gameId || !leaderId) return undefined;
     const previous = fx.remember(`leader:${gameId}`, leaderId);
     if (previous === undefined || previous === leaderId) return undefined;
-    const id = window.setTimeout(
-      () => fx.burst({ key: `${gameId}:${roundNumber}:first:${leaderId}`, at: pointIn(leaderRowRef.current, 0.16), size: 300 * stageScale(), coins: 9, sparks: 14, gravity: false }),
-      Math.round((t0 + 0.28 + 0.4) * 1000),
-    );
-    return () => window.clearTimeout(id);
+    let popped = false;
+    const id = window.setTimeout(() => {
+      popped = true;
+      fx.burst({ key: `${gameId}:${roundNumber}:first:${leaderId}`, at: pointIn(leaderRowRef.current, 0.16), size: 300 * stageScale(), coins: 9, sparks: 14, gravity: false });
+    }, Math.round((t0 + 0.28 + 0.4) * 1000));
+    return () => {
+      window.clearTimeout(id);
+      if (!popped) fx.remember(`leader:${gameId}`, previous);
+    };
   }, [fx, gameId, leaderId, roundNumber, t0]);
 
   return (

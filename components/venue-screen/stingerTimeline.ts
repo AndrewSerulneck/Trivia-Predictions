@@ -22,10 +22,16 @@ export const T_END = 3.95;
  */
 export const T_REVEAL_END = 4.3;
 
-/** Hard stop: the overlay unmounts by now no matter what (fail open). */
+/** Hard stop, counted from the animation's first frame: the overlay unmounts by now no matter what (fail open). */
 export const STINGER_HARD_STOP_MS = 5_000;
 /** Skip the stinger entirely when the logo can't decode within this window. */
 export const STINGER_LOGO_TIMEOUT_MS = 1_500;
+/**
+ * No-JS fail-safe: the server-rendered navy cover fades itself out by CSS this long after load (tailwind
+ * `animate-stinger-cover-failsafe`), so a TV whose scripts never run still shows the screen. Later than the latest
+ * hard stop (logo wait + STINGER_HARD_STOP_MS), so it never cuts a running stinger.
+ */
+export const STINGER_COVER_FAILSAFE_MS = 7_000;
 
 export const STINGER_SEED = 20261026;
 export const STINGER_COIN_COUNT = 34;
