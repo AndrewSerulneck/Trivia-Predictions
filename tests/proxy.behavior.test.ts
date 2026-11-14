@@ -82,14 +82,11 @@ describe("proxy auth-gate (domain split off — default/production)", () => {
     expect(new URL(res.headers.get("location") ?? "").pathname).toBe("/");
   });
 
-  it("passes the TV pairing page + its APIs through with no cookies (Phase 5b)", () => {
-    // The TV has no auth cookies — /tv and /api/tv-pair/* must be public.
-    for (const path of ["/tv", "/api/tv-pair", "/api/tv-pair/XK49PM"]) {
+  it("passes the short display link through with no cookies", () => {
+    // The TV has no auth cookies — /tv and /tv/<code> must be public.
+    for (const path of ["/tv", "/tv/H91A"]) {
       expect(isPassThrough(proxy(makeRequest(path))), `expected pass-through for ${path}`).toBe(true);
     }
-    // The owner claim API is under /api (public at the edge) but self-guards with
-    // requireOwnerAuth — the gate must still let it reach the handler.
-    expect(isPassThrough(proxy(makeRequest("/api/owner/tv-pair/claim")))).toBe(true);
   });
 
   it("still gates an unrelated non-public route after adding the /tv carve-out", () => {

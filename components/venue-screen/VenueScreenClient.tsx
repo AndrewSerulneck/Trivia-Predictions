@@ -16,6 +16,7 @@ import { ShineSweep } from "@/components/venue-screen/fx/ShineSweep";
 import { SquaresTvScreen } from "@/components/venue-screen/SquaresTvScreen";
 import { ScreenTransition } from "@/components/venue-screen/ScreenTransition";
 import { TvGoLiveTakeover, type GameLabel } from "@/components/venue-screen/TvGoLiveTakeover";
+import { TvLiveTriviaPregame } from "@/components/venue-screen/TvLiveTriviaPregame";
 import { TvIntroStinger } from "@/components/venue-screen/TvIntroStinger";
 import { VenueScreenStatus } from "@/components/venue-screen/VenueScreenStatus";
 import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
@@ -26,6 +27,7 @@ import {
   getVenueScreenBurnInTransform,
   getVenueScreenPollIntervalMs,
   getVenueScreenRetryDelayMs,
+  isGoLiveTransition,
   type VenueScreenDebugMode,
 } from "@/lib/venueScreenTiming";
 
@@ -111,7 +113,7 @@ function VenueTitle({ state, theme }: { state: VenueScreenState; theme: VenueScr
   const reduceMotion = useReducedMotion();
   const { accent, accentSoft } = theme;
   const modeLabel =
-    state.mode === "live-trivia"
+    state.mode === "live-trivia" || state.mode === "live-trivia-pregame"
       ? "Live Trivia"
       : state.mode === "category-blitz"
         ? "Category Blitz"
@@ -219,6 +221,7 @@ function getScreenTransitionKey(state: VenueScreenState): string {
       state.liveTrivia.phase === "final" ? state.liveTrivia.gameId : state.liveTrivia.roundNumber ?? "x";
     return `lt:${state.liveTrivia.phase}:${identity}`;
   }
+  if (state.mode === "live-trivia-pregame") return `ltp:${state.pregame.gameId}`;
   if (state.mode === "category-blitz") {
     return `cb:${state.categoryBlitz.phase}:${state.categoryBlitz.roundId ?? "x"}`;
   }
@@ -309,7 +312,8 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null, int
         if (!response.ok) {
           throw new Error("Unable to refresh venue screen.");
         }
-        const flippedLive = previousMode === "idle" && modeToGameLabel(json.mode) !== null;
+        // Idle or pre-game → live game. Pre-game → live is the real Live Trivia start.
+        const flippedLive = isGoLiveTransition(previousMode, json.mode);
         previousMode = json.mode;
         currentState = json;
         failures = 0;
@@ -351,13 +355,17 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null, int
     };
   }, [debugMode, initialState, venueId]);
 
-  const theme = getVenueScreenTheme(state.mode as VenueScreenMode, {
+  const themeMode: VenueScreenMode = state.mode === "live-trivia-pregame" ? "live-trivia" : state.mode;
+  const theme = getVenueScreenTheme(themeMode, {
     primary: state.venue.screenBrandPrimary,
     secondary: state.venue.screenBrandSecondary,
   });
   const transitionKey = getScreenTransitionKey(state);
   const screenTransform =
-    state.mode === "idle" || state.mode === "squares" || state.mode === "bracket"
+    state.mode === "idle" ||
+    state.mode === "squares" ||
+    state.mode === "bracket" ||
+    state.mode === "live-trivia-pregame"
       ? getVenueScreenBurnInTransform(nowMs) : "translate3d(0, 0, 0)";
 
   return (
@@ -372,15 +380,21 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null, int
         <main className="h-full w-full overflow-hidden bg-slate-950 text-white">
           <div className="relative flex h-full flex-col" style={{ background: theme.stageGradient }}>
             <BrandStage ambientA={theme.ambientA} ambientB={theme.ambientB} />
-            {introPlaying ? null : <StageTwinkles />}
+            {/* The twinkle canvas sits above the stage, so it stays off the two screens with the app QR (never covered). */}
+            {introPlaying || state.mode === "idle" || state.mode === "live-trivia-pregame" ? null : <StageTwinkles />}
             <div
               className="flex h-full flex-col will-change-transform"
               style={{ transform: screenTransform }}
             >
               {state.mode !== "idle" ? <VenueTitle state={state} theme={theme} /> : null}
-              {state.mode === "live-trivia" || state.mode === "category-blitz" ? (
+              {state.mode === "live-trivia" ||
+              state.mode === "live-trivia-pregame" ||
+              state.mode === "category-blitz" ? (
                 <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
                   {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} nowMs={nowMs} /> : null}
+                  {state.mode === "live-trivia-pregame" ? (
+                    <TvLiveTriviaPregame state={state} nowMs={nowMs} accent={theme.accent} />
+                  ) : null}
                   {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} nowMs={nowMs} /> : null}
                 </ScreenTransition>
               ) : null}

@@ -1,8 +1,7 @@
 import "server-only";
 
 import { driveVenueCategoryBlitz, getRoundResults, peekCategoryBlitz } from "@/lib/categoryBlitz";
-import { getNextScheduleOccurrence, listSchedules } from "@/lib/categoryBlitzSchedules";
-import { lobbyDwellSeconds, nextRoundStartAtMs } from "@/lib/categoryBlitzShared";
+import { nextRoundStartAtMs } from "@/lib/categoryBlitzShared";
 import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
 import { getLiveShowdownState, type LiveShowdownState } from "@/lib/liveShowdownEngine";
 import type { SquaresTvPayload } from "@/lib/squaresTv";
@@ -10,7 +9,7 @@ import { getSquaresTvPayload } from "@/lib/squaresTvRead";
 import type { BracketTvPayload } from "@/lib/bracketsTv";
 import { getBracketTvPayload } from "@/lib/bracketsTvRead";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getVenueScreenPollIntervalMs } from "@/lib/venueScreenTiming";
+import { getVenueScreenPollIntervalMs, LIVE_TRIVIA_PREGAME_LEAD_MS } from "@/lib/venueScreenTiming";
 import { getVenueById } from "@/lib/venues";
 import type { CategoryBlitzRound, CategoryBlitzSession, Venue } from "@/types";
 
@@ -67,6 +66,18 @@ export type VenueScreenState =
       updatedAt: number;
     }
   | {
+      // The 15 minutes before a scheduled Live Trivia game (LIVE_TRIVIA_PREGAME_LEAD_MS).
+      // Beats Category Blitz, Squares and March Madness; only a live game beats it.
+      ok: true;
+      mode: "live-trivia-pregame";
+      venue: VenueScreenVenue;
+      liveTrivia: null;
+      categoryBlitz: null;
+      idle: null;
+      pregame: VenueScreenPregame;
+      updatedAt: number;
+    }
+  | {
       ok: true;
       mode: "category-blitz";
       venue: VenueScreenVenue;
@@ -117,32 +128,32 @@ export type VenueScreenState =
           firstRoundCategory?: string | null;
           recurringDays?: string[];
         } | null;
-        nextCategoryBlitz: {
-          startsAt: string;
-          recurringDays?: string[];
-        } | null;
-        // Continuous Category Blitz is on here but asleep (nobody has the game
-        // open), so the TV invites players to start it instead of showing a
-        // round. Absent/false for scheduled venues and venues with it off.
-        categoryBlitzOnDemand?: boolean;
+        // No Category Blitz here: the display shows Category Blitz only while
+        // someone is playing a round (Andrew, 2026-11-14), never as "Next up".
         sponsorSlots: VenueScreenSponsorSlot[];
       };
       updatedAt: number;
     };
 
+export type VenueScreenPregame = {
+  /** `${scheduleId}:${occurrenceDate}`, the same identity the live mode carries. */
+  gameId: string;
+  title: string;
+  /** ISO start of this occurrence. */
+  startsAt: string;
+  /** Round 1's category when the host has set it; otherwise null (show nothing). */
+  firstRoundCategory: string | null;
+};
+
 export type VenueScreenCategoryBlitzInput = {
+  // Null unless a session is in play (continuous: awake; scheduled: running).
   session: CategoryBlitzSession | null;
   round: CategoryBlitzRound | null;
   leaderboard: ScreenLeaderboardEntry[] | null;
-  nextStartsAt: string | null;
-  nextRecurringDays?: string[];
   // When the NEXT round of the current active session starts (ISO). Drives the
   // results/intermission "next letter in" countdown. Null when no active round
-  // to count down from (e.g. idle with only a scheduled preview).
+  // to count down from.
   nextRoundStartsAt: string | null;
-  // Continuous mode is on but the game is asleep (category-blitz-how-to-play-plan
-  // Phase 5): no live round to show, so the idle screen says "play anytime".
-  asleep?: boolean;
 };
 
 export type VenueScreenSelectionInput = {
@@ -387,15 +398,7 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
   const peek = await peekCategoryBlitz(roomId, now).catch(() => null);
   const continuousConfig = peek?.continuousConfig ?? null;
   if (peek && continuousConfig && (!peek.session || !peek.awake)) {
-    return {
-      session: null,
-      round: null,
-      leaderboard: null,
-      nextStartsAt: null,
-      nextRecurringDays: [],
-      nextRoundStartsAt: null,
-      asleep: true,
-    };
+    return { session: null, round: null, leaderboard: null, nextRoundStartsAt: null };
   }
   if (peek?.session && continuousConfig && peek.session.status !== "complete") {
     const continuousSession = peek.session;
@@ -415,8 +418,6 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
       session: continuousSession,
       round: continuousRound,
       leaderboard: continuousResults ? toLeaderboard(continuousResults.totals) : null,
-      nextStartsAt: null,
-      nextRecurringDays: [],
       nextRoundStartsAt: continuousRound
         ? new Date(
             nextRoundStartAtMs(continuousRound, continuousSession.testMode, continuousTiming),
@@ -425,28 +426,13 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
     };
   }
 
-  const [session, schedules] = await Promise.all([
-    driveVenueCategoryBlitz(roomId, now).catch(() => null),
-    listSchedules(roomId).catch(() => []),
-  ]);
-  const next = getNextScheduleOccurrence(schedules, now);
-  // Round 1 actually fires `lobbyDwellSeconds` after the window opens (see
-  // lib/categoryBlitz.ts's computeLobbyStartsAt), so the venue idle screen's
-  // "starts in" preview should point at that instant, not the window open
-  // time, to match the single countdown shown once a player opens the game.
-  const nextStartsAt = next
-    ? new Date(next.windowStart.getTime() + lobbyDwellSeconds(false) * 1000).toISOString()
-    : null;
+  // Scheduled engine (a venue explicitly opted out of continuous mode). Unchanged
+  // behaviour; the schedule list is no longer read because the idle screen no
+  // longer previews the next Category Blitz window.
+  const session = await driveVenueCategoryBlitz(roomId, now).catch(() => null);
 
   if (!session || session.status === "complete") {
-    return {
-      session: null,
-      round: null,
-      leaderboard: null,
-      nextStartsAt,
-      nextRecurringDays: next?.schedule.recurringDays ?? [],
-      nextRoundStartsAt: null,
-    };
+    return { session: null, round: null, leaderboard: null, nextRoundStartsAt: null };
   }
 
   const round = await getLatestCategoryBlitzRound(session.id).catch(() => null);
@@ -458,8 +444,6 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
     session,
     round,
     leaderboard: results ? toLeaderboard(results.totals) : null,
-    nextStartsAt,
-    nextRecurringDays: next?.schedule.recurringDays ?? [],
     // Scheduled sessions use the shared pacing constants (null continuous timing).
     nextRoundStartsAt: round
       ? new Date(nextRoundStartAtMs(round, session.testMode, null)).toISOString()
@@ -467,6 +451,30 @@ async function getCategoryBlitzInput(venueId: string, now: Date): Promise<VenueS
   };
 }
 
+/**
+ * The Live Trivia pre-game window: from LIVE_TRIVIA_PREGAME_LEAD_MS before the next
+ * occurrence's start until it starts. Null while a game is active (live, intermission
+ * or final standings) or when nothing is scheduled inside the window.
+ * No extra read: `nextSchedule` is already on the engine state.
+ */
+export function getLiveTriviaPregame(liveTrivia: LiveShowdownState, nowMs: number): VenueScreenPregame | null {
+  if (liveTrivia.isGameActive) return null;
+  const next = liveTrivia.nextSchedule;
+  if (!next) return null;
+  const startMs = Date.parse(next.startTime);
+  if (!Number.isFinite(startMs)) return null;
+  if (nowMs < startMs - LIVE_TRIVIA_PREGAME_LEAD_MS || nowMs >= startMs) return null;
+  return {
+    gameId: `${next.id}:${next.occurrenceDate}`,
+    title: next.title,
+    startsAt: new Date(startMs).toISOString(),
+    firstRoundCategory: optionalTrim(next.firstRoundCategory),
+  };
+}
+
+// Display precedence (one place only): Live Trivia active, incl. final standings >
+// Live Trivia pre-game > Category Blitz (only while someone is playing) > Squares >
+// March Madness > idle.
 export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueScreenState {
   const { venue, liveTrivia, categoryBlitz, updatedAt } = input;
 
@@ -517,6 +525,20 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
       },
       categoryBlitz: null,
       idle: null,
+      updatedAt,
+    };
+  }
+
+  const pregame = getLiveTriviaPregame(liveTrivia, updatedAt);
+  if (pregame) {
+    return {
+      ok: true,
+      mode: "live-trivia-pregame",
+      venue,
+      liveTrivia: null,
+      categoryBlitz: null,
+      idle: null,
+      pregame,
       updatedAt,
     };
   }
@@ -590,13 +612,6 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
             recurringDays: liveTrivia.nextSchedule.recurringDays,
           }
         : null,
-      nextCategoryBlitz: categoryBlitz.nextStartsAt
-        ? {
-            startsAt: categoryBlitz.nextStartsAt,
-            recurringDays: categoryBlitz.nextRecurringDays ?? [],
-          }
-        : null,
-      categoryBlitzOnDemand: categoryBlitz.asleep === true,
       sponsorSlots: input.idle?.sponsorSlots ?? [],
     },
     updatedAt,
@@ -626,7 +641,8 @@ export async function getVenueScreenState(
 
   // Squares and March Madness replace only the idle screen, so they are read only when nothing else
   // is live (each read is zero I/O outside its own season).
-  const wouldBeIdle = !liveTrivia.isGameActive && !categoryBlitz.session;
+  const wouldBeIdle =
+    !liveTrivia.isGameActive && !getLiveTriviaPregame(liveTrivia, nowMs) && !categoryBlitz.session;
   const [sponsorSlots, squares, bracket] = await Promise.all([
     screenConfig.screenSponsorRotationEnabled
       ? getActiveVenueScreenSponsors(safeVenueId, nowMs)

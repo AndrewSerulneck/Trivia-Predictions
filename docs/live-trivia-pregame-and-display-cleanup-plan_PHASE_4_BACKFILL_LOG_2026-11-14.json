@@ -1,0 +1,90 @@
+{
+  "mode": "preview",
+  "capturedAt": "2026-11-14T19:00:40.643Z",
+  "columnExists": false,
+  "totalRows": 16,
+  "withCode": 0,
+  "undo": "alter table public.venues drop column display_code; (plus the trigger and functions, see the migration header)",
+  "changes": [
+    {
+      "id": "brunswick-grove",
+      "name": "Brunswick Grove",
+      "display_code": null
+    },
+    {
+      "id": "category-blitz-global-room",
+      "name": "Category Blitz Global Room (internal)",
+      "display_code": null
+    },
+    {
+      "id": "hc-cbz-live",
+      "name": "Category Blitz Global Room (internal)",
+      "display_code": null
+    },
+    {
+      "id": "sim-category-blitz",
+      "name": "Category Blitz Simulation",
+      "display_code": null
+    },
+    {
+      "id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "name": "Carrabba's Italian Grill - East Brunswick",
+      "display_code": null
+    },
+    {
+      "id": "venue-clermont-club",
+      "name": "Clermont Club",
+      "display_code": null
+    },
+    {
+      "id": "venue-dock-s-corner-tavern",
+      "name": "Dock's Corner Tavern",
+      "display_code": null
+    },
+    {
+      "id": "venue-garden-state-bar",
+      "name": "Garden State Bar",
+      "display_code": null
+    },
+    {
+      "id": "venue-hightop-test",
+      "name": "Hightop Test Bar",
+      "display_code": null
+    },
+    {
+      "id": "venue-hightop-test-2",
+      "name": "Hightop Test Bar 2",
+      "display_code": null
+    },
+    {
+      "id": "venue-olde-silver-tavern",
+      "name": "Olde Silver Tavern",
+      "display_code": null
+    },
+    {
+      "id": "venue-overhill-country-club",
+      "name": "Overhill Country Club",
+      "display_code": null
+    },
+    {
+      "id": "venue-pacific-street",
+      "name": "Pacific Street",
+      "display_code": null
+    },
+    {
+      "id": "venue-riverside",
+      "name": "General Saloon",
+      "display_code": null
+    },
+    {
+      "id": "venue-seven-sirens-brewing-company",
+      "name": "Seven Sirens Brewing Company",
+      "display_code": null
+    },
+    {
+      "id": "venue-wyndham-hotels-resorts",
+      "name": "Wyndham Hotels & Resorts",
+      "display_code": null
+    }
+  ]
+}

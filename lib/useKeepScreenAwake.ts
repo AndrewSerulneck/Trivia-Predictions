@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 // Keeps a TV (Fire TV, Google TV, smart-TV browsers) from dimming or starting its screensaver
-// while the venue display or /tv pairing screen is up.
+// while the venue display is up.
 //
 // 1. Screen Wake Lock API where the browser has it; taken again whenever the page becomes visible
 //    or the system drops it.

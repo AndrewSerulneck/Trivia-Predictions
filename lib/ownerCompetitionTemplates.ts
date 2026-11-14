@@ -2,7 +2,7 @@
 // "server-only" import — both the server boundary (lib/ownerCompetitions.ts,
 // which re-exports this and expands templates into engine input) and the
 // dashboard UI (the template gallery) share ONE registry instead of the client
-// re-fetching it. Same pattern as lib/tvPairingShared.ts / liveTriviaShared.ts.
+// re-fetching it. Same pattern as lib/liveTriviaShared.ts.
 
 import type { ChallengeGameType, ChallengeMode } from "@/types";
 

@@ -6,7 +6,8 @@ import React from "react";
 import { InviteFriendButton } from "@/components/social-share/InviteFriendButton";
 import { PushPermissionCard } from "@/components/push/PushPermissionCard";
 import type { VenueGameCardConfig, VenueGameKey } from "@/lib/venueGameCards";
-import { GAME_TILE_THEMES, gameTileTitleLines } from "@/components/game-themes/gameTileThemes";
+import { GameTileFace } from "@/components/game-themes/GameTileFace";
+import { GAME_TILE_THEMES } from "@/components/game-themes/gameTileThemes";
 import {
   formatBadgeCount,
   VENUE_HUB_TILE_SUBTITLE_BY_KEY,
@@ -266,29 +267,22 @@ function VenueGamesPanelInner({
                   className={`tp-player-hit-target tp-player-pressable tp-clean-button tp-game-card-btn group relative block w-full overflow-hidden rounded-[22px] text-left text-white shadow-ht-tile [container-type:inline-size] ${theme.surfaceClass} ${isOpening ? "is-opening" : ""}`}
                   aria-busy={isOpening}
                 >
-                  {theme.backdrop}
-                  <span className="relative grid min-h-[176px] grid-cols-[minmax(0,1fr)_min(40%,170px)] items-center">
-                    <span className="block py-4 pl-4 pr-1">
-                      {theme.renderTitle(gameTileTitleLines(card.key))}
-                      {isCategoryBlitzLive ? (
-                        <>
-                          <span className="mt-2 block text-[clamp(15px,4.8cqw,18px)] font-black uppercase tracking-[0.1em] text-amber-100">
-                            Group game in progress!
-                          </span>
-                          <span className="mt-1 block text-[clamp(15px,4.6cqw,18px)] font-semibold leading-snug text-amber-50/90">
-                            {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
-                          </span>
-                        </>
-                      ) : (
-                        <span className={`mt-2 block text-[clamp(15px,4.6cqw,18px)] font-bold leading-snug text-white/95 ${theme.subtitleClass ?? ""}`}>
-                          {subtitle}
+                  <GameTileFace gameKey={card.key}>
+                    {isCategoryBlitzLive ? (
+                      <>
+                        <span className="mt-2 block text-[clamp(15px,4.8cqw,18px)] font-black uppercase tracking-[0.1em] text-amber-100">
+                          Group game in progress!
                         </span>
-                      )}
-                    </span>
-                    <span aria-hidden="true" className="pointer-events-none flex items-center justify-end self-stretch">
-                      {theme.art}
-                    </span>
-                  </span>
+                        <span className="mt-1 block text-[clamp(15px,4.6cqw,18px)] font-semibold leading-snug text-amber-50/90">
+                          {VENUE_HUB_TILE_SUBTITLE_BY_KEY[card.key]}
+                        </span>
+                      </>
+                    ) : (
+                      <span className={`mt-2 block text-[clamp(15px,4.6cqw,18px)] font-bold leading-snug text-white/95 ${theme.subtitleClass ?? ""}`}>
+                        {subtitle}
+                      </span>
+                    )}
+                  </GameTileFace>
 
                   {isOpening ? <span role="status" className="absolute bottom-2 right-3 z-10 inline-flex items-center gap-2 rounded-full bg-black/45 px-3 py-1 text-sm font-black"><ButtonSpinner /> Opening…</span> : null}
 

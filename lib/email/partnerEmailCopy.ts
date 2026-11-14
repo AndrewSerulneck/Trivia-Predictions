@@ -75,7 +75,7 @@ export const WELCOME_EMAIL = {
     },
     {
       title: "Put it on your TVs",
-      body: "Let other guests follow the games on your TVs by heading to your Partner Dashboard and clicking 'Venue Display.' Then follow the instructions to link a TV so other guests can follow along even if they are not playing on their phones.",
+      body: "Let other guests follow the games on your TVs by heading to your Partner Dashboard and clicking 'Venue Display.' Then open your Display URL on a TV so other guests can follow along even if they are not playing on their phones.",
     },
     {
       title: "Get guests straight to the games with QR merch",
@@ -171,7 +171,7 @@ export const VENUE_ADDED_EMAIL = {
   nextSteps: [
     {
       title: "Put it on the TVs",
-      body: "Pair the TVs at {venueName} with a code from your Partner Dashboard.",
+      body: "Open the Display URL for {venueName} on its TVs. It's on your Partner Dashboard's Venue Display page.",
     },
     {
       title: "Schedule Group Games",
@@ -183,7 +183,7 @@ export const VENUE_ADDED_EMAIL = {
     },
   ],
 
-  /** The main button (opens the TV pairing page). */
+  /** The main button (opens the Venue Display page). */
   tvButton: "Set up your TVs",
 
   /** The smaller link under it (opens the Partner Dashboard). */

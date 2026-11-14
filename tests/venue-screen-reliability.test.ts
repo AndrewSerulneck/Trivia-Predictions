@@ -13,7 +13,7 @@ import type { VenueScreenState } from "@/lib/venueScreen";
 
 const nowMs = Date.parse("2026-07-02T20:00:00.000Z");
 
-function makeState(mode: Exclude<VenueScreenState["mode"], "squares" | "bracket">): VenueScreenState {
+function makeState(mode: Exclude<VenueScreenState["mode"], "squares" | "bracket" | "live-trivia-pregame">): VenueScreenState {
   const venue = {
     id: "venue-1",
     name: "Hightop Pub",
@@ -73,7 +73,6 @@ function makeState(mode: Exclude<VenueScreenState["mode"], "squares" | "bracket"
     categoryBlitz: null,
     idle: {
       nextLiveTrivia: null,
-      nextCategoryBlitz: null,
       sponsorSlots: [],
     },
     updatedAt: nowMs,

@@ -135,7 +135,7 @@ describe("selectVenueScreenState", () => {
     const state = selectVenueScreenState({
       venue,
       liveTrivia: makeLiveQuestion(),
-      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
       updatedAt,
     });
 
@@ -163,13 +163,13 @@ describe("selectVenueScreenState", () => {
     const first = selectVenueScreenState({
       venue,
       liveTrivia: makeLiveQuestion({ ...base, occurrenceDate: "2026-07-02" }),
-      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
       updatedAt,
     });
     const second = selectVenueScreenState({
       venue,
       liveTrivia: makeLiveQuestion({ ...base, occurrenceDate: "2026-07-09" }),
-      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
       updatedAt,
     });
 
@@ -189,7 +189,7 @@ describe("selectVenueScreenState", () => {
         secondsRemaining: 12,
         revealedAnswer: "Atlanta",
       }),
-      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
       updatedAt,
     });
 
@@ -210,7 +210,7 @@ describe("selectVenueScreenState", () => {
         activePhase: "answering",
         revealedAnswer: "LEAKED_ANSWER",
       }),
-      categoryBlitz: { session: null, round: null, leaderboard: null, nextStartsAt: null, nextRoundStartsAt: null },
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
       updatedAt,
     });
 
@@ -227,7 +227,6 @@ describe("selectVenueScreenState", () => {
         session: makeCategorySession(),
         round: makeCategoryRound(),
         leaderboard: [{ rank: 1, username: "casey", points: 12 }],
-        nextStartsAt: null,
         nextRoundStartsAt: null,
       },
       updatedAt,
@@ -245,7 +244,6 @@ describe("selectVenueScreenState", () => {
         session: makeCategorySession(),
         round: makeCategoryRound(),
         leaderboard: null,
-        nextStartsAt: null,
         nextRoundStartsAt: null,
       },
       updatedAt,
@@ -269,7 +267,6 @@ describe("selectVenueScreenState", () => {
           endsAt: "2026-07-02T19:59:00.000Z",
         }),
         leaderboard: [{ rank: 1, username: "casey", points: 32 }],
-        nextStartsAt: null,
         // Next round three minutes out; the results countdown should reflect it
         // rather than the old hardcoded 0.
         nextRoundStartsAt: "2026-07-02T20:03:00.000Z",
@@ -296,7 +293,6 @@ describe("selectVenueScreenState", () => {
           endsAt: "2026-07-02T19:59:00.000Z",
         }),
         leaderboard: null,
-        nextStartsAt: null,
         // Next round two minutes out; intermission countdown reflects it.
         nextRoundStartsAt: "2026-07-02T20:02:00.000Z",
       },
@@ -333,14 +329,13 @@ describe("selectVenueScreenState", () => {
           firstRoundCategory: "History",
           recurringType: "weekly",
           recurringDays: ["fri"],
+          occurrenceDate: "2026-07-02",
         },
       }),
       categoryBlitz: {
         session: null,
         round: null,
         leaderboard: null,
-        nextStartsAt: "2026-07-03T01:00:00.000Z",
-        nextRecurringDays: ["thu", "sat"],
         nextRoundStartsAt: null,
       },
       idle: { sponsorSlots },
@@ -357,35 +352,24 @@ describe("selectVenueScreenState", () => {
       firstRoundCategory: "History",
       recurringDays: ["fri"],
     });
-    expect(state.idle?.nextCategoryBlitz).toEqual({
-      startsAt: "2026-07-03T01:00:00.000Z",
-      recurringDays: ["thu", "sat"],
-    });
+    expect(state.idle).not.toHaveProperty("nextCategoryBlitz");
     expect(state.idle?.sponsorSlots).toEqual(sponsorSlots);
   });
 
-  it("an asleep continuous Category Blitz shows the idle screen with a play-anytime invite, not a stale round", () => {
+  it("an asleep continuous Category Blitz shows the idle screen with no Category Blitz invite", () => {
     // Sleep when idle (docs/category-blitz-how-to-play-plan.md Phase 5): the TV
-    // never wakes the game, so while nobody plays it shows the idle screen.
+    // never wakes the game. Andrew 2026-11-14: no Category Blitz "Next up" card at all.
     const state = selectVenueScreenState({
       venue,
       liveTrivia: makeInactiveLive(),
-      categoryBlitz: {
-        session: null,
-        round: null,
-        leaderboard: null,
-        nextStartsAt: null,
-        nextRecurringDays: [],
-        nextRoundStartsAt: null,
-        asleep: true,
-      },
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
       updatedAt,
     });
 
     expect(state.mode).toBe("idle");
     expect(state.categoryBlitz).toBeNull();
-    expect(state.idle?.categoryBlitzOnDemand).toBe(true);
-    expect(state.idle?.nextCategoryBlitz).toBeNull();
+    expect(state.idle).not.toHaveProperty("categoryBlitzOnDemand");
+    expect(state.idle).not.toHaveProperty("nextCategoryBlitz");
   });
 
   it("maps active sponsor rows and filters sponsors outside their date window", () => {

@@ -31,6 +31,24 @@ export function applyVenueScreenDebugMode(
     };
   }
 
+  if (mode === "live-trivia-pregame") {
+    return {
+      ok: true,
+      mode: "live-trivia-pregame",
+      venue: state.venue,
+      liveTrivia: null,
+      categoryBlitz: null,
+      idle: null,
+      pregame: {
+        gameId: "debug-schedule:2026-07-02",
+        title: "Debug Live Trivia",
+        startsAt: new Date(nowMs + 14 * 60_000 + 59_000).toISOString(),
+        firstRoundCategory: "History",
+      },
+      updatedAt: nowMs,
+    };
+  }
+
   if (mode === "category-blitz") {
     return {
       ok: true,
@@ -61,10 +79,6 @@ export function applyVenueScreenDebugMode(
         startsAt: new Date(nowMs + 45 * 60_000).toISOString(),
         title: "Debug Live Trivia",
         firstRoundCategory: "History",
-        recurringDays: ["thu"],
-      },
-      nextCategoryBlitz: {
-        startsAt: new Date(nowMs + 15 * 60_000).toISOString(),
         recurringDays: ["thu"],
       },
       sponsorSlots: [

@@ -7,9 +7,8 @@ import { describe, expect, it } from "vitest";
 const read = (file: string): string => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
 describe("venue display brand chrome", () => {
-  it("draws the drifting stage behind every mode and /tv", () => {
+  it("draws the drifting stage behind every mode", () => {
     expect(read("components/venue-screen/VenueScreenClient.tsx")).toContain("<BrandStage");
-    expect(read("components/venue-screen/TvPairingDisplay.tsx")).toContain("<BrandStage");
   });
 
   it("animates only transform and opacity in the shared effects", () => {

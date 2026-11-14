@@ -1,21 +1,13 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import {
-  formatIdleCountdown,
-  getIdleGameDisplay,
-  IdleVenueScreen,
-} from "@/components/venue-screen/IdleVenueScreen";
+import { formatIdleCountdown, IdleVenueScreen } from "@/components/venue-screen/IdleVenueScreen";
+import { APP_DOWNLOAD_DISPLAY_URL, APP_DOWNLOAD_URL } from "@/lib/appDownloadLink";
 import type { VenueScreenState } from "@/lib/venueScreen";
 
 type IdleState = Extract<VenueScreenState, { mode: "idle" }>;
 
-// TvIdleAttract rotates through games at a default 8s cadence, keyed off the
-// wall clock (Math.floor(nowMs / 8000) % gameCount) — deterministic for a
-// fixed nowMs, chosen here so the FIRST scheduled game (Live Trivia) shows.
 const nowMs = Date.parse("2026-07-02T20:00:00.000Z");
-// Same games, 8s later: rotation index flips to the SECOND game (Category Blitz).
-const nowMsSecondCard = nowMs + 8_000;
 
 function makeIdleState(overrides: Partial<IdleState["idle"]> = {}): IdleState {
   return {
@@ -38,10 +30,6 @@ function makeIdleState(overrides: Partial<IdleState["idle"]> = {}): IdleState {
         firstRoundCategory: "History",
         recurringDays: ["thu"],
       },
-      nextCategoryBlitz: {
-        startsAt: "2026-07-02T20:15:30.000Z",
-        recurringDays: ["thu"],
-      },
       sponsorSlots: [],
       ...overrides,
     },
@@ -49,106 +37,39 @@ function makeIdleState(overrides: Partial<IdleState["idle"]> = {}): IdleState {
   };
 }
 
+const render = (state = makeIdleState()) =>
+  renderToStaticMarkup(React.createElement(IdleVenueScreen, { state, nowMs }));
+
 describe("Idle venue screen components", () => {
-  it("renders venue branding and the first rotating game card", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, { state: makeIdleState(), nowMs }),
-    );
+  it("is an app-download screen: Get the app, the permanent short link, the venue name once", () => {
+    const html = render();
 
-    expect(html).toContain("Hightop Pub TV");
-    expect(html).toContain("Thursday Live Trivia");
-    expect(html).toContain("1:00:00");
-    expect(html).toContain("Next up");
-  });
-
-  it("rotates to the second card 8 seconds later", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, { state: makeIdleState(), nowMs: nowMsSecondCard }),
-    );
-
-    expect(html).toContain("Category Blitz");
-    expect(html).toContain("15:22"); // 15:30 minus the 8s advance to nowMsSecondCard
-  });
-
-  it("shows scheduled days instead of a countdown for games more than 24 hours away", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, {
-        state: makeIdleState({
-          nextLiveTrivia: {
-            startsAt: "2026-07-04T21:00:00.000Z",
-            title: "Saturday Live Trivia",
-            firstRoundCategory: "History",
-            recurringDays: ["sat"],
-          },
-          nextCategoryBlitz: {
-            startsAt: "2026-07-05T20:15:30.000Z",
-            recurringDays: ["sun", "wed"],
-          },
-        }),
-        nowMs,
-      }),
-    );
-
-    expect(html).toContain("Saturday Live Trivia");
-    expect(html).not.toContain("49:00:00");
-  });
-
-  it("renders the venue name once (wordmark panel, not per-card)", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, { state: makeIdleState(), nowMs }),
-    );
-
+    expect(html).toContain("Get the app");
+    expect(html).toContain(APP_DOWNLOAD_DISPLAY_URL);
+    expect(html).toContain('data-testid="app-download-qr"');
+    expect(html).toContain("Hightop");
     expect(html.match(/Hightop Pub TV/g)?.length).toBe(1);
   });
 
-  it("shows only the scheduled game when one game is unscheduled", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, {
-        state: makeIdleState({
-          nextLiveTrivia: null,
-          nextCategoryBlitz: {
-            startsAt: "2026-07-02T20:15:30.000Z",
-          },
-        }),
-        nowMs,
-      }),
-    );
-
-    expect(html).toContain("Category Blitz");
-    expect(html).toContain("15:30");
+  it("draws the QR for the permanent app link, white plate, no motion on it", () => {
+    const qr = render().split('data-testid="app-download-qr"')[1] ?? "";
+    expect(qr).toContain("<svg");
+    expect(qr).toContain('fill="#ffffff"');
+    expect(qr).not.toMatch(/animate|transform|opacity/i);
+    expect(APP_DOWNLOAD_URL).toBe("https://hightopchallenge.com/app");
   });
 
-  it("renders the calm attract screen (wordmark + venue name) when no games are scheduled", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, {
-        state: makeIdleState({
-          nextLiveTrivia: null,
-          nextCategoryBlitz: null,
-        }),
-        nowMs,
-      }),
-    );
-
-    expect(html).toContain("Hightop");
-    expect(html).toContain("Hightop Pub TV");
+  it("drops the carousel, the tagline and every Category Blitz card (Andrew 2026-11-14)", () => {
+    const html = render(makeIdleState());
     expect(html).not.toContain("Next up");
+    expect(html).not.toContain("Category Blitz");
+    expect(html).not.toContain("Play anytime");
+    expect(html).not.toContain("Start it on your phone");
+    expect(html).not.toContain("Grab a table");
   });
 
-  it("invites players to start an asleep Category Blitz instead of showing a time", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, {
-        state: makeIdleState({
-          nextLiveTrivia: null,
-          nextCategoryBlitz: null,
-          categoryBlitzOnDemand: true,
-        }),
-        nowMs,
-      }),
-    );
-
-    expect(html).toContain("Category Blitz");
-    expect(html).toContain("Play anytime");
-    expect(html).toContain("Start it on your phone");
+  it("renders the same markup with or without a scheduled game (the small line is device-time text, added after hydration)", () => {
+    expect(render()).toBe(render(makeIdleState({ nextLiveTrivia: null })));
   });
 
   it("formats longer idle countdowns for large TV display", () => {
@@ -156,16 +77,5 @@ describe("Idle venue screen components", () => {
     expect(formatIdleCountdown(45)).toBe("0:45");
     expect(formatIdleCountdown(3_661)).toBe("1:01:01");
     expect(formatIdleCountdown(93_600)).toBe("1d 02h");
-  });
-
-  it("switches countdown display at the 24-hour threshold", () => {
-    expect(getIdleGameDisplay("2026-07-03T19:59:59.000Z", nowMs, ["fri"])).toEqual({
-      kind: "countdown",
-      value: "23:59:59",
-    });
-    expect(getIdleGameDisplay("2026-07-03T20:00:01.000Z", nowMs, ["fri"])).toEqual({
-      kind: "schedule",
-      value: "Friday",
-    });
   });
 });
