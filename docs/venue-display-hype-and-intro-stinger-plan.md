@@ -70,7 +70,7 @@ Things to know:
 7. **Answers to §7 (Andrew, 2026-11-12):** (1) no licensed sound file — the Phase 2 agent finds CC0 options for
    him to pick; (2) **no sound-off switch**, sound stays on (bars are loud; partners aren't asked questions);
    (3) devices: none deployed yet — assume Fire TV Stick first, plus Google TV, smart-TV browsers and Apple TV.
-8. **Keep the TV awake (Andrew, 2026-11-12):** the display and `/tv` stop the TV's screensaver/dimming —
+8. **Keep the TV awake (Andrew, 2026-11-12):** the display stops the TV's screensaver/dimming —
    `lib/useKeepScreenAwake.ts` (Screen Wake Lock, fallback: 1 KB muted looping video). Built with Phase 1.
 9. **Reduced motion keeps the 2.15 s tagline rule** (decided in Phase 1): the reduced stinger uses the same timeline
    (fades only, no particles/rays/spring), so it lasts ~4.3 s rather than the 1.5 s first planned — a 1.5 s version

@@ -15,7 +15,7 @@
 //
 // The app is for PLAYERS ONLY (plan §2 item 12, §5 "No partner surface in the
 // app"): `/owner` is listed, so the partner sign-in, the Partner Dashboard,
-// billing and signup all open in the browser, and so does the TV pairing page
+// billing and signup all open in the browser, and so does the TV display link
 // `/tv`. Legal pages stay in the app (Apple wants them reachable).
 
 /** Marketing pages: the app has none (Phase 2E). `/` is the apex root only (it rewrites to /info). */
@@ -26,7 +26,7 @@ export type WebOnlyPagePath = "/owner" | "/tv" | "/admin";
 /**
  * Pages that only work on the website: every partner page (`/owner/*` — sign-in,
  * dashboard, billing, signup; no purchase buttons in the app, plan §5), the venue
- * TV pairing page, and /admin (never reachable in the app). Each entry also
+ * TV display link, and /admin (never reachable in the app). Each entry also
  * matches the paths below it.
  */
 export const APP_WEB_ONLY_PAGES: Record<WebOnlyPagePath, { title: string; body: string; openPath: string }> = {

@@ -3,7 +3,7 @@
 **Status:** Phase 1 committed 2026-11-14, PR #16 open, not deployed (`…_PHASE_1_HANDOFF.md`). Phase 2 committed 2026-11-14 as `625219bc` on
 branch `feature/live-trivia-pregame-display` (stacked on PR #16), not deployed (`…_PHASE_2_HANDOFF.md`). Phase 3 committed 2026-11-14 as `1d31346f` on the same branch,
 not deployed (`…_PHASE_3_HANDOFF.md`). Phase 4 done 2026-11-14: migration **applied to production** (16 venues
-have codes), code uncommitted and not deployed (`…_PHASE_4_HANDOFF.md`). Phases 5–6 not started. Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
+have codes), code committed as `b2c42e89`, not deployed (`…_PHASE_4_HANDOFF.md`). Phase 5 done 2026-11-14 (code removal; the `tv_pairing_codes` drop migration deliberately waits until after the deploy), see `…_PHASE_5_HANDOFF.md`. Phase 6 not started. Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
 
@@ -220,6 +220,8 @@ column is `NOT NULL`. Bare `/tv` is a route handler (`app/tv/route.ts`, 307), no
 `GET /api/owner/venues?with=displayCode`. The email button opens `/owner/display`. The Fire Stick paste check (step 6) still needs Andrew.
 
 ### Phase 5 — Remove Link a TV
+
+**Done as (2026-11-14):** steps 1, 2 and 4 done; step 3 (drop migration) intentionally not written yet. The Crockford move was already done in Phase 4 (`lib/displayCode.ts` has its own copy), so `lib/tvPairingShared.ts` was simply deleted.
 
 1. Delete: `components/venue-screen/TvPairingDisplay.tsx`, `lib/tvPairing.ts`, `app/api/tv-pair/route.ts`,
    `app/api/tv-pair/[code]/route.ts`, `app/api/owner/tv-pair/claim/route.ts`, `tests/lib.tvPairing.test.ts`,
