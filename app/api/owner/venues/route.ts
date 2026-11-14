@@ -12,6 +12,9 @@ import { requireOwnerAuth } from "@/lib/requireOwnerAuth";
  * from `GET /api/owner/dashboard` in one round trip (Phase 5). This route is
  * still live for /owner/display, /owner/game-settings and /owner/category-blitz,
  * and shares its query with the dashboard route via `listOwnerVenues`.
+ *
+ * `?with=displayCode` (the Display page only) adds each venue's short display link
+ * code, in the same query.
  */
 export async function GET(request: Request) {
   if (!supabaseAdmin) {
@@ -26,7 +29,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const venues = await listOwnerVenues(auth.venueIds);
+    const withDisplayCode = new URL(request.url).searchParams.get("with") === "displayCode";
+    const venues = await listOwnerVenues(auth.venueIds, { withDisplayCode });
     return NextResponse.json({ ok: true, venues });
   } catch (error) {
     return NextResponse.json(

@@ -148,9 +148,9 @@ export const classifyPage = (pathname: string): PageKind => {
     // App download short link (Phase 9a): printed on shared pictures, so it must answer on
     // whichever host receives it and never be bounced across hosts.
     pathname === "/app" ||
-    // TV pairing page (Phase 5b): owners type the apex URL (hightopchallenge.com/tv)
-    // into TV browsers, so /tv must be served on whatever host receives it and
-    // never bounced across hosts.
+    // Short display link (hightopchallenge.com/tv/<code>): partners type it into TV
+    // browsers, so /tv must be served on whatever host receives it and never
+    // bounced across hosts.
     pathname === "/tv" ||
     pathname.startsWith("/tv/") ||
     hasFileExtension(pathname)

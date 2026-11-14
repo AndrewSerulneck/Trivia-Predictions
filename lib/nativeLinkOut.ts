@@ -39,7 +39,7 @@ export const APP_WEB_ONLY_PAGES: Record<WebOnlyPagePath, { title: string; body: 
   "/tv": {
     openPath: "/tv",
     title: "The venue TV screen is on our website",
-    body: "Venue partners set up the TV screen at hightopchallenge.com/tv in the TV's web browser. This app is for players.",
+    body: "Venue partners open their Display URL in the TV's web browser. This app is for players.",
   },
   "/admin": {
     openPath: "/admin",

@@ -29,7 +29,7 @@ const venueAdded = buildVenueAddedEmail({
   thisVenueCents: 7500,
   newMonthlyTotalCents: 17500,
   chargedTodayCents: 3750,
-  tvSetupUrl: "https://play.hightopchallenge.com/tv",
+  tvSetupUrl: "https://hightopchallenge.com/owner/display",
   dashboardUrl: "https://play.hightopchallenge.com/owner/dashboard",
 });
 

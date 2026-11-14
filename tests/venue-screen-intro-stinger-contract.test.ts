@@ -137,9 +137,9 @@ describe("stinger sound", () => {
 });
 
 describe("keep the TV awake", () => {
-  it("the display and the /tv pairing screen both hold the screen on", () => {
+  it("the display holds the screen on (bare /tv is only a redirect to /info now)", () => {
     expect(read("components/venue-screen/VenueScreenClient.tsx")).toMatch(/useKeepScreenAwake\(\)/);
-    expect(read("app/tv/page.tsx")).toMatch(/useKeepScreenAwake\(\)/);
+    expect(read("app/tv/route.ts")).toMatch(/NextResponse\.redirect\(marketingUrl\("\/info"\), 307\)/);
   });
 
   it("uses the Wake Lock API with a muted looping video fallback, and skips embedded previews", () => {

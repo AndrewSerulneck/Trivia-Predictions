@@ -47,9 +47,8 @@ function isPublicPath(pathname: string): boolean {
   if (isVenueScreenPath(pathname)) {
     return true;
   }
-  // Public TV pairing page (Phase 5b) — a TV browser has no auth cookies. Its
-  // pairing APIs live under /api/tv-pair/* and are already covered by the /api/
-  // rule below.
+  // Public short display link /tv/<code> (app/tv/[code]/route.ts) — a TV browser
+  // has no auth cookies. Bare /tv redirects to /info.
   if (pathname === "/tv" || pathname.startsWith("/tv/")) {
     return true;
   }

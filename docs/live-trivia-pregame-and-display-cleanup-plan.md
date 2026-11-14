@@ -1,8 +1,9 @@
 # Live Trivia pre-game screen, no ads on the display, Direct-URL-only TV setup, Category Blitz yields to Live Trivia
 
 **Status:** Phase 1 committed 2026-11-14, PR #16 open, not deployed (`…_PHASE_1_HANDOFF.md`). Phase 2 committed 2026-11-14 as `625219bc` on
-branch `feature/live-trivia-pregame-display` (stacked on PR #16), not deployed (`…_PHASE_2_HANDOFF.md`). Phase 3 committed 2026-11-14 on the same branch,
-not deployed (`…_PHASE_3_HANDOFF.md`). Phases 4–6 not started. Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
+branch `feature/live-trivia-pregame-display` (stacked on PR #16), not deployed (`…_PHASE_2_HANDOFF.md`). Phase 3 committed 2026-11-14 as `1d31346f` on the same branch,
+not deployed (`…_PHASE_3_HANDOFF.md`). Phase 4 done 2026-11-14: migration **applied to production** (16 venues
+have codes), code uncommitted and not deployed (`…_PHASE_4_HANDOFF.md`). Phases 5–6 not started. Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
 
@@ -212,6 +213,11 @@ negligible on current billing. Measure after release with a log counter (no Obse
    Silk opens the screen full-screen. If paste doesn't work, drop "paste" from step 2 (type only) and record it.
 7. Tests: code format/normalize; route redirects (known, lowercase, unknown); display page contract (no "Link a TV",
    no "Manual setup", has "Display URL" and both step lines).
+
+**Done as (2026-11-14):** migration `20261114190044_venue_display_code.sql` applied to production (Andrew approved;
+16/16 venues have unique codes). The trigger fills a NULL code on insert **or** update of `display_code`, and the
+column is `NOT NULL`. Bare `/tv` is a route handler (`app/tv/route.ts`, 307), not a page. The display codes come from
+`GET /api/owner/venues?with=displayCode`. The email button opens `/owner/display`. The Fire Stick paste check (step 6) still needs Andrew.
 
 ### Phase 5 — Remove Link a TV
 

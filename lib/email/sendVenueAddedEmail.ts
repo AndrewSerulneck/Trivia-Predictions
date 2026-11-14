@@ -1,5 +1,5 @@
 import "server-only";
-import { gameUrl } from "@/lib/domainSplit";
+import { gameUrl, marketingUrl } from "@/lib/domainSplit";
 import { getEmailFromAddress, resend } from "@/lib/email/resend";
 import { buildVenueAddedEmail, type VenueAddedEmailInput } from "@/lib/email/venueAddedEmail";
 
@@ -23,7 +23,8 @@ export async function sendVenueAddedEmail(input: SendVenueAddedEmailInput): Prom
     const { toEmail, ...content } = input;
     const { subject, html, text } = buildVenueAddedEmail({
       ...content,
-      tvSetupUrl: gameUrl("/tv"),
+      // The Venue Display page (its Display URL card). /owner/* lives on the apex.
+      tvSetupUrl: marketingUrl("/owner/display"),
       dashboardUrl: gameUrl("/owner/dashboard"),
     });
 

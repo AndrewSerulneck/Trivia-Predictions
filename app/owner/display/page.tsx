@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { withIntroDisabled } from "@/components/venue-screen/stingerTimeline";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { displayCodePath, displayShortUrl, displayShortUrlLabel } from "@/lib/displayCode";
 import { gameUrl } from "@/lib/domainSplit";
 import { ownerAuthRecoveryPath } from "@/lib/ownerAuthCodes";
-import { normalizePairingCode } from "@/lib/tvPairingShared";
 
 // The venue screen is built for a TV/desktop 16:9 viewport, not a narrow mobile
 // one — loading it at the preview box's native (~350px) width makes it reflow
@@ -17,30 +17,25 @@ import { normalizePairingCode } from "@/lib/tvPairingShared";
 const PREVIEW_SOURCE_WIDTH = 1280;
 const PREVIEW_SOURCE_HEIGHT = 720;
 
-type Venue = { id: string; name: string };
+type Venue = { id: string; name: string; displayCode?: string | null };
 
+// Partners set up a display only by its Display URL, the short link
+// hightopchallenge.com/tv/<code> (docs/live-trivia-pregame-and-display-cleanup-plan.md,
+// Phase 4; code pairing was removed, D4). Copy is pinned by
+// tests/owner-display-page-contract.test.ts.
 const OwnerDisplayPage = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [selectedVenueId, setSelectedVenueId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [showManualSetup, setShowManualSetup] = useState(false);
+  const [showFireStick, setShowFireStick] = useState(false);
   const [displayExpanded, setDisplayExpanded] = useState(false);
-
-  // "Link a TV" claim form state — pre-filled from a `/tv` page's QR deep-link
-  // (?code=XK49PM) so scanning it lands ready to tap once.
-  const [pairingCode, setPairingCode] = useState(() =>
-    normalizePairingCode(searchParams.get("code") ?? ""),
-  );
-  const [claiming, setClaiming] = useState(false);
-  const [claimMessage, setClaimMessage] = useState<{ text: string; kind: "success" | "error" } | null>(null);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/owner/venues");
+        const res = await fetch("/api/owner/venues?with=displayCode");
         if (res.status === 401) {
           const body = (await res.json().catch(() => ({}))) as { code?: string };
           router.push(ownerAuthRecoveryPath(body.code));
@@ -65,46 +60,21 @@ const OwnerDisplayPage = () => {
 
   const selectedVenue = venues.find((v) => v.id === selectedVenueId);
   // The venue screen is a game route — under the domain split it lives on `play.`
-  // (gameUrl resolves to the current apex while the split is off).
-  const displayUrl = selectedVenueId ? gameUrl(`/venue/${selectedVenueId}/screen`) : "";
+  // (gameUrl resolves to the current apex while the split is off). The preview
+  // loads it directly; partners copy the short link, which redirects to it.
+  const screenUrl = selectedVenueId ? gameUrl(`/venue/${selectedVenueId}/screen`) : "";
+  const displayCode = selectedVenue?.displayCode ?? null;
+  const copyUrl = displayCode ? displayShortUrl(displayCode) : screenUrl;
+  const shownUrl = displayCode ? displayShortUrlLabel(displayCode) : screenUrl;
 
   const handleCopy = async () => {
-    if (!displayUrl) return;
+    if (!copyUrl) return;
     try {
-      await navigator.clipboard.writeText(displayUrl);
+      await navigator.clipboard.writeText(copyUrl);
       setCopied(true);
     } catch {
       // Clipboard API unavailable (e.g. non-HTTPS context) — the URL is still
-      // visible and selectable in the input for manual copy.
-    }
-  };
-
-  const handleClaim = async () => {
-    if (!selectedVenueId) return;
-    const code = normalizePairingCode(pairingCode);
-    if (!code) {
-      setClaimMessage({ text: "Enter the code shown on your TV.", kind: "error" });
-      return;
-    }
-    setClaiming(true);
-    setClaimMessage(null);
-    try {
-      const res = await fetch("/api/owner/tv-pair/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, venueId: selectedVenueId }),
-      });
-      const json = (await res.json()) as { ok: boolean; error?: string };
-      if (!json.ok) {
-        setClaimMessage({ text: json.error ?? "Couldn't link that TV. Please try again.", kind: "error" });
-        return;
-      }
-      setClaimMessage({ text: "TV linked! It should switch to your venue screen in a few seconds.", kind: "success" });
-      setPairingCode("");
-    } catch {
-      setClaimMessage({ text: "Network error. Please try again.", kind: "error" });
-    } finally {
-      setClaiming(false);
+      // visible and selectable for manual copy.
     }
   };
 
@@ -138,108 +108,72 @@ const OwnerDisplayPage = () => {
           </div>
         ) : (
           <>
-            {/* Link a TV — primary flow (Phase 5b). The TV shows a code at /tv;
-                the owner types (or QR-scans) it in here. */}
-            <div className="rounded-2xl border border-indigo-400/40 bg-ht-surface p-4 shadow-ht-card">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-indigo-300">
-                Link a TV — {selectedVenue?.name ?? "your venue"}
-              </p>
-              <p className="mt-2 text-sm font-semibold text-ht-secondary">
-                On the TV&apos;s browser, go to <span className="font-mono text-ht-primary">hightopchallenge.com/tv</span>.
-                It&apos;ll show that TV&apos;s own one-time code — enter it below to link it to{" "}
-                {selectedVenue?.name ?? "your venue"}.
-              </p>
-              <p className="mt-1.5 text-xs font-semibold text-ht-muted">
-                Each device or browser needs its own one-time link. If you switch devices (e.g. Fire
-                Stick → Apple TV) or open a different browser, just repeat this step — nothing is lost.
-              </p>
-
-              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                <input
-                  type="text"
-                  inputMode="text"
-                  autoCapitalize="characters"
-                  value={pairingCode}
-                  onChange={(e) => setPairingCode(normalizePairingCode(e.target.value))}
-                  placeholder="XK49PM"
-                  maxLength={6}
-                  className="min-h-11 flex-1 rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 text-center font-mono text-lg font-black uppercase tracking-[0.2em] text-ht-primary outline-none focus:border-ht-cyan-400"
-                />
+            <div className="rounded-2xl border border-ht-hairline bg-ht-surface p-4 shadow-ht-card">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Display URL</p>
+              <div className="mt-3 flex items-center gap-2 rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5">
+                {/* Wraps before "/tv/" on narrow phones, so the code itself is never cut off. */}
+                <span
+                  className="min-w-0 flex-1 select-all break-words font-mono text-base font-bold text-ht-primary"
+                  title={copyUrl}
+                >
+                  {displayCode ? (
+                    <>
+                      {shownUrl.slice(0, -displayCodePath(displayCode).length)}
+                      <wbr />
+                      <span className="whitespace-nowrap">{displayCodePath(displayCode)}</span>
+                    </>
+                  ) : (
+                    shownUrl
+                  )}
+                </span>
                 <button
                   type="button"
-                  onClick={() => void handleClaim()}
-                  disabled={claiming || pairingCode.length !== 6}
-                  className="min-h-11 shrink-0 rounded-xl border border-ht-soft bg-ht-cyan-500 px-5 text-sm font-black text-slate-950 disabled:opacity-50"
+                  onClick={() => void handleCopy()}
+                  className="min-h-11 shrink-0 rounded-lg border border-ht-soft bg-ht-cyan-500 px-4 text-sm font-black text-slate-950"
                 >
-                  {claiming ? "Linking…" : "Link TV"}
+                  {copied ? "Copied" : "Copy"}
                 </button>
               </div>
 
-              {claimMessage ? (
-                <div
-                  className={`mt-3 rounded-xl px-3 py-2 text-xs font-bold ${
-                    claimMessage.kind === "success"
-                      ? "bg-ht-emerald-500/15 text-ht-emerald-300"
-                      : "bg-ht-rose-500/15 text-ht-rose-300"
-                  }`}
+              <ol className="mt-4 space-y-2 text-sm font-semibold text-ht-secondary">
+                <li>Step 1: Copy the display URL into your device&apos;s web browser.</li>
+                <li>Step 2: Screen mirror your device with a TV or projector.</li>
+              </ol>
+
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowFireStick((v) => !v)}
+                  aria-expanded={showFireStick}
+                  className="flex min-h-11 w-full items-center justify-between rounded-xl px-3 text-left text-sm font-bold text-ht-primary"
                 >
-                  {claimMessage.text}
-                </div>
-              ) : null}
+                  Amazon Fire Stick
+                  <span className="text-ht-muted">{showFireStick ? "−" : "+"}</span>
+                </button>
+                {showFireStick ? (
+                  <ol className="mt-3 list-decimal space-y-1.5 pl-8 pr-3 text-sm font-semibold text-ht-secondary">
+                    <li>
+                      Open <span className="text-ht-primary">Silk Browser</span> (free in the Fire TV app store).
+                    </li>
+                    <li>
+                      Select the address bar. Scan the QR code beside the keyboard with your phone and paste the
+                      display URL, or type it.
+                    </li>
+                    <li>Bookmark it for next time.</li>
+                  </ol>
+                ) : null}
+              </div>
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-ht-hairline bg-ht-surface shadow-ht-card">
               <div className="flex items-center justify-between px-4 pt-4">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Preview</p>
-                <FullscreenExpander url={displayUrl} onExpandedChange={setDisplayExpanded} />
+                <FullscreenExpander url={screenUrl} onExpandedChange={setDisplayExpanded} />
               </div>
               <div className="mt-3">
-                <ScaledPreview url={displayUrl} paused={displayExpanded} />
+                <ScaledPreview url={screenUrl} paused={displayExpanded} />
               </div>
             </div>
-
-            {/* Manual setup — demoted secondary path (was the primary QR/URL flow
-                before Phase 5b). Still useful for previewing on a phone or as a
-                fallback if /tv pairing isn't available. */}
-            <div className="rounded-2xl border border-ht-hairline bg-ht-surface shadow-ht-card">
-              <button
-                type="button"
-                onClick={() => setShowManualSetup((v) => !v)}
-                className="flex w-full items-center justify-between px-4 py-3 text-left"
-              >
-                <span className="text-xs font-black uppercase tracking-[0.14em] text-ht-muted">
-                  Manual setup (QR / direct URL)
-                </span>
-                <span className="text-ht-muted">{showManualSetup ? "−" : "+"}</span>
-              </button>
-
-              {showManualSetup ? (
-                <div className="space-y-4 border-t border-ht-hairline p-4 pt-4">
-                  <div className="flex items-center gap-2 rounded-xl border border-ht-elevated-2 bg-ht-elevated px-3 py-2.5">
-                    <span
-                      className="min-w-0 flex-1 truncate font-mono text-xs font-semibold text-ht-secondary"
-                      title={displayUrl}
-                    >
-                      {displayUrl}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => void handleCopy()}
-                      className="shrink-0 rounded-lg border border-ht-soft bg-ht-cyan-500 px-3 py-1.5 text-xs font-black text-slate-950"
-                    >
-                      {copied ? "Copied ✓" : "Copy"}
-                    </button>
-                  </div>
-
-                  <p className="text-sm font-semibold text-ht-secondary">
-                    Type this URL into the browser on your TV, or type this URL into a device that is paired
-                    with your TV.
-                  </p>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Native TV apps (Amazon/Google/Apple TV) don't exist yet — this is browser-URL only for now. */}
           </>
         )}
       </div>
