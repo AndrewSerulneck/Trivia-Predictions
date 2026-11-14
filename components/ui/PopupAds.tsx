@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { isVenueDisplayPath } from "@/lib/playerRuntimePaths";
 import { getVenueId } from "@/lib/storage";
 import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import { releaseAdTier, requestAdTier, setLandingPopupGate } from "@/components/ui/adPriority";
@@ -61,6 +62,10 @@ function isTriviaRoundEndedActive(): boolean {
 }
 
 function resolvePageKey(pathname: string | null): AdPageKey | null {
+  // The venue display (TV) never shows ads.
+  if (isVenueDisplayPath(pathname)) {
+    return null;
+  }
   if (!pathname || pathname === "/" || pathname === "/join") {
     return "join";
   }

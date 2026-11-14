@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore }
 import { usePathname } from "next/navigation";
 import { AdBanner } from "@/components/ui/AdBanner";
 import { isLandingPopupGateActive, releaseAdTier, requestAdTier, subscribeAdTierChange } from "@/components/ui/adPriority";
+import { isVenueDisplayPath } from "@/lib/playerRuntimePaths";
 import { getVenueId } from "@/lib/storage";
 import { isVenueTransitionGateActive } from "@/lib/venueGameTransition";
 import type { AdDisplayTrigger, AdPageKey, Advertisement } from "@/types";
@@ -40,7 +41,7 @@ function isAdminRoute(pathname: string | null): boolean {
 // this route only; the other game routes' ad behavior is deliberate and
 // unchanged (see docs/category-blitz-app-feel-plan.md Phase 5).
 function isAdExcludedRoute(pathname: string | null): boolean {
-  return Boolean(pathname?.startsWith("/category-blitz"));
+  return Boolean(pathname?.startsWith("/category-blitz")) || isVenueDisplayPath(pathname); // display (TV): never ads
 }
 
 // The Bingo landscape board is a body-level portal that owns the whole display, and
