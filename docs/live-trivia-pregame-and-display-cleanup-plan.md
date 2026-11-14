@@ -1,7 +1,8 @@
 # Live Trivia pre-game screen, no ads on the display, Direct-URL-only TV setup, Category Blitz yields to Live Trivia
 
-**Status:** Phase 1 committed 2026-11-14, PR #16 open, not deployed (`…_PHASE_1_HANDOFF.md`). Phase 2 done 2026-11-14 on
-branch `feature/live-trivia-pregame-display` (stacked on PR #16), uncommitted, not deployed (`…_PHASE_2_HANDOFF.md`). Phases 3–6 not started. Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
+**Status:** Phase 1 committed 2026-11-14, PR #16 open, not deployed (`…_PHASE_1_HANDOFF.md`). Phase 2 committed 2026-11-14 as `625219bc` on
+branch `feature/live-trivia-pregame-display` (stacked on PR #16), not deployed (`…_PHASE_2_HANDOFF.md`). Phase 3 committed 2026-11-14 on the same branch,
+not deployed (`…_PHASE_3_HANDOFF.md`). Phases 4–6 not started. Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
 
@@ -250,8 +251,8 @@ negligible on current billing. Measure after release with a log counter (no Obse
 Category Blitz shows only while someone plays it; otherwise a gently animated screen with an app-download QR. Q2 → yes.
 Q3 → yes, small, only if known. Q4 → no domain yet.
 
-- **Q5 (for Phase 3):** On the idle app-download screen, keep one small line for the next scheduled Live Trivia game
-  (e.g. "Live Trivia · Thursday 8:00 PM")? Default: yes, if one is scheduled.
+- **Q5 — answered 2026-11-14 (Andrew): yes.** The idle app-download screen keeps one small line for the next scheduled
+  Live Trivia game ("Live Trivia · Thursday 8:00 PM"; "Today"/"Tomorrow" when it is), only when one is scheduled.
 
 ## 7. Standing rules (to fill in at Phase 6)
 

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { BracketTvScreen } from "@/components/venue-screen/BracketTvScreen";
 import { CategoryBlitzIntermissionScreen } from "@/components/venue-screen/CategoryBlitzIntermissionScreen";
 import { CategoryBlitzScreen } from "@/components/venue-screen/CategoryBlitzScreen";
-import { formatIdleCountdown, IdleVenueScreen } from "@/components/venue-screen/IdleVenueScreen";
+import { IdleVenueScreen } from "@/components/venue-screen/IdleVenueScreen";
 import { LiveTriviaIntermissionScreen } from "@/components/venue-screen/LiveTriviaIntermissionScreen";
 import { LiveTriviaRevealScreen } from "@/components/venue-screen/LiveTriviaRevealScreen";
 import { LiveTriviaScreen } from "@/components/venue-screen/LiveTriviaScreen";
@@ -16,6 +16,7 @@ import { ShineSweep } from "@/components/venue-screen/fx/ShineSweep";
 import { SquaresTvScreen } from "@/components/venue-screen/SquaresTvScreen";
 import { ScreenTransition } from "@/components/venue-screen/ScreenTransition";
 import { TvGoLiveTakeover, type GameLabel } from "@/components/venue-screen/TvGoLiveTakeover";
+import { TvLiveTriviaPregame } from "@/components/venue-screen/TvLiveTriviaPregame";
 import { TvIntroStinger } from "@/components/venue-screen/TvIntroStinger";
 import { VenueScreenStatus } from "@/components/venue-screen/VenueScreenStatus";
 import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
@@ -190,27 +191,6 @@ function LiveTriviaPanel({
   if (phase === "question") return <LiveTriviaScreen state={state} nowMs={nowMs} />;
   if (phase === "reveal") return <LiveTriviaRevealScreen state={state} nowMs={nowMs} />;
   return <LiveTriviaIntermissionScreen state={state} nowMs={nowMs} />;
-}
-
-// Phase 2 placeholder; Phase 3 replaces it with TvLiveTriviaPregame (QR + steps).
-function LiveTriviaPregamePanel({
-  state,
-  nowMs,
-}: {
-  state: Extract<VenueScreenState, { mode: "live-trivia-pregame" }>;
-  nowMs: number;
-}) {
-  const { startsAt, firstRoundCategory } = state.pregame;
-  const secondsLeft = Math.max(0, Math.ceil((Date.parse(startsAt) - nowMs) / 1_000));
-  return (
-    <section className="flex min-h-0 flex-1 flex-col items-center justify-center gap-8 text-center">
-      <p className="text-5xl font-black uppercase tracking-[0.2em] text-slate-300">Starts in</p>
-      <p className="text-[12rem] font-black leading-none tabular-nums text-white">{formatIdleCountdown(secondsLeft)}</p>
-      {firstRoundCategory ? (
-        <p className="text-4xl font-bold text-slate-300">Round 1: {firstRoundCategory}</p>
-      ) : null}
-    </section>
-  );
 }
 
 function CategoryBlitzPanel({
@@ -412,7 +392,7 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null, int
                 <ScreenTransition transitionKey={transitionKey} className="flex min-h-0 flex-1 flex-col">
                   {state.mode === "live-trivia" ? <LiveTriviaPanel state={state} nowMs={nowMs} /> : null}
                   {state.mode === "live-trivia-pregame" ? (
-                    <LiveTriviaPregamePanel state={state} nowMs={nowMs} />
+                    <TvLiveTriviaPregame state={state} nowMs={nowMs} accent={theme.accent} />
                   ) : null}
                   {state.mode === "category-blitz" ? <CategoryBlitzPanel state={state} nowMs={nowMs} /> : null}
                 </ScreenTransition>

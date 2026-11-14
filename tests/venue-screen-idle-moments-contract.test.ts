@@ -18,31 +18,32 @@ describe("idle screen moments", () => {
     expect(idle).toContain("reduceMotion && momentKey !== firstMomentKey");
   });
 
-  it("takes game colours and vector art from GAME_TILE_THEMES, keeping the label as is", () => {
-    expect(idle).toContain("GAME_TILE_THEMES[game.gameKey]");
-    expect(idle).toContain("theme.surfaceClass");
-    expect(idle).toContain("{game.label}");
-    expect(wrapper).toContain('gameKey: "live_trivia"');
-    // Andrew 2026-11-14: no Category Blitz "Next up" card (docs/live-trivia-pregame-and-display-cleanup-plan.md).
-    expect(wrapper).not.toContain('gameKey: "category-blitz"');
+  it("anchors the burst on the wordmark, never the QR", () => {
+    expect(idle).toContain("at: wordmarkRef.current");
+    expect(idle).not.toContain("cardRef");
   });
 
-  it("flips digits under an hour and beats under five minutes, with no new words", () => {
-    expect(idle).toContain("IDLE_FLIP_UNDER_S = 3_600");
-    expect(idle).toContain("IDLE_HEARTBEAT_UNDER_S = 300");
-    expect(idle).toContain("rotateX");
-    expect(idle).toContain('data-testid="idle-heartbeat"');
+  it("is a still QR with motion only around it, and no game card (Andrew 2026-11-14)", () => {
+    expect(idle).toContain("<AppDownloadQr");
+    expect(idle).toContain('data-testid="idle-qr-halo"');
+    expect(idle).toContain('data-testid="idle-qr-ring"');
+    expect(idle).not.toContain("GAME_TILE_THEMES");
+    expect(idle).not.toContain("Category Blitz");
+    expect(wrapper).not.toContain("category-blitz");
+    expect(wrapper).not.toContain('gameKey: "');
+    const qr = readFileSync("components/venue-screen/AppDownloadQr.tsx", "utf8");
+    expect(qr).not.toMatch(/framer-motion|motion\.|animate=|transition=|transform:/);
   });
 
   it("renders the same markup under reduced motion (no hydration mismatch)", () => {
-    expect(idle).not.toContain("!reduceMotion && remaining");
-    expect(idle).not.toContain("heartbeat && !reduceMotion");
-    expect(idle).toContain("flip={!reduceMotion}");
+    expect(idle).not.toContain("!reduceMotion &&");
+    expect(idle).toContain("reduceMotion ? undefined :");
+    // Device-time text only after hydration.
+    expect(idle).toContain("hydrated ? formatNextLiveTriviaLine");
   });
 
-  it("keeps the wall-clock drift and rotation", () => {
+  it("keeps the wall-clock drift", () => {
     expect(idle).toContain("DRIFT_X_MS = 227_000");
     expect(idle).toContain("DRIFT_Y_MS = 149_000");
-    expect(idle).toContain("Math.floor(nowMs / (rotateSeconds * 1000))");
   });
 });

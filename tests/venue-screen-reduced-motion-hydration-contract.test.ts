@@ -15,6 +15,7 @@ const SSR_PANELS = [
   "components/venue-screen/TvRoundBreak.tsx",
   "components/venue-screen/TvFinalStandings.tsx",
   "components/venue-screen/TvBlitzResults.tsx",
+  "components/venue-screen/TvLiveTriviaPregame.tsx",
 ];
 
 describe("venue display reduced motion is hydration-safe", () => {
