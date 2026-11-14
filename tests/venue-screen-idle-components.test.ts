@@ -10,12 +10,7 @@ import type { VenueScreenState } from "@/lib/venueScreen";
 
 type IdleState = Extract<VenueScreenState, { mode: "idle" }>;
 
-// TvIdleAttract rotates through games at a default 8s cadence, keyed off the
-// wall clock (Math.floor(nowMs / 8000) % gameCount) — deterministic for a
-// fixed nowMs, chosen here so the FIRST scheduled game (Live Trivia) shows.
 const nowMs = Date.parse("2026-07-02T20:00:00.000Z");
-// Same games, 8s later: rotation index flips to the SECOND game (Category Blitz).
-const nowMsSecondCard = nowMs + 8_000;
 
 function makeIdleState(overrides: Partial<IdleState["idle"]> = {}): IdleState {
   return {
@@ -38,10 +33,6 @@ function makeIdleState(overrides: Partial<IdleState["idle"]> = {}): IdleState {
         firstRoundCategory: "History",
         recurringDays: ["thu"],
       },
-      nextCategoryBlitz: {
-        startsAt: "2026-07-02T20:15:30.000Z",
-        recurringDays: ["thu"],
-      },
       sponsorSlots: [],
       ...overrides,
     },
@@ -61,13 +52,16 @@ describe("Idle venue screen components", () => {
     expect(html).toContain("Next up");
   });
 
-  it("rotates to the second card 8 seconds later", () => {
+  it("never shows a Category Blitz card (Andrew 2026-11-14)", () => {
     const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, { state: makeIdleState(), nowMs: nowMsSecondCard }),
+      React.createElement(IdleVenueScreen, { state: makeIdleState(), nowMs: nowMs + 8_000 }),
     );
 
-    expect(html).toContain("Category Blitz");
-    expect(html).toContain("15:22"); // 15:30 minus the 8s advance to nowMsSecondCard
+    // The rotation has one card now: 8 s later it is still Live Trivia.
+    // (The wordmark tagline still names both games; Phase 3's idle redesign replaces it.)
+    expect(html).toContain("Thursday Live Trivia");
+    expect(html).not.toContain("Play anytime");
+    expect(html).not.toContain("Start it on your phone");
   });
 
   it("shows scheduled days instead of a countdown for games more than 24 hours away", () => {
@@ -79,10 +73,6 @@ describe("Idle venue screen components", () => {
             title: "Saturday Live Trivia",
             firstRoundCategory: "History",
             recurringDays: ["sat"],
-          },
-          nextCategoryBlitz: {
-            startsAt: "2026-07-05T20:15:30.000Z",
-            recurringDays: ["sun", "wed"],
           },
         }),
         nowMs,
@@ -101,29 +91,11 @@ describe("Idle venue screen components", () => {
     expect(html.match(/Hightop Pub TV/g)?.length).toBe(1);
   });
 
-  it("shows only the scheduled game when one game is unscheduled", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, {
-        state: makeIdleState({
-          nextLiveTrivia: null,
-          nextCategoryBlitz: {
-            startsAt: "2026-07-02T20:15:30.000Z",
-          },
-        }),
-        nowMs,
-      }),
-    );
-
-    expect(html).toContain("Category Blitz");
-    expect(html).toContain("15:30");
-  });
-
   it("renders the calm attract screen (wordmark + venue name) when no games are scheduled", () => {
     const html = renderToStaticMarkup(
       React.createElement(IdleVenueScreen, {
         state: makeIdleState({
           nextLiveTrivia: null,
-          nextCategoryBlitz: null,
         }),
         nowMs,
       }),
@@ -132,23 +104,6 @@ describe("Idle venue screen components", () => {
     expect(html).toContain("Hightop");
     expect(html).toContain("Hightop Pub TV");
     expect(html).not.toContain("Next up");
-  });
-
-  it("invites players to start an asleep Category Blitz instead of showing a time", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(IdleVenueScreen, {
-        state: makeIdleState({
-          nextLiveTrivia: null,
-          nextCategoryBlitz: null,
-          categoryBlitzOnDemand: true,
-        }),
-        nowMs,
-      }),
-    );
-
-    expect(html).toContain("Category Blitz");
-    expect(html).toContain("Play anytime");
-    expect(html).toContain("Start it on your phone");
   });
 
   it("formats longer idle countdowns for large TV display", () => {

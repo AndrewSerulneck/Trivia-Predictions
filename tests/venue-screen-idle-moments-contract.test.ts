@@ -23,7 +23,8 @@ describe("idle screen moments", () => {
     expect(idle).toContain("theme.surfaceClass");
     expect(idle).toContain("{game.label}");
     expect(wrapper).toContain('gameKey: "live_trivia"');
-    expect(wrapper).toContain('gameKey: "category-blitz"');
+    // Andrew 2026-11-14: no Category Blitz "Next up" card (docs/live-trivia-pregame-and-display-cleanup-plan.md).
+    expect(wrapper).not.toContain('gameKey: "category-blitz"');
   });
 
   it("flips digits under an hour and beats under five minutes, with no new words", () => {

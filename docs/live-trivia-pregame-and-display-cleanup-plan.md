@@ -1,6 +1,7 @@
 # Live Trivia pre-game screen, no ads on the display, Direct-URL-only TV setup, Category Blitz yields to Live Trivia
 
-**Status:** Phase 1 coded 2026-11-14, uncommitted, not deployed (`docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_1_HANDOFF.md`); Phases 2–6 not started. Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
+**Status:** Phase 1 committed 2026-11-14, PR #16 open, not deployed (`…_PHASE_1_HANDOFF.md`). Phase 2 done 2026-11-14 on
+branch `feature/live-trivia-pregame-display` (stacked on PR #16), uncommitted, not deployed (`…_PHASE_2_HANDOFF.md`). Phases 3–6 not started. Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
 
@@ -13,9 +14,10 @@ Four changes to the venue display (`/venue/[venueId]/screen`) and the Partner Da
 3. **Remove "Link a TV".** The Display page shows the venue's **Display URL** (a new short link like
    `hightopchallenge.com/tv/K7M2`), your two steps, and short Fire Stick steps. `/tv` itself redirects to `/info`; the
    pairing code and its table are deleted.
-4. **Category Blitz yields to Live Trivia.** On a Live Trivia day the display's "Next up" carousel drops the Category
-   Blitz card, and the display never shows Category Blitz while Live Trivia (pre-game, game or final standings) is on.
-   Otherwise Category Blitz shows only while someone is actually playing a round.
+4. **Category Blitz only while someone plays it.** The display's "Next up" never shows Category Blitz (any day). The
+   display shows Category Blitz only while someone is playing a round, and never while Live Trivia (pre-game, game or
+   final standings) is on. When nothing is on, the display shows a gently moving screen with a QR code to download the
+   app (Phase 3).
 
 **On "avoid typing altogether":** three ways, all in the Fire Stick steps:
 - **Screen mirroring** (your Step 2): nothing is typed on the TV.
@@ -24,7 +26,7 @@ Four changes to the venue display (`/venue/[venueId]/screen`) and the Partner Da
   because one older forum post says pasting didn't work in Silk.
 - **Bookmark once:** after the first visit, Silk shows the site on its start page and in bookmarks, so there's nothing to type next time.
 
-A shorter domain (for example a 3–5 letter `.gg`/`.tv` domain) would cost about $10–60 a year plus DNS setup. It isn't in this plan. Say so if you want it.
+A shorter domain (~$10–60 a year): not now (Andrew, 2026-11-14).
 
 ## 1. Decisions already made (don't re-ask)
 
@@ -36,8 +38,11 @@ A shorter domain (for example a 3–5 letter `.gg`/`.tv` domain) would cost abou
 | D4 | Remove Link a TV. `/tv` → redirect to `/info`; delete pairing pages/APIs/lib/tests; a **new** migration drops `tv_pairing_codes` (`supabase db push` asks Andrew first). | Andrew (Q 2026-11-14) |
 | D5 | Add a **short display link** per venue. | Andrew (Q 2026-11-14) |
 | D6 | Display page copy: label **Display URL** (never "Manual Setup"); "Step 1: Copy the display URL into your device's web browser." / "Step 2: Screen mirror your device with a TV or projector." plus short Fire Stick (Silk) steps. | Andrew |
-| D7 | Category Blitz "Next up" card hidden on a day the venue has a Live Trivia game (venue's local date, whole day, including after the game ends). | Andrew, literal reading; see Q1 |
-| D8 | Display precedence: Live Trivia active (incl. final standings) > Live Trivia pre-game > Category Blitz (only an awake session with a round) > Squares > Bracket > idle. | Andrew item 4 |
+| D7 | ~~Category Blitz card hidden on Live Trivia days.~~ **Superseded (Q1):** no Category Blitz "Next up" card ever (scheduled or on-demand). No "Live Trivia today" computation. | Andrew (Q1 2026-11-14) |
+| D8 | Display precedence: Live Trivia active (incl. final standings) > Live Trivia pre-game > Category Blitz (only a session in play: continuous awake, or scheduled running) > Squares > Bracket > idle. A Category Blitz round started during pre-game stays on phones only. | Andrew item 4, Q2 |
+| D12 | Idle (no Live Trivia content, nobody playing Category Blitz): a gently animated screen with a QR to download the app (`APP_DOWNLOAD_URL`). Never static. | Andrew (Q1 2026-11-14) |
+| D13 | Pre-game shows a small "Round 1: <category>" only when the category is set. | Andrew (Q3) |
+| D14 | No short domain for now; the short link uses `hightopchallenge.com/tv/<CODE>`. | Andrew (Q4) |
 | D9 | Short link shape: `hightopchallenge.com/tv/<CODE>`, 4 characters from the Crockford alphabet in `lib/tvPairingShared.ts` (`0-9A-Z` minus I L O U; ~1M codes), case-insensitive. Reuses the `/tv` path, which is already public in `proxy.ts` and served on every host by `lib/domainSplit.ts`. Bare `/tv` still → `/info`. | Planner (Andrew picked "short link"; path is the planner's choice) |
 | D10 | The QR on the pre-game screen encodes `APP_DOWNLOAD_URL` (`lib/appDownloadLink.ts`, `hightopchallenge.com/app`, permanent). It already sends each phone to the right store and sends app users to sign-in. | Planner |
 | D11 | Display paths get **none** of the player runtime (ads, adhesion banner, gameplay animation overlay, venue transition overlay, player analytics), not just no pop-ups. The display has its own effects engine. | Planner |
@@ -132,24 +137,23 @@ Order: **1 ships alone first** (live bug). 2 → 3. 4 → 5. Branches 2–3 and 
    `LIVE_TRIVIA_PREGAME_LEAD_MS = 15 * 60_000` in `lib/venueScreenTiming.ts`.
 2. Precedence per D8. Category Blitz mode only when nothing Live Trivia is on. Squares/bracket reads stay gated on
    `wouldBeIdle`, which now also requires not pre-game.
-3. "Live Trivia today" (D7): compute on the server in the venue's timezone (`nextSchedule.timezone`). True if the next
-   occurrence starts today, **or** a game ran earlier today (a recurring schedule whose `recurring_days` include today
-   with `start_time` already passed, or a one-off dated today). Reuse the engine's occurrence helpers in
-   `lib/liveShowdownEngine.ts` / `lib/liveShowdownAdmin.ts`. Don't add a query unless the helpers can't answer from rows already
-   loaded by `findRelevantSchedules`. If one is needed, it must be one bounded select per poll, and it needs a cost note.
-   Expose `idle.liveTriviaToday: boolean`; `IdleVenueScreen` drops the Category Blitz card (scheduled and on-demand) when true.
+3. ~~"Live Trivia today" (D7).~~ **Amended (Q1):** drop `idle.nextCategoryBlitz` and `idle.categoryBlitzOnDemand`
+   entirely, and the Category Blitz card in `IdleVenueScreen`. The scheduled-engine `listSchedules` read (only used for
+   that preview) goes too. **Done.**
 4. Client: `VenueScreenClient` renders the new mode (placeholder panel until Phase 3); `getScreenTransitionKey` →
    `ltp:<gameId>`; `modeToGameLabel` → `"Live Trivia"`; header chip "Live Trivia". The go-live takeover must fire on
    pre-game → live-trivia (it does if detection is "mode changed into a live mode"; confirm and pin with a test) and
-   must **not** fire on idle → pre-game.
+   must **not** fire on idle → pre-game. **Done as:** the old check was `previousMode === "idle"` only, so pre-game →
+   live would NOT have fired; now `isGoLiveTransition` (`lib/venueScreenTiming.ts`). `modeToGameLabel` stays null for
+   pre-game; the header chip reads "Live Trivia" and the theme is Live Trivia's.
 5. Poll pace (`getVenueScreenPollIntervalMs`): pre-game 10 s; in the last 60 s, 2 s so go-live lands on time.
 6. Debug: add `"live-trivia-pregame"` to `VENUE_SCREEN_DEBUG_MODES` and `applyVenueScreenDebugMode`.
 7. Tests (`tests/lib.venueScreen*.test.ts`): window edges (15:00 before, 0:00, game active, final window); Category Blitz
-   awake during pre-game → pre-game wins; Category Blitz awake with no Live Trivia → Category Blitz; "today" across
-   midnight in `America/New_York` and `America/Los_Angeles`; next-up card hidden on Live Trivia days, shown otherwise;
-   peek-only contract still passes.
+   awake during pre-game → pre-game wins; Category Blitz awake with no Live Trivia → Category Blitz; no Category Blitz
+   on the idle payload; peek-only contract still passes. (The "today"/midnight tests are dropped with D7: the window
+   is plain millisecond math on the engine's occurrence start.)
 
-**Cost:** no new reads per poll. Extra polls only during pre-game: ~14 min ÷ 10 s + 60 s ÷ 2 s ≈ 114 instead of ~45 at
+**Cost:** no new reads per poll (one fewer for scheduled-mode Category Blitz venues: `listSchedules` removed). Extra polls only during pre-game: ~14 min ÷ 10 s + 60 s ÷ 2 s ≈ 114 instead of ~45 at
 idle → **~70 extra function calls per display per game**. At 100 venues × 7 games/week that is ~30k calls/month,
 negligible on current billing. Measure after release with a log counter (no Observability Plus).
 
@@ -161,13 +165,23 @@ negligible on current billing. Measure after release with a log counter (no Obse
      `APP_DOWNLOAD_URL`, caption `APP_DOWNLOAD_DISPLAY_URL`), **2 Sign in**, **3 Tap Live Trivia** + a non-interactive
      replica of the Venue Home Live Trivia tile built from `GAME_TILE_THEMES.live_trivia` and `gameTileTitleLines`
      (extract a shared presentational tile from `VenueGamesPanel` if needed, so the TV and phone can't drift apart).
-   - Optional small line: first round category if known ("Round 1: History"). Andrew to confirm (Q3).
+   - Small line: first round category if known ("Round 1: History") (D13). Phase 2 already sends
+     `pregame.firstRoundCategory` (null when unset).
    - Copy says "Tap", not "click" (phones). Final wording for Andrew's review in the handoff.
 2. Effects: ambient `BrandStage`; one entrance moment keyed `pregame:<gameId>` via `useFxMoment`; QR stays perfectly
    still and high-contrast (never covered or animated, keep a quiet zone); reduced-motion and `lite`/`off` tiers; burn-in drift.
 3. Check at 1920×1080, 3840×2160, the 1280×720 dashboard preview and Expand on a phone; QR scans from ~4 m on a 55"
    TV (test with a phone on a monitor at equivalent size); text ≥12px.
 4. Accelerated-clock Playwright run: idle → pre-game at T-15:00 (no takeover) → countdown → live at T-0 (takeover fires once).
+5. **Idle screen (D12, added 2026-11-14).** Replace the `TvIdleAttract` "Next up" carousel's job with an app-download
+   attract: one focal QR (`QRCodeSVG`, value `APP_DOWNLOAD_URL`, caption `APP_DOWNLOAD_DISPLAY_URL`) with "Get the app"
+   (few words), gentle motion around it (ambient `BrandStage`, the existing 75 s idle moment, wordmark shine, burn-in
+   drift), the QR itself never moving or covered. Default (Q5): if a Live Trivia game is scheduled, keep one small
+   line with its day/time or countdown (reuse `getIdleGameDisplay`); otherwise just the QR. Drop the "Live Trivia ·
+   Category Blitz" tagline (`TvIdleAttract.tsx`). Keep the idle contract tests (`tests/venue-screen-idle-*`) passing
+   or update them for the new layout. Venue sponsor slots (`idle.sponsorSlots`) are the partner's own, not ads: keep
+   whatever the current screen does with them.
+6. Remove the Phase 2 placeholder `LiveTriviaPregamePanel` in `VenueScreenClient.tsx`.
 
 ### Phase 4 — Short display link + Display page
 
@@ -225,7 +239,6 @@ negligible on current billing. Measure after release with a log counter (no Obse
 ## 5. Risks
 
 - **Takeover timing:** the pre-game mode could swallow or double the go-live burst. Pinned by the Phase 2 test and the Phase 3 clock run.
-- **Timezone "today":** schedules in a different zone from the server. Test both coasts and midnight.
 - **Fire TV paste** may not work in Silk. The fallback is typing a 26-character link; step text adjusts in Phase 4.
 - **Short codes are guessable** (~1M space). They only reveal a page that is already public (the display), so there's no
   rate limit. Never put anything private on the display.
@@ -233,19 +246,19 @@ negligible on current billing. Measure after release with a log counter (no Obse
 
 ## 6. Open questions for Andrew
 
-**Answered 2026-11-14 (supersedes D7/D8 where they differ):** Q1 → no Category Blitz "Next up" card at all; the display shows Category Blitz only when someone is playing it. When no Live Trivia content is on the display, show a gently animated screen with a QR to download the app (not a static idle). Q2 → yes. Q3 → yes, small, only if known. Q4 → no domain yet.
+**Answered 2026-11-14** (recorded as D7 superseded, D8, D12–D14): Q1 → no Category Blitz "Next up" card at all;
+Category Blitz shows only while someone plays it; otherwise a gently animated screen with an app-download QR. Q2 → yes.
+Q3 → yes, small, only if known. Q4 → no domain yet.
 
-- **Q1:** After the day's Live Trivia game ends, should the Category Blitz "Next up" card come back that night? Default (D7): no, hidden all day.
-- **Q2:** If a player starts Category Blitz in the 15 minutes before Live Trivia, the display shows the pre-game screen,
-  not their round (D8). Is that right? (Their phone game still works.)
-- **Q3:** Show "Round 1: <category>" on the pre-game screen? Default: yes, small, only if known.
-- **Q4:** Want a shorter domain for display links (~$10–60/yr)? Default: no.
+- **Q5 (for Phase 3):** On the idle app-download screen, keep one small line for the next scheduled Live Trivia game
+  (e.g. "Live Trivia · Thursday 8:00 PM")? Default: yes, if one is scheduled.
 
 ## 7. Standing rules (to fill in at Phase 6)
 
 - No ads, adhesion banners, player animations, transition overlay or player analytics on display paths
   (`isVenueDisplayPath`); a future Live Trivia display ad is its own feature, not the player ad runtime.
 - Display precedence is D8 and lives only in `selectVenueScreenState`.
+- The display never offers Category Blitz as "Next up"; it shows Category Blitz only while a session is in play.
 - The pre-game window is `LIVE_TRIVIA_PREGAME_LEAD_MS`; the go-live takeover fires at the real start, never at pre-game start.
 - The TV only peeks at Category Blitz.
 - Partners set up a display only by the Display URL (`hightopchallenge.com/tv/<display_code>`); there is no pairing.

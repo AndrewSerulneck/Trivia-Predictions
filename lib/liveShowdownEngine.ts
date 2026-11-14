@@ -183,6 +183,7 @@ type LiveShowdownInactiveState = {
     title: string;
     timezone: string;
     startTime: string;
+    occurrenceDate: string; // 'YYYY-MM-DD' of this occurrence (venue display pre-game identity)
     numRounds: number;
     intermissionAdDelaySeconds: number;
     lobbyAdEnabled: boolean;
@@ -2587,6 +2588,7 @@ export async function getLiveShowdownState(
             title: upcoming.title,
             timezone: upcoming.timezone,
             startTime: upcoming.start_time,
+            occurrenceDate: upcoming.occurrenceDate,
             numRounds: clampRounds(Number(upcoming.num_rounds)),
             intermissionAdDelaySeconds: clampIntermissionDelaySeconds(upcoming.intermission_ad_delay_seconds),
             lobbyAdEnabled: Boolean(upcoming.lobby_ad_enabled ?? true),

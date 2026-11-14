@@ -169,10 +169,6 @@ const FIXTURES = [
           firstRoundCategory: "History",
           recurringDays: ["thu"],
         },
-        nextCategoryBlitz: {
-          startsAt: new Date(Date.now() + 1_800_000).toISOString(),
-          recurringDays: ["thu"],
-        },
         sponsorSlots: [],
       },
       updatedAt: Date.now(),

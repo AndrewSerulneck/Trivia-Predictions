@@ -103,26 +103,7 @@ export function IdleVenueScreen({ state, nowMs }: IdleVenueScreenProps) {
       gameKey: "live_trivia",
     });
   }
-  const categoryBlitz = state.idle.nextCategoryBlitz;
-  if (categoryBlitz?.startsAt) {
-    const display = getIdleGameDisplay(categoryBlitz.startsAt, nowMs, categoryBlitz.recurringDays);
-    nextGames.push({
-      label: "Category Blitz",
-      startsAt: categoryBlitz.startsAt,
-      countdownText: display?.value,
-      remainingSeconds: remainingSeconds(display, categoryBlitz.startsAt, nowMs),
-      gameKey: "category-blitz",
-    });
-  } else if (state.idle.categoryBlitzOnDemand) {
-    // Continuous Category Blitz is on but asleep — it only runs while a player
-    // has it open (category-blitz-how-to-play-plan Phase 5), so invite one to.
-    nextGames.push({
-      label: "Category Blitz",
-      kicker: "Play anytime",
-      countdownText: "Start it on your phone",
-      gameKey: "category-blitz",
-    });
-  }
+  // No Category Blitz card: the display shows Category Blitz only while someone is playing it.
 
   return <TvIdleAttract venueName={venueName} nextGames={nextGames} nowMs={nowMs} />;
 }
