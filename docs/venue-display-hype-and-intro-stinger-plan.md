@@ -4,8 +4,9 @@
 > (verification + three fixes) committed on `feature/venue-display-intro-stinger`, PR #12 — see
 > `venue-display-hype-and-intro-stinger-plan_PHASE_6_HANDOFF.md`; results in `docs/venue-display-hype_PHASE_6_after/`.
 > Code review of PR #12 (2026-11-13): 9 of 10 findings fixed, `main` merged in — see the handoff's "Code review" section.
-> **Not yet in production:** waiting on Andrew to merge PR #12 and run the real-TV checklist
-> (`docs/tv-display-physical-device-checklist.md` §F). Earlier handoffs: `…_PHASE_<0–5>_HANDOFF.md`.
+> **Live in production since 2026-11-13** (PR #12 merged as `1ee2e002`; checked on www.hightopchallenge.com). Still
+> to do: the real-TV checklist (`docs/tv-display-physical-device-checklist.md` §F) and the Vercel usage comparison
+> around 2026-11-20 (handoff §6). Earlier handoffs: `…_PHASE_<0–5>_HANDOFF.md`.
 > Created 2026-11-12. Owner: Andrew. Each phase ends with a handoff note `venue-display-hype-and-intro-stinger-plan_PHASE_<N>_HANDOFF.md`
 > next to this file, and this status line is updated to point at it.
 >
