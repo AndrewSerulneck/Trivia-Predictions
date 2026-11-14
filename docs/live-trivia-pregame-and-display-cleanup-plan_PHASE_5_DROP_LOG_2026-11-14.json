@@ -1,0 +1,15 @@
+{
+  "table": "public.tv_pairing_codes",
+  "savedAt": "2026-11-14T20:08:38.822Z",
+  "note": "Rows saved before drop_tv_pairing_codes. Restore: re-run 20260713140000_tv_pairing_codes.sql and the grants line from 20260923130841_explicit_api_grants_baseline.sql, then insert these rows.",
+  "rows": [
+    {
+      "code": "7WJTCP",
+      "venue_id": null,
+      "created_at": "2026-10-12T17:16:20.088962+00:00",
+      "expires_at": "2026-10-12T17:26:20.04+00:00",
+      "claimed_at": null,
+      "consumed_at": null
+    }
+  ]
+}

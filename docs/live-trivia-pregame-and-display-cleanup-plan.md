@@ -1,9 +1,9 @@
 # Live Trivia pre-game screen, no ads on the display, Direct-URL-only TV setup, Category Blitz yields to Live Trivia
 
-**Status:** Phase 1 committed 2026-11-14, PR #16 open, not deployed (`…_PHASE_1_HANDOFF.md`). Phase 2 committed 2026-11-14 as `625219bc` on
-branch `feature/live-trivia-pregame-display` (stacked on PR #16), not deployed (`…_PHASE_2_HANDOFF.md`). Phase 3 committed 2026-11-14 as `1d31346f` on the same branch,
-not deployed (`…_PHASE_3_HANDOFF.md`). Phase 4 done 2026-11-14: migration **applied to production** (16 venues
-have codes), code committed as `b2c42e89`, not deployed (`…_PHASE_4_HANDOFF.md`). Phase 5 done 2026-11-14 (code removal; the `tv_pairing_codes` drop migration deliberately waits until after the deploy), see `…_PHASE_5_HANDOFF.md`. Phase 6 done 2026-11-14 (checks, PR, docs; see `…_PHASE_6_HANDOFF.md`). Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
+**Status:** **LIVE 2026-11-14.** PR #16 (Phase 1) merged as `491ae015`, PR #17 (Phases 2–6 + review fixes `27d37d9a`) merged as
+`536208a4`, deployed to production; `tv_pairing_codes` dropped by `20261114200841_drop_tv_pairing_codes.sql` after the deploy
+(row saved in `…_PHASE_5_DROP_LOG_2026-11-14.json`). Left: real-TV check (Andrew), ~2026-11-21 poll-count compare.
+Release details: `…_PHASE_6_HANDOFF.md` §Release. Phase handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
 
