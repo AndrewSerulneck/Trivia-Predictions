@@ -3,7 +3,7 @@
 **Status:** Phase 1 committed 2026-11-14, PR #16 open, not deployed (`…_PHASE_1_HANDOFF.md`). Phase 2 committed 2026-11-14 as `625219bc` on
 branch `feature/live-trivia-pregame-display` (stacked on PR #16), not deployed (`…_PHASE_2_HANDOFF.md`). Phase 3 committed 2026-11-14 as `1d31346f` on the same branch,
 not deployed (`…_PHASE_3_HANDOFF.md`). Phase 4 done 2026-11-14: migration **applied to production** (16 venues
-have codes), code committed as `b2c42e89`, not deployed (`…_PHASE_4_HANDOFF.md`). Phase 5 done 2026-11-14 (code removal; the `tv_pairing_codes` drop migration deliberately waits until after the deploy), see `…_PHASE_5_HANDOFF.md`. Phase 6 not started. Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
+have codes), code committed as `b2c42e89`, not deployed (`…_PHASE_4_HANDOFF.md`). Phase 5 done 2026-11-14 (code removal; the `tv_pairing_codes` drop migration deliberately waits until after the deploy), see `…_PHASE_5_HANDOFF.md`. Phase 6 done 2026-11-14 (checks, PR, docs; see `…_PHASE_6_HANDOFF.md`). Handoffs: `docs/live-trivia-pregame-and-display-cleanup-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
 
@@ -262,7 +262,7 @@ Q3 → yes, small, only if known. Q4 → no domain yet.
 - **Q5 — answered 2026-11-14 (Andrew): yes.** The idle app-download screen keeps one small line for the next scheduled
   Live Trivia game ("Live Trivia · Thursday 8:00 PM"; "Today"/"Tomorrow" when it is), only when one is scheduled.
 
-## 7. Standing rules (to fill in at Phase 6)
+## 7. Standing rules (Phase 6, 2026-11-14)
 
 - No ads, adhesion banners, player animations, transition overlay or player analytics on display paths
   (`isVenueDisplayPath`); a future Live Trivia display ad is its own feature, not the player ad runtime.
