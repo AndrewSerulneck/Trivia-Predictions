@@ -112,3 +112,25 @@ describe("the client", () => {
     expect(readFileSync("components/venue-screen/TvLiveTriviaPregame.tsx", "utf8")).toContain("useFxMoment(`pregame:${gameId}`)");
   });
 });
+
+describe("the app QR is never covered, and settles on weak TVs", () => {
+  const pregame = readFileSync("components/venue-screen/TvLiveTriviaPregame.tsx", "utf8");
+  const idle = readFileSync("components/venue-screen/TvIdleAttract.tsx", "utf8");
+  const client = readFileSync("components/venue-screen/VenueScreenClient.tsx", "utf8");
+
+  it("keeps the stage twinkles (a canvas above the stage) off the idle and pre-game screens", () => {
+    expect(client).toContain(
+      'introPlaying || state.mode === "idle" || state.mode === "live-trivia-pregame" ? null : <StageTwinkles />',
+    );
+  });
+
+  it("lifts the pre-game QR above the entrance streak", () => {
+    expect(pregame).toMatch(/<div className="relative z-20">\s*<AppDownloadQr/);
+  });
+
+  it("stops the heartbeat, halo and rings at effects tier off", () => {
+    expect(pregame).toContain('const still = Boolean(reduceMotion) || tier === "off";');
+    expect(idle).toContain('const qrStill = Boolean(reduceMotion) || tier === "off";');
+    expect(idle).not.toMatch(/animate=\{reduceMotion \? undefined : \{ (opacity: \[0\.55|scale: \[1, 1\.26\])/);
+  });
+});

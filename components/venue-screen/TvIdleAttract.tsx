@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { AppDownloadQr, appDownloadQrPlatePx } from "@/components/venue-screen/AppDownloadQr";
 import { ShineSweep } from "@/components/venue-screen/fx/ShineSweep";
-import { useFx } from "@/components/venue-screen/fx/useFx";
+import { useFx, useFxTier } from "@/components/venue-screen/fx/useFx";
 import { useHydrated } from "@/components/venue-screen/fx/useHydrated";
 import { APP_DOWNLOAD_DISPLAY_URL } from "@/lib/appDownloadLink";
 import { formatNextLiveTriviaLine } from "@/lib/venueScreenIdleLine";
@@ -54,6 +54,9 @@ const PLATE_PX = appDownloadQrPlatePx(QR_SIZE);
 
 export function TvIdleAttract({ venueName, nextLiveTriviaStartsAt = null, nowMs, driftPx = 26 }: TvIdleAttractProps) {
   const reduceMotion = useReducedMotion();
+  // Tier `off` (the frame watchdog found the TV too slow): the QR halo and rings stop, like BrandStage.
+  const tier = useFxTier();
+  const qrStill = Boolean(reduceMotion) || tier === "off";
   const fx = useFx();
   const hydrated = useHydrated();
   const wordmarkRef = useRef<HTMLDivElement>(null);
@@ -169,8 +172,8 @@ export function TvIdleAttract({ venueName, nextLiveTriviaStartsAt = null, nowMs,
                   inset: -120,
                   background: `radial-gradient(closest-side, rgba(34,211,238,0.30), rgba(245,158,11,0.12) 62%, transparent 76%)`,
                 }}
-                animate={reduceMotion ? undefined : { opacity: [0.55, 1, 0.55], scale: [0.97, 1.03, 0.97] }}
-                transition={reduceMotion ? undefined : { duration: 9, repeat: Infinity, ease: "easeInOut" }}
+                animate={qrStill ? undefined : { opacity: [0.55, 1, 0.55], scale: [0.97, 1.03, 0.97] }}
+                transition={qrStill ? undefined : { duration: 9, repeat: Infinity, ease: "easeInOut" }}
               />
               {[0, 1].map((i) => (
                 <motion.span
@@ -179,9 +182,9 @@ export function TvIdleAttract({ venueName, nextLiveTriviaStartsAt = null, nowMs,
                   data-testid="idle-qr-ring"
                   className="pointer-events-none absolute inset-0 will-change-transform"
                   style={{ borderRadius: 40, border: `3px solid ${BRAND.cyanLight}`, opacity: 0 }}
-                  animate={reduceMotion ? undefined : { scale: [1, 1.26], opacity: [0.5, 0] }}
+                  animate={qrStill ? undefined : { scale: [1, 1.26], opacity: [0.5, 0] }}
                   transition={
-                    reduceMotion ? undefined : { duration: 8, repeat: Infinity, ease: "easeOut", delay: i * 4 }
+                    qrStill ? undefined : { duration: 8, repeat: Infinity, ease: "easeOut", delay: i * 4 }
                   }
                 />
               ))}

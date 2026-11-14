@@ -8,7 +8,7 @@ import { VENUE_HUB_TILE_SUBTITLE_BY_KEY } from "@/components/venue/venueHubShare
 import { AppDownloadQr } from "@/components/venue-screen/AppDownloadQr";
 import { FlipChar } from "@/components/venue-screen/fx/FlipChar";
 import { LightStreak, OneShotShine } from "@/components/venue-screen/fx/MomentOverlays";
-import { useFxMoment } from "@/components/venue-screen/fx/useFx";
+import { useFxMoment, useFxTier } from "@/components/venue-screen/fx/useFx";
 import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { formatIdleCountdown } from "@/components/venue-screen/IdleVenueScreen";
 import type { VenueScreenState } from "@/lib/venueScreen";
@@ -58,6 +58,9 @@ const Step = ({ n, label, children }: { n: number; label: string; children: Reac
 export function TvLiveTriviaPregame({ state, nowMs, accent }: TvLiveTriviaPregameProps) {
   const { gameId, startsAt, firstRoundCategory } = state.pregame;
   const reduceMotion = useReducedMotion();
+  // Tier `off` (the frame watchdog found the TV too slow): the heartbeat ring stops, like BrandStage.
+  const tier = useFxTier();
+  const still = Boolean(reduceMotion) || tier === "off";
   // Digit flips change the first-render style, so they wait for hydration (React #418 otherwise on reduced-motion TVs).
   const reducedAfterHydration = useReducedMotionAfterHydration();
   const entered = useFxMoment(`pregame:${gameId}`);
@@ -83,8 +86,8 @@ export function TvLiveTriviaPregame({ state, nowMs, accent }: TvLiveTriviaPregam
               data-testid="pregame-heartbeat"
               className="pointer-events-none absolute will-change-transform"
               style={{ inset: "8px -40px", borderRadius: 999, border: `3px solid ${accent}`, opacity: 0 }}
-              animate={reduceMotion ? undefined : { scale: [1, 1.12], opacity: [0.6, 0] }}
-              transition={reduceMotion ? undefined : { duration: 1.2, repeat: Infinity, ease: "easeOut" }}
+              animate={still ? undefined : { scale: [1, 1.12], opacity: [0.6, 0] }}
+              transition={still ? undefined : { duration: 1.2, repeat: Infinity, ease: "easeOut" }}
             />
           ) : null}
           <p
@@ -112,7 +115,10 @@ export function TvLiveTriviaPregame({ state, nowMs, accent }: TvLiveTriviaPregam
       {/* ---- Three steps ---- */}
       <div className="flex min-h-0 flex-1 justify-center" style={{ gap: 88, marginTop: 36 }}>
         <Step n={1} label="Get the app">
-          <AppDownloadQr size={QR_SIZE} />
+          {/* Above the entrance streak (z-10): the QR is never covered. */}
+          <div className="relative z-20">
+            <AppDownloadQr size={QR_SIZE} />
+          </div>
         </Step>
 
         <Step n={2} label="Sign in">

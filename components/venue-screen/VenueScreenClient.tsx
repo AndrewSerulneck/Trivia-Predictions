@@ -380,7 +380,8 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null, int
         <main className="h-full w-full overflow-hidden bg-slate-950 text-white">
           <div className="relative flex h-full flex-col" style={{ background: theme.stageGradient }}>
             <BrandStage ambientA={theme.ambientA} ambientB={theme.ambientB} />
-            {introPlaying ? null : <StageTwinkles />}
+            {/* The twinkle canvas sits above the stage, so it stays off the two screens with the app QR (never covered). */}
+            {introPlaying || state.mode === "idle" || state.mode === "live-trivia-pregame" ? null : <StageTwinkles />}
             <div
               className="flex h-full flex-col will-change-transform"
               style={{ transform: screenTransform }}
