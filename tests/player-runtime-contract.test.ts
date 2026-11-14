@@ -33,7 +33,7 @@ const APP_ONLY = ["NativePushRuntime"] as const;
 
 describe("isPlayerRuntimePath", () => {
   it("is true for player surfaces", () => {
-    for (const path of ["/", "/join", "/venue/abc", "/trivia/live", "/bingo", "/pickem", "/info", "/tv"]) {
+    for (const path of ["/", "/join", "/venue/abc", "/trivia/live", "/bingo", "/pickem", "/info"]) {
       expect(isPlayerRuntimePath(path), path).toBe(true);
     }
   });
@@ -42,6 +42,14 @@ describe("isPlayerRuntimePath", () => {
     for (const path of ["/owner", "/owner/dashboard", "/owner/billing/setup", "/admin", "/admin/anything"]) {
       expect(isPlayerRuntimePath(path), path).toBe(false);
     }
+  });
+
+  it("is false for venue display paths", () => {
+    for (const path of ["/tv", "/tv/K7M2", "/venue/abc/screen", "/venue/abc/screen/x"]) {
+      expect(isPlayerRuntimePath(path), path).toBe(false);
+    }
+    expect(isPlayerRuntimePath("/venue/abc")).toBe(true);
+    expect(isPlayerRuntimePath("/venue/abc/screens")).toBe(true);
   });
 
   it("matches on a path SEGMENT, so /ownership is still a player path", () => {

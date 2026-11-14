@@ -27,6 +27,25 @@
 export const NON_PLAYER_PATH_PREFIXES = ["/owner", "/admin"] as const;
 
 /**
+ * Venue display (TV) paths: `/venue/<id>/screen` (and anything below it), `/tv` and `/tv/<code>`.
+ *
+ * The display is a spectator surface, not a player one. It gets NONE of the player runtime
+ * (ads, adhesion banner, gameplay animations, transition overlay, analytics) — a Carrabba's
+ * pop-up once leaked onto a TV because `/venue/<id>/screen` matched the `venue` ad page key.
+ * `docs/live-trivia-pregame-and-display-cleanup-plan.md` Phase 1.
+ */
+export const isVenueDisplayPath = (pathname: string | null | undefined): boolean => {
+  if (!pathname) {
+    return false;
+  }
+  return (
+    /^\/venue\/[^/]+\/screen(\/|$)/.test(pathname) ||
+    pathname === "/tv" ||
+    pathname.startsWith("/tv/")
+  );
+};
+
+/**
  * True when the player runtime should mount.
  *
  * **Fails open to the player.** An unknown path (`null`, as `usePathname()` can
@@ -35,10 +54,17 @@ export const NON_PLAYER_PATH_PREFIXES = ["/owner", "/admin"] as const;
  * gameplay animations or venue-entry transition is a real regression, while a
  * partner briefly mounting five components that already no-op on `/owner/*`
  * costs only the bytes this change is saving.
+ *
+ * Display paths are NOT player paths. The display page is server-rendered with a real pathname,
+ * so `null` only happens before hydration and the next render corrects it; `PopupAds` and
+ * `MobileAdhesionAd` also check `isVenueDisplayPath` themselves to cover that gap.
  */
 export const isPlayerRuntimePath = (pathname: string | null | undefined): boolean => {
   if (!pathname) {
     return true;
+  }
+  if (isVenueDisplayPath(pathname)) {
+    return false;
   }
   return !NON_PLAYER_PATH_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
