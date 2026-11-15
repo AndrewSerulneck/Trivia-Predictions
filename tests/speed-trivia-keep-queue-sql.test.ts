@@ -20,6 +20,7 @@ const MIGRATIONS = [
   "supabase/migrations/20261115153905_speed_trivia_bar_test_scores.sql",
   "supabase/migrations/20261115170333_speed_trivia_keep_queue.sql",
   "supabase/migrations/20261115212126_speed_trivia_queue_repairs.sql",
+  "supabase/migrations/20261115213124_speed_trivia_released_rows_revision.sql",
 ];
 const id = (n: number) => `80000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
@@ -49,6 +50,8 @@ const settle = (rowId: string, hash: string, outcome: string, matched: string | 
 const status = (rowId: string) => scalar<string>("select status from trivia_questions where id=$1", [rowId]);
 const mark = (rowId: string) => db.query<Record<string, unknown>>("select * from speed_trivia_review_marks where row_id=$1", [rowId]).then(r => r.rows[0] ?? null);
 const released = () => harness.call(db, "speed_trivia_released_rows") as Promise<string[]>;
+const releasedV2 = () => harness.call(db, "speed_trivia_released_rows_v2") as Promise<{ id: string; revision: number }[]>;
+const speedRevision = (rowId: string) => scalar<number>("select speed_revision::int from trivia_questions where id=$1", [rowId]);
 // A Phase 2 score for the row's current wording (written as the table owner; the scorer RPC is tested elsewhere).
 const scoreAs = (rowId: string, score: number) => asAdmin(
   "insert into speed_trivia_review_marks(row_id, audience) select q.id, jsonb_build_object('key', public.speed_trivia_audience_key(q), 'score', $2::int) from trivia_questions q where q.id=$1",
@@ -156,6 +159,29 @@ describe("Speed Trivia overnight Keep queue SQL", () => {
     expect(await released()).toEqual([a.id]);
     await undo(a.id);
     expect(await released()).toEqual([]);
+  });
+
+  it("3b: lists each released row with the revision it was released at; a re-reject moves or drops it", async () => {
+    const a = harness.row(id(1), "Which bird is the national bird of the USA?", "Bald eagle", "Animals");
+    const b = harness.row(id(2), "Which planet has the Great Red Spot?", "Jupiter");
+    await seedOlder([a, b]);
+    await reject([a.id, b.id], "quality");
+    const r1 = await speedRevision(a.id);
+    const listed = await releasedV2();
+    expect(listed).toEqual([{ id: a.id, revision: r1 }, { id: b.id, revision: await speedRevision(b.id) }]);
+    expect(listed.every(entry => typeof entry.revision === "number")).toBe(true);
+    // Same rows as the old function.
+    expect(listed.map(entry => entry.id)).toEqual(await released());
+    // The reviewer's #4 case: restored, then rejected as wrong. It isn't released any more.
+    await undo(a.id);
+    await reject([a.id], "wrong");
+    expect((await releasedV2()).map(entry => entry.id)).toEqual([b.id]);
+    // Restored and rejected for quality again: listed at the new revision, not the old one.
+    await undo(a.id);
+    await reject([a.id], "quality");
+    const again = (await releasedV2()).find(entry => entry.id === a.id);
+    expect(again?.revision).toBe(await speedRevision(a.id));
+    expect(again?.revision).toBeGreaterThan(r1);
   });
 
   it("D5: restoring a released row revokes the fast lane for it and for rows admitted meanwhile", async () => {
@@ -293,6 +319,7 @@ describe("Speed Trivia overnight Keep queue SQL", () => {
     await db.exec("set role anon;");
     await expect(db.query("select * from speed_trivia_released_restores")).rejects.toThrow(/permission denied/);
     await expect(db.query("select public.speed_trivia_released_rows()")).rejects.toThrow(/permission denied/);
+    await expect(db.query("select public.speed_trivia_released_rows_v2()")).rejects.toThrow(/permission denied/);
     await expect(db.query("select public.speed_trivia_queue_settle(gen_random_uuid(), 'x', 'needs_look', null, null)")).rejects.toThrow(/permission denied/);
     await db.exec("set role service_role;");
     await expect(asAdmin("select 1")).resolves.toBeUndefined();
@@ -307,6 +334,7 @@ describe("Speed Trivia overnight Keep queue SQL", () => {
     await expect(db.query("select public.speed_trivia_queue_prepare(false)")).rejects.toThrow(/permission denied/);
     await db.exec("set role authenticated;");
     await expect(db.query("select public.speed_trivia_queue_prepare(true)")).rejects.toThrow(/permission denied/);
+    await expect(db.query("select public.speed_trivia_released_rows_v2()")).rejects.toThrow(/permission denied/);
     await db.exec("set role service_role;");
     await expect(db.query("select public.speed_trivia_queue_prepare(null)")).rejects.toThrow(/invalid-quick-review-request/);
   });

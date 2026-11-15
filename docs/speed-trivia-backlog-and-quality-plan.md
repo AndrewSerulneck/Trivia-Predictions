@@ -16,7 +16,9 @@ answered, D12 superseded, D13 Gemini fallback (confirmed), D17 yes (built). Phas
 category; a new Current Events category in both games (§4 Phase 4a–4d). REMEDIAL PHASES 3a–3d ADDED 2026-11-15
 from Andrew's code review of Phases 0–3 (10 findings; §4 "Remedial phases 3a–3d"). Phase 3a DONE 2026-11-15
 (migration `20261115212126` written and tested, NOT applied; 3d applies it) —
-`speed-trivia-backlog-and-quality-plan_PHASE_3A_HANDOFF.md`. Next: Phase 3b, then 3c, 3d, then Phase 4a. Andrew code-reviews Phases 4a–5 after Phase 5, before they are committed.**
+`speed-trivia-backlog-and-quality-plan_PHASE_3A_HANDOFF.md`. Phase 3b DONE 2026-11-15 (migration `20261115213124`
+written and tested, NOT applied; 3d applies it) — `speed-trivia-backlog-and-quality-plan_PHASE_3B_HANDOFF.md`. Next:
+Phase 3c, then 3d, then Phase 4a. Andrew code-reviews Phases 4a–5 after Phase 5, before they are committed.**
 
 ## 1. For Andrew — the short version
 
@@ -424,6 +426,9 @@ Cost: $0 paid. One extra small RPC per night. An idle night goes back to 2 RPCs 
 plus a reservation whenever one stale mark exists.
 
 #### Phase 3b — the repeat checker keeps a confirmed repeat; released rows by revision (review #2, #4, #5)
+
+*DONE 2026-11-15 (`..._PHASE_3B_HANDOFF.md`). Released-view rebuild measured at ~60 ms on the 13,894-row 2026-10-14
+snapshot, so the rebuild was kept (no in-place delta).*
 
 **Problems:**
 - **Review #2.** In `runtime.cjs`'s capped judge, a pair can return `duplicate` while another pair in flight
@@ -934,7 +939,8 @@ hard. Any question Andrew calls obscure becomes a regression example for the sco
   "Reject all shown"). The overnight queue retires only confirmed repeats of an approved question (D8), never for
   quality.
 - D5: only a Quick Review reject for quality (reason `quality`) releases a fact. Full-bank checks skip released rows
-  only through `speed_trivia_released_rows` and `releasedRows:'read'`; nothing else may drop rows from the bank. If a
+  only through `speed_trivia_released_rows_v2` (by revision, Phase 3b) and `releasedRows:'read'`; nothing else may
+  drop rows from the bank. If a
   released row is restored, `speed_trivia_quick_keep` denies the fast lane to it and to everything admitted while it
   was released (`speed_trivia_released_restores`). Never remove that check.
 - The overnight queue (`scripts/process-speed-trivia-keep-queue.cjs`) records results only through

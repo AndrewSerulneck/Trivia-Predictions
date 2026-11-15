@@ -32,5 +32,6 @@ export type AdmissionSession = {
 export type SessionOptions = { client: AdmissionClient; secret?: string; budget?: AdmissionBudget; judge?: CheckOptions; cache?: Map<string, unknown>; apiKey?: string; cachedIndex?: SpeedIndex | null;
   /** Pair comparisons in flight at once (default 6). */
   concurrency?: number;
-  /** 'read': full-bank checks skip rows rejected in Quick Review as dull or obscure (D5). */
+  /** 'read': full-bank checks skip rows rejected in Quick Review as dull or obscure (D5), each only at the revision it
+   * was released at. Read once, by the first full-bank write; approved-only checks never read it. Unreadable → nothing skipped. */
   releasedRows?: "read" | null };
