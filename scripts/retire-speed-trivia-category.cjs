@@ -14,7 +14,7 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
-const { createClient } = require('@supabase/supabase-js');
+const { clientFromEnv } = require('./lib/speedTriviaServiceClient.cjs');
 const { createSession, createBudget } = require('../lib/speed-trivia-uniqueness/runtime.cjs');
 
 const POOL = 'anytime_blitz';
@@ -38,13 +38,6 @@ const parseArgs = argv => {
   if (args.undo && args.apply && !(args.maxDollars > 0)) throw new Error('--undo --apply needs --max-dollars (paid repeat check).');
   if (!args.statuses.length || args.statuses.some(s => !ALLOWED_STATUSES.has(s))) throw new Error('--status must be pending_review and/or active.');
   return args;
-};
-
-const clientFromEnv = () => {
-  const url = String(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim();
-  const key = String(process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim();
-  if (!url || !key) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.');
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 };
 
 const readCategory = async (client, category, statuses) => {

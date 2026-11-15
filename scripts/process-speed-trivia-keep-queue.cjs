@@ -29,7 +29,7 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
-const { createClient } = require('@supabase/supabase-js');
+const { clientFromEnv } = require('./lib/speedTriviaServiceClient.cjs');
 const core = require('../lib/speed-trivia-uniqueness/core.cjs');
 const runtime = require('../lib/speed-trivia-uniqueness/runtime.cjs');
 const gemini = require('../lib/speed-trivia-uniqueness/gemini.cjs');
@@ -74,13 +74,6 @@ const parseArgs = argv => {
   if (!(args.minutes > 0 && args.minutes <= 55)) throw new Error('--minutes must be 0 < n ≤ 55.');
   if (!(Number.isInteger(args.limit) && args.limit > 0 && args.limit <= 20000)) throw new Error('--limit must be 1–20000.');
   return args;
-};
-
-const clientFromEnv = () => {
-  const url = String(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim();
-  const key = String(process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim();
-  if (!url || !key) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.');
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 };
 
 // The budget caps dollars and time; token/request ceilings scale with dollars so dollars bind first.
@@ -360,10 +353,6 @@ const sampleLikelyKeeps = async (client, size) => {
   return rows.sort((a, b) => core.hash(a.id).localeCompare(core.hash(b.id))).slice(0, size);
 };
 
-const priorityOf = task => {
-  try { return core.answerKey(core.content(task.a).answer) === core.answerKey(core.content(task.b).answer); } catch { return false; }
-};
-
 /** Simulate the old (sequential, retrieval order) and new (same answer first; `probe` pairs alone, then K workers)
  * schedules. Mirrors runtime.cjs. */
 const simulate = (calls, concurrency, probe = runtime.PROBE) => {
@@ -429,7 +418,7 @@ const measure = async ({ client, sample, maxDollars, estimateOnly, apiKey = proc
     }
     const calls = [];
     const one = async (task, i) => {
-      const key = keys[i], first = priorityOf(task);
+      const key = keys[i], first = runtime.sameAnswer(task);
       const hit = cached[key];
       if (hit && hit.modelVersion === version && core.validDecision(hit.result)) {
         calls[i] = { id: task.id, cached: true, first, ms: 0, dollars: 0, ...hit.result };

@@ -30,7 +30,7 @@ describe("bar test pre-checks (free)", () => {
     expect(audience.preChecks(row("Which part of the human brain, located in the temporal lobe, is primarily responsible for processing auditory information?", "Temporal lobe")))
       .toEqual(["too-long", "answer-in-question"]);
     expect(audience.preChecks(row("The Nazca Plate is an oceanic plate. Under which plate does it subduct?", "South American Plate"))).toEqual(["preamble"]);
-    expect(audience.preChecks(row("Which countries border Eritrea?", "Sudan, Ethiopia, Djibouti"))).toEqual(["multi-answer"]);
+    expect(audience.preChecks(row("Which three countries border Eritrea?", "Sudan, Ethiopia, Djibouti"))).toEqual(["multi-answer"]);
     expect(audience.preChecks(row("Which Disney Pixar film features a robot named WALL-E?", "WALL-E"))).toEqual(["answer-in-question"]);
   });
 
@@ -39,6 +39,29 @@ describe("bar test pre-checks (free)", () => {
     expect(audience.preChecks(row("Which two NFL teams are tied for the most Super Bowl wins?", "Patriots & Steelers"))).toEqual([]);
     expect(audience.preChecks(row("Which band released 'Nevermind' in 1991?", "Nirvana"))).toEqual([]);
     expect(audience.preChecks(row("What is a baby whale called?", "Calf"))).toEqual([]);
+  });
+});
+
+describe("list check", () => {
+  const flagged = (q: string, a: string) => audience.preChecks(row(q, a)).includes("multi-answer");
+
+  it("does not flag digit-group commas or single answers that contain commas", () => {
+    expect(flagged("How many people live in a city of 1,000,000?", "1,000,000")).toBe(false);
+    expect(flagged("What is a billionaire worth at least?", "$1,000,000,000")).toBe(false);
+    expect(flagged("Which band released 'Deja Vu' in 1970?", "Crosby, Stills, Nash & Young")).toBe(false);
+    expect(flagged("What is the Olympic motto?", "Citius, Altius, Fortius")).toBe(false);
+  });
+
+  it("flags real lists when the question asks for several things", () => {
+    expect(flagged("What are the three main disciplines in fencing?", "Foil, Epee, Sabre")).toBe(true);
+    expect(flagged("Which group of countries makes up the Horn of Africa?", "Eritrea, Djibouti, Somalia, Ethiopia")).toBe(true);
+    expect(flagged("Which of these lists names all four Hogwarts houses?", "Gryffindor, Hufflepuff, Ravenclaw, Slytherin")).toBe(true);
+    expect(flagged("Which four families are in an orchestra?", "A")).toBe(true);
+  });
+
+  it("keeps two-item answers fine and bumps the version", () => {
+    expect(flagged("Which two countries border Eritrea?", "Sudan, Ethiopia")).toBe(false);
+    expect(audience.AUDIENCE_VERSION).toBe("bar-test-v2.1");
   });
 });
 

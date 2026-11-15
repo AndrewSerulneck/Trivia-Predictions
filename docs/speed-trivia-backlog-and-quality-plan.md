@@ -19,8 +19,10 @@ from Andrew's code review of Phases 0–3 (10 findings; §4 "Remedial phases 3a�
 `speed-trivia-backlog-and-quality-plan_PHASE_3A_HANDOFF.md`. Phase 3b DONE 2026-11-15 (migration `20261115213124`
 written and tested, NOT applied; 3d applies it) — `speed-trivia-backlog-and-quality-plan_PHASE_3B_HANDOFF.md`. Phase 3c
 DONE 2026-11-15 (migration `20261115214254` written and tested, NOT applied; 3d applies it) —
-`speed-trivia-backlog-and-quality-plan_PHASE_3C_HANDOFF.md`. Next: Phase 3d, then Phase 4a. Don't merge PR #19 until
-3d has applied the three remedial migrations (Andrew, 2026-11-15). Andrew code-reviews Phases 4a–5 after Phase 5, before they are committed.**
+`speed-trivia-backlog-and-quality-plan_PHASE_3C_HANDOFF.md`. Phase 3d DONE 2026-11-15: the three remedial migrations are
+APPLIED to production, the list check is fixed (`bar-test-v2.1`), 6 marks re-scored —
+`speed-trivia-backlog-and-quality-plan_PHASE_3D_HANDOFF.md`. PR #19 is ready to merge (Andrew's call). Next: Phase 4a.
+Andrew code-reviews Phases 4a–5 after Phase 5, before they are committed.**
 
 ## 1. For Andrew — the short version
 
@@ -629,6 +631,11 @@ Cost: $0.
 
 Cost: $0 paid. About 24 small row writes, once.
 
+**DONE 2026-11-15.** Migrations applied with Andrew's OK. List check: `isListAnswer` in `audience.cjs`. Re-score:
+24 marks carried the flag, 6 changed, 18 are real lists (undo log `…_PHASE_3D_RESCORE_LOG_2026-11-15.json`).
+Calibration agreement did not move. The rule needs a count word, "group/set/list of" or "lists" in the question, so a
+plural question with no count ("Which countries border Eritrea?") is no longer flagged by the free check.
+
 ### Phase 4 — a daily ChatGPT writer for Speed and Live Trivia (amended 2026-11-15, twice)
 
 **What Andrew asked for (2026-11-15):**
@@ -956,7 +963,11 @@ hard. Any question Andrew calls obscure becomes a regression example for the sco
 - D17: the pre-check never approves. It records results only through `speed_trivia_precheck_settle`, touches only
   older undecided waiting questions, and retires only confirmed repeats of an approved question. A restored row
   (`precheck.outcome = 'restored'`) is never pre-checked again in that wording.
-- **Remedial rules (Phases 3a–3c, 2026-11-15):**
+- **Remedial rules (Phases 3a–3d, 2026-11-15):**
+  - `multi-answer` is a list check: ≥ 2 commas after ignoring digit groups **and** a question that asks for several
+    things. A change to `audience.cjs` bumps `AUDIENCE_VERSION`. Stored scores are not rewritten unless a free
+    re-score (`scripts/rescore-speed-trivia-checks.cjs`) does it with an undo log.
+  - The service client is `scripts/lib/speedTriviaServiceClient.cjs` and `sameAnswer` is `runtime.sameAnswer`: one copy each.
   - The overnight job never stops for one question. A row's own errors are recorded and the run moves on. It stops
     only at the budget, the deadline, or the error breaker (3 transient errors in a row, or 20 in a run).
   - Queued Keeps whose row is no longer waiting are cleared or settled only by `speed_trivia_queue_prepare`.
