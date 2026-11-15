@@ -5,17 +5,19 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { SpeedTriviaQuickReview } from "@/components/admin/sections/SpeedTriviaQuickReview";
 
 // Quick Review keyboard flow against a fake in-memory server (no network, no database).
-type Row = { id: string; question: string; options: string[]; correctAnswer: number; category: string; difficulty: string; createdAt: string; recent: boolean; contentHash: string };
+type Row = { id: string; question: string; options: string[]; correctAnswer: number; category: string; difficulty: string; createdAt: string; recent: boolean; contentHash: string; audience?: { score: number; familiar: number; fun: number; estCorrect: number; flags: string[] } | null };
 const row = (n: number, recent = false): Row => ({ id: `id-${n}`, question: `Question ${n}?`, options: [`Right ${n}`, "B", "C", "D"], correctAnswer: 0, category: "Science", difficulty: "easy", createdAt: `2026-07-0${n}T00:00:00Z`, recent, contentHash: `hash-${n}` });
 
 let waiting: Row[];
 let decided: Map<string, Row>;
 const posts: Record<string, unknown>[] = [];
+const gets: string[] = [];
 const respond = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }));
 
 const fakeFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
   const url = String(input);
   if (!init?.method || init.method === "GET") {
+    gets.push(url);
     return respond({ ok: true, total: waiting.length, items: waiting.slice(0, 50) });
   }
   const body = JSON.parse(String(init.body)) as Record<string, unknown>;
@@ -55,6 +57,7 @@ beforeEach(() => {
   waiting = [row(1, true), row(2), row(3), row(4)];
   decided = new Map();
   posts.length = 0;
+  gets.length = 0;
   fakeFetch.mockClear();
   vi.stubGlobal("fetch", fakeFetch);
 });
@@ -129,5 +132,22 @@ describe("Speed Trivia Quick Review", () => {
     fireEvent.click(screen.getByText("Keep all shown (4)"));
     await waitFor(() => expect(posts).toHaveLength(0));
     expect(screen.getByText("Question 1?")).toBeTruthy();
+  });
+
+  it("shows the bar-test score and flags, and sends the score filter to reads and bulk", async () => {
+    waiting[0] = { ...waiting[0], audience: { score: 2, familiar: 2, fun: 3, estCorrect: 30, flags: ["niche-subject", "too-long"] } };
+    vi.stubGlobal("confirm", vi.fn(() => true));
+    render(createElement(SpeedTriviaQuickReview));
+    expect(await screen.findByText(/Score 2/)).toBeTruthy();
+    expect(screen.getByTestId("quick-review-flags").textContent).toBe("Niche · Long");
+    // Best score first is the default sort.
+    expect(new URL(gets[0], "https://x.invalid").searchParams.get("sort")).toBe("best");
+
+    fireEvent.change(screen.getByLabelText("Score"), { target: { value: "1" } });
+    await waitFor(() => expect(new URL(gets[gets.length - 1], "https://x.invalid").searchParams.get("score")).toBe("1"));
+    await screen.findByText("Question 1?");
+    fireEvent.click(screen.getByText("Reject all shown (4)"));
+    expect(await screen.findByText("Rejected 4.")).toBeTruthy();
+    expect(posts.every((p) => p.score === "1")).toBe(true);
   });
 });

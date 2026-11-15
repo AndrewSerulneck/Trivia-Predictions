@@ -22,7 +22,20 @@ const PAGE_SIZE = 50; // QUICK_REVIEW_PAGE_LIMIT on the server
 
 type UndoEntry = { item: QuickReviewItem; kind: "keep" | "reject" | "skip" };
 type Draft = { question: string; options: string[]; correctAnswer: number };
-type Filter = { category: string; source: QuickReviewSource; sort: QuickReviewSort };
+type Filter = { category: string; source: QuickReviewSource; sort: QuickReviewSort; score: string };
+
+// Bar-test flags (lib/speed-trivia-quality/audience.cjs) in plain words.
+const FLAG_LABELS: Record<string, string> = {
+  "too-long": "Long",
+  preamble: "Two sentences",
+  "multi-answer": "List answer",
+  "answer-in-question": "Gives it away",
+  ambiguous: "Ambiguous",
+  "possibly-wrong": "Answer may be wrong",
+  dated: "Dated",
+  "niche-subject": "Niche",
+  "bad-distractors": "Weak options",
+};
 
 const postJson = async <T,>(body: unknown): Promise<T> => {
   const response = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -35,7 +48,7 @@ const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
 export function SpeedTriviaQuickReview() {
-  const [filter, setFilter] = useState<Filter>({ category: "", source: "all", sort: "oldest" });
+  const [filter, setFilter] = useState<Filter>({ category: "", source: "all", sort: "best", score: "" });
   const [items, setItems] = useState<QuickReviewItem[]>([]);
   const [total, setTotal] = useState(0);
   const [exhausted, setExhausted] = useState(false);
@@ -54,9 +67,11 @@ export function SpeedTriviaQuickReview() {
   const fetchPage = useCallback(async (after: QuickReviewItem | null) => {
     const params = new URLSearchParams({ source: filter.source, sort: filter.sort });
     if (filter.category) params.set("category", filter.category);
+    if (filter.score) params.set("score", filter.score);
     if (after) {
       params.set("afterId", after.id);
       params.set("afterCreated", after.createdAt);
+      params.set("afterScore", String(after.audience?.score ?? 0));
     }
     const response = await fetch(`${ENDPOINT}?${params.toString()}`, { cache: "no-store" });
     const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; total?: number; items?: QuickReviewItem[]; error?: string };
@@ -232,7 +247,7 @@ export function SpeedTriviaQuickReview() {
       while (done < count) {
         const result = await postJson<QuickReviewBulkResult>({
           action: "bulk", decision, max: count - done,
-          category: filter.category || null, source: filter.source,
+          category: filter.category || null, source: filter.source, score: filter.score || null,
         });
         done += result.processed;
         setBulk({ decision, done, of: count });
@@ -274,7 +289,7 @@ export function SpeedTriviaQuickReview() {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <div>
           <label className={adminLabel} htmlFor="qr-category">Category</label>
           <select id="qr-category" className={adminField} value={filter.category} disabled={busy}
@@ -296,8 +311,17 @@ export function SpeedTriviaQuickReview() {
           <label className={adminLabel} htmlFor="qr-sort">Sort</label>
           <select id="qr-sort" className={adminField} value={filter.sort} disabled={busy}
             onChange={(event) => setFilter((prev) => ({ ...prev, sort: event.target.value as QuickReviewSort }))}>
+            <option value="best">Best score</option>
             <option value="oldest">Oldest</option>
             <option value="newest">Newest</option>
+          </select>
+        </div>
+        <div>
+          <label className={adminLabel} htmlFor="qr-score">Score</label>
+          <select id="qr-score" className={adminField} value={filter.score} disabled={busy}
+            onChange={(event) => setFilter((prev) => ({ ...prev, score: event.target.value }))}>
+            <option value="">Any</option>
+            {["5", "4", "3", "2", "1"].map((score) => <option key={score} value={score}>{score}</option>)}
           </select>
         </div>
       </div>
@@ -329,6 +353,7 @@ export function SpeedTriviaQuickReview() {
           <div className="space-y-4" data-testid="quick-review-card">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               {current.category ?? "—"}{current.difficulty ? ` · ${current.difficulty}` : ""} · {current.recent ? "Recent" : "Older"}
+              {current.audience ? ` · Score ${current.audience.score}` : ""}
             </p>
             {draft ? (
               <div className="space-y-2">
@@ -366,6 +391,11 @@ export function SpeedTriviaQuickReview() {
                     </li>
                   ))}
                 </ul>
+                {current.audience && current.audience.flags.length > 0 ? (
+                  <p className="text-xs text-slate-500" data-testid="quick-review-flags">
+                    {current.audience.flags.map((flag) => FLAG_LABELS[flag] ?? flag).join(" · ")}
+                  </p>
+                ) : null}
               </>
             )}
           </div>

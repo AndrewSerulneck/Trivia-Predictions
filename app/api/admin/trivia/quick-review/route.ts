@@ -5,6 +5,7 @@ import {
   QuickReviewError,
   isContentHash,
   isQuickReviewId,
+  parseQuickReviewCursor,
   parseQuickReviewFilter,
   quickKeep,
   quickReject,
@@ -33,12 +34,13 @@ export async function GET(request: Request) {
       category: url.searchParams.get("category"),
       source: url.searchParams.get("source"),
       sort: url.searchParams.get("sort"),
+      score: url.searchParams.get("score"),
     });
-    const afterId = url.searchParams.get("afterId");
-    const afterCreated = url.searchParams.get("afterCreated");
-    const after = isQuickReviewId(afterId) && afterCreated && !Number.isNaN(Date.parse(afterCreated))
-      ? { id: afterId, createdAt: afterCreated }
-      : null;
+    const after = parseQuickReviewCursor({
+      afterId: url.searchParams.get("afterId"),
+      afterCreated: url.searchParams.get("afterCreated"),
+      afterScore: url.searchParams.get("afterScore"),
+    });
     const page = await readQuickReviewQueue(filter, after);
     return json({ ok: true, ...page });
   } catch (error) {
@@ -55,6 +57,7 @@ type PostBody = {
   decision?: unknown;
   category?: unknown;
   source?: unknown;
+  score?: unknown;
   max?: unknown;
 };
 
@@ -93,7 +96,7 @@ export async function POST(request: Request) {
       const decision = body.decision === "keep" || body.decision === "reject" ? body.decision : null;
       const max = Number(body.max);
       if (!decision || !Number.isSafeInteger(max) || max < 1) return json({ ok: false, error: "Invalid request." }, 400);
-      const filter = parseQuickReviewFilter({ category: body.category, source: body.source });
+      const filter = parseQuickReviewFilter({ category: body.category, source: body.source, score: body.score });
       return json({ ok: true, ...(await runQuickReviewBulk(decision, filter, max)) });
     }
 

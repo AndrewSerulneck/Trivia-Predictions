@@ -37,9 +37,17 @@ describe("Quick Review route", () => {
     mocks.rpc.mockReturnValue(ok({ total: "7333", rows: [item(1)] }));
     const response = await get(`?category=Science&source=recent&sort=newest&afterId=${id(9)}&afterCreated=2026-07-01T00:00:09%2B00:00`);
     expect(await response.json()).toEqual({ ok: true, total: 7333, items: [item(1)] });
-    expect(mocks.rpc).toHaveBeenCalledWith("speed_trivia_review_queue", { p_category: "Science", p_source: "recent", p_sort: "newest", p_after_created: "2026-07-01T00:00:09+00:00", p_after_id: id(9), p_limit: 50 });
-    await get("?category=Literary%20Landscapes&source=live&sort=random&afterId=bad");
-    expect(mocks.rpc).toHaveBeenLastCalledWith("speed_trivia_review_queue", { p_category: null, p_source: "all", p_sort: "oldest", p_after_created: null, p_after_id: null, p_limit: 50 });
+    expect(mocks.rpc).toHaveBeenCalledWith("speed_trivia_review_queue", { p_category: "Science", p_source: "recent", p_sort: "newest", p_after_created: "2026-07-01T00:00:09+00:00", p_after_id: id(9), p_limit: 50, p_score_min: null, p_score_max: null, p_after_score: null });
+    await get("?category=Literary%20Landscapes&source=live&sort=random&afterId=bad&score=9");
+    expect(mocks.rpc).toHaveBeenLastCalledWith("speed_trivia_review_queue", { p_category: null, p_source: "all", p_sort: "best", p_after_created: null, p_after_id: null, p_limit: 50, p_score_min: null, p_score_max: null, p_after_score: null });
+  });
+
+  it("filters by bar-test score and pages the best sort by score", async () => {
+    mocks.rpc.mockReturnValue(ok({ total: 3, rows: [item(1)] }));
+    await get(`?score=2&sort=best&afterId=${id(9)}&afterCreated=2026-07-01T00:00:09%2B00:00&afterScore=4`);
+    expect(mocks.rpc).toHaveBeenLastCalledWith("speed_trivia_review_queue", expect.objectContaining({ p_sort: "best", p_score_min: 2, p_score_max: 2, p_after_score: 4, p_after_id: id(9) }));
+    await get(`?sort=oldest&afterId=${id(9)}&afterCreated=2026-07-01T00:00:09%2B00:00&afterScore=4`);
+    expect(mocks.rpc).toHaveBeenLastCalledWith("speed_trivia_review_queue", expect.objectContaining({ p_sort: "oldest", p_after_score: null }));
   });
 
   it("signs Keep with the admission secret and passes exactly the reviewed content hash", async () => {
@@ -105,7 +113,7 @@ describe("Quick Review bulk by filter", () => {
     });
     return waiting;
   };
-  const filter = { category: null, source: "all" as const, sort: "newest" as const };
+  const filter = { category: null, source: "all" as const, sort: "newest" as const, score: null };
 
   it("works through the whole filter in pages of 100, capped at the confirmed count", async () => {
     const waiting = fakeDb(250);
@@ -117,6 +125,14 @@ describe("Quick Review bulk by filter", () => {
     expect(rejectCalls.every(([, args]) => (args as { p_reason: string }).p_reason === "quality")).toBe(true);
     // Bulk always reads oldest first.
     expect(mocks.rpc.mock.calls.filter(([name]) => name === "speed_trivia_review_queue").every(([, args]) => (args as { p_sort: string }).p_sort === "oldest")).toBe(true);
+  });
+
+  it("passes the score band to every page of a bulk action", async () => {
+    fakeDb(30);
+    const result = await runQuickReviewBulk("reject", { ...filter, score: 1 }, 30);
+    expect(result.rejected).toBe(30);
+    const reads = mocks.rpc.mock.calls.filter(([name]) => name === "speed_trivia_review_queue");
+    expect(reads.every(([, args]) => (args as { p_score_min: number; p_score_max: number }).p_score_min === 1 && (args as { p_score_max: number }).p_score_max === 1)).toBe(true);
   });
 
   it("keeps: approves the already-checked rows, queues the rest, at most 1,000 per request", async () => {

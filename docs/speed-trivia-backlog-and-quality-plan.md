@@ -2,10 +2,11 @@
 
 Created 2026-11-15. Owner: Andrew Serulneck.
 
-**Status: Phase 0 DONE 2026-11-15 — see `speed-trivia-backlog-and-quality-plan_PHASE_0_HANDOFF.md`.
-Phase 1 DONE 2026-11-15 (migration applied; on branch `feature/speed-trivia-quick-review`, PR open, merge after the
-end-of-plan code review) — see `speed-trivia-backlog-and-quality-plan_PHASE_1_HANDOFF.md`. D1 yes, D2 yes, D3 review
-(not reject), D4 $1.50; D5–D8 open. Next: Phase 2.**
+**Status: Phase 0 DONE 2026-11-15 — `speed-trivia-backlog-and-quality-plan_PHASE_0_HANDOFF.md`. Phase 1 DONE
+2026-11-15 (migration applied) — `..._PHASE_1_HANDOFF.md`. Phase 2 BUILT 2026-11-15: all 7,333 waiting questions
+scored ($1.09); scores in a file, migration `20261115153905` NOT applied (needs Andrew's OK) —
+`speed-trivia-backlog-and-quality-plan_PHASE_2_HANDOFF.md`. All on branch `feature/speed-trivia-quick-review`, PR #19,
+merge after the end-of-plan code review. D1 yes, D2 yes, D3 review, D4 $1.50; D5–D8 open. Next: Phase 3.**
 
 ## 1. For Andrew — the short version
 
@@ -104,6 +105,21 @@ and you bulk-keep the best, you're likely looking at a few hours in total, not w
 | 3 | Overnight Keep queue + faster repeat checker | **Opus 5.5 / high** | Changes the uniqueness engine; must re-pass frozen evaluation gates; new workflow + budget. |
 | 4 | Nightly writer rewrite + one capped pilot | **Opus 5.5 / high** | Prompt and gate design decide quality; shared engine; paid pilot. |
 | 5 | Seven-night monitoring and report | **Sonnet 5.5 / medium** | Read-only measurement against stated baselines. |
+
+**Which AI model runs the work (Andrew asked 2026-11-15 whether to switch off Gemini).** The table above names the
+coding agent. The model *inside* the pipeline is a separate choice for each job:
+
+| Job | Now | Recommendation | Why |
+| --- | --- | --- | --- |
+| Bar test (Phase 2) | Gemini 2.5 Flash, ~$1 one time | Keep | Already calibrated against Andrew's decisions and run. Switching means re-running calibration. |
+| Repeat check (Phase 3) | Gemini 2.5 Flash | Keep | Frozen evaluation gates (`evaluation-v1.json`, `evaluation-fresh-v1.json`) are passed on this model; a switch must re-pass them. It's also the high-volume job (one call per pair). |
+| Question writer (Phase 4) | Gemini 2.5 Flash | **Bake-off in the Phase 4 pilot**: Gemini 2.5 Flash vs Claude Sonnet 5.5, ~40 questions each, rated blind by Andrew in Quick Review | The writer decides question quality, so it's where a stronger model can help most: more natural wording, fewer wrong facts. A different model grading the writer's output also avoids a model marking its own homework. |
+
+Claude list prices (2026-11): Sonnet 5.5 $2 / $10 per million input / output tokens, Haiku 5.5 $0.10 / $0.50, Opus
+5.5 $4 / $20; the Batch API halves these. A nightly 100-candidate run is roughly 20k input + 15k output tokens, about
+**$0.20/night on Sonnet 5.5** (Claude thinking tokens add to output), versus a few cents on Gemini Flash. The project
+already ships `@anthropic-ai/sdk`. A Claude writer would need its own key (e.g. `ANTHROPIC_API_KEY_SPEED_TRIVIA`) in
+`.env.local` and as a GitHub Actions secret for the nightly workflow. Today only `GEMINI_API_KEY` is there.
 
 Order: 0 → 1 → 2 → 3 → 4 → 5. Phase 4 depends only on Phase 2, so it may run before or alongside Phase 3 if Andrew
 wants the writer fixed sooner. Each phase ends with `speed-trivia-backlog-and-quality-plan_PHASE_<N>_HANDOFF.md`
@@ -282,4 +298,7 @@ hard. Any question Andrew calls obscure becomes a regression example for the sco
 - `speed_trivia_review_marks` is written only by its RPCs (`service_role` has `select` only): Undo trusts
   `decided_revision`, so marks must not be forgeable. A queued keep is approved only while its row is still
   `pending_review` and its `content_hash` still matches.
+- Bar-test scores are written only by `speed_trivia_review_set_audience`, which never touches decision fields, and
+  only for a waiting row whose content hash still matches. The scorer lives in `lib/speed-trivia-quality/audience.cjs`
+  and is shared with the Phase 4 writer; a prompt or rule change bumps `AUDIENCE_VERSION` and is re-calibrated.
 - Product copy minimal; "Prize", never "Reward"; no text under 12 px.

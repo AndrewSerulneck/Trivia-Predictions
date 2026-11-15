@@ -52,18 +52,35 @@ const call = async <T,>(name: string, args: Record<string, unknown>): Promise<T>
 export const isQuickReviewId = (value: unknown): value is string => typeof value === "string" && UUID.test(value);
 export const isContentHash = (value: unknown): value is string => typeof value === "string" && HASH.test(value);
 
-export const parseQuickReviewFilter = (input: { category?: unknown; source?: unknown; sort?: unknown }): QuickReviewFilter => {
+const parseScore = (value: unknown): number | null => {
+  const score = typeof value === "number" ? value : typeof value === "string" && value.trim() ? Number(value) : NaN;
+  return Number.isInteger(score) && score >= 1 && score <= 5 ? score : null;
+};
+
+export const parseQuickReviewFilter = (
+  input: { category?: unknown; source?: unknown; sort?: unknown; score?: unknown },
+): QuickReviewFilter => {
   const category = typeof input.category === "string" && CATEGORY_VALUES.has(input.category) ? input.category : null;
   const source = input.source === "older" || input.source === "recent" ? input.source : "all";
-  const sort = input.sort === "newest" ? "newest" : "oldest";
-  return { category, source, sort };
+  const sort = input.sort === "newest" || input.sort === "oldest" ? input.sort : "best";
+  return { category, source, sort, score: parseScore(input.score) };
+};
+
+/** Keyset cursor: the last row shown. `score` is its bar-test score (0 when unscored); used by the best sort. */
+export type QuickReviewCursor = { createdAt: string; id: string; score: number };
+
+export const parseQuickReviewCursor = (input: { afterId?: unknown; afterCreated?: unknown; afterScore?: unknown }): QuickReviewCursor | null => {
+  const { afterId, afterCreated } = input;
+  if (!isQuickReviewId(afterId) || typeof afterCreated !== "string" || Number.isNaN(Date.parse(afterCreated))) return null;
+  const score = Number(input.afterScore ?? 0);
+  return { id: afterId, createdAt: afterCreated, score: Number.isInteger(score) && score >= 0 && score <= 5 ? score : 0 };
 };
 
 type QueueRpc = { total: number | string; rows: QuickReviewItem[] };
 
 export const readQuickReviewQueue = async (
   filter: QuickReviewFilter,
-  after: { createdAt: string; id: string } | null,
+  after: QuickReviewCursor | null,
   limit = QUICK_REVIEW_PAGE_LIMIT,
 ): Promise<QuickReviewPage> => {
   const data = await call<QueueRpc>("speed_trivia_review_queue", {
@@ -73,6 +90,9 @@ export const readQuickReviewQueue = async (
     p_after_created: after?.createdAt ?? null,
     p_after_id: after?.id ?? null,
     p_limit: Math.max(1, Math.min(100, Math.floor(limit))),
+    p_score_min: filter.score,
+    p_score_max: filter.score,
+    p_after_score: after && filter.sort === "best" ? after.score : null,
   });
   return { total: Number(data.total) || 0, items: Array.isArray(data.rows) ? data.rows : [] };
 };
@@ -117,7 +137,7 @@ export const runQuickReviewBulk = async (
   const started = now();
   const cap = Math.max(0, Math.min(Math.floor(max), BULK_MAX_PER_REQUEST));
   const result: QuickReviewBulkResult = { processed: 0, approved: 0, queued: 0, rejected: 0, remaining: 0 };
-  const oldest = { ...filter, sort: "oldest" as const };
+  const oldest: QuickReviewFilter = { ...filter, sort: "oldest" };
   while (result.processed < cap && now() - started < BULK_TIME_MS) {
     // Decided rows leave the queue, so the first page is always the next undecided one.
     const page = await readQuickReviewQueue(oldest, null, Math.min(BULK_PAGE, cap - result.processed));
