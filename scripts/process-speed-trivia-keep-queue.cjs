@@ -20,6 +20,11 @@
  *       SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS) across all runs, reserved first in speed_trivia_queue_runs. Either unset:
  *       nothing is checked.
  *
+ *       Every --apply run first clears queued Keeps whose question is no longer waiting (speed_trivia_queue_prepare).
+ *       One question never stops the run (Phase 3a): a problem that will recur with that question sends it to
+ *       "Needs a look" (pre-check: noted 'uncertain'); a passing failure leaves it for the next night. The run stops
+ *       only at the budget, the deadline, or after 3 passing failures in a row or 20 failures in all.
+ *
  * Speed Trivia only (anytime_blitz + multiple_choice). Never rejects anything for quality.
  */
 const fs = require('node:fs');
@@ -38,6 +43,9 @@ const NOTE_MAX = 600;
 const MAX_CAP = 100;
 const MAX_TOTAL = 1000;
 const PRECHECK_PAGE = 5000;
+const MAX_ERRORS_KEPT = 50;
+const BREAK_IN_A_ROW = 3;
+const BREAK_IN_RUN = 20;
 
 const parseArgs = argv => {
   const args = { mode: 'count', precheck: false, minScore: 3, maxDollars: null, totalDollars: null, minutes: 50, limit: 2000, sample: 0, out: '', reportDir: '' };
@@ -81,11 +89,13 @@ const queueBudget = ({ dollars, minutes }) => runtime.createBudget({
   requests: Math.ceil(dollars * 4000), inputTokens: Math.ceil(dollars * 8e6), outputTokens: Math.ceil(dollars * 1e6),
 });
 
-const countQueued = async client => {
-  const { count, error } = await client.from('speed_trivia_review_marks').select('row_id', { count: 'exact', head: true })
-    .eq('decision', 'keep').eq('outcome', 'queued');
+/** Counts queued Keeps on waiting questions. With apply, first clears Keeps whose question is no longer waiting and
+ * records ones approved elsewhere (speed_trivia_queue_prepare). Returns {queued, stale, settled}. */
+const prepare = async (client, apply) => {
+  const { data, error } = await client.rpc('speed_trivia_queue_prepare', { p_apply: apply });
   if (error) throw new Error(error.message);
-  return count ?? 0;
+  if (!data || !['queued', 'stale', 'settled'].every(key => Number.isInteger(data[key]))) throw new Error('Missing result (speed_trivia_queue_prepare).');
+  return { queued: data.queued, stale: data.stale, settled: data.settled };
 };
 
 const readQueued = async (client, limit) => {
@@ -111,66 +121,113 @@ const readRows = async (client, ids) => {
   return rows;
 };
 
+// A refused settle is that row's problem (it will be refused again); anything else may pass.
+const settleError = (prefix, error) => Object.assign(new Error(`${prefix}: ${error.message}`),
+  { code: /invalid-quick-review-request/.test(String(error.message)) ? 'invalid-quick-review-request' : 'settle_failed' });
+
 const settle = async (client, rowId, contentHash, outcome, matched = null, note = null) => {
   const { data, error } = await client.rpc('speed_trivia_queue_settle', {
     p_row_id: rowId, p_content_hash: contentHash, p_outcome: outcome, p_matched_row_id: matched,
     p_note: note ? note.slice(0, NOTE_MAX) : null,
   });
-  if (error) throw new Error(`settle failed for ${rowId}: ${error.message}`);
+  if (error) throw settleError(`settle failed for ${rowId}`, error);
   return data.outcome;
 };
 
 const speedRow = row => row?.question_pool === 'anytime_blitz' && row?.answer_format === 'multiple_choice';
-const errorCode = error => typeof error?.code === 'string' ? error.code : 'failed';
+// A plain Error from the engine (e.g. 'malformed-answer', 'approved-only-requires-unchanged-pending-approval') carries
+// its code as the message.
+const errorCode = error => typeof error?.code === 'string' ? error.code
+  : /^[a-z][a-z0-9_-]{2,80}$/.test(String(error?.message ?? '')) ? error.message : 'failed';
+
+// ---------- one shared error classifier (Phase 3a) ----------
+// stop: ends the run. row: this question's own problem, which every run would hit again. transient: anything else
+// (provider errors, verification_unavailable, stale_revision), retried next night.
+const STOP_CODES = new Set(['budget_exhausted', 'cancelled', 'budget_configuration']);
+const ROW_CODES = new Set(['invalid_pool', 'retired', 'approved-only-requires-unchanged-pending-approval', 'invalid-quick-review-request']);
+const classify = error => {
+  const code = errorCode(error);
+  return STOP_CODES.has(code) ? 'stop' : error?.malformed === true || ROW_CODES.has(code) ? 'row' : 'transient';
+};
+const stopReason = error => (errorCode(error) === 'budget_exhausted' ? 'budget' : errorCode(error));
+// core.content() failing means the question itself is malformed: always a row problem.
+const contentProblem = row => { try { core.content(row); return null; } catch (error) { return Object.assign(new Error(error.message), { code: errorCode(error), malformed: true }); } };
+
+/** Error breaker shared by both passes of one run: trips after BREAK_IN_A_ROW transient errors in a row or
+ * BREAK_IN_RUN errors in all, so an outage can't mark rows or burn the night. */
+const createBreaker = () => {
+  let inARow = 0, total = 0;
+  return {
+    ok: () => { inARow = 0; },
+    // Returns true when the run must stop.
+    fail: kind => { total++; inARow = kind === 'transient' ? inARow + 1 : 0; return inARow >= BREAK_IN_A_ROW || total >= BREAK_IN_RUN; },
+  };
+};
+const recordError = (report, id, error, kind) => {
+  if (kind !== 'stop') report[kind === 'row' ? 'rowErrors' : 'transientErrors']++;
+  if (report.errors.length < MAX_ERRORS_KEPT) report.errors.push({ id, code: errorCode(error), kind, message: String(error?.message ?? error).slice(0, 300) });
+};
+const CHECK_NOTE = code => `Couldn't check (${code}). Keep it again or reject it.`;
 // The approved question a duplicate verdict matched, if it's still approved.
 const approvedMatch = (session, error) =>
   (error.evidence?.matchedRowIds ?? []).map(id => session.index().byId.get(id)?.row).find(r => r?.status === 'active') ?? null;
 
-/** One pass over queued marks. Returns a report; stops (without failing) at the budget or deadline. */
-const processQueue = async ({ client, session, marks, rows }) => {
-  const report = { examined: 0, approved: 0, repeat: 0, needsLook: 0, skipped: 0, stopped: null, errors: [] };
+/** One pass over queued marks. Returns a report; stops (without failing) at the budget or deadline, and with
+ * stopped='errors' at the breaker. A row's own problem sends it to Needs a look; a passing one leaves it queued. */
+const processQueue = async ({ client, session, marks, rows, breaker = createBreaker() }) => {
+  const report = { examined: 0, approved: 0, repeat: 0, needsLook: 0, skipped: 0, stopped: null, errors: [], rowErrors: 0, transientErrors: 0 };
+  const count = outcome => { report[outcome === 'repeat' ? 'repeat' : outcome === 'needs_look' ? 'needsLook' : outcome === 'approved' ? 'approved' : 'skipped']++; };
   for (const mark of marks) {
     const row = rows.get(mark.row_id);
+    let checking = false;
     try {
       if (!speedRow(row)) { report.skipped++; continue; }
       if (row.status === 'active') {
         // A previous run approved it but stopped before recording the result.
-        await settle(client, row.id, mark.content_hash, 'approved');
-        report.approved++; continue;
+        count(await settle(client, row.id, mark.content_hash, 'approved'));
+        breaker.ok(); continue;
       }
       if (row.status !== 'pending_review') { report.skipped++; continue; }
+      const malformed = contentProblem(row);
+      if (malformed) throw malformed;
       if (core.contentHash(row) !== mark.content_hash) {
-        const outcome = await settle(client, row.id, mark.content_hash, 'needs_look', null, 'Edited after Keep. Keep it again or reject it.');
-        report[outcome === 'needs_look' ? 'needsLook' : 'skipped']++; continue;
+        count(await settle(client, row.id, mark.content_hash, 'needs_look', null, 'Edited after Keep. Keep it again or reject it.'));
+        breaker.ok(); continue;
       }
-      report.examined++;
+      report.examined++; checking = true;
+      let outcome;
       try {
         await session.write({ status: 'active' }, { existing: row, approvedOnly: true });
-        await settle(client, row.id, mark.content_hash, 'approved');
-        report.approved++;
+        outcome = await settle(client, row.id, mark.content_hash, 'approved');
       } catch (error) {
         const code = errorCode(error);
         if (code === 'duplicate') {
           const match = approvedMatch(session, error);
-          const outcome = match
+          outcome = match
             ? await settle(client, row.id, mark.content_hash, 'repeat', match.id, error.message)
             : await settle(client, row.id, mark.content_hash, 'needs_look', null, error.message);
-          report[outcome === 'repeat' ? 'repeat' : outcome === 'needs_look' ? 'needsLook' : 'skipped']++;
         } else if (code === 'uncertain') {
-          const outcome = await settle(client, row.id, mark.content_hash, 'needs_look', null, error.message);
-          report[outcome === 'needs_look' ? 'needsLook' : 'skipped']++;
-        } else if (code === 'retired') {
-          report.skipped++;
-        } else if (code === 'budget_exhausted') {
-          report.examined--; report.stopped = 'budget'; break;
-        } else {
-          report.examined--; report.stopped = code; report.errors.push({ id: row.id, code, message: String(error.message).slice(0, 300) }); break;
-        }
+          outcome = await settle(client, row.id, mark.content_hash, 'needs_look', null, error.message);
+        } else throw error;
       }
+      count(outcome);
+      breaker.ok();
     } catch (error) {
-      report.stopped = 'settle_failed';
-      report.errors.push({ id: mark.row_id, code: 'settle_failed', message: String(error.message).slice(0, 300) });
-      break;
+      const kind = classify(error);
+      if (kind === 'stop') {
+        if (checking) report.examined--;
+        report.stopped = stopReason(error);
+        if (report.stopped !== 'budget') recordError(report, mark.row_id, error, 'stop');
+        break;
+      }
+      if (kind === 'transient' && checking) report.examined--;
+      recordError(report, mark.row_id, error, kind);
+      if (kind === 'row') {
+        // It would fail the same way every night: hand it to Andrew instead.
+        try { count(await settle(client, mark.row_id, mark.content_hash, 'needs_look', null, CHECK_NOTE(errorCode(error)))); }
+        catch (settleFailure) { recordError(report, mark.row_id, settleFailure, classify(settleFailure) === 'row' ? 'row' : 'transient'); }
+      }
+      if (breaker.fail(kind)) { report.stopped = 'errors'; break; }
     }
   }
   return report;
@@ -190,22 +247,27 @@ const precheckSettle = async (client, rowId, contentHash, outcome, matched = nul
     p_row_id: rowId, p_content_hash: contentHash, p_outcome: outcome, p_matched_row_id: matched,
     p_note: note ? note.slice(0, NOTE_MAX) : null,
   });
-  if (error) throw new Error(`pre-check settle failed for ${rowId}: ${error.message}`);
+  if (error) throw settleError(`pre-check settle failed for ${rowId}`, error);
   return data.outcome;
 };
 
 /** Older undecided waiting questions, in the given order, checked against approved questions only. Never approves.
- * Reads rows ROW_CHUNK at a time; stops (without failing) at the budget or deadline. */
-const precheckPass = async ({ client, session, ids, read = readRows }) => {
-  const report = { examined: 0, repeat: 0, unique: 0, uncertain: 0, skipped: 0, stopped: null, errors: [] };
+ * Reads rows ROW_CHUNK at a time; stops (without failing) at the budget or deadline, and with stopped='errors' at the
+ * breaker. A row's own problem is noted 'uncertain' so it isn't retried; a passing one is retried next night. */
+const precheckPass = async ({ client, session, ids, read = readRows, breaker = createBreaker() }) => {
+  const report = { examined: 0, repeat: 0, unique: 0, uncertain: 0, skipped: 0, stopped: null, errors: [], rowErrors: 0, transientErrors: 0 };
+  const failed = (rowId, error, kind) => { recordError(report, rowId, error, kind); if (breaker.fail(kind)) report.stopped = 'errors'; };
   for (let i = 0; i < ids.length && !report.stopped; i += ROW_CHUNK) {
     const chunk = ids.slice(i, i + ROW_CHUNK);
     const rows = await read(client, chunk);
     for (const rowId of chunk) {
       const row = rows.get(rowId);
       if (!speedRow(row) || row.status !== 'pending_review' || row.speed_generation_metadata != null) { report.skipped++; continue; }
+      // Without valid content there's no content hash to record a result against; nothing was paid for. Reported.
+      const malformed = contentProblem(row);
+      if (malformed) { failed(rowId, malformed, 'row'); if (report.stopped) break; continue; }
       report.examined++;
-      let outcome = 'unique', matched = null, note = null;
+      let outcome = 'unique', matched = null, note = null, rowProblem = false;
       try {
         await session.checkApproved(row);
       } catch (error) {
@@ -217,19 +279,26 @@ const precheckPass = async ({ client, session, ids, read = readRows }) => {
         } else if (code === 'uncertain') {
           outcome = 'uncertain'; note = String(error.message);
         } else {
-          report.examined--;
-          report.stopped = code === 'budget_exhausted' ? 'budget' : code;
-          if (code !== 'budget_exhausted') report.errors.push({ id: rowId, code, message: String(error.message).slice(0, 300) });
-          break;
+          const kind = classify(error);
+          if (kind === 'stop') {
+            report.examined--;
+            report.stopped = stopReason(error);
+            if (report.stopped !== 'budget') recordError(report, rowId, error, 'stop');
+            break;
+          }
+          if (kind === 'transient') { report.examined--; failed(rowId, error, kind); if (report.stopped) break; continue; }
+          failed(rowId, error, kind);
+          if (report.stopped) break;
+          outcome = 'uncertain'; note = `Couldn't check (${code}).`; rowProblem = true;
         }
       }
       try {
         const settled = await precheckSettle(client, rowId, core.contentHash(row), outcome, matched, note);
         report[settled === 'skipped' ? 'skipped' : outcome]++;
+        if (!rowProblem) breaker.ok();
       } catch (error) {
-        report.stopped = 'settle_failed';
-        report.errors.push({ id: rowId, code: 'settle_failed', message: String(error.message).slice(0, 300) });
-        break;
+        failed(rowId, error, classify(error) === 'row' ? 'row' : 'transient');
+        if (report.stopped) break;
       }
     }
   }
@@ -250,18 +319,21 @@ const finishRun = async (client, id, spent, report) => {
 };
 
 /** One paid run: Keep queue first, then (optionally) the D17 pre-check with what's left. */
-const runPaid = async ({ client, queued, candidates, perRun, total, minutes, limit, createSession = runtime.createSession, read = readRows }) => {
+const runPaid = async ({ client, queued, candidates, perRun, total, minutes, limit, createSession = runtime.createSession, read = readRows, readMarks = readQueued }) => {
   const reservation = await reserveRun(client, perRun, total);
   if (!reservation.id) return { queued, prechecks: candidates.length, checked: 0, note: `Total budget used ($${reservation.used} of $${reservation.total}); nothing checked.` };
   const started = Date.now();
   let session = null, queue = null, precheck = null, failure = null;
+  // One breaker for the whole run: 20 errors in all stops both passes.
+  const breaker = createBreaker();
   try {
     session = await createSession({ client, budget: queueBudget({ dollars: reservation.dollars, minutes }) });
     if (queued) {
-      const marks = await readQueued(client, limit);
-      queue = await processQueue({ client, session, marks, rows: await read(client, marks.map(m => m.row_id)) });
+      const marks = await readMarks(client, limit);
+      queue = await processQueue({ client, session, marks, rows: await read(client, marks.map(m => m.row_id)), breaker });
     }
-    if (candidates.length && !queue?.stopped) precheck = await precheckPass({ client, session, ids: candidates, read });
+    // Skipped when the queue stopped: at the budget, the deadline or the breaker.
+    if (candidates.length && !queue?.stopped) precheck = await precheckPass({ client, session, ids: candidates, read, breaker });
   } catch (error) {
     failure = String(error?.message ?? error).slice(0, 300);
   }
@@ -413,11 +485,25 @@ const measure = async ({ client, sample, maxDollars, estimateOnly, apiKey = proc
   return { summary, results };
 };
 
+/** --apply: clear stale Keeps, then (only with work and an approved budget) one paid run. */
+const runApply = async ({ client, args, env = process.env, ...inject }) => {
+  const { queued, stale, settled } = await prepare(client, true);
+  const candidates = args.precheck ? await precheckCandidates(client, args.minScore, args.limit) : [];
+  // Nothing to do: exit before loading the bank or reserving dollars.
+  if (queued === 0 && candidates.length === 0) return { queued, stale, settled, prechecks: 0, checked: 0 };
+  const perRun = args.maxDollars ?? Number(env.SPEED_TRIVIA_QUEUE_MAX_DOLLARS);
+  const total = args.totalDollars ?? Number(env.SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS);
+  if (!(perRun > 0 && perRun <= MAX_CAP) || !(total > 0 && total <= MAX_TOTAL)) {
+    return { queued, stale, settled, prechecks: candidates.length, checked: 0,
+      note: 'No approved budget (SPEED_TRIVIA_QUEUE_MAX_DOLLARS and SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS); nothing checked.' };
+  }
+  return { stale, settled, ...(await runPaid({ client, queued, candidates, perRun, total, minutes: args.minutes, limit: args.limit, ...inject })) };
+};
+
 const main = async () => {
   const args = parseArgs(process.argv.slice(2));
   const client = clientFromEnv();
-  const queued = await countQueued(client);
-  if (args.mode === 'count') { console.log(JSON.stringify({ queued })); return; }
+  if (args.mode === 'count') { console.log(JSON.stringify(await prepare(client, false))); return; }
   if (args.mode === 'estimate' || args.mode === 'measure') {
     const { summary, results } = await measure({ client, sample: args.sample, maxDollars: args.maxDollars, estimateOnly: args.mode === 'estimate' });
     console.log(JSON.stringify(summary, null, 2));
@@ -428,17 +514,7 @@ const main = async () => {
     }
     return;
   }
-  const candidates = args.precheck ? await precheckCandidates(client, args.minScore, args.limit) : [];
-  // Nothing to do: exit before loading the bank or reserving dollars.
-  if (queued === 0 && candidates.length === 0) { console.log(JSON.stringify({ queued, prechecks: 0, checked: 0 })); return; }
-  const perRun = args.maxDollars ?? Number(process.env.SPEED_TRIVIA_QUEUE_MAX_DOLLARS);
-  const total = args.totalDollars ?? Number(process.env.SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS);
-  if (!(perRun > 0 && perRun <= MAX_CAP) || !(total > 0 && total <= MAX_TOTAL)) {
-    console.log(JSON.stringify({ queued, prechecks: candidates.length, checked: 0,
-      note: 'No approved budget (SPEED_TRIVIA_QUEUE_MAX_DOLLARS and SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS); nothing checked.' }));
-    return;
-  }
-  const summary = await runPaid({ client, queued, candidates, perRun, total, minutes: args.minutes, limit: args.limit });
+  const summary = await runApply({ client, args });
   console.log(JSON.stringify(summary));
   if (args.reportDir) {
     fs.mkdirSync(args.reportDir, { recursive: true, mode: 0o700 });
@@ -449,4 +525,4 @@ const main = async () => {
 };
 
 if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
-module.exports = { parseArgs, processQueue, precheckPass, runPaid, simulate, queueBudget };
+module.exports = { parseArgs, prepare, processQueue, precheckPass, runPaid, runApply, simulate, queueBudget, classify };

@@ -4,6 +4,9 @@ Written 2026-11-15 by Claude (Opus 5.5, high effort, as the plan's table names).
 day, after Andrew answered the five open questions.
 Plan: `docs/speed-trivia-backlog-and-quality-plan.md`. Previous: `speed-trivia-backlog-and-quality-plan_PHASE_2_HANDOFF.md`.
 
+> **Update 2026-11-15:** Andrew's code review of Phases 0–3 found 10 issues. The next phase is now **Phase 3a**
+> (remedial phases 3a–3d, plan §4), not 4a. §8 below applies once 3d is done.
+
 ## For Andrew
 
 - **Phase 3 is done and committed to PR #19.** The database change is applied. Nothing is live on the website until

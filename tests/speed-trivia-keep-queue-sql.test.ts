@@ -19,6 +19,7 @@ const MIGRATIONS = [
   "supabase/migrations/20261115151703_speed_trivia_quick_review.sql",
   "supabase/migrations/20261115153905_speed_trivia_bar_test_scores.sql",
   "supabase/migrations/20261115170333_speed_trivia_keep_queue.sql",
+  "supabase/migrations/20261115212126_speed_trivia_queue_repairs.sql",
 ];
 const id = (n: number) => `80000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
@@ -78,6 +79,8 @@ const approveSigned = async (r: SpeedQuestion) => {
   args.p_evidence.comparisonScope = "approved";
   await harness.call(db, "admit_speed_trivia", args);
 };
+const prepare = (apply: boolean) => scalar<{ queued: number; stale: number; settled: number }>("select public.speed_trivia_queue_prepare($1) r", [apply]);
+const snapshot = async (table: string) => JSON.stringify((await db.query(`select * from ${table} order by 1`)).rows);
 const keepOne = async (r: SpeedQuestion) => (await keep([{ id: r.id, contentHash: core.contentHash(r) }]))[0].outcome;
 
 beforeEach(async () => {
@@ -230,6 +233,62 @@ describe("Speed Trivia overnight Keep queue SQL", () => {
     await expect(reserve(500, 12)).rejects.toThrow(/invalid-queue-budget/);
   });
 
+  it("3a: prepare(false) only counts; prepare(true) settles approvals made elsewhere and clears stale Keeps", async () => {
+    const waiting = harness.row(id(1), "Which planet is the Red Planet?", "Mars");
+    const approvedHere = harness.row(id(2), "Which gas do plants take in?", "Carbon dioxide");
+    const deleted = harness.row(id(3), "Which metal is liquid at room temperature?", "Mercury");
+    const leftSpeed = harness.row(id(4), "Which ocean is the largest?", "Pacific", "Geography");
+    const unadmitted = harness.row(id(5), "Which bird can fly backwards?", "Hummingbird", "Animals");
+    const scored = harness.row(id(6), "Which planet has the Great Red Spot?", "Jupiter");
+    await seedOlder([waiting, approvedHere, deleted, leftSpeed, unadmitted, scored]);
+    await scoreAs(scored.id, 4);
+    for (const r of [waiting, approvedHere, deleted, leftSpeed, unadmitted, scored]) expect(await keepOne(r)).toBe("queued");
+    // Approved elsewhere with the same content (a real signed admission), but never recorded.
+    await approveSigned(approvedHere);
+    // Changed outside Quick Review: retired, moved to Live Trivia, approved without an admission.
+    await asAdmin("alter table trivia_questions disable trigger all");
+    await asAdmin("update trivia_questions set status='deleted' where id=any($1::uuid[])", [`{${deleted.id},${scored.id}}`]);
+    await asAdmin("update trivia_questions set question_pool='live_showdown', answer_format='write_in' where id=$1", [leftSpeed.id]);
+    await asAdmin("update trivia_questions set status='active' where id=$1", [unadmitted.id]);
+    await asAdmin("alter table trivia_questions enable trigger all");
+
+    const marksBefore = await snapshot("speed_trivia_review_marks");
+    const questionsBefore = await snapshot("trivia_questions");
+    expect(await prepare(false)).toEqual({ queued: 1, stale: 4, settled: 1 });
+    expect(await snapshot("speed_trivia_review_marks")).toBe(marksBefore);
+
+    expect(await prepare(true)).toEqual({ queued: 1, stale: 4, settled: 1 });
+    // Never changes a question.
+    expect(await snapshot("trivia_questions")).toBe(questionsBefore);
+    expect((await mark(waiting.id))?.outcome).toBe("queued");
+    const settledMark = await mark(approvedHere.id);
+    expect(settledMark).toMatchObject({ decision: "keep", outcome: "approved", note: null });
+    expect(settledMark?.checked_at).not.toBeNull();
+    for (const r of [deleted, leftSpeed, unadmitted]) expect(await mark(r.id)).toBeNull();
+    // A mark holding a score keeps it; only the decision is cleared.
+    const kept = await mark(scored.id);
+    expect(kept).toMatchObject({ decision: null, outcome: null, content_hash: null, decided_revision: null, decided_at: null });
+    expect((kept?.audience as { score: number }).score).toBe(4);
+    expect(await prepare(true)).toEqual({ queued: 1, stale: 0, settled: 0 });
+    // The settled approval undoes like any other (decided_revision is the approval's).
+    expect((await undo(approvedHere.id)).status).toBe("pending_review");
+  });
+
+  it("3a: prepare(true) doesn't settle an approval of different content", async () => {
+    const r = harness.row(id(1), "Which planet is the Red Planet?", "Mars");
+    await seedOlder([r]);
+    await keepOne(r);
+    // Edited, then approved elsewhere: the admission is for the new content, not the Keep's.
+    const edited = { ...r, question: "Which planet is called the Red Planet?" };
+    await harness.call(db, "admit_speed_trivia", harness.checked(edited, await revision(), await find(r.id)));
+    await approveSigned(edited);
+    expect(await status(r.id)).toBe("active");
+    await expect(settle(r.id, core.contentHash(r), "approved")).rejects.toThrow(/invalid-quick-review-request/);
+    expect(await prepare(true)).toEqual({ queued: 0, stale: 1, settled: 0 });
+    expect(await mark(r.id)).toBeNull();
+    expect(await status(r.id)).toBe("active");
+  });
+
   it("keeps the new tables and RPCs server-only", async () => {
     await db.exec("set role anon;");
     await expect(db.query("select * from speed_trivia_released_restores")).rejects.toThrow(/permission denied/);
@@ -245,6 +304,10 @@ describe("Speed Trivia overnight Keep queue SQL", () => {
     await expect(db.query("select public.speed_trivia_queue_reserve(1, 1)")).rejects.toThrow(/permission denied/);
     await expect(db.query("select public.speed_trivia_precheck_candidates(3, 10)")).rejects.toThrow(/permission denied/);
     await expect(db.query("select public.speed_trivia_precheck_settle(gen_random_uuid(), 'x', 'unique', null, null)")).rejects.toThrow(/permission denied/);
+    await expect(db.query("select public.speed_trivia_queue_prepare(false)")).rejects.toThrow(/permission denied/);
+    await db.exec("set role authenticated;");
+    await expect(db.query("select public.speed_trivia_queue_prepare(true)")).rejects.toThrow(/permission denied/);
     await db.exec("set role service_role;");
+    await expect(db.query("select public.speed_trivia_queue_prepare(null)")).rejects.toThrow(/invalid-quick-review-request/);
   });
 });

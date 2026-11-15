@@ -13,7 +13,10 @@ PR #19, merge after the end-of-plan code review. Decisions: D1 yes, D2 yes, D3 r
 (answered), D5 no (built), D6 10/game/day, D7 ages 21–75, D8 retire automatically (built), D9–D11 and D14–D16
 answered, D12 superseded, D13 Gemini fallback (confirmed), D17 yes (built). Phase 4 AMENDED 2026-11-15: ChatGPT
 (Andrew's Pro plan) writes Speed AND Live Trivia questions; a variety map plus a star cap force spread inside every
-category; a new Current Events category in both games (§4 Phase 4a–4d). Next: Phase 4a.**
+category; a new Current Events category in both games (§4 Phase 4a–4d). REMEDIAL PHASES 3a–3d ADDED 2026-11-15
+from Andrew's code review of Phases 0–3 (10 findings; §4 "Remedial phases 3a–3d"). Phase 3a DONE 2026-11-15
+(migration `20261115212126` written and tested, NOT applied; 3d applies it) —
+`speed-trivia-backlog-and-quality-plan_PHASE_3A_HANDOFF.md`. Next: Phase 3b, then 3c, 3d, then Phase 4a. Andrew code-reviews Phases 4a–5 after Phase 5, before they are committed.**
 
 ## 1. For Andrew — the short version
 
@@ -59,7 +62,16 @@ nothing. The older 6,981 are the only ones that genuinely need checking.
    are removed automatically with a note saying which approved question they matched (D8); you can restore one
    from **Repeats**. Ones the checker can't settle wait under **Needs a look**. A question you reject as dull no
    longer blocks its fact for new questions (D5).
-5. **Phase 4 (amended 2026-11-15): a new daily writer, ChatGPT, for both games.** Your ChatGPT Pro plan writes
+5. **Phases 3a–3d (added 2026-11-15, after your code review): fixes before anything new.** They cost nothing to run.
+   - **3a:** one bad question can no longer stop the overnight job every night. Keeps on questions you later
+     deleted or approved elsewhere are cleared, so an idle night really is idle.
+   - **3b:** a confirmed repeat is never thrown away because a different comparison failed. Approvals stop reading a
+     list they never use.
+   - **3c:** Undo in **Needs a look** puts the question back in Needs a look, with its note. An unclear reject
+     reason is refused instead of being treated as "dull".
+   - **3d:** answers like "1,000,000" or "Crosby, Stills, Nash & Young" stop counting as lists. Then the database
+     changes go live (with your OK), and you decide when to merge PR #19.
+6. **Phase 4 (amended 2026-11-15): a new daily writer, ChatGPT, for both games.** Your ChatGPT Pro plan writes
    about **10 good questions a day for Speed Trivia and 10 for Live Trivia**. Writing them costs nothing extra.
    - **4a: variety.** Every category gets a map of well-known areas and eras. For Music: rock, pop, hip-hop,
      country, R&B, metal, grunge, disco, EDM, Latin, one-hit wonders… from the 1950s to the 2020s. The writer is
@@ -72,7 +84,7 @@ nothing. The older 6,981 are the only ones that genuinely need checking.
    - **4c:** the same for Live Trivia. One **Publish** button adds the kept ones to the Live Trivia files, and from
      there into the game.
    - **4d:** one trial run of each for you to rate before it runs daily.
-6. **Phase 5:** watch seven days and compare yield, your keep rate and cost, for both games.
+7. **Phase 5:** watch seven days and compare yield, your keep rate and cost, for both games.
 
 **What the bar-test score is for (Andrew asked 2026-11-15).** You never score anything. The score is the AI's
 guess at how familiar and fun a question is to a typical American at a bar trivia night. It has two jobs. **Today**
@@ -129,6 +141,10 @@ and you bulk-keep the best, you're likely looking at a few hours in total, not w
 | 1 | Quick Review screen, server-side filters, bulk by filter, free approval for already-checked rows | **Opus 5.5 / high** | New SECURITY DEFINER approval path + migration touching the signed-admission boundary. |
 | 2 | Shared "bar test" scorer; score the backlog; calibrate against Andrew's decisions | **Opus 5.5 / high** | Shared engine reused by generation; paid API; threshold calibration is judgment-heavy. |
 | 3 | Overnight Keep queue + faster repeat checker | **Opus 5.5 / high** | Changes the uniqueness engine; must re-pass frozen evaluation gates; new workflow + budget. |
+| 3a | Remedial: per-row errors never stop the overnight job; prune stale queued Keeps (review #1, #3) | **Opus 5.5 / high** | New SECURITY DEFINER RPC that writes marks and approvals, inside the paid nightly loop. |
+| 3b | Remedial: a confirmed repeat beats a failed pair; released rows by revision; lazy released read (review #2, #4, #5) | **Opus 5.5 / high** | Shared uniqueness engine and the D5 admission boundary; one wrong line admits a repeat. |
+| 3c | Remedial: Undo restores Needs a look; strict reject reason; arrow function (review #7, #9, #10) | **Opus 5.5 / high** | Replaces the SECURITY DEFINER undo (status restore + D5 release window) and adds a trigger on marks. |
+| 3d | Remedial: list check fix + free re-score, shared helpers, apply 3a–3c migrations, verify, commit (review #6, #8) | **Sonnet 5.5 / medium** | Departure from top tier: a regex fix, a free rewrite of ≤ 24 score rows through the existing RPC with an undo log, and two mechanical refactors. The migrations it applies were written and tested in 3a–3c, and the push needs Andrew's OK. |
 | 4a | Variety map, tags + one-time tagging, star cap, Variety page, Current Events category (Speed), expiry | **Opus 5.5 / high** | Migrations, a ~15k-row data load, a new player-facing category, and the slot logic that decides variety. |
 | 4b | ChatGPT writer in a private repo, writer endpoints, Speed Trivia gates and admission | **Opus 5.5 / high** | New auth boundary (writer token, ChatGPT login secret), shared engine, prompt design decides quality. |
 | 4c | Live Trivia path: Live bar test, Live repeat check, Quick Review Live mode, Publish to the canonical JSON, Current Events round | **Opus 5.5 / high** | Crosses the Live Trivia source-of-truth boundary (append-only, D10); a new checker; GitHub write path. |
@@ -147,8 +163,14 @@ coding agent. The model *inside* the pipeline is a separate choice for each job:
 
 The Gemini-vs-Claude writer bake-off (planned before 2026-11-15) is dropped, and no Claude key is needed.
 
-Order: 0 → 1 → 2 → 3 → 4a → 4b → 4c → 4d → 5. Phase 4 depends only on Phase 2, so 4a may run before or alongside
-Phase 3. 4b needs 4a's map and tags. 4c needs 4b's writer and candidate table. 4d needs all three.
+Order: 0 → 1 → 2 → 3 → **3a → 3b → 3c → 3d** → 4a → 4b → 4c → 4d → 5. The remedial phases come first (Andrew,
+2026-11-15). Run them one after another because 3d edits files 3a and 3b change. 4b needs 4a's map and tags. 4c needs
+4b's writer and candidate table. 4d needs all three.
+
+**Commits (Andrew, 2026-11-15):** each remedial phase commits to PR #19 when it finishes, as Phases 0–3 did. Phases
+4a–5 are **not committed** until Andrew has code-reviewed them after Phase 5. Do them on a new branch from PR #19's
+head and list every uncommitted file in each handoff. Never use `git checkout -- <file>`, `git stash` or `git reset` on
+that work; one slip loses whole phases.
 
 **Why keep Gemini at all (Andrew asked 2026-11-15 whether to switch everything to ChatGPT).** Use both, each for
 what it's good at. ChatGPT does the writing and the one-time tagging, which are the creative, quality-deciding jobs,
@@ -309,6 +331,293 @@ then cost almost nothing. At 1.66 s per question
 a 50-minute run checks ~1,800, so the backlog clears in 2–4 nights. Supabase: one bank load (~11.65 MB) per run
 with work to do, plus bounded deltas; an idle night is one count query and ~1 minute of free public-repo Actions
 time.
+
+### Remedial phases 3a–3d (added 2026-11-15, from Andrew's code review of Phases 0–3)
+
+Andrew ran `/code-review` on PR #19 (Phases 0–3) on 2026-11-15. It reported 10 findings. Each one is restated below
+as "review #N" so the agent fixing it doesn't need the review output.
+
+**Shared ground rules for 3a–3d:**
+- `core.cjs` (the frozen policy) is not touched.
+- Applied migrations are read-only history, so every SQL change is a new migration from `supabase migration new …`.
+- Every new function revokes `public, anon, authenticated` and grants `execute` to `service_role`.
+- The migrations are applied **once, in 3d**, with Andrew's OK. Nothing is deployed until PR #19 merges, so
+  code that calls an unapplied RPC is safe until then.
+- No paid calls, so none of these phases spends from the D4 budget.
+- Tests run on PGlite and fake judges (`scripts/test-speed-trivia-admission-sql.cjs` harness), never on production.
+
+#### Phase 3a — one bad question never stops the overnight job (review #1, #3)
+
+**Problems:**
+- **Review #1.** Any error on a single row ends the whole run.
+  - `processQueue`'s outer catch sets `stopped='settle_failed'` and breaks. `precheckPass` breaks on any unknown
+    code.
+  - The order is fixed (oldest Keep first, best score first), so the same row stops every later night, and the
+    pre-check never runs (`!queue?.stopped`).
+  - The reviewer's case: a queued Keep is edited, then approved through the old Question Review. The row is
+    `active` with new content, so `speed_trivia_queue_settle('approved')` raises `invalid-quick-review-request`.
+  - Any code-less `Error` from `core.content()` (`malformed-question`, `malformed-answer`, …) does the same.
+- **Review #3.** A queued Keep whose row was later deleted, or left Speed, is skipped without being settled, so it
+  stays `queued` forever.
+  - `countQueued` counts it, so the "nothing to do" exit never fires.
+  - Each night then reserves dollars and loads the ~11.65 MB bank just to skip it.
+  - Stale marks also use up `--limit` slots. Quick Review's counts filter on `pending_review`, so they show 0 while
+    the job keeps running.
+
+**Fix:**
+1. **Migration** `supabase migration new speed_trivia_queue_repairs`. Create
+   `speed_trivia_queue_prepare(p_apply boolean) returns jsonb` → `{queued, stale, settled}`:
+   - Takes the `speed_trivia_control` row lock first (same lock order as the other RPCs).
+   - **Stale** = a mark with `decision='keep'`, `outcome='queued'` whose row is missing, isn't
+     `anytime_blitz`/`multiple_choice`, is `deleted`, or is `active` without the admission `settle('approved')`
+     requires. That admission has `content_hash` = the mark's, `evidence->>'decision'='unique'` and the row's current
+     `speed_content_hash` = the mark's.
+   - **Settled** = queued marks on `active` rows that *do* have that admission (approved elsewhere with the same
+     content). With `p_apply`, record them `approved` (the same field writes as `speed_trivia_queue_settle`).
+   - With `p_apply`, a stale mark is **cleared**, using the same field reset as `speed_trivia_quick_undo` (decision,
+     outcome, reason, content_hash, decided_revision, decided_at, matched_row_id, note, checked_at → null). The
+     mark is deleted when `audience` and `precheck` are both null. It never changes `trivia_questions`.
+   - **Queued** = what is left that is still a waiting Speed question.
+   - Without `p_apply` it only counts, so the free count mode stays read-only.
+   - Add a partial index `speed_trivia_review_marks (decided_at, row_id) where decision='keep' and outcome='queued'`.
+     It matches `readQueued`'s order.
+2. **Script** `scripts/process-speed-trivia-keep-queue.cjs`:
+   - `countQueued` is replaced by `prepare(client, apply)`. Count mode calls `false`; `--apply` calls `true` before
+     the nothing-to-do check. That check uses `queued` after pruning.
+   - **One shared error classifier** for `processQueue` and `precheckPass`. It returns one of three classes:
+     - **stop:** `budget_exhausted`, `cancelled`, `budget_configuration`. These end the run, as today; `budget` isn't an
+       error exit.
+     - **row:** a problem with this row that will happen again on every run:
+       - `core.content(row)` throws. Call it in its own `try` before checking, so its plain `Error` is recognised.
+       - `invalid_pool`, `retired`, or `approved-only-requires-unchanged-pending-approval`.
+       - a settle RPC refusing with `invalid-quick-review-request`.
+     - **transient:** everything else, including `verification_unavailable`, `stale_revision` and provider errors.
+   - **Keep queue:**
+     - row → `settle(…,'needs_look', null, "Couldn't check (<code>). Keep it again or reject it.")`. If that settle
+       also fails, record the error and move on.
+     - transient → leave the mark `queued`, record the error, move on. The row is retried first next night, and the
+       pair cache makes the retry nearly free.
+   - **Pre-check:**
+     - row → `precheckSettle(…,'uncertain', null, "Couldn't check (<code>).")`, so the row isn't retried.
+     - transient → skip and move on; it's retried next night.
+   - **Breaker:** stop with `stopped='errors'` (exit 1, as any non-budget stop) after **3 transient errors in a row or
+     20 errors in the run**. That way an outage can't mark rows `needs_look` or burn the night.
+   - **Report:** `errors` keeps at most 50 entries, plus counts by class (`rowErrors`, `transientErrors`).
+   - `runPaid` still skips the pre-check when the queue stopped. After this change the queue stops only at the
+     budget, the deadline or the breaker.
+3. **Tests**:
+   - In `tests/scripts.speed-trivia-keep-queue.test.ts`:
+     - the reviewer's case: a queued Keep, edited, then approved elsewhere. `prepare(true)` clears it, and the
+       next mark is processed.
+     - a malformed row at the head → `needs_look`, and the rest are processed.
+     - 2 transient errors then a success → the run continues. 3 in a row → `stopped='errors'`.
+     - 20 errors in total → stops.
+     - a deleted-elsewhere Keep → `queued=0`, no `speed_trivia_queue_reserve` call and no bank load.
+     - a pre-check row error → `uncertain` with a note, and the rest are processed.
+   - In `tests/speed-trivia-keep-queue-sql.test.ts`:
+     - `prepare(false)` writes nothing.
+     - `prepare(true)` settles `approved` only with a matching unique admission, and clears the other stale states.
+     - it never changes a `trivia_questions` row.
+     - permissions, and the security-definer contract test.
+
+Cost: $0 paid. One extra small RPC per night. An idle night goes back to 2 RPCs and an exit; today it's a bank load
+plus a reservation whenever one stale mark exists.
+
+#### Phase 3b — the repeat checker keeps a confirmed repeat; released rows by revision (review #2, #4, #5)
+
+**Problems:**
+- **Review #2.** In `runtime.cjs`'s capped judge, a pair can return `duplicate` while another pair in flight
+  fails (a provider 5xx, or `budget_exhausted` with 6 reservations open near the cap).
+  - `if(failure)throw failure` runs before the results are returned and before the pair cache is written.
+  - So the confirmed repeat becomes "Unverified comparison" → `verification_unavailable`. The queue run stops with
+    an error instead of retiring a repeat, and admin edits show "checks unavailable" instead of the duplicate.
+  - Up to 5 paid verdicts are never saved and are paid for again next run.
+- **Review #4.** The released set (D5) is read once when a session starts, as bare ids. `releasedIndex` skips any of
+  those rows whose `status==='deleted'`.
+  - A long session (generation) can see this happen: row R is released, then Undo brings it back, then it's rejected
+    as **wrong**, all while the session runs.
+  - R is still deleted and still in the stale set, so new questions skip it. But a `wrong` reject must keep blocking
+    its fact.
+  - No `speed_trivia_released_restores` window covers the revisions after the second reject, so those admissions
+    keep the free fast lane.
+- **Review #5.** Every session opened with `releasedRows:'read'` calls `speed_trivia_released_rows` before any
+  write, approvals included.
+  - `approvedOnly` approvals never use the set; they compare against `approvedIndex`. So a 200-row approval in
+    Question Review means 200 wasted RPCs, each returning every quality-rejected id, which will be thousands once
+    the backlog is triaged.
+  - Each new set also rebuilds the released view over the whole index.
+  - Missing the function (code deployed before its migration) fails every Speed write with
+    `verification_unavailable`.
+
+**Fix:**
+1. **Capped judge** (`lib/speed-trivia-uniqueness/runtime.cjs`, `cappedJudge.adjudicate`), after every worker
+   settles:
+   - **Persist first.** Write the new signed verdicts (`toPersist` keys now in `cache`) to `speed_trivia_cache_pairs`
+     before deciding what to return or throw. If that write fails while a failure is already pending, throw the
+     original failure.
+   - **A duplicate wins.** If any verdict is `decision==='duplicate'`, return the results even when another pair
+     failed. Failed and unstarted pairs become the existing explicit "Not examined…" holds. `checkCandidate` then
+     returns `duplicate`, and `requireUnique` throws `duplicate`, so the queue settles `repeat`.
+   - Without a duplicate, behaviour is unchanged: the failure is thrown.
+   - **Admission is unchanged.** "Unique" still needs every pair unique and sound. Only a result that already
+     couldn't admit changes, from "unverified" to "duplicate". `requireUnique` still checks the deadline first.
+2. **Released rows by revision** (review #4):
+   - New migration `supabase migration new speed_trivia_released_rows_revision`. Add `speed_trivia_released_rows_v2()`
+     → `[{id, revision}]`, where `revision` = `m.decided_revision`, with the same `where` as today's function, which
+     already requires `q.speed_revision = m.decided_revision`.
+   - Keep the old function for now; note in the migration that it is dropped once nothing calls it.
+   - `approval.releasedIndex(index, released)` takes a `Map<id, revision>`. It skips a row only when
+     `row.status==='deleted' && released.get(row.id) === Number(row.speed_revision)`.
+   - Corpus rows are `to_jsonb(trivia_questions)`, so they carry `speed_revision`. Check its type (bigint → JSON
+     number), and check that `speed_trivia_memory` rows never match.
+   - A re-retired row then has a new revision and is compared again. A stale set can only miss rows released later,
+     and missing one only means comparing against more questions, which is safe.
+   - Update `approval.d.cts`, `runtime.d.cts` and `types/speedTriviaAdmission.ts`.
+3. **Lazy, cheap, fail-safe** (review #5):
+   - `createSession({releasedRows:'read'})` no longer reads at start. `write()` reads the set the first time it runs a
+     **full-bank** check (`!approvedOnly`), once per session. `checkApproved` and `approvedOnly` writes never read it.
+   - **Read failure → skip nothing.** Compare against the whole bank, which is the conservative D5 default. Write
+     one `console.warn` and continue; never fail the write. This also removes the deploy-order hazard.
+   - **View rebuild:** first measure `approval.build` on a production-size index (~15k rows; use the offline harness
+     `scripts/measure-speed-trivia-admission-offline.cjs`).
+     - If it's under ~100 ms, keep the rebuild and record the number in the handoff.
+     - Otherwise, update the one released view in place: apply only the difference between the old and new set
+       through `applyDelta`, as `refreshApprovedIndex` does.
+4. **Tests**:
+   - In `tests/scripts.speed-trivia-admission.test.ts` and the runtime tests:
+     - a duplicate in the probe, or in the pool, alongside a concurrent 5xx → `AdmissionError('duplicate')`, and
+       `speed_trivia_cache_pairs` gets the paid verdicts.
+     - a duplicate alongside a concurrent `budget_exhausted` → `duplicate`.
+     - a failure without a duplicate → unchanged.
+     - the cache is written before the throw.
+     - the reviewer's #4 case: a stale set `{R@r1}`, then R restored and re-rejected `wrong` at r3 → R is compared.
+     - an `approvedOnly` write makes **zero** `speed_trivia_released_rows*` calls; a full-bank write makes one per
+       session.
+     - the RPC missing → a full-bank comparison, and the write succeeds.
+   - Re-run the frozen gates unchanged: `npx vitest run tests/speed-trivia-uniqueness-evaluation.test.ts
+     tests/speed-trivia-uniqueness-release.test.ts`.
+
+Cost: $0 paid, and it saves money. Repeats found next to a failure are no longer re-paid, and bulk approvals make
+one fewer RPC per row.
+
+#### Phase 3c — Quick Review: Undo returns a question to where it was (review #7, #9, #10)
+
+**Problems:**
+- **Review #7.** In **Needs a look**, Keep (or Reject) and then **Z** goes wrong:
+  - `speed_trivia_quick_keep` / `_reject` overwrite the mark, which loses the needs-look note.
+  - `speed_trivia_quick_undo` then clears the mark, so the row is really back in **Waiting**.
+  - The client still re-inserts it at the top of Needs a look with the old note. After a reload it's gone from
+    that view, and the overnight explanation has been erased.
+- **Review #9.** `app/api/admin/trivia/quick-review/route.ts` turns any reason other than exactly `'wrong'` into
+  `'quality'`, and a quality reject releases the fact (D5). So `'Wrong'`, `'wrong_answer'` or a missing reason
+  silently unblocks a fact Andrew meant to keep blocked.
+- **Review #10.** `components/admin/sections/SpeedTriviaQuickReview.tsx` uses `export function`, but CLAUDE.md says
+  arrow functions.
+
+**Fix:**
+1. **Migration** `supabase migration new speed_trivia_undo_needs_look`:
+   - Add `speed_trivia_review_marks.prior jsonb`: null, or `{content_hash, decided_revision, decided_at, note,
+     checked_at, matched_row_id}` of a needs-look Keep.
+   - Add a `BEFORE UPDATE` trigger on `speed_trivia_review_marks`. It also fires on the `on conflict do update` path
+     that `quick_keep` and `quick_reject` use.
+     - When the old row is `decision='keep', outcome='needs_look'` and the new one isn't `needs_look`, set
+       `new.prior` from the old fields.
+     - When the new row has `decision is null` or `outcome='needs_look'`, set `new.prior := null`.
+     - A trigger is used so `speed_trivia_quick_keep` (the fast lane and the D5 release-window checks) is **not
+       rewritten**.
+     - Revoke `execute` on the trigger function from `public`.
+   - `create or replace speed_trivia_quick_undo`:
+     - Keep today's body exactly, including the status restore, the drift checks and the
+       `speed_trivia_released_restores` insert.
+     - Then, if `m.prior` is not null, write the mark back to `decision='keep', outcome='needs_look'` with the prior
+       fields, keeping `audience` and `precheck`.
+     - Return `{id, status, view}`. `view` is `'needs_look'` when the prior state was restored, otherwise `'waiting'`.
+2. **Client**: `undo` re-inserts the item only when the server's `view` equals the current Show view. Otherwise it
+   removes the item from the list and adjusts `counts`. Add `view` to `types/speedTriviaQuickReview.ts` and the
+   `quickUndo` result in `lib/speedTriviaQuickReview.ts`.
+3. **Route**: `action:'reject'` requires `reason` to be exactly `'quality'` or `'wrong'`; anything else gets 400
+   "Invalid request.".
+   - The component already always sends one.
+   - Bulk reject stays `'quality'` by design: "Reject all shown" is for dull or obscure questions.
+4. **Style**: `export const SpeedTriviaQuickReview = () => { … }`.
+   - Leave route handlers as `export async function POST`, the repo's convention for route files (186 of 190).
+   - Leave the pre-existing `TriviaPendingReviewSection.tsx` alone.
+5. **Tests**:
+   - SQL:
+     - Keep, and Reject, from Needs a look, then Undo → the row is `pending_review` and the mark is `needs_look`
+       with its note.
+     - Undo from Waiting is unchanged.
+     - Settle, precheck and quick writes leave `prior` null.
+     - The D5 window is still recorded on undoing a quality reject.
+   - API: no reason, `'Wrong'` or `'wrong_answer'` → 400.
+   - Component:
+     - Undo in Needs a look puts the item back with its note.
+     - When the server returns `view:'waiting'`, the item leaves Needs a look.
+   - The text-floor and no-"Reward" contract tests still pass.
+
+Cost: $0.
+
+#### Phase 3d — list check, shared helpers, apply, verify, commit (review #6, #8)
+
+**Problems:**
+- **Review #6.** `preChecks` in `lib/speed-trivia-quality/audience.cjs` flags `multi-answer` on any answer with 2 or
+  more commas, and `compositeScore` caps the score at 2. So `1,000,000`, `$1,000,000,000` and "Crosby, Stills, Nash
+  & Young" sink, and drop out of the D17 pre-check (score ≥ 3).
+  - **Production, read 2026-11-15:** 24 stored scores carry the flag, all on waiting rows.
+  - Most are real lists ("Foil, Epee, Sabre", the Horn of Africa countries).
+  - Some are single answers with commas: "Citius, Altius, Fortius", "On your marks, Get set, Go!", the event-horizon
+    and leitmotif definitions.
+  - The Phase 4 writer will use this same check as a gate, so it matters more later.
+- **Review #8.**
+  - `priorityOf` in the queue script copies `runtime.cjs`'s private `sameAnswer`, so `--measure` simulations can
+    quietly drift from the real schedule.
+  - `clientFromEnv` is copied in `process-speed-trivia-keep-queue.cjs`, `score-speed-trivia-backlog.cjs` and
+    `retire-speed-trivia-category.cjs`.
+
+**Fix:**
+1. **List check:**
+   - Ignore digit-group commas (`/(\d),(?=\d{3}\b)/g`).
+   - Flag `multi-answer` only when the answer still has ≥ 2 commas **and** the question asks for several things:
+     - a count word or digit from two to ten (`which four countries`, `three main types`);
+     - `(which|what) (group|set|list) of`;
+     - or `lists`.
+   - Keep the existing `which three|four|five` rule.
+   - Fixture tests:
+     - the reviewer's three cases → not flagged;
+     - the 24 production rows → record which ones change.
+   - `answer-in-question` is both a model flag and a check flag, so **re-derive only `multi-answer`**.
+   - Bump `AUDIENCE_VERSION` to `bar-test-v2.1`, per §7. No SQL filters on the version (checked 2026-11-15).
+   - Re-run calibration for free from the stored `PHASE_2_CALIBRATION_bar-test-v2_…` file, and record agreement
+     before and after.
+2. **Free re-score:** `scripts/rescore-speed-trivia-checks.cjs [--apply]`.
+   - Read the marks whose `audience.flags` contain `multi-answer` (one bounded query, ~24 rows).
+   - Recompute that flag and `compositeScore` from the stored `familiar`, `fun`, `estCorrect` and other flags. No
+     provider call.
+   - Write the changed rows through `speed_trivia_review_set_audience`, which accepts only waiting rows whose
+     content still matches. Bump the version on the rewritten rows.
+   - Write a before-state undo log first: `docs/speed-trivia-backlog-and-quality-plan_PHASE_3D_RESCORE_LOG_<date>.json`.
+3. **Helpers:**
+   - Export `sameAnswer` from `runtime.cjs`. `priorityOf` becomes `runtime.sameAnswer`.
+   - Add `scripts/lib/speedTriviaServiceClient.cjs` exporting `clientFromEnv()`, next to the existing
+     `scripts/lib/category-blitz-letters.cjs`. The three scripts import it.
+   - Check that `.github/workflows/speed-trivia-keep-queue.yml` needs no path change.
+4. **Apply:** get Andrew's OK, then run `supabase db push --linked` once for the three remedial migrations (3a, 3b,
+   3c). Then verify on production, all free:
+   - `speed_trivia_queue_prepare(false)` returns counts;
+   - `speed_trivia_released_rows_v2()` returns `[]` or the expected list;
+   - `node --env-file=.env.local scripts/process-speed-trivia-keep-queue.cjs` (count mode) prints `queued`;
+   - `speed_trivia_quick_undo` has the new signature behaviour (`view` in the result);
+   - run step 2 with `--apply`.
+5. **Checks:**
+   - `npm run test`;
+   - `npx tsc --noEmit 2>&1 | grep -v '^\.next/'`;
+   - `npx eslint` on the changed files;
+   - the frozen gates from 3b.
+6. **Commit and push** to PR #19, then **ask Andrew whether to merge PR #19 now**. Recommended: yes. The review's
+   blockers are fixed, and merging puts Quick Review live and starts the nightly job, which needs about 3–4 nights.
+   It still needs the two repository variables (Phase 3 handoff §7).
+
+Cost: $0 paid. About 24 small row writes, once.
 
 ### Phase 4 — a daily ChatGPT writer for Speed and Live Trivia (amended 2026-11-15, twice)
 
@@ -636,6 +945,16 @@ hard. Any question Andrew calls obscure becomes a regression example for the sco
 - D17: the pre-check never approves. It records results only through `speed_trivia_precheck_settle`, touches only
   older undecided waiting questions, and retires only confirmed repeats of an approved question. A restored row
   (`precheck.outcome = 'restored'`) is never pre-checked again in that wording.
+- **Remedial rules (Phases 3a–3c, 2026-11-15):**
+  - The overnight job never stops for one question. A row's own errors are recorded and the run moves on. It stops
+    only at the budget, the deadline, or the error breaker (3 transient errors in a row, or 20 in a run).
+  - Queued Keeps whose row is no longer waiting are cleared or settled only by `speed_trivia_queue_prepare`.
+  - The capped judge never throws away a confirmed `duplicate` because another pair failed. It saves paid verdicts
+    to the pair cache before it throws anything.
+  - A released row is skipped only at the revision it was released at (`speed_trivia_released_rows_v2`).
+    Approved-only checks never read the released set. If the released set can't be read, nothing is skipped.
+  - Undo returns a question to the view it came from. A Quick Review reject needs an explicit reason
+    (`quality` or `wrong`), and anything else is refused.
 - No paid run beyond a cap Andrew has approved. The $225 whole-backlog audit stays declined.
 - Every bulk status change writes a before-state undo log first. (Quick Review's mark row, written in the same
   transaction as the status change, is that log.)
