@@ -138,11 +138,12 @@ describe("global cost limits, generation breadth and immutable cleanup", () => {
     const budget = runtime.createBudget({ dollars: 1, elapsedMs: 15 });
     await expect(budget.limit(new Promise(() => undefined))).rejects.toMatchObject({ code: "budget_exhausted" });
   });
-  it("plans from database counts and supplies less-used subtopics", () => {
+  it("plans only the player categories, counting from the database", () => {
     const rows = [candidate(1, "Which music fact?", "Artist", "Music"), candidate(2, "Which other music fact?", "Artist Two", "Music"), candidate(3, "Which literary fact?", "Poet", "Literary Landscapes")];
     const corpus = core.createCorpus(rows, { complete: true, expectedCount: rows.length, revision: "1" });
     const plan = generation.planTopics(corpus);
-    expect(plan[0].category).toBe("Literary Landscapes"); expect(plan.find(p => p.category === "Music")?.topics.length).toBeGreaterThan(5);
+    expect(plan.map(p => p.category)).not.toContain("Literary Landscapes"); expect(plan).toHaveLength(8);
+    expect(plan.find(p => p.category === "Music")).toMatchObject({ count: 2 }); expect(plan.find(p => p.category === "Music")?.topics.length).toBeGreaterThan(5);
   });
   it("rejects extra generator output and missing usage without admitting it", async () => {
     const budget = runtime.createBudget({ dollars: 1 });
