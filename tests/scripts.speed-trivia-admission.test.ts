@@ -93,9 +93,72 @@ describe("Speed writing boundaries on isolated PostgreSQL", () => {
   });
   it("stops at the first rejecting semantic result without fabricating uniqueness", async () => {
     const adjudicate = vi.fn(async (tasks: ComparisonTask[]) => tasks.map(t => ({ ...sound(t), decision: "duplicate" as const })));
-    const checking = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "early-reject-fixture", adjudicate } });
+    const checking = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "early-reject-fixture", adjudicate }, concurrency: 1 });
     await expect(checking.write(candidate(9, "Which new fact is being tested?", "New fixture"))).rejects.toMatchObject({ code: "duplicate" });
     expect(adjudicate).toHaveBeenCalledTimes(1);
+  });
+  it("runs pairs concurrently, same answer first, and starts none after a rejecting result", async () => {
+    const started: string[] = [];
+    let inFlight = 0, peak = 0;
+    const adjudicate = vi.fn(async (tasks: ComparisonTask[]) => {
+      started.push(tasks[0].b.question); inFlight++; peak = Math.max(peak, inFlight);
+      await new Promise(resolve => setTimeout(resolve, 5));
+      inFlight--;
+      return tasks.map(t => core.answerKey(t.b.options[t.b.correct_answer]) === core.answerKey("Mars") ? { ...sound(t), decision: "duplicate" as const } : sound(t));
+    });
+    const earlier = candidate(30, "Which planet is called the Red Planet?", "Mars");
+    await session.write(earlier);
+    const checking = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "concurrent-fixture", adjudicate }, concurrency: 3 });
+    const competitors = checking.index().corpus.rows.length;
+    const failure = await checking.write(candidate(31, "Which planet do the rovers Spirit and Opportunity explore?", "Mars")).catch(error => error);
+    expect(failure).toMatchObject({ code: "duplicate" });
+    // The same-answer competitor is compared first; at most the other in-flight pairs finish after it.
+    expect(started[0]).toBe(earlier.question);
+    // The repeat is the first (probe) pair, so nothing else starts.
+    expect(adjudicate.mock.calls.length).toBe(1);
+    expect(adjudicate.mock.calls.length).toBeLessThan(competitors);
+    expect(peak).toBeLessThanOrEqual(3);
+    const held = failure.evidence.comparisons.filter((r: ComparisonResult) => r.explanation.startsWith("Not examined"));
+    expect(held.length).toBe(failure.evidence.comparisons.length - adjudicate.mock.calls.length);
+  });
+  it("fans out after the probe pairs for a question that has to be compared with every competitor", async () => {
+    let inFlight = 0, peak = 0;
+    const order: number[] = [];
+    const adjudicate = vi.fn(async (tasks: ComparisonTask[]) => {
+      inFlight++; peak = Math.max(peak, inFlight); order.push(inFlight);
+      await new Promise(resolve => setTimeout(resolve, 5));
+      inFlight--;
+      return tasks.map(sound);
+    });
+    const checking = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "fan-out-fixture", adjudicate }, concurrency: 3 });
+    const competitors = checking.index().corpus.rows.length;
+    expect((await checking.write(candidate(34, "Which fixture fact needs every comparison?", "Fan-out fixture"))).row.status).toBe("pending_review");
+    expect(adjudicate.mock.calls.length).toBe(competitors);
+    expect(order.slice(0, runtime.PROBE)).toEqual(Array(runtime.PROBE).fill(1));
+    expect(peak).toBe(3);
+  });
+  it("D5: full-bank checks skip quality rejects only when asked to, and only while they stay retired", async () => {
+    const released = candidate(32, "Which gas makes up most of Earth's air?", "Nitrogen");
+    const sameFact = candidate(33, "What gas makes up most of the air on Earth?", "Nitrogen");
+    const adjudicate = async (tasks: ComparisonTask[]) => tasks.map(t => t.b.question === released.question ? { ...sound(t), decision: "duplicate" as const } : sound(t));
+    const writer = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "released-fixture", adjudicate } });
+    await writer.write(released);
+    // Retire it (status-only, as Quick Review's Reject does).
+    await db.exec("reset role;");
+    await db.query("update trivia_questions set status='deleted' where id=$1", [released.id]);
+    await db.exec("set role service_role;");
+    await db.exec("reset role;");
+    const releasedAt = (await db.query("select speed_revision::int r from trivia_questions where id=$1", [released.id])).rows[0].r;
+    await db.exec("set role service_role;");
+    const releasing = { rpc: (name: string, args?: Record<string, unknown>) => name === "speed_trivia_released_rows_v2" ? Promise.resolve({ data: [{ id: released.id, revision: releasedAt }], error: null }) : client.rpc(name, args) } as AdmissionClient;
+    const conservative = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "released-fixture", adjudicate } });
+    await expect(conservative.write(sameFact)).rejects.toMatchObject({ code: "duplicate" });
+    // The same id at another revision isn't skipped.
+    const staleRevision = { rpc: (name: string, args?: Record<string, unknown>) => name === "speed_trivia_released_rows_v2" ? Promise.resolve({ data: [{ id: released.id, revision: Number(releasedAt) - 1 }], error: null }) : client.rpc(name, args) } as AdmissionClient;
+    const stale = await runtime.createSession({ client: staleRevision, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "released-fixture", adjudicate }, releasedRows: "read" });
+    await expect(stale.write(sameFact)).rejects.toMatchObject({ code: "duplicate" });
+    const d5 = await runtime.createSession({ client: releasing, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "released-fixture", adjudicate }, releasedRows: "read" });
+    expect((await d5.write(sameFact)).row.status).toBe("pending_review");
   });
   it("allows a wording edit and later approval without treating its old wording as a second question", async () => {
     const source = candidate(10, "Which chemical element has the symbol Fe?", "Iron");
@@ -120,6 +183,156 @@ describe("Speed writing boundaries on isolated PostgreSQL", () => {
   }, 20000);
 });
 
+// Phase 3b (review #2): a confirmed duplicate is never lost to another pair's failure; paid verdicts are saved first.
+describe("capped judge: a duplicate beside a failed pair", () => {
+  const ANSWER = "Fixture shared answer";
+  const competitor = (n: number) => candidate(400 + n, `Which numbered fixture fact ${n} has the shared answer?`, ANSWER);
+  // Calls in order: the two probe pairs are unique, then pool pairs follow `plan` (by call number, from 3).
+  const scripted = (modelVersion: string, cache: Map<string, unknown>, plan: Record<number, { delay: number; outcome: "duplicate" | Error }>) => {
+    let call = 0;
+    const saved: string[] = [];
+    const adjudicate = vi.fn(async (tasks: ComparisonTask[]) => {
+      const step = plan[++call];
+      await new Promise(resolve => setTimeout(resolve, step?.delay ?? 1));
+      if (step?.outcome instanceof Error) throw step.outcome;
+      const task = tasks[0];
+      const result = step?.outcome === "duplicate" ? { ...sound(task), decision: "duplicate" as const, explanation: "Same fixture fact" } : sound(task);
+      // As the Gemini judge does: a paid verdict lands in the session cache, for the capped judge to persist.
+      const key = core.pairKey(task.a, task.b, modelVersion);
+      const { id: _id, ...stored } = result;
+      cache.set(key, { modelVersion, firstHash: core.contentHash(task.a), result: stored });
+      saved.push(key);
+      return [result];
+    });
+    return { adjudicate, saved };
+  };
+  let isolated: DB, base: AdmissionClient;
+  beforeAll(async () => {
+    isolated = new PGlite(); await harness.setup(isolated);
+    base = harness.clientFor(isolated);
+    const seeding = await runtime.createSession({ client: base, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge });
+    for (let n = 1; n <= 6; n++) await seeding.write(competitor(n));
+  });
+  afterAll(async () => { await isolated.close(); });
+  const stored = async (keys: string[]) => Object.keys((await base.rpc("speed_trivia_cached_pairs", { p_keys: keys })).data as Record<string, unknown>);
+  const check = async (n: number, modelVersion: string, plan: Record<number, { delay: number; outcome: "duplicate" | Error }>) => {
+    const cache = new Map<string, unknown>();
+    const fixture = scripted(modelVersion, cache, plan);
+    const gate = await runtime.createSession({ client: base, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion, adjudicate: fixture.adjudicate }, cache, concurrency: 2 });
+    const outcome = await gate.write(candidate(500 + n, `Which new fixture fact ${n} has the shared answer?`, ANSWER)).then(() => null, error => error);
+    return { outcome, ...fixture };
+  };
+  it("returns duplicate when a provider 5xx finishes first, and saves every paid verdict", async () => {
+    const { outcome, saved, adjudicate } = await check(1, "dup-after-5xx", { 3: { delay: 5, outcome: new Error("semantic-http-503") }, 4: { delay: 25, outcome: "duplicate" } });
+    expect(outcome).toMatchObject({ code: "duplicate" });
+    expect(adjudicate).toHaveBeenCalledTimes(4);
+    expect(saved).toHaveLength(3);
+    expect((await stored(saved)).sort()).toEqual([...saved].sort());
+    const held = outcome.evidence.comparisons.filter((r: ComparisonResult) => r.explanation.startsWith("Not examined"));
+    expect(held).toHaveLength(outcome.evidence.comparisons.length - 3);
+  });
+  it("returns duplicate when the duplicate finishes before a concurrent 5xx", async () => {
+    const { outcome, saved } = await check(2, "dup-before-5xx", { 3: { delay: 5, outcome: "duplicate" }, 4: { delay: 25, outcome: new Error("semantic-http-502") } });
+    expect(outcome).toMatchObject({ code: "duplicate" });
+    expect((await stored(saved)).sort()).toEqual([...saved].sort());
+  });
+  it("returns duplicate beside a concurrent budget_exhausted", async () => {
+    const { outcome } = await check(3, "dup-beside-budget", { 3: { delay: 5, outcome: new runtime.AdmissionError("budget_exhausted", "Run dollars budget exhausted.") }, 4: { delay: 25, outcome: "duplicate" } });
+    expect(outcome).toMatchObject({ code: "duplicate" });
+  });
+  it("without a duplicate, still fails as before, after saving the paid verdicts", async () => {
+    const { outcome, saved } = await check(4, "fail-no-dup", { 3: { delay: 5, outcome: new Error("semantic-http-503") }, 4: { delay: 25, outcome: "unique" as never } });
+    expect(outcome).toMatchObject({ code: "verification_unavailable" });
+    expect(saved).toHaveLength(3);
+    expect((await stored(saved)).sort()).toEqual([...saved].sort());
+  });
+  it("a failed cache write beside a failed pair throws the pair's failure", async () => {
+    const cache = new Map<string, unknown>();
+    const fixture = scripted("cache-down", cache, { 3: { delay: 5, outcome: new Error("semantic-http-503") }, 4: { delay: 25, outcome: "duplicate" } });
+    const failingCache: AdmissionClient = { rpc: (name, args) => name === "speed_trivia_cache_pairs" ? Promise.resolve({ data: null, error: { message: "cache unavailable" } }) : base.rpc(name, args) };
+    const gate = await runtime.createSession({ client: failingCache, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "cache-down", adjudicate: fixture.adjudicate }, cache, concurrency: 2 });
+    const outcome = await gate.write(candidate(505, "Which new fixture fact 5 has the shared answer?", ANSWER)).then(() => null, error => error);
+    expect(outcome).toMatchObject({ code: "verification_unavailable" });
+    expect(outcome.evidence.explanation).toContain("semantic-http-503");
+  });
+});
+
+// Phase 3b (review #4, #5): released rows by revision, read lazily, never failing a write.
+describe("D5 released set by revision, read lazily", () => {
+  const REMEDIAL = [
+    "supabase/migrations/20261115151703_speed_trivia_quick_review.sql",
+    "supabase/migrations/20261115153905_speed_trivia_bar_test_scores.sql",
+    "supabase/migrations/20261115170333_speed_trivia_keep_queue.sql",
+    "supabase/migrations/20261115212126_speed_trivia_queue_repairs.sql",
+    "supabase/migrations/20261115213124_speed_trivia_released_rows_revision.sql",
+    "supabase/migrations/20261115214254_speed_trivia_undo_needs_look.sql",
+  ];
+  let isolated: DB;
+  const releasedCalls: string[] = [];
+  const counting = (inner: AdmissionClient): AdmissionClient => ({ rpc: (name, args) => { if (name.startsWith("speed_trivia_released_rows")) releasedCalls.push(name); return inner.rpc(name, args); } });
+  const open = async (client: AdmissionClient, adjudicate: (tasks: ComparisonTask[]) => Promise<ComparisonResult[]>) =>
+    runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "released-revision-fixture", adjudicate }, releasedRows: "read" });
+  const sql = async (text: string, args: unknown[] = []) => {
+    await isolated.exec("reset role;");
+    try { return (await isolated.query(text, args)).rows; } finally { await isolated.exec("set role service_role;"); }
+  };
+  beforeAll(async () => {
+    isolated = new PGlite(); await harness.setup(isolated);
+    await isolated.exec("reset role;");
+    for (const file of REMEDIAL) await isolated.exec(fs.readFileSync(file, "utf8"));
+    await isolated.exec("set role service_role;");
+  });
+  afterAll(async () => { await isolated.close(); });
+  it("the reviewer's #4 case: a row restored and re-rejected as wrong mid-session is compared again", async () => {
+    releasedCalls.length = 0;
+    const r = candidate(600, "Which element has the chemical symbol Au?", "Gold");
+    const duplicateOfR = async (tasks: ComparisonTask[]) => tasks.map(t => t.b.id === r.id && t.a.options[t.a.correct_answer] === "Gold" ? { ...sound(t), decision: "duplicate" as const } : sound(t));
+    const base = harness.clientFor(isolated);
+    await (await open(base, duplicateOfR)).write(r);
+    await sql("select public.speed_trivia_quick_reject($1::uuid[], 'quality')", [`{${r.id}}`]);
+    const gate = await open(counting(base), duplicateOfR);
+    // Released at r1: a new wording of its fact is admitted.
+    expect((await gate.write(candidate(601, "Au is the chemical symbol of which element?", "Gold"))).row.status).toBe("pending_review");
+    // Restored by Undo, then rejected as wrong, while the session runs.
+    await sql("select public.speed_trivia_quick_undo($1::uuid)", [r.id]);
+    await sql("select public.speed_trivia_quick_reject($1::uuid[], 'wrong')", [`{${r.id}}`]);
+    await expect(gate.write(candidate(602, "Which metal is represented by Au on the periodic table?", "Gold"))).rejects.toMatchObject({ code: "duplicate" });
+    expect(releasedCalls).toEqual(["speed_trivia_released_rows_v2"]);
+  });
+  it("approved-only writes never read the released set; full-bank writes read it once per session", async () => {
+    releasedCalls.length = 0;
+    const client = counting(harness.clientFor(isolated));
+    const gate = await open(client, async tasks => tasks.map(sound));
+    const a = (await gate.write(candidate(610, "Which planet is closest to the Sun?", "Mercury"))).row;
+    const b = (await gate.write(candidate(611, "Which planet has the most moons?", "Saturn"))).row;
+    expect(releasedCalls).toEqual(["speed_trivia_released_rows_v2"]);
+    releasedCalls.length = 0;
+    const approving = await open(client, async tasks => tasks.map(sound));
+    expect((await approving.write({ status: "active" }, { existing: a, approvedOnly: true })).row.status).toBe("active");
+    expect((await approving.write({ status: "active" }, { existing: b, approvedOnly: true })).row.status).toBe("active");
+    await approving.checkApproved(candidate(612, "Which planet is known for its rings?", "Saturn rings") as AdmissionRow);
+    expect(releasedCalls).toEqual([]);
+  });
+  it("an unreadable released set compares the whole bank, and the write still succeeds", async () => {
+    const released = candidate(620, "Which ocean lies between Africa and Australia?", "Indian Ocean");
+    const duplicateOfReleased = async (tasks: ComparisonTask[]) => tasks.map(t => t.b.id === released.id && t.a.options[t.a.correct_answer] === "Indian Ocean" ? { ...sound(t), decision: "duplicate" as const } : sound(t));
+    const base = harness.clientFor(isolated);
+    await (await open(base, duplicateOfReleased)).write(released);
+    await sql("select public.speed_trivia_quick_reject($1::uuid[], 'quality')", [`{${released.id}}`]);
+    const missing: AdmissionClient = { rpc: (name, args) => name === "speed_trivia_released_rows_v2" ? Promise.resolve({ data: null, error: { message: "function public.speed_trivia_released_rows_v2() does not exist" } }) : base.rpc(name, args) };
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    try {
+      const gate = await open(missing, duplicateOfReleased);
+      expect((await gate.write(candidate(621, "Which planet is the hottest?", "Venus"))).row.status).toBe("pending_review");
+      // Nothing skipped: the released row still blocks its fact.
+      await expect(gate.write(candidate(622, "Which ocean washes both Madagascar and Western Australia?", "Indian Ocean"))).rejects.toMatchObject({ code: "duplicate" });
+      expect(warn).toHaveBeenCalledTimes(1);
+      // With the set readable, the same wording is admitted.
+      expect((await (await open(base, duplicateOfReleased)).write(candidate(622, "Which ocean washes both Madagascar and Western Australia?", "Indian Ocean"))).row.status).toBe("pending_review");
+    } finally { warn.mockRestore(); }
+  });
+});
+
 describe("global cost limits, generation breadth and immutable cleanup", () => {
   it("reserves lost requests and caps candidates/tokens/time across retries", () => {
     let now = 0;
@@ -138,11 +351,12 @@ describe("global cost limits, generation breadth and immutable cleanup", () => {
     const budget = runtime.createBudget({ dollars: 1, elapsedMs: 15 });
     await expect(budget.limit(new Promise(() => undefined))).rejects.toMatchObject({ code: "budget_exhausted" });
   });
-  it("plans from database counts and supplies less-used subtopics", () => {
+  it("plans only the player categories, counting from the database", () => {
     const rows = [candidate(1, "Which music fact?", "Artist", "Music"), candidate(2, "Which other music fact?", "Artist Two", "Music"), candidate(3, "Which literary fact?", "Poet", "Literary Landscapes")];
     const corpus = core.createCorpus(rows, { complete: true, expectedCount: rows.length, revision: "1" });
     const plan = generation.planTopics(corpus);
-    expect(plan[0].category).toBe("Literary Landscapes"); expect(plan.find(p => p.category === "Music")?.topics.length).toBeGreaterThan(5);
+    expect(plan.map(p => p.category)).not.toContain("Literary Landscapes"); expect(plan).toHaveLength(8);
+    expect(plan.find(p => p.category === "Music")).toMatchObject({ count: 2 }); expect(plan.find(p => p.category === "Music")?.topics.length).toBeGreaterThan(5);
   });
   it("rejects extra generator output and missing usage without admitting it", async () => {
     const budget = runtime.createBudget({ dollars: 1 });

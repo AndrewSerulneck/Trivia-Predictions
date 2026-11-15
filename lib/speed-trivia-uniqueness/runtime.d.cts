@@ -9,3 +9,5 @@ export function stateHash(row: unknown): string;
 export function canonicalText(value: unknown): string;
 export function sign(secret: string, envelope: unknown): string;
 export function signText(secret: string, text: string): string;
+export const DEFAULT_CONCURRENCY: number;
+export const PROBE: number;

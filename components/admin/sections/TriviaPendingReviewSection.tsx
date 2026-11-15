@@ -7,6 +7,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { runTriviaBulkAction } from "@/lib/triviaBulkAction";
 import type { TriviaReviewCounts, TriviaReviewRow } from "@/types/triviaReview";
 import { adminField, adminLabel } from "@/lib/adminStyles";
+import { SpeedTriviaQuickReview } from "@/components/admin/sections/SpeedTriviaQuickReview";
 
 type QuestionPool = "live_showdown" | "anytime_blitz";
 
@@ -58,6 +59,7 @@ function formatDate(value: string): string {
 
 export function TriviaPendingReviewSection() {
   const [activeTab, setActiveTab] = useState<QuestionPool>("live_showdown");
+  const [quickReview, setQuickReview] = useState(false);
   const [items, setItems] = useState<PendingQuestion[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -467,8 +469,22 @@ export function TriviaPendingReviewSection() {
               </button>
             );
           })}
+          {activeTab === "anytime_blitz" ? (
+            <button
+              type="button"
+              disabled={bulkBusy}
+              aria-pressed={quickReview}
+              onClick={() => setQuickReview((prev) => !prev)}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
+                quickReview ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              Quick Review
+            </button>
+          ) : null}
         </div>
 
+        {quickReview && activeTab === "anytime_blitz" ? null : (
         <div className="mt-4 max-w-xs">
           <label className={adminLabel}>Category</label>
           <select
@@ -483,8 +499,10 @@ export function TriviaPendingReviewSection() {
             ))}
           </select>
         </div>
+        )}
       </div>
 
+      {quickReview && activeTab === "anytime_blitz" ? <SpeedTriviaQuickReview /> : (<>
       {error ? <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
       {success ? (
         <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -818,6 +836,7 @@ export function TriviaPendingReviewSection() {
           />
         ) : null}
       </div>
+      </>)}
     </fieldset>
   );
 }

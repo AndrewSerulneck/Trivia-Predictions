@@ -1,0 +1,60 @@
+name: Speed Trivia Keep Queue
+# Overnight repeat check for questions Andrew kept in Quick Review
+# (docs/speed-trivia-backlog-and-quality-plan.md, Phase 3). Approves unique ones, retires repeats with their match,
+# leaves uncertain ones under "Needs a look". Then (D17) pre-checks older waiting questions for repeats with what's
+# left of the run, without approving any. Paid only inside repository variables SPEED_TRIVIA_QUEUE_MAX_DOLLARS (per
+# run) and SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS (all runs); either unset = the job only counts. Nothing to do = it exits
+# before loading the question bank.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+on:
+  schedule:
+    # 03:30 UTC nightly, after Trivia Nightly (02:15 UTC).
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: speed-trivia-keep-queue
+  cancel-in-progress: false
+
+jobs:
+  check-kept-questions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Check kept questions
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SPEED_TRIVIA_ADMISSION_SECRET: ${{ secrets.SPEED_TRIVIA_ADMISSION_SECRET }}
+          SPEED_TRIVIA_QUEUE_MAX_DOLLARS: ${{ vars.SPEED_TRIVIA_QUEUE_MAX_DOLLARS }}
+          SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS: ${{ vars.SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS }}
+        run: |
+          node scripts/process-speed-trivia-keep-queue.cjs --apply --precheck --minutes 50 \
+            --report-dir "$RUNNER_TEMP/keep-queue-report"
+
+      - name: Preserve run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: speed-trivia-keep-queue-report
+          path: ${{ runner.temp }}/keep-queue-report/
+          retention-days: 7
+          if-no-files-found: ignore

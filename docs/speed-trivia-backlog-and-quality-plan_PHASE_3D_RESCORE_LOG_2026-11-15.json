@@ -1,0 +1,197 @@
+{
+ "at": "2026-11-15T21:51:49.459Z",
+ "version": "bar-test-v2.1",
+ "undo": "node --env-file=.env.local scripts/rescore-speed-trivia-checks.cjs --undo docs/speed-trivia-backlog-and-quality-plan_PHASE_3D_RESCORE_LOG_2026-11-15.json --apply",
+ "changes": [
+  {
+   "id": "47894607-b280-40d3-b988-1af855fa2aa9",
+   "question": "What is the Latin motto of the Olympic Games?",
+   "answer": "Citius, Altius, Fortius",
+   "contentHash": "5e51c9cdae9b20fa0d74c2ecf1ef1cb817fc260b1b7c8ffb95c0da66b4ccdd35",
+   "before": {
+    "fun": 3,
+    "key": "b4ac1b74104511451a05336fa58903c9",
+    "flags": [
+     "multi-answer"
+    ],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 2,
+    "version": "bar-test-v1",
+    "familiar": 3,
+    "scoredAt": "2026-11-15T16:58:34.686344+00:00",
+    "estCorrect": 40
+   },
+   "after": {
+    "fun": 3,
+    "key": "b4ac1b74104511451a05336fa58903c9",
+    "flags": [],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 3,
+    "version": "bar-test-v2.1",
+    "familiar": 3,
+    "scoredAt": "2026-11-15T16:58:34.686344+00:00",
+    "estCorrect": 40
+   }
+  },
+  {
+   "id": "84fb9fdc-edfd-423d-8800-5b31bdbe511a",
+   "question": "What phrase is commonly used to start a track and field sprint race?",
+   "answer": "On your marks, Get set, Go!",
+   "contentHash": "e220324b1658abe7b4a8add37f1d731ba43b17c1b0046f68a087312695163d19",
+   "before": {
+    "fun": 4,
+    "key": "746730a6447c68746771232c90b48db3",
+    "flags": [
+     "multi-answer"
+    ],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 2,
+    "version": "bar-test-v1",
+    "familiar": 5,
+    "scoredAt": "2026-11-15T16:58:37.215898+00:00",
+    "estCorrect": 80
+   },
+   "after": {
+    "fun": 4,
+    "key": "746730a6447c68746771232c90b48db3",
+    "flags": [],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 5,
+    "version": "bar-test-v2.1",
+    "familiar": 5,
+    "scoredAt": "2026-11-15T16:58:37.215898+00:00",
+    "estCorrect": 80
+   }
+  },
+  {
+   "id": "8f961229-baac-4b8d-ac17-1e20e157f7c1",
+   "question": "The 'Munsell color system' is a scientific method for precisely measuring and describing what attribute of a color?",
+   "answer": "Its hue, value, and chroma",
+   "contentHash": "62e67bcfb87ee365da89004d1a11ba7eff12997a108d2be55c162086c01da1c2",
+   "before": {
+    "fun": 2,
+    "key": "3b9622221226acecb638e0e28434aede",
+    "flags": [
+     "multi-answer",
+     "niche-subject"
+    ],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 1,
+    "version": "bar-test-v1",
+    "familiar": 1,
+    "scoredAt": "2026-11-15T16:58:37.770346+00:00",
+    "estCorrect": 20
+   },
+   "after": {
+    "fun": 2,
+    "key": "3b9622221226acecb638e0e28434aede",
+    "flags": [
+     "niche-subject"
+    ],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 1,
+    "version": "bar-test-v2.1",
+    "familiar": 1,
+    "scoredAt": "2026-11-15T16:58:37.770346+00:00",
+    "estCorrect": 20
+   }
+  },
+  {
+   "id": "994907b1-cd61-4caa-8704-5d738217cef8",
+   "question": "What is a black hole's event horizon?",
+   "answer": "The point of no return beyond which nothing, not even light, can escape",
+   "contentHash": "263fead5e1f5c964aa4c2326987721e78836d48543fb7a52370fa5769130231d",
+   "before": {
+    "fun": 4,
+    "key": "ae2faff930ba5951562ed8679daec3a1",
+    "flags": [
+     "multi-answer"
+    ],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 2,
+    "version": "bar-test-v1",
+    "familiar": 4,
+    "scoredAt": "2026-11-15T16:58:38.046535+00:00",
+    "estCorrect": 60
+   },
+   "after": {
+    "fun": 4,
+    "key": "ae2faff930ba5951562ed8679daec3a1",
+    "flags": [],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 4,
+    "version": "bar-test-v2.1",
+    "familiar": 4,
+    "scoredAt": "2026-11-15T16:58:38.046535+00:00",
+    "estCorrect": 60
+   }
+  },
+  {
+   "id": "baa9e3f3-16cd-4078-b53b-2c1f7da9cb95",
+   "question": "In classical music and opera, what is a 'leitmotif'?",
+   "answer": "A recurring musical theme associated with a particular character, object, or idea",
+   "contentHash": "f756584e95e9d5688b504e7fd6bab1a6c128d5d0bb3a37bf335a0240cc04ebed",
+   "before": {
+    "fun": 3,
+    "key": "d4dff46cc036b1d91223f58f5620ecd0",
+    "flags": [
+     "multi-answer"
+    ],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 2,
+    "version": "bar-test-v1",
+    "familiar": 3,
+    "scoredAt": "2026-11-15T16:58:39.360595+00:00",
+    "estCorrect": 35
+   },
+   "after": {
+    "fun": 3,
+    "key": "d4dff46cc036b1d91223f58f5620ecd0",
+    "flags": [],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 3,
+    "version": "bar-test-v2.1",
+    "familiar": 3,
+    "scoredAt": "2026-11-15T16:58:39.360595+00:00",
+    "estCorrect": 35
+   }
+  },
+  {
+   "id": "d7a4c961-e649-4a67-acc0-4ec511b41456",
+   "question": "The 'Vesta' asteroid, one of the largest objects in the asteroid belt, was discovered by Heinrich Wilhelm Olbers in 1807. What makes Vesta particularly interesting for planetary scientists studying the early solar system?",
+   "answer": "It is a differentiated body with a core, mantle, and crust",
+   "contentHash": "cf73ab583ee445b494a7fba9f3df381cd2dc27ec30472287300017105043cded",
+   "before": {
+    "fun": 2,
+    "key": "3d585fb2b35ae5240447d71f730c5822",
+    "flags": [
+     "multi-answer",
+     "niche-subject",
+     "preamble",
+     "too-long"
+    ],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 1,
+    "version": "bar-test-v1",
+    "familiar": 1,
+    "scoredAt": "2026-11-15T16:58:40.391051+00:00",
+    "estCorrect": 20
+   },
+   "after": {
+    "fun": 2,
+    "key": "3d585fb2b35ae5240447d71f730c5822",
+    "flags": [
+     "niche-subject",
+     "preamble",
+     "too-long"
+    ],
+    "model": "gemini-2.5-flash:bar-test-v1",
+    "score": 1,
+    "version": "bar-test-v2.1",
+    "familiar": 1,
+    "scoredAt": "2026-11-15T16:58:40.391051+00:00",
+    "estCorrect": 20
+   }
+  }
+ ]
+}
