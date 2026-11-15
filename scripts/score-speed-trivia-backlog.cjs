@@ -5,7 +5,7 @@
  *       dry run: how many waiting questions need a score, and the estimated cost. Free.
  *   ... --calibrate --max-dollars 0.25 [--model gemini-2.5-flash-lite]
  *       PAID (cents): scores a fixed labelled set (approved = keep, recent rows Andrew deleted = reject) and prints
- *       agreement at each threshold. Writes docs/<plan>_PHASE_2_CALIBRATION_<model>_<date>.json.
+ *       agreement at each threshold. Writes docs/<plan>_PHASE_2_CALIBRATION_[<version>_]<model>_<date>.json.
  *   ... --score --max-dollars 2 --out <file.json> [--model ...] [--limit N]
  *       PAID: scores every waiting question not already in <file.json>, appending as it goes (resumable).
  *   ... --write <file.json> [--apply]
@@ -166,7 +166,9 @@ const calibrate = async (client, args) => {
   const byGroup = Object.fromEntries(groups.map(g => [g, distribution(run.results, new Set([...labels].filter(([, l]) => l === g).map(([id]) => id)))]));
   const rowsById = new Map(rows.map(row => [row.id, row]));
   const detail = run.results.map(({ id, audience: a }) => ({ id, label: labels.get(id), question: rowsById.get(id).question, answer: rowsById.get(id).options[rowsById.get(id).correct_answer], ...a }));
-  const file = `${PLAN}_PHASE_2_CALIBRATION_${args.model}_${new Date().toISOString().slice(0, 10)}.json`;
+  // v1 files keep their original name; later versions carry the version so they never overwrite it.
+  const tag = audience.AUDIENCE_VERSION === 'bar-test-v1' ? '' : `${audience.AUDIENCE_VERSION}_`;
+  const file = `${PLAN}_PHASE_2_CALIBRATION_${tag}${args.model}_${new Date().toISOString().slice(0, 10)}.json`;
   fs.writeFileSync(path.resolve(file), `${JSON.stringify({ modelVersion: run.modelVersion, usage: run.usage, failures: run.failures, stopped: run.stopped, confusion: table, byGroup, detail }, null, 1)}\n`);
   console.log(JSON.stringify({ usage: { dollars: run.usage.dollars, requests: run.usage.requests }, failures: run.failures.length, stopped: run.stopped, confusion: table, byGroup }, null, 1));
   console.log(`Wrote ${file}`);

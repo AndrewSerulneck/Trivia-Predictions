@@ -37,7 +37,8 @@ export const openSpeedTriviaAdmission = (options?: { elapsedMs: number; signal?:
       const writing = serialized(async () => {
         session.budget.assertTime();
         // Another local request may have advanced the shared index since this session opened.
-        const fresh = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget: session.budget });
+        // D5: rows rejected in Quick Review as dull or obscure don't block new wording of their fact.
+        const fresh = await createSession({ client: supabaseAdmin!, cachedIndex, cache: pairCache, budget: session.budget, releasedRows: "read" });
         try {
           const result = await fresh.write(row, options);
           cachedIndex = fresh.index();

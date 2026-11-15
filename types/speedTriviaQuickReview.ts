@@ -2,6 +2,8 @@ export type QuickReviewSource = "all" | "older" | "recent";
 /** best = highest bar-test score first, then oldest. */
 export type QuickReviewSort = "oldest" | "newest" | "best";
 export type QuickReviewDecision = "keep" | "reject";
+/** waiting = undecided; needs_look / repeats = results of the overnight check (Phase 3). */
+export type QuickReviewView = "waiting" | "needs_look" | "repeats";
 export type QuickReviewRejectReason = "quality" | "wrong";
 /** approved = free fast lane; queued = waits for the overnight check; changed = edited since it was shown. */
 export type QuickReviewKeepOutcome = "approved" | "queued" | "changed" | "not_pending";
@@ -12,6 +14,7 @@ export type QuickReviewFilter = {
   sort: QuickReviewSort;
   /** Bar-test score 1–5 (Phase 2); null = any, including unscored. */
   score: number | null;
+  view: QuickReviewView;
 };
 
 /** Phase 2 "bar test" (lib/speed-trivia-quality/audience.cjs). */
@@ -36,9 +39,15 @@ export type QuickReviewItem = {
   contentHash: string;
   /** Null when unscored, or when the question changed after it was scored. */
   audience: QuickReviewAudience | null;
+  /** The overnight check's note (needs_look / repeats views). */
+  note?: string | null;
+  /** The approved question this one repeats (repeats view). */
+  match?: { id: string; question: string; answer: string } | null;
 };
 
-export type QuickReviewPage = { total: number; items: QuickReviewItem[] };
+export type QuickReviewCounts = { queued: number; needsLook: number; repeats: number };
+
+export type QuickReviewPage = { total: number; items: QuickReviewItem[]; counts: QuickReviewCounts };
 
 export type QuickReviewBulkResult = {
   processed: number;

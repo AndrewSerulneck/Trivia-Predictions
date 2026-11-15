@@ -6,15 +6,18 @@ import { getErrorMessage } from "@/lib/errors";
 import { TRIVIA_CATEGORIES } from "@/lib/triviaCategories";
 import type {
   QuickReviewBulkResult,
+  QuickReviewCounts,
   QuickReviewDecision,
   QuickReviewItem,
   QuickReviewKeepOutcome,
   QuickReviewSort,
   QuickReviewSource,
+  QuickReviewView,
 } from "@/types/speedTriviaQuickReview";
 
 // One Speed Trivia question at a time. → Keep, ← Reject, W wrong answer, E edit, S skip, Z undo.
-// Keep never runs a paid check: already-checked questions are approved at once, the rest wait for the overnight check.
+// Keep never runs a paid check: already-checked questions are approved at once, the rest wait for the overnight check
+// (scripts/process-speed-trivia-keep-queue.cjs). Its results show under "Needs a look" and "Repeats" (Restore = Undo).
 
 const ENDPOINT = "/api/admin/trivia/quick-review";
 const REFILL_AT = 10;
@@ -22,7 +25,7 @@ const PAGE_SIZE = 50; // QUICK_REVIEW_PAGE_LIMIT on the server
 
 type UndoEntry = { item: QuickReviewItem; kind: "keep" | "reject" | "skip" };
 type Draft = { question: string; options: string[]; correctAnswer: number };
-type Filter = { category: string; source: QuickReviewSource; sort: QuickReviewSort; score: string };
+type Filter = { category: string; source: QuickReviewSource; sort: QuickReviewSort; score: string; view: QuickReviewView };
 
 // Bar-test flags (lib/speed-trivia-quality/audience.cjs) in plain words.
 const FLAG_LABELS: Record<string, string> = {
@@ -48,9 +51,10 @@ const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
 export function SpeedTriviaQuickReview() {
-  const [filter, setFilter] = useState<Filter>({ category: "", source: "all", sort: "best", score: "" });
+  const [filter, setFilter] = useState<Filter>({ category: "", source: "all", sort: "best", score: "", view: "waiting" });
   const [items, setItems] = useState<QuickReviewItem[]>([]);
   const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState<QuickReviewCounts>({ queued: 0, needsLook: 0, repeats: 0 });
   const [exhausted, setExhausted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -63,9 +67,10 @@ export function SpeedTriviaQuickReview() {
   const refilling = useRef(false);
 
   const current = items[0] ?? null;
+  const repeats = filter.view === "repeats";
 
   const fetchPage = useCallback(async (after: QuickReviewItem | null) => {
-    const params = new URLSearchParams({ source: filter.source, sort: filter.sort });
+    const params = new URLSearchParams({ source: filter.source, sort: filter.sort, view: filter.view });
     if (filter.category) params.set("category", filter.category);
     if (filter.score) params.set("score", filter.score);
     if (after) {
@@ -74,9 +79,9 @@ export function SpeedTriviaQuickReview() {
       params.set("afterScore", String(after.audience?.score ?? 0));
     }
     const response = await fetch(`${ENDPOINT}?${params.toString()}`, { cache: "no-store" });
-    const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; total?: number; items?: QuickReviewItem[]; error?: string };
+    const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; total?: number; items?: QuickReviewItem[]; counts?: QuickReviewCounts; error?: string };
     if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Couldn't load questions.");
-    return { total: payload.total ?? 0, items: payload.items ?? [] };
+    return { total: payload.total ?? 0, items: payload.items ?? [], counts: payload.counts ?? null };
   }, [filter]);
 
   const reload = useCallback(async () => {
@@ -89,6 +94,7 @@ export function SpeedTriviaQuickReview() {
       if (seq !== loadSeq.current) return;
       setItems(page.items);
       setTotal(page.total);
+      if (page.counts) setCounts(page.counts);
       setExhausted(page.items.length < PAGE_SIZE);
     } catch (err) {
       if (seq === loadSeq.current) setError(getErrorMessage(err, "Couldn't load questions."));
@@ -129,7 +135,7 @@ export function SpeedTriviaQuickReview() {
   }, []);
 
   const keep = useCallback(async () => {
-    if (!current || busy || draft) return;
+    if (!current || busy || draft || repeats) return;
     setBusy(true);
     setError("");
     try {
@@ -155,10 +161,10 @@ export function SpeedTriviaQuickReview() {
     } finally {
       setBusy(false);
     }
-  }, [current, busy, draft, advance, reload]);
+  }, [current, busy, draft, repeats, advance, reload]);
 
   const reject = useCallback(async (reason: "quality" | "wrong") => {
-    if (!current || busy || draft) return;
+    if (!current || busy || draft || repeats) return;
     setBusy(true);
     setError("");
     try {
@@ -176,7 +182,25 @@ export function SpeedTriviaQuickReview() {
     } finally {
       setBusy(false);
     }
-  }, [current, busy, draft, advance]);
+  }, [current, busy, draft, repeats, advance]);
+
+  // Repeats view: put a question the overnight check retired back in the waiting list.
+  const restore = useCallback(async () => {
+    if (!current || busy || !repeats) return;
+    setBusy(true);
+    setError("");
+    try {
+      await postJson({ action: "undo", id: current.id });
+      setItems((prev) => prev.filter((row) => row.id !== current.id));
+      setTotal((prev) => Math.max(0, prev - 1));
+      setCounts((prev) => ({ ...prev, repeats: Math.max(0, prev.repeats - 1) }));
+      setNotice("Restored.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Can't restore."));
+    } finally {
+      setBusy(false);
+    }
+  }, [current, busy, repeats]);
 
   const skip = useCallback(() => {
     if (!current || busy || draft) return;
@@ -205,11 +229,11 @@ export function SpeedTriviaQuickReview() {
   }, [history, busy, draft]);
 
   const startEdit = useCallback(() => {
-    if (!current || busy) return;
+    if (!current || busy || repeats) return;
     setDraft({ question: current.question, options: [...current.options], correctAnswer: current.correctAnswer });
     setError("");
     setNotice("");
-  }, [current, busy]);
+  }, [current, busy, repeats]);
 
   const saveEdit = useCallback(async () => {
     if (!current || !draft) return;
@@ -234,7 +258,7 @@ export function SpeedTriviaQuickReview() {
   }, [current, draft, reload]);
 
   const runBulk = useCallback(async (decision: QuickReviewDecision) => {
-    if (busy || draft || total === 0) return;
+    if (busy || draft || total === 0 || repeats) return;
     const count = total;
     const label = decision === "reject" ? `Reject ${count.toLocaleString()} questions?` : `Keep ${count.toLocaleString()} questions? Older ones are approved after the repeat check.`;
     if (!window.confirm(label)) return;
@@ -247,7 +271,7 @@ export function SpeedTriviaQuickReview() {
       while (done < count) {
         const result = await postJson<QuickReviewBulkResult>({
           action: "bulk", decision, max: count - done,
-          category: filter.category || null, source: filter.source, score: filter.score || null,
+          category: filter.category || null, source: filter.source, score: filter.score || null, view: filter.view,
         });
         done += result.processed;
         setBulk({ decision, done, of: count });
@@ -262,13 +286,13 @@ export function SpeedTriviaQuickReview() {
       setBusy(false);
       await reload();
     }
-  }, [busy, draft, total, filter, reload]);
+  }, [busy, draft, total, repeats, filter, reload]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey || isTyping(event.target) || draft) return;
       const key = event.key.toLowerCase();
-      const actions: Record<string, () => void> = {
+      const actions: Record<string, () => void> = repeats ? { s: skip } : {
         arrowright: () => void keep(),
         arrowleft: () => void reject("quality"),
         w: () => void reject("wrong"),
@@ -283,13 +307,22 @@ export function SpeedTriviaQuickReview() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [keep, reject, skip, startEdit, undo, draft]);
+  }, [keep, reject, skip, startEdit, undo, draft, repeats]);
 
   const buttonBase = "rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50";
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-5">
+        <div>
+          <label className={adminLabel} htmlFor="qr-view">Show</label>
+          <select id="qr-view" className={adminField} value={filter.view} disabled={busy}
+            onChange={(event) => setFilter((prev) => ({ ...prev, view: event.target.value as QuickReviewView }))}>
+            <option value="waiting">Waiting</option>
+            <option value="needs_look">Needs a look ({counts.needsLook.toLocaleString()})</option>
+            <option value="repeats">Repeats ({counts.repeats.toLocaleString()})</option>
+          </select>
+        </div>
         <div>
           <label className={adminLabel} htmlFor="qr-category">Category</label>
           <select id="qr-category" className={adminField} value={filter.category} disabled={busy}
@@ -328,9 +361,10 @@ export function SpeedTriviaQuickReview() {
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-slate-700" role="status" aria-live="polite">
-          {bulk ? `${bulk.decision === "reject" ? "Rejecting" : "Keeping"}… ${bulk.done.toLocaleString()} / ${bulk.of.toLocaleString()}` : `${total.toLocaleString()} left`}
+          {bulk ? `${bulk.decision === "reject" ? "Rejecting" : "Keeping"}… ${bulk.done.toLocaleString()} / ${bulk.of.toLocaleString()}`
+            : `${total.toLocaleString()} ${repeats ? "retired" : "left"}${counts.queued ? ` · ${counts.queued.toLocaleString()} queued` : ""}`}
         </p>
-        <div className="flex flex-wrap gap-2">
+        {repeats ? null : <div className="flex flex-wrap gap-2">
           <button type="button" disabled={busy || total === 0} onClick={() => void runBulk("reject")}
             className={`${buttonBase} bg-rose-50 text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100`}>
             Reject all shown ({total.toLocaleString()})
@@ -339,7 +373,7 @@ export function SpeedTriviaQuickReview() {
             className={`${buttonBase} bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100`}>
             Keep all shown ({total.toLocaleString()})
           </button>
-        </div>
+        </div>}
       </div>
 
       {error ? <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
@@ -391,6 +425,14 @@ export function SpeedTriviaQuickReview() {
                     </li>
                   ))}
                 </ul>
+                {current.match ? (
+                  <p className="text-sm text-slate-700" data-testid="quick-review-match">
+                    Repeats: {current.match.question} ({current.match.answer})
+                  </p>
+                ) : null}
+                {current.note && !current.match ? (
+                  <p className="text-sm text-amber-700" data-testid="quick-review-note">{current.note}</p>
+                ) : null}
                 {current.audience && current.audience.flags.length > 0 ? (
                   <p className="text-xs text-slate-500" data-testid="quick-review-flags">
                     {current.audience.flags.map((flag) => FLAG_LABELS[flag] ?? flag).join(" · ")}
@@ -402,7 +444,14 @@ export function SpeedTriviaQuickReview() {
         )}
       </div>
 
-      {!draft ? (
+      {repeats ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" disabled={!current || busy} onClick={skip}
+            className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Skip (S)</button>
+          <button type="button" disabled={!current || busy} onClick={() => void restore()}
+            className={`${buttonBase} ml-auto bg-slate-900 text-white hover:bg-slate-700`}>Restore</button>
+        </div>
+      ) : !draft ? (
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" disabled={!current || busy} onClick={() => void reject("quality")}
             className={`${buttonBase} bg-rose-600 text-white hover:bg-rose-700`}>← Reject</button>

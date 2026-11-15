@@ -35,6 +35,7 @@ export async function GET(request: Request) {
       source: url.searchParams.get("source"),
       sort: url.searchParams.get("sort"),
       score: url.searchParams.get("score"),
+      view: url.searchParams.get("view"),
     });
     const after = parseQuickReviewCursor({
       afterId: url.searchParams.get("afterId"),
@@ -58,6 +59,7 @@ type PostBody = {
   category?: unknown;
   source?: unknown;
   score?: unknown;
+  view?: unknown;
   max?: unknown;
 };
 
@@ -96,7 +98,7 @@ export async function POST(request: Request) {
       const decision = body.decision === "keep" || body.decision === "reject" ? body.decision : null;
       const max = Number(body.max);
       if (!decision || !Number.isSafeInteger(max) || max < 1) return json({ ok: false, error: "Invalid request." }, 400);
-      const filter = parseQuickReviewFilter({ category: body.category, source: body.source, score: body.score });
+      const filter = parseQuickReviewFilter({ category: body.category, source: body.source, score: body.score, view: body.view });
       return json({ ok: true, ...(await runQuickReviewBulk(decision, filter, max)) });
     }
 

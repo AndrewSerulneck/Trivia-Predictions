@@ -3,10 +3,17 @@
 Created 2026-11-15. Owner: Andrew Serulneck.
 
 **Status: Phase 0 DONE 2026-11-15 — `speed-trivia-backlog-and-quality-plan_PHASE_0_HANDOFF.md`. Phase 1 DONE
-2026-11-15 (migration applied) — `..._PHASE_1_HANDOFF.md`. Phase 2 BUILT 2026-11-15: all 7,333 waiting questions
-scored ($1.09); scores in a file, migration `20261115153905` NOT applied (needs Andrew's OK) —
-`speed-trivia-backlog-and-quality-plan_PHASE_2_HANDOFF.md`. All on branch `feature/speed-trivia-quick-review`, PR #19,
-merge after the end-of-plan code review. D1 yes, D2 yes, D3 review, D4 $1.50; D5–D8 open. Next: Phase 3.**
+2026-11-15 (migration applied) — `..._PHASE_1_HANDOFF.md`. Phase 2 DONE 2026-11-15: migration `20261115153905` applied,
+all 7,333 bar-test scores loaded — `..._PHASE_2_HANDOFF.md`. Phase 3 DONE 2026-11-15 (overnight Keep queue, faster
+checker, D5, D17 pre-check, D4 dollars ledger): migration `20261115170333` APPLIED; verified on production with a
+10-question pre-check ($0.04, 8 repeats retired); committed to PR #19. Waiting on Andrew: set two repository variables
+(`SPEED_TRIVIA_QUEUE_MAX_DOLLARS=5`, `SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS=20`); the nightly job runs only once PR #19 is
+merged — `speed-trivia-backlog-and-quality-plan_PHASE_3_HANDOFF.md`. All on branch `feature/speed-trivia-quick-review`,
+PR #19, merge after the end-of-plan code review. Decisions: D1 yes, D2 yes, D3 review, D4 $5 per night and $20 in total
+(answered), D5 no (built), D6 10/game/day, D7 ages 21–75, D8 retire automatically (built), D9–D11 and D14–D16
+answered, D12 superseded, D13 Gemini fallback (confirmed), D17 yes (built). Phase 4 AMENDED 2026-11-15: ChatGPT
+(Andrew's Pro plan) writes Speed AND Live Trivia questions; a variety map plus a star cap force spread inside every
+category; a new Current Events category in both games (§4 Phase 4a–4d). Next: Phase 4a.**
 
 ## 1. For Andrew — the short version
 
@@ -49,12 +56,30 @@ nothing. The older 6,981 are the only ones that genuinely need checking.
    the best first.
 4. **Phase 3:** repeat-checking moves to a background job that runs overnight on everything you marked Keep, and
    the check itself gets faster. You stop waiting entirely. Next morning, kept questions are approved, and repeats
-   are removed with a note saying which approved question they matched.
-5. **Phase 4:** rewrite the nightly writer: mainstream American topics, a "would a typical bar crowd know this?"
-   gate before anything reaches you, short questions, difficulty from close wrong answers instead of obscure
-   subjects, and examples taken from questions you've approved. It writes fewer questions each night, but better
-   ones.
-6. **Phase 5:** watch seven nights and compare yield, your approval rate and cost.
+   are removed automatically with a note saying which approved question they matched (D8); you can restore one
+   from **Repeats**. Ones the checker can't settle wait under **Needs a look**. A question you reject as dull no
+   longer blocks its fact for new questions (D5).
+5. **Phase 4 (amended 2026-11-15): a new daily writer, ChatGPT, for both games.** Your ChatGPT Pro plan writes
+   about **10 good questions a day for Speed Trivia and 10 for Live Trivia**. Writing them costs nothing extra.
+   - **4a: variety.** Every category gets a map of well-known areas and eras. For Music: rock, pop, hip-hop,
+     country, R&B, metal, grunge, disco, EDM, Latin, one-hit wonders… from the 1950s to the 2020s. The writer is
+     always sent to the emptiest parts of the map, and no single person, band, team or event may have more than 5
+     questions. You review the map once, and you can add areas any time on a **Variety** page. Also new:
+     **Current Events**, a category players can pick in both games. It covers the past 12 months; each question
+     carries its month and year and retires after a year. It stays hidden until it has enough questions.
+   - **4b:** the ChatGPT writer for Speed Trivia. Its questions pass the bar test and the repeat check and show up
+     in Quick Review, ready to Keep.
+   - **4c:** the same for Live Trivia. One **Publish** button adds the kept ones to the Live Trivia files, and from
+     there into the game.
+   - **4d:** one trial run of each for you to rate before it runs daily.
+6. **Phase 5:** watch seven days and compare yield, your keep rate and cost, for both games.
+
+**What the bar-test score is for (Andrew asked 2026-11-15).** You never score anything. The score is the AI's
+guess at how familiar and fun a question is to a typical American at a bar trivia night. It has two jobs. **Today**
+it sorts the backlog: you reject the bottom in bulk, keep the top in bulk and only look closely at the middle,
+instead of reading 7,333 questions one by one. **Later (Phase 4)** the same scorer grades every new question
+ChatGPT writes, and anything that scores low is thrown out before you see it. It doesn't decide what gets
+written. The variety map and the writing rules decide that. The score only screens the results.
 
 **Your time, estimated:** about 2–3 seconds per question in Quick Review. Once the bar test removes the worst
 and you bulk-keep the best, you're likely looking at a few hours in total, not weeks. That's an estimate until Phase
@@ -92,7 +117,8 @@ and you bulk-keep the best, you're likely looking at a few hours in total, not w
 - Player answer history: `trivia_answers` has **3,831 rows** (`question_id`, `is_correct`). That's too thin to
   grade the backlog, but useful later to calibrate real difficulty (Phase 5).
 - Cost reference: Andrew declined a **$225** whole-backlog repeat audit on 2026-10-14 (~7,083 questions ≈
-  **$0.032/question** at today's checker). Gemini rates in code (`RATES`, `gemini.cjs`): flash $0.30 in / $2.50
+  **$0.032/question** at today's checker). *Phase 3 measured far less (2026-11-15): $0.00048 per pair, ~$0.0024 per
+  older question against approved questions, ~$0.013 for a unique one.* Gemini rates in code (`RATES`, `gemini.cjs`): flash $0.30 in / $2.50
   out, flash-lite $0.10 / $0.40 per million tokens. Verify current Google prices in Phase 2 before quoting a bill.
 
 ## 3. Phases, model and effort
@@ -103,8 +129,11 @@ and you bulk-keep the best, you're likely looking at a few hours in total, not w
 | 1 | Quick Review screen, server-side filters, bulk by filter, free approval for already-checked rows | **Opus 5.5 / high** | New SECURITY DEFINER approval path + migration touching the signed-admission boundary. |
 | 2 | Shared "bar test" scorer; score the backlog; calibrate against Andrew's decisions | **Opus 5.5 / high** | Shared engine reused by generation; paid API; threshold calibration is judgment-heavy. |
 | 3 | Overnight Keep queue + faster repeat checker | **Opus 5.5 / high** | Changes the uniqueness engine; must re-pass frozen evaluation gates; new workflow + budget. |
-| 4 | Nightly writer rewrite + one capped pilot | **Opus 5.5 / high** | Prompt and gate design decide quality; shared engine; paid pilot. |
-| 5 | Seven-night monitoring and report | **Sonnet 5.5 / medium** | Read-only measurement against stated baselines. |
+| 4a | Variety map, tags + one-time tagging, star cap, Variety page, Current Events category (Speed), expiry | **Opus 5.5 / high** | Migrations, a ~15k-row data load, a new player-facing category, and the slot logic that decides variety. |
+| 4b | ChatGPT writer in a private repo, writer endpoints, Speed Trivia gates and admission | **Opus 5.5 / high** | New auth boundary (writer token, ChatGPT login secret), shared engine, prompt design decides quality. |
+| 4c | Live Trivia path: Live bar test, Live repeat check, Quick Review Live mode, Publish to the canonical JSON, Current Events round | **Opus 5.5 / high** | Crosses the Live Trivia source-of-truth boundary (append-only, D10); a new checker; GitHub write path. |
+| 4d | Trial run of each game, Andrew rates, tune thresholds, turn on daily | **Opus 5.5 / medium** | Mostly running and reporting, but threshold choices are judgment calls on a paid gate. |
+| 5 | Seven-day monitoring and report (both games) | **Sonnet 5.5 / medium** | Read-only measurement against stated baselines. |
 
 **Which AI model runs the work (Andrew asked 2026-11-15 whether to switch off Gemini).** The table above names the
 coding agent. The model *inside* the pipeline is a separate choice for each job:
@@ -112,17 +141,27 @@ coding agent. The model *inside* the pipeline is a separate choice for each job:
 | Job | Now | Recommendation | Why |
 | --- | --- | --- | --- |
 | Bar test (Phase 2) | Gemini 2.5 Flash, ~$1 one time | Keep | Already calibrated against Andrew's decisions and run. Switching means re-running calibration. |
-| Repeat check (Phase 3) | Gemini 2.5 Flash | Keep | Frozen evaluation gates (`evaluation-v1.json`, `evaluation-fresh-v1.json`) are passed on this model; a switch must re-pass them. It's also the high-volume job (one call per pair). |
-| Question writer (Phase 4) | Gemini 2.5 Flash | **Bake-off in the Phase 4 pilot**: Gemini 2.5 Flash vs Claude Sonnet 5.5, ~40 questions each, rated blind by Andrew in Quick Review | The writer decides question quality, so it's where a stronger model can help most: more natural wording, fewer wrong facts. A different model grading the writer's output also avoids a model marking its own homework. |
+| Repeat check (Phase 3) | Gemini 2.5 Flash | Keep | Frozen evaluation gates (`evaluation-v1.json`, `evaluation-fresh-v1.json`) are passed on this model; a switch must re-pass them. It's also the high-volume job (one call per pair, $0.00048 each, measured 2026-11-15). |
+| Question writer, Speed + Live (Phase 4) | Gemini 2.5 Flash | **ChatGPT through OpenAI's Codex CLI (`codex exec`), signed in with Andrew's ChatGPT Pro plan** (D9, Andrew 2026-11-15). Use the strongest model Codex offers on that plan when Phase 4a is built, and record its exact name in the handoff (don't assume a version). Web search is on only for Current Events slots. It also does the one-time tagging (free); Gemini is the fallback, capped at ≤ $2.50. On a day ChatGPT misses, Gemini 2.5 Flash writes that day's slots (D13). | Andrew's Pro plan is mostly unused, so writing costs nothing extra. The writer decides question quality, so it gets the strongest model. Gemini stays as the independent grader (bar test and repeat checks), so no model marks its own homework. |
+| Live repeat check (Phase 4b) | none (exact text and slug match only) | Gemini 2.5 Flash, one call per candidate against ≤ 12 likely matches | New and not frozen. It's cheap because the Live bank is ~3,800 questions, read from the repo for free. |
 
-Claude list prices (2026-11): Sonnet 5.5 $2 / $10 per million input / output tokens, Haiku 5.5 $0.10 / $0.50, Opus
-5.5 $4 / $20; the Batch API halves these. A nightly 100-candidate run is roughly 20k input + 15k output tokens, about
-**$0.20/night on Sonnet 5.5** (Claude thinking tokens add to output), versus a few cents on Gemini Flash. The project
-already ships `@anthropic-ai/sdk`. A Claude writer would need its own key (e.g. `ANTHROPIC_API_KEY_SPEED_TRIVIA`) in
-`.env.local` and as a GitHub Actions secret for the nightly workflow. Today only `GEMINI_API_KEY` is there.
+The Gemini-vs-Claude writer bake-off (planned before 2026-11-15) is dropped, and no Claude key is needed.
 
-Order: 0 → 1 → 2 → 3 → 4 → 5. Phase 4 depends only on Phase 2, so it may run before or alongside Phase 3 if Andrew
-wants the writer fixed sooner. Each phase ends with `speed-trivia-backlog-and-quality-plan_PHASE_<N>_HANDOFF.md`
+Order: 0 → 1 → 2 → 3 → 4a → 4b → 4c → 4d → 5. Phase 4 depends only on Phase 2, so 4a may run before or alongside
+Phase 3. 4b needs 4a's map and tags. 4c needs 4b's writer and candidate table. 4d needs all three.
+
+**Why keep Gemini at all (Andrew asked 2026-11-15 whether to switch everything to ChatGPT).** Use both, each for
+what it's good at. ChatGPT does the writing and the one-time tagging, which are the creative, quality-deciding jobs,
+and they're free on the Pro plan. Gemini keeps the checking (bar test and repeat checks, ~$8/month) for four
+reasons:
+1. A ChatGPT plan has no API, so it can't be called from the live site (admin edits and approvals re-run the
+   repeat check there) or from the public nightly. It can only run inside the private repo.
+2. The repeat checker's frozen evaluation gates were passed on Gemini. Switching means re-passing them, and moving
+   database keys into the private repo.
+3. If the ChatGPT login lapses, Gemini writes that day's questions (D13), and approvals and edits keep working.
+4. A different model grading the writer's work catches more than self-grading.
+
+Moving the repeat check to ChatGPT later would save at most ~$7/month, which isn't worth those costs. Each phase ends with `speed-trivia-backlog-and-quality-plan_PHASE_<N>_HANDOFF.md`
 and updates the status line above.
 
 ## 4. Phase detail
@@ -186,7 +225,9 @@ one mark per decision.
 
 1. New module `lib/speed-trivia-quality/audience.cjs`, shared with Phase 4. One structured Gemini call scores a
    **batch of ~40 questions** and returns, per question:
-   - `familiar` 1–5: would a typical American adult (D7) recognise the correct answer?
+   - `familiar` 1–5: would a typical American adult, aged 21 to 75 (D7), recognise the correct answer? The
+     backlog was scored on 2026-11-15 with the first draft (21 to 45, `bar-test-v1`); the scorer is `bar-test-v2`
+     from Phase 3 on.
    - `fun` 1–5: would they enjoy hearing the answer, even if they got it wrong?
    - `estCorrect`: % of a bar crowd expected to answer correctly.
    - `flags`: `too-long`, `answer-in-question`, `ambiguous`, `dated`, `niche-subject`, `bad-distractors`.
@@ -207,58 +248,324 @@ one mark per decision.
 Cost: ~7,500 questions ≈ 190 calls, ~1.0 M input + ~0.3 M output tokens. Flash ≈ **$1.05**, flash-lite ≈
 **$0.22**; pick the model by calibration agreement. One time. The ongoing per-night cost is in Phase 4.
 
-### Phase 3 — overnight Keep queue and a faster repeat check
+### Phase 3 — overnight Keep queue and a faster repeat check (DONE 2026-11-15, amended with D5, D8, D17 and D4)
 
-1. **Background, not in the click.** A new step after generation in `trivia-nightly.yml` (or a separate workflow
-   with `workflow_dispatch` for a manual run) processes `keep` marks oldest first. That gives up to 60 minutes per
-   run instead of the browser's 4, under a separate per-run cap (D4). Results:
-   - Unique → approved (signed admission, approved-only scope, as today).
-   - Confirmed repeat → retired, with the matched approved question recorded in the mark (D8).
-   - Uncertain → left pending with reason `needs-look`. Quick Review shows these under their own filter.
-2. **Faster check, same answers.** In order of safety:
-   - (a) Run pair comparisons with bounded concurrency (start at 6) instead of one at a time. Same calls and cost,
-     several times faster. Keep the early stop by cancelling the remaining pairs on the first non-unique result.
-   - (b) Compare same-answer competitors first, since they're the most likely repeats, so the early stop hits sooner.
-   - (c) Optionally narrow retrieval with embeddings, or batch several pairs per call. **Either one changes the
-     frozen policy:** it must re-pass `tests/fixtures/speed-trivia-uniqueness/evaluation-v1.json` and
-     `evaluation-fresh-v1.json` (zero repeat admissions, ≥95% distinct acceptance), or it isn't shipped.
-3. Measure first. Run the old and new checkers on the same 50 kept rows (≈$1.50 at today's rate, inside Andrew's
-   D4 cap) and report seconds and dollars per question and agreement before switching.
-4. The same speed-up applies to generation, so the nightly stops timing out.
+1. **Background, not in the click.** Workflow `.github/workflows/speed-trivia-keep-queue.yml` (03:30 UTC daily, plus
+   a manual run) runs `scripts/process-speed-trivia-keep-queue.cjs --apply`. It processes `keep` marks with outcome
+   `queued`, oldest first, for up to 50 minutes, inside repository variables **`SPEED_TRIVIA_QUEUE_MAX_DOLLARS`**
+   (per run, $5) and **`SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS`** (all runs, $20) (D4). With either unset it only counts;
+   with nothing to do it exits before loading the bank. Runs only from `main` (schedule and manual both).
+   - Unique → approved (signed admission, approved-only scope, as today); mark `approved`, so Undo works.
+   - Confirmed repeat of an approved question → retired automatically (D8); mark `repeat` with the match. Quick
+     Review → **Repeats** shows the question, the approved one it repeats, and **Restore**.
+   - Uncertain, or edited after Keep → mark `needs_look` with the checker's note, still waiting. Quick Review →
+     **Needs a look** works like the main list (Keep, Reject, Edit).
+   - Results are recorded only by `speed_trivia_queue_settle` (migration `20261115170333_speed_trivia_keep_queue.sql`),
+     which refuses to mark a row approved unless a real signed admission for that content exists.
+2. **Faster check, same admissions.** In `runtime.cjs`'s capped judge, not the frozen policy (`core.cjs`):
+   same-answer competitors first; the first 2 pairs run one at a time ("probe"), then up to 6 at once; no new pair
+   starts after a non-unique result, and unexamined pairs stay explicit holds. A question is admitted exactly when
+   it was before. The faster path applies to approvals in the browser, edits and generation too. Option (c)
+   (embeddings or batched pairs) is not built; it would have to re-pass the frozen gates.
+3. **Measured 2026-11-15** (`docs/speed-trivia-backlog-and-quality-plan_PHASE_3_MEASUREMENT_2026-11-15.json`): 50 older
+   waiting questions with score 5, every pair checked once ($0.70, under the $1.50 D4 cap), schedules simulated from
+   the same 1,473 verdicts:
 
-Cost: depends on D4 and on how many older questions Andrew keeps. At today's ~$0.032/question, 1,500 kept ≈ $48;
-the target after (b)/(c) is ≤ $0.015 ≈ $22. The figure is measured in step 3, not assumed. Supabase: one corpus
-load (~11.65 MB) per run plus bounded deltas, unchanged.
+   | Checker | Seconds per question | Dollars per question | Paid pairs |
+   | --- | --- | --- | --- |
+   | Before (one at a time, retrieval order) | 4.35 | $0.0023 | 244 |
+   | Plain 6 at once, same answer first (tried, not shipped) | 1.75 | $0.0047 | 496 |
+   | **Shipped (2 probe pairs, then 6)** | **1.66** | **$0.0024** | 247 |
 
-### Phase 4 — rewrite the nightly writer
+   Admission agreed on all 50. **42 of the 50 were repeats** of an approved question, 7 unique, 1 uncertain. A pair
+   costs $0.00048; a unique question needs ~28 pairs (~$0.013), a repeat usually 1. The old $0.032/question figure
+   was far too high.
+4. **D5, built:** a Quick Review reject for quality (`←`, "Reject all shown") releases the fact. Full-bank checks
+   (edits, generation) skip released rows (`speed_trivia_released_rows`, `releasedRows:'read'`). W (wrong answer),
+   repeats and every deletion from before Quick Review stay blocked. Safety: while a row is released, new questions
+   aren't compared with it, so if Undo brings it back, `speed_trivia_quick_keep` denies the free fast lane to it and
+   to every question admitted while it was released (`speed_trivia_released_restores`); those go to the overnight
+   check instead.
+5. The same speed-up applies to generation, so the nightly should stop timing out (Phase 4 confirms).
+6. **D17 pre-check, built** (`--precheck`, on in the workflow): after the Keep queue, with what's left of the run, older
+   undecided waiting questions with a bar-test score ≥ 3 (6,108 on 2026-11-15; `--min-score` changes it) are checked
+   against approved questions, best score first, **without approving anything**. A confirmed repeat is retired
+   (`speed_trivia_precheck_settle`; mark `decision 'precheck'`, outcome `repeat`) and shown under Repeats with
+   Restore. Unique and uncertain ones stay waiting, noted in `speed_trivia_review_marks.precheck` so they aren't
+   checked again; a later Keep re-checks almost free from the pair cache. Restore records `restored`, so the
+   pre-check never retires that wording again. Score 1–2 rows are skipped because §5 step 3 rejects them anyway.
+7. **D4 dollars ledger, built:** every paid run first reserves its dollars in `speed_trivia_queue_runs`
+   (`speed_trivia_queue_reserve`, never past the total), then records what it spent (`speed_trivia_queue_finish`). A
+   run that dies first counts its whole reservation (conservative).
+8. **Verified on production 2026-11-15:** a 10-question pre-check (score 5, `--max-dollars 0.25`): 8 repeats retired
+   (each checked by hand: Queen of Pop, Cleopatra, Für Elise, Pearl Harbor, Shape of You, Amazon, TikTok, Berlin
+   Wall), 2 unique; $0.042 spent and recorded; 41 s including the bank load.
 
-1. **Audience rule** at the top of the prompt: *"Write for a typical American adult at a bar trivia night. The
-   correct answer must be something most of them have heard of. Make questions hard with close, plausible wrong
-   answers, never with an obscure subject."*
-2. Delete "less-used subtopics" and "beyond the usual famous examples". Replace `TOPICS` with mainstream, US-relevant
-   subtopics for the 8 categories (e.g. Sports: NFL, NBA, MLB, Olympics, college football, golf and tennis majors;
-   Pop Culture: blockbuster movies, sitcoms, streaming hits, celebrities, video games, commercials and brands;
-   History: US presidents, American wars, the 20th century, world-famous events). Stop always picking the
-   least-used topic. Rotate evenly, and allow **a new fact about a famous subject**, which the checker already
-   permits.
-3. Hard limits checked in code: one sentence, ≤ 110 characters, a single-item answer, the answer not in the question,
-   and four options of similar length and type.
-4. Difficulty anchor: easy ≈ 70%+ of the bar gets it, medium ≈ 40–70%, hard ≈ 20–40%, never below 20%. Target mix
-   30 / 50 / 20.
-5. Pipeline: generate → free hard limits → **bar test (Phase 2 scorer)** below threshold → reject → then the paid
-   repeat check. The cheap gate runs first, so fewer paid checks are wasted.
-6. 6–8 good examples, rotated nightly from recently approved rows, plus 3 fixed bad examples.
-7. Nightly target per D6 (recommended 25). Report generated, bar-test rejects by flag, repeats, admitted and cost.
-8. **One capped pilot** (≤ $0.50, dry-run to a file, not to the database): ~40 candidates for Andrew to rate in Quick
-   Review. Pass when he would keep ≥ 70%. Then re-enable nightly.
+Cost (measured): ~$0.0024 per kept older question at the measured mix (84% repeats), up to ~$0.013 for a unique one.
+Keeping every older question with score 4–5 (~4,700) ≈ **$11**; all 6,981 older ≈ $17 at the measured mix. The
+pre-check over the 6,108 with score ≥ 3 is ≈ $15 at that mix, more if lower scores repeat less often; the $20 total
+stops it either way, and best-first order spends it on the likeliest keeps first. Kept questions it already checked
+then cost almost nothing. At 1.66 s per question
+a 50-minute run checks ~1,800, so the backlog clears in 2–4 nights. Supabase: one bank load (~11.65 MB) per run
+with work to do, plus bounded deltas; an idle night is one count query and ~1 minute of free public-repo Actions
+time.
 
-Cost: the bar test adds ~$0.02/night for 100 candidates. Repeat checks fall because fewer candidates reach them.
-Nightly stays ≤ $0.50.
+### Phase 4 — a daily ChatGPT writer for Speed and Live Trivia (amended 2026-11-15, twice)
+
+**What Andrew asked for (2026-11-15):**
+- ChatGPT writes **~10 high-quality questions a day for each game**, using his mostly idle Pro plan.
+- The questions suit an American bar trivia crowd: a real chance they know the answer, or at least the topic.
+- **One new category, "Current Events"**, in both games (D11, revised).
+- **Variety inside every category.** Not every music question about Michael Jackson, Beyoncé and Taylor Swift. Every
+  era of modern music across all well-known genres. Not every history question about the Civil War or World War II.
+  The same goes for every subject.
+- "1980s pop culture" and "2010s Rock Anthems" aren't new categories. They're the kind of areas the variety system
+  must reach on its own.
+
+**Is it possible? Yes, with one constraint.**
+- A ChatGPT plan includes no API credits. It can still run OpenAI's **Codex CLI** non-interactively (`codex exec`)
+  while signed in as Andrew. OpenAI documents this for CI as an advanced path:
+  <https://learn.chatgpt.com/docs/auth/ci-cd-auth>.
+- OpenAI says not to use it in **public** repositories, and `AndrewSerulneck/Trivia-Predictions` is public (checked
+  2026-11-15). So the writer runs in a **small private repo** (D9).
+- That repo holds only the ChatGPT login and one narrow write token. It never holds database keys, the Gemini key or
+  the signing secret.
+- It may need re-signing-in now and then. OpenAI doesn't guarantee a session lasts forever.
+
+**How it fits together:**
+
+```
+private repo (daily, ~00:30 UTC)                 production (this repo)
+  GET  /api/question-writer/brief   ───────────►  today's slots (category · area · era), subjects to avoid,
+                                                   examples, rules
+  codex exec --output-schema …      (ChatGPT; web search only for Current Events slots)
+  POST /api/question-writer/candidates ────────►  question_candidates (status 'received') — nothing else
+                                                   │
+trivia-nightly.yml (public repo, 02:15 UTC, re-enabled)
+  Speed: hard limits → star cap → bar test → full-bank repeat check + signed admission → pending_review
+  Live:  hard limits → star cap → Live bar test → Live repeat check → question_candidates pending_review
+                                                   │
+Admin → Quick Review (Speed / Live)   Keep / Reject (Speed Keep = free fast lane, Phase 1)
+Live: "Publish (N)" → PR appending to data/live-trivia/categories/*.json → auto-merge → Sync Live Trivia imports it
+```
+
+#### How variety is forced (the variety map)
+
+Every category in both games gets a **map**. A map is a list of **areas** (well-known sub-areas), each with the
+**eras** it applies to. One area × one era is a **cell**, e.g. Music · Hip-hop · 1990s. Each day's slots go to the
+**least-covered cells**, so the writer is told exactly where to write, not just "Music". A **star cap** then stops
+any one person, band, team, work or event from crowding out the rest.
+
+1. **Draft map (Phase 4a writes the full draft; Andrew reviews it once, D14).** It lists only mainstream areas that
+   a typical American has heard of:
+   - **Music** (1950s–2020s): rock and classic rock, pop, hip-hop/rap, country, R&B/soul/Motown, metal and hard rock,
+     punk/grunge/alternative, disco and funk, dance/EDM, Latin, jazz and blues standards, Broadway and movie
+     soundtracks, one-hit wonders, MTV and music videos, awards and halftime shows.
+   - **History** (Ancient, Medieval, 1500–1799, 1800s, 1900–1945, 1945–1999, 2000–present): presidents and
+     government, every American war (not just two), world wars and empires, civil rights and social movements,
+     inventions and business, exploration and space, famous documents and speeches, everyday life, world leaders.
+   - **Pop Culture** (1950s–2020s): movies, sitcoms, TV dramas, reality TV, cartoons and animation, video games,
+     celebrities, commercials and brands, toys and fads, internet and viral moments, comics and superheroes, late
+     night and SNL.
+   - **Sports** (1950s–2020s): NFL, NBA, MLB, NHL, college football, March Madness, Summer and Winter Olympics, golf,
+     tennis, soccer and the World Cup, boxing and UFC, NASCAR and racing, records and famous moments.
+   - **Geography, Science, Animals, General Knowledge:** mostly timeless areas (e.g. US states and cities, capitals,
+     landmarks, national parks; space, human body, elements, inventions, computers; pets and breeds, ocean life,
+     birds, record-holders; food and drink, brands and logos, words, holidays, money, cars).
+   - **Current Events** (rolling past 12 months, spread across the months): politics and government (neutral
+     facts), business and tech, entertainment and celebrities, sports, science, health and space, world news,
+     viral and internet.
+   - **Live Trivia** gets its own maps for its categories (Art, Literature and Comics; Geography; History &
+     Government; Movies; Music; Science & Tech; Sports; Television; Current Events). They're seeded from the
+     `subcategory` values already in `data/live-trivia/categories/`.
+2. **Storage:** table `question_coverage_areas` (`id, game, category, name, eras text[], note, active, created_at,
+   created_by`), with a `service_role` grant and RLS per `supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md`. The draft is
+   inserted by a migration-free seed script with a dry run, so Andrew can review it before it's applied.
+3. **Admin → Trivia Questions → Variety** (D14):
+   - Pick a game and a category to see its areas, each with a question count per era and an On/Off switch.
+   - **Add area** asks for a name, eras and an optional note (e.g. "include Motown").
+   - Andrew adds areas whenever he likes; the next day's brief uses them.
+   - A light colour marks thin cells (the design system's one accent). Copy is minimal ("Saved.").
+4. **Tags on every question:** `area`, `era` and `subject` (the main person, band, team, work or event, written as
+   one canonical name). Table `question_tags` (`game, question_ref` = Speed row id or Live slug, `category, area_id,
+   era, subject, subject_key, tagged_at`), with a `service_role` grant.
+   - New questions come tagged by the writer, and the server checks the tags against the map.
+   - **Existing questions get a one-time tagging run** (~4,320 active + ~7,300 waiting Speed, ~3,800 Live): batches
+     of 40 through ChatGPT (`codex exec` on Andrew's Mac, using the same login he sets up for the private repo; no
+     extra cost).
+   - Fallback: Gemini 2.5 Flash, capped at **$2.50** (the bar test cost $1.01 for 7,333 questions).
+   - `subject_key` = the subject lower-cased, with punctuation and a leading "the" removed.
+5. **Slot choice (each day, per game).** The day is **10 questions delivered to review**, so the brief asks for ~16
+   candidates:
+   - **Current Events: 3 delivered (~5 asked).** They're spread across Current Events areas and months, with web
+     search on.
+   - **Regular: 7 delivered (~11 asked).** Rotate the other categories evenly. Within a category, pick the cells
+     with the **lowest count relative to an even share** and break ties by least recently written. At least ⅓ of
+     regular slots fall in 2000–present; every listed era stays in rotation.
+   - Each slot names category · area · era and carries that category's **avoid list**.
+6. **Star cap (D15):**
+   - A subject may have **at most 5 questions** in a game's bank (active + waiting, from `question_tags`).
+   - There's also **a 30-day gap**: nothing about a subject written in the last 30 days in that game.
+   - Subjects at the cap or inside the gap go on the brief's avoid list.
+   - The server re-checks each candidate's `subject_key` and rejects breaches with reason `star-cap`.
+   - The writing rule says: *"Pick a well-known subject from this cell. Famous is fine, but don't reach for the same
+     few superstars. Spread across the many well-known names in this area and era."*
+   - Familiarity is still policed by the bar test, so variety never means obscurity.
+7. **Report (Variety page and Phase 5):** cells with zero questions, the top 20 subjects by count, and how much of
+   the bank sits in each category's top 5 subjects. A healthy map shows that share falling over time.
+
+#### Phase 4a — variety map, tags, the Current Events category (Speed)
+
+1. The variety map, `question_coverage_areas`, `question_tags`, the Variety page and the one-time tagging run, as
+   described above. Andrew reviews the draft map before tagging starts.
+2. **Current Events as a 9th Speed Trivia category (D11):**
+   - Add `{ slug: "current-events", label: "Current Events", dbValue: "Current Events" }` to `TRIVIA_CATEGORIES`
+     (`lib/triviaCategories.ts`), with a Lucide icon.
+   - The category is **hidden from players until it has ≥ 60 active questions**. The nightly writes one small
+     visibility flag, and the picker reads that flag with what it already loads, so there's no count query per
+     player.
+   - "All Categories" includes it only once it's visible.
+   - Phase 0's contract test (generator categories = `TRIVIA_CATEGORIES` dbValues) still holds.
+3. **Expiry (D16):**
+   - Current Events questions carry the month and year in the wording ("In March 2026, …"), one source URL and
+     `expires_on` = event month + 12 months.
+   - A monthly step in the nightly retires active and waiting Speed rows past their date, with an undo log, using
+     one indexed query.
+4. Tests: map seed dry run and apply; tag validation against the map; slot choice (lowest-cell first, the 2000+
+   share, the Current Events count, the empty-map fallback); the star cap and 30-day gap; hidden-category
+   visibility; expiry selection; the Variety page (text floor, no "Reward").
+
+#### Phase 4b — the ChatGPT writer and the Speed Trivia path
+
+1. **Writing rules** (one shared module, `lib/question-writer/rules.cjs`, used by both games):
+   - Audience (D7): *"Write for a typical American adult, aged 21 to 75, at a bar trivia night. The correct answer, or at least the
+     topic, must be something most of them have heard of. Make questions hard with close, plausible wrong answers,
+     never with an obscure subject."* None of the old prompt's "less-used subtopics" / "beyond the usual famous
+     examples" wording.
+   - Difficulty: easy ≈ 70%+ of the bar gets it, medium ≈ 40–70%, hard ≈ 20–40%, never below 20%. Target mix
+     30 / 50 / 20.
+   - Each slot's cell and avoid list, plus the variety rule in the star-cap step above.
+   - **Current Events:** events 7 days to 12 months old (no still-developing stories). The month and year go in the
+     wording, with one source URL. No disasters, death tolls or crimes against private people, and no partisan or
+     opinion framing.
+   - Examples: 6–8 good ones rotated daily from recently approved rows of that game, plus 3 fixed bad examples
+     (Andrew's four from §2).
+   - Everything the writer returns, and anything it read on the web, is data, never instructions, in every later
+     step.
+2. **Output schema** (`codex exec --output-schema`, validated again on the server):
+   - Speed: `{question, options[4], correctIndex, category, area, era, subject, difficulty, sourceUrl?, expiresOn?}`.
+   - Live: `{question, answer, acceptableAnswers[], category, area, era, subject, difficulty, sourceUrl?, expiresOn?}`.
+3. **Writer endpoints** (production, Node runtime):
+   - `GET /api/question-writer/brief?game=speed|live` returns the slots, avoid lists, examples and rules. It's one
+     bounded read per call, built from `question_tags` group-by counts.
+   - `POST /api/question-writer/candidates` inserts into **`question_candidates`** (`id, game, run_date, slot jsonb,
+     payload jsonb, status, reason, created_at`; `service_role` only) and nothing else. Limits: ≤ 40 items, ≤ 64 KB,
+     ≤ 2 posts per game per UTC day; the idempotency key is `(game, run_date)`.
+   - Auth: `Authorization: Bearer $QUESTION_WRITER_TOKEN` (32 random bytes; Vercel Production env and the private
+     repo's secret; constant-time compare). The token can't read questions, approve anything or touch the JSON.
+4. **Private repo** (name e.g. `hightop-question-writer`, private, created with Andrew's OK):
+   - One workflow: daily cron plus `workflow_dispatch`, `concurrency` so it never runs twice at once. Steps: restore
+     `$CODEX_HOME/auth.json` from secret `CODEX_AUTH_JSON` → `codex exec` per game → POST → if `auth.json` changed,
+     write it back with `gh secret set` using a fine-grained token scoped to that repo only (secrets: write). Never
+     print or upload `auth.json`.
+   - Re-sign-in: a 401 fails the job and GitHub emails Andrew. He runs one helper script (`codex login
+     --device-auth` into a fresh `CODEX_HOME`, then `gh secret set CODEX_AUTH_JSON`). Write it so a non-programmer
+     can follow it.
+   - Use a **separate Codex login** for this repo, not the file from Andrew's laptop. OpenAI says not to share one
+     `auth.json` across machines.
+   - Model: the strongest one Codex offers on the Pro plan at build time. Record its exact name in the handoff.
+5. **Speed processing** (a new step in `trivia-nightly.yml`, replacing Gemini generation; re-enable the nightly
+   here): take today's `received` Speed candidates → hard limits in code (one sentence, ≤ 110 characters, a
+   single-item answer, the answer not in the question, 4 options of similar length and type) → tags valid against
+   the map → star cap → bar test (`lib/speed-trivia-quality/audience.cjs`, threshold from 4d, start at score ≥ 3) →
+   the existing full-bank repeat check and signed admission → `pending_review` with `speed_generation_metadata`
+   (`source:'chatgpt'`, `sourceUrl`, `expiresOn`) and a `question_tags` row. They then get Quick Review's free
+   fast-lane Keep. Every rejected candidate keeps its reason in `question_candidates`.
+   **Gemini fallback (D13, Andrew 2026-11-15):** if a game has no `received` candidates for today when the nightly
+   runs (the ChatGPT login lapsed, or the private run failed), the nightly writes that game's slots with Gemini 2.5
+   Flash from the same brief, rules, variety map and gates. Fallback rows carry `source:'gemini-fallback'`, are
+   capped at $0.10 per game per day, and show "Gemini" in Quick Review's Source filter. GitHub still emails Andrew
+   about the failed private run, and Quick Review shows "Writer stopped" after 2 days in a row on the fallback, so
+   the login gets renewed. On fallback days Gemini grades its own writing; the hard limits, star cap and repeat
+   check still apply.
+6. Quick Review: a **Source** filter value "ChatGPT". The card shows area · era, and the source link for Current
+   Events.
+7. Tests: endpoint auth and limits, schema validation, hard limits, the star-cap re-check, the nightly never
+   admitting without the signed path.
+
+#### Phase 4c — Live Trivia path
+
+1. **Live bar test:** a `game:'live'` variant in `audience.cjs` (write-in wording, version `bar-test-live-v1`),
+   calibrated with the existing Live JSON as "keep" labels plus 4d ratings.
+2. **Live hard limits:** a single unambiguous answer of ≤ 4 words (or a year or number), acceptable answers covering
+   common spellings and surnames, no "which of these", the answer not in the question, and ≤ 140 characters for
+   reading aloud.
+3. **Live repeat check** (new, `lib/live-trivia-quality/repeats.cjs`): free checks first (an exact slug or normalized
+   question match, the same normalized answer in the category, then top-8 word overlap), then **one** Gemini call
+   per candidate against those ≤ 12 likely matches. A confirmed repeat is rejected with the match recorded; an
+   uncertain one is shown to Andrew as "Possible repeat of: …". The corpus is the checked-out JSON (free).
+4. **Quick Review, Live mode:** a Speed / Live switch. The card shows the question, answer, acceptable answers,
+   category, area · era and source link. Keys work the same way, and **E** edits the answer and acceptable answers.
+   Marks live on `question_candidates` (`status` keep / reject).
+5. **Publish (D10):** a **Publish (N)** button, using the same GitHub helper pattern as
+   `app/api/admin/trivia/questions/export-speed-json/route.ts` (`GITHUB_TOKEN`, `GITHUB_REPOSITORY`). It reads each
+   category file from `main`, **appends** kept entries (fresh slugs, re-checked against the current file), commits
+   to a branch, opens a PR and turns on auto-merge. The merge triggers the existing **Sync Live Trivia** workflow
+   (`live-trivia:check`, then import). Existing entries are never changed, reordered or rebuilt. Published
+   candidates are marked `published` with the PR URL.
+6. **Current Events for Live (D11):**
+   - A new file `data/live-trivia/categories/current-events.json` (`categoryName: "Current Events"`), created by the
+     first Publish.
+   - A new category is the only kind of new file Publish may create.
+   - It's offered as a schedulable round only once it has **≥ 45 unexpired questions** (three rounds of 15).
+     Confirm where Live scheduling lists categories (start at `lib/liveShowdownAdmin.ts`).
+7. **Expiry (D16):** entries carry `expires_on` in the JSON. `import-trivia-questions.cjs` accepts the field and
+   treats expired entries as absent (pruned from the database; the JSON keeps them as history). `sync-live-trivia.yml`
+   gains a monthly schedule so expiry takes effect without a push. The JSON is never auto-edited for expiry.
+8. Record the authorized exception in `SYSTEM_CONTEXT.md` §12 (the Live Trivia source-of-truth rule):
+   *append-only publishing of reviewed candidates, authorized by Andrew 2026-11-15*. CLAUDE.md is Andrew's to change;
+   propose a one-line edit in the handoff.
+9. Tests: append-only (a byte-for-byte check that existing entries are unchanged), slug collisions, a new category
+   file, expiry in the importer, the round-visibility threshold, pool separation (Live candidates never reach
+   `trivia_questions` as `anytime_blitz`), and the Live mode UI.
+
+#### Phase 4d — trial run, then daily
+
+1. Run the private workflow once by hand for each game (candidates marked as a trial; ≤ $0.50 of Gemini for both
+   games). Andrew rates them in Quick Review.
+2. Pass when all of these hold for each game:
+   - Andrew would keep **≥ 70%**.
+   - No subject appears twice in the trial.
+   - At least 5 categories, and 8 different areas, are represented.
+   - Current Events questions have working sources.
+   - No facts are wrong in his sample.
+3. Tune the bar-test threshold and prompt, then turn on the daily schedule in both repos.
+4. Check the Codex usage the trial used against the Pro plan's limits; two runs a day should sit far inside them.
+   Report it.
+
+**Cost (estimated 2026-11-15; measure in 4d):**
+
+| Item | Per day | Per month | Note |
+| --- | --- | --- | --- |
+| ChatGPT writing (2 Codex runs) | $0 extra | $0 extra | Uses Pro plan usage limits, not money. |
+| Gemini fallback writing (D13), only on days ChatGPT misses | ~$0.02 per missed day | ≤ $0.60 if every day missed | ~32 candidates, Flash; cap $0.10 per game per day. |
+| One-time tagging (~15,400 questions) | — | $0 once (ChatGPT) | Gemini fallback ≤ $2.50 once. |
+| Bar test, ~32 candidates | ~$0.01 | ~$0.30 | Gemini 2.5 Flash, 1–2 calls. |
+| Speed repeat check, ~12 candidates past the gates | ~$0.25 | ~$7 | Measured in Phase 3: $0.00048 per pair; a new unique question needs ~28–128 pairs (~$0.013–0.06). The nightly cap stays $0.50. |
+| Live repeat check, ~12 candidates | ~$0.02 | ~$0.60 | One small call each. Cap $0.25/day. |
+| Private-repo Actions minutes | ~5 min | ~150 min | Inside GitHub Free's 2,000 private minutes. |
+| Supabase / Vercel | 2 brief reads (one group-by each), 2 posts, small inserts | negligible | Tags add ~15k small rows once, plus ~20 a day. The nightly's corpus load is unchanged. |
+
+Total ≈ **$8/month** at the pair cost measured in Phase 3 (the earlier $13 used the old $0.032/question guess). That's
+below the old nightly's $0.50/night (≈ $15/month), which kept about 16 mostly weak questions a night. Cost scales roughly linearly with the repeat check.
+Raising the daily target needs Andrew's OK.
 
 ### Phase 5 — monitor seven nights
 
-Report per night: generated, gate rejects, repeats, admitted, Andrew's keep rate, cost and run time. Compare with
-the baseline (16/night, ~40% keep rate, 10.5 min, ≤ $0.50). Then use `trivia_answers` correct-rates on questions
+Report per day **for each game**: written, gate rejects by reason, repeats, reached review, Andrew's keep rate,
+Current Events count and any expired, empty cells, top subjects and the top-5-subject share per category,
+star-cap rejects, cost, run time and whether the ChatGPT login needed renewing.
+Compare with the baseline (16/night, ~40% keep rate, 10.5 min, ≤ $0.50) and with 4d's numbers. Then use `trivia_answers` correct-rates on questions
 with ≥ 20 answers to check whether "easy / medium / hard" matches real play, and report which categories run too
 hard. Any question Andrew calls obscure becomes a regression example for the scorer.
 
@@ -268,7 +575,10 @@ hard. Any question Andrew calls obscure becomes a regression example for the sco
 2. Recent 473 (minus their Literary Landscapes rows): sort by score, Keep / Reject. Keeps are instant and free.
 3. Older 6,981: "Reject all shown" with a bar-test score of 2 or below. "Keep all shown" with a score of 5 (spot-check
    a few first). Quick Review the middle band.
-4. Overnight runs approve unique kept questions and retire repeats. Andrew only looks at the `needs-look` list.
+4. Overnight runs approve unique kept questions and retire repeats. Andrew only looks at the Needs a look list.
+5. D17 (built): the nightly pre-check removes older repeats with score ≥ 3 before step 3, so steps 3–4 cover roughly
+   1,000–1,500 questions instead of ~7,000 (Phase 3 measured 42 of 50 likely keeps as repeats; 8 of the first 10
+   pre-checked). It takes about 3–4 nights at $5 a night once PR #19 is merged.
 
 ## 6. Decisions needed from Andrew
 
@@ -277,21 +587,55 @@ hard. Any question Andrew calls obscure becomes a regression example for the sco
 | D1 | Also retire the **99 approved** Literary Landscapes questions players can get under "All Categories"? | **Yes.** |
 | D2 | Pause the nightly writer until Phase 4 ships? | **Yes.** It adds ~16 mostly weak questions a night at up to $0.50. |
 | D3 | The 473 recent questions: review them with the score (approval is instant and free) or reject them all? | **Answered 2026-11-15: review them** in Quick Review. |
-| D4 | One-time budget for repeat-checking older questions you Keep, and a per-night cap. | Approve **$1.50** for the Phase 3 measurement first; set the full budget after that number is known (likely $20–50). |
-| D5 | When you reject a question for being dull or obscure, should its fact be blocked forever? Today it is. | **No.** Block forever only repeats and wrong answers. Otherwise every rejected mainstream question pushes the writer further toward obscurity. Phase 3 implements it. |
-| D6 | Nightly target. | **25** (down from 100), with the bar-test gate. |
-| D7 | Audience definition: "typical American adult, 21–45, at a bar trivia night". | Confirm or edit. |
-| D8 | Kept older questions that turn out to be repeats: retire automatically (match recorded, undoable) or show them to you? | **Retire automatically.** Uncertain ones are shown to you. |
+| D4 | One-time budget for repeat-checking older questions you Keep, and a per-night cap. | $1.50 measurement approved and done ($0.70 spent). **Answered 2026-11-15: $5 per night and $20 in total** for the overnight job (Keep queue and D17 pre-check together). Enforced by `speed_trivia_queue_reserve`; set as repository variables `SPEED_TRIVIA_QUEUE_MAX_DOLLARS=5` and `SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS=20`. |
+| D5 | When you reject a question for being dull or obscure, should its fact be blocked forever? Today it is. | **Answered 2026-11-15: No** (Andrew took the recommendation). Block forever only repeats and wrong answers. Built in Phase 3: a Quick Review reject for quality (← / Reject all shown) releases the fact; W (wrong answer), repeats and deletions from before Quick Review stay blocked. |
+| D6 | Nightly target. | **Answered 2026-11-15: ~10 good questions a day for each game**, counted as reaching review after the gates. |
+| D7 | Audience definition. | **Answered 2026-11-15: a typical American adult aged 21 to 75**, at a bar trivia night. Scorer `bar-test-v2` (Phase 3) and the Phase 4 writing rules use it. |
+| D8 | Kept older questions that turn out to be repeats: retire automatically (match recorded, undoable) or show them to you? | **Answered 2026-11-15: retire automatically.** The match is recorded and shown under Quick Review → Repeats, with Restore. Uncertain ones wait under Needs a look. |
+| D9 | Where does the ChatGPT writer run? | **Answered 2026-11-15: a small private GitHub repo**, daily in the cloud, signed in with Andrew's ChatGPT Pro plan. (Not his Mac, not a paid API key.) |
+| D10 | How do approved Live Trivia questions reach the canonical JSON? | **Answered 2026-11-15: review in Quick Review, then Publish** appends them through a self-merging PR. Append-only; never rebuilt from the database. |
+| D11 | Current-events questions: existing categories or a new one? | **Revised by Andrew 2026-11-15: a new "Current Events" category in both games**, the only new category. It's a 9th pickable Speed category and a schedulable Live round, hidden until it has ≥ 60 (Speed) / ≥ 45 (Live) questions. 3 of each day's 10 per game. |
+| D12 | Share of daily questions from Andrew's topics. | **Superseded 2026-11-15.** Andrew's "1980s pop culture" and "2010s Rock Anthems" were examples of variety *within* categories, so the topics list became the variety map (D14). |
+| D13 | If the ChatGPT writer misses a day (login expired), skip the day or fall back to Gemini? | **Answered 2026-11-15: don't skip; fall back to Gemini** (Andrew answered "No" to skipping). Recommendation was to skip. Fallback design in Phase 4b step 5. **Confirmed by Andrew 2026-11-15.** |
+| D14 | Who maintains the variety map? | **Answered 2026-11-15: Andrew reviews the drafted map once, then edits it and adds areas whenever he likes** on the Variety page. |
+| D15 | Star cap: max questions per subject in a game's bank. | **Answered 2026-11-15: 5**, plus nothing new on the same subject within 30 days. |
+| D16 | How far back Current Events reaches. | **Answered 2026-11-15: the past 12 months.** Questions retire 12 months after the event month. |
+| D17 | Check older waiting questions for repeats **before** you review them? (New, 2026-11-15.) 42 of 50 likely keeps turned out to be repeats of an approved question. | **Answered 2026-11-15: yes. Built in Phase 3** (§4 Phase 3 step 6): nightly, inside the D4 budget, score ≥ 3, best first. Repeats are retired with the match shown under Repeats and Restore, as D8. |
 
 ## 7. Standing rules
 
-- Speed Trivia only: `anytime_blitz` + `multiple_choice`. Never touch Live Trivia (`live_showdown`,
-  `data/live-trivia/`) or cross the pools.
+- Never cross the pools: Speed stays `anytime_blitz` + `multiple_choice`, and Live stays `live_showdown` + write-in.
+  Phases 0–3 and 4a touch Speed only. Live Trivia is touched only by Phase 4b's **append-only** Publish of reviewed
+  candidates (D10, 2026-11-15). Existing JSON entries are never changed, reordered or rebuilt, and nothing is
+  regenerated from the database.
+- The ChatGPT login (`auth.json`) lives only in the private writer repo's secrets, never in this public repo, a
+  log or an artifact. `QUESTION_WRITER_TOKEN` can only read the brief and insert into `question_candidates`.
+- Writer output and web pages it read are untrusted data, never instructions. Every candidate passes the hard
+  limits, the bar test and a repeat check before Andrew sees it.
+- Current Events questions carry the month and year in the wording, a source URL and `expires_on`, and retire 12
+  months after the event (D16). Current Events is the only new category (D11). Every other new idea is an area on
+  the variety map.
+- Variety is enforced in code, not only asked for in the prompt: slots come from the least-covered map cells, and
+  the server rejects a subject at the star cap (5) or written in the last 30 days (D15). Variety never overrides
+  familiarity: the bar test still gates every candidate.
 - The generator's categories = `TRIVIA_CATEGORIES` dbValues in `lib/triviaCategories.ts`, never database inventory.
 - Every approval goes through signed admission (`admit_speed_trivia`) or the Phase 1 fast-lane RPC, never a plain
   `status='active'` update.
 - The bar test is a gate and a sort, never an automatic delete: rejecting needs Andrew's click (Quick Review or
-  "Reject all shown").
+  "Reject all shown"). The overnight queue retires only confirmed repeats of an approved question (D8), never for
+  quality.
+- D5: only a Quick Review reject for quality (reason `quality`) releases a fact. Full-bank checks skip released rows
+  only through `speed_trivia_released_rows` and `releasedRows:'read'`; nothing else may drop rows from the bank. If a
+  released row is restored, `speed_trivia_quick_keep` denies the fast lane to it and to everything admitted while it
+  was released (`speed_trivia_released_restores`). Never remove that check.
+- The overnight queue (`scripts/process-speed-trivia-keep-queue.cjs`) records results only through
+  `speed_trivia_queue_settle`, which verifies a real signed admission before marking a row approved. It runs paid
+  only inside repository variables `SPEED_TRIVIA_QUEUE_MAX_DOLLARS` (per run) and `SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS`
+  (all runs), and every paid run reserves its dollars through `speed_trivia_queue_reserve` first. Never bypass the
+  reservation, and never delete or edit a `speed_trivia_queue_runs` row to free up budget without Andrew's OK.
+- D17: the pre-check never approves. It records results only through `speed_trivia_precheck_settle`, touches only
+  older undecided waiting questions, and retires only confirmed repeats of an approved question. A restored row
+  (`precheck.outcome = 'restored'`) is never pre-checked again in that wording.
 - No paid run beyond a cap Andrew has approved. The $225 whole-backlog audit stays declined.
 - Every bulk status change writes a before-state undo log first. (Quick Review's mark row, written in the same
   transaction as the status change, is that log.)

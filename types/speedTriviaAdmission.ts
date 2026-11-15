@@ -20,6 +20,8 @@ export type AdmissionBudget = {
 export type AdmissionClient = { rpc: (name: string, args?: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { message: string } | null }> };
 export type AdmissionSession = {
   write: (row: Record<string, unknown>, options?: { existing?: AdmissionRow | null; importMode?: boolean; approvedOnly?: boolean; generated?: boolean; restore?: boolean; undo?: { manifestHash: string } }) => Promise<{ row: AdmissionRow; idempotent: boolean; evidence?: AdmissionEvidence }>;
+  /** D17 pre-check: the approved-only check without writing. Resolves when unique; throws AdmissionError otherwise. */
+  checkApproved: (row: AdmissionRow) => Promise<AdmissionEvidence>;
   leave: (patch: Record<string, unknown>, existing: AdmissionRow) => Promise<AdmissionRow>;
   refresh: () => Promise<void>;
   budget: AdmissionBudget;
@@ -27,4 +29,8 @@ export type AdmissionSession = {
   index: () => SpeedIndex;
   client: AdmissionClient;
 };
-export type SessionOptions = { client: AdmissionClient; secret?: string; budget?: AdmissionBudget; judge?: CheckOptions; cache?: Map<string, unknown>; apiKey?: string; cachedIndex?: SpeedIndex | null };
+export type SessionOptions = { client: AdmissionClient; secret?: string; budget?: AdmissionBudget; judge?: CheckOptions; cache?: Map<string, unknown>; apiKey?: string; cachedIndex?: SpeedIndex | null;
+  /** Pair comparisons in flight at once (default 6). */
+  concurrency?: number;
+  /** 'read': full-bank checks skip rows rejected in Quick Review as dull or obscure (D5). */
+  releasedRows?: "read" | null };

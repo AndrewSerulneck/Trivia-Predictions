@@ -10,6 +10,8 @@ const row = (n: number, recent = false): Row => ({ id: `id-${n}`, question: `Que
 
 let waiting: Row[];
 let decided: Map<string, Row>;
+let queuedCount = 0;
+let repeated: (Row & { note?: string; match?: { id: string; question: string; answer: string } })[];
 const posts: Record<string, unknown>[] = [];
 const gets: string[] = [];
 const respond = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }));
@@ -18,7 +20,8 @@ const fakeFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
   const url = String(input);
   if (!init?.method || init.method === "GET") {
     gets.push(url);
-    return respond({ ok: true, total: waiting.length, items: waiting.slice(0, 50) });
+    if (url.includes("view=repeats")) return respond({ ok: true, total: repeated.length, items: repeated, counts: { queued: queuedCount, needsLook: 0, repeats: repeated.length } });
+    return respond({ ok: true, total: waiting.length, items: waiting.slice(0, 50), counts: { queued: queuedCount, needsLook: 1, repeats: repeated.length } });
   }
   const body = JSON.parse(String(init.body)) as Record<string, unknown>;
   posts.push(body);
@@ -36,6 +39,10 @@ const fakeFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     const ids = body.ids as string[];
     ids.forEach(take);
     return respond({ ok: true, rejected: ids });
+  }
+  if (body.action === "undo" && repeated.some((r) => r.id === body.id)) {
+    repeated = repeated.filter((r) => r.id !== body.id);
+    return respond({ ok: true, id: body.id, status: "pending_review" });
   }
   if (body.action === "undo") {
     const back = decided.get(body.id as string)!;
@@ -55,6 +62,8 @@ const press = (key: string) => fireEvent.keyDown(window, { key });
 
 beforeEach(() => {
   waiting = [row(1, true), row(2), row(3), row(4)];
+  queuedCount = 0;
+  repeated = [{ ...row(9), note: "Same fact.", match: { id: "id-50", question: "Approved question?", answer: "Right 9" } }];
   decided = new Map();
   posts.length = 0;
   gets.length = 0;
@@ -67,6 +76,24 @@ afterEach(() => {
 });
 
 describe("Speed Trivia Quick Review", () => {
+  it("shows the overnight repeats with their match and restores one", async () => {
+    queuedCount = 2;
+    render(createElement(SpeedTriviaQuickReview));
+    expect(await screen.findByText("4 left · 2 queued")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Show"), { target: { value: "repeats" } });
+    expect(await screen.findByText("Question 9?")).toBeTruthy();
+    expect(screen.getByTestId("quick-review-match").textContent).toBe("Repeats: Approved question? (Right 9)");
+    expect(screen.queryByText(/Reject all shown/)).toBeNull();
+    expect(screen.queryByText("Keep →")).toBeNull();
+    // Arrow keys do nothing here; only Restore changes a repeat.
+    press("ArrowLeft");
+    expect(posts).toHaveLength(0);
+    fireEvent.click(screen.getByText("Restore"));
+    expect(await screen.findByText("Restored.")).toBeTruthy();
+    expect(posts[0]).toEqual({ action: "undo", id: "id-9" });
+    expect(screen.getByText("Nothing left.")).toBeTruthy();
+  });
+
   it("keeps, rejects, skips and undoes from the keyboard", async () => {
     render(createElement(SpeedTriviaQuickReview));
     expect(await screen.findByText("Question 1?")).toBeTruthy();

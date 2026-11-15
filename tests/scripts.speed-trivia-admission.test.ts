@@ -93,9 +93,65 @@ describe("Speed writing boundaries on isolated PostgreSQL", () => {
   });
   it("stops at the first rejecting semantic result without fabricating uniqueness", async () => {
     const adjudicate = vi.fn(async (tasks: ComparisonTask[]) => tasks.map(t => ({ ...sound(t), decision: "duplicate" as const })));
-    const checking = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "early-reject-fixture", adjudicate } });
+    const checking = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "early-reject-fixture", adjudicate }, concurrency: 1 });
     await expect(checking.write(candidate(9, "Which new fact is being tested?", "New fixture"))).rejects.toMatchObject({ code: "duplicate" });
     expect(adjudicate).toHaveBeenCalledTimes(1);
+  });
+  it("runs pairs concurrently, same answer first, and starts none after a rejecting result", async () => {
+    const started: string[] = [];
+    let inFlight = 0, peak = 0;
+    const adjudicate = vi.fn(async (tasks: ComparisonTask[]) => {
+      started.push(tasks[0].b.question); inFlight++; peak = Math.max(peak, inFlight);
+      await new Promise(resolve => setTimeout(resolve, 5));
+      inFlight--;
+      return tasks.map(t => core.answerKey(t.b.options[t.b.correct_answer]) === core.answerKey("Mars") ? { ...sound(t), decision: "duplicate" as const } : sound(t));
+    });
+    const earlier = candidate(30, "Which planet is called the Red Planet?", "Mars");
+    await session.write(earlier);
+    const checking = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "concurrent-fixture", adjudicate }, concurrency: 3 });
+    const competitors = checking.index().corpus.rows.length;
+    const failure = await checking.write(candidate(31, "Which planet do the rovers Spirit and Opportunity explore?", "Mars")).catch(error => error);
+    expect(failure).toMatchObject({ code: "duplicate" });
+    // The same-answer competitor is compared first; at most the other in-flight pairs finish after it.
+    expect(started[0]).toBe(earlier.question);
+    // The repeat is the first (probe) pair, so nothing else starts.
+    expect(adjudicate.mock.calls.length).toBe(1);
+    expect(adjudicate.mock.calls.length).toBeLessThan(competitors);
+    expect(peak).toBeLessThanOrEqual(3);
+    const held = failure.evidence.comparisons.filter((r: ComparisonResult) => r.explanation.startsWith("Not examined"));
+    expect(held.length).toBe(failure.evidence.comparisons.length - adjudicate.mock.calls.length);
+  });
+  it("fans out after the probe pairs for a question that has to be compared with every competitor", async () => {
+    let inFlight = 0, peak = 0;
+    const order: number[] = [];
+    const adjudicate = vi.fn(async (tasks: ComparisonTask[]) => {
+      inFlight++; peak = Math.max(peak, inFlight); order.push(inFlight);
+      await new Promise(resolve => setTimeout(resolve, 5));
+      inFlight--;
+      return tasks.map(sound);
+    });
+    const checking = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "fan-out-fixture", adjudicate }, concurrency: 3 });
+    const competitors = checking.index().corpus.rows.length;
+    expect((await checking.write(candidate(34, "Which fixture fact needs every comparison?", "Fan-out fixture"))).row.status).toBe("pending_review");
+    expect(adjudicate.mock.calls.length).toBe(competitors);
+    expect(order.slice(0, runtime.PROBE)).toEqual(Array(runtime.PROBE).fill(1));
+    expect(peak).toBe(3);
+  });
+  it("D5: full-bank checks skip quality rejects only when asked to, and only while they stay retired", async () => {
+    const released = candidate(32, "Which gas makes up most of Earth's air?", "Nitrogen");
+    const sameFact = candidate(33, "What gas makes up most of the air on Earth?", "Nitrogen");
+    const adjudicate = async (tasks: ComparisonTask[]) => tasks.map(t => t.b.question === released.question ? { ...sound(t), decision: "duplicate" as const } : sound(t));
+    const writer = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "released-fixture", adjudicate } });
+    await writer.write(released);
+    // Retire it (status-only, as Quick Review's Reject does).
+    await db.exec("reset role;");
+    await db.query("update trivia_questions set status='deleted' where id=$1", [released.id]);
+    await db.exec("set role service_role;");
+    const releasing = { rpc: (name: string, args?: Record<string, unknown>) => name === "speed_trivia_released_rows" ? Promise.resolve({ data: [released.id], error: null }) : client.rpc(name, args) } as AdmissionClient;
+    const conservative = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "released-fixture", adjudicate } });
+    await expect(conservative.write(sameFact)).rejects.toMatchObject({ code: "duplicate" });
+    const d5 = await runtime.createSession({ client: releasing, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "released-fixture", adjudicate }, releasedRows: "read" });
+    expect((await d5.write(sameFact)).row.status).toBe("pending_review");
   });
   it("allows a wording edit and later approval without treating its old wording as a second question", async () => {
     const source = candidate(10, "Which chemical element has the symbol Fe?", "Iron");

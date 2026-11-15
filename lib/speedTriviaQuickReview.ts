@@ -11,6 +11,7 @@ import type {
   QuickReviewKeepOutcome,
   QuickReviewPage,
   QuickReviewRejectReason,
+  QuickReviewView,
 } from "@/types/speedTriviaQuickReview";
 
 // Speed Trivia Quick Review (docs/speed-trivia-backlog-and-quality-plan.md, Phase 1).
@@ -57,13 +58,16 @@ const parseScore = (value: unknown): number | null => {
   return Number.isInteger(score) && score >= 1 && score <= 5 ? score : null;
 };
 
+const VIEWS: ReadonlySet<string> = new Set<QuickReviewView>(["waiting", "needs_look", "repeats"]);
+
 export const parseQuickReviewFilter = (
-  input: { category?: unknown; source?: unknown; sort?: unknown; score?: unknown },
+  input: { category?: unknown; source?: unknown; sort?: unknown; score?: unknown; view?: unknown },
 ): QuickReviewFilter => {
   const category = typeof input.category === "string" && CATEGORY_VALUES.has(input.category) ? input.category : null;
   const source = input.source === "older" || input.source === "recent" ? input.source : "all";
   const sort = input.sort === "newest" || input.sort === "oldest" ? input.sort : "best";
-  return { category, source, sort, score: parseScore(input.score) };
+  const view = typeof input.view === "string" && VIEWS.has(input.view) ? (input.view as QuickReviewView) : "waiting";
+  return { category, source, sort, score: parseScore(input.score), view };
 };
 
 /** Keyset cursor: the last row shown. `score` is its bar-test score (0 when unscored); used by the best sort. */
@@ -76,7 +80,7 @@ export const parseQuickReviewCursor = (input: { afterId?: unknown; afterCreated?
   return { id: afterId, createdAt: afterCreated, score: Number.isInteger(score) && score >= 0 && score <= 5 ? score : 0 };
 };
 
-type QueueRpc = { total: number | string; rows: QuickReviewItem[] };
+type QueueRpc = { total: number | string; rows: QuickReviewItem[]; counts?: Partial<Record<keyof QuickReviewPage["counts"], number | string>> };
 
 export const readQuickReviewQueue = async (
   filter: QuickReviewFilter,
@@ -93,8 +97,14 @@ export const readQuickReviewQueue = async (
     p_score_min: filter.score,
     p_score_max: filter.score,
     p_after_score: after && filter.sort === "best" ? after.score : null,
+    p_view: filter.view,
   });
-  return { total: Number(data.total) || 0, items: Array.isArray(data.rows) ? data.rows : [] };
+  const counts = {
+    queued: Number(data.counts?.queued) || 0,
+    needsLook: Number(data.counts?.needsLook) || 0,
+    repeats: Number(data.counts?.repeats) || 0,
+  };
+  return { total: Number(data.total) || 0, items: Array.isArray(data.rows) ? data.rows : [], counts };
 };
 
 /** Keep: free instant approval when the row already passed a full-bank check; otherwise queued for overnight. */
@@ -134,6 +144,8 @@ export const runQuickReviewBulk = async (
   max: number,
   now: () => number = Date.now,
 ): Promise<QuickReviewBulkResult> => {
+  // Repeats are already retired; they are restored one at a time with Undo.
+  if (filter.view === "repeats") throw new QuickReviewError("invalid", "Invalid request.");
   const started = now();
   const cap = Math.max(0, Math.min(Math.floor(max), BULK_MAX_PER_REQUEST));
   const result: QuickReviewBulkResult = { processed: 0, approved: 0, queued: 0, rejected: 0, remaining: 0 };
