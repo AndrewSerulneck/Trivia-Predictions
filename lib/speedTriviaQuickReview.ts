@@ -11,6 +11,7 @@ import type {
   QuickReviewKeepOutcome,
   QuickReviewPage,
   QuickReviewRejectReason,
+  QuickReviewUndoResult,
   QuickReviewView,
 } from "@/types/speedTriviaQuickReview";
 
@@ -131,8 +132,11 @@ export const quickReject = async (ids: string[], reason: QuickReviewRejectReason
   return data.rejected;
 };
 
-export const quickUndo = async (id: string): Promise<{ id: string; status: string }> =>
-  call<{ id: string; status: string }>("speed_trivia_quick_undo", { p_row_id: id });
+/** `view` is the list the question is back in: Needs a look when the decision was made there (Phase 3c). */
+export const quickUndo = async (id: string): Promise<QuickReviewUndoResult> => {
+  const data = await call<{ id: string; status: string; view?: unknown }>("speed_trivia_quick_undo", { p_row_id: id });
+  return { id: data.id, status: data.status, view: data.view === "needs_look" ? "needs_look" : "waiting" };
+};
 
 /**
  * "Keep all shown" / "Reject all shown": the whole filter, server-side, in pages of 100, capped at `max`

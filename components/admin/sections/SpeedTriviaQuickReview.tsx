@@ -12,6 +12,7 @@ import type {
   QuickReviewKeepOutcome,
   QuickReviewSort,
   QuickReviewSource,
+  QuickReviewUndoResult,
   QuickReviewView,
 } from "@/types/speedTriviaQuickReview";
 
@@ -23,7 +24,8 @@ const ENDPOINT = "/api/admin/trivia/quick-review";
 const REFILL_AT = 10;
 const PAGE_SIZE = 50; // QUICK_REVIEW_PAGE_LIMIT on the server
 
-type UndoEntry = { item: QuickReviewItem; kind: "keep" | "reject" | "skip" };
+/** queued: a Keep that went to the overnight check (counted under "queued" until undone). */
+type UndoEntry = { item: QuickReviewItem; kind: "keep" | "reject" | "skip"; queued?: boolean };
 type Draft = { question: string; options: string[]; correctAnswer: number };
 type Filter = { category: string; source: QuickReviewSource; sort: QuickReviewSort; score: string; view: QuickReviewView };
 
@@ -50,7 +52,7 @@ const postJson = async <T,>(body: unknown): Promise<T> => {
 const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
-export function SpeedTriviaQuickReview() {
+export const SpeedTriviaQuickReview = () => {
   const [filter, setFilter] = useState<Filter>({ category: "", source: "all", sort: "best", score: "", view: "waiting" });
   const [items, setItems] = useState<QuickReviewItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -128,11 +130,18 @@ export function SpeedTriviaQuickReview() {
       .finally(() => { refilling.current = false; });
   }, [items, loading, exhausted, fetchPage]);
 
-  const advance = useCallback((item: QuickReviewItem, kind: UndoEntry["kind"]) => {
+  const advance = useCallback((item: QuickReviewItem, kind: UndoEntry["kind"], queued = false) => {
     setItems((prev) => prev.filter((row) => row.id !== item.id));
     if (kind !== "skip") setTotal((prev) => Math.max(0, prev - 1));
-    setHistory((prev) => [...prev.slice(-49), { item, kind }]);
-  }, []);
+    if (kind !== "skip" && (queued || filter.view === "needs_look")) {
+      setCounts((prev) => ({
+        ...prev,
+        queued: prev.queued + (queued ? 1 : 0),
+        needsLook: Math.max(0, prev.needsLook - (filter.view === "needs_look" ? 1 : 0)),
+      }));
+    }
+    setHistory((prev) => [...prev.slice(-49), { item, kind, queued }]);
+  }, [filter.view]);
 
   const keep = useCallback(async () => {
     if (!current || busy || draft || repeats) return;
@@ -154,7 +163,7 @@ export function SpeedTriviaQuickReview() {
         setNotice("Already decided.");
         return;
       }
-      advance(current, "keep");
+      advance(current, "keep", outcome === "queued");
       setNotice(outcome === "approved" ? "Approved." : "Kept. Approved after the repeat check.");
     } catch (err) {
       setError(getErrorMessage(err, "Keep failed."));
@@ -214,19 +223,27 @@ export function SpeedTriviaQuickReview() {
     setBusy(true);
     setError("");
     try {
+      // The server says which list the question is back in; it reappears only if that's the one shown.
+      let back = true;
       if (last.kind !== "skip") {
-        await postJson({ action: "undo", id: last.item.id });
-        setTotal((prev) => prev + 1);
+        const { view } = await postJson<QuickReviewUndoResult>({ action: "undo", id: last.item.id });
+        back = view === filter.view;
+        if (back) setTotal((prev) => prev + 1);
+        setCounts((prev) => ({
+          ...prev,
+          queued: Math.max(0, prev.queued - (last.queued ? 1 : 0)),
+          needsLook: prev.needsLook + (view === "needs_look" ? 1 : 0),
+        }));
       }
       setHistory((prev) => prev.slice(0, -1));
-      setItems((prev) => [last.item, ...prev.filter((row) => row.id !== last.item.id)]);
+      setItems((prev) => [...(back ? [last.item] : []), ...prev.filter((row) => row.id !== last.item.id)]);
       setNotice("Undone.");
     } catch (err) {
       setError(getErrorMessage(err, "Can't undo."));
     } finally {
       setBusy(false);
     }
-  }, [history, busy, draft]);
+  }, [history, busy, draft, filter.view]);
 
   const startEdit = useCallback(() => {
     if (!current || busy || repeats) return;
@@ -471,4 +488,4 @@ export function SpeedTriviaQuickReview() {
       {notice ? <p className="text-sm text-slate-600" role="status">{notice}</p> : null}
     </div>
   );
-}
+};

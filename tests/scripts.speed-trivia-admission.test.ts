@@ -265,6 +265,7 @@ describe("D5 released set by revision, read lazily", () => {
     "supabase/migrations/20261115170333_speed_trivia_keep_queue.sql",
     "supabase/migrations/20261115212126_speed_trivia_queue_repairs.sql",
     "supabase/migrations/20261115213124_speed_trivia_released_rows_revision.sql",
+    "supabase/migrations/20261115214254_speed_trivia_undo_needs_look.sql",
   ];
   let isolated: DB;
   const releasedCalls: string[] = [];

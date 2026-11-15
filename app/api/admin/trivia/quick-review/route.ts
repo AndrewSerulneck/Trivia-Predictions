@@ -82,8 +82,9 @@ export async function POST(request: Request) {
 
     if (body.action === "reject") {
       const ids = Array.isArray(body.ids) ? [...new Set(body.ids)] : [];
-      const reason = body.reason === "wrong" ? "wrong" : "quality";
-      if (ids.length === 0 || ids.length > QUICK_REVIEW_BATCH_LIMIT || !ids.every(isQuickReviewId)) {
+      // Exact reasons only: a quality reject releases the fact (D5), so a typo must never become one.
+      const reason = body.reason === "wrong" || body.reason === "quality" ? body.reason : null;
+      if (!reason || ids.length === 0 || ids.length > QUICK_REVIEW_BATCH_LIMIT || !ids.every(isQuickReviewId)) {
         return json({ ok: false, error: "Invalid request." }, 400);
       }
       return json({ ok: true, rejected: await quickReject(ids, reason) });

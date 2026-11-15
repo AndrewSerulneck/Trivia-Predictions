@@ -87,9 +87,25 @@ describe("Quick Review route", () => {
     mocks.rpc.mockReturnValue(ok({ rejected: [id(1)] }));
     expect(await (await post({ action: "reject", ids: [id(1), id(1)], reason: "wrong" })).json()).toEqual({ ok: true, rejected: [id(1)] });
     expect(mocks.rpc).toHaveBeenCalledWith("speed_trivia_quick_reject", { p_row_ids: [id(1)], p_reason: "wrong" });
-    await post({ action: "reject", ids: [id(2)], reason: "anything" });
+    await post({ action: "reject", ids: [id(2)], reason: "quality" });
     expect(mocks.rpc).toHaveBeenLastCalledWith("speed_trivia_quick_reject", { p_row_ids: [id(2)], p_reason: "quality" });
-    expect((await post({ action: "reject", ids: ["not-a-uuid"] })).status).toBe(400);
+    expect((await post({ action: "reject", ids: ["not-a-uuid"], reason: "quality" })).status).toBe(400);
+    // 3c: a quality reject releases the fact (D5), so anything but an exact reason is refused.
+    mocks.rpc.mockClear();
+    for (const reason of [undefined, null, "", "Wrong", "wrong_answer", "QUALITY", "anything", 1]) {
+      const response = await post({ action: "reject", ids: [id(3)], reason });
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ ok: false, error: "Invalid request." });
+    }
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("3c: Undo says which list the question is back in", async () => {
+    mocks.rpc.mockReturnValue(ok({ id: id(1), status: "pending_review", view: "needs_look" }));
+    expect(await (await post({ action: "undo", id: id(1) })).json()).toEqual({ ok: true, id: id(1), status: "pending_review", view: "needs_look" });
+    // Anything else (including a server without 3c) is Waiting.
+    mocks.rpc.mockReturnValue(ok({ id: id(1), status: "pending_review" }));
+    expect(await (await post({ action: "undo", id: id(1) })).json()).toEqual({ ok: true, id: id(1), status: "pending_review", view: "waiting" });
   });
 
   it("maps a refused Undo to 409", async () => {

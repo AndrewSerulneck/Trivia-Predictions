@@ -21,6 +21,7 @@ const MIGRATIONS = [
   "supabase/migrations/20261115170333_speed_trivia_keep_queue.sql",
   "supabase/migrations/20261115212126_speed_trivia_queue_repairs.sql",
   "supabase/migrations/20261115213124_speed_trivia_released_rows_revision.sql",
+  "supabase/migrations/20261115214254_speed_trivia_undo_needs_look.sql",
 ];
 const id = (n: number) => `80000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
@@ -44,7 +45,7 @@ const keep = async (rows: { id: string; contentHash: string }[]) => {
 };
 const reject = async (ids: string[], reason = "quality") =>
   (await scalar<{ rejected: string[] }>("select public.speed_trivia_quick_reject($1::uuid[], $2) r", [`{${ids.join(",")}}`, reason])).rejected;
-const undo = (rowId: string) => scalar<{ status: string }>("select public.speed_trivia_quick_undo($1::uuid) r", [rowId]);
+const undo = (rowId: string) => scalar<{ status: string; view: string }>("select public.speed_trivia_quick_undo($1::uuid) r", [rowId]);
 const settle = (rowId: string, hash: string, outcome: string, matched: string | null = null, note: string | null = null) =>
   scalar<{ id: string; outcome: string }>("select public.speed_trivia_queue_settle($1::uuid, $2, $3, $4::uuid, $5) r", [rowId, hash, outcome, matched, note]);
 const status = (rowId: string) => scalar<string>("select status from trivia_questions where id=$1", [rowId]);
@@ -313,6 +314,136 @@ describe("Speed Trivia overnight Keep queue SQL", () => {
     expect(await prepare(true)).toEqual({ queued: 0, stale: 1, settled: 0 });
     expect(await mark(r.id)).toBeNull();
     expect(await status(r.id)).toBe("active");
+  });
+
+  // 3c (review #7): Undo returns a question to the view it came from.
+  const toNeedsLook = async (r: SpeedQuestion, note: string) => {
+    expect(await keepOne(r)).toBe("queued");
+    expect((await settle(r.id, core.contentHash(r), "needs_look", null, note)).outcome).toBe("needs_look");
+    return mark(r.id);
+  };
+  const lookFields = (m: Record<string, unknown> | null) => m && ({
+    decision: m.decision, outcome: m.outcome, reason: m.reason, content_hash: m.content_hash,
+    decided_revision: Number(m.decided_revision), decided_at: String(m.decided_at), note: m.note,
+    checked_at: String(m.checked_at), matched_row_id: m.matched_row_id, prior: m.prior,
+  });
+
+  it("3c: Keep from Needs a look, then Undo, puts it back in Needs a look with its note and score", async () => {
+    const r = harness.row(id(1), "Which metal is liquid at room temperature?", "Mercury");
+    await seedOlder([r]);
+    await scoreAs(r.id, 4);
+    const before = await toNeedsLook(r, "Accuracy unclear.");
+    expect(before?.prior).toBeNull();
+    expect(await keepOne(r)).toBe("queued");
+    const kept = await mark(r.id);
+    expect(kept?.note).toBeNull();
+    expect((kept?.prior as Record<string, unknown>).note).toBe("Accuracy unclear.");
+    expect((await queue("needs_look")).total).toBe(0);
+
+    expect(await undo(r.id)).toEqual({ id: r.id, status: "pending_review", view: "needs_look" });
+    const after = await mark(r.id);
+    expect(lookFields(after)).toEqual({ ...lookFields(before), prior: null });
+    expect((after?.audience as { score: number }).score).toBe(4);
+    const look = await queue("needs_look");
+    expect(look.rows.map(row => [row.id, row.note])).toEqual([[r.id, "Accuracy unclear."]]);
+    expect(look.counts).toEqual({ queued: 0, needsLook: 1, repeats: 0 });
+    expect((await queue()).total).toBe(0);
+  });
+
+  it("3c: a fast-lane approval from Needs a look (edited meanwhile) undoes back to Needs a look", async () => {
+    const r = harness.row(id(1), "Which metal is liquid at room temperature?", "Mercury");
+    await seedOlder([r]);
+    const before = await toNeedsLook(r, "Wording unclear.");
+    // Edited in Question Review: full-bank admitted, so Keep approves at once.
+    const edited = { ...r, question: "Which metal is a liquid at room temperature?" };
+    await harness.call(db, "admit_speed_trivia", harness.checked(edited, await revision(), await find(r.id)));
+    expect(await keepOne(edited)).toBe("approved");
+    expect(await status(r.id)).toBe("active");
+    expect(await undo(r.id)).toEqual({ id: r.id, status: "pending_review", view: "needs_look" });
+    expect(lookFields(await mark(r.id))).toEqual({ ...lookFields(before), prior: null });
+  });
+
+  it("3c: Reject from Needs a look, then Undo, restores it there; the D5 window is still recorded", async () => {
+    const a = harness.row(id(1), "Which metal is liquid at room temperature?", "Mercury");
+    const b = harness.row(id(2), "Which gas do plants take in?", "Carbon dioxide");
+    await seedOlder([a, b]);
+    const beforeA = await toNeedsLook(a, "Accuracy unclear.");
+    const beforeB = await toNeedsLook(b, "Two answers fit.");
+    await reject([a.id], "quality");
+    await reject([b.id], "wrong");
+    expect((await mark(a.id))?.note).toBeNull();
+    expect((await releasedV2()).map(entry => entry.id)).toEqual([a.id]);
+    const releasedAt = await speedRevision(a.id);
+
+    expect(await undo(a.id)).toEqual({ id: a.id, status: "pending_review", view: "needs_look" });
+    expect(await undo(b.id)).toEqual({ id: b.id, status: "pending_review", view: "needs_look" });
+    expect(lookFields(await mark(a.id))).toEqual({ ...lookFields(beforeA), prior: null });
+    expect(lookFields(await mark(b.id))).toEqual({ ...lookFields(beforeB), prior: null });
+    expect((await db.query("select row_id, released_revision::int from speed_trivia_released_restores")).rows)
+      .toEqual([{ row_id: a.id, released_revision: releasedAt }]);
+    expect(await releasedV2()).toEqual([]);
+    // The restored row still loses the fast lane (D5), and can be decided again from Needs a look.
+    expect(await keepOne(a)).toBe("queued");
+  });
+
+  it("3c: Undo from Waiting is unchanged, and settle, pre-check and quick writes leave prior null", async () => {
+    const approved = harness.row(id(1), "Which ocean is the largest?", "Pacific", "Geography");
+    const k = harness.row(id(2), "Which planet is the Red Planet?", "Mars");
+    const j = harness.row(id(3), "Which gas do plants take in?", "Carbon dioxide");
+    const p = harness.row(id(4), "What is the biggest ocean on Earth?", "Pacific", "Geography");
+    const u = harness.row(id(5), "Which bird is the national bird of the USA?", "Bald eagle", "Animals");
+    await seedOlder([approved], "active");
+    await seedOlder([k, j, p, u]);
+    await scoreAs(u.id, 4);
+    await scoreAs(p.id, 4);
+    expect(await keepOne(k)).toBe("queued");
+    await reject([j.id], "wrong");
+    expect((await precheck(u.id, core.contentHash(u), "unique")).outcome).toBe("unique");
+    expect((await precheck(p.id, core.contentHash(p), "repeat", approved.id, "Same fact.")).outcome).toBe("repeat");
+    const priors = async () => (await db.query<{ prior: unknown }>("select prior from speed_trivia_review_marks")).rows.map(r => r.prior);
+    expect(await priors()).toEqual([null, null, null, null]);
+    expect(await undo(k.id)).toEqual({ id: k.id, status: "pending_review", view: "waiting" });
+    expect(await undo(j.id)).toEqual({ id: j.id, status: "pending_review", view: "waiting" });
+    expect(await undo(p.id)).toEqual({ id: p.id, status: "pending_review", view: "waiting" });
+    expect(await mark(k.id)).toBeNull();
+    expect(await mark(j.id)).toBeNull();
+    expect(await priors()).toEqual([null, null]);
+
+    // Settled overnight from a needs-look Keep: the result is the latest word, so Restore goes to Waiting.
+    await toNeedsLook(k, "Accuracy unclear.");
+    await keepOne(k);
+    expect((await settle(k.id, core.contentHash(k), "repeat", approved.id, "Same fact.")).outcome).toBe("repeat");
+    expect((await mark(k.id))?.prior).toBeNull();
+    expect(await undo(k.id)).toEqual({ id: k.id, status: "pending_review", view: "waiting" });
+    expect(await mark(k.id)).toBeNull();
+    // Settled back to Needs a look: the new note replaces the old one, prior cleared.
+    await toNeedsLook(k, "First note.");
+    await keepOne(k);
+    expect((await settle(k.id, core.contentHash(k), "needs_look", null, "Second note.")).outcome).toBe("needs_look");
+    expect(await mark(k.id)).toMatchObject({ note: "Second note.", prior: null });
+    // A stale queued Keep cleared by prepare(true) loses its prior too.
+    await keepOne(k);
+    await asAdmin("alter table trivia_questions disable trigger all");
+    await asAdmin("update trivia_questions set status='deleted' where id=$1", [k.id]);
+    await asAdmin("alter table trivia_questions enable trigger all");
+    expect((await prepare(true)).stale).toBe(1);
+    expect(await mark(k.id)).toBeNull();
+  });
+
+  it("3c: prior can't be set outside the trigger's rules, and the trigger function isn't callable", async () => {
+    const r = harness.row(id(1), "Which planet is the Red Planet?", "Mars");
+    await seedOlder([r]);
+    await toNeedsLook(r, "Accuracy unclear.");
+    // Even the table owner: on a needs-look mark the trigger drops it; on a decided mark it must be a full prior.
+    await asAdmin("update speed_trivia_review_marks set prior='{\"note\":\"x\"}'::jsonb where row_id=$1", [r.id]);
+    expect((await mark(r.id))?.prior).toBeNull();
+    await reject([r.id], "wrong");
+    await expect(asAdmin("update speed_trivia_review_marks set prior='{\"note\":\"x\"}'::jsonb where row_id=$1", [r.id]))
+      .rejects.toThrow(/speed_trivia_review_marks_prior/);
+    await db.exec("set role anon;");
+    await expect(db.query("select public.speed_trivia_review_marks_prior()")).rejects.toThrow(/permission denied/);
+    await db.exec("set role service_role;");
+    await expect(db.query("update speed_trivia_review_marks set prior=null")).rejects.toThrow(/permission denied/);
   });
 
   it("keeps the new tables and RPCs server-only", async () => {

@@ -9,7 +9,10 @@ type Row = { id: string; question: string; options: string[]; correctAnswer: num
 const row = (n: number, recent = false): Row => ({ id: `id-${n}`, question: `Question ${n}?`, options: [`Right ${n}`, "B", "C", "D"], correctAnswer: 0, category: "Science", difficulty: "easy", createdAt: `2026-07-0${n}T00:00:00Z`, recent, contentHash: `hash-${n}` });
 
 let waiting: Row[];
-let decided: Map<string, Row>;
+let looking: (Row & { note: string })[];
+let decided: Map<string, { row: Row; from: "waiting" | "needs_look" }>;
+// Where the fake server says an undone question went; null = back where it came from.
+let undoView: "waiting" | "needs_look" | null;
 let queuedCount = 0;
 let repeated: (Row & { note?: string; match?: { id: string; question: string; answer: string } })[];
 const posts: Record<string, unknown>[] = [];
@@ -20,15 +23,19 @@ const fakeFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
   const url = String(input);
   if (!init?.method || init.method === "GET") {
     gets.push(url);
-    if (url.includes("view=repeats")) return respond({ ok: true, total: repeated.length, items: repeated, counts: { queued: queuedCount, needsLook: 0, repeats: repeated.length } });
-    return respond({ ok: true, total: waiting.length, items: waiting.slice(0, 50), counts: { queued: queuedCount, needsLook: 1, repeats: repeated.length } });
+    const counts = { queued: queuedCount, needsLook: looking.length, repeats: repeated.length };
+    if (url.includes("view=repeats")) return respond({ ok: true, total: repeated.length, items: repeated, counts });
+    if (url.includes("view=needs_look")) return respond({ ok: true, total: looking.length, items: looking, counts });
+    return respond({ ok: true, total: waiting.length, items: waiting.slice(0, 50), counts });
   }
   const body = JSON.parse(String(init.body)) as Record<string, unknown>;
   posts.push(body);
   const take = (rowId: string) => {
-    const found = waiting.find((r) => r.id === rowId)!;
+    const from = looking.some((r) => r.id === rowId) ? "needs_look" : "waiting";
+    const found = [...waiting, ...looking].find((r) => r.id === rowId)!;
     waiting = waiting.filter((r) => r.id !== rowId);
-    decided.set(rowId, found);
+    looking = looking.filter((r) => r.id !== rowId);
+    decided.set(rowId, { row: found, from });
     return found;
   };
   if (url.endsWith("/quick-review") && body.action === "keep") {
@@ -42,13 +49,15 @@ const fakeFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
   }
   if (body.action === "undo" && repeated.some((r) => r.id === body.id)) {
     repeated = repeated.filter((r) => r.id !== body.id);
-    return respond({ ok: true, id: body.id, status: "pending_review" });
+    return respond({ ok: true, id: body.id, status: "pending_review", view: "waiting" });
   }
   if (body.action === "undo") {
-    const back = decided.get(body.id as string)!;
+    const { row: back, from } = decided.get(body.id as string)!;
     decided.delete(back.id);
-    waiting = [back, ...waiting].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-    return respond({ ok: true, id: back.id, status: "pending_review" });
+    const view = undoView ?? from;
+    if (view === "needs_look") looking = [{ ...back, note: (back as { note?: string }).note ?? "" }, ...looking];
+    else waiting = [back, ...waiting].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    return respond({ ok: true, id: back.id, status: "pending_review", view });
   }
   if (body.action === "bulk") {
     const batch = waiting.slice(0, Math.min(2, Number(body.max)));
@@ -62,6 +71,8 @@ const press = (key: string) => fireEvent.keyDown(window, { key });
 
 beforeEach(() => {
   waiting = [row(1, true), row(2), row(3), row(4)];
+  looking = [{ ...row(7), note: "Accuracy unclear." }];
+  undoView = null;
   queuedCount = 0;
   repeated = [{ ...row(9), note: "Same fact.", match: { id: "id-50", question: "Approved question?", answer: "Right 9" } }];
   decided = new Map();
@@ -126,6 +137,48 @@ describe("Speed Trivia Quick Review", () => {
     press("z");
     expect(await screen.findByText("Question 3?")).toBeTruthy();
     expect(posts).toHaveLength(4);
+  });
+
+  it("3c: Undo in Needs a look puts the question back there with its note", async () => {
+    render(createElement(SpeedTriviaQuickReview));
+    await screen.findByText("Question 1?");
+    fireEvent.change(screen.getByLabelText("Show"), { target: { value: "needs_look" } });
+    expect(await screen.findByText("Question 7?")).toBeTruthy();
+    expect(screen.getByTestId("quick-review-note").textContent).toBe("Accuracy unclear.");
+
+    press("ArrowRight");
+    expect(await screen.findByText("Nothing left.")).toBeTruthy();
+    expect(screen.getByText("0 left · 1 queued")).toBeTruthy();
+    expect(screen.getByText("Needs a look (0)")).toBeTruthy();
+
+    press("z");
+    expect(await screen.findByText("Question 7?")).toBeTruthy();
+    expect(screen.getByTestId("quick-review-note").textContent).toBe("Accuracy unclear.");
+    expect(screen.getByText("1 left")).toBeTruthy();
+    expect(screen.getByText("Needs a look (1)")).toBeTruthy();
+
+    press("ArrowLeft");
+    expect(await screen.findByText("Nothing left.")).toBeTruthy();
+    press("z");
+    expect(await screen.findByText("Question 7?")).toBeTruthy();
+    expect(screen.getByTestId("quick-review-note").textContent).toBe("Accuracy unclear.");
+    expect(posts.map((p) => p.action)).toEqual(["keep", "undo", "reject", "undo"]);
+  });
+
+  it("3c: an undone question the server puts back in Waiting leaves Needs a look", async () => {
+    undoView = "waiting";
+    render(createElement(SpeedTriviaQuickReview));
+    await screen.findByText("Question 1?");
+    fireEvent.change(screen.getByLabelText("Show"), { target: { value: "needs_look" } });
+    expect(await screen.findByText("Question 7?")).toBeTruthy();
+    press("ArrowLeft");
+    expect(await screen.findByText("Nothing left.")).toBeTruthy();
+    press("z");
+    expect(await screen.findByText("Undone.")).toBeTruthy();
+    expect(screen.queryByText("Question 7?")).toBeNull();
+    expect(screen.getByText("Nothing left.")).toBeTruthy();
+    expect(screen.getByText("0 left")).toBeTruthy();
+    expect(screen.getByText("Needs a look (0)")).toBeTruthy();
   });
 
   it("ignores shortcuts while editing and while typing in a field", async () => {

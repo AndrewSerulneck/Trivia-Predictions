@@ -41,6 +41,8 @@ const MIGRATIONS = [
   "supabase/migrations/20261115153905_speed_trivia_bar_test_scores.sql",
   "supabase/migrations/20261115170333_speed_trivia_keep_queue.sql",
   "supabase/migrations/20261115212126_speed_trivia_queue_repairs.sql",
+  "supabase/migrations/20261115213124_speed_trivia_released_rows_revision.sql",
+  "supabase/migrations/20261115214254_speed_trivia_undo_needs_look.sql",
 ];
 const id = (n: number) => `90000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const sound = (task: ComparisonTask): ComparisonResult => ({ id: task.id, decision: "unique", explanation: "Different facts", fact: "Fixture", qualityA: "sound", qualityB: "sound", confidence: "high" });

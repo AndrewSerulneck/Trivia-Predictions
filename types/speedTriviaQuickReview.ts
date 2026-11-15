@@ -45,6 +45,9 @@ export type QuickReviewItem = {
   match?: { id: string; question: string; answer: string } | null;
 };
 
+/** Undo result: `view` is the list the question is back in (Phase 3c). */
+export type QuickReviewUndoResult = { id: string; status: string; view: Extract<QuickReviewView, "waiting" | "needs_look"> };
+
 export type QuickReviewCounts = { queued: number; needsLook: number; repeats: number };
 
 export type QuickReviewPage = { total: number; items: QuickReviewItem[]; counts: QuickReviewCounts };

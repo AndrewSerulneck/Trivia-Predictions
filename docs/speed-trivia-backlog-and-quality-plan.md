@@ -6,9 +6,9 @@ Created 2026-11-15. Owner: Andrew Serulneck.
 2026-11-15 (migration applied) — `..._PHASE_1_HANDOFF.md`. Phase 2 DONE 2026-11-15: migration `20261115153905` applied,
 all 7,333 bar-test scores loaded — `..._PHASE_2_HANDOFF.md`. Phase 3 DONE 2026-11-15 (overnight Keep queue, faster
 checker, D5, D17 pre-check, D4 dollars ledger): migration `20261115170333` APPLIED; verified on production with a
-10-question pre-check ($0.04, 8 repeats retired); committed to PR #19. Waiting on Andrew: set two repository variables
-(`SPEED_TRIVIA_QUEUE_MAX_DOLLARS=5`, `SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS=20`); the nightly job runs only once PR #19 is
-merged — `speed-trivia-backlog-and-quality-plan_PHASE_3_HANDOFF.md`. All on branch `feature/speed-trivia-quick-review`,
+10-question pre-check ($0.04, 8 repeats retired); committed to PR #19. Repository variables
+`SPEED_TRIVIA_QUEUE_MAX_DOLLARS=5` and `SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS=20` SET 2026-11-15 (confirmed with
+`gh variable list`); the nightly job runs only once PR #19 is merged — `speed-trivia-backlog-and-quality-plan_PHASE_3_HANDOFF.md`. All on branch `feature/speed-trivia-quick-review`,
 PR #19, merge after the end-of-plan code review. Decisions: D1 yes, D2 yes, D3 review, D4 $5 per night and $20 in total
 (answered), D5 no (built), D6 10/game/day, D7 ages 21–75, D8 retire automatically (built), D9–D11 and D14–D16
 answered, D12 superseded, D13 Gemini fallback (confirmed), D17 yes (built). Phase 4 AMENDED 2026-11-15: ChatGPT
@@ -17,8 +17,10 @@ category; a new Current Events category in both games (§4 Phase 4a–4d). REMED
 from Andrew's code review of Phases 0–3 (10 findings; §4 "Remedial phases 3a–3d"). Phase 3a DONE 2026-11-15
 (migration `20261115212126` written and tested, NOT applied; 3d applies it) —
 `speed-trivia-backlog-and-quality-plan_PHASE_3A_HANDOFF.md`. Phase 3b DONE 2026-11-15 (migration `20261115213124`
-written and tested, NOT applied; 3d applies it) — `speed-trivia-backlog-and-quality-plan_PHASE_3B_HANDOFF.md`. Next:
-Phase 3c, then 3d, then Phase 4a. Andrew code-reviews Phases 4a–5 after Phase 5, before they are committed.**
+written and tested, NOT applied; 3d applies it) — `speed-trivia-backlog-and-quality-plan_PHASE_3B_HANDOFF.md`. Phase 3c
+DONE 2026-11-15 (migration `20261115214254` written and tested, NOT applied; 3d applies it) —
+`speed-trivia-backlog-and-quality-plan_PHASE_3C_HANDOFF.md`. Next: Phase 3d, then Phase 4a. Don't merge PR #19 until
+3d has applied the three remedial migrations (Andrew, 2026-11-15). Andrew code-reviews Phases 4a–5 after Phase 5, before they are committed.**
 
 ## 1. For Andrew — the short version
 
@@ -506,6 +508,9 @@ Cost: $0 paid, and it saves money. Repeats found next to a failure are no longer
 one fewer RPC per row.
 
 #### Phase 3c — Quick Review: Undo returns a question to where it was (review #7, #9, #10)
+
+*DONE 2026-11-15 (`..._PHASE_3C_HANDOFF.md`). One addition to the trigger below: it also clears `prior` when the
+overnight job settles the queued Keep (approved or repeat), so Restore from Repeats still goes to Waiting.*
 
 **Problems:**
 - **Review #7.** In **Needs a look**, Keep (or Reject) and then **Z** goes wrong:
