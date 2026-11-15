@@ -46,8 +46,8 @@ score.
 ### 2. Starting state
 
 - Branch `feature/speed-trivia-quick-review`, PR #19 (https://github.com/AndrewSerulneck/Trivia-Predictions/pull/19),
-  **not merged** (Andrew: merge after the end-of-plan code review). Commit `6ebfe9ba` = Phases 0–1; Phase 2 is the
-  next commit on the same branch. Nothing is deployed to production; Vercel builds a preview per push.
+  **not merged** (Andrew: merge after the end-of-plan code review). Commit `6ebfe9ba` = Phases 0–1; `795eedf2` = Phase 2 (both
+  pushed). Nothing is deployed to production; Vercel builds a preview per push.
 - Preview deploys lack `SPEED_TRIVIA_ADMISSION_SECRET` (Production only), so Keep returns 503 there. Reject, Undo and
   the queue work. Don't copy the signing secret to Preview without Andrew's decision.
 - Migrations: `20261115151703_speed_trivia_quick_review.sql` **applied** (Andrew ran `supabase db push`, 2026-11-15).
