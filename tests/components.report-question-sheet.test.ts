@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createElement } from "react";
+import { Fragment, createElement, useState } from "react";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 // Phase 4c.7 (D32) of docs/speed-trivia-backlog-and-quality-plan.md: the Report button and its "What's wrong?" sheet.
@@ -10,7 +10,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 vi.mock("@/lib/storage", () => ({ getUserId: () => "user-1" }));
 
 import { readFileSync } from "node:fs";
-import { ReportQuestionSheet } from "@/components/trivia/ReportQuestionSheet";
+import { ReportButton, ReportQuestionSheet, ReportSheet } from "@/components/trivia/ReportQuestionSheet";
 
 type Posted = { game: string; questionId?: string; slug?: string; reason: string; note?: string };
 let posts: Posted[] = [];
@@ -101,15 +101,60 @@ describe("ReportQuestionSheet", () => {
     expect(screen.getByRole("button", { name: "Reported" })).toBeTruthy();
   });
 
-  it("Live: the next question (a new key) closes the sheet without sending", async () => {
-    const view = render(createElement(ReportQuestionSheet, { key: "r1-q1", game: "live", slug: "sports-q1" }));
+  // Andrew, 2026-11-17: on Live the sheet stays open over the next question until the player sends or closes it.
+  // The harness mirrors app/trivia/live/page.tsx: the button sits in the question's panel, the sheet at page level.
+  const LiveHarness = ({ questionKey, showPanel }: { questionKey: string; showPanel: boolean }) => {
+    const [held, setHeld] = useState<{ key: string; slug: string } | null>(null);
+    const [reported, setReported] = useState<Record<string, true>>({});
+    return createElement(
+      Fragment,
+      null,
+      showPanel
+        ? createElement(ReportButton, {
+            reported: Boolean(reported[questionKey]),
+            onOpen: () => setHeld({ key: questionKey, slug: `slug-${questionKey}` }),
+          })
+        : null,
+      held
+        ? createElement(ReportSheet, {
+            key: held.key,
+            target: { game: "live", slug: held.slug },
+            onSent: () => setReported((current) => ({ ...current, [held.key]: true })),
+            onClose: () => setHeld(null),
+          })
+        : null,
+    );
+  };
+
+  it("Live: the sheet stays open over the next question and reports the question it was opened on", async () => {
+    const view = render(createElement(LiveHarness, { questionKey: "r1-q1", showPanel: true }));
     fireEvent.click(screen.getByRole("button", { name: "Report" }));
     fireEvent.click(screen.getByRole("button", { name: "Other" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Other" }), { target: { value: "half typed" } });
-    view.rerender(createElement(ReportQuestionSheet, { key: "r1-q2", game: "live", slug: "sports-q2" }));
+
+    view.rerender(createElement(LiveHarness, { questionKey: "r1-q2", showPanel: false }));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect((screen.getByRole("textbox", { name: "Other" }) as HTMLTextAreaElement).value).toBe("half typed");
+
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+    await screen.findByText("Sent.");
+    expect(posts).toEqual([{ userId: "user-1", game: "live", slug: "slug-r1-q1", reason: "other", note: "half typed" }]);
+  });
+
+  it("Live: Close ends it without sending", async () => {
+    const view = render(createElement(LiveHarness, { questionKey: "r1-q1", showPanel: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Report" }));
+    view.rerender(createElement(LiveHarness, { questionKey: "r1-q2", showPanel: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.getByRole("button", { name: "Report" })).toBeTruthy();
     await waitFor(() => expect(posts).toEqual([]));
+  });
+
+  it("Live page holds the sheet outside the question's panel", () => {
+    const source = readFileSync("app/trivia/live/page.tsx", "utf8");
+    expect(source).not.toMatch(/<ReportQuestionSheet\b/);
+    expect(source).toMatch(/\{heldReport \? \(\s*<ReportSheet\s+key=\{heldReport\.key\}/);
   });
 
   it("uses only the text scale (no text-xs, no arbitrary sizes)", () => {
