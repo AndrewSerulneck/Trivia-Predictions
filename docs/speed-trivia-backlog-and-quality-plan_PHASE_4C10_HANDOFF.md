@@ -2,8 +2,10 @@
 
 Plan: `docs/speed-trivia-backlog-and-quality-plan.md` §4 "Phase 4c.10" (post-4c.4 review #7, #8, #9). Done 2026-11-17
 on Opus 5.5 / medium (the plan's tier). Steps 1–6 are done: **D23 shipped 2026-11-17** (PR #20 merged, production
-deploy READY 15:41 UTC, Trivia Nightly re-enabled). Left: the old-tab check and the report smoke test (both need Andrew),
-then Phase 4d.
+deploy READY 15:41 UTC, Trivia Nightly re-enabled). Since then: the report smoke test passed, the old-tab check was
+skipped (Andrew, no old tab), the Sync Live Trivia fix shipped (PR #21), and the Live report-sheet change shipped
+(branch `feature/live-report-sheet-hold`, see §2). Andrew signed the writer in to ChatGPT (`CODEX_AUTH_JSON` set
+2026-11-17 16:15 UTC). Next: Phase 4d.
 
 ## For Andrew (plain English)
 
@@ -24,9 +26,11 @@ then Phase 4d.
   ([PR #20](https://github.com/AndrewSerulneck/Trivia-Predictions/pull/20)). Trivia Nightly is back on; its next run is
   02:15 UTC.
 - **Checks:** lint, typecheck, all 7,552 tests and the build pass, and so does GitHub's check on the PR.
-- **Needs you:** (1) if you still have a game tab open from before 15:41 UTC, tap an answer in Speed Trivia: it should
-  say "Refresh to keep playing." (2) Send one Report from a Speed question and one from a Live question, so the new
-  report limit gets a real test.
+- **Since then (2026-11-17):** your test reports (1 Speed, 2 Live) all arrived and were cleared. The Live question
+  sync, broken since July, is fixed and ran: 253 Live questions were added (3,707 active). On Live, the Report window
+  now stays open over the next question until you send or close it (shipped 2026-11-17). You signed the question
+  writer in to ChatGPT; it keeps itself signed in from now on (see §7).
+- **Needs you:** your go-ahead for Phase 4d's trial run.
 
 ## For the next agent
 
@@ -49,11 +53,31 @@ Finish 4c.10's steps 6–8, then **Phase 4d** (plan §4 "Phase 4d — trial run,
 - **Sync Live Trivia still fails (found after the merge, not caused by it).** The merge's run (2026-11-17 15:39 UTC) got
   past `live-trivia:check` for the first time since July (D24's JSON fix), then failed at the import:
   `node: .env.local: not found`. The `live-trivia:import` npm script has used `--env-file=.env.local` since `f916d0f5`
-  (2026-06-09), and CI has no such file. **Fix written, uncommitted:** `.github/workflows/sync-live-trivia.yml` runs
-  `node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories` directly. Read-only preview of what
-  the fixed sync does on production: JSON 3,707 rows (0 expired); DB live_showdown 4,540 rows, 3,454 active; it would
-  **add 253** (none exist as inactive rows) and **soft-delete 0**. Ship it as a small PR on Andrew's word, then run
-  `gh workflow run "Sync Live Trivia"` and expect 3,707 active Live rows.
+  (2026-06-09), and CI has no such file. **Fixed and shipped:** `.github/workflows/sync-live-trivia.yml` runs
+  `node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories` directly. PR #21 merged as
+  `f6e384af` (16:10 UTC); the dispatched run 44122721588 passed: 3,707/3,707 upserted, no orphans. Production now has
+  live_showdown 3,707 active of 4,793 rows (was 3,454 active of 4,540: +253, 0 soft-deleted).
+- **Report smoke test passed (2026-11-17):** Andrew sent 1 Speed and 2 Live reports; `npm run trivia:reports` showed all
+  three (with player answers for Live); resolved with `--resolve 1521826c-…,a532d6fd-…,610f2eac-… --yes` (3 resolved).
+  The old-tab check was skipped: Andrew had no tab from before the deploy.
+- **Live Report sheet stays open over the next question (Andrew, 2026-11-17). Built, uncommitted,** on branch
+  `feature/live-report-sheet-hold` (from main `f6e384af`). Before, the sheet lived inside the "Next question in" panel,
+  so the next question unmounted it mid-report. `components/trivia/ReportQuestionSheet.tsx` now exports `ReportButton`,
+  `ReportSheet` (mounted only while open; own status/note state; closes 1.2 s after "Sent.") and `ReportQuestionSheet`
+  (both together; Speed still uses it, keyed per question). `app/trivia/live/page.tsx` keeps `heldReport {key, slug}` and
+  `reportedKeys` in page state, shows `ReportButton` in the panel, and renders `ReportSheet` at the end of `<motion.main>`
+  so it survives the question change and reports the question it was opened on. The answer box's autofocus on a new
+  question is skipped while a sheet is open. The server has no time limit on Live reports (it only checks the player
+  answered), so a late send works. Tests: `tests/components.report-question-sheet.test.ts` (harness of the page's
+  pattern + a source check); full suite 7,554 pass, typecheck and lint clean. Browser-checked 2026-11-17 (scratchpad
+  clone, no `.env.local`, `/api/**` mocked, 390x844, script `drive-live-report.mjs` in that session's scratchpad):
+  answer Q1 → reveal → Report → Other → type "half typed" → the state switches to Q2: the sheet stays open at the
+  bottom with Q2 visible above it, the note and the focus stay in the sheet, Send posts
+  `{game:"live", slug:"slug-r1-q1", reason:"other", note:"half typed"}`, the sheet closes, and Q2 can be answered.
+  Shipped on Andrew's OK (2026-11-17).
+- **Flaky test seen in CI:** PR #21's push-triggered `validate` failed on `tests/components.speed-trivia-quick-review
+  .test.ts` › "3c: Undo in Needs a look puts the question back there with its note" (`Nothing left.` not found); the
+  pull_request run on the same commit passed, and the PR touched no code. Not fixed yet.
 - About 23 MB of the commit is Phase 4a's JSON records in `docs/` (largest ~7.5 MB). They were kept on purpose as the
   audit trail (Andrew left the call to Claude).
 - After the deploy (read-only): `/api/admin/trivia/live-review` answers 401 without auth and `/api/trivia/report` 405 on
@@ -175,19 +199,25 @@ Finish 4c.10's steps 6–8, then **Phase 4d** (plan §4 "Phase 4d — trial run,
   - The report trigger with a real insert (do it in the post-deploy smoke test).
   - The `audience->score` sort order with real rows (the query itself is accepted; see §2). Open Admin → Live Quick
     Review once candidates exist.
-  - The old-tab check (step 7). It needs a tab Andrew loaded before 15:41 UTC; if none exists, it's moot.
+  - The old-tab check (step 7): skipped, no old tab existed.
+  - The Live report sheet held over the next question in a real game with real timing (browser-checked with mocked
+    state only).
 
 ### 7. Open questions
-- The old-tab check and one real report per game wait on Andrew.
-- The Sync Live Trivia fix (§2): commit, PR and merge on Andrew's word, then dispatch it (adds 253 Live questions).
-- The private writer repo `AndrewSerulneck/hightop-question-writer` has `QUESTION_WRITER_TOKEN` and
-  `SECRETS_WRITE_TOKEN` but **no `CODEX_AUTH_JSON`**. Andrew runs `bash tools/question-writer/renew-login.sh` before
-  4d's ChatGPT trial can run.
+- The private writer repo `AndrewSerulneck/hightop-question-writer` has `QUESTION_WRITER_TOKEN`,
+  `SECRETS_WRITE_TOKEN` and, since Andrew ran `renew-login.sh` on 2026-11-17 (twice; the second sign-in, 16:15 UTC,
+  replaced the first), `CODEX_AUTH_JSON`. **Do not ask him to sign in again** unless a run fails with "ChatGPT login
+  needs renewing". The repo has **no workflow runs yet**, so the save-back below has never run: after 4d's first run,
+  check the "Save the refreshed login" step passed (`gh run view <id> -R AndrewSerulneck/hightop-question-writer`).
+  It stays signed in on its own: each run of `write-questions.yml` saves the
+  refreshed login back to the secret (step "Save the refreshed login", via `SECRETS_WRITE_TOKEN`), so a renewal is
+  needed only if OpenAI ends the session (password change, sign-out everywhere, or a long gap between runs) or
+  `SECRETS_WRITE_TOKEN` expires; the workflow then fails with "ChatGPT login needs renewing".
 - Phase 4d step 1 runs the private writer workflow by hand (≤ $0.50 of Gemini for both games, plus Codex usage). Start
   it on Andrew's word.
 
 ### 8. First steps
-1. After Andrew sends the reports: `npm run trivia:reports`, check both rows, then `--resolve <id> --yes` each.
+1. (Done 2026-11-17: `feature/live-report-sheet-hold` shipped.)
 2. Phase 4d (plan §4 "Phase 4d — trial run, then daily"), **Opus 5.5 / medium**. Trivia Nightly is already on, so
    tonight's 02:15 UTC run uses the Gemini fallback (D13, ≤ $0.10 per game) if the private writer hasn't produced a
    batch. Check that run's report artifact before the trial.

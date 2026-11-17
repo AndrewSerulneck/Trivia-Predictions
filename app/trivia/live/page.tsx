@@ -26,7 +26,7 @@ import {
 import { ReadyPrompt } from "@/components/trivia/ReadyPrompt";
 import { RoundStartCountdownOverlay } from "@/components/animations/RoundStartCountdownOverlay";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
-import { ReportQuestionSheet } from "@/components/trivia/ReportQuestionSheet";
+import { ReportButton, ReportSheet } from "@/components/trivia/ReportQuestionSheet";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { InviteFriendButton } from "@/components/social-share/InviteFriendButton";
 import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
@@ -206,6 +206,11 @@ function LiveShowdownPageContent() {
   const [savedViewerRank, setSavedViewerRank] = useState<number | null>(null);
   const [savedViewerRoundByRound, setSavedViewerRoundByRound] = useState<typeof state extends null ? never : NonNullable<typeof state>["viewerRoundByRound"]>(null);
   const [submitMessage, setSubmitMessage] = useState("");
+  // The open report sheet lives here, not in the question's panel, so the next question doesn't close it.
+  const [heldReport, setHeldReport] = useState<{ key: string; slug: string } | null>(null);
+  const [reportedKeys, setReportedKeys] = useState<Record<string, true>>({});
+  const heldReportRef = useRef(heldReport);
+  const closeHeldReport = useCallback(() => setHeldReport(null), []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultByKey, setResultByKey] = useState<Record<string, SubmissionResult>>({});
   const [rulesVisibleCount, setRulesVisibleCount] = useState(0);
@@ -647,9 +652,14 @@ function LiveShowdownPageContent() {
 
   // Auto-focus the answer input whenever a new question becomes active.
   // If the input isn't rendered (non-answering phase), the ref is null and this is a no-op.
+  // Not while a report sheet is open: the player may be typing in it.
+  useEffect(() => {
+    heldReportRef.current = heldReport;
+  }, [heldReport]);
   useEffect(() => {
     if (!activeKey) return;
     const frame = requestAnimationFrame(() => {
+      if (heldReportRef.current) return;
       answerInputRef.current?.focus();
     });
     return () => cancelAnimationFrame(frame);
@@ -1170,8 +1180,8 @@ function LiveShowdownPageContent() {
   const locked = forfeitKey === activeKey || submittedKey === activeKey || !answering;
   const progressPct = answering ? Math.max(0, Math.min(100, (state.secondsRemaining / 60) * 100)) : 0;
   const currentResult = isSpectatingActiveBlock ? undefined : activeKey ? resultByKey[activeKey] : undefined;
-  // Report (D32): only once the answer is revealed and only for a player who answered (not a forfeit). Keyed by
-  // activeKey, so the sheet closes itself, without sending, when the next question starts.
+  // Report (D32): only once the answer is revealed and only for a player who answered (not a forfeit). The open
+  // sheet (heldReport) outlives the panel: it stays over the next question until the player sends or closes it.
   const viewerAnsweredThisQuestion =
     !isSpectatingActiveBlock &&
     Boolean(
@@ -1836,7 +1846,10 @@ function LiveShowdownPageContent() {
             <RevealedAnswerBanner answer={state.revealedAnswer} animationKey={activeKey} />
             {reportSlug ? (
               <div className="mt-2 flex justify-center">
-                <ReportQuestionSheet key={activeKey} game="live" slug={reportSlug} />
+                <ReportButton
+                  reported={Boolean(reportedKeys[activeKey])}
+                  onOpen={() => setHeldReport({ key: activeKey, slug: reportSlug })}
+                />
               </div>
             ) : null}
             <AnimatePresence>
@@ -2025,6 +2038,14 @@ function LiveShowdownPageContent() {
             <p className="mt-2 text-center text-xs text-slate-300">{popupAd.advertiserName}</p>
           </div>
         </div>
+      ) : null}
+      {heldReport ? (
+        <ReportSheet
+          key={heldReport.key}
+          target={{ game: "live", slug: heldReport.slug }}
+          onSent={() => setReportedKeys((current) => ({ ...current, [heldReport.key]: true }))}
+          onClose={closeHeldReport}
+        />
       ) : null}
     </motion.main>
   );

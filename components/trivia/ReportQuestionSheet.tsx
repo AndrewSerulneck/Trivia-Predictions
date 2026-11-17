@@ -11,38 +11,64 @@ import {
 } from "@/lib/questionReportReasons";
 
 // Phase 4c.7 (D32): a Report button shown only after the answer is revealed, and its "What's wrong?" sheet.
-// Speed passes the question id; Live passes the slug. The parent mounts it per question (keyed), so a new question
-// starts fresh, and unmounting it (Live: the next question starts) closes the sheet without sending.
+// Speed passes the question id; Live passes the slug. Speed uses ReportQuestionSheet (button + sheet, mounted per
+// question, keyed). Live uses ReportButton and ReportSheet apart: the page holds the sheet outside the question's
+// panel, so it stays open over the next question until the player sends or closes it (Andrew, 2026-11-17).
 
-type Props = ({ game: "speed"; questionId: string } | { game: "live"; slug: string }) & { className?: string };
+export type ReportTarget = { game: "speed"; questionId: string } | { game: "live"; slug: string };
 
 type Status = "idle" | "sending" | "sent";
 
 const SENT_CLOSE_MS = 1200;
 
-export const ReportQuestionSheet = (props: Props) => {
-  const { game, className } = props;
-  const [open, setOpen] = useState(false);
+export const ReportButton = ({
+  reported,
+  onOpen,
+  className,
+}: {
+  reported: boolean;
+  onOpen: () => void;
+  className?: string;
+}) => (
+  <button
+    type="button"
+    disabled={reported}
+    onClick={onOpen}
+    className={`tp-clean-button inline-flex items-center gap-1.5 text-footnote font-bold text-slate-400 disabled:opacity-60 ${className ?? ""}`}
+  >
+    <Flag aria-hidden="true" className="h-3.5 w-3.5" />
+    {reported ? "Reported" : "Report"}
+  </button>
+);
+
+// Mounted only while open: each open starts fresh. After "Sent." it closes itself.
+export const ReportSheet = ({
+  target,
+  onSent,
+  onClose,
+}: {
+  target: ReportTarget;
+  onSent: () => void;
+  onClose: () => void;
+}) => {
   const [status, setStatus] = useState<Status>("idle");
   const [writingOther, setWritingOther] = useState(false);
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const closeTimer = useRef<number | null>(null);
-  const reasons = QUESTION_REPORT_REASONS[game];
-  const ref = props.game === "speed" ? props.questionId : props.slug;
+  const reasons = QUESTION_REPORT_REASONS[target.game];
 
   useEffect(() => () => {
     if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
   }, []);
 
   useEffect(() => {
-    if (!open) return undefined;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [onClose]);
 
   const send = async (reason: QuestionReportReason) => {
     if (status !== "idle") return;
@@ -54,8 +80,8 @@ export const ReportQuestionSheet = (props: Props) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: getUserId() ?? undefined,
-          game,
-          ...(game === "speed" ? { questionId: ref } : { slug: ref }),
+          game: target.game,
+          ...(target.game === "speed" ? { questionId: target.questionId } : { slug: target.slug }),
           reason,
           ...(reason === "other" ? { note } : {}),
         }),
@@ -63,18 +89,18 @@ export const ReportQuestionSheet = (props: Props) => {
       const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!response.ok || !payload.ok) throw new Error(payload.error || "Couldn't send. Try again.");
       setStatus("sent");
-      closeTimer.current = window.setTimeout(() => setOpen(false), SENT_CLOSE_MS);
+      onSent();
+      closeTimer.current = window.setTimeout(onClose, SENT_CLOSE_MS);
     } catch (caught) {
       setStatus("idle");
       setError(caught instanceof Error ? caught.message : "Couldn't send. Try again.");
     }
   };
 
-  const reported = status === "sent";
-  const sheet = open ? (
+  const sheet = (
     <div
       className="fixed inset-0 z-[120] flex items-end justify-center bg-black/60"
-      onClick={() => setOpen(false)}
+      onClick={onClose}
       data-testid="report-question-backdrop"
     >
       <div
@@ -91,13 +117,13 @@ export const ReportQuestionSheet = (props: Props) => {
           <button
             type="button"
             aria-label="Close"
-            onClick={() => setOpen(false)}
+            onClick={onClose}
             className="tp-clean-button rounded-full p-2 text-slate-400"
           >
             <X aria-hidden="true" className="h-5 w-5" />
           </button>
         </div>
-        {reported ? (
+        {status === "sent" ? (
           <p role="status" className="py-6 text-center text-base font-bold text-emerald-300">
             Sent.
           </p>
@@ -144,24 +170,22 @@ export const ReportQuestionSheet = (props: Props) => {
         ) : null}
       </div>
     </div>
-  ) : null;
+  );
+
+  return typeof document !== "undefined" ? createPortal(sheet, document.body) : null;
+};
+
+// Button + sheet together, for a parent that mounts it per question (Speed).
+export const ReportQuestionSheet = (props: ReportTarget & { className?: string }) => {
+  const [open, setOpen] = useState(false);
+  const [reported, setReported] = useState(false);
+  const target: ReportTarget =
+    props.game === "speed" ? { game: "speed", questionId: props.questionId } : { game: "live", slug: props.slug };
 
   return (
     <>
-      <button
-        type="button"
-        disabled={reported}
-        onClick={() => {
-          setError("");
-          setWritingOther(false);
-          setOpen(true);
-        }}
-        className={`tp-clean-button inline-flex items-center gap-1.5 text-footnote font-bold text-slate-400 disabled:opacity-60 ${className ?? ""}`}
-      >
-        <Flag aria-hidden="true" className="h-3.5 w-3.5" />
-        {reported ? "Reported" : "Report"}
-      </button>
-      {sheet && typeof document !== "undefined" ? createPortal(sheet, document.body) : null}
+      <ReportButton reported={reported} onOpen={() => setOpen(true)} className={props.className} />
+      {open ? <ReportSheet target={target} onSent={() => setReported(true)} onClose={() => setOpen(false)} /> : null}
     </>
   );
 };
