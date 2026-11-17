@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import { getErrorMessage } from "@/lib/errors";
 import { TRIVIA_CATEGORIES } from "@/lib/triviaCategories";
@@ -330,8 +330,12 @@ export const SpeedTriviaQuickReview = () => {
     }
   }, [busy, draft, total, repeats, filter, reload]);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+  // The listener is bound once and calls the newest handler. The handler is swapped in a layout
+  // effect (before the new question paints), so a key pressed the moment it appears is never
+  // dropped by a stale handler that still sees the previous save as busy.
+  const onKeyRef = useRef<(event: KeyboardEvent) => void>(() => undefined);
+  useLayoutEffect(() => {
+    onKeyRef.current = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey || isTyping(event.target) || draft) return;
       const key = event.key.toLowerCase();
       const actions: Record<string, () => void> = repeats ? { s: skip } : {
@@ -347,9 +351,12 @@ export const SpeedTriviaQuickReview = () => {
       event.preventDefault();
       action();
     };
+  }, [keep, reject, skip, startEdit, undo, draft, repeats]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => onKeyRef.current(event);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [keep, reject, skip, startEdit, undo, draft, repeats]);
+  }, []);
 
   const buttonBase = "rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50";
 
