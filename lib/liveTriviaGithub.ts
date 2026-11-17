@@ -93,7 +93,7 @@ export const openPublishPr = async (baseSha: string, changes: PublishChange[], s
       throw new LiveGithubError("path", "Publish may only create a new category's file.");
     }
   }
-  const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+  const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
   const branch = `${PUBLISH_BRANCH_PREFIX}${stamp}-${Math.random().toString(36).slice(2, 8)}`;
   const baseCommit = await request<{ tree: { sha: string } }>(cfg, `${repoPath(cfg)}/git/commits/${baseSha}`);
   const tree = [];
