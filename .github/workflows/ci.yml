@@ -29,4 +29,7 @@ jobs:
         run: npm run lint
 
       - name: Build
+        # Node's default ~2 GB heap runs out during the build's TypeScript step on the runner.
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
         run: npm run build
