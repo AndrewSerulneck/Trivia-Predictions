@@ -1,8 +1,9 @@
 # Phase 4c.10 handoff: bulk Keep, the report limit, a cleanup; apply and verify
 
 Plan: `docs/speed-trivia-backlog-and-quality-plan.md` §4 "Phase 4c.10" (post-4c.4 review #7, #8, #9). Done 2026-11-17
-on Opus 5.5 / medium (the plan's tier). Steps 1–5 are done. Steps 6–8 (the D23 commit, merge and deploy, the old-tab
-check, then 4d) are next and need Andrew's word for each step.
+on Opus 5.5 / medium (the plan's tier). Steps 1–6 are done: **D23 shipped 2026-11-17** (PR #20 merged, production
+deploy READY 15:41 UTC, Trivia Nightly re-enabled). Left: the old-tab check and the report smoke test (both need Andrew),
+then Phase 4d.
 
 ## For Andrew (plain English)
 
@@ -19,11 +20,13 @@ check, then 4d) are next and need Andrew's word for each step.
   OK on 2026-11-17**. It adds a rule to the reports table, which is still empty. 4c.8's migration
   (`20261117135338_speed_trivia_tag_cap.sql`) had already been applied before this phase. Both are checked and working.
   No data changed and no paid call was made.
-- **Is it live?** The database part is. The code is not: everything from 4a to 4c.10 is still uncommitted on
-  `feature/speed-trivia-variety`.
-- **Checks:** lint, typecheck, all 7,551 tests and the build pass.
-- **Needs you:** your word for the D23 steps: commit, merge (PR), then deploy. After the deploy: Trivia Nightly gets
-  turned back on, and an old browser tab is checked.
+- **Is it live?** Yes. Everything from 4a to 4c.10 went live on 2026-11-17 at about 15:41 UTC
+  ([PR #20](https://github.com/AndrewSerulneck/Trivia-Predictions/pull/20)). Trivia Nightly is back on; its next run is
+  02:15 UTC.
+- **Checks:** lint, typecheck, all 7,552 tests and the build pass, and so does GitHub's check on the PR.
+- **Needs you:** (1) if you still have a game tab open from before 15:41 UTC, tap an answer in Speed Trivia: it should
+  say "Refresh to keep playing." (2) Send one Report from a Speed question and one from a Live question, so the new
+  report limit gets a real test.
 
 ## For the next agent
 
@@ -38,8 +41,26 @@ Finish 4c.10's steps 6–8, then **Phase 4d** (plan §4 "Phase 4d — trial run,
 - Out of scope: an Admin screen for reports; acting on reports automatically (D32).
 
 ### 2. Starting state
-- Branch `feature/speed-trivia-variety`. Last commit `1aa32e4e` (the PR #19 merge). All work from 4a to 4c.10 is
-  uncommitted (~160 paths). Never `git checkout -- <file>`, `git stash` or `git reset`. Finder duplicates with a ` 2`
+- **Shipped 2026-11-17.** Branch `feature/speed-trivia-variety`: commits `a153b72b` (all of 4a–4c.10) and `6b59aefb`
+  (test only: `tests/components.speed-trivia-answer-reveal.test.ts` stubs `Element.prototype.scrollIntoView` for the
+  whole file, because the game's Next-button scroll timer fired after a test ended and failed CI's `validate` with an
+  unhandled error). PR #20 merged to main as `1a604278` at 15:39 UTC; both Vercel production deploys (hightop-challenge,
+  trivia-predictions) succeeded at 15:41 UTC. `gh workflow enable trivia-nightly.yml` → **active**.
+- **Sync Live Trivia still fails (found after the merge, not caused by it).** The merge's run (2026-11-17 15:39 UTC) got
+  past `live-trivia:check` for the first time since July (D24's JSON fix), then failed at the import:
+  `node: .env.local: not found`. The `live-trivia:import` npm script has used `--env-file=.env.local` since `f916d0f5`
+  (2026-06-09), and CI has no such file. **Fix written, uncommitted:** `.github/workflows/sync-live-trivia.yml` runs
+  `node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories` directly. Read-only preview of what
+  the fixed sync does on production: JSON 3,707 rows (0 expired); DB live_showdown 4,540 rows, 3,454 active; it would
+  **add 253** (none exist as inactive rows) and **soft-delete 0**. Ship it as a small PR on Andrew's word, then run
+  `gh workflow run "Sync Live Trivia"` and expect 3,707 active Live rows.
+- About 23 MB of the commit is Phase 4a's JSON records in `docs/` (largest ~7.5 MB). They were kept on purpose as the
+  audit trail (Andrew left the call to Claude).
+- After the deploy (read-only): `/api/admin/trivia/live-review` answers 401 without auth and `/api/trivia/report` 405 on
+  GET (the route exists; main had none before). The 4c.9 query (`order("audience->score", {nullsFirst:false})` on
+  `question_candidates`) runs on production with no PostgREST error; there are 0 Live candidates, so the sort order
+  itself is untested until the writer's first batch.
+- Never `git checkout -- <file>`, `git stash` or `git reset`. Finder duplicates with a ` 2`
   suffix exist (e.g. `tests/venue-screen-brand-stage-tier-contract.test 2.ts`); don't commit them. The file
   `supabase/migrations/Warnings` (62 KB, dated Aug 12) is an old stray; the CLI skips it. Don't commit it either.
 - **Production database:** every migration on the branch is applied. `supabase migration list` shows local = remote
@@ -152,16 +173,21 @@ Finish 4c.10's steps 6–8, then **Phase 4d** (plan §4 "Phase 4d — trial run,
 - **Unverified:**
   - The bulk Keep change in a browser (fake-tested only).
   - The report trigger with a real insert (do it in the post-deploy smoke test).
-  - 4c.9's PostgREST `audience->score` ordering on real Supabase: after deploy, open Admin → Live Quick Review and
-    check that it loads.
-  - The old-tab check (step 7).
+  - The `audience->score` sort order with real rows (the query itself is accepted; see §2). Open Admin → Live Quick
+    Review once candidates exist.
+  - The old-tab check (step 7). It needs a tab Andrew loaded before 15:41 UTC; if none exists, it's moot.
 
 ### 7. Open questions
-None. Waiting only on Andrew's word for each D23 step.
+- The old-tab check and one real report per game wait on Andrew.
+- The Sync Live Trivia fix (§2): commit, PR and merge on Andrew's word, then dispatch it (adds 253 Live questions).
+- The private writer repo `AndrewSerulneck/hightop-question-writer` has `QUESTION_WRITER_TOKEN` and
+  `SECRETS_WRITE_TOKEN` but **no `CODEX_AUTH_JSON`**. Andrew runs `bash tools/question-writer/renew-login.sh` before
+  4d's ChatGPT trial can run.
+- Phase 4d step 1 runs the private writer workflow by hand (≤ $0.50 of Gemini for both games, plus Codex usage). Start
+  it on Andrew's word.
 
 ### 8. First steps
-1. Ask Andrew to confirm the commit. Stage by explicit path, leaving out ` 2` duplicates, `supabase/migrations/Warnings`
-   and `tmp/`. Commit to `feature/speed-trivia-variety`.
-2. Push, open the PR to main, and merge on his word. Confirm the Vercel deploy is READY.
-3. Run `gh workflow enable trivia-nightly.yml`, then the old-tab check and the report smoke test.
-4. Start Phase 4d. Model and effort: as named in the plan's §3 table.
+1. After Andrew sends the reports: `npm run trivia:reports`, check both rows, then `--resolve <id> --yes` each.
+2. Phase 4d (plan §4 "Phase 4d — trial run, then daily"), **Opus 5.5 / medium**. Trivia Nightly is already on, so
+   tonight's 02:15 UTC run uses the Gemini fallback (D13, ≤ $0.10 per game) if the private writer hasn't produced a
+   batch. Check that run's report artifact before the trial.

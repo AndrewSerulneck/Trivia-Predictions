@@ -32,4 +32,5 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: npm run live-trivia:import
+        # Plain node: the npm script loads .env.local, which CI doesn't have (the import failed this way since 2026-06).
+        run: node scripts/import-trivia-questions.cjs --live-dir data/live-trivia/categories
