@@ -100,6 +100,7 @@
     "bingo:audit:phase5": "node --conditions react-server --import tsx scripts/audit-bingo-phase5.cjs",
     "live-showdown:seed": "node --env-file=.env.local --import tsx scripts/seedLiveShowdownPool.ts",
     "trivia:restore-speed": "node --env-file=.env.local scripts/restore-deleted-speed-trivia.cjs",
+    "trivia:reports": "node --env-file=.env.local scripts/export-question-reports.cjs",
     "landmark:images": "node --env-file=.env.local scripts/enrich-landmark-images.cjs",
     "rewards:audit-legacy-cadences": "node --env-file=.env.local scripts/audit-legacy-recurring-cadences.cjs",
     "landmark:images:dry-run": "node --env-file=.env.local scripts/enrich-landmark-images.cjs --dry-run",

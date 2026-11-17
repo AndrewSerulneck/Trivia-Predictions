@@ -187,7 +187,8 @@ export async function POST(request: Request) {
         catch (error) {
           const failure = speedTriviaError(error);
           if (failure.code === "duplicate") { repeats.push({ id: row.id, code: failure.code, conflicts: failure.conflicts }); firstRejection ??= error; continue; }
-          if (failure.code === "uncertain" || failure.code === "retired") { holds.push({ id: row.id, code: failure.code }); firstRejection ??= error; continue; }
+          // subject_full / untagged: the Phase 4a.1 star cap.
+          if (["uncertain", "retired", "subject_full", "untagged"].includes(failure.code)) { holds.push({ id: row.id, code: failure.code }); firstRejection ??= error; continue; }
           throw error;
         }
       } else {

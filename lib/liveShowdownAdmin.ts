@@ -10,6 +10,13 @@ import {
   loadActiveLiveTriviaSeedQuestionPool,
   type TriviaScheduleRow as EngineScheduleRow,
 } from "@/lib/liveShowdownEngine";
+import {
+  GATED_LIVE_CATEGORIES,
+  getLiveTriviaCorrectAnswer,
+  isLiveCategoryOffered,
+  isLiveTriviaSeedAnswerAllowed,
+  liveCategoryMinimum,
+} from "@/lib/liveTriviaCategoryGate";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { broadcastLiveTrivia } from "@/lib/liveTriviaBroadcast";
 import {
@@ -1628,6 +1635,9 @@ type CategoryCount = {
   count: number;
 };
 
+// Current Events holds a few hundred rows at most (12-month life); the cap only bounds the read.
+const GATED_CATEGORY_READ_LIMIT = 1000;
+
 export async function getLiveShowdownRoundCategories(): Promise<CategoryCount[]> {
   const admin = getAdminClient();
 
@@ -1654,7 +1664,28 @@ export async function getLiveShowdownRoundCategories(): Promise<CategoryCount[]>
     if (!String(row.slug ?? "").trim()) continue;
     if (isBlockedLiveShowdownCategory(row.category)) continue;
     const cat = normalizeCategory(row.category);
+    if (liveCategoryMinimum(cat) > 0) continue; // counted below
     byCategory.set(cat, (byCategory.get(cat) ?? 0) + 1);
+  }
+
+  // A gated category (Current Events, D11) is counted the way the round builder counts it: only answers the builder
+  // can seed (≤ 2 words or a number), from its own bounded read, because the read above stops at PostgREST's row cap
+  // (1,000 of ~3,450 active rows on 2026-11-16) and could miss gated rows (Phase 4c.3, review #8).
+  for (const gated of GATED_LIVE_CATEGORIES) {
+    const { data: gatedRows, error: gatedError } = await admin
+      .from("trivia_questions")
+      .select("slug, category, options, correct_answer")
+      .eq("question_pool", "live_showdown")
+      .eq("status", "active")
+      .ilike("category", gated) // case-insensitive, like liveCategoryMinimum; the name has no % or _
+      .range(0, GATED_CATEGORY_READ_LIMIT - 1);
+    if (gatedError) {
+      throw new Error(gatedError.message || "Failed to load categories.");
+    }
+    const usable = ((gatedRows ?? []) as Pick<LiveShowdownQuestionRow, "slug" | "options" | "correct_answer">[])
+      .filter((row) => String(row.slug ?? "").trim() && isLiveTriviaSeedAnswerAllowed(getLiveTriviaCorrectAnswer(row)))
+      .length;
+    if (usable > 0) byCategory.set(gated, usable);
   }
 
   // 2. Also read file-based categories (e.g. us-states.v1.json) that may not
@@ -1673,6 +1704,8 @@ export async function getLiveShowdownRoundCategories(): Promise<CategoryCount[]>
       const categoryName = String(raw.categoryName || "").trim() ||
         file.replace(/\.v\d+\.json$/i, "").replace(/-/g, " ");
       if (!categoryName || isBlockedLiveShowdownCategory(categoryName)) continue;
+      // A gated category (Current Events, D11) is listed only from the database count, once it's offered.
+      if (liveCategoryMinimum(categoryName) > 0) continue;
       if (!byCategory.has(categoryName)) {
         byCategory.set(categoryName, Array.isArray(raw.questions) ? raw.questions.length : 0);
       }
@@ -1682,6 +1715,7 @@ export async function getLiveShowdownRoundCategories(): Promise<CategoryCount[]>
   }
 
   return Array.from(byCategory.entries())
+    .filter(([category, count]) => isLiveCategoryOffered(category, count))
     .map(([category, count]) => ({ category, count }))
     .sort((a, b) => a.category.localeCompare(b.category));
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTriviaQuestions, submitTriviaAnswer, TriviaLimitReachedError } from "@/lib/trivia";
+import { getPlayerTriviaQuestions, submitTriviaAnswer, TriviaLimitReachedError } from "@/lib/trivia";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
 import { maybeRequireActiveVenuePresenceForUser, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId")?.trim() || undefined;
   const category = searchParams.get("category")?.trim() || undefined;
-  const questions = await getTriviaQuestions(15, userId, category);
+  const questions = await getPlayerTriviaQuestions(15, userId, category);
   return NextResponse.json({ ok: true, questions });
 }
 
@@ -18,6 +18,8 @@ export async function POST(request: Request) {
       questionId?: string;
       answer?: number;
       timeElapsed?: number;
+      /** 1 = `answer` indexes the shuffled options the GET served (D31). */
+      order?: number;
     };
 
     if (!body.questionId || typeof body.answer !== "number") {
@@ -35,11 +37,22 @@ export async function POST(request: Request) {
 
     await maybeRequireActiveVenuePresenceForUser({ userId: String(userId ?? "").trim() });
 
+    // Post-4c.4 review #1: a pick without `order: 1` comes from a screen older than D31, which may be showing shuffled
+    // options it got from the new GET. Grading it as a stored index could score a right tap wrong (permanently), so
+    // nothing is graded or stored. A time-out is wrong in any order, so it is still accepted unmarked.
+    if (body.answer >= 0 && body.order !== 1) {
+      return NextResponse.json(
+        { ok: false, error: "Refresh to keep playing.", code: "refresh" },
+        { status: 409 }
+      );
+    }
+
     const result = await submitTriviaAnswer({
       userId,
       questionId: body.questionId,
       answer: body.answer,
       timeElapsed: body.timeElapsed ?? 0,
+      shownOrder: body.order === 1,
     });
 
     return NextResponse.json({ ok: true, result });

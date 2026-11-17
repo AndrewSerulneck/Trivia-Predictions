@@ -11,3 +11,5 @@ export function sign(secret: string, envelope: unknown): string;
 export function signText(secret: string, text: string): string;
 export const DEFAULT_CONCURRENCY: number;
 export const PROBE: number;
+export const WRITER_META_KEYS: readonly string[];
+export function writerMeta(meta: unknown): Record<string, string>;

@@ -11,6 +11,7 @@ import {
   quickReject,
   quickUndo,
   readQuickReviewQueue,
+  readWriterStopped,
   runQuickReviewBulk,
 } from "@/lib/speedTriviaQuickReview";
 import { REVIEW_NO_CACHE } from "@/lib/triviaReviewTransport";
@@ -42,8 +43,8 @@ export async function GET(request: Request) {
       afterCreated: url.searchParams.get("afterCreated"),
       afterScore: url.searchParams.get("afterScore"),
     });
-    const page = await readQuickReviewQueue(filter, after);
-    return json({ ok: true, ...page });
+    const [page, writerStopped] = await Promise.all([readQuickReviewQueue(filter, after, undefined, { withNotes: true }), after ? false : readWriterStopped()]);
+    return json({ ok: true, ...page, writerStopped });
   } catch (error) {
     return fail(error);
   }
@@ -61,6 +62,7 @@ type PostBody = {
   score?: unknown;
   view?: unknown;
   max?: unknown;
+  after?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -100,7 +102,9 @@ export async function POST(request: Request) {
       const max = Number(body.max);
       if (!decision || !Number.isSafeInteger(max) || max < 1) return json({ ok: false, error: "Invalid request." }, 400);
       const filter = parseQuickReviewFilter({ category: body.category, source: body.source, score: body.score, view: body.view });
-      return json({ ok: true, ...(await runQuickReviewBulk(decision, filter, max)) });
+      const start = body.after && typeof body.after === "object" ? body.after as { id?: unknown; createdAt?: unknown } : null;
+      const after = start ? parseQuickReviewCursor({ afterId: start.id, afterCreated: start.createdAt }) : null;
+      return json({ ok: true, ...(await runQuickReviewBulk(decision, filter, max, Date.now, after)) });
     }
 
     return json({ ok: false, error: "Unknown action." }, 400);

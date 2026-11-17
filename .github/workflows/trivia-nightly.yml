@@ -33,20 +33,47 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      # Phase 4 must configure an approved cap + signing secret after schema review.
-      # One coordinator generates, checks and admits; no unchecked import fallback.
-      - name: Generate and admit checked Speed Trivia
+      # Phase 4b: today's question-writer candidates (ChatGPT, from the private writer repo ~00:30 UTC) pass the hard
+      # limits, star cap, bar test and the full-bank repeat check with signed admission, then wait in Quick Review.
+      # No ChatGPT batch today -> the Gemini fallback writes the regular slots (D13, ≤ $0.10). Replaces the old
+      # Gemini generator (scripts/generate-trivia-nightly.cjs), which is no longer run.
+      - name: Check and admit the writer's Speed Trivia questions
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.5-flash' }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SPEED_TRIVIA_ADMISSION_SECRET: ${{ secrets.SPEED_TRIVIA_ADMISSION_SECRET }}
           SPEED_TRIVIA_MAX_DOLLARS: ${{ vars.SPEED_TRIVIA_MAX_DOLLARS }}
+          QUESTION_WRITER_FALLBACK_MAX_DOLLARS: ${{ vars.QUESTION_WRITER_FALLBACK_MAX_DOLLARS || '0.10' }}
         run: |
-          node scripts/generate-trivia-nightly.cjs \
-            --new-only-dir "$RUNNER_TEMP/speed-trivia-report" \
-            --total 100 --batch-size 10 --new-categories 0 --allow-category-errors
+          node scripts/process-question-candidates.cjs --game speed \
+            --threshold "${{ vars.QUESTION_WRITER_SPEED_THRESHOLD || '3' }}" \
+            --report "$RUNNER_TEMP/speed-trivia-report"
+
+      # Phase 4c: today's Live Trivia candidates pass the Live hard limits, star cap, Live bar test and the Live repeat
+      # check (against this checkout's data/live-trivia/categories, read-only), then wait in Quick Review's Live mode.
+      # Nothing here writes the JSON or trivia_questions: Publish appends kept questions through a PR (D10).
+      - name: Check the writer's Live Trivia questions
+        if: always()
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          QUESTION_WRITER_LIVE_MAX_DOLLARS: ${{ vars.QUESTION_WRITER_LIVE_MAX_DOLLARS || '0.25' }}
+          QUESTION_WRITER_FALLBACK_MAX_DOLLARS: ${{ vars.QUESTION_WRITER_FALLBACK_MAX_DOLLARS || '0.10' }}
+        run: |
+          node scripts/process-question-candidates.cjs --game live \
+            --threshold "${{ vars.QUESTION_WRITER_LIVE_THRESHOLD || '3' }}" \
+            --report "$RUNNER_TEMP/live-trivia-report"
+
+      # Phase 4a (D11, D16): refresh the Current Events visibility flag nightly; retire expired dated questions on
+      # the 1st of each month (UTC). Free; the before-state is logged in the database in the same transaction.
+      - name: Dated questions housekeeping
+        if: always()
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/speed-trivia-dated-housekeeping.cjs --expire-apply --monthly
 
       - name: Preserve internal run report
         if: always()
@@ -54,5 +81,14 @@ jobs:
         with:
           name: speed-trivia-admission-report
           path: ${{ runner.temp }}/speed-trivia-report/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Preserve Live run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-trivia-writer-report
+          path: ${{ runner.temp }}/live-trivia-report/
           retention-days: 7
           if-no-files-found: ignore

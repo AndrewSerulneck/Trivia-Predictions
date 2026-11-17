@@ -7,6 +7,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { runTriviaBulkAction } from "@/lib/triviaBulkAction";
 import type { TriviaReviewCounts, TriviaReviewRow } from "@/types/triviaReview";
 import { adminField, adminLabel } from "@/lib/adminStyles";
+import { LiveTriviaQuickReview } from "@/components/admin/sections/LiveTriviaQuickReview";
 import { SpeedTriviaQuickReview } from "@/components/admin/sections/SpeedTriviaQuickReview";
 
 type QuestionPool = "live_showdown" | "anytime_blitz";
@@ -469,7 +470,8 @@ export function TriviaPendingReviewSection() {
               </button>
             );
           })}
-          {activeTab === "anytime_blitz" ? (
+          {/* Quick Review: Speed (Phase 1) or Live (Phase 4c), following the tab. */}
+          {activeTab === "anytime_blitz" || activeTab === "live_showdown" ? (
             <button
               type="button"
               disabled={bulkBusy}
@@ -484,7 +486,7 @@ export function TriviaPendingReviewSection() {
           ) : null}
         </div>
 
-        {quickReview && activeTab === "anytime_blitz" ? null : (
+        {quickReview ? null : (
         <div className="mt-4 max-w-xs">
           <label className={adminLabel}>Category</label>
           <select
@@ -502,7 +504,7 @@ export function TriviaPendingReviewSection() {
         )}
       </div>
 
-      {quickReview && activeTab === "anytime_blitz" ? <SpeedTriviaQuickReview /> : (<>
+      {quickReview ? (activeTab === "anytime_blitz" ? <SpeedTriviaQuickReview /> : <LiveTriviaQuickReview />) : (<>
       {error ? <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
       {success ? (
         <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">

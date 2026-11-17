@@ -1,0 +1,1141 @@
+{
+  "version": "variety-map-v2",
+  "note": "Variety map (docs/speed-trivia-backlog-and-quality-plan.md Phase 4a, D14). Andrew reviews it once; afterwards areas are edited on Admin -> Trivia Questions -> Variety. The seed script only ADDS missing areas; it never edits or removes one. Approved by Andrew 2026-11-15 with two additions to Speed Music (Classical music; Instruments and music basics). variety-map-v2 (Phase 4a.1, D20, approved by Andrew 2026-11-16): 13 General Knowledge areas and 8 Sports areas drafted from the questions no area fit; Speed Sports gains the eras \"Before 1950\" and \"Timeless\" for new areas (its first 14 areas keep the decades).",
+  "eraSets": {
+    "decades": [
+      "1950s",
+      "1960s",
+      "1970s",
+      "1980s",
+      "1990s",
+      "2000s",
+      "2010s",
+      "2020s"
+    ],
+    "musicDecades": [
+      "1950s",
+      "1960s",
+      "1970s",
+      "1980s",
+      "1990s",
+      "2000s",
+      "2010s",
+      "2020s",
+      "Timeless"
+    ],
+    "history": [
+      "Ancient",
+      "Medieval",
+      "1500-1799",
+      "1800s",
+      "1900-1945",
+      "1945-1999",
+      "2000-present"
+    ],
+    "timeless": [
+      "Timeless"
+    ],
+    "currentEvents": [
+      "Past 12 months"
+    ],
+    "sportsEras": [
+      "Before 1950",
+      "1950s",
+      "1960s",
+      "1970s",
+      "1980s",
+      "1990s",
+      "2000s",
+      "2010s",
+      "2020s",
+      "Timeless"
+    ]
+  },
+  "games": {
+    "speed": {
+      "Music": {
+        "eraSet": "musicDecades",
+        "areas": [
+          {
+            "name": "Rock and classic rock",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Pop",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Hip-hop and rap",
+            "eras": [
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Country",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "R&B, soul and Motown",
+            "note": "include Motown",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Metal and hard rock",
+            "eras": [
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Punk, grunge and alternative",
+            "eras": [
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Disco and funk",
+            "eras": [
+              "1960s",
+              "1970s",
+              "1980s"
+            ]
+          },
+          {
+            "name": "Dance and EDM",
+            "eras": [
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Latin",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Jazz and blues standards",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Broadway and movie soundtracks",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "One-hit wonders",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "MTV and music videos",
+            "eras": [
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Awards and halftime shows",
+            "eras": [
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Classical music",
+            "eras": [
+              "Timeless"
+            ],
+            "note": "famous composers and pieces most people know"
+          },
+          {
+            "name": "Instruments and music basics",
+            "eras": [
+              "Timeless"
+            ],
+            "note": "well-known instruments and terms"
+          }
+        ]
+      },
+      "History": {
+        "eraSet": "history",
+        "areas": [
+          {
+            "name": "Presidents and government",
+            "eras": [
+              "1500-1799",
+              "1800s",
+              "1900-1945",
+              "1945-1999",
+              "2000-present"
+            ]
+          },
+          {
+            "name": "American wars",
+            "eras": [
+              "1500-1799",
+              "1800s",
+              "1900-1945",
+              "1945-1999",
+              "2000-present"
+            ],
+            "note": "every American war, not just the Civil War and World War II"
+          },
+          {
+            "name": "World wars and empires",
+            "eras": [
+              "Ancient",
+              "Medieval",
+              "1500-1799",
+              "1800s",
+              "1900-1945"
+            ]
+          },
+          {
+            "name": "Civil rights and social movements",
+            "eras": [
+              "1800s",
+              "1900-1945",
+              "1945-1999",
+              "2000-present"
+            ]
+          },
+          {
+            "name": "Inventions and business",
+            "eras": [
+              "1500-1799",
+              "1800s",
+              "1900-1945",
+              "1945-1999",
+              "2000-present"
+            ]
+          },
+          {
+            "name": "Exploration and space",
+            "eras": [
+              "Medieval",
+              "1500-1799",
+              "1800s",
+              "1900-1945",
+              "1945-1999",
+              "2000-present"
+            ]
+          },
+          {
+            "name": "Famous documents and speeches",
+            "eras": [
+              "Medieval",
+              "1500-1799",
+              "1800s",
+              "1900-1945",
+              "1945-1999",
+              "2000-present"
+            ]
+          },
+          {
+            "name": "Everyday life"
+          },
+          {
+            "name": "World leaders"
+          }
+        ]
+      },
+      "Pop Culture": {
+        "eraSet": "decades",
+        "areas": [
+          {
+            "name": "Movies"
+          },
+          {
+            "name": "Sitcoms"
+          },
+          {
+            "name": "TV dramas"
+          },
+          {
+            "name": "Reality TV",
+            "eras": [
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Cartoons and animation"
+          },
+          {
+            "name": "Video games",
+            "eras": [
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Celebrities"
+          },
+          {
+            "name": "Commercials and brands"
+          },
+          {
+            "name": "Toys and fads"
+          },
+          {
+            "name": "Internet and viral moments",
+            "eras": [
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Comics and superheroes"
+          },
+          {
+            "name": "Late night and SNL"
+          }
+        ]
+      },
+      "Sports": {
+        "eraSet": "sportsEras",
+        "areas": [
+          {
+            "name": "NFL",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "NBA",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "MLB",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "NHL",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "College football",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "March Madness",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Summer Olympics",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Winter Olympics",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Golf",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Tennis",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Soccer and the World Cup",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Boxing and UFC",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "NASCAR and racing",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Records and famous moments",
+            "eras": [
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          },
+          {
+            "name": "Cycling and the Tour de France",
+            "eras": [
+              "Before 1950",
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s",
+              "Timeless"
+            ]
+          },
+          {
+            "name": "Bowling, darts and snooker",
+            "eras": [
+              "Before 1950",
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s",
+              "Timeless"
+            ]
+          },
+          {
+            "name": "Rugby and cricket",
+            "eras": [
+              "Before 1950",
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s",
+              "Timeless"
+            ]
+          },
+          {
+            "name": "Horse racing",
+            "eras": [
+              "Before 1950",
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s",
+              "Timeless"
+            ]
+          },
+          {
+            "name": "Martial arts and wrestling",
+            "eras": [
+              "Before 1950",
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s",
+              "Timeless"
+            ]
+          },
+          {
+            "name": "Track, field and marathons",
+            "eras": [
+              "Before 1950",
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s",
+              "Timeless"
+            ]
+          },
+          {
+            "name": "Racket and net sports",
+            "eras": [
+              "Before 1950",
+              "1950s",
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s",
+              "Timeless"
+            ],
+            "note": "badminton, table tennis, volleyball"
+          },
+          {
+            "name": "Early sports history",
+            "eras": [
+              "Before 1950"
+            ],
+            "note": "ancient and early Olympics, how sports began"
+          }
+        ]
+      },
+      "Geography": {
+        "eraSet": "timeless",
+        "areas": [
+          {
+            "name": "US states and cities"
+          },
+          {
+            "name": "World capitals"
+          },
+          {
+            "name": "Countries and flags"
+          },
+          {
+            "name": "Landmarks and wonders"
+          },
+          {
+            "name": "National parks"
+          },
+          {
+            "name": "Mountains, rivers and oceans"
+          },
+          {
+            "name": "Islands and coastlines"
+          },
+          {
+            "name": "Borders and neighbors"
+          },
+          {
+            "name": "Continents and maps"
+          }
+        ]
+      },
+      "Science": {
+        "eraSet": "timeless",
+        "areas": [
+          {
+            "name": "Space and planets"
+          },
+          {
+            "name": "Human body"
+          },
+          {
+            "name": "Elements and chemistry"
+          },
+          {
+            "name": "Inventions and inventors"
+          },
+          {
+            "name": "Computers and the internet"
+          },
+          {
+            "name": "Weather and climate"
+          },
+          {
+            "name": "Earth and geology"
+          },
+          {
+            "name": "Physics basics"
+          },
+          {
+            "name": "Medicine and health"
+          },
+          {
+            "name": "Plants"
+          }
+        ]
+      },
+      "Animals": {
+        "eraSet": "timeless",
+        "areas": [
+          {
+            "name": "Pets and breeds"
+          },
+          {
+            "name": "Ocean life"
+          },
+          {
+            "name": "Birds"
+          },
+          {
+            "name": "Record-holders",
+            "note": "fastest, biggest, longest-lived"
+          },
+          {
+            "name": "Big cats and safari animals"
+          },
+          {
+            "name": "Reptiles and amphibians"
+          },
+          {
+            "name": "Insects and bugs"
+          },
+          {
+            "name": "Farm animals"
+          },
+          {
+            "name": "North American wildlife"
+          },
+          {
+            "name": "Animal babies and group names"
+          },
+          {
+            "name": "Dinosaurs and extinct animals"
+          }
+        ]
+      },
+      "General Knowledge": {
+        "eraSet": "timeless",
+        "areas": [
+          {
+            "name": "Food and drink"
+          },
+          {
+            "name": "Cocktails, beer and wine"
+          },
+          {
+            "name": "Brands and logos"
+          },
+          {
+            "name": "Words and phrases"
+          },
+          {
+            "name": "Holidays and traditions"
+          },
+          {
+            "name": "Money and currency"
+          },
+          {
+            "name": "Cars"
+          },
+          {
+            "name": "Board and card games"
+          },
+          {
+            "name": "Fashion and clothing"
+          },
+          {
+            "name": "Mythology"
+          },
+          {
+            "name": "Famous art and artists"
+          },
+          {
+            "name": "Classic books and authors"
+          },
+          {
+            "name": "Landmarks and wonders"
+          },
+          {
+            "name": "Oceans, rivers and deserts",
+            "note": "and mountains"
+          },
+          {
+            "name": "Space and the planets"
+          },
+          {
+            "name": "Human body"
+          },
+          {
+            "name": "Science basics",
+            "note": "elements, light, water, plants"
+          },
+          {
+            "name": "Famous scientists and inventions"
+          },
+          {
+            "name": "Classical music and instruments"
+          },
+          {
+            "name": "Famous moments in history"
+          },
+          {
+            "name": "Colors, shapes and numbers"
+          },
+          {
+            "name": "Countries and cities"
+          },
+          {
+            "name": "Animals"
+          },
+          {
+            "name": "Philosophy and religion"
+          }
+        ]
+      },
+      "Current Events": {
+        "eraSet": "currentEvents",
+        "areas": [
+          {
+            "name": "Politics and government",
+            "note": "neutral facts only"
+          },
+          {
+            "name": "Business and tech"
+          },
+          {
+            "name": "Entertainment and celebrities"
+          },
+          {
+            "name": "Sports"
+          },
+          {
+            "name": "Science, health and space"
+          },
+          {
+            "name": "World news"
+          },
+          {
+            "name": "Viral and internet"
+          }
+        ]
+      }
+    },
+    "live": {
+      "Art, Literature and Comics": {
+        "eraSet": "timeless",
+        "areas": [
+          {
+            "name": "Classic literature"
+          },
+          {
+            "name": "Comics and graphic novels"
+          },
+          {
+            "name": "Art history and artists"
+          },
+          {
+            "name": "Language and grammar"
+          },
+          {
+            "name": "Adaptations and theater"
+          },
+          {
+            "name": "Literary quotes and lines"
+          }
+        ]
+      },
+      "Geography": {
+        "eraSet": "timeless",
+        "areas": [
+          {
+            "name": "Countries, capitals and borders"
+          },
+          {
+            "name": "Map identification"
+          },
+          {
+            "name": "Physical geography"
+          },
+          {
+            "name": "US states"
+          },
+          {
+            "name": "Landmarks and wonders"
+          }
+        ]
+      },
+      "History & Government": {
+        "eraSet": "history",
+        "areas": [
+          {
+            "name": "Cultural and social history"
+          },
+          {
+            "name": "US history and government",
+            "eras": [
+              "1500-1799",
+              "1800s",
+              "1900-1945",
+              "1945-1999",
+              "2000-present"
+            ]
+          },
+          {
+            "name": "Ancient and medieval",
+            "eras": [
+              "Ancient",
+              "Medieval"
+            ]
+          },
+          {
+            "name": "Famous figures and quotes"
+          },
+          {
+            "name": "Wars, battles and conflicts"
+          }
+        ]
+      },
+      "Movies": {
+        "eraSet": "decades",
+        "areas": [
+          {
+            "name": "Plots, quotes and trivia"
+          },
+          {
+            "name": "Actors and performers"
+          },
+          {
+            "name": "Biographical films"
+          },
+          {
+            "name": "Characters and lore"
+          },
+          {
+            "name": "Awards and the industry"
+          }
+        ]
+      },
+      "Music": {
+        "eraSet": "decades",
+        "areas": [
+          {
+            "name": "Albums, songs and lyrics"
+          },
+          {
+            "name": "Band lineups"
+          },
+          {
+            "name": "Artist identity"
+          },
+          {
+            "name": "Classic rock",
+            "eras": [
+              "1960s",
+              "1970s",
+              "1980s",
+              "1990s"
+            ]
+          },
+          {
+            "name": "Genres, instruments and terms"
+          },
+          {
+            "name": "Music history and events"
+          },
+          {
+            "name": "Contemporary pop",
+            "eras": [
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          }
+        ]
+      },
+      "Science & Tech": {
+        "eraSet": "timeless",
+        "areas": [
+          {
+            "name": "Physics concepts"
+          },
+          {
+            "name": "Biology and the human body"
+          },
+          {
+            "name": "Astronomy and earth science"
+          },
+          {
+            "name": "Medicine and technology"
+          },
+          {
+            "name": "Chemistry and the periodic table"
+          }
+        ]
+      },
+      "Sports": {
+        "eraSet": "decades",
+        "areas": [
+          {
+            "name": "Teams and franchises"
+          },
+          {
+            "name": "Historical moments"
+          },
+          {
+            "name": "Rules and terminology"
+          },
+          {
+            "name": "Records and statistics"
+          },
+          {
+            "name": "Notable figures"
+          }
+        ]
+      },
+      "Television": {
+        "eraSet": "decades",
+        "areas": [
+          {
+            "name": "Sitcoms and comedy"
+          },
+          {
+            "name": "Drama and cable"
+          },
+          {
+            "name": "Television history"
+          },
+          {
+            "name": "Animated series"
+          },
+          {
+            "name": "SNL and late night"
+          },
+          {
+            "name": "Reality and competition",
+            "eras": [
+              "1990s",
+              "2000s",
+              "2010s",
+              "2020s"
+            ]
+          }
+        ]
+      },
+      "Current Events": {
+        "eraSet": "currentEvents",
+        "areas": [
+          {
+            "name": "Politics and government",
+            "note": "neutral facts only"
+          },
+          {
+            "name": "Business and tech"
+          },
+          {
+            "name": "Entertainment and celebrities"
+          },
+          {
+            "name": "Sports"
+          },
+          {
+            "name": "Science, health and space"
+          },
+          {
+            "name": "World news"
+          },
+          {
+            "name": "Viral and internet"
+          }
+        ]
+      }
+    }
+  }
+}

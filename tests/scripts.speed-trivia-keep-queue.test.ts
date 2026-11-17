@@ -17,7 +17,7 @@ const harness = require("../scripts/test-speed-trivia-admission-sql.cjs") as {
   SECRET: string;
 };
 type Mark = { row_id: string; content_hash: string };
-type Report = { examined: number; approved: number; repeat: number; needsLook: number; skipped: number; stopped: string | null;
+type Report = { examined: number; approved: number; repeat: number; needsLook: number; subjectFull?: number; skipped: number; stopped: string | null;
   errors: { id: string; code: string; kind: string }[]; rowErrors: number; transientErrors: number };
 type Call = { cached: boolean; first: boolean; ms: number; dollars: number; decision: string; qualityA: string };
 type Side = { ms: number; dollars: number; calls: number; decision: string };
@@ -26,7 +26,8 @@ type PrecheckReport = { examined: number; repeat: number; unique: number; uncert
 type Prepared = { queued: number; stale: number; settled: number };
 type Reader = (client: AdmissionClient, ids: string[]) => Promise<Map<string, Record<string, unknown>>>;
 const queue = require("../scripts/process-speed-trivia-keep-queue.cjs") as {
-  processQueue: (args: { client: AdmissionClient; session: AdmissionSession; marks: Mark[]; rows: Map<string, Record<string, unknown>> }) => Promise<Report>;
+  processQueue: (args: { client: AdmissionClient; session: AdmissionSession; marks: Mark[]; rows: Map<string, Record<string, unknown>>;
+    tag?: (row: Record<string, unknown>) => Promise<boolean> }) => Promise<Report & { tagCalls?: number; tagged?: number }>;
   simulate: (calls: Call[], concurrency: number) => { old: Side; new: Side };
   precheckPass: (args: { client: AdmissionClient; session: AdmissionSession; ids: string[]; read: Reader }) => Promise<PrecheckReport>;
   runPaid: (args: { client: AdmissionClient; queued: number; candidates: string[]; perRun: number; total: number; minutes: number; limit: number;
@@ -146,6 +147,90 @@ describe("Speed Trivia overnight Keep queue", () => {
     expect(report).toMatchObject({ examined: 0, needsLook: 1 });
     expect(calls).toBe(0);
     expect((await outcome(r.id)).note).toMatch(/Edited after Keep/);
+  });
+
+  it("Phase 4a.1: a Keep on a full subject goes to Needs a look without a paid check", async () => {
+    await db.exec("reset role;");
+    for (const file of ["supabase/migrations/20261115220356_question_variety_map.sql", "supabase/migrations/20261116014954_speed_trivia_star_cap.sql"]) {
+      await db.exec(readFileSync(file, "utf8"));
+    }
+    await db.exec("set role service_role;");
+    const live = [1, 2, 3, 4, 5].map(n => harness.row(id(n), `Chameleon fact ${n}?`, `Answer ${n}`, "Animals"));
+    const r = harness.row(id(6), "Chameleon fact 6?", "Answer 6", "Animals");
+    const tag = async (rows: SpeedQuestion[]) => {
+      await db.exec("reset role;");
+      for (const row of rows) await db.query("insert into question_tags(game,question_ref,category,subject,subject_key) values('speed',$1,'Animals','Chameleon','chameleon')", [row.id]);
+      await db.exec("set role service_role;");
+    };
+    // Kept while the subject had room; it filled up before the overnight run.
+    await seed(live.slice(0, 4), "active");
+    await seed([r], "pending_review");
+    await tag([...live.slice(0, 4), r]);
+    await keep([r]);
+    expect((await outcome(r.id)).outcome).toBe("queued");
+    await seed(live.slice(4), "active");
+    await tag(live.slice(4));
+    let calls = 0;
+    const session = await sessionWith(async tasks => { calls++; return tasks.map(sound); });
+    const report = await queue.processQueue({ client, session, marks: marksFor([r]), rows: await current([r.id]) });
+    expect(report).toMatchObject({ examined: 0, needsLook: 1, subjectFull: 1, transientErrors: 0, stopped: null });
+    expect(calls).toBe(0);
+    expect(await status(r.id)).toBe("pending_review");
+    expect(await outcome(r.id)).toMatchObject({ outcome: "needs_look", note: "Subject full: 5 approved questions on this subject." });
+  });
+
+  it("Phase 4c.1: an untagged Keep is tagged once and retried once; only a failed tag goes to Needs a look", async () => {
+    const tags = harness.row(id(1), "Which lizard can change its colour?", "Chameleon", "Animals");
+    const fails = harness.row(id(2), "Which bird is the fastest diver?", "Peregrine falcon", "Animals");
+    await seed([tags, fails], "pending_review");
+    // Kept before the star cap existed (Quick Keep now refuses an untagged row), so they reach the queue untagged.
+    await keep([tags, fails]);
+    await db.exec("reset role;");
+    for (const file of ["supabase/migrations/20261115220356_question_variety_map.sql", "supabase/migrations/20261116014954_speed_trivia_star_cap.sql"]) {
+      await db.exec(readFileSync(file, "utf8"));
+    }
+    await db.exec("set role service_role;");
+    // The fake tagger writes a real question_tags row (as tagOne would) only for the first question.
+    const tagged: string[] = [];
+    const tag = async (row: Record<string, unknown>) => {
+      tagged.push(String(row.id));
+      if (row.id !== tags.id) return false;
+      await db.exec("reset role;");
+      await db.query("insert into question_tags(game,question_ref,category,subject,subject_key) values('speed',$1,'Animals','Chameleon','chameleon')", [row.id]);
+      await db.exec("set role service_role;");
+      return true;
+    };
+    let writes = 0;
+    const real = await sessionWith(async tasks => tasks.map(sound));
+    const session = { ...real, write: (input: Record<string, unknown>, options?: Parameters<AdmissionSession["write"]>[1]) => { writes++; return real.write(input, options); } };
+    const report = await queue.processQueue({ client, session, marks: marksFor([tags, fails]), rows: await current([tags.id, fails.id]), tag });
+    expect(tagged).toEqual([tags.id, fails.id]);
+    expect(writes).toBe(3); // tagged: refused, tag, retry approves. Tag failed: refused, no retry.
+    expect(report).toMatchObject({ approved: 1, needsLook: 1, subjectFull: 1, tagCalls: 2, tagged: 1, stopped: null, transientErrors: 0 });
+    expect(await status(tags.id)).toBe("active");
+    expect(await outcome(tags.id)).toMatchObject({ outcome: "approved" });
+    expect(await status(fails.id)).toBe("pending_review");
+    expect(await outcome(fails.id)).toMatchObject({ outcome: "needs_look", note: "No subject tag yet." });
+    // Each tag call is charged $0.0001 to the run's dollar budget.
+    expect(real.budget.summary().dollars).toBeCloseTo(0.0002, 8);
+  });
+
+  it("Phase 4c.1: a tag call past the run budget stops the run without tagging", async () => {
+    const r = harness.row(id(1), "Which lizard can change its colour?", "Chameleon", "Animals");
+    await seed([r], "pending_review");
+    await keep([r]);
+    await db.exec("reset role;");
+    for (const file of ["supabase/migrations/20261115220356_question_variety_map.sql", "supabase/migrations/20261116014954_speed_trivia_star_cap.sql"]) {
+      await db.exec(readFileSync(file, "utf8"));
+    }
+    await db.exec("set role service_role;");
+    let tagCalls = 0;
+    const session = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 0.00005 }),
+      judge: { modelVersion: "queue-fixture", adjudicate: async tasks => tasks.map(sound) } });
+    const report = await queue.processQueue({ client, session, marks: marksFor([r]), rows: await current([r.id]), tag: async () => { tagCalls++; return true; } });
+    expect(tagCalls).toBe(0);
+    expect(report).toMatchObject({ examined: 0, tagCalls: 0, stopped: "budget" });
+    expect(await outcome(r.id)).toMatchObject({ outcome: "queued" });
   });
 
   it("records an approval left unrecorded by a previous run", async () => {

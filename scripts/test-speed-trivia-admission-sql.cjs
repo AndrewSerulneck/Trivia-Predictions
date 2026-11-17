@@ -27,7 +27,7 @@ const setup=async (db,extraRows=0)=>{
  await db.exec('set role service_role');
 };
 const call=async(db,name,args={})=>{
- const entries=Object.entries(args),params=entries.map(([k,v])=>k==='p_keys'?'{'+v.map(s=>JSON.stringify(s)).join(',')+'}':typeof v==='object'&&v!==null?JSON.stringify(v):v);
+ const entries=Object.entries(args),params=entries.map(([k,v])=>k==='p_keys'||k==='p_row_ids'?'{'+v.map(s=>JSON.stringify(s)).join(',')+'}':typeof v==='object'&&v!==null?JSON.stringify(v):v);
  const sql=`select public.${name}(${entries.map(([k],i)=>`${k} => $${i+1}`).join(',')}) result`;
  return (await db.query(sql,params)).rows[0].result;
 };

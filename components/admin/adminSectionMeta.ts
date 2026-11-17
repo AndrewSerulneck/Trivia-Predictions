@@ -19,6 +19,7 @@ export type AdminSection =
   | "trivia-list"
   | "trivia-review"
   | "trivia-image-review"
+  | "trivia-variety"
   | "ads-create"
   | "ads-list"
   | "challenge-campaigns"
@@ -56,6 +57,7 @@ export const ADMIN_SECTION_OPTIONS: AdminSectionOption[] = [
   { id: "trivia-list",           label: "Trivia Questions",      slug: "trivia-list",           status: { label: "Ready", tone: "live" } },
   { id: "trivia-review",         label: "Question Review",       slug: "trivia-review",         status: { label: "Ready", tone: "live" } },
   { id: "trivia-image-review",   label: "Image Review",          slug: "trivia-image-review",   status: { label: "Ready", tone: "live" } },
+  { id: "trivia-variety",        label: "Variety",               slug: "trivia-variety",        status: { label: "Ready", tone: "live" } },
   { id: "ads-list",              label: "Manage Ads",            slug: "ads-list",              status: { label: "Ready", tone: "live" } },
   { id: "ads-create",            label: "Create Ad",             slug: "ads-create",            status: { label: "Ready", tone: "live" } },
   { id: "ad-placement",          label: "Placement Builder",     slug: "ad-placement" },
@@ -78,7 +80,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: "Content",
-    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["trivia-list", "trivia-review", "trivia-image-review"].includes(opt.id)),
+    items: ADMIN_SECTION_OPTIONS.filter((opt) => ["trivia-list", "trivia-review", "trivia-image-review", "trivia-variety"].includes(opt.id)),
   },
   {
     label: "Advertising",
@@ -113,6 +115,7 @@ export const MIGRATED_SECTIONS: ReadonlySet<AdminSection> = new Set([
   "trivia-list",
   "trivia-review",
   "trivia-image-review",
+  "trivia-variety",
   "challenge-campaigns",
   "live-trivia",
   "live-trivia-inventory",

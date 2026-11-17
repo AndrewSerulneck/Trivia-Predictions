@@ -2,6 +2,7 @@ import "server-only";
 import { POLICY_VERSION } from "@/lib/speed-trivia-uniqueness/core.cjs";
 import { sign } from "@/lib/speed-trivia-uniqueness/runtime.cjs";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { tagAllowance, tagUntaggedSpeedQuestions, type TagAllowance } from "@/lib/speedTriviaTagging";
 import { TRIVIA_CATEGORIES } from "@/lib/triviaCategories";
 import type {
   QuickReviewBulkResult,
@@ -11,12 +12,14 @@ import type {
   QuickReviewKeepOutcome,
   QuickReviewPage,
   QuickReviewRejectReason,
+  QuickReviewSource,
   QuickReviewUndoResult,
   QuickReviewView,
 } from "@/types/speedTriviaQuickReview";
 
 // Speed Trivia Quick Review (docs/speed-trivia-backlog-and-quality-plan.md, Phase 1).
-// No paid calls: every operation is one bounded RPC (supabase/migrations/20261115151703_speed_trivia_quick_review.sql).
+// Every operation is one bounded RPC (supabase/migrations/20261115151703_speed_trivia_quick_review.sql). The one paid
+// call: Keep tags a waiting question that has no subject tag (Phase 4c.1; ~$0.0001 each, at most 25 per request).
 
 export const QUICK_REVIEW_PAGE_LIMIT = 50;
 export const QUICK_REVIEW_BATCH_LIMIT = 200;
@@ -60,12 +63,13 @@ const parseScore = (value: unknown): number | null => {
 };
 
 const VIEWS: ReadonlySet<string> = new Set<QuickReviewView>(["waiting", "needs_look", "repeats"]);
+const SOURCES: ReadonlySet<string> = new Set<QuickReviewSource>(["all", "older", "recent", "chatgpt", "gemini"]);
 
 export const parseQuickReviewFilter = (
   input: { category?: unknown; source?: unknown; sort?: unknown; score?: unknown; view?: unknown },
 ): QuickReviewFilter => {
   const category = typeof input.category === "string" && CATEGORY_VALUES.has(input.category) ? input.category : null;
-  const source = input.source === "older" || input.source === "recent" ? input.source : "all";
+  const source = typeof input.source === "string" && SOURCES.has(input.source) ? (input.source as QuickReviewSource) : "all";
   const sort = input.sort === "newest" || input.sort === "oldest" ? input.sort : "best";
   const view = typeof input.view === "string" && VIEWS.has(input.view) ? (input.view as QuickReviewView) : "waiting";
   return { category, source, sort, score: parseScore(input.score), view };
@@ -83,10 +87,31 @@ export const parseQuickReviewCursor = (input: { afterId?: unknown; afterCreated?
 
 type QueueRpc = { total: number | string; rows: QuickReviewItem[]; counts?: Partial<Record<keyof QuickReviewPage["counts"], number | string>> };
 
+/**
+ * The writer's "why it's true" notes (D30, Phase 4c.5) for the writer-made rows on a page: one read of at most 100
+ * ids, and none when the page has no writer rows. Read here, not in the queue RPC, so no migration was needed.
+ * A failed read just shows no notes.
+ */
+const readWhyTrueNotes = async (items: QuickReviewItem[]): Promise<Map<string, string>> => {
+  const ids = items.filter((item) => item.recent).map((item) => item.id).filter(isQuickReviewId).slice(0, 100);
+  const notes = new Map<string, string>();
+  if (!ids.length) return notes;
+  try {
+    const { data, error } = await admin().from("trivia_questions")
+      .select("id, whyTrue:speed_generation_metadata->>whyTrue").in("id", ids);
+    if (error || !Array.isArray(data)) return notes;
+    for (const row of data as { id?: unknown; whyTrue?: unknown }[]) {
+      if (typeof row.id === "string" && typeof row.whyTrue === "string" && row.whyTrue.trim()) notes.set(row.id, row.whyTrue.trim());
+    }
+  } catch {}
+  return notes;
+};
+
 export const readQuickReviewQueue = async (
   filter: QuickReviewFilter,
   after: QuickReviewCursor | null,
   limit = QUICK_REVIEW_PAGE_LIMIT,
+  options: { withNotes?: boolean } = {},
 ): Promise<QuickReviewPage> => {
   const data = await call<QueueRpc>("speed_trivia_review_queue", {
     p_category: filter.category,
@@ -105,14 +130,52 @@ export const readQuickReviewQueue = async (
     needsLook: Number(data.counts?.needsLook) || 0,
     repeats: Number(data.counts?.repeats) || 0,
   };
-  return { total: Number(data.total) || 0, items: Array.isArray(data.rows) ? data.rows : [], counts };
+  const items = Array.isArray(data.rows) ? data.rows : [];
+  if (!options.withNotes) return { total: Number(data.total) || 0, items, counts };
+  const notes = await readWhyTrueNotes(items);
+  return { total: Number(data.total) || 0, items: notes.size ? items.map((item) => (notes.has(item.id) ? { ...item, whyTrue: notes.get(item.id) } : item)) : items, counts };
 };
 
-/** Keep: free instant approval when the row already passed a full-bank check; otherwise queued for overnight. */
-export const quickKeep = async (rows: { id: string; contentHash: string }[]) => {
+export type WriterState = "none" | "silent" | "fallback" | "ok";
+
+/**
+ * "Writer stopped" (Phase 4b D13, widened in 4c.4 D29), for either game. One read of at most two rows (primary key
+ * order). `none`: no run ever (the writer was never turned on). `silent`: the newest run is over 2 days old.
+ * `fallback`: the two newest runs are consecutive Gemini fallbacks. Unknown (read failed) is `ok`.
+ */
+export const readWriterState = async (game: "speed" | "live"): Promise<WriterState> => {
+  let rows: unknown;
+  try {
+    const { data, error } = await admin().from("question_writer_runs").select("run_date, source")
+      .eq("game", game).order("run_date", { ascending: false }).limit(2);
+    rows = error ? null : data;
+  } catch {
+    return "ok";
+  }
+  if (!Array.isArray(rows)) return "ok";
+  if (rows.length === 0) return "none";
+  const [latest, before] = rows as { run_date: string; source: string }[];
+  const dayMs = 86_400_000;
+  if (Math.floor(Date.now() / dayMs) * dayMs - Date.parse(latest.run_date) > 2 * dayMs) return "silent"; // whole UTC days
+  if (!before) return "ok";
+  const consecutive = Date.parse(latest.run_date) - Date.parse(before.run_date) === dayMs;
+  return consecutive && latest.source === "gemini-fallback" && before.source === "gemini-fallback" ? "fallback" : "ok";
+};
+
+export const readWriterStopped = async (game: "speed" | "live" = "speed"): Promise<boolean> => {
+  const state = await readWriterState(game);
+  return state === "silent" || state === "fallback";
+};
+
+/**
+ * Keep: free instant approval when the row already passed a full-bank check; otherwise queued for overnight.
+ * First tags the batch's untagged questions (Phase 4c.1), within `allowance`, so the star cap can admit them.
+ */
+export const quickKeep = async (rows: { id: string; contentHash: string }[], allowance: TagAllowance = tagAllowance()) => {
   if (rows.length < 1 || rows.length > QUICK_REVIEW_BATCH_LIMIT) throw new QuickReviewError("invalid", "Invalid request.");
   const secret = process.env.SPEED_TRIVIA_ADMISSION_SECRET;
   if (!secret || secret.length < 32) throw new QuickReviewError("unavailable", "Speed Trivia admission is not configured.", 503);
+  await tagUntaggedSpeedQuestions(rows.map((row) => row.id), allowance);
   const envelope = {
     operation: "quick_keep",
     policyVersion: POLICY_VERSION,
@@ -147,34 +210,71 @@ export const runQuickReviewBulk = async (
   filter: QuickReviewFilter,
   max: number,
   now: () => number = Date.now,
+  start: QuickReviewCursor | null = null,
 ): Promise<QuickReviewBulkResult> => {
   // Repeats are already retired; they are restored one at a time with Undo.
   if (filter.view === "repeats") throw new QuickReviewError("invalid", "Invalid request.");
   const started = now();
   const cap = Math.max(0, Math.min(Math.floor(max), BULK_MAX_PER_REQUEST));
-  const result: QuickReviewBulkResult = { processed: 0, approved: 0, queued: 0, rejected: 0, remaining: 0 };
+  const result: QuickReviewBulkResult = { processed: 0, approved: 0, queued: 0, full: 0, rejected: 0, changed: 0, remaining: 0, next: start };
+  // One tagging allowance for the whole request, so tagging can't stretch it past its time limit.
+  const allowance = tagAllowance();
   const oldest: QuickReviewFilter = { ...filter, sort: "oldest" };
+  // Rows changed under a Keep are re-read once per request with fresh hashes (post-4c.4 review #7).
+  let retried = false;
   while (result.processed < cap && now() - started < BULK_TIME_MS) {
-    // Decided rows leave the queue, so the first page is always the next undecided one.
-    const page = await readQuickReviewQueue(oldest, null, Math.min(BULK_PAGE, cap - result.processed));
+    // Decided rows leave the queue; a Keep the star cap refused stays, so paging continues after the last row seen.
+    const pageStart = result.next;
+    const after = pageStart ? { ...pageStart, score: 0 } : null;
+    const page = await readQuickReviewQueue(oldest, after, Math.min(BULK_PAGE, cap - result.processed));
     result.remaining = page.total;
     if (page.items.length === 0) break;
     let progressed = 0;
+    let pageFull = 0;
+    // Index of this page's first row that changed under the Keep (-1: none). `not_pending` rows have left the queue.
+    let firstChanged = -1;
+    let pageChanged = 0;
     if (decision === "reject") {
       const rejected = await quickReject(page.items.map((item) => item.id), "quality");
       result.rejected += rejected.length;
       progressed = rejected.length;
     } else {
-      const outcomes = await quickKeep(page.items.map(({ id, contentHash }) => ({ id, contentHash })));
+      const outcomes = await quickKeep(page.items.map(({ id, contentHash }) => ({ id, contentHash })), allowance);
+      const byId = new Map(outcomes.map((row) => [row.id, row.outcome]));
+      firstChanged = page.items.findIndex((item) => byId.get(item.id) === "changed");
+      pageChanged = outcomes.filter((row) => row.outcome === "changed").length;
+      // Full rows after the first changed row are read again below, so count them then, not twice.
+      const counted = firstChanged < 0 ? page.items : page.items.slice(0, firstChanged);
+      pageFull = counted.filter((item) => {
+        const outcome = byId.get(item.id);
+        return outcome === "subject_full" || outcome === "untagged";
+      }).length;
       const approved = outcomes.filter((row) => row.outcome === "approved").length;
       const queued = outcomes.filter((row) => row.outcome === "queued").length;
       result.approved += approved;
       result.queued += queued;
+      result.full += pageFull;
+      result.processed += pageFull;
       progressed = approved + queued;
     }
+    const last = page.items[page.items.length - 1];
+    result.next = { createdAt: last.createdAt, id: last.id };
     result.processed += progressed;
     result.remaining = Math.max(0, result.remaining - progressed);
-    // A concurrent writer changed every row on this page; stop rather than loop.
+    if (pageChanged > 0) {
+      // Put the cursor just before the first changed row, so the changed rows come back with fresh hashes.
+      const before = firstChanged > 0 ? page.items[firstChanged - 1] : null;
+      result.next = before ? { createdAt: before.createdAt, id: before.id } : pageStart;
+      if (retried) {
+        result.changed = pageChanged;
+        break;
+      }
+      retried = true;
+      continue;
+    }
+    // Everything left on this page stays waiting (subject full): move on to the next page.
+    if (progressed === 0 && pageFull > 0 && decision === "keep") continue;
+    // Nothing on this page could be decided; stop rather than loop.
     if (progressed === 0) break;
   }
   return result;

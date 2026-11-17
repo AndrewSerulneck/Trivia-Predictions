@@ -931,3 +931,11 @@ export async function explainWriteInAnswerMatchWithVariants(
 export function normalizeWriteInForStorage(value: string): string {
   return normalizeForTriviaComparison(String(value ?? ""));
 }
+
+/**
+ * True when grading can ever match this answer: it doesn't normalize to nothing ("$", "-", "%"). The grader drops an
+ * empty target (uniqueAnswerTargets), so Quick Review's edit refuses one (Phase 4c.9 #6).
+ */
+export function isMatchableAnswer(value: unknown): boolean {
+  return typeof value === "string" && normalizeForTriviaComparison(value).length > 0;
+}

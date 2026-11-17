@@ -1,0 +1,67 @@
+name: Write questions
+
+on:
+  # Turned on in Phase 4d, after the trial run (docs/speed-trivia-backlog-and-quality-plan.md in the main repo).
+  # schedule:
+  #   - cron: "30 0 * * *"   # 00:30 UTC, before the main repo's Trivia Nightly at 02:15 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: write-questions
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  write:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install Codex
+        run: npm install --global @openai/codex@0.163.0
+
+      # The ChatGPT login lives only in this private repo's secret. It is written to a private temp folder,
+      # never printed, never uploaded, and removed at the end.
+      - name: Restore the ChatGPT login
+        env:
+          CODEX_AUTH_JSON: ${{ secrets.CODEX_AUTH_JSON }}
+        run: |
+          umask 077
+          mkdir -p "$RUNNER_TEMP/codex-home"
+          printf '%s' "$CODEX_AUTH_JSON" > "$RUNNER_TEMP/codex-home/auth.json"
+          sha256sum "$RUNNER_TEMP/codex-home/auth.json" | cut -d' ' -f1 > "$RUNNER_TEMP/auth.sha"
+          echo "CODEX_HOME=$RUNNER_TEMP/codex-home" >> "$GITHUB_ENV"
+
+      - name: Write and send today's questions
+        env:
+          QUESTION_WRITER_TOKEN: ${{ secrets.QUESTION_WRITER_TOKEN }}
+          WRITER_BASE_URL: ${{ vars.WRITER_BASE_URL }}
+          CODEX_MODEL: ${{ vars.CODEX_MODEL || 'gpt-6-astra' }}
+          CODEX_EFFORT: ${{ vars.CODEX_EFFORT || 'high' }}
+          WRITER_GAMES: ${{ vars.WRITER_GAMES || 'speed' }}
+        run: node write.mjs
+
+      # Codex may refresh the login while it runs; keep the new one, or the next run would start from a stale copy.
+      - name: Save the refreshed login
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.SECRETS_WRITE_TOKEN }}
+        run: |
+          f="$CODEX_HOME/auth.json"
+          [ -s "$f" ] || exit 0
+          if [ "$(sha256sum "$f" | cut -d' ' -f1)" != "$(cat "$RUNNER_TEMP/auth.sha")" ]; then
+            gh secret set CODEX_AUTH_JSON --repo "$GITHUB_REPOSITORY" < "$f"
+          fi
+
+      - name: Remove the login from the runner
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/codex-home" "$RUNNER_TEMP/auth.sha"

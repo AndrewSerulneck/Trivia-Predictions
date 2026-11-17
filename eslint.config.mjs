@@ -12,7 +12,7 @@ const config = [
   // comparison package uses .d.cts so both Node CJS and strict TS resolve it.
   {
     ...nextVitals.find(config => config.name === 'next/typescript'),
-    files: ['lib/speed-trivia-uniqueness/**/*.d.cts'],
+    files: ['lib/speed-trivia-uniqueness/**/*.d.cts', 'lib/question-variety/**/*.d.cts', 'lib/question-writer/**/*.d.cts', 'lib/live-trivia-quality/**/*.d.cts'],
   },
   {
     rules: {

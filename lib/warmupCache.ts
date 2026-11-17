@@ -1,4 +1,4 @@
-import type { Prediction, TriviaQuestion } from "@/types";
+import type { Prediction, PlayerTriviaQuestion } from "@/types";
 
 type TriviaQuotaSnapshot = {
   limit: number;
@@ -12,7 +12,7 @@ type WarmTriviaSnapshot = {
   fetchedAt: number;
   userId: string;
   venueId: string;
-  questions: TriviaQuestion[];
+  questions: PlayerTriviaQuestion[];
   quota?: TriviaQuotaSnapshot | null;
 };
 
@@ -64,7 +64,7 @@ function predictionsCacheKey(venueId: string): string {
 export function writeWarmTriviaCache(input: {
   userId: string;
   venueId: string;
-  questions: TriviaQuestion[];
+  questions: PlayerTriviaQuestion[];
   quota?: TriviaQuotaSnapshot | null;
 }): void {
   if (!input.userId || !input.venueId || input.questions.length === 0) return;
@@ -83,6 +83,8 @@ export function readWarmTriviaCache(userId: string, venueId: string): WarmTrivia
   const snapshot = readSessionStorage<WarmTriviaSnapshot>(triviaCacheKey(userId, venueId));
   if (!snapshot) return null;
   if (Date.now() - snapshot.fetchedAt > TRIVIA_CACHE_TTL_MS) return null;
+  // Phase 4c.8: questions cached before D31 have no `order: 1`, and the player POST refuses a pick on them.
+  if (!Array.isArray(snapshot.questions) || snapshot.questions.some((question) => question?.order !== 1)) return null;
   return snapshot;
 }
 

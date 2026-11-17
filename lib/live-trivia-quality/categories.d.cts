@@ -1,0 +1,11 @@
+export declare const LIVE_DIR: string;
+export declare const CURRENT_EVENTS: "Current Events";
+export declare const CURRENT_EVENTS_MIN_QUESTIONS: number;
+export declare const LIVE_CATEGORY_FILES: Readonly<Record<string, string>>;
+export declare const LIVE_CATEGORIES: readonly string[];
+export declare const NEW_FILES: ReadonlySet<string>;
+export declare const AREA_SUBCATEGORIES: Readonly<Record<string, Record<string, string>>>;
+export declare function slugify(value: string): string;
+export declare function subcategoryFor(category: string, area: string | null): string;
+export declare function fileFor(category: string): string;
+export declare function isExpiredLiveEntry(entry: { expires_on?: unknown; expiresOn?: unknown } | null | undefined, today?: Date | string): boolean;

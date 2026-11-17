@@ -5,7 +5,7 @@ import { haptic } from "@/lib/haptics";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExitBackButton } from "@/components/navigation/ExitBackButton";
-import { TRIVIA_CATEGORIES, ALL_CATEGORIES_SENTINEL } from "@/lib/triviaCategories";
+import { ALL_CATEGORIES_SENTINEL, visibleTriviaCategories } from "@/lib/triviaCategories";
 import { getVenueId } from "@/lib/storage";
 import { navigateBackToVenue, runVenueGameReturnTransition } from "@/lib/venueGameTransition";
 
@@ -14,9 +14,11 @@ const BUTTON_POP_CLASS =
 
 type Props = {
   onSelect: (category: string | null) => void;
+  /** Gated categories not yet stocked (D11). */
+  hiddenCategories: ReadonlySet<string>;
 };
 
-export function CategorySelect({ onSelect }: Props) {
+export function CategorySelect({ onSelect, hiddenCategories }: Props) {
   const router = useRouter();
   const choosingRef = useRef(false);
   const [choosing, setChoosing] = useState(false);
@@ -103,7 +105,7 @@ export function CategorySelect({ onSelect }: Props) {
 
           {/* Category grid */}
           <div className="grid grid-cols-2 gap-2">
-            {TRIVIA_CATEGORIES.map((cat) => {
+            {visibleTriviaCategories(hiddenCategories).map((cat) => {
               const Icon = cat.icon;
               return (
                 <button

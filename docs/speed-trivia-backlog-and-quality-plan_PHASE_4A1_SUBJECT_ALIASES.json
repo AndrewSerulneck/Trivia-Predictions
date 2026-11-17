@@ -1,0 +1,32 @@
+{
+  "version": "thin-subjects-v1",
+  "createdAt": "2026-11-16T03:15:25.508Z",
+  "reviewedAt": "2026-11-16",
+  "note": "ChatGPT judged 206 candidate pairs; 14 proposed; 6 removed on review (swift = the bird, titanic = the 1997 film, hamilton = the musical, newton/watt = SI units, gotham = the TV series).",
+  "aliases": {
+    "motown records": [
+      "motown"
+    ],
+    "wimbledon": [
+      "wimbledon championships"
+    ],
+    "mekong river": [
+      "mekong"
+    ],
+    "sahara": [
+      "sahara desert"
+    ],
+    "cleopatra vii": [
+      "cleopatra"
+    ],
+    "ring of fire": [
+      "pacific ring of fire"
+    ],
+    "danube": [
+      "danube river"
+    ],
+    "nile": [
+      "nile river"
+    ]
+  }
+}

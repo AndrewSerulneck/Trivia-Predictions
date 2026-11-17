@@ -41,6 +41,10 @@ const audienceKey = row => {
     row.image_context == null ? '' : JSON.stringify(row.image_context)].join('\u001f')).digest('hex');
 };
 
+// The version this free re-score produces: the Phase 3d list-check fix. Later scorer versions (bar-test-v3, D26) change
+// the model prompt, which a free re-score can't apply, so it never stamps them.
+const RESCORE_VERSION = 'bar-test-v2.1';
+
 /** The score as it would read today, or null when nothing changes. Only the multi-answer flag is re-derived. */
 const rescored = (row, stored) => {
   const flags = new Set(stored.flags.filter(flag => flag !== FLAG));
@@ -48,7 +52,8 @@ const rescored = (row, stored) => {
   const next = { ...stored, flags: [...flags].sort() };
   next.score = audience.compositeScore({ familiar: stored.familiar, fun: stored.fun, estCorrect: stored.estCorrect, flags: next.flags });
   if (next.score === stored.score && next.flags.join() === stored.flags.join()) return null;
-  next.version = audience.AUDIENCE_VERSION;
+  // Only older scores take the 2.1 stamp; a v3/v4 score keeps its version (4c.4, review #6).
+  if (/^bar-test-v[012](\.\d+)?$/.test(String(stored.version ?? 'bar-test-v2'))) next.version = RESCORE_VERSION;
   return next;
 };
 
@@ -112,7 +117,7 @@ const main = async () => {
   if (!args.apply || !result.changes.length) { if (!args.apply) console.log('Dry run. Add --apply.'); return; }
   const date = new Date().toISOString().slice(0, 10);
   const logPath = `${PLAN}_PHASE_3D_RESCORE_LOG_${date}.json`;
-  fs.writeFileSync(logPath, JSON.stringify({ at: new Date().toISOString(), version: audience.AUDIENCE_VERSION, undo: `node --env-file=.env.local scripts/rescore-speed-trivia-checks.cjs --undo ${logPath} --apply`, changes: result.changes }, null, 1));
+  fs.writeFileSync(logPath, JSON.stringify({ at: new Date().toISOString(), version: RESCORE_VERSION, undo: `node --env-file=.env.local scripts/rescore-speed-trivia-checks.cjs --undo ${logPath} --apply`, changes: result.changes }, null, 1));
   console.log(`Undo log: ${logPath}`);
   console.log(JSON.stringify(await writeScores(client, result.changes.map(({ id, contentHash, after }) => ({ id, contentHash, audience: after })))));
 };

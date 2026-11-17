@@ -18,11 +18,12 @@ import { ExitBackButton } from "@/components/navigation/ExitBackButton";
 import { useVenuePresence } from "@/components/venue/VenuePresenceBoundary";
 import { isPopupBlocking, isPopupVisible, subscribePopupBlockingChange } from "@/components/ui/popupBlocking";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
-import type { TriviaQuestion } from "@/types";
+import { ReportQuestionSheet } from "@/components/trivia/ReportQuestionSheet";
+import type { PlayerTriviaQuestion } from "@/types";
 
 type TriviaApiResponse = {
   ok: boolean;
-  questions?: TriviaQuestion[];
+  questions?: PlayerTriviaQuestion[];
   error?: string;
 };
 
@@ -97,13 +98,13 @@ type TriviaLivePreviewSnapshot = {
   correctAnswers: number;
   attempted: number;
   questionText: string;
-  questions: TriviaQuestion[];
+  questions: PlayerTriviaQuestion[];
   userId: string;
   venueId: string;
 };
 
 type RecoveredRoundState = {
-  questions: TriviaQuestion[];
+  questions: PlayerTriviaQuestion[];
   nextIndex: number;
   correctAnswers: number;
   attempted: number;
@@ -149,18 +150,18 @@ function randomEmoji(list: readonly string[]) {
   return list[Math.floor(Math.random() * list.length)] ?? list[0] ?? "🎉";
 }
 
-function normalizeTriviaQuestion(value: unknown): TriviaQuestion | null {
+function normalizeTriviaQuestion(value: unknown): PlayerTriviaQuestion | null {
   if (!value || typeof value !== "object") {
     return null;
   }
 
-  const candidate = value as Partial<TriviaQuestion>;
+  const candidate = value as Partial<PlayerTriviaQuestion>;
   const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
   const question = typeof candidate.question === "string" ? candidate.question.trim() : "";
   const options = Array.isArray(candidate.options) ? candidate.options.filter((item): item is string => typeof item === "string") : [];
-  const correctAnswerRaw = Number(candidate.correctAnswer);
-  const correctAnswer = Number.isFinite(correctAnswerRaw) ? Math.floor(correctAnswerRaw) : -1;
-  if (!id || !question || options.length < 2 || correctAnswer < 0 || correctAnswer >= options.length) {
+  // D31: a served question has no correct answer; only the POST's reply reveals it.
+  // Phase 4c.8: one saved before D31 (no `order: 1`) can't be answered any more (the POST refuses it), so it's dropped.
+  if (!id || !question || options.length < 2 || candidate.order !== 1) {
     return null;
   }
 
@@ -168,9 +169,9 @@ function normalizeTriviaQuestion(value: unknown): TriviaQuestion | null {
     id,
     question,
     options,
-    correctAnswer,
     category: typeof candidate.category === "string" ? candidate.category : undefined,
     difficulty: typeof candidate.difficulty === "string" ? candidate.difficulty : undefined,
+    order: 1,
   };
 }
 
@@ -324,7 +325,7 @@ export function TriviaGame({
   selectedCategory = null,
   onChangeCategory,
 }: {
-  questions?: TriviaQuestion[];
+  questions?: PlayerTriviaQuestion[];
   selectedCategory?: string | null;
   onChangeCategory?: () => void;
 }) {
@@ -336,7 +337,7 @@ export function TriviaGame({
   const venuePresence = useVenuePresence();
   const gameRootRef = useRef<HTMLDivElement>(null);
   const nextQuestionButtonRef = useRef<HTMLButtonElement>(null);
-  const [questions, setQuestions] = useState<TriviaQuestion[]>(initialQuestions);
+  const [questions, setQuestions] = useState<PlayerTriviaQuestion[]>(initialQuestions);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [quota, setQuota] = useState<TriviaQuota | null>(null);
@@ -347,6 +348,7 @@ export function TriviaGame({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string>("");
   const [feedbackKind, setFeedbackKind] = useState<"correct" | "incorrect" | "timeout" | null>(null);
+  const [feedbackPoints, setFeedbackPoints] = useState(POINTS_PER_CORRECT);
   const [revealedCorrectAnswer, setRevealedCorrectAnswer] = useState<number | null>(null);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [attempted, setAttempted] = useState(0);
@@ -522,9 +524,10 @@ export function TriviaGame({
           const parsedQuestions = Array.isArray(parsed.questions)
             ? parsed.questions
                 .map((item) => normalizeTriviaQuestion(item))
-                .filter((item): item is TriviaQuestion => Boolean(item))
+                .filter((item): item is PlayerTriviaQuestion => Boolean(item))
             : [];
-          if (parsedQuestions.length === 0) {
+          // Any dropped question (e.g. saved before D31, no `order: 1`) means the whole round is stale.
+          if (parsedQuestions.length === 0 || parsedQuestions.length !== parsed.questions?.length) {
             return null;
           }
 
@@ -963,40 +966,8 @@ export function TriviaGame({
       setFeedbackKind(null);
       setRevealedCorrectAnswer(null);
 
-      const localCorrectAnswer = question.correctAnswer;
-      const localWasCorrect = answerIndex === localCorrectAnswer;
-      setRevealedCorrectAnswer(localCorrectAnswer);
-      const localOutcome: "correct" | "incorrect" | "timeout" =
-        answerIndex < 0 ? "timeout" : localWasCorrect ? "correct" : "incorrect";
-
-      if (answerIndex < 0) {
-        setFeedback(`Time's up. Correct answer: ${question.options[localCorrectAnswer]}.`);
-        setFeedbackKind("timeout");
-        setRewardPulse("⚡ Time out, keep going");
-        setShowRewardPulse(true);
-      } else if (localWasCorrect) {
-        setFeedback(`Correct! +${POINTS_PER_CORRECT} points added to your profile.`);
-        setFeedbackKind("correct");
-        setRewardPulse(`🎉 Correct +${POINTS_PER_CORRECT}`);
-        setShowRewardPulse(true);
-
-        // Note: optimistic feedback uses base points; updated below once server confirms
-      } else {
-        setFeedback(`Incorrect. Correct answer: ${question.options[localCorrectAnswer]}.`);
-        setFeedbackKind("incorrect");
-      }
-
-      triggerCelebration(localOutcome === "correct");
-
-      // The badge pops now; its points chip waits for the server's real award (multiplier included).
-      let correctAnimationId: number | null = null;
-      if (localOutcome === "correct") {
-        correctAnimationId = triggerAnimation("SPEED_TRIVIA_CORRECT");
-        correctAnimationIdRef.current = correctAnimationId;
-      } else if (localOutcome === "incorrect") {
-        triggerAnimation("SPEED_TRIVIA_WRONG");
-      }
-
+      // D31: the browser never knows the answer before this reply, so feedback, the reveal, the animations and
+      // the celebration all start from it (the picked option shows as selected meanwhile; Next shows its spinner).
       try {
           const response = await fetch("/api/trivia", {
             method: "POST",
@@ -1006,6 +977,7 @@ export function TriviaGame({
               questionId: question.id,
               answer: answerIndex,
               timeElapsed: 0,
+              order: 1,
             }),
           });
 
@@ -1021,29 +993,31 @@ export function TriviaGame({
             throw new Error(payload.error ?? "Failed to submit answer.");
           }
 
+          const revealed = payload.result.correctAnswer;
+          const revealedOption = question.options[revealed] ?? "";
+          setRevealedCorrectAnswer(revealed);
+
           if (payload.result.alreadyAnswered) {
             setFeedback("You already answered this question earlier. Skipping scoring.");
             setFeedbackKind(null);
-            setRevealedCorrectAnswer(payload.result.correctAnswer);
             void loadQuota();
             void loadCurrentUserPoints();
             return;
           }
 
           const wasCorrect = payload.result.isCorrect;
+          const outcome: "correct" | "incorrect" | "timeout" =
+            wasCorrect ? "correct" : answerIndex < 0 ? "timeout" : "incorrect";
           const pointsAwarded = Math.max(0, Number(payload.result.pointsAwarded ?? POINTS_PER_CORRECT));
           const multiplierApplied = Number(payload.result.multiplierApplied ?? 1);
           const challengeActive = multiplierApplied > 1;
           setAttempted((value) => value + 1);
+          triggerCelebration(wasCorrect);
 
-          if (payload.result.correctAnswer !== localCorrectAnswer) {
-            setRevealedCorrectAnswer(payload.result.correctAnswer);
-          }
-
-          if (wasCorrect) {
-            if (correctAnimationId !== null) {
-              updateAnimationPayload(correctAnimationId, { pointsAwarded });
-            }
+          if (outcome === "correct") {
+            const correctAnimationId = triggerAnimation("SPEED_TRIVIA_CORRECT");
+            correctAnimationIdRef.current = correctAnimationId;
+            updateAnimationPayload(correctAnimationId, { pointsAwarded });
             const savedLabel = payload.result.saved ? "saved" : "recorded";
             setRewardPulse(
               challengeActive
@@ -1058,6 +1032,7 @@ export function TriviaGame({
                 : `Correct! +${pointsAwarded} points added to your profile.`
             );
             setFeedbackKind("correct");
+            setFeedbackPoints(pointsAwarded);
             setCorrectAnswers((value) => value + 1);
             setRoundPointsAwarded((value) => value + pointsAwarded);
             triggerPointsFlow(answerIndex, pointsAwarded);
@@ -1076,16 +1051,17 @@ export function TriviaGame({
                 );
               }
             }
+          } else if (outcome === "timeout") {
+            setFeedback(`Time's up. Correct answer: ${revealedOption}.`);
+            setFeedbackKind("timeout");
+            setRewardPulse("⚡ Time out, keep going");
+            setShowRewardPulse(true);
           } else {
-            setFeedback(`Incorrect. Correct answer: ${question.options[payload.result.correctAnswer]}.`);
+            triggerAnimation("SPEED_TRIVIA_WRONG");
+            setFeedback(`Incorrect. Correct answer: ${revealedOption}.`);
             setFeedbackKind("incorrect");
             setRewardPulse("🙌 Nice try");
             setShowRewardPulse(true);
-
-          }
-
-          if ((wasCorrect ? "correct" : "incorrect") !== localOutcome) {
-            triggerCelebration(wasCorrect);
           }
 
           void loadQuota();
@@ -1991,6 +1967,13 @@ export function TriviaGame({
                 })}
               </div>
 
+              {/* Report (D32): only once the server's reply has revealed the answer, so never while the timer runs. */}
+              {revealedCorrectAnswer !== null ? (
+                <div className="flex justify-end px-3.5 pt-2">
+                  <ReportQuestionSheet key={question.id} game="speed" questionId={question.id} />
+                </div>
+              ) : null}
+
               {/* Feedback bar */}
               {feedback ? (
                 <div className="px-3.5 pt-3.5">
@@ -2021,7 +2004,7 @@ export function TriviaGame({
                     </div>
                     {feedbackKind === "correct" ? (
                       <span className="shrink-0 whitespace-nowrap font-black text-[#fde68a] text-caption">
-                        🔥 +{POINTS_PER_CORRECT} pts
+                        🔥 +{feedbackPoints} pts
                       </span>
                     ) : null}
                   </div>
@@ -2067,7 +2050,7 @@ export function TriviaGame({
   );
 }
 
-export async function fetchTriviaQuestions(userId?: string, category?: string | null): Promise<TriviaQuestion[]> {
+export async function fetchTriviaQuestions(userId?: string, category?: string | null): Promise<PlayerTriviaQuestion[]> {
   const query = new URLSearchParams();
   if (userId) {
     query.set("userId", userId);

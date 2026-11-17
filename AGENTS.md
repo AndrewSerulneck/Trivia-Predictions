@@ -12,6 +12,8 @@ style, naming rules) and **`SYSTEM_CONTEXT.md`** (architecture, product
 direction) — read both before starting any task. This file does not duplicate
 them; it documents recurring processes and active implementation-plan pointers below.
 
+**Difficulty differs by game (Andrew, 2026-11-16).** Speed Trivia is multiple choice: the answer is on screen, so players can recognize it or guess even if they don't know it, and a question can be much harder than Live. It must still be knowable for the average American: a subject they recognize and a fact that is fairly common knowledge, never specialist-only. Live Trivia is write-in: players must recall the answer with no options, so it must be easier and the fact itself must be widely known. Code home: `lib/question-variety/factRules.cjs` (`RECALL_VS_RECOGNITION`).
+
 ## Models in phased plans — always
 
 Name models from the **planning agent's own family** (Claude → Claude models, Codex → Codex/GPT models, any

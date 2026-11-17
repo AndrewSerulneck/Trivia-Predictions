@@ -95,6 +95,23 @@ export interface TriviaQuestion {
   imageCredit?: string;
 }
 
+/**
+ * A Speed Trivia question as the player GET serves it (D31, Phase 4c.6): options in `questionOptionOrder` order and
+ * no correct answer, which only the POST's reply reveals. `order: 1` tells the POST the options were shuffled; the
+ * player POST refuses a pick without it (409 "refresh", Phase 4c.8), so the screen drops cached questions lacking it.
+ * Never add `correctAnswer` here (`tests/speed-trivia-answer-hidden-contract.test.ts`).
+ */
+export interface PlayerTriviaQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  category?: string;
+  difficulty?: string;
+  imageUrl?: string;
+  imageCredit?: string;
+  order: 1;
+}
+
 export interface TriviaAnswer {
   id: string;
   userId: string;

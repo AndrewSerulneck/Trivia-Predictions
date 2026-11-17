@@ -39,8 +39,12 @@ const FLAG_LABELS: Record<string, string> = {
   "possibly-wrong": "Answer may be wrong",
   dated: "Dated",
   "niche-subject": "Niche",
+  "obscure-fact": "Obscure fact",
   "bad-distractors": "Weak options",
 };
+
+const sourceLabel = (item: QuickReviewItem) =>
+  item.source === "chatgpt" ? "ChatGPT" : item.source === "gemini-fallback" ? "Gemini" : item.recent ? "Recent" : "Older";
 
 const postJson = async <T,>(body: unknown): Promise<T> => {
   const response = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -57,6 +61,7 @@ export const SpeedTriviaQuickReview = () => {
   const [items, setItems] = useState<QuickReviewItem[]>([]);
   const [total, setTotal] = useState(0);
   const [counts, setCounts] = useState<QuickReviewCounts>({ queued: 0, needsLook: 0, repeats: 0 });
+  const [writerStopped, setWriterStopped] = useState(false);
   const [exhausted, setExhausted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -69,6 +74,9 @@ export const SpeedTriviaQuickReview = () => {
   const refilling = useRef(false);
 
   const current = items[0] ?? null;
+  // The id whose "why it's true" note is open; a new question starts closed (D30).
+  const [whyOpenId, setWhyOpenId] = useState<string | null>(null);
+  const whyOpen = Boolean(current?.whyTrue) && whyOpenId === current?.id;
   const repeats = filter.view === "repeats";
 
   const fetchPage = useCallback(async (after: QuickReviewItem | null) => {
@@ -81,9 +89,11 @@ export const SpeedTriviaQuickReview = () => {
       params.set("afterScore", String(after.audience?.score ?? 0));
     }
     const response = await fetch(`${ENDPOINT}?${params.toString()}`, { cache: "no-store" });
-    const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; total?: number; items?: QuickReviewItem[]; counts?: QuickReviewCounts; error?: string };
+    const payload = (await response.json().catch(() => ({}))) as {
+      ok?: boolean; total?: number; items?: QuickReviewItem[]; counts?: QuickReviewCounts; writerStopped?: boolean; error?: string;
+    };
     if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Couldn't load questions.");
-    return { total: payload.total ?? 0, items: payload.items ?? [], counts: payload.counts ?? null };
+    return { total: payload.total ?? 0, items: payload.items ?? [], counts: payload.counts ?? null, writerStopped: payload.writerStopped === true };
   }, [filter]);
 
   const reload = useCallback(async () => {
@@ -97,6 +107,7 @@ export const SpeedTriviaQuickReview = () => {
       setItems(page.items);
       setTotal(page.total);
       if (page.counts) setCounts(page.counts);
+      setWriterStopped(page.writerStopped);
       setExhausted(page.items.length < PAGE_SIZE);
     } catch (err) {
       if (seq === loadSeq.current) setError(getErrorMessage(err, "Couldn't load questions."));
@@ -161,6 +172,12 @@ export const SpeedTriviaQuickReview = () => {
         setItems((prev) => prev.filter((row) => row.id !== current.id));
         setTotal((prev) => Math.max(0, prev - 1));
         setNotice("Already decided.");
+        return;
+      }
+      // Star cap (Phase 4a.1): nothing was saved; the question stays waiting.
+      if (outcome === "subject_full" || outcome === "untagged") {
+        advance(current, "skip");
+        setNotice(outcome === "subject_full" ? "Subject full." : "Couldn't tag.");
         return;
       }
       advance(current, "keep", outcome === "queued");
@@ -284,18 +301,26 @@ export const SpeedTriviaQuickReview = () => {
     setNotice("");
     setBulk({ decision, done: 0, of: count });
     let done = 0;
+    let full = 0;
+    // Rows that changed under the last request's Keep and were left waiting (post-4c.4 review #7).
+    let changed = 0;
+    let after: QuickReviewBulkResult["next"] = null;
     try {
       while (done < count) {
-        const result = await postJson<QuickReviewBulkResult>({
-          action: "bulk", decision, max: count - done,
+        const result: QuickReviewBulkResult = await postJson<QuickReviewBulkResult>({
+          action: "bulk", decision, max: count - done, after,
           category: filter.category || null, source: filter.source, score: filter.score || null, view: filter.view,
         });
         done += result.processed;
+        full += result.full ?? 0;
+        changed = result.changed ?? 0;
+        after = result.next ?? null;
         setBulk({ decision, done, of: count });
         if (result.processed === 0 || result.remaining === 0) break;
       }
       setHistory([]);
-      setNotice(`${decision === "reject" ? "Rejected" : "Kept"} ${done.toLocaleString()}.`);
+      setNotice(decision === "reject" ? `Rejected ${done.toLocaleString()}.`
+        : `Kept ${(done - full).toLocaleString()}.${full ? ` ${full.toLocaleString()} subject full.` : ""}${changed ? " Some changed. Run again." : ""}`);
     } catch (err) {
       setError(`${getErrorMessage(err, "Stopped.")} ${done.toLocaleString()} done.`);
     } finally {
@@ -355,6 +380,8 @@ export const SpeedTriviaQuickReview = () => {
             <option value="all">All</option>
             <option value="older">Older</option>
             <option value="recent">Recent</option>
+            <option value="chatgpt">ChatGPT</option>
+            <option value="gemini">Gemini</option>
           </select>
         </div>
         <div>
@@ -393,6 +420,7 @@ export const SpeedTriviaQuickReview = () => {
         </div>}
       </div>
 
+      {writerStopped ? <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800" role="status">Writer stopped</div> : null}
       {error ? <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -403,9 +431,22 @@ export const SpeedTriviaQuickReview = () => {
         ) : (
           <div className="space-y-4" data-testid="quick-review-card">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {current.category ?? "—"}{current.difficulty ? ` · ${current.difficulty}` : ""} · {current.recent ? "Recent" : "Older"}
+              {current.category ?? "—"}{current.difficulty ? ` · ${current.difficulty}` : ""} · {sourceLabel(current)}
+              {current.area ? ` · ${current.area}${current.era ? ` · ${current.era}` : ""}` : ""}
               {current.audience ? ` · Score ${current.audience.score}` : ""}
             </p>
+            {current.sourceUrl || current.whyTrue ? (
+              <div className="flex flex-wrap items-center gap-4">
+                {current.sourceUrl ? (
+                  <a href={current.sourceUrl} target="_blank" rel="noopener noreferrer nofollow"
+                    className="text-sm font-semibold text-indigo-700 underline">Source</a>
+                ) : null}
+                {current.whyTrue ? (
+                  <button type="button" aria-expanded={whyOpen} onClick={() => setWhyOpenId(whyOpen ? null : current.id)}
+                    className="text-sm font-semibold text-indigo-700 underline">Why</button>
+                ) : null}
+              </div>
+            ) : null}
             {draft ? (
               <div className="space-y-2">
                 <textarea value={draft.question} rows={3} aria-label="Question" className={adminField}
@@ -442,6 +483,7 @@ export const SpeedTriviaQuickReview = () => {
                     </li>
                   ))}
                 </ul>
+                {whyOpen ? <p className="text-sm text-slate-600" data-testid="quick-review-why">{current.whyTrue}</p> : null}
                 {current.match ? (
                   <p className="text-sm text-slate-700" data-testid="quick-review-match">
                     Repeats: {current.match.question} ({current.match.answer})

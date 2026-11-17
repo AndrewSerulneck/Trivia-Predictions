@@ -26,6 +26,7 @@ import {
   TriviaListSection,
   TriviaPendingReviewSection,
   TriviaImageReviewSection,
+  TriviaVarietySection,
   AdPlacementBuilder,
   AdAnalyticsDashboard,
   AdsListSection,
@@ -666,6 +667,8 @@ export function AdminShell({ venues, initialSection = "venue-users", deepLinked 
         return <TriviaPendingReviewSection />;
       case "trivia-image-review":
         return <TriviaImageReviewSection />;
+      case "trivia-variety":
+        return <TriviaVarietySection />;
       case "ad-placement":
         return <AdPlacementBuilder venues={venueList} />;
       case "ad-debug":

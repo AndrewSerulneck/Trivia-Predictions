@@ -13,6 +13,8 @@
  *       PAID: processes queued Keeps oldest first.
  *       Unique -> approved (signed admission, approved-only scope). Repeat -> retired with its match (D8).
  *       Uncertain, or edited after Keep -> left waiting under "Needs a look".
+ *       No subject tag (star cap) -> tagged once (one Gemini call, charged $0.0001 to the run) and retried once;
+ *       still untagged -> "Needs a look" (Phase 4c.1).
  *       --precheck (D17): then, with what's left of the run, checks older undecided waiting questions (score ≥
  *       --min-score, best first) the same way WITHOUT approving. Repeat -> retired with its match (Repeats, Restore);
  *       unique / uncertain -> left waiting, noted so they aren't checked again.
@@ -34,6 +36,7 @@ const core = require('../lib/speed-trivia-uniqueness/core.cjs');
 const runtime = require('../lib/speed-trivia-uniqueness/runtime.cjs');
 const gemini = require('../lib/speed-trivia-uniqueness/gemini.cjs');
 const approval = require('../lib/speed-trivia-uniqueness/approval.cjs');
+const tagging = require('../lib/question-variety/tagging.cjs');
 
 const PLAN = 'docs/speed-trivia-backlog-and-quality-plan';
 const MODEL = 'gemini-2.5-flash';
@@ -160,6 +163,11 @@ const recordError = (report, id, error, kind) => {
   if (kind !== 'stop') report[kind === 'row' ? 'rowErrors' : 'transientErrors']++;
   if (report.errors.length < MAX_ERRORS_KEPT) report.errors.push({ id, code: errorCode(error), kind, message: String(error?.message ?? error).slice(0, 300) });
 };
+const SUBJECT_FULL_NOTE = 'Subject full: 5 approved questions on this subject.';
+const UNTAGGED_NOTE = 'No subject tag yet.';
+const TAGGED_BY = `gemini:${tagging.TAG_MODEL}:keep-queue-v1`;
+// Phase 4c.1: the real tagger. Tests inject a fake.
+const tagWith = client => row => tagging.tagOne({ client, row, apiKey: process.env.GEMINI_API_KEY, taggedBy: TAGGED_BY });
 const CHECK_NOTE = code => `Couldn't check (${code}). Keep it again or reject it.`;
 // The approved question a duplicate verdict matched, if it's still approved.
 const approvedMatch = (session, error) =>
@@ -167,8 +175,16 @@ const approvedMatch = (session, error) =>
 
 /** One pass over queued marks. Returns a report; stops (without failing) at the budget or deadline, and with
  * stopped='errors' at the breaker. A row's own problem sends it to Needs a look; a passing one leaves it queued. */
-const processQueue = async ({ client, session, marks, rows, breaker = createBreaker() }) => {
-  const report = { examined: 0, approved: 0, repeat: 0, needsLook: 0, skipped: 0, stopped: null, errors: [], rowErrors: 0, transientErrors: 0 };
+const processQueue = async ({ client, session, marks, rows, breaker = createBreaker(), tag = tagWith(client) }) => {
+  const report = { examined: 0, approved: 0, repeat: 0, needsLook: 0, subjectFull: 0, skipped: 0, tagCalls: 0, tagged: 0, stopped: null, errors: [], rowErrors: 0, transientErrors: 0 };
+  // One tag call, charged to the run's dollar budget first (a spent budget stops the run like any paid check).
+  const tagged = async row => {
+    session.budget.reserve({ dollars: tagging.TAG_DOLLARS, requests: 1 });
+    report.tagCalls++;
+    const ok = await tag(row);
+    if (ok) report.tagged++;
+    return ok;
+  };
   const count = outcome => { report[outcome === 'repeat' ? 'repeat' : outcome === 'needs_look' ? 'needsLook' : outcome === 'approved' ? 'approved' : 'skipped']++; };
   for (const mark of marks) {
     const row = rows.get(mark.row_id);
@@ -189,9 +205,18 @@ const processQueue = async ({ client, session, marks, rows, breaker = createBrea
       }
       report.examined++; checking = true;
       let outcome;
-      try {
+      const approve = async () => {
         await session.write({ status: 'active' }, { existing: row, approvedOnly: true });
-        outcome = await settle(client, row.id, mark.content_hash, 'approved');
+        return settle(client, row.id, mark.content_hash, 'approved');
+      };
+      try {
+        try {
+          outcome = await approve();
+        } catch (error) {
+          // Phase 4c.1: no subject tag -> tag it once and retry once. Pair verdicts are cached, so the retry is free.
+          if (errorCode(error) !== 'untagged' || !(await tagged(row))) throw error;
+          outcome = await approve();
+        }
       } catch (error) {
         const code = errorCode(error);
         if (code === 'duplicate') {
@@ -201,6 +226,10 @@ const processQueue = async ({ client, session, marks, rows, breaker = createBrea
             : await settle(client, row.id, mark.content_hash, 'needs_look', null, error.message);
         } else if (code === 'uncertain') {
           outcome = await settle(client, row.id, mark.content_hash, 'needs_look', null, error.message);
+        } else if (code === 'subject_full' || code === 'untagged') {
+          // Phase 4a.1 star cap: refused before any paid check. Andrew decides (reject it, or retire another first).
+          report.examined--; report.subjectFull++;
+          outcome = await settle(client, row.id, mark.content_hash, 'needs_look', null, code === 'subject_full' ? SUBJECT_FULL_NOTE : UNTAGGED_NOTE);
         } else throw error;
       }
       count(outcome);
@@ -312,7 +341,7 @@ const finishRun = async (client, id, spent, report) => {
 };
 
 /** One paid run: Keep queue first, then (optionally) the D17 pre-check with what's left. */
-const runPaid = async ({ client, queued, candidates, perRun, total, minutes, limit, createSession = runtime.createSession, read = readRows, readMarks = readQueued }) => {
+const runPaid = async ({ client, queued, candidates, perRun, total, minutes, limit, createSession = runtime.createSession, read = readRows, readMarks = readQueued, tag }) => {
   const reservation = await reserveRun(client, perRun, total);
   if (!reservation.id) return { queued, prechecks: candidates.length, checked: 0, note: `Total budget used ($${reservation.used} of $${reservation.total}); nothing checked.` };
   const started = Date.now();
@@ -323,7 +352,7 @@ const runPaid = async ({ client, queued, candidates, perRun, total, minutes, lim
     session = await createSession({ client, budget: queueBudget({ dollars: reservation.dollars, minutes }) });
     if (queued) {
       const marks = await readMarks(client, limit);
-      queue = await processQueue({ client, session, marks, rows: await read(client, marks.map(m => m.row_id)), breaker });
+      queue = await processQueue({ client, session, marks, rows: await read(client, marks.map(m => m.row_id)), breaker, tag });
     }
     // Skipped when the queue stopped: at the budget, the deadline or the breaker.
     if (candidates.length && !queue?.stopped) precheck = await precheckPass({ client, session, ids: candidates, read, breaker });

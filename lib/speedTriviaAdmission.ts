@@ -1,8 +1,11 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { AdmissionError, createBudget, createSession } from "@/lib/speed-trivia-uniqueness/runtime.cjs";
+import { contentHash } from "@/lib/speed-trivia-uniqueness/core.cjs";
+import { computeSpeedTag, readSpeedSubjectKey, speedSubjectHasRoom, tagSpeedQuestion, writeSpeedTag } from "@/lib/speedTriviaTagging";
+import type { TagRow } from "@/lib/question-variety/tagging.cjs";
 import type { AdmissionRow, AdmissionSession } from "@/types/speedTriviaAdmission";
-import type { SpeedIndex } from "@/types/speedTriviaUniqueness";
+import type { SpeedIndex, SpeedQuestion } from "@/types/speedTriviaUniqueness";
 
 let cachedIndex: SpeedIndex | null = null;
 const pairCache = new Map<string, unknown>();
@@ -64,20 +67,61 @@ export const openSpeedTriviaAdmission = (options?: { elapsedMs: number; signal?:
   });
   return budget ? budget.limit(opening) : opening;
 };
+// Phase 4a.1 star cap: approval needs a subject tag. An untagged question is tagged once (one Gemini call) and retried;
+// if tagging fails, the 'untagged' refusal stands and the question stays waiting. `tagged` says it tagged (Phase 4c.1),
+// so a save doesn't tag the same content a second time.
+const withTag = async <T,>(row: AdmissionRow, attempt: () => Promise<T>): Promise<{ result: T; tagged: boolean }> => {
+  try {
+    return { result: await attempt(), tagged: false };
+  } catch (error) {
+    if (!(error instanceof AdmissionError) || error.code !== "untagged" || !(await tagSpeedQuestion(row))) throw error;
+    return { result: await attempt(), tagged: true };
+  }
+};
+const changedContent = (saved: AdmissionRow, existing: AdmissionRow | null) => {
+  if (!existing || existing.question_pool !== "anytime_blitz") return true;
+  const hash = (row: AdmissionRow) => contentHash({ ...row, category: row.category ?? "" } as SpeedQuestion);
+  try { return hash(saved) !== hash(existing); } catch { return true; }
+};
+const isActiveSpeed = (row: AdmissionRow | null) => row?.question_pool === "anytime_blitz" && row.status === "active";
 export const writeSpeedTrivia = async (patch: Record<string, unknown>, existing: AdmissionRow | null = null, session?: AdmissionSession): Promise<AdmissionRow> => {
   const gate = session ?? await openSpeedTriviaAdmission();
-  return (await gate.write(patch, { existing })).row;
+  const prospective = { ...(existing ?? {}), ...patch } as AdmissionRow;
+  // Phase 4c.8 (post-4c.4 review #4, D15): the star cap is checked only when a row BECOMES active, so an edit that
+  // keeps an approved question approved is tagged before the save. A move into a subject with 5 other approved
+  // questions is refused ('subject_full', 409) with nothing saved. Still one Gemini call per save; if it fails, the
+  // save goes ahead and the old tag stays. The tag trigger (guard_speed_question_tag) stays the binding check.
+  let earlyTag: TagRow | null = null;
+  const tagBeforeSave = Boolean(existing && isActiveSpeed(existing) && isActiveSpeed(prospective) && changedContent(prospective, existing));
+  if (tagBeforeSave && existing) {
+    earlyTag = await computeSpeedTag(prospective);
+    if (earlyTag && earlyTag.subject_key !== await readSpeedSubjectKey(existing.id)
+      && await speedSubjectHasRoom(earlyTag.subject_key, existing.id) === false) {
+      throw new AdmissionError("subject_full", "Subject full.");
+    }
+  }
+  const { result, tagged } = await withTag(prospective, () => gate.write(patch, { existing }));
+  const saved = result.row;
+  if (tagBeforeSave) {
+    if (earlyTag && saved) await writeSpeedTag(earlyTag);
+    return saved;
+  }
+  // Admin add/edit: a new question, or new content, gets its subject tag now (best effort; never blocks the save),
+  // unless withTag just tagged this content (one Gemini call per save, Phase 4c.1).
+  if (!tagged && saved?.question_pool === "anytime_blitz" && changedContent(saved, existing)) await tagSpeedQuestion(saved);
+  return saved;
 };
 // Manual approval compares only with questions already available to players.
 // Edits, new generation and imports continue to use the complete fact bank.
 export const approveSpeedTrivia = async (existing: AdmissionRow, session?: AdmissionSession): Promise<AdmissionRow> => {
   const gate = session ?? await openSpeedTriviaAdmission();
-  return (await gate.write({ status: "active" }, { existing, approvedOnly: true })).row;
+  return (await withTag(existing, () => gate.write({ status: "active" }, { existing, approvedOnly: true }))).result.row;
 };
 export const convertSpeedTriviaToLive = async (patch: Record<string, unknown>, existing: AdmissionRow, session?: AdmissionSession): Promise<AdmissionRow> => {
   const gate = session ?? await openSpeedTriviaAdmission();
   return gate.leave(patch, existing);
 };
+// A question's own state that stops its approval (409). subject_full and untagged come from the star cap (Phase 4a.1).
 export const speedTriviaError = (error: unknown) => error instanceof AdmissionError
-  ? { status: ["duplicate", "uncertain", "retired"].includes(error.code) ? 409 : 503, code: error.code, conflicts: error.evidence?.matchedRowIds ?? [] }
+  ? { status: ["duplicate", "uncertain", "retired", "subject_full", "untagged"].includes(error.code) ? 409 : 503, code: error.code, conflicts: error.evidence?.matchedRowIds ?? [] }
   : { status: 500, code: "write_failed", conflicts: [] };
