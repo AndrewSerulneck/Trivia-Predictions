@@ -393,6 +393,8 @@ describe("animated Story (docs/share-win-celebration-plan.md Phase 2)", () => {
     expect(shared.blob.type).toBe("video/mp4");
     expect(shared.fileName).toMatch(/\.mp4$/);
 
+    // Still is disabled while the share sheet is open; wait for the share to finish before tapping it.
+    await waitFor(() => expect(screen.getByRole("button", { name: "Still" }).hasAttribute("disabled")).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Still" }));
     await settle();
     expect(document.querySelector("video")).toBeNull();
