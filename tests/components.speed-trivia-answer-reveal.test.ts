@@ -31,6 +31,10 @@ vi.mock("@/components/trivia/QuestionImage", () => ({ QuestionImage: () => null 
 
 import { TriviaGame } from "@/components/trivia/TriviaGame";
 
+// jsdom has no scrollIntoView. The game scrolls the Next button into view on a timer, which can fire after a test
+// ends (it failed CI on PR #20), so the stub stays for the whole file.
+Element.prototype.scrollIntoView = () => {};
+
 const SNAPSHOT_KEY = "tp:trivia:live-preview:v1";
 const Q1 = { id: "q-1", question: "First question?", options: ["A1", "B1", "C1", "D1"], order: 1 };
 const Q2 = { id: "q-2", question: "Which planet is red?", options: ["Venus", "Mars", "Jupiter", "Mercury"], order: 1 };
