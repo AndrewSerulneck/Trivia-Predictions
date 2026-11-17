@@ -23,6 +23,12 @@ describe("rescore multi-answer", () => {
     expect(next).toMatchObject({ flags: ["niche-subject"], score: 4, version: "bar-test-v2.1", model: "m" });
   });
 
+  it("keeps a newer scorer's version", () => {
+    const v4 = { ...stored(["multi-answer", "niche-subject"], 2), version: "bar-test-v4" };
+    const next = script.rescored(row("Which band released 'Deja Vu' in 1970?", "Crosby, Stills, Nash & Young"), v4);
+    expect(next).toMatchObject({ flags: ["niche-subject"], version: "bar-test-v4" });
+  });
+
   it("changes nothing for a real list", () => {
     expect(script.rescored(row("What are the three main disciplines in fencing?", "Foil, Epee, Sabre"), stored(["multi-answer"], 2))).toBeNull();
   });

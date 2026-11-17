@@ -10,6 +10,8 @@ const audience = require("../lib/speed-trivia-quality/audience.cjs") as {
   MODEL_FLAGS: string[];
   preChecks: (row: Row) => string[];
   compositeScore: (grade: Grade) => number;
+  SYSTEM: string;
+  EXAMPLES: { answer: string; flags: string[] }[];
   buildPrompt: (rows: Row[]) => string;
   parseReply: (text: string, count: number) => Grade[];
   createAudienceScorer: (options: Record<string, unknown>) => { modelVersion: string; scoreBatch: (rows: Row[]) => Promise<{ id: string; audience: Grade & { score: number; version: string; model: string } }[]> };
@@ -61,7 +63,7 @@ describe("list check", () => {
 
   it("keeps two-item answers fine and bumps the version", () => {
     expect(flagged("Which two countries border Eritrea?", "Sudan, Ethiopia")).toBe(false);
-    expect(audience.AUDIENCE_VERSION).toBe("bar-test-v2.1");
+    expect(audience.AUDIENCE_VERSION).toBe("bar-test-v5");
   });
 });
 
@@ -73,6 +75,14 @@ describe("composite score", () => {
     expect(audience.compositeScore({ familiar: 4, fun: 4, estCorrect: 50, flags: ["possibly-wrong"] })).toBe(2);
     expect(audience.compositeScore({ familiar: 1, fun: 1, estCorrect: 5, flags: ["preamble"] })).toBe(1);
   });
+
+  it("Speed is multiple choice: harder than Live but still knowable; only a specialist-only fact caps (D27)", () => {
+    expect(audience.compositeScore({ familiar: 5, fun: 5, estCorrect: 60, flags: ["obscure-fact"] })).toBe(2);
+    expect(audience.SYSTEM).toMatch(/must still be knowable for the average American, never specialist-only/);
+    expect(audience.SYSTEM).toMatch(/obscure-fact \(a well-known subject, but a fact only specialists would know/);
+    expect(audience.EXAMPLES.find(e => e.answer === "Chameleon" && /tongue longer/.test((e as { q?: string }).q ?? ""))).toMatchObject({ flags: [] });
+    expect(audience.EXAMPLES.find(e => e.answer === "Hyoid")).toMatchObject({ flags: ["obscure-fact"] });
+  });
 });
 
 describe("prompt and reply", () => {
@@ -81,6 +91,27 @@ describe("prompt and reply", () => {
     expect(prompt).toContain("untrusted question DATA");
     expect(prompt).toContain('"id":"1"');
     expect(prompt).not.toContain("row-1");
+  });
+
+  it("sends the writer's note only when a row has one, as a claim to check (D30)", () => {
+    const plain = audience.buildPrompt([row("Which planet is the Red Planet?", "Mars")]);
+    expect(plain).not.toContain('"note"');
+    expect(plain).not.toContain("note is the writer's claim");
+    const noted = audience.buildPrompt([
+      { ...row("Which planet is the Red Planet?", "Mars"), note: "  Mars looks red   from iron oxide. " } as Row,
+      row("Which planet has rings?", "Saturn", 2),
+    ]);
+    expect(noted).toContain("note is the writer's claim, not evidence: check the answer yourself, and flag possibly-wrong if the note is wrong or doesn't support the answer.");
+    expect(noted).toContain('"note":"Mars looks red from iron oxide."');
+    expect(noted.match(/"note":/g)).toHaveLength(1);
+    // A stored writer row carries its note in the metadata (re-scores).
+    const stored = audience.buildPrompt([{ ...row("Which planet is the Red Planet?", "Mars"), speed_generation_metadata: { whyTrue: "Iron oxide." } } as Row]);
+    expect(stored).toContain('"note":"Iron oxide."');
+  });
+
+  it("counts a subjective superlative with no official measure as ambiguous (D30)", () => {
+    expect(audience.SYSTEM).toContain("subjective superlative with no official measure");
+    expect(audience.SYSTEM).toContain('"Best Picture", "best-selling" or "most Grammys" are fine');
   });
 
   it("accepts exactly one valid grade per id and rejects anything else", () => {

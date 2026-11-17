@@ -1,0 +1,11 @@
+export const FACT_RULES_VERSION: string;
+export const CEILING: number;
+export const KINDS: readonly string[];
+export const KIND_HELP: string;
+export const RULE_ONE_FACT: string;
+export const RECALL_VS_RECOGNITION: string;
+export const RULE_SPEED_FACT: string;
+export const RULE_KNOWN_FACT: string;
+export const RULE_KINDS: string;
+export const RULE_CEILING: string;
+export const FACT_RULES: Readonly<{ speed: readonly string[]; live: readonly string[] }>;

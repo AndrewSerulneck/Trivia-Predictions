@@ -2,6 +2,10 @@ name: Sync Live Trivia
 
 on:
   workflow_dispatch:
+  # Monthly (D16): entries past their expires_on are treated as absent and pruned from the database without a push.
+  # Expiry dates are always the 1st of a month, so a run early on the 1st (UTC) catches each month's expiries.
+  schedule:
+    - cron: "20 6 1 * *"
   push:
     branches:
       - main

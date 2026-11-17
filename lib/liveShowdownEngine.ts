@@ -23,6 +23,7 @@ import {
   type LiveTriviaQuestionProfile,
   type LiveTriviaSourceBand,
 } from "@/lib/liveTriviaSeeding";
+import { getLiveTriviaCorrectAnswer, isLiveCategoryOffered, isLiveTriviaSeedAnswerAllowed } from "@/lib/liveTriviaCategoryGate";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const QUESTIONS_PER_ROUND = 15;
@@ -344,25 +345,6 @@ function isBlockedLiveTriviaCategory(value: string | null | undefined): boolean 
   return BLOCKED_LIVE_SHOWDOWN_CATEGORIES.has(normalizeLiveTriviaCategory(value).toLowerCase());
 }
 
-function getLiveTriviaCorrectAnswer(row: Pick<LiveTriviaSeedQuestion, "options" | "correct_answer">): string {
-  const options = coerceOptions(row.options);
-  const answerIndex = Number.isInteger(row.correct_answer) ? row.correct_answer : -1;
-  if (answerIndex < 0 || answerIndex >= options.length) return "";
-  return String(options[answerIndex] ?? "").trim();
-}
-
-function countAnswerWords(answer: string): number {
-  if (!answer) return 0;
-  return answer.split(/\s+/).map((part) => part.trim()).filter(Boolean).length;
-}
-
-function isLiveTriviaSeedAnswerAllowed(answerRaw: unknown): boolean {
-  const answer = String(answerRaw ?? "").trim().replace(/\s+/g, " ");
-  if (!answer) return false;
-  if (parseLargePureNumberAnswer(answer) !== null) return true;
-  return countAnswerWords(answer) <= 2;
-}
-
 type NormalizedLiveTriviaSeedQuestion = LiveTriviaSeedQuestion & {
   slug: string;
   category: string;
@@ -665,6 +647,11 @@ export function buildLiveTriviaOccurrenceSeedSlots(params: {
       category,
       sorted.map((row, index) => applySourceMetadata(row, index, sorted.length, explicitSourceTotal))
     );
+  }
+
+  // D11 (Phase 4c): a gated category (Current Events) is offered only once it can fill rounds.
+  for (const [category, list] of Array.from(byCategory.entries())) {
+    if (!isLiveCategoryOffered(category, list.length)) byCategory.delete(category);
   }
 
   const categoryInventory = Array.from(byCategory.entries()).map(([category, list]) => {

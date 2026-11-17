@@ -7,6 +7,7 @@ import { TriviaThemeScope } from "@/components/trivia/TriviaThemeScope";
 import { GameLandingExperience } from "@/components/venue/GameLandingExperience";
 import { formatCountdown } from "@/components/venue/venueHubShared";
 import { getUserId } from "@/lib/storage";
+import { GATED_TRIVIA_CATEGORIES } from "@/lib/triviaCategories";
 
 type TriviaQuotaSnapshot = {
   limit: number;
@@ -21,6 +22,8 @@ export function TriviaAppFrame() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [quota, setQuota] = useState<TriviaQuotaSnapshot | null>(null);
   const [quotaSecondsRemaining, setQuotaSecondsRemaining] = useState(0);
+  // Gated categories stay hidden until the quota response says otherwise (fails closed).
+  const [hiddenCategories, setHiddenCategories] = useState<ReadonlySet<string>>(() => new Set(GATED_TRIVIA_CATEGORIES));
 
   const quotaLocked = Boolean(quota && !quota.isAdminBypass && quota.questionsRemaining <= 0);
 
@@ -35,9 +38,16 @@ export function TriviaAppFrame() {
       }
       try {
         const response = await fetch(`/api/trivia/quota?userId=${encodeURIComponent(userId)}`, { cache: "no-store" });
-        const payload = (await response.json().catch(() => null)) as { ok?: boolean; quota?: TriviaQuotaSnapshot | null } | null;
+        const payload = (await response.json().catch(() => null)) as {
+          ok?: boolean;
+          quota?: TriviaQuotaSnapshot | null;
+          hiddenCategories?: unknown;
+        } | null;
         if (cancelled || !payload?.ok) {
           return;
+        }
+        if (Array.isArray(payload.hiddenCategories)) {
+          setHiddenCategories(new Set(payload.hiddenCategories.filter((value): value is string => typeof value === "string")));
         }
         const nextQuota = payload.quota ?? null;
         setQuota(nextQuota);
@@ -130,6 +140,7 @@ export function TriviaAppFrame() {
         <div className="flex h-full min-h-0 flex-col">
           {phase === "category-select" ? (
             <CategorySelect
+              hiddenCategories={hiddenCategories}
               onSelect={(category) => {
                 setSelectedCategory(category);
                 setPhase("game");

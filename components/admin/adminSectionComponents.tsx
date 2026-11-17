@@ -61,6 +61,10 @@ export const TriviaImageReviewSection = dynamic(
   () => import("@/components/admin/sections/TriviaImageReviewSection").then((m) => m.TriviaImageReviewSection),
   { loading: SectionLoading }
 );
+export const TriviaVarietySection = dynamic(
+  () => import("@/components/admin/sections/TriviaVarietySection").then((m) => m.TriviaVarietySection),
+  { loading: SectionLoading }
+);
 export const AdPlacementBuilder = dynamic(
   () => import("@/components/admin/AdPlacementBuilder").then((m) => m.AdPlacementBuilder),
   { loading: SectionLoading }
@@ -151,6 +155,7 @@ export const ADMIN_CONSOLE_SECTION_RENDERERS: Record<
   "trivia-list": () => <TriviaListSection />,
   "trivia-review": () => <TriviaPendingReviewSection />,
   "trivia-image-review": () => <TriviaImageReviewSection />,
+  "trivia-variety": () => <TriviaVarietySection />,
   "ads-list": ({ venues }) => <AdsListSection venues={venues} />,
   "ads-create": ({ venues }) => <AdsCreateSection venues={venues} />,
   "ad-placement": ({ venues }) => <AdPlacementBuilder venues={venues} />,

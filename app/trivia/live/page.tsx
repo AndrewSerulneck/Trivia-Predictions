@@ -26,6 +26,7 @@ import {
 import { ReadyPrompt } from "@/components/trivia/ReadyPrompt";
 import { RoundStartCountdownOverlay } from "@/components/animations/RoundStartCountdownOverlay";
 import { QuestionImage } from "@/components/trivia/QuestionImage";
+import { ReportQuestionSheet } from "@/components/trivia/ReportQuestionSheet";
 import { useAnimationTrigger } from "@/components/animations/AnimationTriggerProvider";
 import { InviteFriendButton } from "@/components/social-share/InviteFriendButton";
 import { StoryShareLauncher } from "@/components/social-share/StoryShareLauncher";
@@ -1169,6 +1170,21 @@ function LiveShowdownPageContent() {
   const locked = forfeitKey === activeKey || submittedKey === activeKey || !answering;
   const progressPct = answering ? Math.max(0, Math.min(100, (state.secondsRemaining / 60) * 100)) : 0;
   const currentResult = isSpectatingActiveBlock ? undefined : activeKey ? resultByKey[activeKey] : undefined;
+  // Report (D32): only once the answer is revealed and only for a player who answered (not a forfeit). Keyed by
+  // activeKey, so the sheet closes itself, without sending, when the next question starts.
+  const viewerAnsweredThisQuestion =
+    !isSpectatingActiveBlock &&
+    Boolean(
+      (currentResult && !currentResult.forfeited) ||
+        (state.viewerResult &&
+          state.viewerResult.roundNumber === state.currentRound &&
+          state.viewerResult.questionIndex === state.currentQuestionIndex &&
+          state.viewerResult.submittedAnswer !== "__FORFEIT__")
+    );
+  const reportSlug =
+    state.activePhase === "rest_warning" && state.revealedAnswer && viewerAnsweredThisQuestion
+      ? state.activeQuestion?.questionId ?? ""
+      : "";
   const unsubmittedIsInactive = Boolean(activeKey && participatingQuestionKeys[activeKey]);
   const feedbackState: FeedbackState = !currentResult
     ? unsubmittedIsInactive
@@ -1818,6 +1834,11 @@ function LiveShowdownPageContent() {
               {!currentResult ? <p className="mt-1 text-xs">Question expired.</p> : null}
             </motion.div>
             <RevealedAnswerBanner answer={state.revealedAnswer} animationKey={activeKey} />
+            {reportSlug ? (
+              <div className="mt-2 flex justify-center">
+                <ReportQuestionSheet key={activeKey} game="live" slug={reportSlug} />
+              </div>
+            ) : null}
             <AnimatePresence>
               {state.emceeAnnouncement ? (
                 <motion.p

@@ -54,7 +54,8 @@ export const runProgressiveTriviaApproval = async (
         recordRow({ id, outcome: "approved" });
       } catch (error) {
         const failure = speedTriviaError(error);
-        if (["duplicate", "uncertain", "retired"].includes(failure.code)) { recordRow(describe(id, error)); continue; }
+        // subject_full / untagged: the Phase 4a.1 star cap.
+        if (["duplicate", "uncertain", "retired", "subject_full", "untagged"].includes(failure.code)) { recordRow(describe(id, error)); continue; }
         // A timeout may follow a committed save. Reconcile once, without rechecking.
         if (failure.code !== "budget_exhausted" && failure.code !== "cancelled") recordRow(describe(id, error));
         throw error;

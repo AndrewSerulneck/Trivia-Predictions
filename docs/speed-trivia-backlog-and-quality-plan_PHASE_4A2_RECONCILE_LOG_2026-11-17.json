@@ -1,0 +1,4492 @@
+{
+  "version": "thin-subjects-v3",
+  "runId": "471498d8-d5e2-4e68-a8df-5f9204434424",
+  "plan": "docs/speed-trivia-backlog-and-quality-plan_PHASE_4A2_THIN_PLAN_V3_2026-11-16.json",
+  "baseRunId": "6c1502bd-ddd2-4a1a-aea9-af9a1d53489b",
+  "baseLog": "docs/speed-trivia-backlog-and-quality-plan_PHASE_4A2_THIN_LOG_2026-11-17.json",
+  "startedAt": "2026-11-17T02:11:20.920Z",
+  "aliasTags": [],
+  "restoreIds": [
+    "008d9e18-006b-4659-97ae-75f433331b00",
+    "025944a2-f629-4f88-824f-ad71893225da",
+    "027c6bc3-5f77-45aa-a385-fc8bb88d350a",
+    "02e265b8-ae80-4a1a-be8b-5f7c491b0701",
+    "033ce89a-4166-404e-b97c-ff54f366b294",
+    "03ddb965-b7d5-4f1a-ab58-554bdc4acc7d",
+    "04197973-db18-446f-9946-c41ea5bded61",
+    "044d7873-80a1-455d-844c-f5370dd9efd6",
+    "04beea01-9150-4d01-9729-5cb6e7554a2c",
+    "057af3ba-6fac-4e5b-86d9-62ebd8f27d35",
+    "05d9eb5d-16a7-415a-b9bb-a03da1ba73a4",
+    "069e1c0d-842d-4835-ba16-38dc6990da02",
+    "06b9932c-8eae-46c3-93eb-4b2cb57c83ef",
+    "0750183c-367a-4801-992e-c0c55e0b4b47",
+    "07723314-dda2-4830-bf2c-3f51b45b4649",
+    "07952661-a9d7-407e-871c-a02ed3d5d678",
+    "0820062e-4605-40ca-9c6e-7c53a30c9f2d",
+    "084aa825-f89f-45f0-b014-0a23d7b85a39",
+    "0880abdf-9094-4c23-b207-27b74f472cc9",
+    "0895c880-48d1-4b42-a86e-7105232372ec",
+    "09b51d55-0e31-4e3e-90ad-fdf3130d468e",
+    "09bb02b1-a85e-4708-9d86-a8f9027f8cad",
+    "09cb9b9a-61a0-4ae3-a9c9-5e0f3b95ae26",
+    "0a15167d-7b89-48d5-8f61-537ec1ffa06d",
+    "0a2e6938-8c54-4c6c-aca9-09f4fc927262",
+    "0a470bec-5cf3-4b71-b530-050a448ed4de",
+    "0a5139bf-1cf5-4705-9899-6a046e8fe5c5",
+    "0ae31947-4d33-4092-a784-3e1dcff1be04",
+    "0b0e5059-3e7e-4958-92c1-1f2e48a66542",
+    "0b652778-577e-44a8-b7c8-fa68f9388cad",
+    "0bcd4ec6-78c7-427e-a65c-f0cfbda184e2",
+    "0c5c87d9-0a74-4e43-9371-9406deb9733a",
+    "0cdaed6f-f4de-4922-828e-fe8235dfa3b2",
+    "0d2c76cc-7c5a-4f2c-a74e-d53d15260ad6",
+    "0d7a49ba-cae3-48d4-93c1-d84262652af6",
+    "0deeb363-da24-4978-a18c-cdd760cb14da",
+    "0e9919df-7e21-4c5a-81e6-f270e16a4c73",
+    "0f51b629-add6-4a44-a41e-af2e8c33cbdb",
+    "10439d22-3de1-493a-b392-88baa06b2bc6",
+    "1245a277-cb7d-438e-870d-cae9ff3191fa",
+    "1307788e-8b38-422c-ab8f-b267c4831430",
+    "137338d3-d840-4a21-96ce-caf4cd32d0d6",
+    "13f2b82f-59b6-423d-8311-5493c911e942",
+    "13f5d81a-2e59-4eec-ae5d-4ffe66cc56ca",
+    "149ca597-f76a-4aef-a2b7-c4890f4c003d",
+    "1583f4f7-6b66-4dd8-a352-63e313c439b6",
+    "15bbc9dd-3e45-4ac0-8db4-228565c4785a",
+    "178df150-9180-4388-9a05-748a13846f8b",
+    "17a69453-c459-4bcc-a3fc-326b32da317e",
+    "17d171e7-28f8-410f-b909-b0f43760a484",
+    "18278d60-1bf8-4982-843d-5d7c41720bfc",
+    "1882e261-0bbc-4911-b675-e8fdd801fcd3",
+    "1b015297-01bd-4848-b269-7d46850ac6a8",
+    "1b32e7cd-66cf-4906-8039-9a80a29c2ceb",
+    "1b6f7dd6-5eb8-48de-89ad-2bc8d7195563",
+    "1bc0d669-4a55-4fa2-aeaa-3f213166af20",
+    "1c9e7016-54bc-4d54-8e7e-77631b8acb5e",
+    "1d144f24-509a-4c59-bc45-1012a20bc157",
+    "1dd99add-d196-4fdd-835b-2061c79f3cfa",
+    "1e2c527b-92d2-469a-9332-a92a947fe89b",
+    "1f41553d-3413-4937-8f41-c19dcd9bc9f4",
+    "2050e326-d696-4a83-bb24-49d1235d1ccf",
+    "20888ff9-71fe-41f7-8ec1-6f7788d590ba",
+    "20e289ec-b06d-49d6-add9-618f67be49bb",
+    "20f568c7-a196-4557-950a-c9c63d945a78",
+    "215d5c99-58f5-47d0-95d1-094d4c35b6a5",
+    "21d21530-629b-4ebc-a924-6a50a29a173f",
+    "22e16995-7ab8-450a-8e00-e26fda9ac9e1",
+    "23d55429-1888-46a5-be4e-f0d42e2063cf",
+    "23ea628e-29b0-4148-8911-715320c54824",
+    "241075c4-7678-4ec4-8023-62a73ef7653e",
+    "241feeb8-d553-4e95-bc27-b4791cd574a9",
+    "24acb3d1-c255-45da-9a61-ccf224bb0c4e",
+    "24d9e2b7-a44c-4bb2-9e32-1d83971e05e2",
+    "25740b9f-bc99-4769-8187-a826468bd455",
+    "25bff2e6-47e9-46d2-9798-77c7a0ab1277",
+    "25ead5a6-ae1f-41bb-a47d-42fd903e455f",
+    "26519dae-c82c-4b90-8a28-03045d76724c",
+    "27158fbe-564b-4f62-8b8c-6f2fb76e5471",
+    "27442063-edf6-40e0-9c6a-763ae29d61be",
+    "274bc1f7-52b7-497b-a067-a428f6ac62aa",
+    "280cfe3b-3f8b-4610-a0b0-8ca3c2f3dcce",
+    "283bdba9-af4b-45f7-9bc5-4f21d3b809ed",
+    "288ed1a6-5248-4f22-adca-30449ac55569",
+    "28c36313-ed30-4626-9c4a-463f5d35ea1d",
+    "29443162-4055-4362-8e31-ea41bccc787d",
+    "2952d805-cdac-494e-a01b-e7e2960bab0b",
+    "2a26df37-b00e-4e8d-8449-6f4a5905eac5",
+    "2a63fc32-aa68-497f-8af5-bdc2b4fa8887",
+    "2a8b7d70-da74-44aa-84aa-835576d86221",
+    "2aeed91c-ef24-429a-8c17-e87ac5a614fe",
+    "2cb0d711-bc5b-46f5-9fc0-8cde36d346d6",
+    "2f8ea94e-3df7-4d68-b3e9-2fd07f981fbb",
+    "302c30cd-6724-47fa-b054-3f7c9d661bcc",
+    "309aba77-3d0c-4abc-a115-beb7817cf229",
+    "31d4dfb8-3132-4fa0-917b-8ba3d2ffd898",
+    "3240e832-1320-435f-beb4-3ae54869665e",
+    "324eb161-1e11-4f4b-ab45-198326a65893",
+    "325fd892-fbba-40b1-978a-902b95a3b473",
+    "32f01f1d-e004-45cf-b9b8-7327f1604912",
+    "33312772-cfab-4462-b5c0-bcc153c0b625",
+    "3440a8e5-074b-4f66-8581-d1a936460dc6",
+    "3457f329-fece-41cc-9c10-c041633e1c24",
+    "350e5a65-c53d-4d04-880f-c0af2ce70195",
+    "363ba495-8996-4472-b859-061e48b7cdc9",
+    "3698ff74-1202-4659-9f93-376bde862896",
+    "370fd48a-9631-43a7-af52-5e875607be29",
+    "3759896e-da97-43b3-87be-b03349fc67bb",
+    "37880d25-72b6-4f29-b9ea-059553742762",
+    "3789c3f2-2db0-403c-b98a-2836eb8795b4",
+    "37d6e7bb-dc09-4d6c-802a-26a0975e3298",
+    "3824b67c-2d96-4d5e-af64-77201d455326",
+    "3826645e-4566-4ade-9519-918fa95823d1",
+    "399d9b8e-fa0c-41a9-ad82-3d73c292fbb5",
+    "39e53e53-4b6e-4463-8cfc-44de70fb061d",
+    "39f528ae-cd6b-4b50-9d00-9e137aa6906f",
+    "3a4eab81-6f27-42c9-b4ae-ad63a95d155b",
+    "3b388cfd-d13a-49e1-b5a4-af56f9d88789",
+    "3c2e7be2-0df1-4a4c-90f2-4b5a35df6348",
+    "3c681325-92dd-495b-889d-16e85195981f",
+    "3d26c443-d7d0-42e9-ba7d-98196dd3ee56",
+    "3e916e1a-de0e-4209-8176-909ea6d5c65d",
+    "3f908179-6410-4a42-8918-fb2801f49d11",
+    "3fa63be3-e943-4c8e-b826-f1eb1ab9ca97",
+    "3fd0b7fb-7b4b-4dc6-bbe7-97a03000b1be",
+    "400ce12c-48d4-4c6e-8ff1-ec35d8d4a9e2",
+    "4083c829-9a71-4ece-9e60-d70bb6f93120",
+    "41ab79d6-b43f-4f3b-9efb-98a813a9fb5c",
+    "43512e09-6613-44f9-b9ec-3056b18c0bee",
+    "448e210f-d36a-4ee2-a74a-1f4756bd85f3",
+    "44aa816d-6478-4472-bbf2-c95f225d7392",
+    "46301562-1c20-4fc0-95d9-64860888bca7",
+    "49d3a43f-59ff-426a-88e2-4df609b00cad",
+    "49dae9d8-fce3-43a7-84de-696d8297bc21",
+    "4a2cec39-8ee9-43ce-b2c8-285e46780e56",
+    "4a45fbfd-fc1c-4cb0-beb7-0f95fef2e862",
+    "4a9b26e5-5a72-40f9-a2e1-c2ce3a753370",
+    "4b94c741-0c87-4ba8-9939-cb8182c67e69",
+    "4c3b7c54-bf86-4c93-8086-ac9473eba287",
+    "4e079b46-ea0d-4762-8e6f-a1d81685e008",
+    "50d23a04-01fd-4a0e-a9f1-7b5b9531e263",
+    "516247ae-d90c-4639-8a33-78b50bd4495e",
+    "537772bd-7ac1-4478-9eb5-7644e869c655",
+    "537befdd-e7b4-49ed-9c95-d14e28e5cf79",
+    "53f50f5e-de70-48f9-83b9-76df6ac8e062",
+    "540a9119-2549-4eec-bc24-02f458fc6114",
+    "545f5f70-5b44-4a4f-9406-83bda2351748",
+    "550a1077-41df-4278-9e57-7aaa7a979c81",
+    "55fe8d0e-9de2-4b7a-b50a-41879296a4a4",
+    "56a14fe5-6696-4722-9c96-93f15424346c",
+    "56aaa4be-f97f-48c6-a7e0-90daae8e9ba8",
+    "5858c479-886a-4475-9446-6beea2e4c8d3",
+    "585e0555-5b1d-4660-9df9-f91f9b6959dc",
+    "58de11ab-d297-44bf-8e48-36ae9a12740b",
+    "591ba4a4-dc17-41b2-99cd-dd4650bbc54b",
+    "5a79b9d4-f002-470d-84d6-bbf9648f7939",
+    "5ae31ba5-55d8-41f5-ba3e-fa4e75d8059c",
+    "5ae4dd0b-5a11-4fb4-8388-4a00b636b888",
+    "5c2aa548-83fd-4e48-859f-9bc5e6bf349b",
+    "5c4cd6b1-7f9e-47d4-8cb5-819ece4d96b2",
+    "5cdc7f53-89cb-467a-8581-efea50872971",
+    "5d55a82d-2941-43d3-a80a-4aaf9b24e028",
+    "5d807d7f-45bf-4458-a5fb-6ff7fe819d57",
+    "5d8ff7f6-697f-438d-aa9d-edc8fd3601a7",
+    "5dc87ed4-b3bb-43b2-bcfe-bb14067ef2e5",
+    "5dd84747-677f-4bd3-8e48-1c9e2fe15f7c",
+    "5e70ef7f-bfb0-4d74-b1dd-0c1801b2b5ed",
+    "5e840541-2fae-4a3c-b191-4ef7734dba6e",
+    "5f6fc206-be79-42c9-823e-166dde35df44",
+    "5fa1f91a-f509-4070-8a38-24089d8be28d",
+    "5fd072d8-e235-4dca-adea-8a41d55fc152",
+    "6254a24b-feff-4c87-9572-7110a4259920",
+    "62589472-bc4b-44bd-a7f9-a1db0cc48217",
+    "62e2e9e2-a3f2-4c43-9e88-8d0101484ff6",
+    "62e695eb-cadf-4fb2-a991-d6b182071f78",
+    "62f38f14-a64d-4908-a23b-6fe4609e5add",
+    "64300431-32ed-492e-97ab-7e8b5d8b6413",
+    "64ce6034-c359-439e-af58-fc2c8731f366",
+    "65028048-67f5-4421-bc62-7f02e5884b7c",
+    "65615e79-80d4-4b5c-b5bf-29977a9cce22",
+    "65625e99-f60b-4781-bacb-3eeb55cb4ce6",
+    "6637b53d-dfa9-4ec9-8d0c-f6ad80641ea9",
+    "66b4b6e9-4e2e-4d8c-9d67-8871c71c4def",
+    "66eaf09a-21a1-4c8c-8a48-3ad129cfa866",
+    "67282392-6d1c-461d-86a6-695c86eb5404",
+    "67bccb95-7bf7-457c-8ef0-948b5eb3be69",
+    "68c82d81-3bc9-4727-8796-9eff8866da16",
+    "69091aaa-8d61-46aa-8767-a395ae865879",
+    "696d9bb5-4a78-47b1-90b4-5889349f8d47",
+    "696fdd78-059a-41d0-87ab-3c38e4bb3c72",
+    "69fde34c-8e49-4eca-bb79-6b81a5b2e688",
+    "6a39b832-b5bf-4e8c-801c-650b5389c038",
+    "6d41a46d-bc4e-4412-aa33-e5e6d7560ba7",
+    "6da83f5a-101e-4abf-8f1f-531c80c9a0b0",
+    "6dd1d070-c575-4bb0-8643-0005038d965b",
+    "7081f980-cd7e-4973-8ce0-7e314d1f87df",
+    "708c023e-a9bc-44ae-babe-2794b0fcbeba",
+    "70bb840c-d63a-4731-aced-389824d8f803",
+    "73938f61-5c7e-43ad-8ee2-424b215ec46f",
+    "73ccc7da-e557-44a0-ba3a-f6075719e9f3",
+    "7433cc04-26b2-41d5-afea-2a69a8799eb3",
+    "749b2c46-fe10-4c05-8eca-ee29fc07ef0d",
+    "753e4e5f-13d1-4b61-beb6-3a5e167ce8d3",
+    "75b94199-767d-44b4-86ed-6cdc8c670958",
+    "75c5289b-fb53-4cd2-8306-a55c3d698ec9",
+    "75eda59c-715c-4cce-a2f8-ddae69a36508",
+    "765db970-08c2-4242-afec-accb7a38240b",
+    "76e5d64b-689e-411f-a5fb-172f74efeb00",
+    "77430164-5862-4ffb-98d0-a4657bf62f93",
+    "779a60bf-2e77-4be0-90d2-67561e0a9708",
+    "77afb0ec-1461-4396-b2e7-c7463549a34d",
+    "77ed901d-9156-456d-8279-be09e59433ad",
+    "78260f71-e5d0-47de-8bea-d5ddce98a3c6",
+    "784df4f7-18f8-4192-8edf-12df41a08956",
+    "7870fb42-a329-4290-a0e0-3c8dee571784",
+    "788fb12e-0875-4b7d-8ae7-1f34983dc449",
+    "78a5ddd5-a5e8-4483-9e70-755826ef82b3",
+    "7b0b57dd-545c-4c72-8426-500aec60d5d2",
+    "7b0f52b6-8929-4c52-a2d5-60216790c3d2",
+    "7b7c3d63-1018-4308-bad8-91f8df8ab58b",
+    "7ba292c4-4662-4462-8eb6-e29922ed5f80",
+    "7bd07eca-444a-48ca-8bac-dcd83858dd24",
+    "7c09d869-9f9a-43a3-84e1-f1db229bb69c",
+    "7e575944-d8de-4204-bb9a-43085ee1ec0d",
+    "804981bf-2100-4d9a-bace-1e40ce046fe1",
+    "806b215d-585d-49e1-b334-1bc88efeaa00",
+    "80e1ae35-094d-4be7-a9ee-6125be5e9c36",
+    "81110c4a-fb10-43fb-9aa8-02062d280c4b",
+    "82290eb9-689f-4413-9a8d-2bedda64e06e",
+    "822a1647-746d-4d79-a990-e916563b8b70",
+    "8249c967-0c34-4d33-826f-4217dbee75cf",
+    "82ceb2bc-35d2-4a62-89d0-f11ab924168c",
+    "830820c7-5e35-441b-9103-d74e96c3c8ff",
+    "8425593b-7934-4376-8863-2d91b59fafb7",
+    "84eea372-8dac-413d-86ca-698639ffe077",
+    "854ca4a4-b998-4468-bfa6-1d6bc5e388bb",
+    "85828536-4710-4b0c-99fb-b4c96b1b5923",
+    "8589b5f5-edf5-487d-baa5-7bf26216a1d0",
+    "86a217bb-5212-4fff-8778-86644f01af08",
+    "8731ef2d-bb3f-4881-83d0-b20a4f85f0e6",
+    "8748ca92-357a-454a-b6fd-4f9ae46bfdea",
+    "875bea25-168c-462b-ba61-755c1475e761",
+    "8782904d-3013-474f-af88-bc263b85db33",
+    "87af0c90-04cf-4371-823f-7a7ad52a65ba",
+    "87b98f9e-bb5b-41b8-b54a-a75588aab9ed",
+    "87d54da0-2797-467e-bfd9-ad51a3057b7a",
+    "88b5ed19-f928-4e44-85ae-de9520ca0aa9",
+    "8930e36e-df26-45bd-b2db-b1e98d8307cf",
+    "89e50176-83ec-4357-8b26-32e74c61e503",
+    "89f805a9-7883-4b78-9079-e4e1bfcf56a8",
+    "8a42bc86-eb2f-4a1b-8053-9f8d8c8ebc16",
+    "8b387b84-be94-4c61-9c6b-924467063abb",
+    "8ba1e8a1-b949-403f-8b9d-8d87d263e4c8",
+    "8c75ad5f-13b3-4ecd-a030-989fcdc838b8",
+    "8d1dda7b-39f5-428a-b431-ed83784390ca",
+    "8de4ffed-0bd6-4f2d-b7f8-2c0793fe606d",
+    "8f6c91a2-f045-4dd4-b095-0651e917627c",
+    "8fa8e279-c62f-4cb7-a490-6c8064b2d480",
+    "9086f1ed-281d-499c-aad7-5312c21024b9",
+    "917f2dfd-1cf3-4e84-8506-cacc765130b8",
+    "930d33b5-0b92-4c47-a431-d5bab6c6fa4e",
+    "931d1700-69c5-44ef-9623-7bd5e650f258",
+    "93452c0f-e753-4939-9861-ea4bdc6550ce",
+    "945dc567-9dbf-4184-ad88-02f135efa76d",
+    "951cf829-fddd-4804-a57d-a268bc68bfba",
+    "952f4bd3-2452-4b80-8992-27abd69dc303",
+    "95a88c6d-94bb-45c9-8588-03d5fd9ffaa0",
+    "96321211-4f97-4d10-a6ed-2e9ee901cdeb",
+    "96eb8226-254c-40de-8cb9-52d477a15cef",
+    "97012bbe-07da-48b4-8dd1-a36acc52694d",
+    "974021e3-3a8c-445f-a8cc-78062eda7ff8",
+    "97664972-f3e8-4460-a721-95dcabfa7c24",
+    "978b6aa0-3f2c-4e64-9743-cc4dc1fe2f31",
+    "97dd759a-68e7-4aca-ab95-16c5ba88ba69",
+    "9862f917-3c31-4722-ad9f-ae34b0ef975d",
+    "987a7b21-8d47-4c3c-b61a-856328ca5d97",
+    "98c56ef6-9710-4cfd-ab9c-474576c4447b",
+    "99c5d7a3-7d0c-48f5-abcb-d0b3eba217c9",
+    "9a0394e6-1783-4a80-b455-a3246fd742fb",
+    "9d597ba1-b714-43c3-87a9-11b80728b613",
+    "9ee4bf73-b494-46fa-bf89-376697563aaa",
+    "9f0da2e8-d4ca-44f6-b35a-9c618be8c7a5",
+    "9f5fe14b-1d22-4f28-bf96-ee3b9b7a0ada",
+    "a04edc45-65e6-4f84-aa5f-bb846a5be775",
+    "a05527b7-0ff7-4e87-aec1-63a248dd79ba",
+    "a0f7cf0e-0bcb-4f94-bcc1-72dc12663216",
+    "a1157e99-a04e-466e-ac82-061c0904fd67",
+    "a11de18c-039e-415b-a373-5734b07f2803",
+    "a153bf73-3df6-404b-973d-faec063a11da",
+    "a192e278-edaf-4777-b56a-010b2bc0d045",
+    "a1ac25f9-59f3-47b8-82e2-c5b19183fe0c",
+    "a33817bb-51ec-4940-93bf-22b9c04e3829",
+    "a3815764-5196-4950-a230-9f5995bfdc82",
+    "a3e2e3c8-5f26-406f-bbe5-95806da2cb6c",
+    "a3f90fd4-7a87-407f-86b0-84c4e177f3f0",
+    "a400b592-a2ca-44d9-a47a-1c82049cefb8",
+    "a4f93e65-cd08-4f63-b996-5ad4c6233250",
+    "a5839641-0264-4d55-a1a4-6a9b64dd4154",
+    "a5f20d6a-f4b4-4567-9755-40bdd867c436",
+    "a645ffd1-2d90-4cbc-a9bf-befa3cc55bcf",
+    "a65a803f-0598-4cee-878c-c22af3071530",
+    "a6af08cd-1130-4bca-8a42-2d1b03e0a630",
+    "a6ed61ae-f887-4648-8c99-c39bf6e4dee2",
+    "a8956b94-c0a7-46b6-8d72-4e93fc39ef76",
+    "a89d6b09-4fc6-4305-9855-92fc44a4cadf",
+    "a8f6859f-e714-45e9-bce6-3740aa7aa81d",
+    "abaad6bc-e637-41bc-9962-7d1aa6a8a4a7",
+    "abee8d32-faa9-4dc7-b790-c5315ba8efd2",
+    "af64b924-4a33-4fc2-a751-34cd92f042e5",
+    "af66377a-38fb-4662-8a33-5dc97116760e",
+    "b037ab1c-29db-464f-8618-9be5d8ebdbf7",
+    "b0439b5c-5637-48a6-9d2e-d5b7eed9e7d9",
+    "b15507b1-6a69-44ed-a880-7ac0da4f41be",
+    "b20942e2-b5ac-4a51-b962-722cdeae4eb1",
+    "b234566c-c4a1-4543-831e-458effacf610",
+    "b290f3ac-c21e-4a2a-b8a2-160823aa395f",
+    "b3147c38-315b-4ae8-a7b0-091aa3fc1de9",
+    "b317affe-b066-46e2-84f2-a070de49ba45",
+    "b4638199-360c-4c4f-a7db-67d1ba00ee12",
+    "b58b7e37-0c84-4fd4-9864-d2823a973361",
+    "b72b1e13-5ee1-4790-a288-931913aad686",
+    "ba334c3a-1e1a-4e34-932d-daed0c81a4c9",
+    "bab8d253-e85e-4411-8de0-aefd3c4a1829",
+    "bb450d4f-34e8-49a7-bdb1-261d9d2efa15",
+    "bb91af93-cb30-43b6-8be9-3c9d325fbe95",
+    "bbf0f0cf-cfad-4668-b69c-d30852090843",
+    "bc7bb6e0-61ec-4ec0-93dc-11f65f8fab03",
+    "bd1ba2a1-6f6a-4637-a096-f0f35941c8cc",
+    "bde52058-1cba-4496-b2f9-3be140142b76",
+    "be09f711-d3d6-4a53-879b-6d4fa71b63d1",
+    "c07865a2-0649-43da-a390-0ce66f9c0069",
+    "c0cdee2d-9cf7-4508-91d4-7c3cf36ab378",
+    "c135140c-9034-4137-a9ad-1fb9af106f57",
+    "c1a1fea1-3c5b-443e-9c65-c0581c4a1150",
+    "c2f9a0a7-6cd7-4bfb-a4da-f6cca94bc69d",
+    "c3e6bf1f-447d-4e4f-8ad1-ebc50027b773",
+    "c4c125ce-ad9d-4ceb-8f33-ada4841dfdb1",
+    "c4cb1e20-7677-4d51-a8fd-f29452dd2f38",
+    "c4d205c8-4df3-4df2-bb82-c26f3cb2f137",
+    "c6cdf309-772d-4b58-9b41-7b043828a635",
+    "c895e46b-a298-4d73-b7ba-d1e05270838b",
+    "c8a12f86-a497-4afc-ba9b-420dc0edff90",
+    "c8d7f0e3-1bf2-484e-9700-b1e6dc2da60f",
+    "c925669b-ea64-4814-987f-976dea36eabc",
+    "ca1d3d9c-c5a5-43ab-b8a7-23e18f952067",
+    "ca8d9d05-ca1c-4eda-885a-a8b5293e5198",
+    "cbbada24-970e-4052-8b05-8356c01687aa",
+    "cbd09b4b-6b03-489b-a57b-c71f2022e14e",
+    "cc58d122-b69f-4b92-984a-c227cbaa43f1",
+    "cc8ad075-15ae-44a6-8e64-35a7f2a52863",
+    "cc8e2171-7d22-4f25-9464-d0fd5de0b0d2",
+    "cd2a1de1-62b6-4fd6-a9c7-3db51861a0bb",
+    "cd7a0aac-71f7-4a6f-9643-0d4429157204",
+    "cd897d07-6f48-4b89-98db-7873521eab68",
+    "cdde3436-6814-46f8-ac76-2e3c8e9e3e97",
+    "ce37fd84-88c7-4ed5-9948-aa717d413eed",
+    "ce6fa2cf-b1cf-4f5a-8f7f-48b1a4d84fb2",
+    "ceef7c48-bb32-4b04-910b-59599be408cb",
+    "cf459e44-e709-4f98-b3bc-446bf262495a",
+    "d0069a14-dbff-4bd4-9ab1-6c5c7a56fb07",
+    "d0742dae-e062-4849-887a-0941215aef9e",
+    "d0b66461-cfbe-4862-aa44-7286cd4c189c",
+    "d0e1b518-8a92-4d7d-9e98-ab48294c6189",
+    "d1414234-5d50-4e6e-a32a-ea8791d693e1",
+    "d192bcea-106e-4952-88ae-8ad38e9e6704",
+    "d4887fa9-4bb3-4219-9fed-dc0c65d0ec4b",
+    "d48dcf6e-6b77-41b9-a0e8-5235d86cf9cc",
+    "d4de4faa-ee27-4ee2-aaa7-4345be7f8f20",
+    "d599b577-a28e-4cb1-95b6-7f2fb89b2def",
+    "d6ae2329-4c3b-4a35-8149-9d423506b5fa",
+    "d76f3c0f-b3be-467f-bb8f-b0ae9efe47b9",
+    "d7c5073d-3fc6-4bcf-bed8-c1a3e060dc69",
+    "d7db0942-cf42-40f8-acb2-5e1c3cbd0fb4",
+    "d8397e5d-874f-47f3-8905-b7ae6811ee20",
+    "d898e54e-7ff4-497f-b28a-330b09920243",
+    "d8ae031b-d17c-4953-8b65-c9c776ec1db2",
+    "da77790e-56a6-4cad-a433-40e86772663c",
+    "dac7e6dd-6f43-4217-9f30-06ef0463b582",
+    "db2b6495-f9f1-471a-993a-ac720ce3a7d9",
+    "db6e5a61-9e75-44e2-afb3-266e868d03c5",
+    "dc4d0e2a-0d51-46ca-a931-980114f3fc44",
+    "dc58e2ac-3e7f-4819-8301-e06226c79b47",
+    "dc6acc45-ddea-4b8a-8f1b-5d36b3eaed94",
+    "dcf58cc7-0300-4c22-b50f-274e9958844f",
+    "ddcf16dc-7110-4c9d-b62a-d2addd146039",
+    "dfd955a6-336b-4708-8b6b-43940d2eb0f1",
+    "e0ad7f11-ff77-4fc0-a301-dc82f8059023",
+    "e184b67b-0575-4e35-b57d-23cb4f1c6aef",
+    "e21204ea-ffe5-48ea-aace-37cc2c936bd7",
+    "e2ac37ae-32c6-4141-bd68-1f6fbaaeee37",
+    "e49d1507-6fcc-4213-98d8-59a693084b02",
+    "e6e5c6d3-9f36-4eaa-9360-cdc7fb35ee97",
+    "e8e5ec8e-5d0d-4ba8-a247-31e4ca67f8f8",
+    "e923031c-30ea-4ff0-8e7c-574e4293d8e5",
+    "eac7a7b7-48d2-4eaa-9168-9ef7cb1b515a",
+    "eb55f638-9e5f-4174-9926-5bddcd30f2fa",
+    "ebcbaf01-d5a1-4bb1-89ac-98cc72a270db",
+    "ebda36a3-de9e-4cfc-aaf9-0f1f8fba24df",
+    "ec7d630b-d9e4-433d-981a-ca65839e6ace",
+    "ecb13736-ebe5-4505-b72a-f9f3d6f0aacd",
+    "ed2d61a7-03df-472a-a3f4-0e5a04efefc4",
+    "ed4338af-2b0f-4056-8115-f48f3ac49223",
+    "edf2344e-e189-484d-ab7b-592bb96638f9",
+    "ee1cc942-d35a-4b4c-bb4f-6418f90c0786",
+    "ee8644cd-53ad-40c7-8272-149780a2560f",
+    "eeeae6dc-7fdf-4184-a930-d3d35aa6a149",
+    "ef8419c7-ff7c-47d4-a304-5609d08daddb",
+    "efb695d2-624f-415d-89d6-cc31a79093ca",
+    "f0e27da3-3e26-428f-a412-24ae7a6b33a1",
+    "f0f7fc8e-dac4-4713-bbf5-e6f010d1259e",
+    "f1274175-9919-4967-8b58-b0007cc175c4",
+    "f167275c-904d-4155-9753-46cd166a5560",
+    "f1a9b366-b996-41b3-b6ef-8f44e412f887",
+    "f1b1ff14-4796-4057-bcf4-d5950cc05909",
+    "f2088b2c-c7f6-467a-aa83-6b119714e7e4",
+    "f262d9bc-430e-4dff-92ad-af42293a30da",
+    "f2647bb7-6827-4cbe-9f7e-018899d58554",
+    "f27160ec-0d0d-4fc4-8334-e28dc8b42109",
+    "f2816325-a026-4b76-b3a2-66f9aea4f02c",
+    "f28fd586-ff35-41f4-90b6-1ee033d653be",
+    "f292c289-4794-42b8-af22-1b939b4f68ad",
+    "f4cf9fdc-d1d7-4b88-88e4-efabef6fa044",
+    "f4d4003a-a886-4b62-b1b6-4363c809789e",
+    "f50a2111-d5ae-4ecf-902f-cc9e0ce07dd4",
+    "f517abb2-beaa-4939-bad3-0c18f32a29cf",
+    "f518746c-c725-4984-b0d2-123b95fb270c",
+    "f51b8109-c510-41a1-9768-d77ffa850f5f",
+    "f757b025-a4d8-4e63-b96b-af881aaea18e",
+    "f9f94f0d-ee36-45d1-804a-9f4fe71a8949",
+    "fad6d027-14f2-47e4-b1a7-12c9f6133edd",
+    "fae0651d-2d50-434f-81a9-72d0e04f4a7b",
+    "fbe3ba22-2944-4ec1-8e63-ff4baf896a9c",
+    "fbfa8513-559a-4a26-a7a6-f2314513b1c3",
+    "fcd1fe8b-eabd-4d04-8b4b-01e58fce6fab",
+    "fdbc689d-77c7-49f3-896d-0cf6e8141dcd",
+    "fdfbe5cc-8120-405c-83e7-0b418fe2c450",
+    "ff187c73-8351-49cb-8695-f518bb550c2b",
+    "ff2a2985-1b2f-4454-93b5-27af60a5e1bd"
+  ],
+  "rows": [
+    {
+      "id": "ab5c48cf-4b16-4472-98e2-e16a283aaa2d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sonata",
+      "contentHash": "d909cc14f2211eeae57a01a845274e489216a5b77e08821739cee7e909ba285b",
+      "reason": "same-fact",
+      "keptId": "2e2ad547-eca4-4264-839a-295d7a0459cd"
+    },
+    {
+      "id": "bbcf75ea-af4a-49b7-a652-c44734c7bab9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sonata",
+      "contentHash": "fcb88ffe70a9938976abb323cdd32245f8cd846809369c58131f1e71d8ca2273",
+      "reason": "same-fact",
+      "keptId": "2e2ad547-eca4-4264-839a-295d7a0459cd"
+    },
+    {
+      "id": "6c6dabe0-06ea-4ae8-81b7-4989596b8eae",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "south china sea",
+      "contentHash": "459ad8ac6ff48611ab4cdd35376241e84c39be238191bf778a00c1c5a7ac2daa",
+      "reason": "same-fact",
+      "keptId": "24de600c-73bd-42a2-8c29-f706195f84f2"
+    },
+    {
+      "id": "d4e31826-af9a-43ab-89fb-e8b864283690",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sphinx",
+      "contentHash": "fb4ed139f26b7571ca98ffc15fe50068af26c8dc5d93a634df28745080af2abf",
+      "reason": "same-fact",
+      "keptId": "f1c2f11b-a7a2-4e5d-9811-03cc13c0e9e2"
+    },
+    {
+      "id": "d3a3ecb5-3948-4e52-a5ec-bc3326cb3fdc",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sphinx",
+      "contentHash": "72324204210f75aa685f873992d6d4d6ab794541d961d82fcfee0a26f5119c10",
+      "reason": "same-fact",
+      "keptId": "f1c2f11b-a7a2-4e5d-9811-03cc13c0e9e2"
+    },
+    {
+      "id": "bd10b62b-fadd-47e9-ad48-2400aea6070c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "stan lee",
+      "contentHash": "caa9919ec0c18e0f2d800b429dd61fb0498c6dab92a4956172ac935450e9afea",
+      "reason": "same-fact",
+      "keptId": "019b318e-f9cd-45c9-9a77-81f2b3480870"
+    },
+    {
+      "id": "11897131-b346-44e7-916b-8be6ad8959cb",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "strait of dover",
+      "contentHash": "fe550b04a0504211243456df834dd40ddb57a2acfee3ef77c213861c3044f8b5",
+      "reason": "same-fact",
+      "keptId": "8a3bd825-f753-4b56-be2e-25ee616170d7"
+    },
+    {
+      "id": "5f3db214-aac0-4227-9da4-2a2d2e1ec345",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "strait of dover",
+      "contentHash": "2e56a3eb27cc62ec2d8bc6025b7d53b7b02ac8e1c2cad6614b722617342e5e3f",
+      "reason": "same-fact",
+      "keptId": "8a3bd825-f753-4b56-be2e-25ee616170d7"
+    },
+    {
+      "id": "c9252783-23fc-4ab7-8635-79149faf606b",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "strait of hormuz",
+      "contentHash": "e025158b12c7fc16b550d8c18cdbc45f7eda1822b458f62ba5bb81c8683d00c7",
+      "reason": "same-fact",
+      "keptId": "f9d8bba0-43d2-47fa-9ed0-c6955108a0b4"
+    },
+    {
+      "id": "4bed4adb-6a6c-4afc-be35-e32e1ed6d711",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "strait of hormuz",
+      "contentHash": "c2fffd387a069bcdf42f4eae9680b0cd9dc678d7d6a38eea6762a9f45fbd5c8d",
+      "reason": "same-fact",
+      "keptId": "f9d8bba0-43d2-47fa-9ed0-c6955108a0b4"
+    },
+    {
+      "id": "578e90e4-2371-4348-ba9f-575d57381488",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "strike in bowling",
+      "contentHash": "d2c4a286b02094c96f1925ed3d410604ca3611f59fe94c93ef013d3ba9e2e762",
+      "reason": "same-fact",
+      "keptId": "d31f844c-2b5d-4958-83ab-a639f283468e"
+    },
+    {
+      "id": "d0e9c57d-de22-4538-b54b-53d4aa31bcf3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "strike in bowling",
+      "contentHash": "05b66e8121973019f06a72144373efec46ed53d49bcc36440826818c9b50bd06",
+      "reason": "same-fact",
+      "keptId": "d31f844c-2b5d-4958-83ab-a639f283468e"
+    },
+    {
+      "id": "43725bfc-b77e-4fec-bdf7-f253e12db02a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "strong interaction",
+      "contentHash": "13ea185a0d40d3e578e721d4af4c14b3b550c6ebe2063181fe65315dce0d0de6",
+      "reason": "same-fact",
+      "keptId": "bfb12ed3-2900-4679-b8c5-0a6e70bbb156"
+    },
+    {
+      "id": "2bb3b2a9-3e44-45b7-aa95-78bf9de06cbf",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "strong interaction",
+      "contentHash": "8643edef8b853a94479e2ac99fdde9fded16c346478a274842f3b5e2a893120e",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "7ce7fa6a-2a86-44e2-b231-93ca3b7dac70",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "studio ghibli",
+      "contentHash": "cc89aad7eb25d1f41af2ede17954bf9d3e1ac02dd9688838f3be626007813112",
+      "reason": "same-fact",
+      "keptId": "e83befdd-1edb-4d35-b6aa-fef5ba3821d4"
+    },
+    {
+      "id": "808f4878-49b2-447f-bbd1-b178e2922d2a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "studio ghibli",
+      "contentHash": "4b824aec63367207431aa7215b3886acc8d1ce2666a0fe6f9173472acea453fd",
+      "reason": "same-fact",
+      "keptId": "e83befdd-1edb-4d35-b6aa-fef5ba3821d4"
+    },
+    {
+      "id": "f49650d7-4310-4b4b-94f4-27a702d0f0e8",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sulfuric acid",
+      "contentHash": "67fd78ca1c391a6a6f2334351064134bc604d232585ea9610ec58ef5f7f7d543",
+      "reason": "same-fact",
+      "keptId": "1e5f30f0-baa5-4a0c-89c8-0fc5c41fcb7b"
+    },
+    {
+      "id": "524d1eaa-caad-484d-8190-63fcce44e19f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sulfuric acid",
+      "contentHash": "9fe65fd909b184be9fb46a50091de90deee097666b3741c25f875a952da808f5",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "fcaa0e98-b65c-43c2-b9b4-32742756d80c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "suriname",
+      "contentHash": "e910f62e1dc15c03b20c131d0e8f2d4d8665491f5ced24f18f04bc5f66e20672",
+      "reason": "same-fact",
+      "keptId": "31b90d2d-aa5a-4558-86b7-3ed92a9d28b4"
+    },
+    {
+      "id": "637b195c-8846-45cb-b348-b999d1a688a4",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "suriname",
+      "contentHash": "5445958014fb08cd3a974bd2ff840c4d55b6c1a4402396d4221f8f6466f1bcf8",
+      "reason": "same-fact",
+      "keptId": "31b90d2d-aa5a-4558-86b7-3ed92a9d28b4"
+    },
+    {
+      "id": "17233c6e-7691-4aa4-b8e1-47df67e1b4f3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sushi",
+      "contentHash": "f674c2e186068a3a20dd2b8fc60a8655acee1c8d87d02d64871763b32cb792e1",
+      "reason": "same-fact",
+      "keptId": "d6287ba6-fdb4-4da9-87fd-19b7762d22f7"
+    },
+    {
+      "id": "320e3976-75c8-4ff6-a35b-b97b690cadf6",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "technical knockout",
+      "contentHash": "efe3f37f8e0129d6873e0f0fc53a6ef81beae0ec4c888dc06cba2cc98feab9a0",
+      "reason": "same-fact",
+      "keptId": "36582d59-b233-46ac-9706-36ba5421cd75"
+    },
+    {
+      "id": "26ea7f71-e462-4acf-b2eb-143d1e6ced55",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "technical knockout",
+      "contentHash": "7e2881705e4d208f1776160031b119e83a767353b8f04843fe4cfdd59f733170",
+      "reason": "same-fact",
+      "keptId": "36582d59-b233-46ac-9706-36ba5421cd75"
+    },
+    {
+      "id": "53ae3bee-ce69-4d51-848e-271f12d5532b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "thailand",
+      "contentHash": "e036d2092d71919bf978982e000a0374af085dd92d012da2eccb754cc875340c",
+      "reason": "same-fact",
+      "keptId": "b2c15a40-144d-4898-8947-83a75e594f78"
+    },
+    {
+      "id": "70db1868-466f-4b76-939e-7a9b144f9305",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "this is fine",
+      "contentHash": "c00d8b5c5a6fc7f2045be72337fe82054d8e3d6acb5e549b160a7492d8102afb",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "49cf348c-ec23-417a-bad2-14541be53c76",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "this is fine",
+      "contentHash": "9dfc1f9966c7d1a8959c66671289b7aa800e5afcf400d2e075560c88efe11ff3",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "a27bec8d-06ea-4446-be38-03a6d2340aa9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "thomas edison",
+      "contentHash": "8dd199bf4f2714d585adabb24b7aae3bc1be9ea6eaa4021da24dff5cc20c70a2",
+      "reason": "same-fact",
+      "keptId": "1fd5615c-7855-44e6-8950-2bd7d6659654"
+    },
+    {
+      "id": "0729be0c-d317-4266-861c-4a42e76c28ae",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "thomas edison",
+      "contentHash": "7fd715b9c1a21b87a042aa0dbe8f465cd4b6baf80ca84fc789606ab92a5d853d",
+      "reason": "same-fact",
+      "keptId": "1fd5615c-7855-44e6-8950-2bd7d6659654"
+    },
+    {
+      "id": "e0b37b06-aa16-492c-8854-d7f44ad5e225",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "thomas jefferson",
+      "contentHash": "39998d85467de69fd80291e597b25eb6abc3063cf03593de5ee0fb819a50bbe5",
+      "reason": "same-fact",
+      "keptId": "f1c9cc33-f02d-4c40-8f30-f113d02a69c7"
+    },
+    {
+      "id": "f51441bc-089f-4a72-8af6-17be6476ca25",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tides",
+      "contentHash": "48b543f1cc33e478e25d8721a1a1e5c99fc90ea143f885eed316838fa864255e",
+      "reason": "same-fact",
+      "keptId": "e11667aa-3447-4136-804f-689f5c26bdf2"
+    },
+    {
+      "id": "c30c4bb7-7cfc-4c0b-beee-6f2ee43fa990",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tides",
+      "contentHash": "d62262b493db18ccdb1674c324043738d1c91d4b7dfc7212b05d30894534cf1f",
+      "reason": "same-fact",
+      "keptId": "e11667aa-3447-4136-804f-689f5c26bdf2"
+    },
+    {
+      "id": "7f0d7145-05b0-4dd9-b63d-63b208428f1e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tim berners lee",
+      "contentHash": "5fd2aa89451d4cce5f31ef0944c28375ea3f631e60d64967ce7971bdeaa0b27d",
+      "reason": "same-fact",
+      "keptId": "b0c637d0-3089-4720-86d0-df0bbe9df143"
+    },
+    {
+      "id": "7a4921a8-cd38-468b-b566-f1df9326b95d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tim berners lee",
+      "contentHash": "428c75f1b37c81b3fb1368f1623a9794f83071d329d79a8ee72ff776423f6781",
+      "reason": "same-fact",
+      "keptId": "b0c637d0-3089-4720-86d0-df0bbe9df143"
+    },
+    {
+      "id": "7855223f-a739-43f4-b600-76f74d438ced",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "tokyo",
+      "contentHash": "26e9e5605dbc00ba9ce9abc65be5710874a177228b16cb053a9a5dbb042d7202",
+      "reason": "same-fact",
+      "keptId": "3674757b-0b5c-40d5-b2ba-a1e8c2a61851"
+    },
+    {
+      "id": "6f379037-0dcb-44df-a208-092f090beecf",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tom hanks",
+      "contentHash": "89f1bfb15304b64480d883015c8a1b92bcd77b5b01084519c66557b0a4c4107d",
+      "reason": "same-fact",
+      "keptId": "d519107c-5810-46be-a6d7-ceb83168d862"
+    },
+    {
+      "id": "79743295-2b49-422f-bd35-f4208c34b700",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tom hanks",
+      "contentHash": "8b068759dd9d641d7900b6f6be2b889405584846914744947e65c475bf5a62fb",
+      "reason": "same-fact",
+      "keptId": "d519107c-5810-46be-a6d7-ceb83168d862"
+    },
+    {
+      "id": "55ec8f60-63b2-47ce-97e3-b393a2f06d12",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "treaty of tordesillas",
+      "contentHash": "deef75f8bae05a04db4dcad7c8a1340427886d587de03594c0e5b55ec59b7a51",
+      "reason": "same-fact",
+      "keptId": "dab5f942-ffcf-4a1b-9b13-cd9d79360eae"
+    },
+    {
+      "id": "a005959e-338c-45ce-ab56-b9351ad93aa0",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "treaty of tordesillas",
+      "contentHash": "565f27942be9d3f61e2b09c56cc97ad57f1eb2257ef9be2fe71bd248ada23b75",
+      "reason": "same-fact",
+      "keptId": "dab5f942-ffcf-4a1b-9b13-cd9d79360eae"
+    },
+    {
+      "id": "8ea1aa3b-0b30-40d0-b48f-9c46205c399a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tuatara",
+      "contentHash": "0aab9072e73345cc26a1eccc6252b7d5a0d39a725d682b961b5307c13a60a20f",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "3bea1f99-b081-4089-9485-8326c274989e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tuatara",
+      "contentHash": "a6473a3b3a9c3196b0d51da7cd09f725a7f00b15a58f1b9b104ce4835e0d19cd",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "68edd335-fdae-418e-a2c1-5f3f59a63991",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "umbrella academy",
+      "contentHash": "3d0ed9aa047e4d0a83e259b9ea4ceb31e0adb12863495bca46f9d896303f8ee2",
+      "reason": "same-fact",
+      "keptId": "eca7a098-5ed9-4a1c-a699-c5a7b67737b7"
+    },
+    {
+      "id": "83cd1c8d-3e5d-490b-b802-32299e3e68c6",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "umbrella academy",
+      "contentHash": "a9e014a716aa077f07ea0f5188ebba10b2bbf5e600d62d88bbb2105c595b281d",
+      "reason": "same-fact",
+      "keptId": "eca7a098-5ed9-4a1c-a699-c5a7b67737b7"
+    },
+    {
+      "id": "43232827-0b4c-4c6c-aacc-21beb6eb146b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "uruk",
+      "contentHash": "b60ec16c8463ebdaef8134af3bac434b5ba13fc7edb1f2a92a7a5c7d6648f2eb",
+      "reason": "same-fact",
+      "keptId": "4e3335f0-6ce5-46fb-bf5a-49938f73a667"
+    },
+    {
+      "id": "0b047489-2279-4239-9f37-8210e30350c9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "uruk",
+      "contentHash": "86735bd3c1f0996aefde6f43b04e5678b529345f0e0424424cfa3219e5226d5d",
+      "reason": "same-fact",
+      "keptId": "4e3335f0-6ce5-46fb-bf5a-49938f73a667"
+    },
+    {
+      "id": "49c42ffe-be10-4c8b-a040-c1b5d296b2c9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "vine",
+      "contentHash": "8ad41143fc4bb84b35bfbf0a34296672ac7484007a5eecbc22ef2f3e5acdd49f",
+      "reason": "same-fact",
+      "keptId": "811e414f-70a5-4c49-b2f2-7a8158ef040c"
+    },
+    {
+      "id": "e12ac84e-1065-4843-b9c4-b54d0b430ac4",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "vine",
+      "contentHash": "0edf4f43b5c7a75f7ed381a26fbc1ed894f2bc02a94bd3a45a9d09e471f22201",
+      "reason": "same-fact",
+      "keptId": "811e414f-70a5-4c49-b2f2-7a8158ef040c"
+    },
+    {
+      "id": "bf6041ea-e8a3-4855-b525-2cac99833d6f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "walking dead",
+      "contentHash": "213a6d92736414c70c2bd87beadcce4e7ee16e1ea5000fcd407e33b94023a819",
+      "reason": "same-fact",
+      "keptId": "2b0d7bb8-6ae6-47c4-a057-2890b778cb4f"
+    },
+    {
+      "id": "caca0043-5782-44d3-ae3d-a3e0d6120050",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "wall e",
+      "contentHash": "d249b43a4d1a83ae6e584afe9080a20f0e67ee0fdc089bae69780482f4223f64",
+      "reason": "same-fact",
+      "keptId": "a76d3a2a-7dd9-446f-80d3-eca563cf4d2f"
+    },
+    {
+      "id": "e4a7e832-31e1-4e39-b788-534b4bc185c4",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "wall e",
+      "contentHash": "e4e9cd36c72ba121538f422f9bfe703b3ce2c22d75fee2099999b3312e8c821b",
+      "reason": "same-fact",
+      "keptId": "a76d3a2a-7dd9-446f-80d3-eca563cf4d2f"
+    },
+    {
+      "id": "f1272c8d-b5e8-4fe5-a864-0ca1a49d12db",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "war of jenkins ear",
+      "contentHash": "3127acb6435d4012cadfca1f037453c948766e9792d0a096d5157319d186d377",
+      "reason": "same-fact",
+      "keptId": "89c46cea-4f01-430b-b124-c009e93d5871"
+    },
+    {
+      "id": "b480de43-98e4-4ead-b633-ae9472acf812",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "war of jenkins ear",
+      "contentHash": "eecb962f86a801b4b1e9ff0e0a58bc2105fee94b5f142dab67afa6f37d4c2778",
+      "reason": "same-fact",
+      "keptId": "89c46cea-4f01-430b-b124-c009e93d5871"
+    },
+    {
+      "id": "768bd786-ecf5-4e6c-9af9-6d4a9e1e52b9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "watson and crick",
+      "contentHash": "c443af69f5e582877eaee76361e006f3e9baf1dd4c559443e4fd7e9c7b512a9d",
+      "reason": "same-fact",
+      "keptId": "f4133c6c-b9a4-4cf3-b53d-33b3609ad651"
+    },
+    {
+      "id": "a679537b-f00f-483d-a6f0-bc4ae2a10baf",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "watson and crick",
+      "contentHash": "b7a3c65d23852764df3468435d879ce643658987455ae7b992f7c19b44bb65e3",
+      "reason": "same-fact",
+      "keptId": "f4133c6c-b9a4-4cf3-b53d-33b3609ad651"
+    },
+    {
+      "id": "5fbf03d7-7991-46ff-95f7-7f94e5b28d41",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "weathering",
+      "contentHash": "72434e9fd59aaee60ad5b7c3bdc5b38a83c618188e7c82845044a2e517986bfc",
+      "reason": "same-fact",
+      "keptId": "2baed1c0-d5cb-4e3e-a881-ef9c288393fd"
+    },
+    {
+      "id": "60c1a124-8bf8-4e89-994a-be8125f2fdc3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "weathering",
+      "contentHash": "71cdd7dc1dad1f797bfffbf9a23f62dee09e2858dde49db9eee6ba34c893ff6c",
+      "reason": "same-fact",
+      "keptId": "2baed1c0-d5cb-4e3e-a881-ef9c288393fd"
+    },
+    {
+      "id": "b61c1832-fb44-4f40-8e13-3a41cc365f9d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "wednesday",
+      "contentHash": "32dae05c35b18704d68d6fa59a9d16eb6d9d2966290203d1fb01820dff13496f",
+      "reason": "same-fact",
+      "keptId": "c308a87f-d91f-49d3-9d3a-a3727011d2d9"
+    },
+    {
+      "id": "493916d3-0803-46b0-bff1-47781fa6a249",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "wednesday",
+      "contentHash": "ec2e7c69f11c0e5a12cd9aef0cc4e9dec7b03ff772c0a99885062596012bd63e",
+      "reason": "same-fact",
+      "keptId": "c308a87f-d91f-49d3-9d3a-a3727011d2d9"
+    },
+    {
+      "id": "07f4b100-1f13-4a16-8984-73fa8cdf0804",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "whale shark",
+      "contentHash": "acc5f171aa68d110891326d2116a5f260cea01bc826248bee202c1a346aa46cd",
+      "reason": "same-fact",
+      "keptId": "a2f3be6d-ea7c-4e70-8e5a-d7d299c23ee3"
+    },
+    {
+      "id": "1059f055-c54f-45d5-aef7-e50f1c1b6abc",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "whale shark",
+      "contentHash": "43ec3ca4e0d7ad958b1a9b7b6c23609372cac664027089263acfdfcce462ed39",
+      "reason": "same-fact",
+      "keptId": "a2f3be6d-ea7c-4e70-8e5a-d7d299c23ee3"
+    },
+    {
+      "id": "8ef91a2d-f398-418d-ae37-ca9da0ce85b7",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "when we all fall asleep where do we go",
+      "contentHash": "210c740c289f00188fd40830300004a93ad8be087b794363e17416c5dc18d918",
+      "reason": "same-fact",
+      "keptId": "1b71ff74-7fb6-4c21-b991-4004c51480da"
+    },
+    {
+      "id": "8d6fa8ef-dca1-402e-9c43-cf415455ddea",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "when we all fall asleep where do we go",
+      "contentHash": "3da0af34030ef9e5a5f791c11e7fb11cb84f872b8dfb118d25d88294c6c32747",
+      "reason": "same-fact",
+      "keptId": "1b71ff74-7fb6-4c21-b991-4004c51480da"
+    },
+    {
+      "id": "732a2bfd-ef92-4f6c-b59c-2df1f595a45a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "wood frog",
+      "contentHash": "6cb5143baea0da51d59f8d2dd43e9e763fe060b91a13edf8ebfa0d5ab17f869d",
+      "reason": "same-fact",
+      "keptId": "6db7d62d-800b-4345-90b3-1d537d336169"
+    },
+    {
+      "id": "57418f01-0cbf-491d-9167-0049b7c5feec",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "wood frog",
+      "contentHash": "adcdeeb14fe9652dca96cfe450b4298f385de3c4d0863e2812f73c0006117617",
+      "reason": "same-fact",
+      "keptId": "6db7d62d-800b-4345-90b3-1d537d336169"
+    },
+    {
+      "id": "4684964d-21a5-4e9b-a38e-23427bb347be",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "xylophone",
+      "contentHash": "e64d625186e4b9add24deb7936aeb4511146cb13d1ea12d38705f49c5c01a605",
+      "reason": "same-fact",
+      "keptId": "37934bbe-a020-4bb4-8627-b6c1a6bb7717"
+    },
+    {
+      "id": "7e983635-05f8-433d-8c4e-9d230fc44b5d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "xylophone",
+      "contentHash": "bfcf5d9e8b1ab8519fe21f338f940afa3a184597521ad2d2d9bf32a25a00e5d3",
+      "reason": "same-fact",
+      "keptId": "37934bbe-a020-4bb4-8627-b6c1a6bb7717"
+    },
+    {
+      "id": "6cefc9bb-4556-4a5c-bbf8-446037b69aa7",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "yo yo ma",
+      "contentHash": "221a1431a43c872be5ae6e243af6e35fb18da33fef71ff0281b08d216ef17b33",
+      "reason": "same-fact",
+      "keptId": "b0588cff-3efd-4bc0-804d-5e0d7d928882"
+    },
+    {
+      "id": "d5a7f537-a02b-4eb8-b68a-3ca932eb55fe",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "yo yo ma",
+      "contentHash": "5629246be1a2f74edd6fa69f50201df1a707a1c9ee143c929c7a293e541445f3",
+      "reason": "same-fact",
+      "keptId": "b0588cff-3efd-4bc0-804d-5e0d7d928882"
+    },
+    {
+      "id": "5c2a478f-e4df-4da5-9b2b-e5bb19a2f355",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "yoshi",
+      "contentHash": "04c5be4823ecdd48c66fcb622c395de2b249a1b0a979c340b25996221f066a35",
+      "reason": "same-fact",
+      "keptId": "0bd82ef5-77eb-4f0c-af1b-8f118a2e4221"
+    },
+    {
+      "id": "57753392-911d-4605-a52c-18af7b803673",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "yoshi",
+      "contentHash": "fd88662da31d3875a509fd1654a20f785672d992a1b38097f0dce670540f6765",
+      "reason": "same-fact",
+      "keptId": "0bd82ef5-77eb-4f0c-af1b-8f118a2e4221"
+    },
+    {
+      "id": "164c857d-4e39-4894-a772-d005ba7fb4b1",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "19",
+      "contentHash": "eff30b6c2774dd70b143864220a411ddf13bfc689dbf4820cb95ef376b9121d1",
+      "reason": "same-fact",
+      "keptId": "4986bbff-baa3-4622-8dc8-ddf05c387ee1"
+    },
+    {
+      "id": "42cfc859-a189-4496-9c0a-89165385d616",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "1987 rugby world cup",
+      "contentHash": "5ff75e7f6325b8129481760e2bd55800cdfe505714b3cab9f77d9136cc8f38f8",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "7a2b1ddc-c9fb-4d68-b93d-1302eee37447",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "1989",
+      "contentHash": "d499af5fea6d5e39e6d6fbf72e08aa90f2b1e2d8c2c7bdfd1b40608d07ef7432",
+      "reason": "same-fact",
+      "keptId": "5d15954b-e70c-4639-b52c-b088b57bd6e9"
+    },
+    {
+      "id": "f815ca85-5759-4158-8e8e-e10327f879a8",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "200 metre swimming",
+      "contentHash": "5c751559103b074d9ce8be724c0140f9610877dc2f033f3c4cf0e70172f35cf2",
+      "reason": "same-fact",
+      "keptId": "c55d7b53-83df-41fb-9845-eb14cafc450d"
+    },
+    {
+      "id": "977e9aa4-65db-431d-a0f2-0c7815d3b6b8",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "24 hours of le mans",
+      "contentHash": "420c79cac5c9758ca98d0ce9ea67b7a710636528d08b94fcf34ed5f76ac859f0",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "87577ead-21d1-40f5-a1e8-4167b6ec4684",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "a ha",
+      "contentHash": "00936dcca7a682494e0b900c8474f24a5ecad93e692053bd7ca5399312baf06b",
+      "reason": "same-fact",
+      "keptId": "ca7481f1-3865-4a6f-889f-b382c1b5c508"
+    },
+    {
+      "id": "b7d0c4a0-53a2-4223-9fb7-9bc5f76d32fd",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "a star is born",
+      "contentHash": "5f977090fcefec6a756c76437d4754a0cb70c6ec56fc3ee1ee4f6931e671377e",
+      "reason": "same-fact",
+      "keptId": "498409f5-293d-4d06-a62f-394686cd067f"
+    },
+    {
+      "id": "56c52451-ec68-472e-ada3-9e186246556c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ab positive blood type",
+      "contentHash": "feec3e3a3f1788d5c7c0146c194cd3a82c0ef0564c773c49991dab2e883e0fb6",
+      "reason": "same-fact",
+      "keptId": "10a89e19-23b3-4932-bceb-101cf8e34a5b"
+    },
+    {
+      "id": "de402b8d-2413-44ae-86d7-5fe19197e01c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "acid",
+      "contentHash": "6ea0062b43b1e28371a679b62589d7a106409bd293192c7378c47dd25fdb4805",
+      "reason": "same-fact",
+      "keptId": "0f82cb93-1120-4e2c-bb4d-4d4e6c990e85"
+    },
+    {
+      "id": "42effbc2-039d-4a8f-8f52-3c4e0d85eabb",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "alan rickman",
+      "contentHash": "37dde8016ce57f6f6b581bc023309b221f17789ace0a4a800aedcae9f1511028",
+      "reason": "same-fact",
+      "keptId": "50c8bfef-c550-43bf-8251-e26d728fea6c"
+    },
+    {
+      "id": "0b082eac-fadc-4a02-898c-f32496cff9e3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "algeria",
+      "contentHash": "f2bcfe43efb306ed942035acfdf6d311bf74771cebe5724c5578e1b058c3e648",
+      "reason": "same-fact",
+      "keptId": "1313077a-50da-4adb-94b1-c01df067b517"
+    },
+    {
+      "id": "b255b089-571a-46d5-a1bd-2d314f04b181",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "alligator",
+      "contentHash": "326f87899d0f4c77af95d90869aae96717c9d487235c2b41bc0c9066824a3a83",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "89285cb4-771d-46a3-948a-c7c8f1763e81",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "amino acids",
+      "contentHash": "7b09c12c6a67a8951e15b91e31a038f11fb48be9f785a20eaef1bc68a539d9a2",
+      "reason": "same-fact",
+      "keptId": "496c70ca-5365-4ecf-8a88-4286d56aafbc"
+    },
+    {
+      "id": "9d2f1627-8e99-4541-a39d-b1ad64674150",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "andorra",
+      "contentHash": "6693507246fcf8d000d2c3f0e08abbcad0d5afd085f90344652e519c899a03cb",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "bd9c4b9a-53bf-48c9-941e-6667b7dfc9b8",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "andromeda galaxy",
+      "contentHash": "41452040e7efe8aa631e499f3f399344017e0cb1ca23b20fd4e7a82743afb8a2",
+      "reason": "same-fact",
+      "keptId": "0d91ca20-b42f-49b5-a3fd-498fbfa60ae6"
+    },
+    {
+      "id": "71b70b11-d3fd-44dd-ba37-858e407b319e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "anne frank",
+      "contentHash": "4022513ddbdc10eb87d920b428fa8154ede3769dd5bb1c19aa526b3c441d6453",
+      "reason": "same-fact",
+      "keptId": "3c287f18-699e-4119-b6d5-b3f293181c47"
+    },
+    {
+      "id": "f803b0da-1769-458f-91af-55ceea7f89ef",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "appendix",
+      "contentHash": "9342d82236188804fe5f35e6d6eb8d4eff72140c0572f58536bb5117c3c6079b",
+      "reason": "same-fact",
+      "keptId": "40c074e4-4d26-43b3-8263-5ff7eaa37b85"
+    },
+    {
+      "id": "dcd70b2b-4b47-47b9-92fc-e712716f7e6b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "apprentice",
+      "contentHash": "aff942bc1485b11fd779d10cb4c52db7d13feaadee51ca815db7434ee997ae7d",
+      "reason": "same-fact",
+      "keptId": "dbca154a-7ac9-4fb5-a37e-e78fb5408354"
+    },
+    {
+      "id": "b08dc5f8-471b-43e8-9700-d501a286820d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "arthropods",
+      "contentHash": "6b4eae3191d4f6af586bd600e62c0d42b4e93dea1ba1f9897b1790fdffa94e2c",
+      "reason": "same-fact",
+      "keptId": "3dd8c8b5-4eec-4b92-b8b8-f4f303380610"
+    },
+    {
+      "id": "91c66a7f-7e38-4d90-9932-38b46d136977",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ashes",
+      "contentHash": "d868c72ee8bd1ef1ef9152a10847490dc6065f54419cfdd4b7062d8ba989a2eb",
+      "reason": "same-fact",
+      "keptId": "e3eeebc4-4b8d-4611-a953-143f63a126f7"
+    },
+    {
+      "id": "b5b10bc0-d9db-4a8a-a22b-f702cc2bd1e9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "astronomy",
+      "contentHash": "4e1fca5671bfaf1458985605183e718ee0a35abe27a273117a989b6826b789a0",
+      "reason": "same-fact",
+      "keptId": "3b98a042-f7ef-4a0f-9fb4-e6dc69bbdd28"
+    },
+    {
+      "id": "5e4daecf-48a2-442c-a5b8-162c1dbc0e71",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "athletics track",
+      "contentHash": "1730a8f25f99b17424214e7196862ad3e1e38d81f1119af1131318e4a916f799",
+      "reason": "same-fact",
+      "keptId": "4537d479-5955-4685-bfab-bdca23b07ca9"
+    },
+    {
+      "id": "18a0e987-3c52-4855-ba6b-162e200f1b1a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "avengers endgame",
+      "contentHash": "65fcf2e130ca7e5acc7d5501baeb0fd888eb4fa76787293a90a9d0f3b730c91c",
+      "reason": "same-fact",
+      "keptId": "bdb5a2fe-f1a3-403a-9d25-76b86eab66e6"
+    },
+    {
+      "id": "859d90af-c132-47af-b768-0f6112dddd1b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "back to the future",
+      "contentHash": "5b0f8b5957ce35f865c4044f1f785ceeff2b2e96d89c6f58783992959e2e8f3a",
+      "reason": "same-fact",
+      "keptId": "20aedc70-d716-48cd-9468-3b2d3a968b09"
+    },
+    {
+      "id": "c201b5a9-0acf-4bc7-a55d-1e7990e72d84",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "bad bunny",
+      "contentHash": "11b2f31e3b0efa14ebbc92bee457e30bb75531a611b03fbb8ef4c24fe2034a59",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "1576c07d-5721-4d2f-93dc-d809131ea298",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "badminton racket",
+      "contentHash": "a682b6a30f90fe72ed9a61226e5012f2159c10582e1b118e177dcde153b4d55f",
+      "reason": "same-fact",
+      "keptId": "adb10aa2-53d2-46dd-9e41-dc880eaeaa5d"
+    },
+    {
+      "id": "321e92a3-cc1c-4606-89be-384ca447ba00",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "badwater basin",
+      "contentHash": "ca3204a4b63a4b69d514e59dcca16522d3d9c4d9b410f007732def821b521f40",
+      "reason": "same-fact",
+      "keptId": "f5863d89-61d7-4dc7-b43b-80d4afe0d22d"
+    },
+    {
+      "id": "729ba740-bc3c-4ddf-8077-125486313f39",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "bartolomeu dias",
+      "contentHash": "9d59c82df87728963f204f1f625aef697d374521fe57c44cca83a6f50eb1f13f",
+      "reason": "same-fact",
+      "keptId": "0e3422b6-9937-459f-ad65-1b70eb6cc532"
+    },
+    {
+      "id": "500f046f-0501-4978-af6a-c6aa3d980db6",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "baseball field",
+      "contentHash": "74e33699b4b7648ab34f2b9d3ddb648a003a546b0e62cf96ec2b176a8968d489",
+      "reason": "same-fact",
+      "keptId": "28f231b4-305b-4222-a8af-f6e620a58f45"
+    },
+    {
+      "id": "3bfb899b-f813-47b2-af48-8883d0d8fc7d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "bass voice",
+      "contentHash": "1cef430dee60660b27e7dc317d22c59d666d7b70355fe497c3f33470946e5ab6",
+      "reason": "same-fact",
+      "keptId": "3819bf6c-8962-450f-b7b5-73616cac26a2"
+    },
+    {
+      "id": "a1bb77c2-3251-4c67-b2b5-9f905e333747",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "batting helmet",
+      "contentHash": "f21fbc829ae9465cdfebaf9d903f20c4a45d982ede99cfc17b4fdc0df01b123c",
+      "reason": "same-fact",
+      "keptId": "04a5b4c4-bd11-4bce-aacd-5680d89aff8e"
+    },
+    {
+      "id": "29dec69d-89b0-4b85-8695-3639708e6326",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "battle of cannae",
+      "contentHash": "6822237b9cac4cd8aa2534e1b4c144ab3c4d08dc4832b62e5d8f392f10506f6f",
+      "reason": "same-fact",
+      "keptId": "a358bc52-097a-4f78-9442-9df10f009c2b"
+    },
+    {
+      "id": "dec99f93-211b-4826-990d-d43d0b5b5903",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "battle of fort sumter",
+      "contentHash": "d8f8c24d25731c0f097a02cbd2bcddae4d17528c6121b923b9d5d61d8041ca58",
+      "reason": "same-fact",
+      "keptId": "650a0733-694b-4957-b50a-45469b97bc6c"
+    },
+    {
+      "id": "bd263961-b7c8-4f24-bf80-59f649d9868b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "battle of gaugamela",
+      "contentHash": "b344754253a9807f054c2bcf78c8c558bd5e9e57eca107aae3015292e4a03356",
+      "reason": "same-fact",
+      "keptId": "1d1b960a-148a-4a01-afd5-f50e4fca7e83"
+    },
+    {
+      "id": "cddbf13a-e569-4b10-8d46-0656020eeff9",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "battle of stalingrad",
+      "contentHash": "00332266b166a6305f4d53c01c5eb0269256700819575dbcf066a1faf692f4af",
+      "reason": "same-fact",
+      "keptId": "d88d66c4-010a-4dda-bfcc-a8d01489b2cb"
+    },
+    {
+      "id": "0993eac2-628c-4fdf-b4af-da9be407b5ee",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "battle of trafalgar",
+      "contentHash": "1ff93e4bd6cc8abfd6603e662edc6476a08540c82e39534f9d8e66e36e7bd8cb",
+      "reason": "same-fact",
+      "keptId": "6e681a84-569b-4874-b81f-ef6d276778bc"
+    },
+    {
+      "id": "6969c96c-d685-4cb5-880a-089385ae491e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "battles of lexington and concord",
+      "contentHash": "5d27e99fb2087450f18615ef58e29443bf9700222ba3c1d9c8e535e536942175",
+      "reason": "same-fact",
+      "keptId": "529a6266-cea0-424d-9d1a-360f79793c0e"
+    },
+    {
+      "id": "3395b48a-aca7-4a6b-b522-7927da35d841",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "battles of saratoga",
+      "contentHash": "3caee72a7b06b0fca7058aa59dccc0ed0853c1168d555e872deec96c5d0848c6",
+      "reason": "same-fact",
+      "keptId": "f8ed9457-0b32-4c69-95f4-7b991e0ada8e"
+    },
+    {
+      "id": "8daf4402-ccb9-4e6d-a4a8-1bab520fe1c7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "bayside high school",
+      "contentHash": "999b0a60b838abadec5221d6fb5ff6d933ed8a30c6303d55946e4f60731adafc",
+      "reason": "same-fact",
+      "keptId": "fcaf145a-57a2-47cf-a79c-d6d936473669"
+    },
+    {
+      "id": "5ada41b8-c3a0-4906-b7c2-69381299b8f9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "beauty and the beast",
+      "contentHash": "c98acbb8345915a9e448f9458405d2ae5b9fe27de92d1a2126de8a687bd344e4",
+      "reason": "same-fact",
+      "keptId": "3083e654-c222-45e0-a2c7-1938a3062eb1"
+    },
+    {
+      "id": "f7ac1b9e-78c5-4406-aa63-e34170c33e89",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "becquerel",
+      "contentHash": "aa3748d3fc1e91f583d289d26f7a29677795939734e924add9513378712095f9",
+      "reason": "same-fact",
+      "keptId": "f96fe534-1452-42b2-a322-8aea8d01c121"
+    },
+    {
+      "id": "b2546765-ff10-4e7a-bc94-bea28972f8ca",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "bee hummingbird",
+      "contentHash": "df415225f7836ff0c2f733e92fd1f6b41d2912a24a30ed5cfa9f634727899231",
+      "reason": "same-fact",
+      "keptId": "c2e896d4-b195-4dbb-9766-3eb9dba199cb"
+    },
+    {
+      "id": "0680f1b7-cc58-4b4e-96c9-990db1486d81",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "bern",
+      "contentHash": "0ae8baa7a16df6b7204c1f66554638c3b60016288cd3fc4b92597c42aea79d6e",
+      "reason": "same-fact",
+      "keptId": "2a473b90-ca9d-49b1-8102-2fb74e4c9d9f"
+    },
+    {
+      "id": "3c081339-c4bd-4920-b005-4c1f192be164",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "biology",
+      "contentHash": "72cabb9aee45632dd9279407e704589a51b54916d5156c94c5a6b1b9dc365ef2",
+      "reason": "same-fact",
+      "keptId": "d5171b3c-b2fa-4ac8-8e65-d5659c816c9f"
+    },
+    {
+      "id": "0ecc0da2-a9ed-434c-b484-7a173728e906",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "black sabbath",
+      "contentHash": "fae0c06eb7213e0b6d053aef11770faa6a95ed2c6ac8a2d821629e9fb61592e5",
+      "reason": "same-fact",
+      "keptId": "f8c4f875-0b6c-487e-864d-5ca2ee20687f"
+    },
+    {
+      "id": "7e9c9a2c-aab5-42f8-bb54-0506b27786c8",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "blue light",
+      "contentHash": "e52024b648d7aa58d167068341561215ee95d2080b761aa7d42c25358c9fb813",
+      "reason": "same-fact",
+      "keptId": "eae90077-bfdf-4997-8a87-fd6ab8a97f44"
+    },
+    {
+      "id": "1935dc43-129c-4795-902e-b1ace39c6576",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "blue ringed octopus",
+      "contentHash": "cb10551d244d2a514a3dd21592248079c01b9b45c4072aa1db0922e9027abac4",
+      "reason": "same-fact",
+      "keptId": "798c64af-bd28-48b3-baf6-c904f9b5ce03"
+    },
+    {
+      "id": "f29150fb-fb8e-4f9c-9d3c-68a3d69a1b46",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "bobsleigh",
+      "contentHash": "077ea36d11003b648e04d7569d9e011088cf55953a5be67004c4cd75da289494",
+      "reason": "same-fact",
+      "keptId": "319d0e75-171c-4ca4-a9a3-38c0f1f1b84a"
+    },
+    {
+      "id": "ca2350b0-4aeb-430b-b265-73eef59005ff",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "boiling point of water",
+      "contentHash": "df9f068be9d8c8540fbdfe5666f02f93e09b60d19a7c239729a1e6bb7cbe89b4",
+      "reason": "same-fact",
+      "keptId": "94b3f79b-9c98-4249-892e-a95afde07ade"
+    },
+    {
+      "id": "a4c3f29b-8b41-4d19-b9b7-6afd03bd6fe6",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "bojack horseman",
+      "contentHash": "fd9653d42e046091cc8e63a8c7a367d0a5920e2745f0f5c48ed9babf5516037c",
+      "reason": "same-fact",
+      "keptId": "6a976f7a-41d4-4271-8042-2c42e3358f47"
+    },
+    {
+      "id": "6332e374-8f8b-43a9-beda-702aab1fec84",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "bosporus",
+      "contentHash": "d911bd6e4debb85e0184b3c7ee39d1b9c1b05269ec154d5cd5a2e05804c3fe89",
+      "reason": "same-fact",
+      "keptId": "fbb5ec13-2429-4b6f-b350-546f82477d7c"
+    },
+    {
+      "id": "b8cd2266-f93a-40ce-b6eb-c626885d7a02",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "bowser",
+      "contentHash": "0698d4882af0a515fe3b4d25663e4eb36f94da2b4af84cd5cf4eefcedea867ab",
+      "reason": "same-fact",
+      "keptId": "43515801-2f73-4a37-a35a-fca280863da8"
+    },
+    {
+      "id": "f874c81c-a262-4e4b-9f1c-24684d65d35f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "boxing gloves",
+      "contentHash": "5639097d634ef8e37c5ff23f1d449c4bf9c140c97c3769c1686165e5a7a436c5",
+      "reason": "same-fact",
+      "keptId": "88bd3406-5eae-4d80-b449-91084a398c2e"
+    },
+    {
+      "id": "ad8148fe-2f33-4215-a5e8-05e345fbd556",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "boxing headgear",
+      "contentHash": "6abc0dced64fa7844c27d244cce7798db42e93c4e93c5365a3204fe0e7479e54",
+      "reason": "same-fact",
+      "keptId": "b0ca9734-82da-44a6-b743-7e5955f625a3"
+    },
+    {
+      "id": "d15ba301-69e4-426f-94a0-465e16c2bf54",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "boyles law",
+      "contentHash": "08d0e86bb5d4e8a21fa0b646309128d7c187a57b72001cf1772d87f13ea85887",
+      "reason": "same-fact",
+      "keptId": "258d7d07-5a62-4d27-89e7-bc5ac2aa38cf"
+    },
+    {
+      "id": "f253547b-a29d-4ea3-aba5-cb2c8ff8a0db",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "brasilia",
+      "contentHash": "5e87538c2382f49df47d1c5343e7acae17f9347abfc2b998b1e38f59deded35a",
+      "reason": "same-fact",
+      "keptId": "62db39d4-eb71-449a-9ba7-b11a47795632"
+    },
+    {
+      "id": "ec08d0b5-67c7-4db4-bf78-3ff733d13d03",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "brazil national football team",
+      "contentHash": "ab3c60a96ad074d7b936071eb8ee31b502ffc5ff39dfd19654e2bb641b65c28e",
+      "reason": "same-fact",
+      "keptId": "c506efcf-c67d-48be-a5a7-752c92d5a19a"
+    },
+    {
+      "id": "279dafd7-3204-4a00-9990-38f12c084ff4",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "brazilian jiu jitsu",
+      "contentHash": "9ba26926ab376a3fbb5aa8c624214036cb16675dac446f36ea7fe07619776e88",
+      "reason": "same-fact",
+      "keptId": "b4cee657-b417-4cb3-a328-4455f3b97342"
+    },
+    {
+      "id": "d6d52dff-4566-472a-be9e-0f9cc99ded26",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "brown dwarf",
+      "contentHash": "a609a3b0ce536875322ec133a062390beb4c6c39bb248b36a275bb637449a64f",
+      "reason": "same-fact",
+      "keptId": "22bc61ed-8a8f-4b55-8e67-5de4fcf5d19a"
+    },
+    {
+      "id": "0e3c6c02-6e8e-452a-80d2-4251e0b2c5af",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "buenos aires",
+      "contentHash": "161434763a24c30e2f408852b6e268b6f8daaa51f7e04c1cbb6ff6b8f65d1e8c",
+      "reason": "same-fact",
+      "keptId": "e76aa55a-457b-4c90-9f5a-b10c62676d2f"
+    },
+    {
+      "id": "a33d6c2b-a7d4-4f56-91c9-e256d90a3fe5",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "buster douglas",
+      "contentHash": "f49d1ada728dc608ee889567c9ba4d22d76f909521ae27832701918aff9d2a16",
+      "reason": "same-fact",
+      "keptId": "03bdef55-71b1-40ce-bdba-d0107b24cad2"
+    },
+    {
+      "id": "3fe6b5cb-8be6-4e37-ab24-3d3d888703e1",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "canary islands",
+      "contentHash": "7a8f8b81abbc6f8422a4f769fb7f4892cdae0ccb30720c7dde172a02cdd9656e",
+      "reason": "same-fact",
+      "keptId": "51710b9b-9458-4e34-bf89-aa8d3793b7ab"
+    },
+    {
+      "id": "ada83526-b5c4-4dd1-aa57-798ca89f3146",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "candela",
+      "contentHash": "dd4752a685af8773acfad396aa3823e6ffa43b3fff5ccdc9e0f1e7eb3470bb85",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "e800a95d-3f8c-4457-b097-689c05257921",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "captain americas shield",
+      "contentHash": "dcaad4b5ba155279825688453de2fbb52403d29319d40785c0275add0830763a",
+      "reason": "same-fact",
+      "keptId": "ae7d1dc4-646b-49ed-a09f-326b7efc32da"
+    },
+    {
+      "id": "8bfb2dd3-639f-4327-a93d-3e1df323601a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "catchers mask",
+      "contentHash": "00f1051ed3e54a29ba62eb209bcf5645ee6872f774a55da10a2869ae091aec73",
+      "reason": "same-fact",
+      "keptId": "205f91fc-561d-4632-a3c0-2da57ab76c06"
+    },
+    {
+      "id": "c7a47744-b805-4a11-b6c2-71281e784da7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cats",
+      "contentHash": "50d09d7f8f9694e626aa7be5dafea6e5b601f1725e62bd6df6252757ab40b6b0",
+      "reason": "same-fact",
+      "keptId": "25c6d82d-0e31-44d3-8c51-90f6cd24b248"
+    },
+    {
+      "id": "d9b04b29-b3a0-4419-abec-fad127fdd513",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cerberus",
+      "contentHash": "e67dbe8a14c66c619b067d73086fc0172e6e4e5d61772a11f7b40129b66086e0",
+      "reason": "same-fact",
+      "keptId": "d24b8b2a-f07b-4219-a6b3-1a97d69316cc"
+    },
+    {
+      "id": "7e948ce0-1797-437b-8f03-9de53f2ee808",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "championship boxing",
+      "contentHash": "9311b980ebb209df16e9a4867e7ff5139165a68b472f4156e67ecc532a521ab8",
+      "reason": "same-fact",
+      "keptId": "f211a8b0-ab5c-43a7-81ba-eda7132c9923"
+    },
+    {
+      "id": "668dca14-866f-45e0-8a02-751e38fda043",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "chanter",
+      "contentHash": "2e1b0acdc38af6f10d354b23812afcdc4d3a1b29b9db965d3c85ad2fce72dd2b",
+      "reason": "same-fact",
+      "keptId": "f5f3946d-134e-4d26-b046-bd9e1ba77ae5"
+    },
+    {
+      "id": "700bafd5-16ae-49b1-a452-16e23cfb63cd",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "charlemagne",
+      "contentHash": "be0367cde4e62c4540e70f11f462da886017fdc68e49b5082136e3cc37fd6708",
+      "reason": "same-fact",
+      "keptId": "c6c52fe5-9c2b-45d3-a722-3d35a0534128"
+    },
+    {
+      "id": "b8bf5b1e-eb72-4064-88e6-079356c29cf3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "charles darwin",
+      "contentHash": "93bcaeee9b75c3415b778967d60906292867012c91f4cfd1b8def1ad6c1fb3d1",
+      "reason": "same-fact",
+      "keptId": "0aca1423-879e-4b46-8b47-4cf9ba47d631"
+    },
+    {
+      "id": "8118aba0-2ed3-4943-affc-9fa31318219d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "chessboard",
+      "contentHash": "e55c2a47311b4608cbd0efbefd712d63d4b1fd3b8c31bcba222077dc45e540f3",
+      "reason": "same-fact",
+      "keptId": "2c41a2d8-c70a-4d9e-af1b-69b94df182fe"
+    },
+    {
+      "id": "3cce7eaa-08cb-4aa0-86bb-a68861b6f3a7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "chimera",
+      "contentHash": "8c21c10143008daab04a42e52c24981561e159b1c2d767e8d3c602033bf15284",
+      "reason": "same-fact",
+      "keptId": "497672cc-8c71-47d1-9521-d6f6450e3daa"
+    },
+    {
+      "id": "51af2fb1-0796-46d8-aad5-20ca9bf1f9e6",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "chocolate",
+      "contentHash": "14fbdc68449faedaf07473022a32915b033bb30a5cfed8996dbffc998606cdc0",
+      "reason": "same-fact",
+      "keptId": "7fb8b1b1-cd1f-4dcb-bf3e-0c2dbc51d64b"
+    },
+    {
+      "id": "1d9e1fc1-fb5b-4944-80d7-65add05fe1fa",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "chord",
+      "contentHash": "1c6b8f170e83a23e1f213dadbb69e3cfef8c5a4ccfa587589bf7615cdfaa19ad",
+      "reason": "same-fact",
+      "keptId": "453b4be0-18a5-4b5e-aaf4-939607b96a2d"
+    },
+    {
+      "id": "1d122c9d-cdeb-4533-926c-a751243b5364",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "chuck berry",
+      "contentHash": "89a6ba82eab2fe67f2539498f1b0a23a013a81b42fa39d96ca871ad4f3033b2b",
+      "reason": "same-fact",
+      "keptId": "41c467e3-3beb-47e3-b74c-9c5f99abb971"
+    },
+    {
+      "id": "16098ac1-95e0-468d-af54-b5acc077fd8d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cinderella",
+      "contentHash": "986274bb1a27a5fd90b9d78f396a60476457392843ff4c336e3648ce285e150f",
+      "reason": "same-fact",
+      "keptId": "69b301da-e8aa-4c53-a31b-77c51bb05656"
+    },
+    {
+      "id": "16c2ee63-a2d4-458e-84b5-9da6e587356b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "circulatory system",
+      "contentHash": "bfa1e47b78258a45903012a9a8150d91b32491ddc0fe35b53b8ff90a135bfc87",
+      "reason": "same-fact",
+      "keptId": "081ed740-9d0a-4ed6-a34f-09a708b18798"
+    },
+    {
+      "id": "e3bfcfb9-8482-4e1e-b5fa-7c1e937026af",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cleisthenes",
+      "contentHash": "fb0cba0109dddf0df0c79b223d14c2091580cbd8064b84e899faa01a37c7f953",
+      "reason": "same-fact",
+      "keptId": "9701c0ac-da16-42d9-b318-9e80d104488a"
+    },
+    {
+      "id": "a6e1ae29-553f-43cf-95b4-663262b88739",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cmyk color model",
+      "contentHash": "ad4f9ce31b1ead0cbbe6a601521568738cafef90170b01d52c7f7e7c85c88db8",
+      "reason": "same-fact",
+      "keptId": "2e37c543-034b-45ac-b0bc-f28153ba35e3"
+    },
+    {
+      "id": "a620e866-fe83-483e-8180-e6fc00def5ff",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cnidaria",
+      "contentHash": "c2ac3febfd131947cfbc42283187b120d81a84f6cae12bb4931ac98040ca5a3e",
+      "reason": "same-fact",
+      "keptId": "74afd7eb-aab4-4c7f-b1ca-92e86f35e5da"
+    },
+    {
+      "id": "911de4ef-5df1-43f8-a6d4-e3656ff7cff7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cogito ergo sum",
+      "contentHash": "05006ae6b0ef12ea4e97acb3366c57ff844c666971ee577c2fb54f55bfd4a702",
+      "reason": "same-fact",
+      "keptId": "0b533c5f-7051-4e79-b9ed-1bccb45780f3"
+    },
+    {
+      "id": "afc396d3-7739-426e-ae1b-7c05754d88b7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "coloratura soprano",
+      "contentHash": "2dd91fd5f5c803b14ae64015bffc278ff9f17a99a358a0c4533880b0ff4cdbb9",
+      "reason": "same-fact",
+      "keptId": "bafc2304-2fe1-4e00-97a8-cdd23e9118b1"
+    },
+    {
+      "id": "eefcb159-b621-4163-9d50-6a797ef6932d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "communist manifesto",
+      "contentHash": "75b5dfb09aa87f43bf2df9ae81b626f50bc0ed00e2c041349df99144d83ef5c4",
+      "reason": "same-fact",
+      "keptId": "448df0ba-2792-448a-a48b-774435fc0e15"
+    },
+    {
+      "id": "219cdb71-26af-44ff-9e68-2bfda314ec87",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "compact disc",
+      "contentHash": "04d249d63b858114d81980eae806ac755989074848615f482fdef7c7aac9369f",
+      "reason": "same-fact",
+      "keptId": "f5af7ef7-3de8-4747-bce8-d55753d89eba"
+    },
+    {
+      "id": "fc0a5d29-15b6-48c4-9be4-7641ef4e5e2c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cone cell",
+      "contentHash": "4779754df1f78daf8dc05b4738dc38eb6cd2a060dfb024f8818c8683b5cadd69",
+      "reason": "same-fact",
+      "keptId": "174e07e8-47c9-4c5e-9c82-036cbe521b31"
+    },
+    {
+      "id": "cc081df4-d666-4368-8b59-1f7bef19e277",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "convection",
+      "contentHash": "ed976ad491cbb5f45f4127d234dba459e89b5f135ff0f2a3166610140eb63d34",
+      "reason": "same-fact",
+      "keptId": "555c8557-4a7f-422f-9d9a-75aed8c14ec0"
+    },
+    {
+      "id": "7f39fd12-3a3c-409f-9f81-67c2f19cbf82",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "copper",
+      "contentHash": "85830af7e17a51eaa3b726f39605974f758ac2cb9e784d366c06ed809615a494",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "95423bbc-b5ee-47b0-93eb-29f3ee56ff36",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "coral",
+      "contentHash": "999a1726c35874a8b86b3e5d3a07442cfca0ddd2877ced6263fdc3d6985378b7",
+      "reason": "same-fact",
+      "keptId": "8efc7ad2-9617-4694-98c5-c709e2c4e0b8"
+    },
+    {
+      "id": "2cf57632-05e2-48fa-bbd2-f3eb64671a58",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cpu",
+      "contentHash": "3c8e7fa6b28a0d73670766a613fd6f66dbd2c41b2b0c8c96aaf0297da8c22ff3",
+      "reason": "same-fact",
+      "keptId": "f530e32c-7fdb-4f24-8ab5-507b4dd956d7"
+    },
+    {
+      "id": "d26e35f2-164f-4497-a1d5-aeb39eda3c7c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "crescendo",
+      "contentHash": "1d7ee463c7f5790ad3fff7dc30f70f1d502fb2a2e0749beda111e9b0b3c5127f",
+      "reason": "same-fact",
+      "keptId": "2bd60a9a-8e47-41ec-be82-e925e83ccace"
+    },
+    {
+      "id": "44d65bca-7190-4674-bb1a-626132bb9e00",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "cuckoo",
+      "contentHash": "40f6e5df967ec0c92e36d52cb8bf2064451365cc7f9abcc16f95d4ce6ee3f0a3",
+      "reason": "same-fact",
+      "keptId": "1741db08-6ea7-4d33-9e76-c377355fb0ca"
+    },
+    {
+      "id": "a686fdb9-bf45-4207-8322-0fa4feed3aac",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "damn",
+      "contentHash": "811cfd7eb38344b431c658a73014b27857e0c1ddfa523ebaf3b5c2b676d1b93e",
+      "reason": "same-fact",
+      "keptId": "c72004c5-2dba-42c8-87d8-aebe1408e86f"
+    },
+    {
+      "id": "65e71105-164e-439e-943f-2ca75ed26445",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "dangerously in love",
+      "contentHash": "d380dda94b77d3208411d82511b270c3edebe05e97214d35ab2b15a37d8d2d08",
+      "reason": "same-fact",
+      "keptId": "366de315-b90d-4eea-a87a-3553967e0f02"
+    },
+    {
+      "id": "a09636ba-a307-4ece-b47e-1765834e0a67",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "decibel",
+      "contentHash": "42e2a1162265039d9cbff154b38a8ccc8545693b8b64de6a596a5009c1b2ba2f",
+      "reason": "same-fact",
+      "keptId": "9552a134-7dc7-4efc-9c97-02e8b8eab40d"
+    },
+    {
+      "id": "7f2d5681-7362-4088-852f-56f7efe9db72",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "destinys child",
+      "contentHash": "573a9987ac913906ee7435c5f3b77b239b342834e6e0173e97c4ff61ff281721",
+      "reason": "same-fact",
+      "keptId": "6845df5a-9414-4cfc-8d55-82a0f8289d1c"
+    },
+    {
+      "id": "a19deb43-dd7b-45de-a886-86b468ee7587",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "die walkure",
+      "contentHash": "7758df8ad4918146e1046e9058dd069c492b45c6c55b043edf375a2fe02b0209",
+      "reason": "same-fact",
+      "keptId": "22b60593-d318-4ffa-8907-7f7792223715"
+    },
+    {
+      "id": "8ddef4bd-0fd4-481c-8d64-79374a23a0de",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "digestive system",
+      "contentHash": "a49f144a8d7a23f394d1592f5e074aa5f0d18add0a0a5110a6addce399906b22",
+      "reason": "same-fact",
+      "keptId": "a4b5fddf-92f8-4e8a-875a-c598f7c8f61a"
+    },
+    {
+      "id": "f99b282a-a9d8-48af-9816-12a1ece224db",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "dj jazzy jeff and the fresh prince",
+      "contentHash": "62d25fc5aec8e709f386abc9cac98f718dd77d8c5e2ffdb869beadfef41e3b29",
+      "reason": "same-fact",
+      "keptId": "164b4d69-4059-44bd-90fa-abbd81a2c76b"
+    },
+    {
+      "id": "af5e3685-5fdc-480f-a821-a58b64b6ce3e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "dna helicase",
+      "contentHash": "cfc16930a08ba9122117e2d81f227ba5e23814a944bb22fd6d280913a31b40c8",
+      "reason": "same-fact",
+      "keptId": "76a189a7-c8ee-471d-a0a4-a8b9567d2f2b"
+    },
+    {
+      "id": "1d8e53c7-766c-4365-acff-f3316893703e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "dna polymerase",
+      "contentHash": "336520e966e5f7df236068d6df26e0bf50cf30e7b19522fbeff16099d25ac5b7",
+      "reason": "same-fact",
+      "keptId": "b000cb50-1a5c-4300-8387-4f7ac7f85142"
+    },
+    {
+      "id": "de7e294f-fae8-4962-8926-ad841d44b901",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "dna replication",
+      "contentHash": "1ed31b1413fb691f6b60e6aabffe282c94cbae0adfab6b5a557cc68ffdd7c66c",
+      "reason": "same-fact",
+      "keptId": "7d9cda02-3082-425e-ab7c-106d9e407e51"
+    },
+    {
+      "id": "3752e139-2a05-4671-b6f4-66f52566d644",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "dogecoin",
+      "contentHash": "629a5140ce0be8ef77f6d9a1414cacb3d68f81605ce856478f43ea042b2eb68e",
+      "reason": "same-fact",
+      "keptId": "8a427976-9063-4211-af97-1b9ffe89f782"
+    },
+    {
+      "id": "0e6137e7-758f-4b80-b3f5-a89e22fe0bca",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "domesday book",
+      "contentHash": "9488d068fd4f8ea28b3af98da3156576c955ae96388b11e5898f5365aadfc6f7",
+      "reason": "same-fact",
+      "keptId": "7e842e0b-47e4-449b-a05c-76f0a528c39e"
+    },
+    {
+      "id": "1bb4d5a1-e1f3-4ba0-8bb7-218f3beb4879",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "dominican republic",
+      "contentHash": "ada3599e321f221c987b3049ab09889837b7665ec0c823f063a8942bb9538a9b",
+      "reason": "same-fact",
+      "keptId": "8795bafd-bd2c-4e38-86c1-70451d42888d"
+    },
+    {
+      "id": "a1e47a6b-2313-4a94-af52-0f43cbd5b1ea",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "double slit experiment",
+      "contentHash": "eac6e9fe08f51c4965f4e89ab8096e8b75b00f4357a4fec51118703fcd44f6ed",
+      "reason": "same-fact",
+      "keptId": "29690437-b9a8-45e4-b3be-4d1dd69207ec"
+    },
+    {
+      "id": "2fdbd2a4-860c-45ec-b972-af073a19edf2",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "down",
+      "contentHash": "a0d3e9f02b6408fe7a9b65cc9bd15853e51b2e06d74c2bae7c2045b5bc356904",
+      "reason": "same-fact",
+      "keptId": "59c2416d-a702-4dec-9a84-b0cd46e81432"
+    },
+    {
+      "id": "030f7ec4-8ec6-4567-9c4c-b30de986c3ec",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "dream",
+      "contentHash": "234c88defa0eb498af523e9a504a758736d28145e1f0f49f0527f6d4fc487050",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "67302108-0817-4086-9d65-b0d7c25a9bf1",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "dunder mifflin",
+      "contentHash": "13a044b538d55370d7931f503c86f3dbc15056e09120854c6448042e43537678",
+      "reason": "same-fact",
+      "keptId": "dc528182-dfeb-472a-8e79-9b9592404cdc"
+    },
+    {
+      "id": "7455a3b5-ac58-44e2-9d04-9e195e07f6e7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "dung beetle",
+      "contentHash": "2e0701a1a347b65fabb32535498a26ee56c177b8a36571fe62d24ff6196c093f",
+      "reason": "same-fact",
+      "keptId": "8b04316f-7139-44c2-ac6a-0ecbfd8adeba"
+    },
+    {
+      "id": "98fb5ca2-94ec-4f7d-b583-1dfe23834081",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "durian",
+      "contentHash": "c65ecedaa59a56a8b7138776709c56a326375079461879e55fb4612b0755f938",
+      "reason": "same-fact",
+      "keptId": "bf03024b-9465-4284-a887-ee38a25ade74"
+    },
+    {
+      "id": "475839dd-19ed-4652-b73c-6d06d708f890",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "dwarf planet",
+      "contentHash": "e7053f77ea727a86063e94c834982d2290b89635379c7122b570e457b21958a0",
+      "reason": "same-fact",
+      "keptId": "3b454b54-73e8-4e3b-8204-d05b8a02693d"
+    },
+    {
+      "id": "6ceb204e-8222-494d-91f1-fb350c74cdf1",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "earths axial tilt",
+      "contentHash": "79efe88e823244047e6e9491a9dc845ff0484f739329ee5f44322b0074fe5b44",
+      "reason": "same-fact",
+      "keptId": "756423c1-0f8f-4a5d-a105-a5382e55d29b"
+    },
+    {
+      "id": "2dac5b84-5e93-4456-b3cc-4f2e8b63ce4d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "earths escape velocity",
+      "contentHash": "e48087bc57b2f5b836447f83196d87a75ebab4d1d31b5e09fba0b656cafbe6da",
+      "reason": "same-fact",
+      "keptId": "0621d1af-f69d-471a-b14a-fb468dd483a2"
+    },
+    {
+      "id": "e8bb14d9-3a8f-4921-b1e9-27422fce3604",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "earthworm",
+      "contentHash": "af461ddad22060f4d6eb0a9c50aaf89b2a4ef2739d02b82f3dd3ff85e47b7e27",
+      "reason": "same-fact",
+      "keptId": "fe825c77-b50d-4220-9c1e-ce28012d394c"
+    },
+    {
+      "id": "a6897709-b07e-47da-96e2-83212101359a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "electromagnetic waves",
+      "contentHash": "2c2682854e1eac3c8bfad099c7942504719ceda8c3affc58484bd57692384cd8",
+      "reason": "same-fact",
+      "keptId": "62896200-e9be-4f2c-aa32-29cca23d8d7f"
+    },
+    {
+      "id": "419b4932-2fc8-468a-9b99-e6a9ae0d1b17",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "eleven",
+      "contentHash": "ebbfb1b99d111f9e3a1036f27722885ebae578e47b7943d84d02936c30b30ac0",
+      "reason": "same-fact",
+      "keptId": "48a1a2c1-fa7a-4bbd-b661-301957057c9a"
+    },
+    {
+      "id": "1793fa8d-1837-4d5a-a4d6-b8b9c290e028",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "eli whitney",
+      "contentHash": "6b9b9884e7b04a42fd3363dc232196052df06fa344659661c34dae4745b69399",
+      "reason": "same-fact",
+      "keptId": "9baa2245-5695-4e17-9d54-b87b0edb90b7"
+    },
+    {
+      "id": "aaaba70d-dca8-43b7-9a01-f1d23b399cc2",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "elizabeth tower",
+      "contentHash": "9a96e27db8213dff7de287fa05efa23c3d4e6b54906d68645315f238d3190e34",
+      "reason": "same-fact",
+      "keptId": "aef6dcfb-bd00-4338-84dc-a7577f4b00a7"
+    },
+    {
+      "id": "cf4b5a14-70f9-4923-a2df-cda2cba919f7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ella fitzgerald",
+      "contentHash": "875d786b97f40b3cc78c167d69dcc948cfa5807d424afecf00216bcec16781c4",
+      "reason": "same-fact",
+      "keptId": "4d6da38a-6a30-4d38-b15e-193f135613ff"
+    },
+    {
+      "id": "25287dc8-b499-4bac-8192-c3858dad68b8",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "emancipation proclamation",
+      "contentHash": "cdb975f113fff2e0db5748b1bc2ab5b5f4d98e2b29ff87388c06a3809ced31ac",
+      "reason": "same-fact",
+      "keptId": "dc7b58d1-fdbf-44b2-932f-2ef510588880"
+    },
+    {
+      "id": "3fc85a7e-4803-41f9-937e-1e68f19c8a0b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "emilia clarke",
+      "contentHash": "057c3e8fe41f680d426c008fe93c2de68a9707a540c9b61e182ffdc122c12d78",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "5943116a-b045-4168-90c1-1554e2ab4653",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "endothermic reaction",
+      "contentHash": "4cf111bd4461c8e032960f46bc69a9f5fde49ff19b1dcb1415ee5db7842d6da3",
+      "reason": "same-fact",
+      "keptId": "a19a9388-68f8-4684-90aa-ba92e1395b10"
+    },
+    {
+      "id": "f4144d31-b846-4b71-8dd3-e908480be8b7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "epee fencing",
+      "contentHash": "0f3789ab274457ccaeef3309958825a86f03c94dce888ffc5f9cef8e316c902d",
+      "reason": "same-fact",
+      "keptId": "8de2fdf3-53a5-4515-8b1b-ec1eff532fca"
+    },
+    {
+      "id": "10529d1f-5991-4ec4-b79e-c6e614c78000",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "evolution",
+      "contentHash": "e6e6c01343960b639d26cde78944ba719505eedb416ff564f5355c8840263f2b",
+      "reason": "same-fact",
+      "keptId": "8f3b3e48-1a63-4adc-b8cb-3bca0307fa82"
+    },
+    {
+      "id": "93f644ff-71b7-4241-b8f1-11da5ffdfc4e",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "exhalation",
+      "contentHash": "cd02384870745471730c4771e6f1cae18f5ff415d1743dbcd2fffb17bb1bf909",
+      "reason": "same-fact",
+      "keptId": "3b9d0ee3-6530-47bc-a99b-b866e49c1fc6"
+    },
+    {
+      "id": "6a8be021-8253-4c6e-b31f-b560c1b2254f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "fastest lap",
+      "contentHash": "71a584e067028a4f07342baa7052acb148ba19903d9ff324633e103372a62e37",
+      "reason": "same-fact",
+      "keptId": "6b5adafe-8939-4f83-a479-484a6f31a542"
+    },
+    {
+      "id": "e09289e9-1bec-4fb6-96cc-6f6703778b1f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "femur",
+      "contentHash": "d3ba6894bd9486495d30c82e7fa77dcc66648805639c0cce391bc8585d637e81",
+      "reason": "same-fact",
+      "keptId": "e3acd1b5-f58b-4ec1-8f4c-583d03e0f38e"
+    },
+    {
+      "id": "2aedc1a5-ed96-4b1a-98e1-84115baf124b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "fencing mask",
+      "contentHash": "de44c894e46150a9964c98d30d02be99f666691dbcf448c68c5af50d4882317a",
+      "reason": "same-fact",
+      "keptId": "92b65d02-ef67-40cc-93d8-20bb51e850df"
+    },
+    {
+      "id": "d341881d-c4b2-4b99-a38a-f7f44eed374a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "flag of canada",
+      "contentHash": "6e7924974fdd6f3857283bc3ee541c19d0193f3c73b3b2fc1d4830999f7a453c",
+      "reason": "same-fact",
+      "keptId": "9e7d049e-1ad8-4563-b1ad-61a257279cef"
+    },
+    {
+      "id": "91e3c130-6815-4117-9dd4-b4070a973e3c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "flag of the united states",
+      "contentHash": "e33128de98259c59940698153922c44f0124e7fa2a1cc84d07331d8809b1a2d9",
+      "reason": "same-fact",
+      "keptId": "8c3c984b-677f-46a2-8a67-0565a9bd413f"
+    },
+    {
+      "id": "7aeda1e2-caba-449c-86ec-c0b5f92a999a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "flamenco",
+      "contentHash": "650fd10576fb9dc4c7ec5ac08409e3a4a20844081fa466824e173ff5fb5ad4a5",
+      "reason": "same-fact",
+      "keptId": "476ee267-be68-4711-a9e7-31fb888b8a7b"
+    },
+    {
+      "id": "d98af13f-2964-491a-bfab-d2642aca39c0",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "flight recorder",
+      "contentHash": "7a4f6bd483e8277a39dfc4c2e7652b723957112d48f6b81cff138276eed77ed3",
+      "reason": "same-fact",
+      "keptId": "a01816b4-ae3a-4e51-9917-98a0be14f2b0"
+    },
+    {
+      "id": "8d50f959-c3b1-4a1e-b7ad-2ecd10b4ded6",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "formula one world drivers championship",
+      "contentHash": "2ebbfd14b83014fb535d22a76ec49357ecb9162afd302a09b0df75e9ddc4e0bb",
+      "reason": "same-fact",
+      "keptId": "eb3b26d3-dec2-44ae-b2c1-dc7ac8a1ac96"
+    },
+    {
+      "id": "64d40bff-cdad-4351-87d0-fbe11cf2b84e",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "franz schubert",
+      "contentHash": "511dcaa6251e67109f215c925ac563c774a3adc0189fb04fde418380bda42f8d",
+      "reason": "same-fact",
+      "keptId": "0bfcdedf-345f-482a-98a1-aeccc6b9d799"
+    },
+    {
+      "id": "aa1f0105-76f0-498e-8281-99953432a291",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "freezing",
+      "contentHash": "dbb1b95f739c870fa99cfb013d8e104729240214d99d96cde7f0d68354b43376",
+      "reason": "same-fact",
+      "keptId": "860d676d-0876-458e-8b19-4fd209c7509b"
+    },
+    {
+      "id": "343781f9-663d-4edd-a544-0cde47c3f6eb",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "gambia",
+      "contentHash": "7d5b5b3392e8cb5b13d8243ea1d35b3d3e22df6f045ba8404b0595d6218bb29e",
+      "reason": "same-fact",
+      "keptId": "701c1e23-b1f7-4689-b5b8-457ab8a82102"
+    },
+    {
+      "id": "7f321245-dd52-41d6-ba91-299e21109fe2",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "garth brooks",
+      "contentHash": "adade2cdb38c3df6493fc34f9425c6a57aa4ffcee6edd876d17d431d3406d60a",
+      "reason": "same-fact",
+      "keptId": "2f933ce5-1f20-48d2-9283-9902d4227b47"
+    },
+    {
+      "id": "6d8a77f5-31ab-4a47-a25c-8879ae869cb5",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "genetics",
+      "contentHash": "2e390813559be19dd4b230be9e2a1f8b5ef9f0db802dc9b5192ff913b50cb103",
+      "reason": "same-fact",
+      "keptId": "66f60f70-d91d-4030-bb79-d8af58cefed2"
+    },
+    {
+      "id": "41715a73-ac7d-401a-8486-49c6614ea740",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "georg solti",
+      "contentHash": "cc4a3bcf8c8132e57a5a11e6cc0bbf0d166e828c6b0b490267256e21bc223ea8",
+      "reason": "same-fact",
+      "keptId": "a2162d7b-4383-42b9-9861-5a7093f4fe23"
+    },
+    {
+      "id": "0b8f5d2c-c48d-468f-95e5-c086b83c8edf",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "george frideric handel",
+      "contentHash": "f73dfa1f60d52d7e3c0eba36b8e0c65e2f4dfd31c9546d2b6d0de3166488462f",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "db3356e1-3928-4091-9914-0aa25634a268",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "george r r martin",
+      "contentHash": "ba47961dc9004558e3ab3097ef692ef54cdc016b2c1bd90a2972fc4bf5a0840a",
+      "reason": "same-fact",
+      "keptId": "7d8971f5-1d8e-4675-b2cb-87e5c03d274f"
+    },
+    {
+      "id": "42785e83-ad70-4ee4-adcc-7db48c9ea67f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "george washington",
+      "contentHash": "981ce18b605a79ce04e18d3e33e712e1f9527ce66e3848141accc5076d037c9b",
+      "reason": "same-fact",
+      "keptId": "34fbb9ef-8810-477d-bc86-3526d4e73549"
+    },
+    {
+      "id": "9187be60-285d-49e1-8cf0-f3a443b63a24",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "georges bizet",
+      "contentHash": "03d76c2b2e1d7d4fd92b26e5820e2a6941298525cb318526ebb31c4fb437829f",
+      "reason": "same-fact",
+      "keptId": "afecab4f-cc24-4bf4-b88e-c7a64b1a7a69"
+    },
+    {
+      "id": "0975cbbc-1545-4857-a387-a820a9e61260",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "giuseppe verdi",
+      "contentHash": "5f74c0b2356a76c93823408a74044c2183f9a3c194ff6c3db7def774b5da6b56",
+      "reason": "same-fact",
+      "keptId": "6371d28c-43c7-474c-91c2-dfe15283ffd4"
+    },
+    {
+      "id": "692b8569-0fc5-4b04-8926-830ff76b0f14",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "glass",
+      "contentHash": "8e59daddab0464f66e5631d35e56b33a734faf3477436b32e2b7ce1308055346",
+      "reason": "same-fact",
+      "keptId": "c357aff0-fa75-41fc-80eb-8a39dbc870ce"
+    },
+    {
+      "id": "3257dc57-bd3d-42a6-8965-fda4fdfbf3cb",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "glissando",
+      "contentHash": "576d4486d6bb880bd765e6957e9e223a17c7b6a0fc51921c402d6c346ffd020a",
+      "reason": "same-fact",
+      "keptId": "698a749d-aaa6-4e01-b0ae-7c7eca4b60dc"
+    },
+    {
+      "id": "2f69a0fc-d149-4b30-b9b4-995e699f2de3",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "gluon",
+      "contentHash": "e6b7f6653d0e3e3c8032fc090f3884e3955501363ca3fb18556f8a40bf4e0ac7",
+      "reason": "same-fact",
+      "keptId": "d5a782e8-53c0-4ead-8f4b-5950e08eae62"
+    },
+    {
+      "id": "f67db3fb-6391-4f3d-a46c-b030e42b31bd",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "golf course",
+      "contentHash": "a0a4cfd4440c700bf8bc28874e9707b7c67eb8faaf3882304fca18889bf37555",
+      "reason": "same-fact",
+      "keptId": "0d92f5b3-ba67-44b8-a1f5-f0b391422195"
+    },
+    {
+      "id": "2fdb6de6-577d-4ffa-830b-96bd6377d605",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "grand theft auto v",
+      "contentHash": "7e23fd8e6f4796ea2f0424e2656b61198ea8e543fd4cd012e3229e94c12633b1",
+      "reason": "same-fact",
+      "keptId": "ea0e96fb-dd1f-4715-aa1e-72a7cb56b814"
+    },
+    {
+      "id": "f7d593b7-96ef-4026-8ba3-3c5a7126787a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "gravitational collapse",
+      "contentHash": "6d71cbd0127cce12fd90e1edbb362777f46f4108295a3871c912eb5cacc593c6",
+      "reason": "same-fact",
+      "keptId": "a0c626ff-5a36-4a15-bd4d-0324fe85a146"
+    },
+    {
+      "id": "c340f74f-d412-4891-bf35-f029b9d76dc7",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "great famine",
+      "contentHash": "869900d71acf45eed0060fd94f36feac2056902892d4fe2f8c824c9a6b9055b7",
+      "reason": "same-fact",
+      "keptId": "0e180386-fa8f-4c2c-a7dd-a9e79a6f5b45"
+    },
+    {
+      "id": "9dc743c1-1413-48d8-b0f4-5ce5ab2aea26",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "great zimbabwe",
+      "contentHash": "37af831885701f7110278bcb4aaaf84b8b025d747a5d725b7b83902cf4484046",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "5741f23e-552b-42a7-b4b3-4ad9b7fc5700",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "green with envy",
+      "contentHash": "e6734e93f08c9a24d0d5afd43164f7ebba601a18bf72276cb3d2105133fc0a73",
+      "reason": "same-fact",
+      "keptId": "84ae6499-a1a8-4976-a379-b6438f1deed8"
+    },
+    {
+      "id": "25167ddf-135b-42a3-a1da-c5315f11b674",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "grey parrot",
+      "contentHash": "7d331b4ce0559eeb2922ff3b86a8624357b0c88907b276e72fabb4d175be5cd0",
+      "reason": "same-fact",
+      "keptId": "eda64052-73c3-4820-8b7f-d54a66d232bd"
+    },
+    {
+      "id": "ae647ed3-5462-48be-bfac-7b3aa43483b8",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "grunge",
+      "contentHash": "4df22f5d7e60dc3706a8042ec5d4bdc317951d3e0543de613713a67ca53b99c6",
+      "reason": "same-fact",
+      "keptId": "89b31023-e513-4607-83ec-c07ee8d12453"
+    },
+    {
+      "id": "baf20dfb-2ab1-4964-803b-f76dacfaf38a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "guitarron",
+      "contentHash": "fb6e63d210d1dadc33bb3bfa97d48fc79870acbd7200163235a5f6ba7c22af37",
+      "reason": "same-fact",
+      "keptId": "78a9ed7c-697d-42be-a706-6378ee6bd6de"
+    },
+    {
+      "id": "4f217317-a2a6-4138-bb4c-01c93a7cd9d5",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "gunpowder",
+      "contentHash": "dbd2848cfa8b9471639fccef22b71aafafb4e9a619df4278a1c4a2355d62789a",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "cd07235e-d58c-407e-90be-7d667d39f4e3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "gwen stefani",
+      "contentHash": "821f60a398f67fd80b0b92ec76989de2c166aa1f2b6eb594e897d1d1b27a0cb2",
+      "reason": "same-fact",
+      "keptId": "11d4236c-67cc-49a3-8b48-f5e1f0b98d68"
+    },
+    {
+      "id": "4d2b223a-d48f-4a4e-91b9-74440e5f6435",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "gymnastics code of points",
+      "contentHash": "342aa5352f716828398f5ed6373d0c4bcf7f890e0bad17b9e2cffc7804fec88a",
+      "reason": "same-fact",
+      "keptId": "f5032bec-7eb1-410d-8e03-f57347ec11f0"
+    },
+    {
+      "id": "3f43a75d-c5ec-464f-a99f-103b9d656671",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "hammerhead shark",
+      "contentHash": "bbd4e66cea49a1b146b60081e3c6a1a9ed7f4cf4dadcda918106ee4871496024",
+      "reason": "same-fact",
+      "keptId": "86862478-30d3-481e-8498-4c5d53baacdc"
+    },
+    {
+      "id": "8cd2447b-8a17-4f04-b73f-104e78b877ef",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "handmaids tale",
+      "contentHash": "2c0d945c5d3d19b83cc2b14c56fe795791ef5f5670fabd4e6e77d69946b136e3",
+      "reason": "same-fact",
+      "keptId": "7c012e99-7af1-4f89-aa18-7ec2bd296008"
+    },
+    {
+      "id": "9a8ea126-d86a-43e9-9e34-ea4ff7d42688",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "harmony",
+      "contentHash": "74c8aabef3a43bdca1cdddf157b2a136ece2897b706cd4ae7c60f22d17a20c1d",
+      "reason": "same-fact",
+      "keptId": "5471ce3d-63a4-446b-b24e-f4dcee0e04ca"
+    },
+    {
+      "id": "43566564-aa9a-4798-b747-92678aa0b65e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "heart of the ocean",
+      "contentHash": "7da51779338fd3ffd40211b4ae92ab002fa0add9497a343c394419a303e52d07",
+      "reason": "same-fact",
+      "keptId": "58f84614-abd2-46cd-b199-e4506547fe13"
+    },
+    {
+      "id": "002427a7-77ba-4e03-b246-35e93ad4ad6c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "heavy metal",
+      "contentHash": "915e54a76916c783bd74851aaa7d9867fb0a603cac9ac9512e622147fd6a2862",
+      "reason": "same-fact",
+      "keptId": "6540276e-c5fb-4b66-854e-849e6c4c5e99"
+    },
+    {
+      "id": "6b83ff1a-8cc1-4641-81a7-c7c9265425a3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "heavyweight",
+      "contentHash": "2f265a470c928eb9af45bce6105ddac228734d29ae667026f9293c4717ce89e9",
+      "reason": "same-fact",
+      "keptId": "3884b8fe-69d7-4a89-90ad-ac4452d5539f"
+    },
+    {
+      "id": "60de5e88-3aef-41ff-9fb5-36ac5979003a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "helicase",
+      "contentHash": "a1f8264fd44f8a0628c2a58d48e73c8121e1e2a7e487bd6ffe9c19ee4aaca76d",
+      "reason": "same-fact",
+      "keptId": "54238247-cfb9-4ec8-a23f-e082b4c64c30"
+    },
+    {
+      "id": "4759be88-1f1d-4cab-a148-8a1582d78d51",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "helmet",
+      "contentHash": "45de6fbf80593144e73b7558d7096736e88ffc7043f2ea451d0d64af1522a742",
+      "reason": "same-fact",
+      "keptId": "cd76723a-ae35-4286-8889-e9f036d340fb"
+    },
+    {
+      "id": "9cce98c5-db5b-4c83-b350-0a57fd3a24b4",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "hemoglobin",
+      "contentHash": "e5ee05d788aab6c5ef3e898d34dbee2fcc5a73a854273a1105fee2b24f960a57",
+      "reason": "same-fact",
+      "keptId": "b42f136f-e152-48bc-8374-361f8d0abc0a"
+    },
+    {
+      "id": "158c8a08-fe21-4664-bf22-3d9d1aa7733c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "henry iv of france",
+      "contentHash": "138203ac116de2cade9a70d188cedf4701897816669ce651b623b56aa6f93b40",
+      "reason": "same-fact",
+      "keptId": "cbdfaaa6-5a99-4aff-a750-d2d36cb13b36"
+    },
+    {
+      "id": "4fd0c44d-9ddd-4146-8e7e-c7595487752f",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "hernan cortes",
+      "contentHash": "48be3e4614a85ac983bbc4b73b71d8e48d86bf7f2aba03166bb1b23c98c324ee",
+      "reason": "same-fact",
+      "keptId": "3eadeeed-a411-4ffb-83ef-a6d75ea52ba3"
+    },
+    {
+      "id": "5a1127a7-eeb6-4c8a-b177-bd316cbec6e4",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "hexagon",
+      "contentHash": "b79a0ee2162efea3689b3dfbbe8e97f54b1ccf086c7ad53cfed707d5bf66aa1e",
+      "reason": "same-fact",
+      "keptId": "32ea1bf5-dd2a-4836-a147-5802e4867d59"
+    },
+    {
+      "id": "a3b894ff-3b67-42f1-ad86-c193b43878ff",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "hitchhikers guide to the galaxy",
+      "contentHash": "068a8a1f99f5dc1977d3ce19baffaa20faafc6839d6f03771fb0b5997d85789e",
+      "reason": "same-fact",
+      "keptId": "4701ae19-ccb6-41a3-b004-71cc0ec0f89c"
+    },
+    {
+      "id": "a4857f0b-23ff-47bb-abc0-30079c71cb26",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "homeostasis",
+      "contentHash": "99a450e8de9d9f15a58ebdb9bc2e51f687df0a2f5da6cdad0a3223a231730241",
+      "reason": "same-fact",
+      "keptId": "028155ce-8bc0-4bc6-ba53-a803b70ac3fd"
+    },
+    {
+      "id": "a7b13984-4e6d-4811-b301-d1bb160c7202",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "house music",
+      "contentHash": "0d5e91e55baf7ab83cf6f9d1d9b1d5f5643cedeb86cf45141d90e6726220876c",
+      "reason": "same-fact",
+      "keptId": "a1dde663-51e5-4bb1-803b-34cd8f212258"
+    },
+    {
+      "id": "25607bad-c2d2-40ac-9bf2-b8f8eba5ab0b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "house of medici",
+      "contentHash": "4a2aa4dfd770148b40d78220f77ca3af6df6826a84a4cfd354e1408ec8307942",
+      "reason": "same-fact",
+      "keptId": "e0b0796c-bcc2-4f98-99b8-e6eabc187a5c"
+    },
+    {
+      "id": "289c6743-6b8d-4466-8e73-fec0f39a7538",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "http",
+      "contentHash": "10ff680b1992a33b42f0cdf7e50eb5d2755c20b7fb1e3780aceaef7425f255a0",
+      "reason": "same-fact",
+      "keptId": "0f3adb06-ec02-4ff9-9301-a69e9764ca91"
+    },
+    {
+      "id": "e16b9e84-706c-4890-9f36-ae0fa0997630",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "hydrogen peroxide",
+      "contentHash": "1ed7e858e8d0da0b65b93fa1aec9bcdacde1f54891d6b1b0643e90787b48bfc6",
+      "reason": "same-fact",
+      "keptId": "0282a6a9-5c13-4017-bd5e-4a1667aa28e3"
+    },
+    {
+      "id": "d7e70838-2b4f-450a-9bbd-ca616a52e2bc",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ice hockey rink",
+      "contentHash": "7c55e4397b66ecba3a8f7b90658a779d185b294a8b0fef8eb40dbcb11c41c9ef",
+      "reason": "same-fact",
+      "keptId": "42590b06-9d62-4a80-ab49-b00f7acb9ac7"
+    },
+    {
+      "id": "b95b56aa-f5df-4b31-8c11-5e90c3ad012c",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "igneous rock",
+      "contentHash": "b1d1b6a9c18d64e8d74e006e0ed899d7ad3bd056209326d2a8ef9dc313d35ca1",
+      "reason": "same-fact",
+      "keptId": "fd7ca2ef-e04c-411d-b814-1a8a8473486d"
+    },
+    {
+      "id": "5d05930c-e532-4261-885a-d8544560b7dc",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "indian mathematics",
+      "contentHash": "2a77d202dd725e20d5f630e9d97afb01ada9e1a3dd1d6b0afe5f5068e16adfe3",
+      "reason": "same-fact",
+      "keptId": "46cb59ea-7cda-4c49-b72f-a695d2206d1d"
+    },
+    {
+      "id": "ac5e1279-a029-4c4f-a877-1eb4f1bc8c89",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ion",
+      "contentHash": "fd65920f22ad7e5c53eeaec94b137ce9fb4d4d0c6a05c681851f89dfac967e43",
+      "reason": "same-fact",
+      "keptId": "f02db0e6-fc55-4513-9611-f6f37b56efce"
+    },
+    {
+      "id": "883e3733-8b00-435d-9167-a7ca17e68a19",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "italian open",
+      "contentHash": "cd3b4684fba225167a53e20f86485cc1af82d597a4918ab507bf15b36500db52",
+      "reason": "same-fact",
+      "keptId": "d7921f7c-3c3b-49f0-a712-c3b2a0cb1262"
+    },
+    {
+      "id": "46fc1798-bf37-41e4-ae23-0891198f6951",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "j k rowling",
+      "contentHash": "b2dd1656428ef28c9dfd21ea57de2b118c476d66126afab429788f1337f81670",
+      "reason": "same-fact",
+      "keptId": "abc15625-6626-44dc-81a0-c6b04f986634"
+    },
+    {
+      "id": "bf47aa2c-d6e6-4396-af0b-7ccaaae33407",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "jab",
+      "contentHash": "98e4a16d2227ac451d5296ea2776b326a40ce6a6dee48b000ffb57117ff41513",
+      "reason": "same-fact",
+      "keptId": "6bba480a-b7f7-466f-a883-643d621e98d3"
+    },
+    {
+      "id": "76e630a7-f208-4897-8469-983c0381307d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "jackie robinson",
+      "contentHash": "32a1963352bb014c603ea3104179a873f92956ddbb0acfb28abfb77e6163c4ce",
+      "reason": "same-fact",
+      "keptId": "13084fbd-87b1-430a-9f32-b06fd05a5140"
+    },
+    {
+      "id": "d6119e82-9963-480f-a84a-369d4a6e2181",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "james hargreaves",
+      "contentHash": "451e6b0c031cbbfa78ab66e4d4f7f69ce5d533e88567bd8f9e4adacc75206bea",
+      "reason": "same-fact",
+      "keptId": "0c9405bd-8088-4e4e-8ea2-0cf01a38f1cb"
+    },
+    {
+      "id": "61d4ade9-849e-432c-bdea-623bfae879c1",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "james ii of england",
+      "contentHash": "2c187209ec9f525fab09035c395d5035ee557d27145df63816cf1dd1e198d446",
+      "reason": "same-fact",
+      "keptId": "90e5d5fe-ca5a-4fd1-aa71-abb89f471f27"
+    },
+    {
+      "id": "2f11cfbd-c49c-466a-82b7-d69d999c2155",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "janis joplin",
+      "contentHash": "5f4ddf76e82d8951e5dffec497087c6b7897e960b39ffa95628a8c0fe475bc5b",
+      "reason": "same-fact",
+      "keptId": "623b8cae-0748-48a7-bd5b-bec0db60b868"
+    },
+    {
+      "id": "bee7d6ab-afb6-4700-bde2-2689b1b7bf04",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "jean michel jarre",
+      "contentHash": "cdb12854d0af07d98ff4d8413b71b120d8d27318f5bab076a4034ed8b3b8e2be",
+      "reason": "same-fact",
+      "keptId": "0f841d85-8ee4-43eb-b05a-782732a9375e"
+    },
+    {
+      "id": "9b20ec7b-145a-42b4-be4b-ae6976357dac",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "jerry seinfeld",
+      "contentHash": "4f07be5be6be95f67f1ba052b12854f5486c327a096f47ac72f434a369fa15f3",
+      "reason": "same-fact",
+      "keptId": "1198dc25-b072-49fd-81b3-cdfe1f1a138b"
+    },
+    {
+      "id": "2ed43ba4-d27f-45e4-a3f4-beb534603c10",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "jimmy page",
+      "contentHash": "3e42a1da4f49a034b54f9fbd874ffb33d34724fca0f12a4ddbc770e25e657c78",
+      "reason": "same-fact",
+      "keptId": "c602168b-5107-4fc9-8cea-378bac5f13f7"
+    },
+    {
+      "id": "36179d64-b684-49f5-a9d1-8b64de6cfd09",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "john stockton",
+      "contentHash": "b67f4e63a771f4d858e6494186be1c5fcd573625b6d0450954eb44782e21deb8",
+      "reason": "same-fact",
+      "keptId": "87375b62-de20-47fb-9bb5-c6fcb00526b8"
+    },
+    {
+      "id": "c99101d1-44b2-41fb-9f3d-5c8ba41d23cc",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "johnny depp",
+      "contentHash": "834faabfdbf3bf58317a276f17d0dab739435b9c5d969966864ae22c9b89deb1",
+      "reason": "same-fact",
+      "keptId": "01f63634-616a-44ec-b2a2-153826160032"
+    },
+    {
+      "id": "4654a979-f540-45b4-af0b-a2c8d02e5e3a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "jordan peele",
+      "contentHash": "8f1575c54b30adcb4755d145233829de9e5111bf451117e3754b574bcd24ecae",
+      "reason": "same-fact",
+      "keptId": "910d2814-eaac-4045-98f8-6365bbb4989c"
+    },
+    {
+      "id": "e5f2e9c9-381d-46cb-8ab8-8e8ca310e2a4",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "kardashians",
+      "contentHash": "70e0581d8f5271aabdc3ea715a4ef12234a07dc2d5800853fc24883095a14507",
+      "reason": "same-fact",
+      "keptId": "edec5916-fa32-4a63-a4b7-0ebe05019eed"
+    },
+    {
+      "id": "dcc5c7a8-902c-4783-bc8a-306dad608c67",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "khyber pass",
+      "contentHash": "02de55ec0fee85cd4063406bff68f7ec5b85320035247e6286315c010e3ca7c7",
+      "reason": "same-fact",
+      "keptId": "cf9fe0d6-b16e-4b2f-988f-cd2b81bc74da"
+    },
+    {
+      "id": "2fd74aa7-8b23-4d1c-bef9-de291c4293ba",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "kill bill volume 1",
+      "contentHash": "5e8f259ddcd0fc03f67fbca1e4a9bd72cb5566901cdf3fc73ac2efd81ac37e38",
+      "reason": "same-fact",
+      "keptId": "b306e883-5e96-47f8-a2c4-b8cb671451f6"
+    },
+    {
+      "id": "5ea604ef-8da7-4781-9f95-3f9af2a42760",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "kind of blue",
+      "contentHash": "7e81874df73687a3ca998dd1fa16731f12a211965f66846497d997af5d3454b6",
+      "reason": "same-fact",
+      "keptId": "0796380e-057c-47cd-a3e8-51618796340d"
+    },
+    {
+      "id": "6552ff80-6473-4547-b737-5c6e637aabb6",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "kitten",
+      "contentHash": "29748f67dfcc3f619cf5d6abcca596c969fbb9af50ff081e00d704d2768da8fb",
+      "reason": "same-fact",
+      "keptId": "7e770e12-0a45-4af8-8d59-a597420f9faf"
+    },
+    {
+      "id": "dc26ba9c-1f01-472b-9a1e-8f828e626c45",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "large intestine",
+      "contentHash": "51dbc79cc9c76753938b6ca11e294432e9089a3130a6fb113a2e5e6597686ab8",
+      "reason": "same-fact",
+      "keptId": "c7a98714-80f7-4038-926c-7793122223dc"
+    },
+    {
+      "id": "54f94c7e-095c-442a-a31c-8307c7df1e75",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "larisa latynina",
+      "contentHash": "69f717dddf8d422272029c66aed137b84a5ecbd296b04f9179a21aa729cfbb4d",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "5eaeff6b-9a61-460b-a5a2-70cfc48cc833",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "larynx",
+      "contentHash": "3548965d2e25ada704b11509f5ff15f6fd949575e42f54165e55dd1a3cc19c75",
+      "reason": "same-fact",
+      "keptId": "406a759b-a99c-4d61-8b5c-46bb420a71d0"
+    },
+    {
+      "id": "43d5b57f-afa1-4d2e-9f0e-b1be3736ac8b",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "leap year",
+      "contentHash": "adb27d8bbee19067a4df70ba13474397a37fa47ad337cee61cbdd35a3bfe801c",
+      "reason": "same-fact",
+      "keptId": "5b175d66-685d-40c6-b648-64e1b395066a"
+    },
+    {
+      "id": "a095747e-6f20-4fcf-b249-9320e2333b04",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "lever",
+      "contentHash": "1cd73e11422eebad980f0748888d407b92a4df5162670a1854384e7a01e6ca4c",
+      "reason": "same-fact",
+      "keptId": "a8801b16-3255-4b0f-ada0-cf6e89ced6d8"
+    },
+    {
+      "id": "23689b5e-aabe-419c-a475-06812ec0465c",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "light year",
+      "contentHash": "21049490513d8904b0f7331a79d1565ddbd53006c769aca209bea6a325a040e7",
+      "reason": "same-fact",
+      "keptId": "cb337491-7a39-47fb-829e-0c39cb21b684"
+    },
+    {
+      "id": "3ca03c75-7bd8-440c-b163-d2150a0a4252",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "lithosphere",
+      "contentHash": "66d2f8af82d5d8e180062694f37b63a80e7d9056f55f546cb0eb0d26fe45c378",
+      "reason": "same-fact",
+      "keptId": "b27fbdb7-01e5-4c65-9cd0-0309ed1aaacd"
+    },
+    {
+      "id": "1fb09c08-1a4b-4d33-90b7-163ee68b7a65",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "liverpool",
+      "contentHash": "43fbef55f883852dece06b3610a9d55b2f69563a40e82de53b77c8b1bb2869f7",
+      "reason": "same-fact",
+      "keptId": "ee5d1fe2-6d8b-4ce5-a6ce-1917160e43b7"
+    },
+    {
+      "id": "3844aadb-6278-4fda-ba11-5aa8eaad532a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "lol",
+      "contentHash": "e08b6aff1ea6d4d88272a1578056e77f46e2591d8e4a20b633f60c444ea30e76",
+      "reason": "same-fact",
+      "keptId": "cfaa3a3f-6625-40bc-83a3-d42a7b3fc9ea"
+    },
+    {
+      "id": "df36d25d-e2f9-474a-9996-bba12cea2d59",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "luge",
+      "contentHash": "b79131ac297128a77682da9e507412e19af44d987ddba61c541d2bcabaf6b66f",
+      "reason": "same-fact",
+      "keptId": "11a8d06c-3e8a-47c3-8c07-c578b2ea7e8a"
+    },
+    {
+      "id": "8077379c-14f5-4607-a0fc-4b2756560b93",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "magellan elcano expedition",
+      "contentHash": "2d297cc70817d7bca8184a37c5b2d8446bcc6e32635d0a7ce1ac808444324746",
+      "reason": "same-fact",
+      "keptId": "e721cef3-7928-4871-9165-db861aba59e5"
+    },
+    {
+      "id": "66d150f7-ec91-4c5f-b35a-72c8de2da83f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "maldives",
+      "contentHash": "f2b35450b137342ab384caf12e393cc68d1839310a2873c571192e4aa21f39d9",
+      "reason": "same-fact",
+      "keptId": "336a7572-1210-493c-bc70-b83ff6721555"
+    },
+    {
+      "id": "12030805-61ed-414d-8e40-ef3145475f9f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "mammal",
+      "contentHash": "394fe758221bb92c0864e6e3c8bb25052cbe654d6de011ed113efbd2e66cad86",
+      "reason": "same-fact",
+      "keptId": "37c5d5a2-31ee-4e3f-9d19-b5d105d222e1"
+    },
+    {
+      "id": "fc203f01-f4f8-4597-ba17-68c84c74cad8",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "mammals",
+      "contentHash": "40b03f0d14f34576d8ffce33c3e536102bc95b151ef32ca1f1f9fd1678fa288f",
+      "reason": "same-fact",
+      "keptId": "165c5941-5af2-49b3-8ca3-91ba8337ffe7"
+    },
+    {
+      "id": "05c44c3f-731c-4af7-aea2-6ddc1514fba2",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "manatee",
+      "contentHash": "9fd91a767660ea565ae144183c245680117e14aa31a5cef588fdca45393b7b4b",
+      "reason": "same-fact",
+      "keptId": "6b07e644-0287-49dc-af4d-d0de28081f2f"
+    },
+    {
+      "id": "673a071d-a575-4033-935e-f2676c343e5d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "margot robbie",
+      "contentHash": "e206041091616d6110003294f209a6a27368f7d8055311b1e0971c0a20959f55",
+      "reason": "same-fact",
+      "keptId": "56e5de69-d15f-4a80-82c4-e388ffee91ad"
+    },
+    {
+      "id": "a6a9eca5-21ac-4dfd-badc-7a856740fe98",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "marsupials",
+      "contentHash": "330c6d5156a2382a01567bcf86318ca035a1cc3c798f4e4ca41ebbacd87f3d07",
+      "reason": "same-fact",
+      "keptId": "1aacd8d3-ac2f-400c-a329-f1e8b45886bb"
+    },
+    {
+      "id": "0790a018-59db-4b8f-8c36-014c3bdc797a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "martial arts belts",
+      "contentHash": "4ceb3192b158cb1a37b6338c79be5d52ebe3617ae4aafb07161dfff8f6dd4a57",
+      "reason": "same-fact",
+      "keptId": "8436f672-df2e-4fce-92c6-343a25a3cbe5"
+    },
+    {
+      "id": "e1c9ae79-434c-47df-8bde-fd05b1521d94",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "marvel cinematic universe",
+      "contentHash": "b9ec9c79087d8d5df9b710c4db5b10e0813b58e79d87d43124ea40c0ac3d0e74",
+      "reason": "same-fact",
+      "keptId": "fd958e68-8a57-4c37-b984-d99927b9a3ee"
+    },
+    {
+      "id": "67f4c4dc-81fb-4a29-937e-a061f9455a4c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "middle earth",
+      "contentHash": "f7b1af3752c1a81f96548c404d085853da290876c66696d217a7eafbbaad82e8",
+      "reason": "same-fact",
+      "keptId": "10309153-b856-4c2d-b6d7-97c1de6240b8"
+    },
+    {
+      "id": "26ae705c-af37-4ec0-85b5-0f31643a99e3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "miguel indurain",
+      "contentHash": "2395c748b773176a2bcb6954dce4bdfd3b7abf7ccd87035120a792b707357620",
+      "reason": "same-fact",
+      "keptId": "4c8cb6b8-a6e9-4c60-8509-d83c6c271d24"
+    },
+    {
+      "id": "18af23e4-f9a5-4841-abdd-f4cee8124e30",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "millipede",
+      "contentHash": "f47de7a894ee9c705970c350de373156d5679fcddfbe4a6990d3c22b1dd9e290",
+      "reason": "same-fact",
+      "keptId": "f7b1c6bc-cc1a-46b5-8706-eacaade26d83"
+    },
+    {
+      "id": "bb161eaf-1643-47e4-a0ba-f73ac0c46f66",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "miso soup",
+      "contentHash": "f8526231eb38536e725e1ddcbd5ffaac633e9c93fb88d723ae528e9e1bf468f2",
+      "reason": "same-fact",
+      "keptId": "f7227028-39a3-42c7-b172-0d6cf7bd13d5"
+    },
+    {
+      "id": "4b6dd2cf-6f0e-4db0-aa64-8c2724320592",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "mitosis",
+      "contentHash": "07d7316a9c03582be88adf02a2571442965bb455519b25b18986eb31dee96614",
+      "reason": "same-fact",
+      "keptId": "14888bb4-28f1-410b-b0a3-3fdfc4451237"
+    },
+    {
+      "id": "c6153a72-16a9-459e-a3dc-8be68781896a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "moana",
+      "contentHash": "72d965fbe2319f234dba3fa92d91468b9163ddeab89f479fd68c3235739a927e",
+      "reason": "same-fact",
+      "keptId": "df2f5af3-93b1-41ac-ba58-cfc54d858c7f"
+    },
+    {
+      "id": "161a8335-cd64-4c5a-b6c4-0cdee7cf7250",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "mockingbird",
+      "contentHash": "3a6dd8d9b2202ab24e7e1adad259b7cab0f9068fa6377438d397d61f68939f12",
+      "reason": "same-fact",
+      "keptId": "f25e515a-4aa2-4a97-b449-7c0c9364f857"
+    },
+    {
+      "id": "6ec88dbb-097f-4198-8af5-a8aa39303034",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "moctezuma ii",
+      "contentHash": "0e4c5aba84c9273cf90dc2ade7cb5a3b235acb08e0682a0b39c58d861a988327",
+      "reason": "same-fact",
+      "keptId": "07402dd3-feb5-452e-9a7a-0266abcb6e52"
+    },
+    {
+      "id": "dfc689aa-3fe6-474f-836c-52d9d8861ace",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "mohorovicic discontinuity",
+      "contentHash": "4be1d3bbc36c9848d31ba4e74d3e513feb6da68ac906e6701696e2e1725a67a6",
+      "reason": "same-fact",
+      "keptId": "e94c56c7-9545-47e4-9910-2555a7c49c49"
+    },
+    {
+      "id": "d730df21-59a1-4b8c-bb3e-cc1a36998f52",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "montreal canadiens",
+      "contentHash": "666c10dee9c57eaa8e6570d3d9afb048d76eb071194297ad0b9b1a503fafcac3",
+      "reason": "same-fact",
+      "keptId": "4d2dfafa-5154-4421-aa09-64203ba66f0b"
+    },
+    {
+      "id": "475d72e7-ac7f-4109-9de8-ded95f160260",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "monza circuit",
+      "contentHash": "3db225400706a7fb217754238a8a31ffeea451aaa9bdc88458836fe6f250b499",
+      "reason": "same-fact",
+      "keptId": "13ba40fc-fd66-4d8d-bb9e-6e9474b4f0d9"
+    },
+    {
+      "id": "fd2e294e-a250-4f4f-8e7f-d949055b5e3e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "mudskipper",
+      "contentHash": "a3da981343acb02a28a198b9ec52a3d1120087c98145d37f1654f7faec967077",
+      "reason": "same-fact",
+      "keptId": "5be51cee-7dc0-43be-86be-7121328a1d45"
+    },
+    {
+      "id": "1973f564-d6a4-4d86-a51b-87fc09ba3c0a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "murano glass",
+      "contentHash": "e8d54721b26881c2d9e0c0a6d011bbd5d2c59d3e75ad15a405e2a866b13bdf1b",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "eab4472e-0023-4d21-af10-93061dda71ce",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "mutation",
+      "contentHash": "150ca314a483622db58dbbe404451dfa396e8a1563a06cd8887c1b9be47498eb",
+      "reason": "same-fact",
+      "keptId": "98369e95-ba2e-4961-8453-c05fa5e67e9f"
+    },
+    {
+      "id": "8527d4fa-bc9b-44f6-b200-5edef68183bc",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "mutualism",
+      "contentHash": "8cb67e027bb46d0f02f0304edcbc784e1b78932f715b86a618534a88a146783e",
+      "reason": "same-fact",
+      "keptId": "a5cc9a37-3844-4e50-99f8-6191e6d88334"
+    },
+    {
+      "id": "35bd6b1b-f4b5-4130-8efd-d48e09abcd7d",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "myelin sheath",
+      "contentHash": "804c38c619c3abd5e2bc2d1c888684d63e9ef5b93b08edd86bd8e80980faf1f1",
+      "reason": "same-fact",
+      "keptId": "4fc95bab-8e38-4ef5-aab2-456b5672a495"
+    },
+    {
+      "id": "f51de415-cfcc-415f-8cbc-1c889debb68a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "nadia comaneci",
+      "contentHash": "6d791b2fb0ffc24dabbc1f453a031659c229bf4443b0cbd35de0ac95d0992345",
+      "reason": "same-fact",
+      "keptId": "5babc709-d96d-4a14-8818-de9eed3c7ef3"
+    },
+    {
+      "id": "36ffc39b-06bf-4251-bfdd-362f8ccae4a9",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "napoleon bonaparte",
+      "contentHash": "afe0e3c62afa7b2790e11dfd4887f37d6bb8f031f956ce67ef9d40aa3da2a6a1",
+      "reason": "same-fact",
+      "keptId": "2e9413fb-6f1f-49f6-a8cc-d24c0cad6542"
+    },
+    {
+      "id": "1a1fda5e-9ddb-411b-abf3-f378e4f41b8e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "narmer",
+      "contentHash": "4dc333d463caf6ddc76b619fdc81c56e09c1f1a210a9b2c7507e4a3c8270bd07",
+      "reason": "same-fact",
+      "keptId": "3a3279c8-10ca-4871-97d4-f0e3915ef326"
+    },
+    {
+      "id": "e3f374fd-f330-450d-b10b-00c22bdd2ab4",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "national convention",
+      "contentHash": "18e5bdd22cca1624c6cb5c5aa779fb7463f4f5632dcd595cc9a257013f4c8878",
+      "reason": "same-fact",
+      "keptId": "74891b63-03c6-4e3d-bc60-956279950158"
+    },
+    {
+      "id": "d8e74d8e-3f4a-4205-957e-7bcdd576db37",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "nato",
+      "contentHash": "8a44c67ac9a8cce70691ef88d91df909dad71fbd488c69c6a3806e21a8a9c656",
+      "reason": "same-fact",
+      "keptId": "ff816b81-2557-4400-a792-70ab08e89ef2"
+    },
+    {
+      "id": "f0485e8f-9215-4b6b-845d-cdd9c17a14ed",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "nba finals",
+      "contentHash": "5a37396cc737c3c0f7ad2bcad9c4ead74204951681bba43cef979a477fb14e20",
+      "reason": "same-fact",
+      "keptId": "9e49f9a5-ab5f-4ba3-a696-eb68be4362f5"
+    },
+    {
+      "id": "1667e669-499c-41e0-abd7-353a428aebd1",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "nba game duration",
+      "contentHash": "1b07426d7969a04147a2ccc60624e4d18dd1e3f0718f6196941771b6bd647d07",
+      "reason": "same-fact",
+      "keptId": "77b35042-77b2-4606-be51-bff2ebe4e56e"
+    },
+    {
+      "id": "f4b4a19f-0469-4638-af1a-d51e3bc9fac6",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ned stark",
+      "contentHash": "f6895d42c3e7c3f72f61b3be6932d33950c5209f03cf550c695d0bed3374420b",
+      "reason": "same-fact",
+      "keptId": "550af398-3854-4d5f-9382-61ca4543530f"
+    },
+    {
+      "id": "cb325f2b-a123-42e4-9e4c-0b4c9b812681",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "neolithic revolution",
+      "contentHash": "05631c0cb4f0112e29284adfe34fd68b4963ceda6389699cf6c8cb37fd44abff",
+      "reason": "same-fact",
+      "keptId": "ffa94fb6-a784-4937-a08d-cb9a4f1006f4"
+    },
+    {
+      "id": "42a9e879-4819-46e3-ba2d-158e45e83d6f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "new york yankees",
+      "contentHash": "dd59f221ad21ab09eb1c0db5be871a331d32d204328ae90c1a5c58b61ccd7403",
+      "reason": "same-fact",
+      "keptId": "9cf8912d-5ad1-4e80-8e6c-e124a95033cd"
+    },
+    {
+      "id": "f38b80f4-dcef-4a1d-914c-bca32a4c026f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "niccolo machiavelli",
+      "contentHash": "3c16afca6e501b6c4d09e4f68765e2e557e6a80106aafb18460e4730b7fa34ee",
+      "reason": "same-fact",
+      "keptId": "9645d57b-cfc3-4fc9-9d1f-00f0cee04a92"
+    },
+    {
+      "id": "26384a17-c407-4de6-856b-8ad355828c80",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "nitrogen fixation",
+      "contentHash": "9e6a4a3a187b0166a1b74821f38b8a25d7fad717cc144c7b235500529aa6aef5",
+      "reason": "same-fact",
+      "keptId": "31de184a-b16f-4551-8ec7-90ed832ee6fa"
+    },
+    {
+      "id": "30e3cf9f-828c-4d82-a54e-e8d64bb82b33",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "norman conquest",
+      "contentHash": "df403081a0b0771b85726cb9c5356c2a22c9403c9154f1cb08baab28032a3a40",
+      "reason": "same-fact",
+      "keptId": "34566bcf-3ded-4675-ace1-0ba0821ba2e8"
+    },
+    {
+      "id": "97b091d2-0d14-4d93-996c-4801fb3fe3e3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "nucleic acid",
+      "contentHash": "f6a981e7e7e159cfb1a69059f8b412632911f4f2de4d53b1166b3fccc57c5b0d",
+      "reason": "same-fact",
+      "keptId": "7acb75f0-93fd-443d-95e8-0561c9c92246"
+    },
+    {
+      "id": "80abfcb3-2855-455a-9313-409e331662ad",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "nurburgring",
+      "contentHash": "9ecb0741fc5a2b7cae5dea72c20f9e28a84dc8399921e10efa57e7968fc10227",
+      "reason": "same-fact",
+      "keptId": "c68ebfd2-c078-43ce-b842-763d59677812"
+    },
+    {
+      "id": "866811af-b3d1-4eea-b29b-5fd19ea3e8af",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "nwa",
+      "contentHash": "07bfd5dd50fdc9f520f995dfaf8fd3647b6e2db072386a98e7af7ca18e650441",
+      "reason": "same-fact",
+      "keptId": "275a42b7-2e28-437b-862b-75f9cc74e7ac"
+    },
+    {
+      "id": "3695697b-903a-4a34-9152-cff2ce683e0c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ocean quahog",
+      "contentHash": "9474b59c121c8ab3b12e47c72c160cf00a74fcac2564235a66af4277f6d8fc45",
+      "reason": "same-fact",
+      "keptId": "cc9e607d-4126-4a9e-9037-4adb9de0961c"
+    },
+    {
+      "id": "26494b3d-4295-4a73-b2dd-7f0f1e9ebbad",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "ohm",
+      "contentHash": "1ff5af745531df99b0f3837a4364469add948041ff91752bce83b3d53bf17742",
+      "reason": "same-fact",
+      "keptId": "88240198-b9c0-4c26-9d3f-6e51ebe1871a"
+    },
+    {
+      "id": "a156f6fc-1e17-444a-92e7-ad55b0777301",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ohms law",
+      "contentHash": "abadf03c8e4fdfd9a439803b3551f043d71c568cc6dc0305e8fe14dfebcb28a9",
+      "reason": "same-fact",
+      "keptId": "1355ea2e-e76b-4aa1-a984-e61002a67014"
+    },
+    {
+      "id": "22f8cd50-6a9e-4034-af46-b81f20663341",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "okja",
+      "contentHash": "3d503ac5955d137fb79467f22337ef0dc421616da39ea49dec43bcd20bad4a32",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "cbf191cf-d2d5-4d3f-8596-3a75c809f9ad",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "ornette coleman",
+      "contentHash": "d8482388fd24b9659555c2359f0bfde1d7e5a423c6435b3c0ee4e1979ad1d472",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "7bf50fa7-d9b2-4bfe-89c2-0f880b83628e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ottawa",
+      "contentHash": "ce9999d108d87cf0e8893c0ebfd80ba3939cfb55b35431827785b359a013a804",
+      "reason": "same-fact",
+      "keptId": "1c18e649-46a0-4ca7-b857-40803a31fffc"
+    },
+    {
+      "id": "ec99fdb5-09c5-4a77-baf6-bec218de75e8",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "oyster",
+      "contentHash": "aec7421e07cb8f137e76743bcc2c53450c2727d2f22b98605451db4e33cd9a06",
+      "reason": "same-fact",
+      "keptId": "159c0f1d-08e5-4bef-8e65-b5b198df9a16"
+    },
+    {
+      "id": "ca990969-5d28-4726-b775-924caddd6b3a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ozone",
+      "contentHash": "a5f8f345421139f7cfaffd6cb4a33b0fb7bd7b6fee9b3058ad85b75854a2dac9",
+      "reason": "same-fact",
+      "keptId": "789baf67-28be-419a-a3c4-15d488af87eb"
+    },
+    {
+      "id": "75ced587-eb28-4299-a6f1-0d3032d9c1a3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pangolin",
+      "contentHash": "93287ca793c94e22668c74602e27ec537137ae7fd74c8a22e9c6661e31fddd05",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "0b12ab21-67b5-47f2-964c-51ea6ecff2ab",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "paraguay",
+      "contentHash": "ad6e7ac898095b91e1047cd22c98bd2ad096be7997f03cdb39c57734ac551a8e",
+      "reason": "same-fact",
+      "keptId": "b11c58b2-6cf5-4292-bf47-30ea5e9771ab"
+    },
+    {
+      "id": "8af2f5dd-b327-492c-ab8d-a213c0c757ac",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "parana river",
+      "contentHash": "38759cee9768032a30bba46d545f415b21b1873733f777dc0fc09399f59d50c2",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "a1cdfdd8-230b-48ce-b053-6f92125629c6",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "patrick henry",
+      "contentHash": "4b430f210decb0789f8dcfba769f571b1f80068ed6e6a360962533f62383f0a6",
+      "reason": "same-fact",
+      "keptId": "cfade563-aa4d-4d81-9576-870a9962400d"
+    },
+    {
+      "id": "6ee43189-5744-4160-a454-36c56f3ffba5",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "peace of augsburg",
+      "contentHash": "c2a82cb645c53e15b544163336be53ec67ed7a3d4b55a09d1c9ac38c291577d1",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "aa2062bf-cd76-4424-adfd-f425a65c260e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "peafowl",
+      "contentHash": "7344d14979bd190bce28f0e88405d280a77ac60b7a2bf9fc8a5627ec021cc1d4",
+      "reason": "same-fact",
+      "keptId": "b4b0a0f9-76a6-465c-b949-38d5512bed28"
+    },
+    {
+      "id": "b0de5b69-affb-4798-ac0c-ecb2925e6bc9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pele",
+      "contentHash": "6a45678788a542c0ba89d7a19ac02c21cf1d6562e584c07edff872c1b499d3a2",
+      "reason": "same-fact",
+      "keptId": "bc4ed9d9-4bdf-4a53-b058-218af4477b10"
+    },
+    {
+      "id": "cd553eeb-c98a-4095-a23c-3cf939959911",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pentatonic scale",
+      "contentHash": "f89eca994395ac902540edd43eee9abc0840e7e49ef78e5e53709b624cf0163a",
+      "reason": "same-fact",
+      "keptId": "4ba61ce1-bc76-496e-95c0-8be99c2b1f55"
+    },
+    {
+      "id": "dfe55f9e-f438-46c2-945c-9a69edb9296c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "persian gulf",
+      "contentHash": "e58b15f1a61213475f25aa7771afd11cefbfd7dfde65b3af8116545e5138b261",
+      "reason": "same-fact",
+      "keptId": "fd476fd7-488e-44ea-807a-e153e9c0bf7c"
+    },
+    {
+      "id": "b3fed71f-82c8-434d-b291-2215a8abac63",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pete townshend",
+      "contentHash": "b9586029ec90265b0270efd43387c17ac471e3101b0f0b93c16b9c70bfb9e18b",
+      "reason": "same-fact",
+      "keptId": "dad1b9dd-4d0f-474e-a882-b9976b232a48"
+    },
+    {
+      "id": "021867b2-e893-4497-829c-ddd6c49271e5",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ph neutrality",
+      "contentHash": "9263b929c83ec4e3f418a509783a4fbe09900871716a6b3cbbf2b75ea329e4f7",
+      "reason": "same-fact",
+      "keptId": "01fbd10c-5128-481c-93d6-847162881c38"
+    },
+    {
+      "id": "800973ab-1f3d-4ab7-80e2-10a8383d9abd",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "phenotype",
+      "contentHash": "3e870879f28b9d773507c7284e2318cbf93572ebfb789e7d6bdb5f7b2392bcce",
+      "reason": "same-fact",
+      "keptId": "45a2e3dc-3c68-42eb-b95c-50694bfb6de4"
+    },
+    {
+      "id": "9a100306-257c-44a9-9654-2dab6f581a83",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pioneer anomaly",
+      "contentHash": "7b47e93e59609058de06520b1376f183c5231703b93935080f5127245d7ddbb1",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "a9c018e2-af83-418a-a746-a99381661653",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pituitary gland",
+      "contentHash": "a57b4ca456c6297fe72e1386f950d171aecda105a794a897fb9ea80ba8193062",
+      "reason": "same-fact",
+      "keptId": "c8389300-1bf9-4cca-90b8-fc49b68ec293"
+    },
+    {
+      "id": "5a2400ac-601a-462f-85c1-cb7f3af03bd1",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "planarian",
+      "contentHash": "6261da90b7d106dcadfb38e2104948fb7bc5ec22ccc25f4e9c27b58397bbf4de",
+      "reason": "same-fact",
+      "keptId": "01b5a894-09a3-41fd-a18e-71f6ab7317f4"
+    },
+    {
+      "id": "3d252c5b-46c7-4c9d-8e41-1997242c1085",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "planck constant",
+      "contentHash": "0b0c8d20d876ffc2caef3ef64d73fe51528718480833ccda261a85129d7d45d2",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "c5ecf485-4c3d-4932-95ac-bbfbbfb1f13b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "plant cell wall",
+      "contentHash": "be35fc077aa65a44e8297db9a2fdddb89857c9c555a4cdeea63ffcc25a185fe4",
+      "reason": "same-fact",
+      "keptId": "52d7628b-d449-4caa-bc20-d339924a247b"
+    },
+    {
+      "id": "c0d508fa-f3aa-4e5f-b239-70a3529d85f2",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "plasma",
+      "contentHash": "d2ee05a05a46c46a984772b9e7ee8456392b7ed87fc1d57706c230498d102695",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "d0f9a47d-1f97-4b3e-b452-873f27c8f72a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pont du gard",
+      "contentHash": "566b62dd77167b69d62133c063c144a5984f057052f62b8a0607ab3f883b9859",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "183bf393-3c55-4e96-bbf0-88f3ab7f1ca5",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pope urban ii",
+      "contentHash": "d8f6d23d614af50d1c974e82389304f24d223f5b3bed3b5167fb60d7efc419ac",
+      "reason": "same-fact",
+      "keptId": "e7c856fa-e480-40d9-9fc6-7bb9510e4a39"
+    },
+    {
+      "id": "fc213d17-64b3-43ab-bb86-43a04bab020b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "portugal",
+      "contentHash": "88c2b9966da88ce8576be406a04b87b3004add416b0ae6b00a83b19dc067a46e",
+      "reason": "same-fact",
+      "keptId": "0aeea3da-6125-44ca-8f0f-aa777159473b"
+    },
+    {
+      "id": "6ca42806-3d94-47b5-b49e-94877418eede",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "potassium",
+      "contentHash": "efb9f7331a9cd7626c976d356df0e872a415c6391fcc1a30d27686b2b50befdb",
+      "reason": "same-fact",
+      "keptId": "49a292ae-227c-43cb-94a6-23ed0891cec3"
+    },
+    {
+      "id": "6b41c4ce-14da-4e8d-a376-3be0843e6ec7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pov",
+      "contentHash": "1aceda6de7d98857191018becdd059575660c82c9bcf00b74f224476c5ef0e26",
+      "reason": "same-fact",
+      "keptId": "83a6e20a-4f6e-48e8-8528-9bb3830961ea"
+    },
+    {
+      "id": "b9bd9558-5c7e-4894-a327-e3876a2a51ca",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "presto",
+      "contentHash": "70a13b538a22bbf055adc9578b904ad6d8d27492b18cdd5f5f9d79e55e4b7dcb",
+      "reason": "same-fact",
+      "keptId": "2b06ad8a-8682-4ead-b869-84fb401ed6bb"
+    },
+    {
+      "id": "96b780c3-8725-4fd4-8be2-5f01aff7a451",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "primary colors of light",
+      "contentHash": "9b02fd5e46e7d9aef1548886dcd12d10fe0c193681daedead2a047f95188edd6",
+      "reason": "same-fact",
+      "keptId": "60d038d6-20d4-4123-bd70-731324734d19"
+    },
+    {
+      "id": "20b147c4-cbe6-4306-aad4-cf6579e8ea52",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "princess bride",
+      "contentHash": "3ca591b01d0e25d49e079924d36c47ac9007de18843bd9b412fba6a72ced67d8",
+      "reason": "same-fact",
+      "keptId": "609c5f95-d1dd-4c98-a56d-59b805f46aac"
+    },
+    {
+      "id": "0a7553f7-d11d-45f3-b7b0-88fdce35cdaf",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "pulsar",
+      "contentHash": "9d6a26384d2f9200c7f57150d68ea6f69353cdfb16ecd85e48b867a1530a5a1c",
+      "reason": "same-fact",
+      "keptId": "f7328842-eb30-4149-b40b-fe86c80e1c62"
+    },
+    {
+      "id": "e147a37c-764a-4a34-b331-909ad60e0f1e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "puppy",
+      "contentHash": "b49476f3580d7be671477794f76700925d8d419011847e132493aea0811eda9a",
+      "reason": "same-fact",
+      "keptId": "6217ce66-9742-47a3-ae76-3a797db93ceb"
+    },
+    {
+      "id": "87db26b7-cf00-476e-a14a-f3cbd2a4824d",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "qing dynasty",
+      "contentHash": "5a04b240ee2d118c5c678b25d632c3018d4ec6de1dd965b843293c1bc3a9d8ae",
+      "reason": "same-fact",
+      "keptId": "296e4f08-089f-4a56-8cf2-9e0de83830ee"
+    },
+    {
+      "id": "4bc94397-1b05-4a49-8b66-ed2100570f05",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "quartet",
+      "contentHash": "4015f14321eb957872a8c579a8cff3c341e4d944d27d81be070e6d0eed6a6d59",
+      "reason": "same-fact",
+      "keptId": "bfe970b1-5471-4ace-8fee-feef274b2002"
+    },
+    {
+      "id": "dd8d1ddc-7131-4f56-a048-cef282114d1c",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "raid on lindisfarne",
+      "contentHash": "23ec6eda108634c7eb67c305f341678e7d7d5e3b9d0a1b2bfaee6745760eded3",
+      "reason": "same-fact",
+      "keptId": "21fdc106-e27e-411c-b1bb-55ebf02166d6"
+    },
+    {
+      "id": "f9cf3830-ce56-40b0-814f-314c3235894b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ramones",
+      "contentHash": "c75c0d2058dc560c02ec09ab81704a32774462bed25d8d7261f156836724cfd4",
+      "reason": "same-fact",
+      "keptId": "dc0cb0d8-ecd0-43bb-b70f-e6d94fcadce5"
+    },
+    {
+      "id": "38ad197b-e88c-4c5d-8c5a-d787aab6341d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "refracting telescope",
+      "contentHash": "aaa4f4b4e4ff68e0a9eccaa3d3982d78fb91a16b1082ea70300a956b7bb2b898",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "ea105a60-82f8-4fab-9733-a16f05459401",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "renegade dance challenge",
+      "contentHash": "73d10763a654c0a82f42d115ac8045b4a5a5101e788aa511e68e77f8afcf6f94",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "534c6dfd-4492-40b5-81ee-a54472ba2f00",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "rest",
+      "contentHash": "90d72ecaffcabe7e603615639defbec5b5c13902f0fff28a940516a02748ee1a",
+      "reason": "same-fact",
+      "keptId": "4265e91a-c9ba-48e0-9286-4a024a850457"
+    },
+    {
+      "id": "cb2f7073-2b00-409e-9dfb-0af6155bdcfd",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "rgb color model",
+      "contentHash": "60acd56cb57624c4329df9a46d10da0b771dcedc449c291222a51e65c86747e1",
+      "reason": "same-fact",
+      "keptId": "259febb2-fbd0-4c2b-beef-bedab7386e3e"
+    },
+    {
+      "id": "46ae33df-4adc-439b-911e-7ba5bddd6b21",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "rhinoceros",
+      "contentHash": "f29e1bd947773bc9a3ef436c2dca5f600482fa557f6c9639d6c10b0c5ebb1e14",
+      "reason": "same-fact",
+      "keptId": "7fb4b344-cdae-4dd8-b12c-a0e12e9d4c5f"
+    },
+    {
+      "id": "d151fcf1-26ed-42c1-8921-ed8cedd4b065",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "rio grande",
+      "contentHash": "97f18d4ffb153b57a40ae3d9dd7e7c99d3910125f1d256719c4983596be6f92e",
+      "reason": "same-fact",
+      "keptId": "10e546d1-7283-4920-bb0e-da4ea4a69d4d"
+    },
+    {
+      "id": "c7ef88ac-9082-4caa-95cc-b15e017a1858",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "robert johnson",
+      "contentHash": "3616e807062bf82a9be2a39d6f06378e33ec8bce8b4dadd3b69f0e0a54f97b76",
+      "reason": "same-fact",
+      "keptId": "efff1c3e-eff8-472f-99d9-04c31d7077ef"
+    },
+    {
+      "id": "4576e7d2-3d26-4964-8459-3afecf6f5e18",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "rock",
+      "contentHash": "5fa396625aa842e18fe810e6a8fb680a29aed5e17eb13e302b08fc03881826ac",
+      "reason": "same-fact",
+      "keptId": "eeb078de-5f68-4db4-a5d4-1dd41c0d583d"
+    },
+    {
+      "id": "af119c25-2541-47b8-aae2-38bff3440dd8",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "rock and roll",
+      "contentHash": "e6954ee96e0dbdf5d4ce748fdbd9ecc093e705d576ebb8f57f5a69932f697cf4",
+      "reason": "same-fact",
+      "keptId": "77850e82-b7f8-40f2-a5f5-ef6ddeb4c33b"
+    },
+    {
+      "id": "4257f345-1abb-432a-a979-5a28de18fcdb",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "roger moore",
+      "contentHash": "cbc50dc861d9a52430a9d0b0416f2aef2686a6b37f9ecc23fa20a99744e289fb",
+      "reason": "same-fact",
+      "keptId": "859b0dbd-24dd-40c9-b350-4eb033e337c6"
+    },
+    {
+      "id": "e72be110-8ce2-44e0-be5e-81858827c54f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "roman aqueducts",
+      "contentHash": "e7b818c7b7bbf81695a7385c84b94d276dc87d739436b9992a6fab554592c7b1",
+      "reason": "same-fact",
+      "keptId": "c95df12b-e4f5-4e48-b325-55d24b3074f6"
+    },
+    {
+      "id": "3a59242a-2955-4aef-bd5d-ec40af95e8df",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "roman senate",
+      "contentHash": "3c751ac1fc31cd7cfd13fda72d9628133f58deb3b98c355296d7ff2693ae5454",
+      "reason": "same-fact",
+      "keptId": "9f9c3a55-c349-4af6-83b1-a54808e821e0"
+    },
+    {
+      "id": "1bef27c8-7598-4088-b8c5-3fbb67908869",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "romulus augustulus",
+      "contentHash": "f76705a212a8795176bf3ff3e433cde35f17b41bfb8ee8276eae4b02e4b6522b",
+      "reason": "same-fact",
+      "keptId": "93327897-5796-4e10-a72e-5ca25cdda89b"
+    },
+    {
+      "id": "8f62a4fb-f2bc-44e1-a925-32f7b417a16c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "rugby union scoring",
+      "contentHash": "7f8fdc4a6cd42c115dfa6bb50696d20f4e6ffcf0a538b688e662b0112971bb09",
+      "reason": "same-fact",
+      "keptId": "61f3f555-b432-4997-83b8-c5245f475be9"
+    },
+    {
+      "id": "5618834b-5c23-460c-b345-eea51ea371c7",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "rugby world cup",
+      "contentHash": "6a3103feb0e1b0688f13841f83e3519f28f90079dc8e2b3d03785edc0fb3530c",
+      "reason": "same-fact",
+      "keptId": "71766bb0-aa03-4112-a01c-3fe1e246759d"
+    },
+    {
+      "id": "1863706a-f45e-4c57-96e2-d7cd55325fc0",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sagrada familia",
+      "contentHash": "4212ffc06bfdda063c90e28e82a1fb5073b4e499dc58a6ab625f68556e484cc2",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "114b9f8a-7ac0-4674-aac0-ce36325c53a0",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "san marino",
+      "contentHash": "c1ab430b662d0dfa211d92aa1dd21c6791699046b43f3e9cd03c8fd57c568460",
+      "reason": "same-fact",
+      "keptId": "b91ddd12-d391-4ae0-b16a-aec1fcf71097"
+    },
+    {
+      "id": "36ca8992-32c6-4a9b-a00b-7cb4405f2d01",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sargasso sea",
+      "contentHash": "bf6d28ea86931920a7e0f5348feed773dfdccb6eef6e503387646f6139c26e70",
+      "reason": "same-fact",
+      "keptId": "01c12691-e09b-4d3a-9137-fdd565ea0e64"
+    },
+    {
+      "id": "22bbf269-1028-42e3-a4ae-1a8a4f80ee4b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "saudi arabia",
+      "contentHash": "6fa5ddd51002c457fdd61e04e90415a058a7fe7fa97ca1d7e56e7b28ab85e587",
+      "reason": "same-fact",
+      "keptId": "06607872-b9bf-4088-8d2b-30adb9e2459f"
+    },
+    {
+      "id": "03a21794-8020-4793-b8d1-12640d1af9c3",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "scallop",
+      "contentHash": "0aebdd2fdc2c6173f11132b10861996b6ddf302f4b943243b0a4eaf6ce87849d",
+      "reason": "same-fact",
+      "keptId": "0e684353-bfd3-4186-beaa-10e4c5fa3a4a"
+    },
+    {
+      "id": "95e620d9-c164-4a74-b4bb-79a0a441c7fa",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sea peoples",
+      "contentHash": "cbe8620ec1c533480e775ee043db7f66a367390c4005d36f80ee3800f4fd71f7",
+      "reason": "same-fact",
+      "keptId": "5e1ab045-adad-4665-b1c0-d1485604745a"
+    },
+    {
+      "id": "3fda8ce1-5b01-4b57-9456-e203760245b7",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sea turtle",
+      "contentHash": "4504e561d310b4b846166daf8a098107c1f673e26980e33d167272a2f65a7168",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "a0fe1b08-3ec8-4fe0-a9eb-ab0b620ad17a",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "seal",
+      "contentHash": "455d7b5651f0bd11bae8423bfbe29d8305a0e6219548215598cef7a772dbd11d",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "afa0f417-e920-4347-83eb-d3afeff0b3b4",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "seine",
+      "contentHash": "e0904ef7bf757339150e290a4a509ceb0e7e93799d3ea9404ccc69dea4b2aa85",
+      "reason": "same-fact",
+      "keptId": "f3e7ca0c-2b31-4c50-ab01-6a9fbaddfb7d"
+    },
+    {
+      "id": "d4890f3d-fbcd-4d9a-8314-117736165b69",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "semitone",
+      "contentHash": "34ba42a4a349c5ddde658e6ef7bcae033c9d8582358855280bfbc548eeec32f1",
+      "reason": "same-fact",
+      "keptId": "85e1136b-912b-4c7f-9a7c-64afde22f5ba"
+    },
+    {
+      "id": "e0f0cd6d-61f2-4088-8472-03300a4f4776",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "seven years war",
+      "contentHash": "6b2c9f42785107eeef0f595074a00876a1c996f8fb82917b3dbf41e382a5c7ed",
+      "reason": "same-fact",
+      "keptId": "181586cb-e9ae-42c5-91ec-4229a5bfb838"
+    },
+    {
+      "id": "e6e8fe3a-6481-4c75-b3a8-dfc7d82dcc37",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sex education",
+      "contentHash": "ee0a8ceacc57e4629f9219226e41d949fda1bf1117ca031f1dfe6b201012e6f8",
+      "reason": "same-fact",
+      "keptId": "270db3dc-4d7d-4a74-b15f-f756d7f249bf"
+    },
+    {
+      "id": "5c04048c-c200-4a15-a6dd-04f16900518f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "shamisen",
+      "contentHash": "11c4ab1e60855acb854f1f879f00bcd14d6da7979fe7c0cb34c2c600e8c075b3",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "028cb19e-510a-4947-9419-e65b300b3ad8",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "shrimp",
+      "contentHash": "c040dc7f9b3b47232d624e85295766602ab2f846c2fe32f981279d158927f17d",
+      "reason": "same-fact",
+      "keptId": "215dbb73-d136-4c58-950f-7d7b155fb019"
+    },
+    {
+      "id": "def8e208-114a-405e-89e5-364e322dc8bb",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "shukhov tower",
+      "contentHash": "e4125ff0666a57ec14294b76b5b33ae7bb9b4f9e4e47d2186e0b384d81630c2d",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "66764983-051b-4daa-a31c-c72c9e9f08e9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sinking of the titanic",
+      "contentHash": "b4478f205ea5e474aedf57e72b16e8e96680604cbf980c6db4e8a36303972d46",
+      "reason": "same-fact",
+      "keptId": "66f02deb-10d4-4f30-96e1-77b27dab4473"
+    },
+    {
+      "id": "c4424a66-a722-4dd2-a12e-2fb69fecb345",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "snow leopard",
+      "contentHash": "1852c86c240c7fcc3d1e9d19739b1d38d187e5aabd507f796d84706485bfded7",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "ef75a977-2352-4ff8-875d-460ad86bc7ac",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "snowpiercer",
+      "contentHash": "b18f47f9c232f4555e4dde072d8bfd6ac34796680d00f9014660718c8c2b7763",
+      "reason": "same-fact",
+      "keptId": "8f56b545-1bcc-406f-9338-6876cb895eb4"
+    },
+    {
+      "id": "11844607-90d7-43c9-a36b-7cf66e48cffa",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sony",
+      "contentHash": "12e283557824eaeb5db0aeaa6c3a6016cc16b6af0ce4de84fd991aed0c6670df",
+      "reason": "same-fact",
+      "keptId": "deb25f38-2dde-4c59-85ee-f6b4a3196409"
+    },
+    {
+      "id": "737547d6-5bf2-42d3-8272-ccdfd02e7efa",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "sound",
+      "contentHash": "3906db16f1edda0d24fab425aeba3fbae970d1e4263747904313a649fbaaf14b",
+      "reason": "same-fact",
+      "keptId": "5f683ad7-5730-4fa5-b95d-5e20153f18d0"
+    },
+    {
+      "id": "4657ca1d-1ef4-450a-b253-b00294290eae",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "starry night",
+      "contentHash": "323f863e09c6eb83a51f43d7283b8b545f8f7c259b423f66e1d86a7d2533b983",
+      "reason": "same-fact",
+      "keptId": "c30cb394-79e9-4ac1-8b60-3c34683c79ce"
+    },
+    {
+      "id": "a901cbf6-1849-459b-a574-842e66006f4d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "statue of liberty",
+      "contentHash": "6ee98ebf948b13a83d6bb310a800858bcf3508e6f58c46e2fc126db2c4cc147e",
+      "reason": "same-fact",
+      "keptId": "76ae11df-a5f7-4aa0-8412-ee4619a6e67a"
+    },
+    {
+      "id": "08edfd0f-2946-4c7b-ae97-11b1533e9d7c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "steve reich",
+      "contentHash": "fb72a3039c337efe10b4850f886b5cafc75c8abeb52129d1c9716b1abdccda21",
+      "reason": "same-fact",
+      "keptId": "46ae3ff9-f3c7-488c-ad62-f9e18deac97c"
+    },
+    {
+      "id": "b19bd9cf-7fc5-4dfb-919a-c584fdd4af6e",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "stockholm",
+      "contentHash": "64f22f747f05916cef380c4abe8ac8f6404e70ea098fc74b0f31910c5a1ddd19",
+      "reason": "same-fact",
+      "keptId": "6d5529e8-4f3f-4331-b619-83d54409f728"
+    },
+    {
+      "id": "dc760fba-d12d-40be-8699-33ad4e70a82f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "stoicism",
+      "contentHash": "4f7e570abe00ffb0067153bd3520b916e310f2a54fcc7db4aea914217b8c2703",
+      "reason": "same-fact",
+      "keptId": "41685d0c-f39f-495f-b837-37f4ca62b610"
+    },
+    {
+      "id": "cbb21c3b-27a4-476c-90e8-8b7e5114107b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "stratosphere",
+      "contentHash": "0feed7db600be6a5222de4b209ea1c09e71143955921e6812c2c21bc8f924ce2",
+      "reason": "same-fact",
+      "keptId": "20ac6be3-302b-4aee-b61c-ca090a10c4bf"
+    },
+    {
+      "id": "0d063aa2-cf9e-4c4a-ba20-44dff5cb39a1",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "sudan",
+      "contentHash": "2e94b318efcb3f8fb3c1569245360099d3fc77f8f61a0898ced178c12f5d0542",
+      "reason": "same-fact",
+      "keptId": "7d9dc366-4dca-4a1f-9fc9-cadc8854388c"
+    },
+    {
+      "id": "d3c5818d-76e9-4dc7-a10a-5d64481eaaf9",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "summer olympic games",
+      "contentHash": "80b9c46a32d3917f0277fe2479c7c5b578152d8b10a2f6106107defa9e567f55",
+      "reason": "same-fact",
+      "keptId": "5bd4fa87-f063-4873-b233-cbd4416c3b78"
+    },
+    {
+      "id": "327c9351-c40a-4068-aaec-fef1b876668d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "supremes",
+      "contentHash": "58636d048687f6f3c09560d4174e777ed2a10d60165807bc6a422f4a0d1e4c2f",
+      "reason": "same-fact",
+      "keptId": "aaffffe7-4d3f-4423-8408-77732177ca01"
+    },
+    {
+      "id": "f8f02392-e0b6-4190-b301-f4d26a5e6f5c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "svalbard",
+      "contentHash": "3003ec81ee78034ecdd8c7f06d25a12056c7a1cd28cd43186e796737e6bc98a3",
+      "reason": "same-fact",
+      "keptId": "2898267d-eba4-407b-ac57-644da85c3b02"
+    },
+    {
+      "id": "cb8b009d-4ec4-4075-980c-2c8b84c76fe7",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "symphony no 5",
+      "contentHash": "da06d5e25036091fe7865dab5d3cd43255953211d938bfb342d8e2bc0a5919a4",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "30785939-1dc4-48cb-96ac-08ea71113692",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "synthesis reaction",
+      "contentHash": "593ccee54c2fbfbdb8b561677e8bbe94d4a8bcb0a5334bddad380719f97d7917",
+      "reason": "same-fact",
+      "keptId": "a0773043-ef19-47d1-b276-030e1ab24493"
+    },
+    {
+      "id": "cb938c74-f581-4c3f-8fca-c31bf1f82a0c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "table tennis racket",
+      "contentHash": "321a971d35d0561f2d5970204b82f7b876136178b1b48b33319b14f8cee153ec",
+      "reason": "same-fact",
+      "keptId": "2ef6dc82-fdd9-4c9e-a243-6729a7051f3c"
+    },
+    {
+      "id": "631e1812-4318-46db-899e-c4004b834248",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "tardigrade",
+      "contentHash": "40af280aa57a69a40c7e9adedf88d57e41adbd3f183ff097ea2a6d8f3108af6e",
+      "reason": "same-fact",
+      "keptId": "0b44117e-0a9b-45c5-b0e9-726cdadcbd8a"
+    },
+    {
+      "id": "c3bf0129-337e-42fe-9ada-3ec3ce5e099e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tasmania",
+      "contentHash": "d93671907ecf1faacde9303c5adbd88a65265be8dea255b9affab585573f0536",
+      "reason": "same-fact",
+      "keptId": "b59e352e-5130-49e1-9eaf-596ae87e4f42"
+    },
+    {
+      "id": "51ad6f76-d325-4c45-8ed6-edf0f54b889c",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "tempo",
+      "contentHash": "5e5c23b33d4c8779f117bbc2bffb9083961508d692527ac50fa2370a209f3780",
+      "reason": "same-fact",
+      "keptId": "6b241af9-371f-4327-bfa6-e7e2a37bb779"
+    },
+    {
+      "id": "8567bdfb-b642-4907-93db-5b5ba8fe95ee",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tequila",
+      "contentHash": "60ba70667d181f8ae11761f0a5a0053d96f0bb696a7032dd48148467fe717756",
+      "reason": "same-fact",
+      "keptId": "d0c043c2-9f6c-49d7-95ea-6cff589add76"
+    },
+    {
+      "id": "e7289c92-5993-43de-bdd2-194117e1164b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "thermal conduction",
+      "contentHash": "bc78d4ff9e673ac5d9049bc5c6a60fea5ede86f4ded07a5b1207123e30801071",
+      "reason": "same-fact",
+      "keptId": "6cb6e069-454e-4331-a6f7-a2f224e61f1b"
+    },
+    {
+      "id": "295f9bda-507d-4680-b585-ee717a9c260e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "thymine",
+      "contentHash": "e8ccd3cd5bf31ca7f2016ab80ef388833b212c300e7352aa0cb24a1a4160f20e",
+      "reason": "same-fact",
+      "keptId": "bb79ace4-167d-434b-a63f-f80200bdf181"
+    },
+    {
+      "id": "6f30ad69-5757-450b-8cb5-97a216b12871",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tim allen",
+      "contentHash": "e6aa9a0282e2aeb60841317fe61caf2cd8009b589f4afa61d9adeeb68a44ec65",
+      "reason": "same-fact",
+      "keptId": "5b1685c3-ea2c-4f56-9d1c-96e9483de4ca"
+    },
+    {
+      "id": "8eac6290-12a9-461c-8ed1-9de0837bc54a",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tour de france general classification",
+      "contentHash": "675fe2ba24b3d86513814d922e2fe7caf83c92ff2a553f4f16148db6601f431d",
+      "reason": "same-fact",
+      "keptId": "a96347a6-41b5-4c11-bd8f-d9ab0e91ae25"
+    },
+    {
+      "id": "5013fd0c-446b-4228-b778-48de747e2226",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "transfer rna",
+      "contentHash": "44af061a020fd9b1bd5e947674bca5d0e3cf93a5e9e5237d275f00c671e4beb6",
+      "reason": "same-fact",
+      "keptId": "16b18b4a-22be-4e2c-b8ff-8f01db8d417a"
+    },
+    {
+      "id": "10dcf7b8-5a94-469c-8db9-fd5b97e31781",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "transpiration",
+      "contentHash": "b8a27ac81717bcc085c0c1e8a3273722fc115814a9b272a6a2658c280cb234ba",
+      "reason": "same-fact",
+      "keptId": "beee92e8-eec2-4d6b-9c45-f7861ae7b4ce"
+    },
+    {
+      "id": "1ae8ed3f-8902-45e9-8d61-dc64b6d05df0",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "tremolo",
+      "contentHash": "278060ce9fd622b353820d8c7b487ef2f3a41ede01f09cda942772ec1bcf22cb",
+      "reason": "same-fact",
+      "keptId": "d0a3620f-c48e-409f-ac4e-29b93c328694"
+    },
+    {
+      "id": "e6808f80-5e4c-427c-8cea-79d4198f909c",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "trio",
+      "contentHash": "3d3c9d3bf88297bf7af56183f2668230c21fc49f163d35b4899b1ee455a6eba0",
+      "reason": "same-fact",
+      "keptId": "4f198fb0-a49b-4ef3-bb9e-b82924fa73ba"
+    },
+    {
+      "id": "efaf6858-b3da-431e-be0d-c2a93432b80a",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "troy",
+      "contentHash": "61352c5a2c467a32aebb1604e637137a06737ecafe3bb3a155061e1956cc4516",
+      "reason": "same-fact",
+      "keptId": "67059cea-2bb6-49a9-9986-3696b4c97027"
+    },
+    {
+      "id": "24bbf4bf-976d-4b23-9a57-b85f9a01e08b",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "turkish straits",
+      "contentHash": "94a68afb873d7617b8f03972cc15aaecd4369aee3af1f7d6c3b43c2270a7c165",
+      "reason": "same-fact",
+      "keptId": "13939b7b-4e0c-4bc4-9e5e-e7888cb856d5"
+    },
+    {
+      "id": "47bb6ce6-8299-4754-9429-47a17b630f48",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "uganda",
+      "contentHash": "6f8226e359eb1ef82566dc3403dae59d118d28d5b855180c206beae09a4599d9",
+      "reason": "same-fact",
+      "keptId": "29a72938-3e50-402f-8778-c6ab205a7128"
+    },
+    {
+      "id": "06a3d23d-4307-4437-a8a8-406e301e1861",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "united states constitution",
+      "contentHash": "775041c2274ab770e5cd2f6f3a4b967bcc247cc065502d73caf2a97f8205b09a",
+      "reason": "same-fact",
+      "keptId": "eb765682-918e-450d-9839-0f683454f604"
+    },
+    {
+      "id": "fd31ccc3-2cc2-4b9a-a93e-d66c3ed675d0",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "uracil",
+      "contentHash": "7090aecf6f5dad145ad84a2b107520efa1d5927f2cddd630f15d4c3de902e482",
+      "reason": "same-fact",
+      "keptId": "bde38450-c013-432c-87c1-8eb08dd998e2"
+    },
+    {
+      "id": "8595addc-b924-483e-bb38-8c86a58e67c9",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "uzbekistan",
+      "contentHash": "603934ea3c6901f61bf299635522cf6c0c2594e015804da18a522b4f89aa902d",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "d98d921a-8670-4b06-bd99-c1f56f911836",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "vampire squid",
+      "contentHash": "36272198108e69da90fb22bdad9f2984268859173a7eb2468bfb8faba6f4acd7",
+      "reason": "same-fact",
+      "keptId": "1bd2f5ed-7eed-46b3-842c-c2005e513411"
+    },
+    {
+      "id": "e36d3603-9efe-4ca8-b768-ccc86dbea28f",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "vibranium",
+      "contentHash": "0505b2b97bc16b79627863408af6692a03d977abf685b9f6789580ebd84a4974",
+      "reason": "same-fact",
+      "keptId": "a3632ae8-bf26-458f-a9f6-81404bb77e32"
+    },
+    {
+      "id": "dcc166ed-62d6-4693-b7cb-9ec69c88bdea",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "vin diesel",
+      "contentHash": "952bc9417062cd1773219a6f20104e102b2b14c6a64d76e9fc0cc80caf54b5fb",
+      "reason": "same-fact",
+      "keptId": "b3694cb0-fb76-466e-a5f7-d74ca37b23b1"
+    },
+    {
+      "id": "88f0c70a-47a3-4f0d-970e-cb9c53edc4ec",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "virginia opossum",
+      "contentHash": "e3433ccae7f63f49700ef8fc8718fcf9576eb7c84036bb12a758dbdfc110db9d",
+      "reason": "same-fact",
+      "keptId": "aa2bc240-775c-409a-90b1-4136f676aba0"
+    },
+    {
+      "id": "dc001aca-5740-4148-8399-412aab668069",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "vitamin k",
+      "contentHash": "8912535ae43cc71b11a6d8fc55735ef9b3ec3c08c973b906a828b682cb1a7250",
+      "reason": "same-fact",
+      "keptId": "62d37b58-f92d-470c-a81a-2bda3f6b174c"
+    },
+    {
+      "id": "fc4b263b-771a-469e-a70e-54534eb06f9e",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "vuelta a espana",
+      "contentHash": "390a02c30d7041ab22d829c48291754b0c011d34eb1ce35eee70de2e4d104cee",
+      "reason": "same-fact",
+      "keptId": "a76439c7-f9e9-4b76-a75f-fac064444fb2"
+    },
+    {
+      "id": "9168d76b-1f5e-4b7a-b475-937be83d889e",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "warsaw pact",
+      "contentHash": "76c1cfa29f9c6c8a2e16922461dccbd827562fc75c88660c38350f6c07efd204",
+      "reason": "same-fact",
+      "keptId": "f9ee5e69-3e6a-41c4-a2da-9080492d6532"
+    },
+    {
+      "id": "f5bdbaad-426d-4b5f-82f3-b64ec37aa051",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "water strider",
+      "contentHash": "a250022dd9929f36b6b1a0b781d9506101243743bc363591e86539f6314b968d",
+      "reason": "same-fact",
+      "keptId": "99cb1c55-5740-4c68-bfcf-5ddf690d0f27"
+    },
+    {
+      "id": "a48e4d2d-4e38-4672-a010-b0eca7859031",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "weak interaction",
+      "contentHash": "6448af356bccd33d85ecc796d6e1f0497312524276e5a3b83bcfa65be9a56624",
+      "reason": "same-fact",
+      "keptId": "744f8d13-128a-4129-9ed2-96c55a52da3c"
+    },
+    {
+      "id": "81757a6c-3a2c-46fd-b79f-d556c8f9ab42",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "weaverbird",
+      "contentHash": "0fb4f033653e89da89c31789169f466de2d64c7ed429016c06a1a23f649aca18",
+      "reason": "same-fact",
+      "keptId": "f01c6786-5963-4b5c-a317-a38c814fe4ce"
+    },
+    {
+      "id": "b4c16ad8-057b-4920-be9d-e0a6223e63fd",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "weightlifting",
+      "contentHash": "6e87010fc090ecfd1bd0d18657d8d775d6c6ac97a99cfb079d159b57f3b7e01a",
+      "reason": "same-fact",
+      "keptId": "bc66d749-3183-4ddd-8f2c-10a3d5777b48"
+    },
+    {
+      "id": "d3ac8e50-dc7b-4ae9-ac06-3c101b86789e",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "what was i made for",
+      "contentHash": "0777a9c3d4322ff13f7a81b3ae8b0f2adcfc11a7189203edc109b87564d66d61",
+      "reason": "same-fact",
+      "keptId": "63c88e40-5049-46d1-a4ca-8f9b20a089d9"
+    },
+    {
+      "id": "94beed4a-17d4-4960-b3ec-0fcf40e3aab1",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "white blood cell",
+      "contentHash": "df6d9d729c182ce91538ea3d92926df6d356e3e68706f6528f7efc2121d10570",
+      "reason": "same-fact",
+      "keptId": "0a102a37-00b8-40c8-954a-f18c0e255f41"
+    },
+    {
+      "id": "a70bc587-6f92-4404-986b-4f8eb630cbbf",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "white blood cells",
+      "contentHash": "447fdce9a335908fc26f57bb2d2458b70a9c4f9af0921e26bf5e4303422c5fed",
+      "reason": "same-fact",
+      "keptId": "86491d24-2283-4664-83a3-799d312b407f"
+    },
+    {
+      "id": "7401aeea-d211-4932-bce1-145a23e4c1cd",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "whole step",
+      "contentHash": "dffc605ff71bfdd70c1f38c89ffdde7a523bae1da2cdbe5fdab7ed5e67529666",
+      "reason": "same-fact",
+      "keptId": "618d0dc0-6e32-4cf9-a522-cd35d9d64e15"
+    },
+    {
+      "id": "b4101b3d-dccd-44cd-b7e9-2aed65541276",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "wilt chamberlain",
+      "contentHash": "605a2aa2a37a58c400b02225be426a80a6b0032749c64b91d9775ae6450a9245",
+      "reason": "same-fact",
+      "keptId": "36609254-c127-432e-aa2c-ef7f4d5e224a"
+    },
+    {
+      "id": "99210fd2-0bc8-4864-bf0e-46a7b0839d00",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "wings",
+      "contentHash": "afd5d7cc1dd5b796b899d3ced40f2d25feadc05e8d014252b8b9e8c622c24586",
+      "reason": "same-fact",
+      "keptId": "50c960c5-ba84-4172-9c34-443e75b6ab86"
+    },
+    {
+      "id": "96a11730-af58-4142-b948-cc4302a41a64",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "womens artistic gymnastics",
+      "contentHash": "4754301635a771c34c1f3671d0e3dd86806f42315324fb4d96908abc612409b3",
+      "reason": "same-fact",
+      "keptId": "0d2b6b09-a466-4996-9146-37d14441622e"
+    },
+    {
+      "id": "a7e06f34-2bab-4569-a090-69c74ab0fa5f",
+      "oldStatus": "active",
+      "newStatus": "deleted",
+      "subjectKey": "woodpecker",
+      "contentHash": "17077575cc8c62065078ddd0e775dbd3dfef1a8c00465ea89a933dd81c8c3b9e",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "0a7c1587-1b20-4e08-a029-b69f355de48d",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "yardang",
+      "contentHash": "9d530d493fc73afa5eea667157307fffc2579bafbdbfca233aa196a6d8c72154",
+      "reason": "little-known",
+      "keptId": null
+    },
+    {
+      "id": "b40856a7-7f30-473b-9a13-df20f0b150a2",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "zheng he",
+      "contentHash": "3a4bc0a129a91f4953d0c8566316d29b90797f7f1572f6ff4bbb8ce8e3d67dd4",
+      "reason": "same-fact",
+      "keptId": "9ce71732-b7b2-42d1-a197-1c713971207b"
+    },
+    {
+      "id": "002a9f1e-c030-428b-a987-7441585c8d44",
+      "oldStatus": "pending_review",
+      "newStatus": "deleted",
+      "subjectKey": "ziggurat of ur",
+      "contentHash": "256543f62983ffd37df21bb2d5392a7919db8f5ba07b161c382521fbadd34209",
+      "reason": "little-known",
+      "keptId": null
+    }
+  ],
+  "result": {
+    "finishedAt": "2026-11-17T02:11:25.859Z",
+    "retired": 448,
+    "retireSkipped": [],
+    "restored": 438,
+    "liveBackToWaiting": 0,
+    "restoreSkipped": [],
+    "changedSinceDryRun": []
+  }
+}

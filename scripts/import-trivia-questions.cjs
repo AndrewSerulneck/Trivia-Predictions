@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const dns = require("node:dns");
 const { createClient } = require("@supabase/supabase-js");
+const { isExpiredLiveEntry } = require("../lib/live-trivia-quality/categories.cjs");
 
 const DEFAULT_FILE = "data/trivia/questions.v1.json";
 const DEFAULT_DIR = "data/trivia/categories";
@@ -265,6 +266,27 @@ function extractQuestions(parsed, filePath) {
   throw new Error(`File ${filePath} must contain a JSON array or an object with a questions array.`);
 }
 
+function isIsoDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+/**
+ * D16 (Phase 4c): Live entries whose expires_on is today or earlier (UTC) are treated as absent, so the import skips
+ * them and the prune retires them from the database. The JSON keeps them as history; it is never auto-edited.
+ * The rule is shared with Live Publish (isExpiredLiveEntry, Phase 4c.9 #3).
+ */
+function splitExpiredLiveRows(rows, today = new Date()) {
+  const current = [];
+  const expired = [];
+  for (const row of rows) {
+    if (row.question_pool === "live_showdown" && isExpiredLiveEntry({ expires_on: row.__expiresOn }, today)) expired.push(row);
+    else current.push(row);
+  }
+  return { current, expired };
+}
+
 function buildQuestionIdentity(questionPool, question) {
   return `${String(questionPool ?? "").trim()}::${normalizeQuestionKey(question)}`;
 }
@@ -366,6 +388,18 @@ function normalizeAndValidate(questions, options = {}) {
       row.source_order = Number.isInteger(sourceOrder) && sourceOrder >= 0 ? sourceOrder : null;
       const subcategory = String(item.subcategory ?? "").trim();
       row.subcategory = subcategory || null;
+      // D16 (Phase 4c): an optional expiry date. JSON-only: it never becomes a database column.
+      const expiresOn = item.expires_on ?? item.expiresOn;
+      // Review #5(c), Phase 4c.3: a Current Events entry must carry its date, or a hand-added one would never expire.
+      // Publish always writes it (lib/question-writer/publish.cjs); Sync Live Trivia runs this check first.
+      assert(
+        expiresOn != null || category.toLowerCase() !== "current events",
+        `Row ${rowNumber}${source}: Current Events needs expires_on (YYYY-MM-DD).`
+      );
+      if (expiresOn != null) {
+        assert(isIsoDate(expiresOn), `Row ${rowNumber}${source}: expires_on must be a YYYY-MM-DD date.`);
+        Object.defineProperty(row, "__expiresOn", { value: expiresOn, enumerable: false });
+      }
     }
     if (status) {
       row.status = status;
@@ -636,10 +670,50 @@ async function verifyLiveShowdownImportAvailability(supabase, expectedCount) {
   );
 }
 
-async function upsertRows(rows, options = {}) {
-  const { supabaseUrl, supabase } = createSupabaseClient();
+/**
+ * Phase 4c.9 #2: trivia_questions.slug is one unique column shared by both pools. A Live slug a Speed row already uses
+ * would make the upsert hit that Speed row (guard_speed_trivia_write refuses it) and fail its whole chunk. Returns the
+ * clashing slugs (slug -> pool). One small read per CHUNK_SIZE slugs (~19 per sync).
+ */
+async function findLiveSlugClashes(supabase, slugs) {
+  const clashes = new Map();
+  for (let start = 0; start < slugs.length; start += CHUNK_SIZE) {
+    const batch = slugs.slice(start, start + CHUNK_SIZE);
+    const { data, error } = await retryAsync(
+      async () => {
+        return supabase
+          .from("trivia_questions")
+          .select("slug, question_pool")
+          .in("slug", batch)
+          .neq("question_pool", "live_showdown");
+      },
+      { operation: `check Live slugs against other pools (offset ${start})` }
+    );
+    if (error) {
+      throw new Error(`Failed to check Live slugs against other pools: ${describeError(error)}`);
+    }
+    for (const row of data ?? []) {
+      const slug = String(row.slug ?? "").trim();
+      if (slug) clashes.set(slug, row.question_pool ?? null);
+    }
+  }
+  return clashes;
+}
 
-  await verifyConnectivity(supabaseUrl);
+const slugClashError = (clashes) =>
+  new Error(`Live slug used by a Speed question: ${[...clashes.keys()].join(", ")}. Re-slug these in the Live JSON.`);
+
+/**
+ * options.supabase: an injected client (tests); otherwise the env's, after a connectivity preflight.
+ * A Live row whose slug another pool uses is left out of the upsert, the prune set and the availability count; the
+ * rest are imported, then this throws (exit 1) naming the slugs, so a person re-slugs them. The JSON is never edited.
+ */
+async function upsertRows(rows, options = {}) {
+  const { supabaseUrl, supabase } = options.supabase
+    ? { supabaseUrl: "", supabase: options.supabase }
+    : createSupabaseClient();
+
+  if (supabaseUrl) await verifyConnectivity(supabaseUrl);
 
   // Speed imports use signed admission, including current deleted-history memory.
   // Live imports retain their existing validation/upsert/prune behavior.
@@ -656,6 +730,13 @@ async function upsertRows(rows, options = {}) {
   }
   rows = rows.filter(row => row.question_pool !== "anytime_blitz");
   if (!rows.length) return;
+  const liveSlugs = [...new Set(rows.filter((row) => row.question_pool === "live_showdown").map((row) => row.slug).filter(Boolean))];
+  const slugClashes = liveSlugs.length ? await findLiveSlugClashes(supabase, liveSlugs) : new Map();
+  if (slugClashes.size) {
+    console.error(`Left out (slug used by another pool): ${[...slugClashes].map(([slug, pool]) => `${slug} (${pool})`).join(", ")}.`);
+    rows = rows.filter((row) => !slugClashes.has(row.slug));
+    if (!rows.length) throw slugClashError(slugClashes);
+  }
   let processed = 0;
   let skippedDuplicates = 0;
   let skippedNearDuplicates = 0;
@@ -725,6 +806,7 @@ async function upsertRows(rows, options = {}) {
   }
 
   console.log(`Done. trivia_questions total rows: ${count ?? "unknown"}`);
+  if (slugClashes.size) throw slugClashError(slugClashes);
 }
 
 async function retryAsync(fn, options) {
@@ -938,7 +1020,12 @@ async function main() {
     return;
   }
 
-  await upsertRows(rows, { pruneOrphans: liveMode, verifyLiveAvailability: liveMode });
+  const { current, expired } = liveMode ? splitExpiredLiveRows(rows) : { current: rows, expired: [] };
+  if (expired.length > 0) {
+    console.log(`Expired (treated as absent, pruned from the database): ${expired.length}.`);
+  }
+
+  await upsertRows(current, { pruneOrphans: liveMode, verifyLiveAvailability: liveMode });
 }
 
 if (require.main === module) {
@@ -949,7 +1036,10 @@ if (require.main === module) {
 }
 
 module.exports = {
+  findLiveSlugClashes,
   normalizeAndValidate,
   parseArgs,
   slugify,
+  splitExpiredLiveRows,
+  upsertRows,
 };

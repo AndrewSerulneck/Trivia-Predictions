@@ -4471,20 +4471,6 @@
       "answer_format": "write_in"
     },
     {
-      "slug": "nba-longest-winning-streak",
-      "question": "What team owns the longest winning streak in NBA history?",
-      "answer": "Los Angeles Lakers",
-      "acceptableAnswers": [
-        "Lakers",
-        "LA Lakers",
-        "L.A. Lakers"
-      ],
-      "category": "Sports",
-      "difficulty": "medium",
-      "subcategory": "basketball",
-      "answer_format": "write_in"
-    },
-    {
       "slug": "first-shatter-backboard-nba",
       "question": "Who was the first NBA player to shatter a backboard?",
       "answer": "Chuck Connors",

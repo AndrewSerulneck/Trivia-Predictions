@@ -1,7 +1,9 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { applyChallengeCampaignPoints } from "@/lib/challengeCampaigns";
+import { getHiddenSpeedCategories } from "@/lib/speedTriviaCategoryVisibility";
+import { questionOptionOrder, shownIndexFor, storedIndexFor } from "@/lib/triviaOptionOrder";
 import { randomInt } from "node:crypto";
-import type { TriviaQuestion } from "@/types";
+import type { PlayerTriviaQuestion, TriviaQuestion } from "@/types";
 
 type TriviaQuestionRow = {
   id: string;
@@ -171,11 +173,24 @@ export async function getTriviaQuestions(limit = 15, userId?: string, category?:
 
   const safeCategory = category?.trim() || undefined;
 
-  const countQuery = client
+  // D11: a gated category (Current Events) is unplayable, and left out of "All Categories", until it's visible.
+  const hidden = await getHiddenSpeedCategories();
+  if (safeCategory && hidden.has(safeCategory)) {
+    return [];
+  }
+  const excluded = safeCategory ? [] : [...hidden];
+  // `category NOT IN (…)` is NULL for a NULL category, so an uncategorised row must be let through explicitly
+  // (review #4). None of the three queries below uses another `.or`; a later one would need a nested `and(…)`.
+  const withoutHidden = <Q extends { or: (filters: string) => Q }>(query: Q): Q =>
+    excluded.length
+      ? query.or(`category.is.null,category.not.in.(${excluded.map((name) => `"${name.replace(/"/g, "")}"`).join(",")})`)
+      : query;
+
+  const countQuery = withoutHidden(client
     .from("trivia_questions")
     .select("id", { count: "exact", head: true })
     .eq("question_pool", "anytime_blitz")
-    .eq("status", "active");
+    .eq("status", "active"));
 
   const { count: totalQuestionCount, error: countError } = safeCategory
     ? await countQuery.eq("category", safeCategory)
@@ -192,11 +207,11 @@ export async function getTriviaQuestions(limit = 15, userId?: string, category?:
 
   const candidatesById = new Map<string, TriviaQuestionRow>();
   if (total <= queryLimit) {
-    const rowQuery = client
+    const rowQuery = withoutHidden(client
       .from("trivia_questions")
       .select("id, question, options, correct_answer, category, difficulty")
       .eq("question_pool", "anytime_blitz")
-      .eq("status", "active")
+      .eq("status", "active"))
       .range(0, total - 1);
 
     const { data, error } = safeCategory ? await rowQuery.eq("category", safeCategory) : await rowQuery;
@@ -222,11 +237,11 @@ export async function getTriviaQuestions(limit = 15, userId?: string, category?:
 
     const windows = await Promise.all(
       offsets.map((offset) => {
-        const windowQuery = client
+        const windowQuery = withoutHidden(client
           .from("trivia_questions")
           .select("id, question, options, correct_answer, category, difficulty")
           .eq("question_pool", "anytime_blitz")
-          .eq("status", "active")
+          .eq("status", "active"))
           .range(offset, offset + windowSize - 1);
         return safeCategory ? windowQuery.eq("category", safeCategory) : windowQuery;
       })
@@ -263,6 +278,30 @@ export async function getTriviaQuestions(limit = 15, userId?: string, category?:
   const remaining = Math.max(0, safeLimit - pickedUnseen.length);
   const pickedSeen = remaining > 0 ? pickBalancedRandomQuestions(seen, remaining) : [];
   return shuffleInPlace([...pickedUnseen, ...pickedSeen]).slice(0, safeLimit);
+}
+
+/** D31: the player's view of a question — options in their fixed shuffled order, no correct answer. */
+export const toPlayerTriviaQuestion = (question: TriviaQuestion): PlayerTriviaQuestion => {
+  const perm = questionOptionOrder(question.id, question.options);
+  return {
+    id: question.id,
+    question: question.question,
+    options: perm.map((stored) => question.options[stored]),
+    category: question.category,
+    difficulty: question.difficulty,
+    imageUrl: question.imageUrl,
+    imageCredit: question.imageCredit,
+    order: 1,
+  };
+};
+
+/** The player GET (`app/api/trivia/route.ts`): `getTriviaQuestions`, shuffled and without the answers. */
+export async function getPlayerTriviaQuestions(
+  limit = 15,
+  userId?: string,
+  category?: string
+): Promise<PlayerTriviaQuestion[]> {
+  return (await getTriviaQuestions(limit, userId, category)).map(toPlayerTriviaQuestion);
 }
 
 export async function getTriviaQuota(
@@ -350,13 +389,20 @@ export async function submitTriviaAnswer(params: {
   answer: number;
   timeElapsed: number;
   forceAdminBypass?: boolean;
+  /** The pick is an index into the shown (shuffled) options (D31). Absent: an older script, stored order. */
+  shownOrder?: boolean;
 }): Promise<{ isCorrect: boolean; correctAnswer: number; saved: boolean; alreadyAnswered?: boolean; pointsAwarded?: number; multiplierApplied?: number }> {
   const question = await getQuestionById(params.questionId);
   if (!question) {
     throw new Error("Question not found.");
   }
 
-  const isCorrect = params.answer === question.correctAnswer;
+  // Grade and store in stored order, so every `trivia_answers.answer` lines up with the stored options; reply with
+  // the correct answer in the order the player was shown.
+  const perm = params.shownOrder ? questionOptionOrder(question.id, question.options) : null;
+  const storedAnswer = perm ? storedIndexFor(perm, params.answer) : params.answer;
+  const correctAnswer = perm ? shownIndexFor(perm, question.correctAnswer) : question.correctAnswer;
+  const isCorrect = storedAnswer === question.correctAnswer;
   const safeTimeElapsed = Number.isFinite(params.timeElapsed) ? Math.max(0, Math.round(params.timeElapsed)) : 0;
   let saved = false;
 
@@ -382,7 +428,7 @@ export async function submitTriviaAnswer(params: {
     if (!existingAnswerError && existingAnswer) {
       return {
         isCorrect: existingAnswer.is_correct,
-        correctAnswer: question.correctAnswer,
+        correctAnswer,
         saved: false,
         alreadyAnswered: true,
       };
@@ -391,7 +437,7 @@ export async function submitTriviaAnswer(params: {
     const { error: answerError } = await supabaseAdmin.from("trivia_answers").insert({
       user_id: params.userId,
       question_id: params.questionId,
-      answer: params.answer,
+      answer: storedAnswer,
       is_correct: isCorrect,
       time_elapsed: safeTimeElapsed,
     });
@@ -399,7 +445,7 @@ export async function submitTriviaAnswer(params: {
     if (answerError && answerError.code === "23505") {
       return {
         isCorrect,
-        correctAnswer: question.correctAnswer,
+        correctAnswer,
         saved: false,
         alreadyAnswered: true,
       };
@@ -436,7 +482,7 @@ export async function submitTriviaAnswer(params: {
 
         return {
           isCorrect,
-          correctAnswer: question.correctAnswer,
+          correctAnswer,
           saved,
           pointsAwarded,
           multiplierApplied,
@@ -447,7 +493,7 @@ export async function submitTriviaAnswer(params: {
 
   return {
     isCorrect,
-    correctAnswer: question.correctAnswer,
+    correctAnswer,
     saved,
     pointsAwarded: 0,
     multiplierApplied: 1,

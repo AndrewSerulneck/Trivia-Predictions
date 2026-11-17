@@ -122,6 +122,7 @@ Before this, Back had 10 implementations across 5 visual treatments, Next had 2,
 - Host-run, scheduled game. All users at the venue play simultaneously and their gameplay is synchronized.
 - Live Trivia rounds are category-pure: each round draws all of its questions from one category. For example, Round 1 may be Science & Tech and Round 2 may be History, but a single round must not mix Science, History, Sports, etc. Question freshness logic must preserve this category-separated round structure.
 - Players write in open-ended answers (no multiple choice). Questions must pass a rigorous validation to ensure answers are "rigid identifiers" (proper nouns, specific facts) — this narrows the acceptable answer field and eases grading burden.
+- **Easier than Speed Trivia (Andrew, 2026-11-16):** players must recall the answer with no options, so the fact itself must be widely known, not just the subject. Live's bar for "too obscure" is higher than Speed's.
 - Two question pools exist: `live_showdown` (for Live Trivia) and `anytime_blitz` (legacy name for Speed Trivia pool — do not use this name in UI or docs). The pools differ because answer formats and difficulty standards are entirely different.
 - Nightly question generation: `scripts/generate-live-trivia-nightly.cjs` → calls `generate-live-trivia-questions.cjs`.
 - Internal lib: `lib/liveShowdown*.ts` (engine, grading, submission, emcee, comments, closest-guess, admin). These files are named "liveShowdown" internally but always surface to users as "Live Trivia."
@@ -132,7 +133,7 @@ Before this, Back had 10 implementations across 5 visual treatments, Next had 2,
 
 **Manual Speed approval update, 2026-10-14:** Andrew declined a $225 backlog audit and chose manual review. “Approve Selected” now checks only already-approved active Speed questions for unchanged pending→active approval; new generation/edits/imports retain full-bank pending/deleted/history repeat protection and signed admission. Batch results preserve actual saved IDs across rejection/failure. No migration, paid audit or normal-cap change. Release/handoff: `docs/speed-trivia-manual-approval-2026-10-14.md`. Root workspace has separate unpublished subject-variety work: do not deploy it before its own approved schema cutover.
 - Solo game, available at any time, no host required.
-- Multiple choice questions, any topic or difficulty.
+- Multiple choice questions, any topic or difficulty. **Can be much harder than Live Trivia (Andrew, 2026-11-16):** the answer is on screen, so players can recognize it or guess. It must still be knowable for the average American: a recognizable subject and a fairly common fact, never specialist-only or an obscure subject.
 - Nightly question generation: `scripts/generate-trivia-nightly.cjs` → calls `generate-trivia-questions.cjs`.
 
 Speed Trivia uniqueness **is complete/live (2026-10-13)**. Reviewed retirement of 2,534
@@ -434,6 +435,15 @@ original incident. Calibrate variety/win rates separately from grading correctne
 - **Speed Trivia source-of-truth rule:** Speed Trivia (`question_pool='anytime_blitz'`, `answer_format='multiple_choice'`) is canonical in the Admin UI / Supabase `trivia_questions` table. Files under `data/trivia/categories/` are export artifacts for approved Speed Trivia rows.
 - **Live Trivia source-of-truth rule:** Files under `data/live-trivia/categories/` are the canonical source of truth for Live Trivia question content, answers, and acceptable answers.
 - **No reverse sync into Live Trivia JSON:** Supabase, local dev database state, production database state, or other remote sources must never overwrite or regenerate `data/live-trivia/categories/`.
+  - **Authorized exception (Andrew, 2026-11-15, D10; built Phase 4c of `docs/speed-trivia-backlog-and-quality-plan.md`):
+    append-only publishing of reviewed candidates.** Admin → Quick Review (Live) → **Publish** appends writer questions
+    Andrew kept to the end of their category file through a GitHub PR it merges (`lib/liveTriviaReview.ts`,
+    `lib/live-trivia-quality/publish.cjs`, `lib/liveTriviaGithub.ts`). Existing entries are never changed, reordered or
+    rebuilt (checked byte-for-byte before the PR); the only file it may create is a new category's (Current Events, D11).
+    Nothing else may write the JSON from the database. Entries may carry `expires_on` (D16): the importer treats an
+    expired entry as absent (pruned from the database monthly by Sync Live Trivia); the JSON keeps it as history.
+    A PR that isn't merged leaves its candidates `pr_open` (not `published`) until the PR check sees it merged or
+    closed, and an open Publish PR blocks a new one (Phase 4c.2).
 - **Pool separation rule:** Speed Trivia must stay `anytime_blitz` + `multiple_choice`; Live Trivia must stay `live_showdown` + write-in-compatible answer formats. Never mix these rows, import paths, or JSON directories.
 - **No historical snapshot rewrites for trivia JSON:** Do not use `git show`, `HEAD`, or any older snapshot as the input source for trivia JSON rewrite/backfill scripts unless the user explicitly asks for a history restore.
 - **Live Trivia question edits belong in local JSON first:** If the user asks to add, remove, revise, or audit Live Trivia questions or answers, the intended changes should be made in the local JSON files.
