@@ -165,6 +165,23 @@ describe("processLiveDay", () => {
     expect(report.possibleRepeats).toBe(1);
   });
 
+  it("uses the writer's ChatGPT grade, keeps the score on a bar-test reject, and asks Gemini only for the rest (D35)", async () => {
+    const grade = (over: Row = {}) => ({ version: "bar-test-live-v4", model: "gpt-6-astra", familiar: 5, fun: 4, estCorrect: 60, flags: [], ...over });
+    const q2 = "Which band sang the 1977 hit 'Go Your Own Way'?";
+    const q3 = "Which band released the 1973 album 'The Dark Side of the Moon'?";
+    const client = memoryClient({ list: [
+      candidate("c1", 1, { ...payload(), grade: grade() }),
+      candidate("c2", 2, { ...payload({ question: q2, answer: "Fleetwood Mac", acceptableAnswers: [], subject: "Fleetwood Mac" }), grade: grade({ familiar: 1, fun: 1, flags: ["obscure-fact"] }) }),
+      candidate("c3", 3, payload({ question: q3, answer: "Pink Floyd", acceptableAnswers: [], subject: "Pink Floyd" })),
+    ] });
+    const seen: Row[] = [];
+    const report = await run(client, { createScorer: () => ({ scoreBatch: async (rows: Row[]) => { seen.push(...rows); return scorer()().scoreBatch(rows); } }) });
+    expect(seen.map(r => r.question)).toEqual([q3]);
+    expect((report as Report & { graded: Row }).graded).toEqual({ chatgpt: 2, gemini: 1 });
+    expect(statusOf(client, "c1").audience).toMatchObject({ version: "bar-test-live-v4", model: "chatgpt:gpt-6-astra:bar-test-live-v4", score: 5 });
+    expect(statusOf(client, "c2")).toMatchObject({ status: "rejected", reason: "bar-test:1", audience: expect.objectContaining({ score: 1 }) });
+  });
+
   it("stops at one full round (15) a night", async () => {
     const list = Array.from({ length: 17 }, (_, i) => candidate(`c${i}`, i + 1, payload({ question: `Which band recorded song number ${i + 10} on the classic album?`, subject: `Band ${i}` })));
     const client = memoryClient({ list });

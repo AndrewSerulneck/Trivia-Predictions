@@ -203,6 +203,34 @@ describe("nightly processing", () => {
     expect(client.tables.question_candidates.map(c => [c.status, c.reason])).toEqual([["skipped", "budget"], ["skipped", "budget"]]);
   });
 
+  it("uses the writer's ChatGPT grade and asks Gemini only for ungraded items (D35)", async () => {
+    const grade = (over: Row = {}) => ({ version: "bar-test-v6", model: "gpt-6-astra", familiar: 5, fun: 4, estCorrect: 70, flags: [], ...over });
+    const client = memoryClient({ list: [
+      candidate("g1", 1, { ...payload(), grade: grade() }),
+      candidate("g2", 2, { ...payload({ question: "Which act topped the charts with 'Walk Like an Egyptian'?", options: ["The Bangles", "The Go-Go's", "Heart", "Blondie"], subject: "The Bangles" }),
+        grade: grade({ familiar: 1, fun: 1, estCorrect: 20, flags: ["possibly-wrong"] }) }),
+      candidate("old", 3, { ...payload({ question: "Which 1985 song did Whitney Houston take to number one?", options: ["Saving All My Love for You", "I Wanna Dance", "Greatest Love", "So Emotional"], subject: "Whitney Houston" }),
+        grade: grade({ version: "bar-test-v5" }) }),
+    ] });
+    const seen: Row[] = [];
+    const scorer = () => ({ scoreBatch: async (rows: Row[]) => { seen.push(...rows); return fakeScorer({})().scoreBatch(rows); } });
+    const session = fakeSession();
+    const report = await processing.processSpeedDay({ client, today: TODAY, env, createSession: session.create, createScorer: scorer });
+    expect(seen.map(r => r.question)).toEqual(["Which 1985 song did Whitney Houston take to number one?"]);
+    expect((report as Report & { graded: Row }).graded).toEqual({ chatgpt: 2, gemini: 1 });
+    const byId = new Map(client.tables.question_candidates.map(c => [c.id, c]));
+    expect(byId.get("g2")).toMatchObject({ status: "rejected", reason: "bar-test:1", audience: expect.objectContaining({ model: "chatgpt:gpt-6-astra:bar-test-v6" }) });
+    const set = client.rpcs.filter(r => r.name === "speed_trivia_review_set_audience").map(r => ((r.args.p_rows as Row[])[0].audience as Row));
+    expect(set).toContainEqual(expect.objectContaining({ version: "bar-test-v6", model: "chatgpt:gpt-6-astra:bar-test-v6", score: 5 }));
+  });
+
+  it("makes no Gemini call when every item is graded", async () => {
+    const client = memoryClient({ list: [candidate("g1", 1, { ...payload(), grade: { version: "bar-test-v6", model: "gpt-6-astra", familiar: 4, fun: 4, estCorrect: 50, flags: [] } })] });
+    const report = await processing.processSpeedDay({ client, today: TODAY, env: { SPEED_TRIVIA_MAX_DOLLARS: "0.5" }, createSession: fakeSession().create,
+      createScorer: () => { throw new Error("no Gemini expected"); } });
+    expect(report.admitted).toBe(1);
+  });
+
   it("never writes trivia_questions except through the signed session", () => {
     const source = readFileSync("lib/question-writer/process.cjs", "utf8");
     expect(source).not.toMatch(/from\(['"]trivia_questions['"]\)/);

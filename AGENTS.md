@@ -14,6 +14,8 @@ them; it documents recurring processes and active implementation-plan pointers b
 
 **Difficulty differs by game (Andrew, 2026-11-16).** Speed Trivia is multiple choice: the answer is on screen, so players can recognize it or guess even if they don't know it, and a question can be much harder than Live. It must still be knowable for the average American: a subject they recognize and a fact that is fairly common knowledge, never specialist-only. Live Trivia is write-in: players must recall the answer with no options, so it must be easier and the fact itself must be widely known. Code home: `lib/question-variety/factRules.cjs` (`RECALL_VS_RECOGNITION`).
 
+**AI for trivia questions: OpenAI / ChatGPT first (Andrew, repeated; recorded 2026-11-18).** Writing, grading, fact-checking and any new question-pipeline AI step use ChatGPT (Codex on his plan, in the private writer repo) or another OpenAI model, never Gemini by default. Gemini remains only where it already runs until replaced (repeat checks, tagging, backlog re-scores; planned to move to the OpenAI API, D36). The Gemini fallback writer is off (2026-11-18). Full rule: `CLAUDE.md` §Trivia and Category Blitz content.
+
 ## Models in phased plans — always
 
 Name models from the **planning agent's own family** (Claude → Claude models, Codex → Codex/GPT models, any

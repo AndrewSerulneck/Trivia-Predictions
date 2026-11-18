@@ -27,7 +27,16 @@ export type LivePayload = {
   /** The writer's one-sentence "why it's true" note (D30), ≤ 200 characters. */
   whyTrue: string;
 };
-export type CandidateItem = { slot: WriterSlot; payload: SpeedPayload | LivePayload };
+/** The writer's bar-test grade (D35, Phase 4d.1), checked by the site; stored as `payload.grade`. */
+export type WriterGrade = {
+  version: string;
+  model: string;
+  familiar: number;
+  fun: number;
+  estCorrect: number;
+  flags: string[];
+};
+export type CandidateItem = { slot: WriterSlot; payload: (SpeedPayload | LivePayload) & { grade?: WriterGrade } };
 export const SOURCES: readonly string[];
 export const CATEGORIES: Readonly<Record<string, string[]>>;
 export class CandidateError extends Error {
@@ -35,7 +44,7 @@ export class CandidateError extends Error {
   status: number;
   constructor(code: string, message: string, status: number);
 }
-export function parsePost(body: unknown, game: string): { items: CandidateItem[]; invalid: number };
+export function parsePost(body: unknown, game: string): { items: CandidateItem[]; invalid: number; graded: number };
 export function batchHash(items: CandidateItem[]): string;
 export function cleanModel(value: unknown): string | null;
 export function receive(input: {

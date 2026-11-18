@@ -55,13 +55,13 @@ latent (nothing on production needs repair) → **REMEDIAL PHASES 4c.1–4c.4 AD
 D28, D29). **Phase 4c.1 DONE 2026-11-16** (uncommitted; no migration, no paid call made) —
 `speed-trivia-backlog-and-quality-plan_PHASE_4C1_HANDOFF.md`. **Phase 4c.2 DONE 2026-11-16** (uncommitted; migration
 `20261117025917_live_publish_pr_open.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it) —
-`speed-trivia-backlog-and-quality-plan_PHASE_4C2_HANDOFF.md`. **Phase 4c.3 DONE 2026-11-16** (uncommitted; migration `20261117033637_speed_trivia_expire_undated_current_events.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it) — `speed-trivia-backlog-and-quality-plan_PHASE_4C3_HANDOFF.md`. **Phase 4c.5 DONE 2026-11-16** (uncommitted; no migration, no data change, no paid call made; `writer-v4`, `bar-test-v5`, `bar-test-live-v3`) — `speed-trivia-backlog-and-quality-plan_PHASE_4C5_HANDOFF.md`. **Phase 4c.6 DONE 2026-11-16** (uncommitted; no migration, no data change, no paid call made; Speed options shuffled per question, the answer no longer sent before the tap) — `speed-trivia-backlog-and-quality-plan_PHASE_4C6_HANDOFF.md`. **Phase 4c.7 DONE 2026-11-17** (uncommitted; migration `20261117040723_question_reports.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it; no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C7_HANDOFF.md`. **Phase 4c.4 code + checks DONE 2026-11-17** (uncommitted; the three migrations were already applied on production; lint, tests, build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4C4_HANDOFF.md`. **CODE REVIEW 2026-11-17** (after 4c.4, all uncommitted work since PR #19): 9 findings, all latent (read-only check 2026-11-17: no slug clash, no subject over the cap, 0 reports) → **REMEDIAL PHASES 4c.8–4c.10 ADDED** (§4 "Remedial phases 4c.8–4c.10"). **Phase 4c.8 DONE 2026-11-17** (uncommitted; migration `20261117135338_speed_trivia_tag_cap.sql` written and PGlite-tested, **NOT applied** — 4c.10 applies it; no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C8_HANDOFF.md`. **Phase 4c.9 DONE 2026-11-17** (uncommitted; no migration, no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C9_HANDOFF.md`. **Phase 4c.10 steps 1–5 DONE 2026-11-17** (code uncommitted; migration `20261117142126_question_reports_daily_limit.sql` **APPLIED** with Andrew's OK; 4c.8's `20261117135338` was already applied; both verified on production; lint, typecheck, 7,551 tests and build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4C10_HANDOFF.md`. **D23 SHIPPED 2026-11-17** (PR #20 merged as `1a604278`; production deploy READY 15:41 UTC; Trivia Nightly re-enabled). Report smoke test passed; Sync Live Trivia fixed (PR #21, +253 Live rows). Live report-sheet hold shipped (`feature/live-report-sheet-hold`); the writer is signed in to ChatGPT (`CODEX_AUTH_JSON` set 2026-11-17). **Next: Phase 4d.** **PHASE 4c.5 ADDED 2026-11-16** (D30: interest rule, no loose superlatives, a "why it's true"
+`speed-trivia-backlog-and-quality-plan_PHASE_4C2_HANDOFF.md`. **Phase 4c.3 DONE 2026-11-16** (uncommitted; migration `20261117033637_speed_trivia_expire_undated_current_events.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it) — `speed-trivia-backlog-and-quality-plan_PHASE_4C3_HANDOFF.md`. **Phase 4c.5 DONE 2026-11-16** (uncommitted; no migration, no data change, no paid call made; `writer-v4`, `bar-test-v5`, `bar-test-live-v3`) — `speed-trivia-backlog-and-quality-plan_PHASE_4C5_HANDOFF.md`. **Phase 4c.6 DONE 2026-11-16** (uncommitted; no migration, no data change, no paid call made; Speed options shuffled per question, the answer no longer sent before the tap) — `speed-trivia-backlog-and-quality-plan_PHASE_4C6_HANDOFF.md`. **Phase 4c.7 DONE 2026-11-17** (uncommitted; migration `20261117040723_question_reports.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it; no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C7_HANDOFF.md`. **Phase 4c.4 code + checks DONE 2026-11-17** (uncommitted; the three migrations were already applied on production; lint, tests, build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4C4_HANDOFF.md`. **CODE REVIEW 2026-11-17** (after 4c.4, all uncommitted work since PR #19): 9 findings, all latent (read-only check 2026-11-17: no slug clash, no subject over the cap, 0 reports) → **REMEDIAL PHASES 4c.8–4c.10 ADDED** (§4 "Remedial phases 4c.8–4c.10"). **Phase 4c.8 DONE 2026-11-17** (uncommitted; migration `20261117135338_speed_trivia_tag_cap.sql` written and PGlite-tested, **NOT applied** — 4c.10 applies it; no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C8_HANDOFF.md`. **Phase 4c.9 DONE 2026-11-17** (uncommitted; no migration, no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C9_HANDOFF.md`. **Phase 4c.10 steps 1–5 DONE 2026-11-17** (code uncommitted; migration `20261117142126_question_reports_daily_limit.sql` **APPLIED** with Andrew's OK; 4c.8's `20261117135338` was already applied; both verified on production; lint, typecheck, 7,551 tests and build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4C10_HANDOFF.md`. **D23 SHIPPED 2026-11-17** (PR #20 merged as `1a604278`; production deploy READY 15:41 UTC; Trivia Nightly re-enabled). Report smoke test passed; Sync Live Trivia fixed (PR #21, +253 Live rows). Live report-sheet hold shipped (`feature/live-report-sheet-hold`); the writer is signed in to ChatGPT (`CODEX_AUTH_JSON` set 2026-11-17). **Phase 4d STARTED 2026-11-17, PAUSED** (trial batch written and processed, $0.11; every Current Events question failed the Gemini bar test) — `speed-trivia-backlog-and-quality-plan_PHASE_4D_HANDOFF.md`. **PHASE 4d.1 ADDED 2026-11-17 (D35: ChatGPT bar test).** **Phase 4d.1 code + calibration DONE 2026-11-18** (uncommitted; no migration, no data change; calibration on Andrew's ChatGPT plan, ~238k tokens, plus a $0.05 Gemini comparison; thresholds stay 3) — `speed-trivia-backlog-and-quality-plan_PHASE_4D1_HANDOFF.md`. **2026-11-18 (Andrew): ship 4d.1 approved; D36 answered (Gemini fallback writer OFF now; repeat check + tagging to the OpenAI API later, its own phase); the 7 Speed trial questions Kept; PHASE 4e ADDED (D37: send a Speed question to ChatGPT to become a Live question).** **Next: the 4d re-trial, then 4e.** **PHASE 4c.5 ADDED 2026-11-16** (D30: interest rule, no loose superlatives, a "why it's true"
 note); order 4c.2 → 4c.3 → 4c.5 → 4c.4. 4d starts only after 4c.4 and the D23 deploy. **PHASES 4c.6, 4c.7, 6 AND 7
 ADDED 2026-11-16** (Andrew; D31–D34): 4c.6 shuffles Speed answer order when a question is served and stops sending the
 correct answer to the browser (the right answer sits in slot C on 43% of active questions); 4c.7 adds a "Report" button
 in both games. Both run before 4c.4, so one push and one deploy cover them. Phase 5's correct-rate check is reworded for
 today's low play volume. After 5: Phase 6 fixes Live grading misses, and Phase 7 adds seasonal slots. Order:
-4c.3 → 4c.5 → 4c.6 → 4c.7 → 4c.4 → D23 → 4d → 5 → 6 → 7.
+4c.3 → 4c.5 → 4c.6 → 4c.7 → 4c.4 → D23 → 4d → 4d.1 → 4d → 4e → 5 → 6 → 7.
 
 ## 1. For Andrew — the short version
 
@@ -129,6 +129,9 @@ nothing. The older 6,981 are the only ones that genuinely need checking.
    - **4c:** the same for Live Trivia. One **Publish** button adds the kept ones to the Live Trivia files, and from
      there into the game.
    - **4d:** one trial run of each for you to rate before it runs daily.
+   - **4e:** a **Make Live** button on any Speed question (and key **L** in Quick Review). That night ChatGPT rewrites
+     it as a write-in Live question with the same answer, or says why it can't. It reaches Live Quick Review for you.
+     The Speed question stays.
 7. **Phase 5:** watch seven days and compare yield, your keep rate and cost, for both games.
 
 **What the bar-test score is for (Andrew asked 2026-11-15).** You never score anything. The score is the AI's
@@ -206,6 +209,8 @@ and you bulk-keep the best, you're likely looking at a few hours in total, not w
 | 4c.9 | Remedial: Live Publish reserves database slugs and ignores expired entries; the sync refuses a slug clash; the Live queue sorts in SQL; edited answers must be matchable (post-4c.4 review #2, #3, #5, #6) | **Opus 5.5 / high** | The Live source-of-truth write path (D10) and the sync importer; a slip loses or duplicates Live questions. |
 | 4c.10 | Remedial: bulk Keep stops on changed rows; an atomic report limit; a cleanup; then checks, apply the 4c.8 + 4c.10 migrations, D23 (post-4c.4 review #7, #8, #9) | **Opus 5.5 / medium** | One small trigger migration (top tier), but each fix is narrow and fully specified, and the rest is running checks; Andrew's OK gates the push. |
 | 4d | Trial run of each game, Andrew rates, tune thresholds, turn on daily | **Opus 5.5 / medium** | Mostly running and reporting, but threshold choices are judgment calls on a paid gate. |
+| 4d.1 | ChatGPT bar test (D35): the private writer grades its batch in a separate ChatGPT call (web search for Current Events), the site uses those grades, Gemini grades only fallback days; calibrate; then back to 4d. **Added 2026-11-17 from the 4d trial; runs before 4d resumes.** | **Opus 5.5 / high** | Changes the shared bar test that decides what reaches Andrew, the writer's POST format at the token boundary, and both games' nightly processing; calibration is judgment-heavy. |
+| 4e | Speed → Live conversions (D37): a "Make Live" key/button queues a Speed question; the nightly ChatGPT writer rewrites it as a write-in Live question (same answer); it reaches Live Quick Review with its grade. **Added 2026-11-18; runs after 4d turns on the daily writer.** | **Opus 5.5 / high** | A new table and RPCs (migration, grants), a new writer POST at the token boundary, the Live source-of-truth path (D10), and UI in two admin screens. |
 | 5 | Seven-day monitoring and report (both games), including player reports | **Sonnet 5.5 / medium** | Read-only measurement against stated baselines. |
 | 6 | Live grading misses (D33): accept right answers the grader marks wrong, fix fragment answers in the Live JSON with Andrew's OK | **Opus 5.5 / high** | Changes the shared Live grader (points on every Live night) and may edit existing canonical Live JSON entries, which needs Andrew's OK per entry list. |
 | 7 | Seasonal slots (D34): at most one writer slot a day per game tied to a nearby calendar event | **Opus 5.5 / medium** | Top tier because it changes the shared slot logic that decides variety; medium effort because it's one small, specified addition with no migration and no extra cost. |
@@ -215,14 +220,14 @@ coding agent. The model *inside* the pipeline is a separate choice for each job:
 
 | Job | Now | Recommendation | Why |
 | --- | --- | --- | --- |
-| Bar test (Phase 2) | Gemini 2.5 Flash, ~$1 one time | Keep | Already calibrated against Andrew's decisions and run. Switching means re-running calibration. |
+| Bar test (Phase 2) | Gemini 2.5 Flash, ~$1 one time | Keep | Already calibrated against Andrew's decisions and run. Switching means re-running calibration. **Superseded for the writer's batches by D35 (2026-11-17, Phase 4d.1): ChatGPT grades them; Gemini grades fallback days and the backlog re-scores.** |
 | Repeat check (Phase 3) | Gemini 2.5 Flash | Keep | Frozen evaluation gates (`evaluation-v1.json`, `evaluation-fresh-v1.json`) are passed on this model; a switch must re-pass them. It's also the high-volume job (one call per pair, $0.00048 each, measured 2026-11-15). |
-| Question writer, Speed + Live (Phase 4) | Gemini 2.5 Flash | **ChatGPT through OpenAI's Codex CLI (`codex exec`), signed in with Andrew's ChatGPT Pro plan** (D9, Andrew 2026-11-15). Use the strongest model Codex offers on that plan when Phase 4a is built, and record its exact name in the handoff (don't assume a version). Web search is on only for Current Events slots. It also does the one-time tagging (free); Gemini is the fallback, capped at ≤ $2.50. On a day ChatGPT misses, Gemini 2.5 Flash writes that day's slots (D13). | Andrew's Pro plan is mostly unused, so writing costs nothing extra. The writer decides question quality, so it gets the strongest model. Gemini stays as the independent grader (bar test and repeat checks), so no model marks its own homework. |
+| Question writer, Speed + Live (Phase 4) | Gemini 2.5 Flash | **ChatGPT through OpenAI's Codex CLI (`codex exec`), signed in with Andrew's ChatGPT Pro plan** (D9, Andrew 2026-11-15). Use the strongest model Codex offers on that plan when Phase 4a is built, and record its exact name in the handoff (don't assume a version). Web search is on only for Current Events slots. It also does the one-time tagging (free); Gemini is the fallback, capped at ≤ $2.50. On a day ChatGPT misses, Gemini 2.5 Flash writes that day's slots (D13). **Superseded by D36 (2026-11-18): the fallback is off (`--no-fallback`); a missed day writes nothing.** | Andrew's Pro plan is mostly unused, so writing costs nothing extra. The writer decides question quality, so it gets the strongest model. Gemini stays as the independent grader (bar test and repeat checks), so no model marks its own homework. |
 | Live repeat check (Phase 4b) | none (exact text and slug match only) | Gemini 2.5 Flash, one call per candidate against ≤ 12 likely matches | New and not frozen. It's cheap because the Live bank is ~3,800 questions, read from the repo for free. |
 
 The Gemini-vs-Claude writer bake-off (planned before 2026-11-15) is dropped, and no Claude key is needed.
 
-Order: 0 → 1 → 2 → 3 → **3a → 3b → 3c → 3d** → 4a → **4a.1** → 4b → 4c → **4a.2** → Andrew's code review → **4c.1 → 4c.2 → 4c.3 → 4c.5 → 4c.6 → 4c.7 → 4c.4** → **4c.8 → 4c.9 → 4c.10** → commit, merge, deploy (D23) → 4d → 5 → 6 → 7 → second code review (4c.8–7). (4c.8–4c.10 were added 2026-11-17 from the review after 4c.4; they run before D23 because #1 must ship in the same deploy as 4c.6, and 4c.10 applies their migrations and takes over 4c.4's D23 steps. 4c.6 and 4c.7 were added 2026-11-16, D31 and D32; they run before 4c.4 so 4c.4's checks, its one migration push and the one deploy cover them, and player reports start during the 4d trial. Run them one after another: both edit `components/trivia/TriviaGame.tsx`. Phases 6 and 7 were added the same day, D33 and D34; 6 waits for Phase 5 so player reports can show grading misses first. 4c.5 was added 2026-11-16, D30; it runs before 4c.4 so one deploy and 4c.4's checks cover it. 4a.2 was added 2026-11-16 after 4b and 4c were built; it replaces 4a.1's thinning, which was never applied. 4c.1–4c.4 were added 2026-11-16 from the review; run them one after another, because 4c.1 and 4c.4 both edit `lib/speedTriviaQuickReview.ts`.) 4a.1 (added 2026-11-16) comes
+Order: 0 → 1 → 2 → 3 → **3a → 3b → 3c → 3d** → 4a → **4a.1** → 4b → 4c → **4a.2** → Andrew's code review → **4c.1 → 4c.2 → 4c.3 → 4c.5 → 4c.6 → 4c.7 → 4c.4** → **4c.8 → 4c.9 → 4c.10** → commit, merge, deploy (D23) → 4d (trial) → **4d.1** → 4d (re-trial, daily on) → 5 → 6 → 7 → second code review (4c.8–7). (4d.1 was added 2026-11-17 from the 4d trial, D35.) (4c.8–4c.10 were added 2026-11-17 from the review after 4c.4; they run before D23 because #1 must ship in the same deploy as 4c.6, and 4c.10 applies their migrations and takes over 4c.4's D23 steps. 4c.6 and 4c.7 were added 2026-11-16, D31 and D32; they run before 4c.4 so 4c.4's checks, its one migration push and the one deploy cover them, and player reports start during the 4d trial. Run them one after another: both edit `components/trivia/TriviaGame.tsx`. Phases 6 and 7 were added the same day, D33 and D34; 6 waits for Phase 5 so player reports can show grading misses first. 4c.5 was added 2026-11-16, D30; it runs before 4c.4 so one deploy and 4c.4's checks cover it. 4a.2 was added 2026-11-16 after 4b and 4c were built; it replaces 4a.1's thinning, which was never applied. 4c.1–4c.4 were added 2026-11-16 from the review; run them one after another, because 4c.1 and 4c.4 both edit `lib/speedTriviaQuickReview.ts`.) 4a.1 (added 2026-11-16) comes
 before 4b so the Keep Queue resumes on a thinned backlog and the writer starts from a bank inside the cap. The remedial phases come first (Andrew,
 2026-11-15). Run them one after another because 3d edits files 3a and 3b change. 4b needs 4a's map and tags. 4c needs
 4b's writer and candidate table. 4d needs all three.
@@ -1917,7 +1922,7 @@ and the rest is running checks; Andrew's OK gates the push, as in 4c.3.
 | Item | Per day | Per month | Note |
 | --- | --- | --- | --- |
 | ChatGPT writing (2 Codex runs) | $0 extra | $0 extra | Uses Pro plan usage limits, not money. |
-| Gemini fallback writing (D13), only on days ChatGPT misses | ~$0.02 per missed day | ≤ $0.60 if every day missed | ~32 candidates, Flash; cap $0.10 per game per day. |
+| Gemini fallback writing (D13), only on days ChatGPT misses | $0 (off, D36) | $0 | Turned off 2026-11-18 (D36); was ~$0.02 per missed day. |
 | One-time tagging (~15,400 questions) | — | $0 once (ChatGPT) | Gemini fallback ≤ $2.50 once. |
 | Bar test, ~32 candidates | ~$0.01 | ~$0.30 | Gemini 2.5 Flash, 1–2 calls. |
 | Speed repeat check, ~12 candidates past the gates | ~$0.25 | ~$7 | Measured in Phase 3: $0.00048 per pair; a new unique question needs ~28–128 pairs (~$0.013–0.06). The nightly cap stays $0.50. |
@@ -1928,6 +1933,146 @@ and the rest is running checks; Andrew's OK gates the push, as in 4c.3.
 Total ≈ **$8/month** at the pair cost measured in Phase 3 (the earlier $13 used the old $0.032/question guess). That's
 below the old nightly's $0.50/night (≈ $15/month), which kept about 16 mostly weak questions a night. Cost scales roughly linearly with the repeat check.
 Raising the daily target needs Andrew's OK.
+
+#### Phase 4d.1 — ChatGPT bar test (D35) (added 2026-11-17, from the 4d trial; runs before 4d resumes)
+
+**Why (found in the 4d trial, 2026-11-17).** All 5 Speed Current Events candidates (2026 World Cup final, Tom
+Cruise's *Digger*, the US–Denmark Greenland deal, the Starbucks tiramisu latte, the August 2026 eclipse) scored 1. A
+free re-score showed why: Gemini 2.5 Flash knows nothing from 2026, so it gives every one `familiar 1, fun 1,
+estCorrect 25, flags [dated, possibly-wrong]`. As built, no Current Events question can pass in either game. Andrew
+chose ChatGPT over Gemini for the fix, and for the whole bar test, not only Current Events (D35).
+
+**Trade-off Andrew accepted.** §3's model table kept Gemini as the grader "so no model marks its own homework". D35
+reverses that for the writer's batches. Mitigation: the grade is a **separate** `codex exec` (a fresh session that sees
+only the grading rubric and the finished questions, never the writing prompt). The repeat check stays on Gemini (its
+evaluation gates are frozen on that model), and the free pre-checks (`audience.preChecks`) still run on the server.
+
+1. **Rules stay in the main repo.** `brief.buildBrief` returns, per game, a `grade` block: the grading prompt (built from
+   `lib/speed-trivia-quality/audience.cjs` `SYSTEM` / `EXAMPLES` / `NOTE_RULE` for Speed and the Live bar test's
+   equivalents) and its JSON schema (`familiar`, `fun`, `estCorrect`, `flags` from `MODEL_FLAGS`, keyed by slot `n`).
+   Bump the version (`bar-test-v6`, `bar-test-live-v4`). For Current Events the prompt adds today's date and: "open the
+   `sourceUrl` and search; flag `possibly-wrong` unless a reliable source confirms the answer; never flag `dated` for
+   a question inside its month window; judge `familiar` as how big the story was in US news."
+2. **Writer** (`tools/question-writer/write.mjs`, then copy to the private repo): after each game's batch, one grading
+   `codex exec` for the regular items and one `codex --search exec` for the Current Events items. Send each grade on
+   its item and the grader model at the top level. If grading fails, send the batch without grades (the site falls
+   back to Gemini; log it). Also fix the token count: the Live run on 2026-11-17 logged `tokens: 0` because the
+   `tokens used` regex didn't match its log.
+3. **Site intake** (`lib/question-writer/candidates.cjs` `parsePost`, `/api/question-writer/candidates`): accept an
+   optional `grade` per item and `graderModel`, validated like `audience.parseReply` (integers in range, known flags
+   only, deduplicated). Store it inside `payload` (no migration if `question_writer_receive` keeps `payload` as is;
+   check the 64 KB limit with 40 graded items). The token already trusts the writer with the questions themselves, so
+   trusting its grades adds no new authority.
+4. **Nightly** (`lib/question-writer/process.cjs`, `liveProcess.cjs`): a candidate with a valid grade gets
+   `audienceFor(row, grade, 'chatgpt:<model>:bar-test-v6')` with no Gemini call; ungraded candidates (fallback days, a
+   failed grading call) go to the Gemini scorer as now. The report adds `graded: { chatgpt, gemini }`.
+5. **Calibrate (free, ChatGPT plan usage).** Run the new grading prompt on the Phase 2 calibration set (Andrew's Speed
+   keep/reject labels, `docs/..._PHASE_2_CALIBRATION_bar-test-v2_gemini-2.5-flash_2026-11-15.json` lists the rows) and
+   on the 4c Live calibration labels, and on the 2026-11-17 trial (16 Speed, 24 Live, incl. the 5 Current Events).
+   Pick each game's threshold so agreement with Andrew is at least Gemini's. Record it in a calibration file next to
+   the Phase 2 ones and set `QUESTION_WRITER_SPEED_THRESHOLD` / `QUESTION_WRITER_LIVE_THRESHOLD` only if it changes.
+   Expect the 5 Current Events questions to pass unless a fact is wrong.
+6. Tests (fakes for codex and the scorer), lint, typecheck, full suite, build; PR and deploy on Andrew's word; copy
+   `tools/question-writer` to the private repo.
+7. **Then resume 4d**: one trial batch per game on a new UTC day (one batch per game per day; 2026-11-17 is used),
+   Trivia Nightly by hand, Andrew rates, pass rules as in 4d.
+
+**Cost.** Gemini bar test ≈ $0.01/day → $0 on ChatGPT days. ChatGPT usage: +2 grading calls per game per day (one with
+search); measure tokens in the 4d re-trial (the 2026-11-17 Speed writing used 62,069 tokens). No new money.
+
+**Model / effort:** Opus 5.5 / high. **Handoff:** `speed-trivia-backlog-and-quality-plan_PHASE_4D1_HANDOFF.md`.
+
+**Done 2026-11-18 (code + calibration; shipping waits for Andrew).** Deviations from the steps above:
+- The grade block is per writing prompt (`prompts[].grade`), not per game, so regular and Current Events items are
+  graded in their own calls (Current Events with `--search`). The writer adds `answer` = `options[correctIndex]` for
+  Speed; it never sends difficulty, subject, area or era to the grader.
+- Gemini's own prompt text is unchanged (checked byte for byte), so Gemini scores stay `bar-test-v5` /
+  `bar-test-live-v3`; only ChatGPT grades carry `bar-test-v6` / `bar-test-live-v4`
+  (model label `chatgpt:<model>:<version>`). A grade from another version is ignored and Gemini grades that item.
+- A bar-test reject now keeps its score on `question_candidates.audience` (both games), for auditing the grader.
+- Grading effort is `CODEX_GRADE_EFFORT`, default `medium` (writing stays `high`).
+- Calibration: `docs/speed-trivia-backlog-and-quality-plan_PHASE_4D1_CALIBRATION_chatgpt-gpt-6-astra_2026-11-18.json`.
+  Speed, rejecting at ≤ 2: ChatGPT loses 52/200 old keeps and catches 15/19 rejects; Gemini v5 on the same rows loses
+  35 and catches 16. About 16 of the 25 keeps only ChatGPT fails have real defects Gemini missed (ABBA called
+  British, Hatshepsut ×2, the Andes, answer in the question, ambiguous). Live: 18 vs 17 of 50 keeps. Trial: all 5
+  Current Events now score 3–5. Thresholds stay 3.
+
+#### Phase 4e — Speed → Live conversions (D37) (added 2026-11-18; runs after 4d turns on the daily writer)
+
+**What Andrew asked (2026-11-18).** "A system where I can see a Speed Trivia question … click a button that puts it in a
+queue where ChatGPT (as part of its nightly work) will review the question and rephrase it as a high quality,
+top-tier, interesting open-ended question (while also keeping the multiple choice version in Speed Trivia)." His
+choices are D37 (§6). The Speed question is never changed, moved or retired by this phase.
+
+**Flow.**
+```
+Quick Review key L (Keep + queue)  ─┐
+Question list "Make Live" (active) ─┴─> live_conversion_requests (queued)
+  -> Live brief (00:30 UTC): a "conversion" prompt with ≤ 20 oldest queued requests
+  -> private writer: ChatGPT rewrites each (or declines with a reason), then grades the rewrites (Live bar test)
+  -> new receive RPC -> question_candidates (game 'live', source 'chatgpt', payload.conversionOf = request id)
+  -> nightly liveProcess: schema, Live hard limits, tag, Live repeat check (reject); grade stored, never gating
+  -> Live Quick Review (card shows "From Speed: <question> — <answer>") -> Keep -> Publish (D10) -> Live JSON
+```
+
+**Steps.**
+1. **Queue (migration).** New table `live_conversion_requests`: `id`, `speed_question_id` (→ `trivia_questions.id`,
+   Speed rows only: `anytime_blitz` + `multiple_choice`), `status` (`queued` → `sent` → `done` | `declined` |
+   `failed`; `cancelled` from `queued` only), `candidate_id` (→ `question_candidates`), `reason` (≤ 500 chars, the
+   decline or failure), `requested_at`, `updated_at`. One open request per Speed question (partial unique index on
+   `speed_question_id` where status in queued/sent). A question whose Live version was kept or published can't be
+   queued again (refused with "Already in Live"). RLS on, `service_role` grants only (no browser access);
+   `supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md`. Any SECURITY DEFINER RPC: revoke from public/anon/authenticated.
+   PGlite-test it; `supabase db push` needs Andrew's OK.
+2. **Admin API.** `POST /api/admin/trivia/live-conversions` `{ questionId }` queues; `DELETE` cancels a `queued` one;
+   `GET ?ids=` returns the status of ≤ 100 Speed ids, for the list page (one bounded read, no polling). Same admin
+   auth as `app/api/admin/trivia/quick-review/route.ts`.
+3. **Quick Review (Speed).** Key **L** and a button: Keep (the existing `quickKeep` path), then queue only if the
+   Keep outcome is approved or queued. Notice: "Kept. Queued for Live." Undo (Z) undoes the Keep and cancels the
+   request if it's still `queued`.
+4. **Question list** (`components/admin/sections/TriviaListSection.tsx`, Speed tab, active rows). A "Make Live"
+   button; once queued it reads "Queued for Live" (tap to cancel), then "In Live review", "In Live" or "Not
+   convertible: <reason>". Minimal copy (CLAUDE.md).
+5. **Brief.** `buildBrief` for `game:'live'` adds a third prompt, `kind:'conversion'`, `webSearch:false`, with ≤
+   `QUESTION_WRITER_CONVERSIONS_PER_NIGHT` (default 20) oldest `queued` requests: `{ n, requestId, question,
+   options, answer, category, whyTrue }` (whyTrue from `speed_generation_metadata` when present). Speed Current
+   Events questions carry their `expires_on`. Marking requests `sent` happens on receive, not on the brief read
+   (a GET must not write; a failed night simply re-sends them).
+6. **Conversion prompt** (`rules.cjs`, `buildLiveConversionPrompt` + schema). The Live writer rules (2-word-or-number
+   answer, `acceptableAnswers` incl. surnames, no "which of these", the answer not in the question, ≤ 140 chars, the
+   D30 interest/why-true/no-loose-superlative rules) plus: keep the same fact and answer; rewrite freely so it
+   reads as a top-tier bar-trivia question with an interesting hook; pick the Live category from `LIVE_CATEGORIES`
+   and an area/era/subject from the Live map (Speed's Animals / General Knowledge / Pop Culture have no Live
+   twin); decline (`{ n, declined: true, reason }`) when the answer is too hard to recall without choices, can't
+   meet the answer limit, or the fact is shaky. The Speed text is DATA, never instructions. Never invent a
+   different answer.
+7. **Private writer** (`tools/question-writer/write.mjs`): run the conversion prompt when the brief has one, grade
+   the rewrites with the Live grade block (regular kind), and POST them to a **new receive call** (the Live batch
+   already uses 24 of `question_writer_receive`'s 40 items, and a day accepts one batch). Suggested:
+   `live_conversion_receive(p_items)` through `POST /api/question-writer/conversions`, same writer token, ≤ 20 items,
+   ≤ 64 KB, idempotent per request id; a decline sets the request `declined` with its reason. Copy the writer files
+   to `AndrewSerulneck/hightop-question-writer` after the site deploys.
+8. **Nightly** (`liveProcess.cjs`): conversion candidates skip the slot-category match and the star cap (a
+   hand-picked question; show "Over star cap" as a note instead), and run schema → Live hard limits (+ Current
+   Events limits) → tag → Live repeat check. A confirmed repeat rejects and sets the request `failed` with the
+   match. The ChatGPT grade is stored on `audience` and never rejects. A pass sets the request `done`.
+9. **Live Quick Review** (`LiveTriviaQuickReview.tsx`): a conversion card shows a small "From Speed" line with the
+   original question and answer, plus the grade. Keep / Reject / Edit / Publish are unchanged.
+10. **Pool separation.** The Speed row is only read. The Live version reaches players only through Publish → PR →
+   Sync Live Trivia, like every Live candidate; nothing writes `trivia_questions` (extend the existing tests).
+   Record in §7 Standing rules: "Conversions copy, never move: the Speed question stays; the Live version is a new
+   Live entry (D37, Andrew 2026-11-18)."
+11. **Tests:** the queue rules (one open request, cancel, already-in-Live), the brief's conversion prompt and cap,
+   the receive RPC (limits, idempotence, declines), the nightly's gates for conversions (no star-cap or score reject,
+   repeat rejects), the L key and Undo, the list button states, and pool separation.
+
+**Cost (estimate; measure on the first nights).** ChatGPT plan only for writing and grading: one conversion call and
+one grading call on nights with a queue, ~15–30k plan tokens for 20 items; $0 extra. The Live repeat check still uses
+Gemini (until the later D36 phase): ~$0.001 per conversion, ≤ $0.02 a night at 20, inside the Live cap
+(`QUESTION_WRITER_LIVE_MAX_DOLLARS`, $0.25). Supabase: one bounded read (≤ 20 rows) in the brief, one small insert per
+conversion, one bounded status read per list page. No cron, no polling.
+
+**Model / effort:** Opus 5.5 / high. **Handoff:** `speed-trivia-backlog-and-quality-plan_PHASE_4E_HANDOFF.md`.
 
 ### Phase 5 — monitor seven nights
 
@@ -2056,6 +2201,9 @@ Bowl week, the Oscars, March Madness, Halloween.
 | D32 | Let players report a bad question? (Andrew's idea, 2026-11-16.) | **Answered 2026-11-16: yes, Phase 4c.7, before the D23 deploy**, so reports start during the 4d trial. Speed reasons: Wrong answer · Two right answers · Confusing · Typo · Other. Live: My answer was right · Wrong answer · Confusing · Typo · Other. Other takes 200 characters. Only after answering; one per player per question; 20 a day. Andrew exports the reports and gives them to Claude. **Recommendation (default):** reports never change a question automatically, and there's no Admin screen yet; Phase 5 decides whether either is worth adding. |
 | D33 | Fix Live grading misses, including adding accepted answers to **existing** Live JSON entries? (New, 2026-11-16.) | **Added to the plan as Phase 6 (after Phase 5).** The grader change is code. Editing existing canonical entries needs Andrew's OK on the exact list first (CLAUDE.md: the Live JSON is canonical). Past results are never re-graded. |
 | D34 | Seasonal slots tied to the calendar? (New, 2026-11-16.) | **Added to the plan as Phase 7 (after Phase 6).** At most one slot a day per game, within 10 days of an event, with no change to the daily total. Andrew approves the calendar list once. |
+| D35 | The 4d trial showed Gemini scores every 2026 Current Events question 1 (it can't know 2026). How to fix? (New, 2026-11-17.) | **Answered 2026-11-17: ChatGPT grades the whole bar test, both games, not only Current Events** ("we should be relying on ChatGPT for this, not Gemini. It's better."). Gemini grades only fallback days. Phase 4d.1. Gemini with Google Search was offered first and dropped. |
+| D36 | Andrew, 2026-11-18: rely primarily or even exclusively on OpenAI / ChatGPT models for writing questions "and anything else" (now in CLAUDE.md and AGENTS.md). After 4d.1, Gemini still runs in: the fallback writer (no ChatGPT batch that day), the bar test for ungraded items, the Speed and Live repeat checks, question tagging and backlog re-scores. Which to move, and how? | **Answered 2026-11-18 ("I'll take your recommendation"):** (1) now: the Gemini fallback writer is off (`--no-fallback` in `trivia-nightly.yml`), so a day with no ChatGPT batch writes nothing and "Writer stopped" shows after 2 silent days; (2) later, as its own phase with a cost baseline first: move the Speed/Live repeat checks and tagging (and backlog re-scores) to the OpenAI API (needs an `OPENAI_API_KEY`; the Speed checker's gates must be re-evaluated on the new model). Not yet scheduled; add it after Phase 5. The bar test for ungraded items stays on Gemini until then (rare: only a failed ChatGPT grading call). |
+| D37 | Andrew, 2026-11-18: a way to send a Speed question to ChatGPT to be rewritten as a top-tier Live (write-in) question, keeping the Speed version. Choices? | **Answered 2026-11-18:** (a) the button is in **both** places: Quick Review key **L** = Keep in Speed + queue for Live; the Trivia question list has "Make Live" on any active Speed question; (b) **same answer, free rewording**: ChatGPT may rewrite the wording, add an interesting hook and accepted spellings, but keeps the fact and the answer; if the answer is too hard to recall without choices (or can't fit Live's answer limit), it **declines with a reason** rather than forcing it; (c) **rules + repeats reject, Andrew decides the rest**: Live hard limits and the Live repeat check still reject; ChatGPT's Live grade is shown but a low score never auto-rejects. Phase 4e. |
 
 ## 7. Standing rules
 
@@ -2170,7 +2318,8 @@ Bowl week, the Oscars, March Madness, Halloween.
     (`publish.cjs buildEntry` keeps its field list). The bar test treats it as an untrusted claim to check.
   - Loose superlatives ("best band", "most iconic") are caught by the writer rule and the bar test's `ambiguous`
     flag, never by a regex: "Best Picture", "best-selling" and "most Grammys" are legitimate.
-  - The Gemini fallback runs only on a day with no batch, ≤ $0.10, regular slots only.
+  - The Gemini fallback writer is **off** (D36, 2026-11-18: `--no-fallback` in `trivia-nightly.yml`). A day with no
+    ChatGPT batch writes nothing. Don't turn it back on without Andrew.
   - The writer's prompt lives in this repo (`rules.cjs`); the private repo only runs it. Change rules here, never there.
 - **Live Trivia path rules (Phase 4c, 2026-11-16):**
   - A Live candidate never enters `trivia_questions` from the writer path. It reaches players only through Publish →

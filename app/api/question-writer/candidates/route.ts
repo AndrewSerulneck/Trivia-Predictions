@@ -7,6 +7,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 // The private writer repo posts the day's candidates here (docs/speed-trivia-backlog-and-quality-plan.md Phase 4b).
 // It inserts into question_candidates and nothing else: no question is read, approved or published here.
 // Limits: ≤ 40 items, ≤ 64 KB, one batch per game per UTC day (a retry of it is idempotent), ≤ 2 posts a day.
+// Each item may carry the writer's bar-test grade (D35, Phase 4d.1); it is checked and kept inside the payload.
 export const runtime = "nodejs";
 
 const NO_STORE = { "Cache-Control": "no-store" };
@@ -24,9 +25,9 @@ export async function POST(request: Request) {
     try { body = JSON.parse(raw); } catch { return json({ ok: false, error: "Invalid post." }, 400); }
     const envelope = (body ?? {}) as { game?: unknown; model?: unknown };
     const game = typeof envelope.game === "string" ? envelope.game : "";
-    const { items, invalid } = parsePost(body, game);
+    const { items, invalid, graded } = parsePost(body, game);
     const result = await receive({ client: supabaseAdmin, game, source: "chatgpt", model: cleanModel(envelope.model), items });
-    return json({ ok: true, ...result, invalid });
+    return json({ ok: true, ...result, invalid, graded });
   } catch (error) {
     if (error instanceof CandidateError) return json({ ok: false, code: error.code, error: error.message }, error.status);
     return json({ ok: false, error: "Unavailable." }, 503);
