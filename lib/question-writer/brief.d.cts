@@ -1,5 +1,14 @@
 export type WriterSlot = { n: number; category: string; area: string | null; era: string | null };
-export type WriterPrompt = { kind: "regular" | "currentEvents"; webSearch: boolean; slots: WriterSlot[]; prompt: string; schema: object };
+/** The bar test the writer runs on a prompt's finished items in a separate ChatGPT session (D35, Phase 4d.1). */
+export type WriterGradeBlock = { version: string; webSearch: boolean; fields: string[]; prompt: string; schema: object };
+export type WriterPrompt = {
+  kind: "regular" | "currentEvents";
+  webSearch: boolean;
+  slots: WriterSlot[];
+  prompt: string;
+  schema: object;
+  grade: WriterGradeBlock;
+};
 export type WriterBrief = {
   game: string;
   runDate: string;

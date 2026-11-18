@@ -25,7 +25,8 @@ const rules = require("../lib/question-writer/rules.cjs") as {
 const brief = require("../lib/question-writer/brief.cjs") as {
   buildBrief: (input: { client: unknown; game: string; today?: Date }) => Promise<{
     runDate: string; deliver: Record<string, number>;
-    prompts: { kind: string; webSearch: boolean; slots: { n: number; category: string; area: string | null; era: string | null }[]; prompt: string; schema: unknown }[];
+    prompts: { kind: string; webSearch: boolean; slots: { n: number; category: string; area: string | null; era: string | null }[]; prompt: string; schema: unknown;
+      grade: { version: string; webSearch: boolean; fields: string[]; prompt: string; schema: { properties: { grades: { items: { required: string[]; properties: { flags: { items: { enum: string[] } } } } } } } } }[];
   }>;
   pickExamples: (rows: unknown[], today: Date, count?: number) => { category: string }[];
   GAME_CATEGORIES: Record<string, string[]>;
@@ -35,7 +36,7 @@ const slots = require("../lib/question-variety/slots.cjs") as {
   nightPlan: (game: string, categories: string[], today?: Date) => { categories: string[] };
 };
 const candidates = require("../lib/question-writer/candidates.cjs") as {
-  parsePost: (body: unknown, game: string) => { items: { slot: unknown; payload: Item }[]; invalid: number };
+  parsePost: (body: unknown, game: string) => { items: { slot: unknown; payload: Item & { grade?: Record<string, unknown> } }[]; invalid: number; graded: number };
   receive: (input: Record<string, unknown>) => Promise<unknown>;
   cleanModel: (value: unknown) => string | null;
 };
@@ -206,6 +207,26 @@ describe("brief", () => {
     expect(result.prompts.find(p => p.slots.some(s => s.category === "Music"))?.prompt ?? "").toContain("Madonna");
   });
 
+  it("sends a separate bar test with each prompt: the rubric, no tools for regular, search + today's date for news (D35)", async () => {
+    const speed = await brief.buildBrief({ client: fakeClient(), game: "speed", today: TODAY });
+    const [regular, news] = speed.prompts.map(p => p.grade);
+    expect([regular.version, regular.webSearch, news.webSearch]).toEqual(["bar-test-v6", false, true]);
+    expect(regular.prompt).toContain("a typical American adult, aged 21 to 75");
+    expect(regular.prompt).toContain("Do not run any commands or use any tools.");
+    expect(regular.prompt).not.toContain("Search the web");
+    expect(news.prompt).toContain("Today is 2026-11-16.");
+    expect(news.prompt).toContain("open each sourceUrl");
+    expect(news.prompt).toContain("Never flag dated");
+    expect(regular.prompt).not.toContain("You write Speed Trivia"); // never the writing prompt
+    expect(regular.fields).toEqual(["category", "question", "options", "answer", "whyTrue", "sourceUrl"]);
+    expect(regular.schema.properties.grades.items.required).toEqual(["n", "familiar", "fun", "estCorrect", "flags"]);
+    expect(regular.schema.properties.grades.items.properties.flags.items.enum).toContain("bad-distractors");
+    const live = await brief.buildBrief({ client: fakeClient(), game: "live", today: TODAY });
+    expect(live.prompts[0].grade.version).toBe("bar-test-live-v4");
+    expect(live.prompts[0].grade.prompt).toContain("write-in");
+    expect(live.prompts[0].grade.schema.properties.grades.items.properties.flags.items.enum).toContain("hard-to-spell");
+  });
+
   it("refuses a game that isn't a writer game", async () => {
     await expect(brief.buildBrief({ client: fakeClient(), game: "bingo", today: TODAY })).rejects.toMatchObject({ code: "game_not_ready" });
   });
@@ -253,6 +274,45 @@ describe("post parsing", () => {
     expect(() => candidates.parsePost({ items: Array.from({ length: 41 }, () => ({ slot, payload: good() })) }, "speed")).toThrow(expect.objectContaining({ status: 413 }));
     expect(() => candidates.parsePost({ nope: true }, "speed")).toThrow(expect.objectContaining({ status: 400 }));
     expect(() => candidates.parsePost({ items: [] }, "bingo")).toThrow(expect.objectContaining({ status: 404 }));
+  });
+
+  it("keeps a valid writer grade in the payload and drops a bad one without dropping the item (D35)", () => {
+    const grade = { version: "bar-test-v6", familiar: 4, fun: 5, estCorrect: 60, flags: ["dated", "dated"] };
+    const items = [
+      { slot, payload: good(), grade },
+      { slot: { ...slot, n: 2 }, payload: good(), grade: { ...grade, familiar: 9 } },
+      { slot: { ...slot, n: 3 }, payload: good(), grade: { ...grade, flags: ["hard-to-spell"] } }, // a Live flag
+      { slot: { ...slot, n: 4 }, payload: good(), grade: { ...grade, version: "bar-test-v5" } },
+      { slot: { ...slot, n: 5 }, payload: { ...good(), grade } }, // inside the payload: not where the writer sends it
+    ];
+    const parsed = candidates.parsePost({ graderModel: "gpt-6-astra", items }, "speed");
+    expect(parsed.items).toHaveLength(5);
+    expect(parsed.graded).toBe(1);
+    expect(parsed.items[0].payload.grade).toEqual({ version: "bar-test-v6", model: "gpt-6-astra", familiar: 4, fun: 5, estCorrect: 60, flags: ["dated"] });
+    expect(parsed.items.slice(1).every(i => !i.payload.grade)).toBe(true);
+    // No grader model, no grades.
+    expect(candidates.parsePost({ items }, "speed").graded).toBe(0);
+    expect(candidates.parsePost({ graderModel: "x; rm", items }, "speed").graded).toBe(0);
+    // Live uses its own version and flags.
+    const livePayload = { question: "Who voiced the Genie in 'Aladdin'?", answer: "Robin Williams", acceptableAnswers: ["Williams"], answerIsPerson: true,
+      category: "Movies", area: null, era: null, subject: "Robin Williams", difficulty: "easy", sourceUrl: null, whyTrue: "He voiced the Genie." };
+    const liveParsed = candidates.parsePost({ graderModel: "gpt-6-astra", items: [{ slot: { n: 1, category: "Movies", area: null, era: null }, payload: livePayload,
+      grade: { version: "bar-test-live-v4", familiar: 5, fun: 4, estCorrect: 70, flags: ["hard-to-spell"] } }] }, "live");
+    expect(liveParsed.graded).toBe(1);
+  });
+
+  it("fits 40 graded Current Events items inside the 64 KB post limit", () => {
+    const item = (n: number) => ({ slot: { n, category: "Current Events", area: "Politics and government", era: "2026-08" },
+      payload: good({ category: "Current Events", question: "In August 2026, which country agreed a new defense deal with the United States over Greenland?".slice(0, 110),
+        options: ["Denmark of the Kingdom", "Norway of the North", "Iceland of the Sea", "Sweden of the Lakes"], area: "Politics and government", era: "2026-08",
+        subject: "Greenland defense agreement 2026", sourceUrl: `https://www.example-news-site.com/world/europe/2026/08/${"greenland-defense-agreement-".repeat(3)}${n}`,
+        whyTrue: "x".repeat(200) }),
+      grade: { version: "bar-test-v6", familiar: 4, fun: 4, estCorrect: 55, flags: ["dated", "possibly-wrong", "ambiguous"] } });
+    const body = { game: "speed", model: "gpt-6-astra", graderModel: "gpt-6-astra", items: Array.from({ length: 40 }, (_, i) => item(i + 1)) };
+    const parsed = candidates.parsePost(body, "speed");
+    expect(parsed.graded).toBe(40);
+    expect(Buffer.byteLength(JSON.stringify(body))).toBeLessThan(64 * 1024);
+    expect(Buffer.byteLength(JSON.stringify(parsed.items))).toBeLessThan(64 * 1024); // question_writer_receive's own check
   });
 
   it("maps database refusals to clear statuses", async () => {

@@ -47,6 +47,7 @@ jobs:
           WRITER_BASE_URL: ${{ vars.WRITER_BASE_URL }}
           CODEX_MODEL: ${{ vars.CODEX_MODEL || 'gpt-6-astra' }}
           CODEX_EFFORT: ${{ vars.CODEX_EFFORT || 'high' }}
+          CODEX_GRADE_EFFORT: ${{ vars.CODEX_GRADE_EFFORT || 'medium' }}
           WRITER_GAMES: ${{ vars.WRITER_GAMES || 'speed' }}
         run: node write.mjs
 
