@@ -30,8 +30,8 @@
 
 ### 2. Starting state
 
-- Branch `fix/seasonal-slots-7abc`, cut from `main` at `fa6979a1`. All 7a + 7b + 7c work is in one commit (see
-  `git log -1`), pushed, PR open (see `gh pr list --head fix/seasonal-slots-7abc`). **Not merged, not deployed.**
+- Branch `fix/seasonal-slots-7abc`, cut from `main` at `fa6979a1`. All 7a + 7b + 7c work is in commit `d6c0607f`
+  (plus this handoff update), pushed, **PR #31** open. **Not merged, not deployed.**
 - No migration, no data change, no paid call, no env var, no cron. Cost unchanged.
 - Left untracked on purpose (not this phase's): `docs/cancelled-prizes-pick-windows-away-mode-plan_C1_BACKFILL_LOG_2026-11-09.json`,
   `docs/partner-business-type-plan_PHASE_1_BACKFILL_LOG_2026-11-12.json`.
@@ -83,6 +83,9 @@
 - `npm run lint` → clean on tracked files (see trap). `npx tsc --noEmit` → clean.
 - `npm run test` → 7,639 passed, 13 skipped, 1 failed on the first run (the flaky test above); second run all green.
 - `npm run build` → success. (Typecheck and build run separately.)
+- Offline brief check (stub DB client, real draft map + calendar): for 2026-11-20 the Speed brief is `writer-v6`, one
+  slot `General Knowledge | Holidays and traditions · Timeless · seasonal: Thanksgiving`, and the prompt carries the
+  new subject rule.
 - **Unverified:** how the writer behaves with the new rule — that's step 8.
 
 ### 7. Open questions for Andrew
