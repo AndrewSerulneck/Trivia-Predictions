@@ -16,11 +16,11 @@
 - **Cost:** no new paid calls. Some edits now cost a few extra fractions of a cent in checks. Once the migration is
   applied, **337 waiting questions** (admitted before today's 86 Admin edits) go to the overnight check when you
   Keep them, about **$0.17 once**.
-- **Needs you (not 7d's fault, but it matters soon):** the overnight Keep queue has used **$14.65 of its $20
-  lifetime cap** (`SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS`). Each night spends about $4.87, mostly on the D17 pre-check of
-  older questions. After the 2026-11-20 run, about $0.48 is left; from about 2026-11-22, **queued Keeps stop being
-  checked** until the cap is raised. Options: raise the total cap (e.g. to $40), or lower the nightly cap
-  `SPEED_TRIVIA_QUEUE_MAX_DOLLARS` (now $5) so the pre-check spends less.
+- **Keep queue budget (settled 2026-11-19):** the overnight Keep queue had used $14.65 of its $20 lifetime cap, at
+  ~$4.87 a night, almost all on the D17 pre-check of older waiting questions. Your call:
+  - The nightly limit is now **$1** and the lifetime cap **$30** (repo variables, already set).
+  - The pre-check is turned off in **PR #32**, which needs your OK to merge. After the merge, the queue only spends on
+    questions you Keep (pennies a night, $0 on nights with no Keeps).
 - **Also merged today:** PR #31 (7a–7c), with your OK. It's deployed. The first seasonal (Thanksgiving) brief gets
   checked after tonight's 00:30 UTC writer run (7c step 8).
 
@@ -112,8 +112,14 @@
   - Waiting rows with a fast-lane-eligible admission: 345. Of these, 337 are older than revision 11807 and go
     overnight once the migration is applied.
   - `speed_trivia_admissions`: 720 rows.
-- **Keep queue budget:** 4 runs, $14.6462 committed of the $20 total (11-17, 11-18 and 11-19 each spent ~$4.87). The
-  reserve takes `least(per_run, total − used)`, so the 11-20 run gets $5 and the 11-21 run ~$0.48. See "For Andrew".
+- **Keep queue budget:** 4 runs, $14.6462 committed (11-17, 11-18 and 11-19 each spent ~$4.87; `report->'precheck'`
+  examined ~460–490 a night, while `report->'queue'` held 14 Keeps on 11-18 and 1 on 11-19).
+  - Andrew, 2026-11-19: `SPEED_TRIVIA_QUEUE_MAX_DOLLARS=1` and `SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS=30`, set with
+    `gh variable set`.
+  - The D17 pre-check is off: `--precheck` is removed from `.github/workflows/speed-trivia-keep-queue.yml` on branch
+    `chore/keep-queue-no-precheck`, PR #32, which merges with his OK.
+  - The script and SQL are unchanged; add the flag back to restore the pre-check.
+  - Waiting rows: 1,974 `pending_review`.
 - The fake judges in tests have **no pair cache**, so the final D38b check calls them again. The OpenAI judge
   (`openai.cjs`) answers repeats from `cache`. Don't assert "each pair once" with a fake judge.
 - `core.checkCandidate` returns early on a *deterministic* (exact-text) duplicate without judging the rest. That's
@@ -142,8 +148,7 @@
 
 ### 7. Open questions for Andrew
 
-- Raise `SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS` (now $20, $14.65 used), or lower the nightly `SPEED_TRIVIA_QUEUE_MAX_DOLLARS`
-  ($5)? Otherwise overnight Keeps stop being checked around 2026-11-22.
+- OK to merge PR #32 (pre-check off)? The budget question itself is answered: $1 nightly, $30 total.
 - OK with "a question may return to its own reserved fact" (the D45 refinement)?
 - One PR for 7d–7j, or one per phase?
 
