@@ -23,6 +23,7 @@ export function isModernEra(era: string): boolean;
 export function canonicalEra(value: unknown): string;
 export function areaKey(name: string): string;
 export function subjectKey(subject: string): string;
+export function utcDay(date: Date | string | number): Date;
 export function isoDay(date: Date | string | number): string;
 export function monthOf(date: Date | string | number): string;
 export function addMonths(era: string, n: number): string;

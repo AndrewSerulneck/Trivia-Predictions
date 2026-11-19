@@ -1,6 +1,6 @@
 {
   "version": "calendar-v1",
-  "note": "Seasonal writer slots (docs/speed-trivia-backlog-and-quality-plan.md Phase 7, D34). When an event starts within the next 10 days, one regular writer slot a day per game is about it. Edit freely. Date: {\"on\":\"MM-DD\"} or {\"month\":M,\"weekday\":\"Sun\",\"nth\":2} (nth -1 = last), optional \"offset\" days; \"exact\" {\"YYYY\":\"YYYY-MM-DD\"} overrides a year. Moving events are approximate rules; set \"exact\" when the real date is known. speed / live: the category and area the question is written in (Live: only on the night its category is written).",
+  "note": "Seasonal writer slots (docs/speed-trivia-backlog-and-quality-plan.md Phase 7, D34). From 14 to 3 days before an event, one regular writer slot a night per game is about it; events in that window take turns night by night. Edit freely. Date: {\"on\":\"MM-DD\"} or {\"month\":M,\"weekday\":\"Sun\",\"nth\":2} (nth -1 = last), optional \"offset\" days; \"exact\" {\"YYYY\":\"YYYY-MM-DD\"} overrides a year. Moving events are approximate rules; set \"exact\" when the real date is known. speed / live: the category and area the question is written in (Live: only on the night its category is written).",
   "events": [
     { "id": "new-years", "name": "New Year's", "date": { "on": "01-01" },
       "speed": { "category": "General Knowledge", "area": "Holidays and traditions" },
