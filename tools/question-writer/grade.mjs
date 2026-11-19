@@ -37,3 +37,34 @@ export const tokensUsed = (stderr) => {
   const match = /tokens used\s+([\d,]+)/i.exec(stderr);
   return match ? Number(match[1].replace(/,/g, "")) || null : null;
 };
+
+const CONVERSION_FIELDS = ["question", "answer", "acceptableAnswers", "answerIsPerson", "category", "area", "era", "subject",
+  "difficulty", "sourceUrl", "whyTrue"];
+
+/**
+ * Phase 4e (D37): the conversion prompt's answers, matched to their requests by n (`conversions` = the brief's
+ * [{ n, requestId }]). Returns { rewrites: [{ slot:{n}, requestId, payload }], declines: [{ requestId, reason }] }.
+ * Unknown or repeated n are dropped. The site re-validates everything.
+ */
+export const conversionItems = (output, conversions) => {
+  const byN = new Map((Array.isArray(conversions) ? conversions : []).map((c) => [c.n, c.requestId]));
+  const done = new Set();
+  const rewrites = [];
+  const declines = [];
+  for (const item of Array.isArray(output?.items) ? output.items : []) {
+    const requestId = byN.get(item?.n);
+    if (!requestId || done.has(item.n)) continue;
+    done.add(item.n);
+    if (item.declined === true) { declines.push({ requestId, reason: typeof item.reason === "string" ? item.reason : "" }); continue; }
+    const payload = {};
+    for (const field of CONVERSION_FIELDS) payload[field] = item[field] ?? null;
+    rewrites.push({ slot: { n: item.n }, requestId, payload });
+  }
+  return { rewrites, declines };
+};
+
+/** The conversions post body's items: rewrites (with any grade) and declines. */
+export const conversionPost = ({ rewrites, declines }) => [
+  ...rewrites.map(({ requestId, payload, grade }) => ({ requestId, payload, ...(grade ? { grade } : {}) })),
+  ...declines.map(({ requestId, reason }) => ({ requestId, declined: true, reason })),
+];

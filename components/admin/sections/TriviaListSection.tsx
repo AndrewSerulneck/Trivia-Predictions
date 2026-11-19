@@ -2,10 +2,16 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import type { TriviaQuestion } from "@/types";
+import type { LiveConversionState, LiveConversionStatusMap } from "@/types/liveConversions";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import { BulkActionBar, PaginationBar, TD, TH, TR } from "@/components/admin/AdminShell";
 
 const PAGE_SIZE = 25;
+// "Make Live" (docs/speed-trivia-backlog-and-quality-plan.md Phase 4e, D37): one status read per page, no polling.
+const CONVERSIONS = "/api/admin/trivia/live-conversions";
+const LIVE_LABELS: Partial<Record<LiveConversionState["state"], string>> = {
+  converting: "Converting", in_review: "In Live review", kept: "Kept for Live", in_live: "In Live",
+};
 
 type QuestionType = "speed" | "live";
 type AnswerFormatFilter = "all" | "multiple_choice" | "write_in" | "numeric" | "true_false";
@@ -90,6 +96,65 @@ export function TriviaListSection() {
   );
 
   const categoryOptions = useMemo(() => ["", ...allCategories], [allCategories]);
+
+  const [liveStates, setLiveStates] = useState<LiveConversionStatusMap>({});
+  const [liveBusyId, setLiveBusyId] = useState<string | null>(null);
+  const speedIds = useMemo(
+    () => (questionType === "speed" ? items.filter((item) => (item.answerFormat ?? "multiple_choice") === "multiple_choice").map((item) => item.id) : []),
+    [items, questionType]
+  );
+  useEffect(() => {
+    if (!speedIds.length) { setLiveStates({}); return; }
+    let cancelled = false;
+    fetch(`${CONVERSIONS}?ids=${speedIds.map(encodeURIComponent).join(",")}`, { cache: "no-store" })
+      .then((response) => response.json() as Promise<{ ok?: boolean; states?: LiveConversionStatusMap }>)
+      .then((payload) => { if (!cancelled && payload.ok) setLiveStates(payload.states ?? {}); })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [speedIds]);
+
+  // Queue a question for Live, or cancel it while it is still queued.
+  async function toggleLive(id: string) {
+    const queued = liveStates[id]?.state === "queued";
+    setLiveBusyId(id);
+    setError("");
+    try {
+      const response = await fetch(CONVERSIONS, {
+        method: queued ? "DELETE" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ questionId: id }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; state?: string; cancelled?: boolean };
+      if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Try again.");
+      const next: LiveConversionState = queued
+        ? payload.cancelled ? { state: "none" } : { state: "converting" }
+        : payload.state === "converting" ? { state: "converting" } : { state: "queued" };
+      setLiveStates((prev) => ({ ...prev, [id]: next }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Try again.");
+    } finally {
+      setLiveBusyId(null);
+    }
+  }
+
+  const liveControl = (id: string) => {
+    const live = liveStates[id] ?? { state: "none" as const };
+    const label = LIVE_LABELS[live.state];
+    if (label) return <span className="min-h-[44px] px-1 py-3 text-xs text-slate-500">{label}</span>;
+    return (
+      <span className="inline-flex flex-col gap-1">
+        <button
+          type="button"
+          onClick={() => void toggleLive(id)}
+          disabled={liveBusyId === id}
+          className="min-h-[44px] rounded border border-indigo-200 px-3 py-1 text-xs text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
+        >
+          {live.state === "queued" ? "Queued for Live" : "Make Live"}
+        </button>
+        {live.state === "not_convertible" ? (
+          <span className="max-w-[200px] text-xs text-slate-500">Not convertible{live.reason ? `: ${live.reason}` : ""}</span>
+        ) : null}
+      </span>
+    );
+  };
 
   const fetchTrivia = useCallback(
     async (targetPage: number) => {
@@ -518,6 +583,7 @@ export function TriviaListSection() {
                         </td>
                         <td className={`${TD} text-right`}>
                           <div className="inline-flex flex-col gap-2 sm:flex-row">
+                            {speedIds.includes(item.id) ? liveControl(item.id) : null}
                             <button
                               onClick={() => setEditing(isEditing ? null : toEditState(item))}
                               className="min-h-[44px] rounded border border-slate-300 px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"

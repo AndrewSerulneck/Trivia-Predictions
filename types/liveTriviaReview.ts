@@ -22,6 +22,10 @@ export type LiveReviewItem = {
   possibleRepeat: { slug: string; question: string; answer: string } | null;
   /** Answer or acceptable answers changed with E. */
   edited: boolean;
+  /** A Speed -> Live rewrite (Phase 4e, D37): the original Speed question and its answer. */
+  fromSpeed: { question: string; answer: string } | null;
+  /** A rewrite's subject is over the star cap (shown, never a reject). */
+  overStarCap: boolean;
 };
 
 /** categories: the Live writer's categories, for the filter. */

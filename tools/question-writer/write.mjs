@@ -2,13 +2,15 @@
 // Daily question writer (private repo; docs/speed-trivia-backlog-and-quality-plan.md Phase 4b in the main repo).
 // GET the brief -> one `codex exec` per prompt (ChatGPT plan login; web search only for Current Events) -> one more,
 // separate `codex exec` per prompt grades what was written (the bar test, D35; same search rule) -> POST.
+// Live briefs may add a `conversion` prompt (Phase 4e, D37): queued Speed questions rewritten as Live ones (or
+// declined), graded the same way, then posted to /api/question-writer/conversions after the day's batch.
 // No dependencies besides grade.mjs. Never prints the login, the token or the questions. Exit codes: 1 failure,
 // 2 token rejected, 3 ChatGPT login needs renewing (run renew-login.sh).
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { attachGrades, gradeItems, tokensUsed } from "./grade.mjs";
+import { attachGrades, conversionItems, conversionPost, gradeItems, tokensUsed } from "./grade.mjs";
 
 const BASE = (process.env.WRITER_BASE_URL ?? "").replace(/\/+$/, "");
 const TOKEN = process.env.QUESTION_WRITER_TOKEN ?? "";
@@ -71,7 +73,8 @@ for (const game of GAMES) {
   const items = [];
   let tokens = 0;
   let graded = 0;
-  for (const prompt of brief.prompts) {
+  const conversion = brief.prompts.find((prompt) => prompt.kind === "conversion");
+  for (const prompt of brief.prompts.filter((p) => p.kind !== "conversion")) {
     const written = [];
     try {
       const result = await runCodex(prompt);
@@ -100,10 +103,48 @@ for (const game of GAMES) {
       console.error(`${game} ${prompt.kind} grading: ${error.message} (Gemini grades these instead).`);
     }
   }
-  if (!items.length) { console.error(`${game}: nothing written.`); failed = true; continue; }
-  const sent = await api("/api/question-writer/candidates", { method: "POST", body: JSON.stringify({ game, model: MODEL, graderModel: MODEL, items }) });
-  if (sent.status !== 200 || !sent.body.ok) { console.error(`${game}: not saved (${sent.status} ${sent.body.code ?? ""}).`); failed = true; continue; }
-  console.log(JSON.stringify({ game, written: items.length, graded, received: sent.body.received, invalid: sent.body.invalid,
-    gradedReceived: sent.body.graded, idempotent: sent.body.idempotent, tokens }));
+  if (!items.length) { console.error(`${game}: nothing written.`); failed = true; }
+  else {
+    const sent = await api("/api/question-writer/candidates", { method: "POST", body: JSON.stringify({ game, model: MODEL, graderModel: MODEL, items }) });
+    if (sent.status !== 200 || !sent.body.ok) { console.error(`${game}: not saved (${sent.status} ${sent.body.code ?? ""}).`); failed = true; }
+    else console.log(JSON.stringify({ game, written: items.length, graded, received: sent.body.received, invalid: sent.body.invalid,
+      gradedReceived: sent.body.graded, idempotent: sent.body.idempotent, tokens }));
+  }
+  if (conversion) await convert(game, conversion);
+}
+
+// Phase 4e: rewrite queued Speed questions as Live ones, grade the rewrites, post them. A failure leaves the requests
+// queued, so the next night's brief sends them again.
+async function convert(game, prompt) {
+  let tokens = 0;
+  let found;
+  try {
+    const result = await runCodex(prompt);
+    tokens += result.tokens ?? 0;
+    found = conversionItems(result.output, prompt.conversions);
+  } catch (error) {
+    if (error.login) fail(3, "ChatGPT login needs renewing: run renew-login.sh (see README).");
+    console.error(`${game} conversions: ${error.message}`);
+    failed = true;
+    return;
+  }
+  let graded = 0;
+  if (found.rewrites.length && prompt.grade?.prompt) {
+    try {
+      const { prompt: rubric, schema, webSearch, fields, version } = prompt.grade;
+      const result = await runCodex({ prompt: `${rubric}\n${JSON.stringify(gradeItems(found.rewrites, fields))}`, schema, webSearch, effort: GRADE_EFFORT });
+      tokens += result.tokens ?? 0;
+      graded = attachGrades(found.rewrites, result.output, version);
+    } catch (error) {
+      if (error.login) fail(3, "ChatGPT login needs renewing: run renew-login.sh (see README).");
+      console.error(`${game} conversions grading: ${error.message} (shown ungraded).`);
+    }
+  }
+  const items = conversionPost(found);
+  if (!items.length) { console.error(`${game} conversions: nothing returned.`); failed = true; return; }
+  const sent = await api("/api/question-writer/conversions", { method: "POST", body: JSON.stringify({ graderModel: MODEL, items }) });
+  if (sent.status !== 200 || !sent.body.ok) { console.error(`${game} conversions: not saved (${sent.status} ${sent.body.code ?? ""}).`); failed = true; return; }
+  console.log(JSON.stringify({ game, conversions: prompt.conversions.length, rewritten: found.rewrites.length, declined: found.declines.length,
+    graded, received: sent.body.received, declinedReceived: sent.body.declined, already: sent.body.already, invalid: sent.body.invalid, tokens }));
 }
 if (failed) process.exit(1);

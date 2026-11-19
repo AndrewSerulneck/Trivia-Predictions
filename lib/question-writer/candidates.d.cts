@@ -54,3 +54,13 @@ export function receive(input: {
   model?: string | null;
   items: CandidateItem[];
 }): Promise<{ runDate: string; received: number; idempotent: boolean }>;
+/** Phase 4e (D37): one conversion as stored by live_conversion_receive. */
+export type ConversionItem =
+  | { requestId: string; declined: true; reason: string }
+  | { requestId: string; slot: { n: number; kind: "conversion"; category: string; area: string | null; era: string | null };
+      payload: LivePayload & { grade?: WriterGrade } };
+export function parseConversions(body: unknown): { items: ConversionItem[]; invalid: number; graded: number };
+export function receiveConversions(input: {
+  client: { rpc: (...args: never[]) => unknown };
+  items: ConversionItem[];
+}): Promise<{ runDate: string; received: number; declined: number; already: number }>;

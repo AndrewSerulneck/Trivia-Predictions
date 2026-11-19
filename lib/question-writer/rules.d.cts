@@ -39,3 +39,22 @@ export const LIVE_OUTPUT_SCHEMA: object;
 export function buildLivePrompt(input: PromptInput): string;
 export function validateLivePayload(payload: unknown, options: { categories: string[] }): { ok: true; item: LivePayload } | { ok: false; reason: string };
 export function liveHardLimits(item: LivePayload): string[];
+export const MAX_CONVERSIONS: number;
+export const LIVE_CONVERSION_SCHEMA: object;
+/** Phase 4e (D37): one queued Speed question, numbered for the prompt. */
+export type ConversionSource = {
+  n: number;
+  question: string;
+  options: string[];
+  answer: string;
+  category: string;
+  whyTrue: string | null;
+  era: string | null;
+  sourceUrl: string | null;
+};
+export function buildLiveConversionPrompt(input: {
+  items: ConversionSource[];
+  areas?: { category: string; name: string; eras?: string[]; active?: boolean }[];
+  today: Date;
+}): string;
+export function declineReason(value: unknown): string | null;

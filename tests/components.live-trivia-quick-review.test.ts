@@ -7,7 +7,8 @@ import { LiveTriviaQuickReview } from "@/components/admin/sections/LiveTriviaQui
 
 // Quick Review, Live mode (docs/speed-trivia-backlog-and-quality-plan.md Phase 4c) against a fake in-memory server.
 type Item = { id: string; question: string; answer: string; acceptableAnswers: string[]; category: string; difficulty: string; area: string | null;
-  era: string | null; sourceUrl: string | null; whyTrue?: string | null; source: string; createdAt: string; audience: null; possibleRepeat: { slug: string; question: string; answer: string } | null; edited: boolean };
+  era: string | null; sourceUrl: string | null; whyTrue?: string | null; source: string; createdAt: string; audience: null; possibleRepeat: { slug: string; question: string; answer: string } | null; edited: boolean;
+  fromSpeed?: { question: string; answer: string } | null; overStarCap?: boolean };
 const item = (n: number, over: Partial<Item> = {}): Item => ({ id: `id-${n}`, question: `Live question ${n}?`, answer: `Answer ${n}`, acceptableAnswers: [],
   category: "Music", difficulty: "easy", area: "Classic rock", era: "1970s", sourceUrl: null, source: "chatgpt", createdAt: `2026-11-16T00:0${n}:00Z`,
   audience: null, possibleRepeat: null, edited: false, ...over });
@@ -140,5 +141,20 @@ describe("Live Quick Review", () => {
     const source = readFileSync("components/admin/sections/LiveTriviaQuickReview.tsx", "utf8");
     expect(source).not.toMatch(/Reward/);
     expect(source).not.toMatch(/text-\[(?:[0-9]|1[01])px\]/);
+  });
+});
+
+// Phase 4e (D37): a Speed -> Live rewrite shows where it came from.
+describe("Live Quick Review: conversions", () => {
+  it("shows the original Speed question and answer, and a star-cap note, only on a conversion", async () => {
+    waiting = [item(1, { fromSpeed: { question: "Which planet is called the Red Planet?", answer: "Mars" }, overStarCap: true }), item(2)];
+    render(createElement(LiveTriviaQuickReview));
+    await waitFor(() => expect(card().textContent).toContain("Live question 1?"));
+    expect(screen.getByTestId("live-review-from-speed").textContent).toBe("From Speed: Which planet is called the Red Planet? (Mars)");
+    expect(screen.getByTestId("live-review-star-cap").textContent).toBe("Over star cap");
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    await waitFor(() => expect(card().textContent).toContain("Live question 2?"));
+    expect(screen.queryByTestId("live-review-from-speed")).toBeNull();
+    expect(screen.queryByTestId("live-review-star-cap")).toBeNull();
   });
 });

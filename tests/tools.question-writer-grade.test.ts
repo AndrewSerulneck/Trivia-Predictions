@@ -43,3 +43,38 @@ describe("writer grading helpers", () => {
     expect(source).toContain("graderModel: MODEL");
   });
 });
+
+// Phase 4e (D37): the conversion prompt's answers, matched to their requests, then posted.
+describe("conversions", async () => {
+  const { conversionItems, conversionPost } = (await import("../tools/question-writer/grade.mjs" as string)) as {
+    conversionItems: (output: unknown, conversions: { n: number; requestId: string }[]) => { rewrites: (Written & { requestId: string })[]; declines: { requestId: string; reason: string }[] };
+    conversionPost: (found: { rewrites: (Written & { requestId: string })[]; declines: { requestId: string; reason: string }[] }) => Record<string, unknown>[];
+  };
+  const map = [{ n: 1, requestId: "r1" }, { n: 2, requestId: "r2" }];
+
+  it("matches answers by n, splits declines, drops unknown and repeated n", () => {
+    const found = conversionItems({ items: [
+      { n: 1, declined: false, reason: null, question: "Q?", answer: "Mars", extra: "dropped" },
+      { n: 1, declined: true, reason: "dup" },
+      { n: 2, declined: true, reason: "Too hard without choices." },
+      { n: 9, declined: false, question: "Stray?" },
+    ] }, map);
+    expect(found.rewrites).toHaveLength(1);
+    expect(found.rewrites[0]).toMatchObject({ slot: { n: 1 }, requestId: "r1", payload: { question: "Q?", answer: "Mars", subject: null } });
+    expect(found.rewrites[0].payload).not.toHaveProperty("extra");
+    expect(found.declines).toEqual([{ requestId: "r2", reason: "Too hard without choices." }]);
+    found.rewrites[0].grade = { version: "v", familiar: 4 };
+    expect(conversionPost(found)).toEqual([
+      { requestId: "r1", payload: found.rewrites[0].payload, grade: { version: "v", familiar: 4 } },
+      { requestId: "r2", declined: true, reason: "Too hard without choices." },
+    ]);
+    expect(conversionItems(null, map)).toEqual({ rewrites: [], declines: [] });
+  });
+
+  it("posts conversions separately, after the day's batch, and leaves them queued on failure", () => {
+    const write = readFileSync("tools/question-writer/write.mjs", "utf8");
+    expect(write).toContain('brief.prompts.filter((p) => p.kind !== "conversion")');
+    expect(write).toContain("/api/question-writer/conversions");
+    expect(write.indexOf("/api/question-writer/candidates")).toBeLessThan(write.indexOf("if (conversion) await convert"));
+  });
+});
