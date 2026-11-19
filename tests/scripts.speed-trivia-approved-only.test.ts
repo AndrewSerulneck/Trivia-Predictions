@@ -84,6 +84,48 @@ describe.each([false])("approved-only manual review, variety schema=%s",variety=
  });
 });
 
+it("D38: an edit to a live question ignores deleted and waiting copies, but not live ones or new questions",async()=>{
+ const db=new PGlite();try{
+  await harness.setup(db,0,false);
+  const live=row(20,"Which planet is known as the Red Planet?","Mars"),waiting=row(21,"What planet is nicknamed the Red Planet?","Mars");
+  const gone=row(22,"The Red Planet is which planet?","Mars"),other=row(23,"Which is the largest planet?","Jupiter"),twin=row(24,"What is the biggest planet in the Solar System?","Jupiter");
+  await seedPending(db,[live,waiting,gone,other,twin]);
+  await db.exec(`reset role;alter table trivia_questions disable trigger all;update trivia_questions set status='active' where id in ('${live.id}','${other.id}');update trivia_questions set status='deleted' where id='${gone.id}';alter table trivia_questions enable trigger all;set role service_role;`);
+  const adjudicate=vi.fn(judge.adjudicate);
+  const gate=await runtime.createSession({client:harness.clientFor(db),secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge:{...judge,adjudicate}});
+  const existing=gate.index().byId.get(live.id)!.row as AdmissionRow;
+  const saved=(await gate.write({question:"Which planet is called the Red Planet because of its rusty soil?"},{existing})).row;
+  expect(saved.status).toBe("active");expect(saved.question).toContain("rusty soil");
+  expect(adjudicate.mock.calls.flatMap(([tasks])=>tasks).filter(task=>task.id!=='previous-version').every(task=>task.b.status==='active')).toBe(true);
+  // A live repeat still blocks the edit.
+  const edited=gate.index().byId.get(live.id)!.row as AdmissionRow;
+  await expect(gate.write({question:"Which planet is the largest?",options:["Mars","Venus","Jupiter","Mercury"],correct_answer:2},{existing:edited})).rejects.toMatchObject({code:"duplicate"});
+  // New questions still meet the whole bank, including deleted and waiting copies.
+  await expect(gate.write(row(25,"Which planet is famously red?","Mars"))).rejects.toMatchObject({code:"duplicate"});
+  // An edit to a waiting question is not a live edit: it still meets waiting copies.
+  await expect(gate.write({question:"Which planet has the most mass?"},{existing:gate.index().byId.get(twin.id)!.row as AdmissionRow})).rejects.toMatchObject({code:"duplicate"});
+ }finally{await db.close();}
+});
+
+it("D38b: a live edit that keeps its fact passes a repeat its previous version already had, but not a new one",async()=>{
+ const db=new PGlite();try{
+  await harness.setup(db,0,false);
+  const a=row(30,"Which planet is called the Red Planet?","Mars"),b=row(31,"Which planet is red from iron oxide dust?","Mars");
+  const c=row(32,"Which planet is the largest?","Jupiter");
+  await seedPending(db,[a,b,c]);
+  await db.exec(`reset role;alter table trivia_questions disable trigger all;update trivia_questions set status='active' where id in ('${a.id}','${b.id}','${c.id}');alter table trivia_questions enable trigger all;set role service_role;`);
+  // Same answer = same fact, including an edit against its own previous version.
+  const sameFact={modelVersion:"same-fact-synthetic",adjudicate:async(tasks:ComparisonTask[]):Promise<ComparisonResult[]>=>tasks.map(task=>({...verdict(task),
+   decision:task.id!=="candidate-soundness"&&core.content(task.a).answer===core.content(task.b).answer?"duplicate":"unique"}))};
+  const gate=await runtime.createSession({client:harness.clientFor(db),secret:harness.SECRET,budget:runtime.createBudget({dollars:1}),judge:sameFact});
+  const saved=(await gate.write({question:"Which planet is nicknamed the Red Planet?"},{existing:gate.index().byId.get(a.id)!.row as AdmissionRow})).row;
+  expect(saved.question).toBe("Which planet is nicknamed the Red Planet?");expect(saved.status).toBe("active");
+  // Changing the fact to one another live question holds is still a repeat.
+  await expect(gate.write({question:"Which planet is the biggest?",options:["Mars","Venus","Jupiter","Mercury"],correct_answer:2},{existing:gate.index().byId.get(a.id)!.row as AdmissionRow})).rejects.toMatchObject({code:"duplicate"});
+  expect(gate.index().byId.get(a.id)!.row.question).toBe("Which planet is nicknamed the Red Planet?");
+ }finally{await db.close();}
+});
+
 it("filters before retrieval ranking, so pending competitors cannot hide an approved match",()=>{
  const pending=Array.from({length:150},(_,n)=>row(100+n,'Which synthetic desert is largest on this continent? '+n,'Unknown '+n));
  const active={...row(999,'Which continent contains the Gobi Desert?','Asia'),status:'active' as const};

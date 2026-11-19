@@ -1,0 +1,145 @@
+{
+ "note": "Speed questions deleted 2026-11-19: they show a wrong answer and their fix was refused by the repeat check (Andrew approved). Undo: restore through writeSpeedTrivia(..., {restore:true}); a plain status update is refused by the database guard.",
+ "before": [
+  {
+   "id": "008d9e18-006b-4659-97ae-75f433331b00",
+   "question": "Who is the only golfer to have won all four major championships at least three times?",
+   "options": [
+    "Tiger Woods",
+    "Jack Nicklaus",
+    "Ben Hogan",
+    "Arnold Palmer"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "033ce89a-4166-404e-b97c-ff54f366b294",
+   "question": "Which Roman emperor declared Christianity the state religion of the Roman Empire in the 4th century AD?",
+   "options": [
+    "Julius Caesar",
+    "Nero",
+    "Constantine I",
+    "Augustus"
+   ],
+   "correct_answer": 2,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "2e37c543-034b-45ac-b0bc-f28153ba35e3",
+   "question": "Which of these is a primary color in the subtractive color model (CMYK)?",
+   "options": [
+    "Green",
+    "Orange",
+    "Purple",
+    "Blue"
+   ],
+   "correct_answer": 3,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "51f77449-eda3-4cda-a8ec-33e4868f1732",
+   "question": "In computing, what does \"URL\" stand for?",
+   "options": [
+    "Universal Resource Locator",
+    "Uniform Resource Link",
+    "United Resource Locator",
+    "Universal Reference Link"
+   ],
+   "correct_answer": 0,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "70e3d871-a091-42bd-a481-bd75c12e8e4a",
+   "question": "What is the musical term for playing very softly?",
+   "options": [
+    "Forte",
+    "Mezzo",
+    "Piano",
+    "Allegro"
+   ],
+   "correct_answer": 2,
+   "category": "Music",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "72143644-3578-4ec7-8df4-62b20934ade9",
+   "question": "What is the highest possible score with three darts in a single turn without a double or triple?",
+   "options": [
+    "150",
+    "180",
+    "170",
+    "160"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "8a1a9b32-16bb-4829-b079-58878833a62a",
+   "question": "Which insect has its 'ears' located on its front legs?",
+   "options": [
+    "Grasshopper",
+    "Housefly",
+    "Butterfly",
+    "Ant"
+   ],
+   "correct_answer": 0,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "9204e8c0-2907-477c-9d12-cab1ef5e8685",
+   "question": "Which female athlete is the only one to have won Olympic gold in both the 100m and 200m sprints at the same Games while setting world records in both?",
+   "options": [
+    "Florence Griffith-Joyner",
+    "Wilma Rudolph",
+    "Allyson Felix",
+    "Elaine Thompson-Herah"
+   ],
+   "correct_answer": 0,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "a15be98d-96d3-46fe-8335-ef40ab22b0e4",
+   "question": "Which legendary coach is credited with inventing the \"Triangle Offense\" in basketball?",
+   "options": [
+    "Red Auerbach",
+    "Phil Jackson",
+    "Gregg Popovich",
+    "Pat Riley"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "a2162d7b-4383-42b9-9861-5a7093f4fe23",
+   "question": "Which artist has won the most Grammy Awards of all time?",
+   "options": [
+    "Beyoncé",
+    "Georg Solti",
+    "Quincy Jones",
+    "Stevie Wonder"
+   ],
+   "correct_answer": 1,
+   "category": "Music",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  }
+ ]
+}
