@@ -97,6 +97,17 @@ describe("Speed writing boundaries on isolated PostgreSQL", () => {
     await expect(checking.write(candidate(9, "Which new fact is being tested?", "New fixture"))).rejects.toMatchObject({ code: "duplicate" });
     expect(adjudicate).toHaveBeenCalledTimes(1);
   });
+  it("checks every pair of a Current Events fact the judge can't confirm, and admits it; other categories stop (2026-11-19)", async () => {
+    const unsure = () => vi.fn(async (tasks: ComparisonTask[]) => tasks.map(t => ({ ...sound(t), qualityA: "uncertain" as const })));
+    const session = async (adjudicate: ReturnType<typeof unsure>) => runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 1 }), judge: { modelVersion: "recent-fact-fixture", adjudicate }, concurrency: 1 });
+    const regular = unsure();
+    await expect((await session(regular)).write(candidate(30, "Which performer headlined a 2026 stadium show?", "Taylor Swift", "Music"))).rejects.toMatchObject({ code: "uncertain" });
+    expect(regular).toHaveBeenCalledTimes(1);
+    const news = unsure();
+    const saved = await (await session(news)).write(candidate(31, "In November 2026, which performer announced a new album?", "Taylor Swift", "Current Events"));
+    expect(saved.row.status).toBe("pending_review");
+    expect(news.mock.calls.length).toBeGreaterThan(1);
+  });
   it("runs pairs concurrently, same answer first, and starts none after a rejecting result", async () => {
     const started: string[] = [];
     let inFlight = 0, peak = 0;
