@@ -1,9 +1,9 @@
 name: Write questions
 
 on:
-  # Turned on in Phase 4d, after the trial run (docs/speed-trivia-backlog-and-quality-plan.md in the main repo).
-  # schedule:
-  #   - cron: "30 0 * * *"   # 00:30 UTC, before the main repo's Trivia Nightly at 02:15 UTC
+  # Turned on 2026-11-19 (Phase 4d, after the re-trial; docs/speed-trivia-backlog-and-quality-plan.md in the main repo).
+  schedule:
+    - cron: "30 0 * * *"   # 00:30 UTC, before the main repo's Trivia Nightly at 02:15 UTC
   workflow_dispatch:
 
 concurrency:

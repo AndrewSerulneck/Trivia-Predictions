@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdmissionError } from "@/lib/speed-trivia-uniqueness/runtime.cjs";
+import { openaiResponse } from "./helpers/openaiReply";
 import type { AdmissionRow, AdmissionSession } from "@/types/speedTriviaAdmission";
 
 // Phase 4a.1: Admin add/edit tags a Speed question on save; an untagged approval is tagged once and retried.
-// Supabase and Gemini are fakes; nothing leaves the process.
+// Supabase and OpenAI are fakes; nothing leaves the process.
 const mocks = vi.hoisted(() => ({
   upserts: [] as unknown[], areasError: null as unknown, upsertError: null as unknown,
   // Phase 4c.8: the stored tag's subject, and speed_trivia_subject_has_room's answer.
@@ -40,10 +41,7 @@ const row = (over: Partial<AdmissionRow> = {}): AdmissionRow => ({
   correct_answer: 0, category: "Animals", question_pool: "anytime_blitz", answer_format: "multiple_choice", status: "pending_review",
   created_at: "2026-11-01T00:00:00Z", ...over,
 }) as AdmissionRow;
-const gemini = (item: unknown, ok = true) => vi.fn(async () => new Response(JSON.stringify({
-  candidates: [{ content: { parts: [{ text: JSON.stringify({ items: [item] }) }] }, finishReason: "STOP" }],
-  usageMetadata: { promptTokenCount: 200, candidatesTokenCount: 20 },
-}), { status: ok ? 200 : 500 }));
+const openai = (item: unknown, ok = true) => vi.fn(async () => openaiResponse(JSON.stringify({ items: [item] }), {}, ok ? 200 : 400));
 
 beforeEach(() => {
   mocks.upserts.length = 0;
@@ -52,30 +50,30 @@ beforeEach(() => {
   mocks.currentSubject = null;
   mocks.room = true;
   mocks.rpcs.length = 0;
-  vi.stubEnv("GEMINI_API_KEY", "test-key");
+  vi.stubEnv("OPENAI_API_KEY", "test-key");
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 describe("tagSpeedQuestion", () => {
   it("tags one question against its category's areas and upserts the tag", async () => {
-    const transport = gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" });
+    const transport = openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" });
     expect(await tagSpeedQuestion(row(), transport as unknown as typeof fetch)).toBe(true);
     expect(transport).toHaveBeenCalledTimes(1);
     expect(mocks.upserts).toEqual([[expect.objectContaining({ game: "speed", question_ref: row().id, area_id: "a1", era: "Timeless",
-      subject: "Chameleon", subject_key: "chameleon", written_at: "2026-11-01T00:00:00Z", tagged_by: "gemini:gemini-2.5-flash:admin-save-v1" })]]);
+      subject: "Chameleon", subject_key: "chameleon", written_at: "2026-11-01T00:00:00Z", tagged_by: "openai:gpt-6.1-sol:admin-save-v1" })]]);
   });
 
   it("keeps a subject when no area fits", async () => {
-    expect(await tagSpeedQuestion(row(), gemini({ n: 1, area: null, era: null, subject: "Chameleon" }) as unknown as typeof fetch)).toBe(true);
+    expect(await tagSpeedQuestion(row(), openai({ n: 1, area: null, era: null, subject: "Chameleon" }) as unknown as typeof fetch)).toBe(true);
     expect(mocks.upserts).toEqual([[expect.objectContaining({ area_id: null, era: null, subject_key: "chameleon" })]]);
   });
 
   it("never throws: a bad reply, a provider error, a missing key or Live Trivia return false and write nothing", async () => {
-    expect(await tagSpeedQuestion(row(), gemini({ n: 1, area: "Not an area", era: "x", subject: "Chameleon" }) as unknown as typeof fetch)).toBe(false);
-    expect(await tagSpeedQuestion(row(), gemini({}, false) as unknown as typeof fetch)).toBe(false);
-    expect(await tagSpeedQuestion(row({ question_pool: "live_showdown" }), gemini({}) as unknown as typeof fetch)).toBe(false);
-    vi.stubEnv("GEMINI_API_KEY", "");
-    expect(await tagSpeedQuestion(row(), gemini({}) as unknown as typeof fetch)).toBe(false);
+    expect(await tagSpeedQuestion(row(), openai({ n: 1, area: "Not an area", era: "x", subject: "Chameleon" }) as unknown as typeof fetch)).toBe(false);
+    expect(await tagSpeedQuestion(row(), openai({}, false) as unknown as typeof fetch)).toBe(false);
+    expect(await tagSpeedQuestion(row({ question_pool: "live_showdown" }), openai({}) as unknown as typeof fetch)).toBe(false);
+    vi.stubEnv("OPENAI_API_KEY", "");
+    expect(await tagSpeedQuestion(row(), openai({}) as unknown as typeof fetch)).toBe(false);
     expect(mocks.upserts).toEqual([]);
   });
 });
@@ -91,7 +89,7 @@ describe("approveSpeedTrivia and the star cap", () => {
   };
 
   it("tags an untagged question once and retries the approval", async () => {
-    vi.stubGlobal("fetch", gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" }));
+    vi.stubGlobal("fetch", openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" }));
     const { session: s, write } = session(["untagged"]);
     expect((await approveSpeedTrivia(row(), s)).status).toBe("active");
     expect(write).toHaveBeenCalledTimes(2);
@@ -99,7 +97,7 @@ describe("approveSpeedTrivia and the star cap", () => {
   });
 
   it("leaves it waiting when tagging fails, and never retries a full subject", async () => {
-    vi.stubGlobal("fetch", gemini({}, false));
+    vi.stubGlobal("fetch", openai({}, false));
     const untagged = session(["untagged"]);
     await expect(approveSpeedTrivia(row(), untagged.session)).rejects.toMatchObject({ code: "untagged" });
     expect(untagged.write).toHaveBeenCalledTimes(1);
@@ -111,7 +109,7 @@ describe("approveSpeedTrivia and the star cap", () => {
 
 describe("Phase 4c.1: one tag call per Admin save; tagOne shared with the scripts", () => {
   it("an Admin save refused as untagged tags once, retries, and doesn't tag again after the save", async () => {
-    const fetch = gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" });
+    const fetch = openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" });
     vi.stubGlobal("fetch", fetch);
     const failures = ["untagged"];
     const write = vi.fn(async () => {
@@ -125,7 +123,7 @@ describe("Phase 4c.1: one tag call per Admin save; tagOne shared with the script
   });
 
   it("a new question saved without hitting the cap is still tagged once after the save", async () => {
-    const fetch = gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" });
+    const fetch = openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" });
     vi.stubGlobal("fetch", fetch);
     const write = vi.fn(async () => ({ row: row(), idempotent: false }));
     await writeSpeedTrivia(row(), null, { write } as unknown as AdmissionSession);
@@ -136,9 +134,9 @@ describe("Phase 4c.1: one tag call per Admin save; tagOne shared with the script
     const upserts: unknown[] = [];
     const chain = { select: () => chain, eq: () => chain, order: async () => ({ data: [{ id: "a1", name: "Reptiles", eras: ["Timeless"], active: true }], error: null }) };
     const client = { from: (table: string) => table === "question_tags" ? { upsert: async (rows: unknown) => { upserts.push(rows); return { error: null }; } } : chain };
-    const transport = gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" }) as unknown as typeof fetch;
-    expect(await tagOne({ client: client as never, row: row(), apiKey: "k", transport, taggedBy: "gemini:gemini-2.5-flash:keep-queue-v1" })).toBe(true);
-    expect(upserts).toEqual([[expect.objectContaining({ question_ref: row().id, subject_key: "chameleon", tagged_by: "gemini:gemini-2.5-flash:keep-queue-v1" })]]);
+    const transport = openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" }) as unknown as typeof fetch;
+    expect(await tagOne({ client: client as never, row: row(), apiKey: "k", transport, taggedBy: "openai:gpt-6-luna:keep-queue-v1" })).toBe(true);
+    expect(upserts).toEqual([[expect.objectContaining({ question_ref: row().id, subject_key: "chameleon", tagged_by: "openai:gpt-6-luna:keep-queue-v1" })]]);
     const broken = { from: () => { throw new Error("down"); } };
     expect(await tagOne({ client: broken as never, row: row(), apiKey: "k", transport })).toBe(false);
   });
@@ -153,7 +151,7 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
   const gate = () => vi.fn(async () => ({ row: savedRow, idempotent: false }));
 
   it("refuses a move into a full subject with 409 subject_full and saves nothing", async () => {
-    const fetch = gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" });
+    const fetch = openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" });
     vi.stubGlobal("fetch", fetch);
     mocks.currentSubject = "chameleon";
     mocks.room = false;
@@ -167,8 +165,8 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
-  it("with room: one Gemini call, saves, then writes the new tag", async () => {
-    const fetch = gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" });
+  it("with room: one OpenAI call, saves, then writes the new tag", async () => {
+    const fetch = openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" });
     vi.stubGlobal("fetch", fetch);
     mocks.currentSubject = "chameleon";
     const write = gate();
@@ -179,7 +177,7 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
   });
 
   it("an unchanged subject skips the room check and still refreshes the tag", async () => {
-    const fetch = gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" });
+    const fetch = openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" });
     vi.stubGlobal("fetch", fetch);
     mocks.currentSubject = "chameleon";
     mocks.room = false;
@@ -191,8 +189,8 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
     expect(mocks.upserts).toHaveLength(1);
   });
 
-  it("if Gemini fails, saves anyway, keeps the old tag and makes no second call", async () => {
-    const fetch = gemini({}, false);
+  it("if OpenAI fails, saves anyway, keeps the old tag and makes no second call", async () => {
+    const fetch = openai({}, false);
     vi.stubGlobal("fetch", fetch);
     mocks.currentSubject = "chameleon";
     const write = gate();
@@ -202,7 +200,7 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
   });
 
   it("if the room check can't answer, saves and lets the trigger decide", async () => {
-    vi.stubGlobal("fetch", gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" }));
+    vi.stubGlobal("fetch", openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" }));
     mocks.currentSubject = "chameleon";
     mocks.room = null;
     const write = gate();
@@ -212,7 +210,7 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
   });
 
   it("a race the trigger refuses after the save keeps the old tag and logs", async () => {
-    vi.stubGlobal("fetch", gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" }));
+    vi.stubGlobal("fetch", openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" }));
     mocks.currentSubject = "chameleon";
     mocks.upsertError = { message: "star-cap" };
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
@@ -225,7 +223,7 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
   it("an edit to a waiting question, or one leaving approval, is tagged after the save as before (no room check)", async () => {
     for (const [existing, patch] of [[row(), edit], [active, { ...edit, status: "deleted" }]] as const) {
       mocks.upserts.length = 0;
-      const fetch = gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" });
+      const fetch = openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" });
       vi.stubGlobal("fetch", fetch);
       mocks.room = false;
       const write = vi.fn(async () => ({ row: row({ ...patch }), idempotent: false }));
@@ -238,7 +236,7 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
   });
 
   it("tagOne with write: false returns the tag row and writes nothing", async () => {
-    const transport = gemini({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" }) as unknown as typeof fetch;
+    const transport = openai({ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" }) as unknown as typeof fetch;
     const client = { from: (table: string) => {
       if (table === "question_tags") throw new Error("must not write");
       const chain = { select: () => chain, eq: () => chain, order: async () => ({ data: [{ id: "a1", name: "Reptiles", eras: ["Timeless"], active: true }], error: null }) };
@@ -246,6 +244,6 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
     } };
     expect(await tagOne({ client: client as never, row: row(), apiKey: "k", transport, write: false }))
       .toMatchObject({ question_ref: row().id, subject_key: "chameleon", area_id: "a1" });
-    expect(await tagOne({ client: client as never, row: row(), apiKey: "k", transport: gemini({}, false) as unknown as typeof fetch, write: false })).toBeNull();
+    expect(await tagOne({ client: client as never, row: row(), apiKey: "k", transport: openai({}, false) as unknown as typeof fetch, write: false })).toBeNull();
   });
 });

@@ -141,8 +141,8 @@ export function LlmCostSection() {
         <div>
           <h2 className="text-lg font-bold text-white">LLM Cost Observability</h2>
           <p className="mt-1 max-w-md text-caption text-slate-500">
-            Tracks Username Moderation (Haiku) and Live Trivia rewrite (Gemini). Any other LLM
-            usage in the app is not instrumented and will not appear here.
+            Tracks Username Moderation (Haiku) and the OpenAI question checks, tagging and Live Trivia
+            rewrite. Other LLM usage is not tracked here.
           </p>
         </div>
         <div className="flex gap-1">

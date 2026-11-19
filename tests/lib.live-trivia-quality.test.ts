@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
+import { openaiResponse } from "./helpers/openaiReply";
 
 // Phase 4c of docs/speed-trivia-backlog-and-quality-plan.md: the Live categories, the append-only Publish (D10), the
 // Live repeat check, the Live bar test and the Live writing rules. Pure functions; reads the real Live JSON read-only.
@@ -238,18 +239,17 @@ describe("Live repeat check", () => {
     expect(() => repeats.parseVerdict("nope", likely)).toThrow(/repeat-json-invalid/);
   });
 
-  it("makes at most one budgeted Gemini call, and none when the free checks settle it", async () => {
+  it("makes at most one budgeted OpenAI call, and none when the free checks settle it", async () => {
     const calls: Row[] = [];
     const budget = { reserve: (a: Row) => a, settle: () => undefined };
     const transport = async (_url: string, init: Row) => {
       calls.push(init);
-      return new Response(JSON.stringify({ usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 10 },
-        candidates: [{ finishReason: "STOP", content: { parts: [{ text: '{"verdict":"repeat","match":1}' }] } }] }));
+      return openaiResponse('{"verdict":"repeat","match":1}', { input: 100, output: 10 });
     };
     const checker = repeats.createRepeatChecker({ corpus: corpus(), apiKey: "k", budget, transport });
     expect(await checker.check({ question: "Which chess piece moves in an L shape?", answer: "Knight", category: "Sports" })).toMatchObject({ verdict: "distinct" });
     expect(await checker.check({ question: "Which group's 1971 epic is 'Stairway to Heaven'?", answer: "Led Zeppelin", category: "Music" }))
-      .toMatchObject({ verdict: "duplicate", how: "gemini", match: { slug: "stairway" } });
+      .toMatchObject({ verdict: "duplicate", how: "openai", match: { slug: "stairway" } });
     expect(calls).toHaveLength(1);
   });
 });

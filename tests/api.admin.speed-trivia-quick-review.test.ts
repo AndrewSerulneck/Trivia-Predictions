@@ -40,6 +40,7 @@ vi.mock("@/lib/adminAuth", () => ({ requireAdminAuth: mocks.auth }));
 vi.mock("@/lib/speedTriviaAdmission", () => ({ openSpeedTriviaAdmission: mocks.paid, approveSpeedTrivia: mocks.paid, writeSpeedTrivia: mocks.paid }));
 import { GET, POST } from "@/app/api/admin/trivia/quick-review/route";
 import { runQuickReviewBulk } from "@/lib/speedTriviaQuickReview";
+import { openaiResponse } from "./helpers/openaiReply";
 
 const SECRET = "quick-review-test-secret-000000000000000000";
 const id = (n: number) => `80000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -53,7 +54,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.auth.mockResolvedValue({ ok: true });
   vi.stubEnv("SPEED_TRIVIA_ADMISSION_SECRET", SECRET);
-  vi.stubEnv("GEMINI_API_KEY", "");
+  vi.stubEnv("OPENAI_API_KEY", "");
   mocks.runs = [];
   mocks.tags = [];
   mocks.waiting = [];
@@ -61,22 +62,19 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllGlobals(); });
 
-// Phase 4c.1: a waiting Speed row as trivia_questions holds it, and a fake Gemini that tags anything as "Gravity".
+// Phase 4c.1: a waiting Speed row as trivia_questions holds it, and a fake OpenAI tagger that tags anything as "Gravity".
 const waitingRow = (n: number) => ({ id: id(n), question: `Q${n}?`, options: ["A", "B", "C", "D"], correct_answer: 0, category: "Science",
   question_pool: "anytime_blitz", status: "pending_review", created_at: "2026-07-01T00:00:00+00:00" });
-const fakeGemini = (ok = true) => {
+const fakeOpenAI = (ok = true) => {
   const state = { calls: 0, inFlight: 0, maxInFlight: 0 };
   const fetch = vi.fn(async () => {
     state.calls++; state.inFlight++; state.maxInFlight = Math.max(state.maxInFlight, state.inFlight);
     await new Promise((resolve) => setTimeout(resolve, 1));
     state.inFlight--;
-    return new Response(JSON.stringify({
-      candidates: [{ content: { parts: [{ text: JSON.stringify({ items: [{ n: 1, area: "Physics", era: "Timeless", subject: "Gravity" }] }) }] } }],
-      usageMetadata: { promptTokenCount: 200, candidatesTokenCount: 20 },
-    }), { status: ok ? 200 : 500 });
+    return openaiResponse(JSON.stringify({ items: [{ n: 1, area: "Physics", era: "Timeless", subject: "Gravity" }] }), {}, ok ? 200 : 400);
   });
   vi.stubGlobal("fetch", fetch);
-  vi.stubEnv("GEMINI_API_KEY", "test-key");
+  vi.stubEnv("OPENAI_API_KEY", "test-key");
   return state;
 };
 
@@ -196,15 +194,15 @@ describe("Quick Keep tags an untagged question first (Phase 4c.1)", () => {
   };
 
   it("tags only the waiting rows without a tag, then signs the Keep unchanged", async () => {
-    const gemini = fakeGemini();
+    const tagger = fakeOpenAI();
     mocks.tags = [{ question_ref: id(1), subject_key: "gravity" }, { question_ref: id(3), subject_key: null }];
     mocks.waiting = [waitingRow(1), waitingRow(2), waitingRow(3)];
     const upsertsAtKeep = keepRpc();
     // id(4) has no tag but isn't waiting (decided elsewhere): never tagged.
     const response = await post({ action: "keep", rows: [1, 2, 3, 4].map((n) => ({ id: id(n), contentHash: hash(n) })) });
-    expect(gemini.calls).toBe(2);
+    expect(tagger.calls).toBe(2);
     expect(mocks.upserts.flat().map((tag) => tag.question_ref)).toEqual([id(2), id(3)]);
-    expect(mocks.upserts.flat()[0]).toMatchObject({ game: "speed", subject_key: "gravity", tagged_by: "gemini:gemini-2.5-flash:quick-keep-v1" });
+    expect(mocks.upserts.flat()[0]).toMatchObject({ game: "speed", subject_key: "gravity", tagged_by: "openai:gpt-6.1-sol:quick-keep-v1" });
     expect(upsertsAtKeep).toEqual([2]);
     const [, args] = mocks.rpc.mock.calls[0] as [string, { p_check: { rows: unknown[] } }];
     expect(args.p_check.rows).toEqual([1, 2, 3, 4].map((n) => ({ id: id(n), contentHash: hash(n) })));
@@ -212,27 +210,27 @@ describe("Quick Keep tags an untagged question first (Phase 4c.1)", () => {
   });
 
   it("tags at most 25 per request, 4 at a time; the rest stay untagged", async () => {
-    const gemini = fakeGemini();
+    const tagger = fakeOpenAI();
     mocks.waiting = Array.from({ length: 30 }, (_, n) => waitingRow(n + 1));
     keepRpc();
     const response = await post({ action: "keep", rows: mocks.waiting.map((row, n) => ({ id: row.id, contentHash: hash(n + 1) })) });
-    expect(gemini.calls).toBe(25);
-    expect(gemini.maxInFlight).toBe(4);
+    expect(tagger.calls).toBe(25);
+    expect(tagger.maxInFlight).toBe(4);
     const outcomes = (await response.json()).rows.map((row: { outcome: string }) => row.outcome);
     expect(outcomes.filter((outcome: string) => outcome === "untagged")).toHaveLength(5);
   });
 
   it("a failed tag keeps the untagged outcome and still runs the Keep", async () => {
-    const gemini = fakeGemini(false);
+    const tagger = fakeOpenAI(false);
     mocks.waiting = [waitingRow(1)];
     keepRpc();
     const response = await post({ action: "keep", rows: [{ id: id(1), contentHash: hash(1) }] });
-    expect(gemini.calls).toBe(1);
+    expect(tagger.calls).toBe(1);
     expect(mocks.upserts).toEqual([]);
     expect(await response.json()).toEqual({ ok: true, rows: [{ id: id(1), outcome: "untagged" }] });
   });
 
-  it("makes no tag reads or calls without a Gemini key", async () => {
+  it("makes no tag reads or calls without an OpenAI key", async () => {
     mocks.waiting = [waitingRow(1)];
     keepRpc();
     await post({ action: "keep", rows: [{ id: id(1), contentHash: hash(1) }] });
@@ -316,12 +314,12 @@ describe("Quick Review bulk by filter", () => {
   });
 
   it("Phase 4c.1: a bulk Keep tags at most 25 in the whole request, across its pages", async () => {
-    const gemini = fakeGemini();
+    const tagger = fakeOpenAI();
     fakeDb(250);
     mocks.waiting = Array.from({ length: 250 }, (_, n) => waitingRow(n + 1));
     const result = await runQuickReviewBulk("keep", filter, 250);
     expect(result.processed).toBe(250);
-    expect(gemini.calls).toBe(25);
+    expect(tagger.calls).toBe(25);
   });
 
   // Post-4c.4 review #7: rows changed under a bulk Keep are never skipped silently.
@@ -378,17 +376,7 @@ describe("Quick Review writer source (Phase 4b)", () => {
     expect(mocks.rpc.mock.calls[1][1]).toMatchObject({ p_source: "gemini" });
   });
 
-  it("says Writer stopped only after two fallback days in a row", async () => {
-    mocks.rpc.mockReturnValue(ok({ total: 0, rows: [] }));
-    mocks.runs = [{ run_date: day(0), source: "gemini-fallback" }, { run_date: day(1), source: "gemini-fallback" }];
-    expect((await (await get()).json()).writerStopped).toBe(true);
-    mocks.runs = [{ run_date: day(0), source: "gemini-fallback" }, { run_date: day(1), source: "chatgpt" }];
-    expect((await (await get()).json()).writerStopped).toBe(false);
-    mocks.runs = [{ run_date: day(0), source: "gemini-fallback" }, { run_date: day(3), source: "gemini-fallback" }];
-    expect((await (await get()).json()).writerStopped).toBe(false);
-    mocks.runs = [];
-    expect((await (await get()).json()).writerStopped).toBe(false);
-  });
+
 
   it("says Writer stopped when no batch arrived for over 2 days, but not before the first run", async () => {
     mocks.rpc.mockReturnValue(ok({ total: 0, rows: [] }));

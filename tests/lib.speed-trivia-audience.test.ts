@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
 import { describe, expect, it, vi } from "vitest";
+import { openaiResponse } from "./helpers/openaiReply";
 
 // Phase 2 "bar test" scorer (docs/speed-trivia-backlog-and-quality-plan.md). No network: a fake transport.
 const require = createRequire(import.meta.url);
@@ -7,6 +8,7 @@ type Grade = { familiar: number; fun: number; estCorrect: number; flags: string[
 type Row = { id: string; question: string; options: string[]; correct_answer: number; category: string; status: string; question_pool: string; answer_format: string };
 const audience = require("../lib/speed-trivia-quality/audience.cjs") as {
   AUDIENCE_VERSION: string;
+  GRADE_VERSION: string;
   MODEL_FLAGS: string[];
   preChecks: (row: Row) => string[];
   compositeScore: (grade: Grade) => number;
@@ -129,21 +131,31 @@ describe("prompt and reply", () => {
 });
 
 describe("scorer", () => {
-  const reply = (grades: unknown[], usage = { promptTokenCount: 1000, candidatesTokenCount: 200 }) =>
-    Promise.resolve(new Response(JSON.stringify({ usageMetadata: usage, candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify(grades) }] } }] }), { status: 200 }));
+  // Phase 4f.2: the OpenAI API with the ChatGPT grader's prompt and schema (bar-test-v6), so both paths grade alike.
+  const reply = (grades: unknown[], usage = { input: 1000, output: 200 }) => Promise.resolve(openaiResponse(JSON.stringify({ grades }), usage));
 
-  it("scores a batch in one budgeted call and merges the free checks", async () => {
+  it("scores a batch in one budgeted call with the ChatGPT grader's prompt and merges the free checks", async () => {
     const budget = createBudget({ dollars: 1 });
-    const transport = vi.fn(() => reply([{ id: "1", familiar: 5, fun: 4, estCorrect: 80, flags: [] }, { id: "2", familiar: 3, fun: 3, estCorrect: 40, flags: ["niche-subject"] }]));
+    const transport = vi.fn((_url: string, _init: RequestInit) => reply([{ n: 1, familiar: 5, fun: 4, estCorrect: 80, flags: [] }, { n: 2, familiar: 3, fun: 3, estCorrect: 40, flags: ["niche-subject"] }]));
     const scorer = audience.createAudienceScorer({ apiKey: "k", budget, transport });
     const rows = [row("Which band released 'Nevermind' in 1991?", "Nirvana", 1), row("The Nazca Plate is an oceanic plate. Under which plate does it subduct?", "South American Plate", 2)];
     const scored = await scorer.scoreBatch(rows);
     expect(transport).toHaveBeenCalledTimes(1);
-    expect(scored[0]).toMatchObject({ id: "row-1", audience: { score: 5, flags: [], version: audience.AUDIENCE_VERSION } });
+    const body = JSON.parse(String(transport.mock.calls[0][1].body));
+    expect(body).toMatchObject({ model: "gpt-6.1-sol", store: false, text: { format: { type: "json_schema", strict: true } } });
+    expect(body.input).toContain("You only grade: never rewrite a question.");
+    expect(scorer.modelVersion).toBe(`openai:gpt-6.1-sol:${audience.GRADE_VERSION}`);
+    expect(scored[0]).toMatchObject({ id: "row-1", audience: { score: 5, flags: [], version: audience.GRADE_VERSION } });
     expect(scored[1].audience).toMatchObject({ score: 2, flags: ["niche-subject", "preamble"] });
     const spent = budget.summary();
     expect(spent.requests).toBe(1);
-    expect(spent.dollars).toBeCloseTo((1000 * 0.3 + 200 * 2.5) / 1e6, 10);
+    expect(spent.dollars).toBeCloseTo((1000 * 2 + 200 * 10) / 1e6, 10);
+  });
+
+  it("refuses a reply that skips or repeats an item", async () => {
+    const twice = vi.fn(() => reply([{ n: 1, familiar: 5, fun: 4, estCorrect: 80, flags: [] }, { n: 1, familiar: 5, fun: 4, estCorrect: 80, flags: [] }]));
+    await expect(audience.createAudienceScorer({ apiKey: "k", budget: createBudget({ dollars: 1 }), transport: twice })
+      .scoreBatch([row("Q1?", "A", 1), row("Q2?", "B", 2)])).rejects.toThrow("audience-result-invalid");
   });
 
   it("stops before calling when the approved budget can't cover the call", async () => {
@@ -154,11 +166,11 @@ describe("scorer", () => {
   });
 
   it("refuses truncated or failed replies and needs a key", async () => {
-    const truncated = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1 }, candidates: [{ finishReason: "MAX_TOKENS", content: { parts: [{ text: "[" }] } }] }))));
+    const truncated = vi.fn(() => Promise.resolve(openaiResponse("{", { status: "incomplete", input: 1, output: 1 })));
     await expect(audience.createAudienceScorer({ apiKey: "k", budget: createBudget({ dollars: 1 }), transport: truncated }).scoreBatch([row("Q?", "A")])).rejects.toThrow("audience-truncated-or-blocked");
     const failed = vi.fn(() => Promise.resolve(new Response("{}", { status: 404 })));
     await expect(audience.createAudienceScorer({ apiKey: "k", budget: createBudget({ dollars: 1 }), transport: failed }).scoreBatch([row("Q?", "A")])).rejects.toThrow("audience-http-404");
-    expect(() => audience.createAudienceScorer({ budget: createBudget({ dollars: 1 }) })).toThrow("missing-GEMINI_API_KEY");
+    expect(() => audience.createAudienceScorer({ budget: createBudget({ dollars: 1 }) })).toThrow("missing-OPENAI_API_KEY");
   });
 });
 

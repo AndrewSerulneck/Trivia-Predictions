@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 const require = createRequire(import.meta.url);
 type Row = Record<string, unknown>;
 type Report = { source: string | null; examined: number; rejected: Record<string, number>; admitted: number; skipped: number;
-  admittedByKind: Record<string, number>; stopped: string | null; fallback: Record<string, unknown> | null; admittedIds: string[] };
+  admittedByKind: Record<string, number>; stopped: string | null; admittedIds: string[] };
 const processing = require("../lib/question-writer/process.cjs") as {
   processSpeedDay: (input: Record<string, unknown>) => Promise<Report>;
 };
@@ -92,7 +92,7 @@ const fakeSession = (outcomes: Record<string, string> = {}) => {
     }),
   };
 };
-const env = { SPEED_TRIVIA_MAX_DOLLARS: "0.5", GEMINI_API_KEY: "k" };
+const env = { SPEED_TRIVIA_MAX_DOLLARS: "0.5", OPENAI_API_KEY: "k" };
 
 describe("nightly processing", () => {
   it("sends the writer's note to the bar test and keeps it in the Speed metadata (D30)", async () => {
@@ -172,25 +172,8 @@ describe("nightly processing", () => {
     expect(client.tables.question_candidates.find(c => c.status === "skipped")?.reason).toBe("daily-target");
   });
 
-  it("falls back to Gemini when today has no ChatGPT batch (D13), then gates the same way", async () => {
-    const client = memoryClient({ run: null });
-    let briefed: Row | null = null;
-    const writeFallback = async ({ brief, maxDollars }: { brief: Row; maxDollars: number }) => {
-      briefed = brief;
-      expect(maxDollars).toBe(0.1);
-      return { items: [{ slot: { n: 1, category: "Music", area: "Pop", era: "1980s" }, payload: payload() }], dollars: 0.004, skipped: ["currentEvents"] };
-    };
-    const session = fakeSession();
-    const report = await processing.processSpeedDay({ client, today: TODAY, env, writeFallback, createSession: session.create, createScorer: fakeScorer({}) });
-    expect(briefed).not.toBeNull();
-    expect(report.source).toBe("gemini-fallback");
-    expect(report.fallback).toMatchObject({ written: 1, dollars: 0.004 });
-    expect(report.admitted).toBe(1);
-    expect(session.writes[0].writerMeta).toMatchObject({ source: "gemini-fallback", model: "gemini-2.5-flash" });
-  });
-
-  it("does nothing without a batch when the fallback is off", async () => {
-    const report = await processing.processSpeedDay({ client: memoryClient({ run: null }), today: TODAY, env, fallback: false });
+  it("does nothing without a ChatGPT batch (no fallback writer, D40)", async () => {
+    const report = await processing.processSpeedDay({ client: memoryClient({ run: null }), today: TODAY, env });
     expect(report.stopped).toBe("no-candidates");
   });
 
@@ -203,7 +186,7 @@ describe("nightly processing", () => {
     expect(client.tables.question_candidates.map(c => [c.status, c.reason])).toEqual([["skipped", "budget"], ["skipped", "budget"]]);
   });
 
-  it("uses the writer's ChatGPT grade and asks Gemini only for ungraded items (D35)", async () => {
+  it("uses the writer's ChatGPT grade and asks the OpenAI API only for ungraded items (D35, 4f.2)", async () => {
     const grade = (over: Row = {}) => ({ version: "bar-test-v6", model: "gpt-6-astra", familiar: 5, fun: 4, estCorrect: 70, flags: [], ...over });
     const client = memoryClient({ list: [
       candidate("g1", 1, { ...payload(), grade: grade() }),
@@ -217,17 +200,17 @@ describe("nightly processing", () => {
     const session = fakeSession();
     const report = await processing.processSpeedDay({ client, today: TODAY, env, createSession: session.create, createScorer: scorer });
     expect(seen.map(r => r.question)).toEqual(["Which 1985 song did Whitney Houston take to number one?"]);
-    expect((report as Report & { graded: Row }).graded).toEqual({ chatgpt: 2, gemini: 1 });
+    expect((report as Report & { graded: Row }).graded).toEqual({ chatgpt: 2, openai: 1 });
     const byId = new Map(client.tables.question_candidates.map(c => [c.id, c]));
     expect(byId.get("g2")).toMatchObject({ status: "rejected", reason: "bar-test:1", audience: expect.objectContaining({ model: "chatgpt:gpt-6-astra:bar-test-v6" }) });
     const set = client.rpcs.filter(r => r.name === "speed_trivia_review_set_audience").map(r => ((r.args.p_rows as Row[])[0].audience as Row));
     expect(set).toContainEqual(expect.objectContaining({ version: "bar-test-v6", model: "chatgpt:gpt-6-astra:bar-test-v6", score: 5 }));
   });
 
-  it("makes no Gemini call when every item is graded", async () => {
+  it("makes no API grading call when every item is graded", async () => {
     const client = memoryClient({ list: [candidate("g1", 1, { ...payload(), grade: { version: "bar-test-v6", model: "gpt-6-astra", familiar: 4, fun: 4, estCorrect: 50, flags: [] } })] });
     const report = await processing.processSpeedDay({ client, today: TODAY, env: { SPEED_TRIVIA_MAX_DOLLARS: "0.5" }, createSession: fakeSession().create,
-      createScorer: () => { throw new Error("no Gemini expected"); } });
+      createScorer: () => { throw new Error("no API grading expected"); } });
     expect(report.admitted).toBe(1);
   });
 

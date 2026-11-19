@@ -6,24 +6,24 @@ import type { AdmissionRow } from "@/types/speedTriviaAdmission";
 
 // The star cap needs every question's subject before it can be approved (docs/speed-trivia-backlog-and-quality-plan.md
 // Phases 4a.1, 4c.1). The logic lives once, in tagOne (lib/question-variety/tagging.cjs), shared with the scripts.
-// One Gemini call (~$0.0001) per question, only for a question without a tag. Best effort: a failure never blocks
+// One OpenAI call (~$0.0001) per question, only for a question without a tag. Best effort: a failure never blocks
 // anything; an untagged question just stays waiting.
 
-const ADMIN_SAVE = `gemini:${TAG_MODEL}:admin-save-v1`;
-const QUICK_KEEP = `gemini:${TAG_MODEL}:quick-keep-v1`;
+const ADMIN_SAVE = `openai:${TAG_MODEL}:admin-save-v1`;
+const QUICK_KEEP = `openai:${TAG_MODEL}:quick-keep-v1`;
 /** Quick Keep tags at most this many questions per request (a bulk Keep shares one allowance across its pages). */
 export const QUICK_KEEP_TAG_LIMIT = 25;
 const TAG_CONCURRENCY = 4;
 
 export const tagSpeedQuestion = async (row: AdmissionRow, transport: typeof fetch = fetch, taggedBy = ADMIN_SAVE): Promise<boolean> =>
-  tagOne({ client: supabaseAdmin, row, apiKey: process.env.GEMINI_API_KEY, transport, taggedBy });
+  tagOne({ client: supabaseAdmin, row, apiKey: process.env.OPENAI_API_KEY, transport, taggedBy });
 
 // Phase 4c.8 (post-4c.4 review #4): an edit to an approved question is tagged BEFORE the save, so a move into a full
-// subject is refused with nothing saved. Same single Gemini call; the tag is written after the save.
+// subject is refused with nothing saved. Same single OpenAI call; the tag is written after the save.
 
 /** The tag this content would get, without writing it. Null on any failure (never throws). */
 export const computeSpeedTag = (row: AdmissionRow, transport: typeof fetch = fetch): Promise<TagRow | null> =>
-  tagOne({ client: supabaseAdmin, row, apiKey: process.env.GEMINI_API_KEY, transport, taggedBy: ADMIN_SAVE, write: false });
+  tagOne({ client: supabaseAdmin, row, apiKey: process.env.OPENAI_API_KEY, transport, taggedBy: ADMIN_SAVE, write: false });
 
 /** The subject the question is tagged with now; null when untagged or unreadable. One indexed read. */
 export const readSpeedSubjectKey = async (rowId: string): Promise<string | null> => {
@@ -61,11 +61,11 @@ export const tagAllowance = (): TagAllowance => ({ left: QUICK_KEEP_TAG_LIMIT })
 
 /**
  * Quick Keep: tag the batch's waiting Speed questions that have no tag, before the signed Keep. Two indexed reads
- * (question_tags, then the untagged rows), then one Gemini call each, 4 at a time, at most `allowance.left` in all.
+ * (question_tags, then the untagged rows), then one OpenAI call each, 4 at a time, at most `allowance.left` in all.
  * Never throws; a question still untagged gets the 'untagged' outcome from the Keep as before. Returns how many were tagged.
  */
 export const tagUntaggedSpeedQuestions = async (ids: string[], allowance: TagAllowance, transport: typeof fetch = fetch): Promise<number> => {
-  if (!supabaseAdmin || ids.length === 0 || allowance.left <= 0 || !process.env.GEMINI_API_KEY) return 0;
+  if (!supabaseAdmin || ids.length === 0 || allowance.left <= 0 || !process.env.OPENAI_API_KEY) return 0;
   const client = supabaseAdmin;
   try {
     const { data: tags, error } = await client.from("question_tags").select("question_ref, subject_key")

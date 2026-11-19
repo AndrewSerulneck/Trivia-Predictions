@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 /* Nightly: gate today's question-writer candidates (docs/speed-trivia-backlog-and-quality-plan.md Phases 4b, 4c).
  *
- *   node --env-file=.env.local scripts/process-question-candidates.cjs --game speed|live [--threshold 3] [--no-fallback]
- *        [--report <dir>]
+ *   node --env-file=.env.local scripts/process-question-candidates.cjs --game speed|live [--threshold 3] [--report <dir>]
  *
  * Speed: admits through signed admission as pending_review. Live: leaves passing candidates waiting in Quick Review's
  * Live mode (the JSON is changed only by Publish). Live's repeat check reads data/live-trivia/categories from this
  * checkout (read-only).
  * Paid: Speed's bar test and repeat check spend inside SPEED_TRIVIA_MAX_DOLLARS (the nightly's approved $0.50); Live's
- * inside QUESTION_WRITER_LIVE_MAX_DOLLARS (default $0.25); the Gemini fallback (only on a day with no ChatGPT batch)
- * inside QUESTION_WRITER_FALLBACK_MAX_DOLLARS (≤ $0.10 per game).
+ * inside QUESTION_WRITER_LIVE_MAX_DOLLARS (default $0.25). A day with no ChatGPT batch writes nothing (no fallback writer, D40).
  * Exit code 1 on a fatal error; candidates not yet settled stay `received`, so re-running the same UTC day continues.
  */
 const fs = require('node:fs');
@@ -19,12 +17,11 @@ const { processSpeedDay, DEFAULT_THRESHOLD } = require('../lib/question-writer/p
 const { processLiveDay } = require('../lib/question-writer/liveProcess.cjs');
 
 const parseArgs = argv => {
-  const args = { game: null, threshold: DEFAULT_THRESHOLD, fallback: true, report: null };
+  const args = { game: null, threshold: DEFAULT_THRESHOLD, report: null };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--game') args.game = argv[++i];
     else if (arg === '--threshold') args.threshold = Number(argv[++i]);
-    else if (arg === '--no-fallback') args.fallback = false;
     else if (arg === '--report') args.report = argv[++i];
     else throw new Error(`unknown option ${arg}`);
   }
@@ -44,7 +41,7 @@ const main = async argv => {
   const client = clientFromEnv();
   try {
     const run = args.game === 'live' ? processLiveDay : processSpeedDay;
-    const report = await run({ client, threshold: args.threshold, fallback: args.fallback });
+    const report = await run({ client, threshold: args.threshold });
     writeReport(args.report, report);
     console.log(JSON.stringify(report));
     return report;

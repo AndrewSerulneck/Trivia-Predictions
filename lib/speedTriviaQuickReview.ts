@@ -136,35 +136,31 @@ export const readQuickReviewQueue = async (
   return { total: Number(data.total) || 0, items: notes.size ? items.map((item) => (notes.has(item.id) ? { ...item, whyTrue: notes.get(item.id) } : item)) : items, counts };
 };
 
-export type WriterState = "none" | "silent" | "fallback" | "ok";
+export type WriterState = "none" | "silent" | "ok";
 
 /**
- * "Writer stopped" (Phase 4b D13, widened in 4c.4 D29), for either game. One read of at most two rows (primary key
- * order). `none`: no run ever (the writer was never turned on). `silent`: the newest run is over 2 days old.
- * `fallback`: the two newest runs are consecutive Gemini fallbacks. Unknown (read failed) is `ok`.
+ * "Writer stopped" (Phase 4b D13, widened in 4c.4 D29; the Gemini fallback case went in 4f.1), for either game. One read
+ * of the newest row. `none`: no run ever (the writer was never turned on). `silent`: the newest run is over 2 days old.
+ * Unknown (read failed) is `ok`.
  */
 export const readWriterState = async (game: "speed" | "live"): Promise<WriterState> => {
   let rows: unknown;
   try {
-    const { data, error } = await admin().from("question_writer_runs").select("run_date, source")
-      .eq("game", game).order("run_date", { ascending: false }).limit(2);
+    const { data, error } = await admin().from("question_writer_runs").select("run_date")
+      .eq("game", game).order("run_date", { ascending: false }).limit(1);
     rows = error ? null : data;
   } catch {
     return "ok";
   }
   if (!Array.isArray(rows)) return "ok";
   if (rows.length === 0) return "none";
-  const [latest, before] = rows as { run_date: string; source: string }[];
+  const [latest] = rows as { run_date: string }[];
   const dayMs = 86_400_000;
-  if (Math.floor(Date.now() / dayMs) * dayMs - Date.parse(latest.run_date) > 2 * dayMs) return "silent"; // whole UTC days
-  if (!before) return "ok";
-  const consecutive = Date.parse(latest.run_date) - Date.parse(before.run_date) === dayMs;
-  return consecutive && latest.source === "gemini-fallback" && before.source === "gemini-fallback" ? "fallback" : "ok";
+  return Math.floor(Date.now() / dayMs) * dayMs - Date.parse(latest.run_date) > 2 * dayMs ? "silent" : "ok"; // whole UTC days
 };
 
 export const readWriterStopped = async (game: "speed" | "live" = "speed"): Promise<boolean> => {
-  const state = await readWriterState(game);
-  return state === "silent" || state === "fallback";
+  return (await readWriterState(game)) === "silent";
 };
 
 /**

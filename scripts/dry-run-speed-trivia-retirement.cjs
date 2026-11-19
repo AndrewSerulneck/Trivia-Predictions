@@ -6,7 +6,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const core=require('../lib/speed-trivia-uniqueness/core.cjs');
 const retirement=require('../lib/speed-trivia-uniqueness/retirement.cjs');
-const gemini=require('../lib/speed-trivia-uniqueness/gemini.cjs');
+const judgeProvider=require('../lib/speed-trivia-uniqueness/openai.cjs');
 const support=require('./speed-trivia-phase2-support.cjs');
 const buildAudit = (corpus,mandatoryIds=new Set()) => {
   const index=core.buildIndex(corpus),pairs=new Map(),retrieval=[];
@@ -49,7 +49,7 @@ const run = async ({snapshot,output,paid=false,cap=10,limit=12000,thinkingBudget
   const plan={version:'bounded-audit-v2',corpusRevision:corpus.revision,corpusDigest:corpus.digest,rows:corpus.rows.length,retrievedPairs:audit.pairs.length,selectedPairs:selected.length,selectedComponents:components.length,unadjudicatedPairs:audit.pairs.length-selected.length,selection:'Prioritize high-overlap edges >=0.8 and the six original reported families. Components select work only; every duplicate must be compared DIRECTLY with its proposed keeper. Distinct or uncertain matches start separate comparisons. Never infer a retirement from a transitive chain.',estimatedDollars:selected.length*.00055,estimateBasis:'Conservative all-selected-pairs estimate from measured isolated Flash comparisons, zero thinking; direct keeper groups usually require fewer requests. Retries may differ.',explicitCap:cap,limit,concurrency,productionMutations:0};
   if(!paid){console.log(JSON.stringify(plan));support.writeExclusive(path.join(directory,`audit-plan-${Date.now()}.json`),plan);return plan;}
   const budget=support.openBudget(directory,{dollars:cap,maxRequests:11000,maxInputTokens:20000000,maxOutputTokens:4500000,maxElapsedMs:7200000});
-  const cache=support.openCache(directory),judge=gemini.createJudge({model:'gemini-2.5-flash',thinkingBudget,batchSize:1,apiKey:process.env.GEMINI_API_KEY,budget,cache});
+  const cache=support.openCache(directory),judge=judgeProvider.createJudge({batchSize:1,apiKey:process.env.OPENAI_API_KEY,budget,cache});
   const journal=path.join(directory,'adjudicated-pairs.jsonl'),existing=new Map();
   if(fs.existsSync(journal))for(const line of fs.readFileSync(journal,'utf8').trim().split('\n').filter(Boolean)){const p=JSON.parse(line);if(p.corpusDigest!==corpus.digest||p.modelVersion!==judge.modelVersion)throw new Error('audit-journal-version-drift');existing.set(p.id,p);}
   const dependenciesBytes=fs.readFileSync(path.join(snapshot,'dependencies.json')),deps=JSON.parse(dependenciesBytes)[0].evidence,references={};

@@ -12,21 +12,21 @@ const ANTHROPIC_PRICING: Record<string, ModelPrice> = {
   "claude-opus-4-8":           { input: 15.00, output: 75.00 },
 };
 
-const GEMINI_PRICING: Record<string, ModelPrice> = {
-  "gemini-2.5-flash": { input: 0.15, output: 0.60 },
-  "gemini-1.5-flash": { input: 0.075, output: 0.30 },
-};
-
 // ── Public types ────────────────────────────────────────────────────────────
 
 export type LlmUsageFeature =
+  // OpenAI question checks (Phase 4f.2): one row per model per run, written by lib/openai/ledger.cjs
+  | "speed_question_checks"
+  | "live_question_checks"
+  | "question_tagging"
   // category_blitz_grading/moderation: not emitted anywhere yet — no caller instruments Category Blitz
   | "category_blitz_grading"
   | "category_blitz_moderation"
   | "username_moderation"
   | "live_trivia_rewrite";
 
-export type LlmUsageProvider = "anthropic" | "gemini";
+// "gemini" stays readable for rows written before Phase 4f.2; nothing writes it any more.
+export type LlmUsageProvider = "anthropic" | "gemini" | "openai";
 
 export type LlmUsageLogRow = {
   id: string;
@@ -57,7 +57,7 @@ export type LlmCostSummary = {
  * Falls back to 0 if the model is unrecognised.
  */
 export function estimateCost(model: string, inputTokens: number, outputTokens: number): number {
-  const price = ANTHROPIC_PRICING[model] ?? GEMINI_PRICING[model];
+  const price = ANTHROPIC_PRICING[model];
   if (!price) return 0;
   const costUsd = (inputTokens / 1_000_000) * price.input + (outputTokens / 1_000_000) * price.output;
   return Number((costUsd * 100).toFixed(4)); // convert USD → cents, keep 4 decimals
@@ -69,6 +69,7 @@ export function estimateCost(model: string, inputTokens: number, outputTokens: n
 export function inferProvider(model: string): LlmUsageProvider {
   if (model.startsWith("claude-")) return "anthropic";
   if (model.startsWith("gemini-")) return "gemini";
+  if (model.startsWith("gpt-")) return "openai";
   return "anthropic";
 }
 
@@ -102,39 +103,6 @@ export async function trackAnthropicUsage(
     });
   } catch (err) {
     console.warn("[llmCostTracker] Failed to log Anthropic usage:", err instanceof Error ? err.message : err);
-  }
-}
-
-type GeminiUsage = {
-  promptTokenCount?: number;
-  candidatesTokenCount?: number;
-};
-
-/**
- * Track a Gemini API call. Fire-and-forget — never throws.
- */
-export async function trackGeminiUsage(
-  usage: GeminiUsage,
-  model: string,
-  feature: LlmUsageFeature,
-  metadata?: Record<string, unknown>,
-): Promise<void> {
-  if (!supabaseAdmin) return;
-  const inputTokens = usage.promptTokenCount ?? 0;
-  const outputTokens = usage.candidatesTokenCount ?? 0;
-  const costCents = estimateCost(model, inputTokens, outputTokens);
-  try {
-    await supabaseAdmin.from("llm_usage_logs").insert({
-      provider: "gemini",
-      model,
-      feature,
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      cost_cents: costCents,
-      metadata: metadata ?? null,
-    });
-  } catch (err) {
-    console.warn("[llmCostTracker] Failed to log Gemini usage:", err instanceof Error ? err.message : err);
   }
 }
 
