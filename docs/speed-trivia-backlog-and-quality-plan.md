@@ -2,6 +2,28 @@
 
 Created 2026-11-15. Owner: Andrew Serulneck.
 
+> ## ▶ What runs next, and which Claude model runs it
+>
+> Start a new Claude Code session for each phase, set to the model and effort below (`/model`, then the effort
+> setting). Run them **in this order, one at a time** — they share files. Full reasons: §3 table. Each phase's section
+> in §4 repeats its model in its heading.
+>
+> | # | Phase | Claude model | Effort | Status |
+> | --- | --- | --- | --- | --- |
+> | 1 | 7a — seasonal slot chosen first | **Opus 5.5** | medium | ✅ DONE 2026-11-19 (`..._PHASE_7A_HANDOFF.md`) |
+> | 2 | 7b — every event gets its turn; calendar cleanups | **Opus 5.5** | medium | ✅ DONE 2026-11-19 (`..._PHASE_7B_HANDOFF.md`) |
+> | 3 | 7c — seasonal subjects, duplicate files; checks and **PR for 7a–7c** | **Opus 5.5** | medium | ✅ code DONE 2026-11-19; PR waits for Andrew's OK (`..._PHASE_7C_HANDOFF.md`) |
+> | 4 | 7d — repeat check on live edits | **Opus 5.5** | high | ← **next** (after 7a–7c merge) |
+> | 5 | 7e — OpenAI calls: room, true costs, retries | **Opus 5.5** | high | waiting |
+> | 6 | 7f — Speed → Live conversions can't get stuck | **Opus 5.5** | high | waiting |
+> | 7 | 7g — Live Publish, Speed answers, Admin edits | **Opus 5.5** | high | waiting |
+> | 8 | 7h — the private writer never loses a batch | **Opus 5.5** | medium | waiting |
+> | 9 | 7i — player screens: report sheet, Current Events tab | **Sonnet 5.5** | medium | waiting |
+> | 10 | 7j — Sync safety, tripwire; apply, verify, ship | **Sonnet 5.5** | medium | waiting |
+> | — | 6 — Live grading misses | Opus 5.5 | high | deferred (D41) |
+>
+> When a phase finishes, its agent ticks it here and moves "← next" down one row.
+
 **Status: Phase 0 DONE 2026-11-15 — `speed-trivia-backlog-and-quality-plan_PHASE_0_HANDOFF.md`. Phase 1 DONE
 2026-11-15 (migration applied) — `..._PHASE_1_HANDOFF.md`. Phase 2 DONE 2026-11-15: migration `20261115153905` applied,
 all 7,333 bar-test scores loaded — `..._PHASE_2_HANDOFF.md`. Phase 3 DONE 2026-11-15 (overnight Keep queue, faster
@@ -55,7 +77,7 @@ latent (nothing on production needs repair) → **REMEDIAL PHASES 4c.1–4c.4 AD
 D28, D29). **Phase 4c.1 DONE 2026-11-16** (uncommitted; no migration, no paid call made) —
 `speed-trivia-backlog-and-quality-plan_PHASE_4C1_HANDOFF.md`. **Phase 4c.2 DONE 2026-11-16** (uncommitted; migration
 `20261117025917_live_publish_pr_open.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it) —
-`speed-trivia-backlog-and-quality-plan_PHASE_4C2_HANDOFF.md`. **Phase 4c.3 DONE 2026-11-16** (uncommitted; migration `20261117033637_speed_trivia_expire_undated_current_events.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it) — `speed-trivia-backlog-and-quality-plan_PHASE_4C3_HANDOFF.md`. **Phase 4c.5 DONE 2026-11-16** (uncommitted; no migration, no data change, no paid call made; `writer-v4`, `bar-test-v5`, `bar-test-live-v3`) — `speed-trivia-backlog-and-quality-plan_PHASE_4C5_HANDOFF.md`. **Phase 4c.6 DONE 2026-11-16** (uncommitted; no migration, no data change, no paid call made; Speed options shuffled per question, the answer no longer sent before the tap) — `speed-trivia-backlog-and-quality-plan_PHASE_4C6_HANDOFF.md`. **Phase 4c.7 DONE 2026-11-17** (uncommitted; migration `20261117040723_question_reports.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it; no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C7_HANDOFF.md`. **Phase 4c.4 code + checks DONE 2026-11-17** (uncommitted; the three migrations were already applied on production; lint, tests, build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4C4_HANDOFF.md`. **CODE REVIEW 2026-11-17** (after 4c.4, all uncommitted work since PR #19): 9 findings, all latent (read-only check 2026-11-17: no slug clash, no subject over the cap, 0 reports) → **REMEDIAL PHASES 4c.8–4c.10 ADDED** (§4 "Remedial phases 4c.8–4c.10"). **Phase 4c.8 DONE 2026-11-17** (uncommitted; migration `20261117135338_speed_trivia_tag_cap.sql` written and PGlite-tested, **NOT applied** — 4c.10 applies it; no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C8_HANDOFF.md`. **Phase 4c.9 DONE 2026-11-17** (uncommitted; no migration, no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C9_HANDOFF.md`. **Phase 4c.10 steps 1–5 DONE 2026-11-17** (code uncommitted; migration `20261117142126_question_reports_daily_limit.sql` **APPLIED** with Andrew's OK; 4c.8's `20261117135338` was already applied; both verified on production; lint, typecheck, 7,551 tests and build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4C10_HANDOFF.md`. **D23 SHIPPED 2026-11-17** (PR #20 merged as `1a604278`; production deploy READY 15:41 UTC; Trivia Nightly re-enabled). Report smoke test passed; Sync Live Trivia fixed (PR #21, +253 Live rows). Live report-sheet hold shipped (`feature/live-report-sheet-hold`); the writer is signed in to ChatGPT (`CODEX_AUTH_JSON` set 2026-11-17). **Phase 4d STARTED 2026-11-17, PAUSED** (trial batch written and processed, $0.11; every Current Events question failed the Gemini bar test) — `speed-trivia-backlog-and-quality-plan_PHASE_4D_HANDOFF.md`. **PHASE 4d.1 ADDED 2026-11-17 (D35: ChatGPT bar test).** **Phase 4d.1 code + calibration DONE 2026-11-18** (uncommitted; no migration, no data change; calibration on Andrew's ChatGPT plan, ~238k tokens, plus a $0.05 Gemini comparison; thresholds stay 3) — `speed-trivia-backlog-and-quality-plan_PHASE_4D1_HANDOFF.md`. **2026-11-18 (Andrew): ship 4d.1 approved; D36 answered (Gemini fallback writer OFF now; repeat check + tagging to the OpenAI API later, its own phase); the 7 Speed trial questions Kept; PHASE 4e ADDED (D37: send a Speed question to ChatGPT to become a Live question).** **2026-11-19: D38 repeat-check change in PR #26 (green, waits for Andrew's merge). 4d RE-TRIAL RUN** (writer run 44536359607, Trivia Nightly 44537297004, $0.13; every item ChatGPT-graded; Speed 8 waiting, Live 14 waiting; all 22 fact-checked; waits for Andrew's ratings before the schedule goes on). **Phase 4e code + tests DONE 2026-11-19** (uncommitted on `fix/speed-live-edit-repeat-check`; migration `20261119134654_live_conversion_requests.sql` PGlite-tested, **NOT applied**) — `speed-trivia-backlog-and-quality-plan_PHASE_4E_HANDOFF.md`. **2026-11-19 SHIPPED:** PR #26 (D38) merged; 4e migration applied; PR #27 (4e + D39: Current Events facts needn't be confirmed by Gemini) merged and deployed; writer files synced to the private repo; **writer daily schedule ON** (00:30 UTC, Andrew: "The writer seems to be doing well. You can turn it on.") — `speed-trivia-backlog-and-quality-plan_PHASE_4E_SHIP_HANDOFF.md`. **2026-11-19 (Andrew): Gemini out of the process altogether (D40) → PHASES 4f.1 AND 4f.2 ADDED; Phase 5 SKIPPED (too few players for monitoring to tell us anything, D41); Phase 6 DEFERRED until Live play grows (D41).** **Phase 4f.1 DONE 2026-11-19** (committed locally, not pushed, on `feature/gemini-writers-out-4f1`; no migration, no data change, $0; lint, typecheck, tests and build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4F1_HANDOFF.md`. **Phase 4f.2 DONE 2026-11-19** (built and tested on `feature/gemini-writers-out-4f1`, NOT live until merged; migration `20261119153651_llm_usage_logs_openai.sql` written, NOT applied; `OPENAI_API_KEY` set in `.env.local`, Vercel production + preview and GitHub Actions). Models picked by test: Speed repeat check `gpt-6-luna` (re-passed both frozen gates; `gpt-6.1-sol` failed them), Live repeat check, tagging and the backup bar test `gpt-6.1-sol` — `speed-trivia-backlog-and-quality-plan_PHASE_4F2_HANDOFF.md`. **2026-11-19 (Andrew): migration OK'd and applied (verified with a test insert); PR #29 (4f.1 + 4f.2) opened, Andrew let the agent merge it; `GEMINI_API_KEY` may stay where it is (D42).** **Phase 7 DONE 2026-11-19** (branch `feature/seasonal-slots-phase7`, PR waits for Andrew to approve the calendar, D34; no migration, no data change, $0) — `speed-trivia-backlog-and-quality-plan_PHASE_7_HANDOFF.md`. **Next: Andrew approves `data/question-variety/calendar.json` → merge; 4f.2 step 6 production check after the first OpenAI nightly; then the second code review (4c.8–7).** **PHASE 4c.5 ADDED 2026-11-16** (D30: interest rule, no loose superlatives, a "why it's true"
+`speed-trivia-backlog-and-quality-plan_PHASE_4C2_HANDOFF.md`. **Phase 4c.3 DONE 2026-11-16** (uncommitted; migration `20261117033637_speed_trivia_expire_undated_current_events.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it) — `speed-trivia-backlog-and-quality-plan_PHASE_4C3_HANDOFF.md`. **Phase 4c.5 DONE 2026-11-16** (uncommitted; no migration, no data change, no paid call made; `writer-v4`, `bar-test-v5`, `bar-test-live-v3`) — `speed-trivia-backlog-and-quality-plan_PHASE_4C5_HANDOFF.md`. **Phase 4c.6 DONE 2026-11-16** (uncommitted; no migration, no data change, no paid call made; Speed options shuffled per question, the answer no longer sent before the tap) — `speed-trivia-backlog-and-quality-plan_PHASE_4C6_HANDOFF.md`. **Phase 4c.7 DONE 2026-11-17** (uncommitted; migration `20261117040723_question_reports.sql` written and PGlite-tested, **NOT applied** — 4c.4 applies it; no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C7_HANDOFF.md`. **Phase 4c.4 code + checks DONE 2026-11-17** (uncommitted; the three migrations were already applied on production; lint, tests, build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4C4_HANDOFF.md`. **CODE REVIEW 2026-11-17** (after 4c.4, all uncommitted work since PR #19): 9 findings, all latent (read-only check 2026-11-17: no slug clash, no subject over the cap, 0 reports) → **REMEDIAL PHASES 4c.8–4c.10 ADDED** (§4 "Remedial phases 4c.8–4c.10"). **Phase 4c.8 DONE 2026-11-17** (uncommitted; migration `20261117135338_speed_trivia_tag_cap.sql` written and PGlite-tested, **NOT applied** — 4c.10 applies it; no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C8_HANDOFF.md`. **Phase 4c.9 DONE 2026-11-17** (uncommitted; no migration, no data change, no paid call) — `speed-trivia-backlog-and-quality-plan_PHASE_4C9_HANDOFF.md`. **Phase 4c.10 steps 1–5 DONE 2026-11-17** (code uncommitted; migration `20261117142126_question_reports_daily_limit.sql` **APPLIED** with Andrew's OK; 4c.8's `20261117135338` was already applied; both verified on production; lint, typecheck, 7,551 tests and build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4C10_HANDOFF.md`. **D23 SHIPPED 2026-11-17** (PR #20 merged as `1a604278`; production deploy READY 15:41 UTC; Trivia Nightly re-enabled). Report smoke test passed; Sync Live Trivia fixed (PR #21, +253 Live rows). Live report-sheet hold shipped (`feature/live-report-sheet-hold`); the writer is signed in to ChatGPT (`CODEX_AUTH_JSON` set 2026-11-17). **Phase 4d STARTED 2026-11-17, PAUSED** (trial batch written and processed, $0.11; every Current Events question failed the Gemini bar test) — `speed-trivia-backlog-and-quality-plan_PHASE_4D_HANDOFF.md`. **PHASE 4d.1 ADDED 2026-11-17 (D35: ChatGPT bar test).** **Phase 4d.1 code + calibration DONE 2026-11-18** (uncommitted; no migration, no data change; calibration on Andrew's ChatGPT plan, ~238k tokens, plus a $0.05 Gemini comparison; thresholds stay 3) — `speed-trivia-backlog-and-quality-plan_PHASE_4D1_HANDOFF.md`. **2026-11-18 (Andrew): ship 4d.1 approved; D36 answered (Gemini fallback writer OFF now; repeat check + tagging to the OpenAI API later, its own phase); the 7 Speed trial questions Kept; PHASE 4e ADDED (D37: send a Speed question to ChatGPT to become a Live question).** **2026-11-19: D38 repeat-check change in PR #26 (green, waits for Andrew's merge). 4d RE-TRIAL RUN** (writer run 44536359607, Trivia Nightly 44537297004, $0.13; every item ChatGPT-graded; Speed 8 waiting, Live 14 waiting; all 22 fact-checked; waits for Andrew's ratings before the schedule goes on). **Phase 4e code + tests DONE 2026-11-19** (uncommitted on `fix/speed-live-edit-repeat-check`; migration `20261119134654_live_conversion_requests.sql` PGlite-tested, **NOT applied**) — `speed-trivia-backlog-and-quality-plan_PHASE_4E_HANDOFF.md`. **2026-11-19 SHIPPED:** PR #26 (D38) merged; 4e migration applied; PR #27 (4e + D39: Current Events facts needn't be confirmed by Gemini) merged and deployed; writer files synced to the private repo; **writer daily schedule ON** (00:30 UTC, Andrew: "The writer seems to be doing well. You can turn it on.") — `speed-trivia-backlog-and-quality-plan_PHASE_4E_SHIP_HANDOFF.md`. **2026-11-19 (Andrew): Gemini out of the process altogether (D40) → PHASES 4f.1 AND 4f.2 ADDED; Phase 5 SKIPPED (too few players for monitoring to tell us anything, D41); Phase 6 DEFERRED until Live play grows (D41).** **Phase 4f.1 DONE 2026-11-19** (committed locally, not pushed, on `feature/gemini-writers-out-4f1`; no migration, no data change, $0; lint, typecheck, tests and build pass) — `speed-trivia-backlog-and-quality-plan_PHASE_4F1_HANDOFF.md`. **Phase 4f.2 DONE 2026-11-19** (built and tested on `feature/gemini-writers-out-4f1`, NOT live until merged; migration `20261119153651_llm_usage_logs_openai.sql` written, NOT applied; `OPENAI_API_KEY` set in `.env.local`, Vercel production + preview and GitHub Actions). Models picked by test: Speed repeat check `gpt-6-luna` (re-passed both frozen gates; `gpt-6.1-sol` failed them), Live repeat check, tagging and the backup bar test `gpt-6.1-sol` — `speed-trivia-backlog-and-quality-plan_PHASE_4F2_HANDOFF.md`. **2026-11-19 (Andrew): migration OK'd and applied (verified with a test insert); PR #29 (4f.1 + 4f.2) opened, Andrew let the agent merge it; `GEMINI_API_KEY` may stay where it is (D42).** **Phase 7 DONE 2026-11-19** (branch `feature/seasonal-slots-phase7`, PR waits for Andrew to approve the calendar, D34; no migration, no data change, $0) — `speed-trivia-backlog-and-quality-plan_PHASE_7_HANDOFF.md`. **Next: Andrew approves `data/question-variety/calendar.json` → merge; 4f.2 step 6 production check after the first OpenAI nightly; then the second code review (4c.8–7).** **2026-11-19: PR #30 merged (Phase 7 live). Andrew's Phase 7 code review (Phase 7 only) gave 10 findings → REMEDIAL PHASES 7a–7c ADDED** (§4 "Remedial phases 7a–7c"; D43, D44 defaults). Nothing needs switching off meanwhile. **Second code review of 4c.8–4f.2 RUN 2026-11-19, by PR (#20, #21, #22, #25, #26, #27, #29): 64 findings, checked against `main`; nothing needs a data repair → REMEDIAL PHASES 7d–7j ADDED** (§4 "Remedial phases 7d–7j"; D45, D46 defaults). **Phase 7a DONE 2026-11-19** (uncommitted on `fix/seasonal-slots-7abc`, from `main`; no migration, no data change, $0) — `speed-trivia-backlog-and-quality-plan_PHASE_7A_HANDOFF.md`. **Phase 7b DONE 2026-11-19** (uncommitted on the same branch; no migration, no data change, $0) — `speed-trivia-backlog-and-quality-plan_PHASE_7B_HANDOFF.md`. **Phase 7c DONE 2026-11-19** (`writer-v6`; 41 Finder copies removed + tripwire; 7a–7c committed on `fix/seasonal-slots-7abc`, one PR, merges only with Andrew's OK; post-merge brief check still to do) — `speed-trivia-backlog-and-quality-plan_PHASE_7C_HANDOFF.md`. **Next: Andrew's OK → merge → 7c step 8 → 7d → 7e → 7f → 7g → 7h → 7i → 7j** (models: the box at the top). **PHASE 4c.5 ADDED 2026-11-16** (D30: interest rule, no loose superlatives, a "why it's true"
 note); order 4c.2 → 4c.3 → 4c.5 → 4c.4. 4d starts only after 4c.4 and the D23 deploy. **PHASES 4c.6, 4c.7, 6 AND 7
 ADDED 2026-11-16** (Andrew; D31–D34): 4c.6 shuffles Speed answer order when a question is served and stops sending the
 correct answer to the browser (the right answer sits in slot C on 43% of active questions); 4c.7 adds a "Report" button
@@ -222,6 +244,16 @@ and you bulk-keep the best, you're likely looking at a few hours in total, not w
 | 5 | ~~Seven-day monitoring and report~~ **SKIPPED 2026-11-19 (D41)** | — | Too few players for the numbers to mean anything. |
 | 6 | Live grading misses (D33). **DEFERRED 2026-11-19 (D41)** until Live play grows or a "My answer was right" report comes in. | **Opus 5.5 / high** | Changes the shared Live grader (points on every Live night) and may edit existing canonical Live JSON entries, which needs Andrew's OK per entry list. |
 | 7 | Seasonal slots (D34): at most one writer slot a day per game tied to a nearby calendar event | **Opus 5.5 / medium** | Top tier because it changes the shared slot logic that decides variety; medium effort because it's one small, specified addition with no migration and no extra cost. |
+| 7a | Remedial: the seasonal cell is chosen before the modern-era swap and never reuses a cell (Phase 7 review #1, #2). **DONE 2026-11-19.** | **Opus 5.5 / medium** | Shared slot engine that decides every night's variety (top tier); the fix is prototyped and specified, so medium effort. |
+| 7b | Remedial: rotate overlapping events, 14→3-day lead window (D43, D44), reuse `map.cjs` helpers, bad `exact` falls back (Phase 7 review #3, #5, #7, #8) | **Opus 5.5 / medium** | Changes which event the writer gets each night (shared logic); small and specified, no migration or cost. |
+| 7c | Remedial: seasonal subject rule (`writer-v6`), `@/` type import, a sharper brief test, delete untracked and committed " 2" copies + a tripwire; checks, PR, post-merge brief check (Phase 7 review #4, #6, #9, #10; R2 #29.9) | **Opus 5.5 / medium** | Top tier because it changes the writer prompt that decides quality (as 4c.5); the rest is mechanical, so medium effort. |
+| 7d | Remedial (second review): a live edit can't open a hole in Quick Keep's fast lane; D38b in one pass; D45 (R2 #26.1–#26.9, #27.9) | **Opus 5.5 / high** | The shared repeat checker on the signed admission boundary, plus a migration to the Quick Keep and Keep Queue fast lanes; one slip admits a repeat. |
+| 7e | Remedial (second review): OpenAI calls get room to answer, true tag costs on the D4 caps, billed failures recorded, bounded retries, a capped Convert to Live, `sourceUrl` to the backup grader (R2 #29.1–#29.8, #29.10) | **Opus 5.5 / high** | Paid calls and budgets on the nightly and Admin paths, and tagging that gates admission. |
+| 7f | Remedial (second review): Speed → Live conversions never get stuck; "Writer stopped" stays honest; a failed read can't sink the Live brief (R2 #27.1–#27.8, #27.10) | **Opus 5.5 / high** | A SECURITY DEFINER receive function (migration) at the writer token boundary, and the nightly Live processor. |
+| 7g | Remedial (second review): Publish never auto-merges a moved head (D10); the Speed answer POST grades only playable questions; edits re-tag; idempotent writer retries; a lighter PR check; honest messages (R2 #20.1–#20.5, #20.7, #20.9) | **Opus 5.5 / high** | The Live source-of-truth write path (D10), the Speed scoring path (points), and a migration. |
+| 7h | Remedial (second review): a failed grade never drops the writer's batch; one grade per slot; shared bar-test helper; writer repo sync (R2 #25.1, #25.2, #25.5–#25.7, #25.9, #25.10) | **Opus 5.5 / medium** | The nightly writer decides whether any questions arrive (top tier), but each fix is narrow and specified, with no migration. |
+| 7i | Remedial (second review): the held Live report sheet never blocks or loses a question or a note (D46); the Current Events tab without a stored id; visibility read cache (R2 #22.1–#22.9, #20.6, #20.8) | **Sonnet 5.5 / medium** | Well-specified player UI and a small cache; browser-verified from a scratchpad clone. |
+| 7j | Remedial (second review): Sync Live Trivia concurrency, a workflow `--env-file` tripwire, a handoff banner; then checks, apply 7d/7f/7g migrations, merge, writer sync, post-nightly check against 7e's baseline (R2 #21.1–#21.3) | **Sonnet 5.5 / medium** | Departure from top tier, as 3d and 4c.4: small, specified changes plus applying migrations already PGlite-tested in 7d/7f/7g; Andrew's OK gates the push and the merge. |
 
 **Which AI model runs the work (Andrew asked 2026-11-15 whether to switch off Gemini).** The table above names the
 coding agent. The model *inside* the pipeline is a separate choice for each job:
@@ -235,7 +267,7 @@ coding agent. The model *inside* the pipeline is a separate choice for each job:
 
 The Gemini-vs-Claude writer bake-off (planned before 2026-11-15) is dropped, and no Claude key is needed.
 
-Order: 0 → 1 → 2 → 3 → **3a → 3b → 3c → 3d** → 4a → **4a.1** → 4b → 4c → **4a.2** → Andrew's code review → **4c.1 → 4c.2 → 4c.3 → 4c.5 → 4c.6 → 4c.7 → 4c.4** → **4c.8 → 4c.9 → 4c.10** → commit, merge, deploy (D23) → 4d (trial) → **4d.1** → 4d (re-trial, daily on) → 4e → **4f.1 → 4f.2 → 7** → second code review (4c.8–7); 5 skipped, 6 deferred (D41, 2026-11-19). If Andrew's OpenAI key isn't ready when 4f.1 ends, run 7 before 4f.2 (they share no files except possibly `brief.cjs`; run them one after another, never at once). (4d.1 was added 2026-11-17 from the 4d trial, D35.) (4c.8–4c.10 were added 2026-11-17 from the review after 4c.4; they run before D23 because #1 must ship in the same deploy as 4c.6, and 4c.10 applies their migrations and takes over 4c.4's D23 steps. 4c.6 and 4c.7 were added 2026-11-16, D31 and D32; they run before 4c.4 so 4c.4's checks, its one migration push and the one deploy cover them, and player reports start during the 4d trial. Run them one after another: both edit `components/trivia/TriviaGame.tsx`. Phases 6 and 7 were added the same day, D33 and D34; 6 waits for Phase 5 so player reports can show grading misses first. 4c.5 was added 2026-11-16, D30; it runs before 4c.4 so one deploy and 4c.4's checks cover it. 4a.2 was added 2026-11-16 after 4b and 4c were built; it replaces 4a.1's thinning, which was never applied. 4c.1–4c.4 were added 2026-11-16 from the review; run them one after another, because 4c.1 and 4c.4 both edit `lib/speedTriviaQuickReview.ts`.) 4a.1 (added 2026-11-16) comes
+Order: 0 → 1 → 2 → 3 → **3a → 3b → 3c → 3d** → 4a → **4a.1** → 4b → 4c → **4a.2** → Andrew's code review → **4c.1 → 4c.2 → 4c.3 → 4c.5 → 4c.6 → 4c.7 → 4c.4** → **4c.8 → 4c.9 → 4c.10** → commit, merge, deploy (D23) → 4d (trial) → **4d.1** → 4d (re-trial, daily on) → 4e → **4f.1 → 4f.2 → 7** → Phase 7 code review → **7a → 7b → 7c** (added 2026-11-19) → second code review (4c.8–4f.2, by PR, run 2026-11-19) → **7d → 7e → 7f → 7g → 7h → 7i → 7j** (added 2026-11-19; one after another, they share files; §4 "Remedial phases 7d–7j"); 5 skipped, 6 deferred (D41, 2026-11-19). If Andrew's OpenAI key isn't ready when 4f.1 ends, run 7 before 4f.2 (they share no files except possibly `brief.cjs`; run them one after another, never at once). (4d.1 was added 2026-11-17 from the 4d trial, D35.) (4c.8–4c.10 were added 2026-11-17 from the review after 4c.4; they run before D23 because #1 must ship in the same deploy as 4c.6, and 4c.10 applies their migrations and takes over 4c.4's D23 steps. 4c.6 and 4c.7 were added 2026-11-16, D31 and D32; they run before 4c.4 so 4c.4's checks, its one migration push and the one deploy cover them, and player reports start during the 4d trial. Run them one after another: both edit `components/trivia/TriviaGame.tsx`. Phases 6 and 7 were added the same day, D33 and D34; 6 waits for Phase 5 so player reports can show grading misses first. 4c.5 was added 2026-11-16, D30; it runs before 4c.4 so one deploy and 4c.4's checks cover it. 4a.2 was added 2026-11-16 after 4b and 4c were built; it replaces 4a.1's thinning, which was never applied. 4c.1–4c.4 were added 2026-11-16 from the review; run them one after another, because 4c.1 and 4c.4 both edit `lib/speedTriviaQuickReview.ts`.) 4a.1 (added 2026-11-16) comes
 before 4b so the Keep Queue resumes on a thinned backlog and the writer starts from a bank inside the cap. The remedial phases come first (Andrew,
 2026-11-15). Run them one after another because 3d edits files 3a and 3b change. 4b needs 4a's map and tags. 4c needs
 4b's writer and candidate table. 4d needs all three.
@@ -2274,16 +2306,16 @@ Bowl week, the Oscars, March Madness, Halloween.
    - **Sports:** the Super Bowl, March Madness, the Masters, the Kentucky Derby, the NBA Finals, the Stanley Cup Final
      and the World Series.
    - **Awards:** the Oscars and the Grammys.
-2. `lib/question-variety/slots.cjs` / `lib/question-writer/brief.cjs`: when an event falls within the next 10 days, one
-   of the day's regular slots per game becomes that event's slot, at most one a day. The total stays 10 Speed and one
+2. `lib/question-variety/slots.cjs` / `lib/question-writer/brief.cjs`: when an event falls within the next 10 days (**7b: 14 to 3
+   days before**, D44), one of the day's regular slots per game becomes that event's slot, at most one a day. The total stays 10 Speed and one
    15-question Live round, so there's no extra cost.
 3. The questions are **evergreen facts about the event**: not news, no web search, no expiry. They go through the same
    gates, star cap and repeat check as any other question. The writer prompt gets the event name as the slot's area.
 4. Live: the seasonal question goes into its category's normal round. A full seasonal Live round is out of scope; it
    could be a later idea.
 5. **Tests:**
-   - An event 10 days out gets a slot; one 11 days out doesn't.
-   - Two events in the same window still give one slot.
+   - An event 10 days out gets a slot; one 11 days out doesn't. (**7b:** 14 and 3 days out do; 15, 2 and 0 don't.)
+   - Two events in the same window still give one slot. (**7b:** they take turns night by night, D43.)
    - The day's total is unchanged.
    - The calendar file is validated (category exists, dates parse).
 6. **Handoff:** `speed-trivia-backlog-and-quality-plan_PHASE_7_HANDOFF.md`.
@@ -2294,8 +2326,676 @@ Bowl week, the Oscars, March Madness, Halloween.
   only way the question gets tagged and admitted.
 - Live: the seasonal slot is used only on a night that writes the event's Live category (one category a night), so a
   Live event slot happens about once or twice per 10-day window.
-- Two events in the window: the soonest wins. The window is 0–10 days before the event's start date.
+- Two events in the window: the soonest wins. The window is 0–10 days before the event's start date. **Superseded by
+  7b (2026-11-19):** the window is 14 to 3 days before (D44), and events in it take turns night by night (D43).
 - Moving events use approximate weekday rules; an `exact` date per year overrides one.
+
+### Remedial phases 7a–7c (added 2026-11-19, from Andrew's code review of Phase 7)
+
+On 2026-11-19, after PR #30 merged (`fa6979a1`), Andrew ran `/code-review` on `feature/seasonal-slots-phase7`. **It
+covered Phase 7 only.** 4c.8–4f.2 are still unreviewed (see "Second code review" below). It reported 10 findings,
+each restated here as "Phase 7 review #N" (#N for short in this section), so the agent fixing it doesn't need the review
+output.
+
+**Phase 7 is live**, and the first seasonal slot is in the 2026-11-20 00:30 UTC writer run: Thanksgiving, Speed General
+Knowledge. **Nothing needs switching off.** The worst case is a little less modern spread, a wasted slot or a question
+that arrives after its moment. The questions are still evergreen, pass the same gates and go to Andrew's review, so no
+bad data reaches players. No data repair is needed.
+
+**Checked by the planning agent on 2026-11-19 (read-only, $0).** Every night from 2026-12-01 to 2027-12-31 was
+simulated with the real draft map (`map.draftAreas`) and the real calendar. Scripts are in the session scratchpad;
+re-create them from this description if needed.
+
+| Check | As built | With the 7a/7b fixes (prototyped) |
+| --- | --- | --- |
+| Speed seasonal nights that drop below the modern-era minimum (#1) | 101 of 176 (0 without the seasonal slot) | 0 |
+| Live seasonal nights below the minimum (#1) | 23 of 24 (7 without the seasonal slot) | 7 (the same 7; see "Known limit") |
+| Live seasonal nights with two slots in the same area and era (#2) | 18 of 24 (0 without) | 0 |
+| Speed nights per event in 2027 (#3) | Valentine's **0**, March Madness 1, NBA Finals 1, St. Patrick's 3; others 7–13 | every event 4–12 (rotation, 3–14 day window) |
+| Production subjects already named after an event (#4) | Speed: Kentucky Derby **4** (cap 5), Indianapolis 500 3, Super Bowl 2, NBA Finals 1. Live: Indianapolis 500 1 | n/a (prompt rule) |
+| Untracked " 2" copies (#10) | 8 byte-identical to their originals; `..._PHASE_7_HANDOFF 2.md` is an **older** draft ("Is it live? No") | n/a |
+
+**Known limit (not a review finding; record it, don't fix it):**
+- **Live categories without enough modern cells.** On 7 Live nights the modern-era minimum can't be met even without a
+  seasonal slot: the category's map doesn't have enough modern cells for 24 slots. That's a map question for the
+  Variety page, not slot logic.
+- **Live events that share a category.** Live writes one of 9 categories a night, so within a 12-night window an
+  event's category comes up once or twice. Events in the same category share those nights. With 7b's rotation, the
+  Stanley Cup Final still gets 0 Live nights in 2027: it shares Sports nights with the NBA Finals and the Indy 500. This
+  is accepted under D43 unless Andrew moves its Live entry to another category in `calendar.json`.
+
+**Shared ground rules for 7a–7c:**
+- No migration, no data change, no paid call, no new cron. Cost is unchanged: a seasonal slot still replaces a
+  regular one.
+- Pure-function changes, tested with the real `data/question-variety/draft-map.json` and `calendar.json`, never
+  production.
+- Run the phases one after another: all three edit `tests/lib.question-variety-seasonal.test.ts`.
+- Work on a new branch from `main`, e.g. `fix/seasonal-slots-7abc`. One PR covers all three; it merges with Andrew's OK.
+  Never `git checkout -- <file>`, `git stash` or `git reset`.
+- Each phase ends with `speed-trivia-backlog-and-quality-plan_PHASE_7<A|B|C>_HANDOFF.md`. 7a and 7b are small enough
+  for the short form.
+
+#### Phase 7a — the seasonal slot is chosen first, so the night's rules still hold (Phase 7 review #1, #2)
+
+> **Run with: Opus 5.5 / medium effort. DONE 2026-11-19** — `speed-trivia-backlog-and-quality-plan_PHASE_7A_HANDOFF.md`.
+
+**#1:** in `chooseSlots` (`lib/question-variety/slots.cjs`), the seasonal slot replaces a regular one **after** the
+"at least a third in 2000-present" swap has run. `actual` is recounted but the rule isn't applied again. The swap works
+from the end of the list, so `lastIndexOf(category)` usually lands on a slot that was just swapped to a modern era,
+which the event's (often older) cell then replaces.
+
+**#2:** `options.find(...) ?? options[0]` falls back to a cell another slot already uses. Live asks for 24 slots in
+one category, so the event area's cells are often all taken, and the writer gets two near-identical slots.
+
+**Fix (prototyped; it gave 0 and 0 in the simulation above):**
+1. Before the per-category loop, work out the seasonal cell. Take the event's area (active, matched by `map.areaKey`),
+   then the least-covered cell from `cellsFor(category, [area], …)`. If there's no area, no cell, or no slot in the
+   event's category tonight, there's no seasonal slot (as now).
+2. In the event's category, take `k − 1` cells from `spread(cellList without the seasonal cell, …)`. Then add the
+   seasonal cell (carrying `event`) as that category's **last** slot. Fallback slots go before it.
+3. The modern swap runs **after** this, over every regular slot. For the seasonal slot it may only swap to an unused
+   modern cell in the **same area**, and it keeps `event`. Without this, Speed still had 14 nights made worse in the
+   prototype, because the event's category can have only one slot that night.
+4. Delete the old post-hoc block. `taken` now includes the seasonal cell, so no other slot can reuse it.
+
+**Tests** (add to `tests/lib.question-variety-seasonal.test.ts`, over the real draft map and calendar, every night
+2026-12-01 → 2027-12-31, both games):
+- the slot count equals the count without the seasonal slot, and exactly one slot carries `event`;
+- `modern.actual ≥ min(modern.required, actual without the seasonal slot)`;
+- the night has no more duplicate area/era cells than it would without the seasonal slot (that's 0 today);
+- the seasonal slot's area is the event's area.
+
+**Done when:** the tests above pass, the existing seasonal tests pass, and `tests/lib.question-variety*.test.ts` and
+`tests/lib.question-writer.test.ts` are green.
+
+**Model:** Opus 5.5 / medium.
+
+#### Phase 7b — every event gets its turn, with time for review; calendar cleanups (Phase 7 review #3, #5, #7, #8)
+
+> **Run with: Opus 5.5 / medium effort. DONE 2026-11-19** — `speed-trivia-backlog-and-quality-plan_PHASE_7B_HANDOFF.md`.
+
+**#3:** `seasonalFor` keeps one event per game: the soonest, with ties in list order. In 2027 Valentine's Day
+(2027-02-14) gets **0** nights, because the Super Bowl falls on the same day and comes first in the list. March Madness
+and the NBA Finals get 1 each.
+
+**#5:** the window includes the event day (`days === 0`). Writer questions wait for Andrew's review (Quick Review) before
+players see them. So a question written on the day, or a day or two before, goes live after the event. Speed serves
+from the whole bank at random (`getTriviaQuestions`, `lib/trivia.ts`), so a seasonal question was never going to be
+shown more often during event week. Getting it into the bank before the event is the most this feature can do.
+
+**Fix:**
+1. **Lead time (D44, default unless Andrew says otherwise):** a seasonal slot runs from **14 days to 3 days** before the
+   event (12 nights, up from 11). Questions written on the last night still have 2–3 days to be reviewed. Constants:
+   `LEAD_DAYS = 3`, `WINDOW_DAYS = 14`.
+2. **Fair sharing (D43, default unless Andrew says otherwise):** still at most one seasonal slot per game per night
+   (D34). List the events in the window whose category is written tonight, sorted by date and then list order. Pick
+   `list[dayNumber % list.length]`, where `dayNumber = floor(utc(today) / DAY_MS)`, the same day count `nightPlan` uses.
+   This is stateless and deterministic, and a test pins it. In the 2027 prototype every event got 4–12 Speed nights.
+3. **#7, reuse `map.cjs`:** use `map.GAMES` / `map.isGame` in place of the local `GAMES`. Build `utc` and `validDay`
+   from `map.utcDay` / `map.isoDay` (`validDay = day => /^\d{4}-\d{2}-\d{2}$/.test(day) && isoDay(day) === day`, inside a
+   try, since `utcDay` throws). A third writer game added to `map.GAMES` is then validated and served without anyone
+   editing the calendar code. A game missing from an event's entry gets no seasonal slot, and `validateCalendar` reports
+   it.
+4. **#8, an `exact` date that doesn't parse falls back to the rule.** Examples: `"2028-2-13"`, `null`, the wrong year.
+   `validateCalendar` still reports it as `<id>: exact <year> <value>`. The calendar can only change through a PR, and
+   CI runs `npm test` (`.github/workflows/ci.yml`), so the file test catches a bad edit before it ships. No validation
+   is needed at run time.
+
+**Tests:**
+- An event 14 days out gets a slot; 15 days out doesn't; 3 days out does; 2 days out, the day itself, and the day after
+  don't.
+- Two events on the same date alternate night by night, and both get nights.
+- **Over the real calendar, every event gets ≥ 2 Speed nights** in each of the current year and the next two. That
+  makes the rotation a contract: a calendar edit that starves an event fails CI.
+- A bad `exact` value falls back to the rule's date and is reported by `validateCalendar`.
+- `calendar.GAMES` no longer exists; the calendar reads `map.GAMES`.
+- Update the "10 days / 11 days" tests and the plan wording in Phase 7 step 2.
+
+**Done when:** these tests pass and `npx tsc --noEmit` is clean.
+
+**Model:** Opus 5.5 / medium.
+
+#### Phase 7c — seasonal subjects, a path fix, a sharper test, the duplicate files; checks and PR (Phase 7 review #4, #6, #9, #10)
+
+> **Run with: Opus 5.5 / medium effort. Steps 1–7 DONE 2026-11-19** (PR waits for Andrew's OK; step 8 after the merge) — `speed-trivia-backlog-and-quality-plan_PHASE_7C_HANDOFF.md`.
+
+**#4:** a seasonal slot asks for the same event every night of its window. If the writer gives the event itself as the
+subject (`subject: "Halloween"`), then from the next night that subject is on the category's avoid list (30-day
+gap, `avoidList` in `slots.cjs`). `checkStarCap` then refuses any later question with that subject as `star-cap:gap`.
+The prompt says "seasonal: Halloween" while the avoid list names Halloween. The star cap of 5 also fills within a
+season or two: Speed already has 4 questions on the Kentucky Derby.
+
+**Fix:**
+1. Add a sentence to `SEASONAL_RULE` (`lib/question-writer/rules.cjs`): *the subject is the specific person, team,
+   game, work, place or tradition the question is about (e.g. "Joe Namath", "Super Bowl III", "jack-o'-lantern"), never
+   the event's own name, and it follows the avoid list like any other slot.* Then the event and the avoid list never
+   conflict: the event stays allowed, and only its generic name is off-limits as a subject.
+2. Bump `WRITER_VERSION` to `writer-v6`, and update the version pins in `tests/lib.question-writer.test.ts` and
+   `tests/scripts.question-candidates.test.ts`.
+3. **Not built:** a server-side reject when a seasonal item's subject is the event's name. Processing doesn't know which
+   slot was seasonal (`candidates.parseSlot` keeps only n/category/area/era). The star cap already stops the bank
+   overfilling. Revisit only if the writer ignores the rule (see the post-merge check below).
+4. **#6:** in `lib/question-writer/brief.d.cts`, change `import("../question-variety/calendar.cjs").Calendar` to
+   `import("@/lib/question-variety/calendar.cjs").Calendar` (CLAUDE.md: `@/` imports only). Run `npx tsc --noEmit` to
+   confirm the alias resolves in a `.d.cts`. If it doesn't, use a top-level `import type` with `@/`, as the test files
+   do.
+5. **#9:** in the brief test, give the fixture event a name different from its id (e.g. id `big-game`, name `the Big
+   Game`). Assert that the slot's `event` is the **name** and that the prompt shows `seasonal: the Big Game`.
+6. **#10, the untracked " 2" copies** (iCloud/Finder duplicates). Before deleting, check each with `cmp` against its
+   original. On 2026-11-19 these 8 were byte-identical:
+   - `data/question-variety/calendar 2.json`
+   - `lib/question-variety/calendar 2.cjs`
+   - `lib/question-variety/calendar.d 2.cts`
+   - `tests/lib.question-variety-seasonal.test 2.ts`
+   - `docs/venue-display-hype_PHASE_6_after/README 2.md`
+   - `public/brand/web/htc-stinger-boom-v1 2.m4a`
+   - `public/brand/web/htc-stinger-shine-v1 2.m4a`
+   - `public/brand/web/keep-awake-v1 2.mp4`
+
+   `docs/speed-trivia-backlog-and-quality-plan_PHASE_7_HANDOFF 2.md` is an older draft of the handoff. If all 9 still
+   match that description, delete them with `rm` (they're untracked, so git can't restore them; that's why the check
+   comes first). If any has changed, list it for Andrew and leave it.
+
+   **Committed copies too** (found in the second review, PR #29 finding 9). On 2026-11-19, `git ls-files` listed 32
+   paths ending in ` 2` (bingo plans and scripts, `lib/envNumber 2.ts`, and test files). **28 are byte-identical** to
+   their originals: `git rm` them, since git keeps the history. **4 differ:**
+   - `tests/components.bingo.SportsBingoSelectSport.test 2.ts`
+   - `tests/venue-screen-brand-chrome-contract.test 2.ts`
+   - `tests/venue-screen-idle-moments-contract.test 2.ts`
+   - `tests/venue-screen-intro-stinger-contract.test 2.ts`
+
+   `diff` each of the 4 with its original. If the copy only lacks later changes (it's older), `git rm` it. If it has
+   anything the original lacks, list it for Andrew and leave it. Vitest never runs these copies (its pattern is
+   `*.test.ts`), so no coverage is lost.
+
+   Then add `tests/no-finder-duplicates-contract.test.ts`. It fails if `git ls-files` lists any path matching
+   `/ \d+(\.[^/]+)?$/`, so a stray copy can't be committed by `git add -A`. Any copy left for Andrew goes on a
+   named allow-list in the test, with a comment.
+7. **Checks:** `npm run lint`, `npx tsc --noEmit`, `npm run test` and `npm run build`, run one at a time (never
+   typecheck and build together). Open one PR for 7a–7c. **Merge only with Andrew's OK.**
+8. **After the merge:** read the next writer run's brief for each game (the `seasonal` field and the slot carrying
+   `event`). Then, after the Trivia Nightly, check that the seasonal question was admitted with a normal tag and a
+   subject that isn't the event's name. Record the result in the 7c handoff.
+
+**Model:** Opus 5.5 / medium.
+
+### Remedial phases 7d–7j (added 2026-11-19, from the second code review: 4c.8 → 4f.2)
+
+**What was reviewed.** On 2026-11-19 Andrew asked for every merged PR since the 2026-11-17 review to be reviewed. The
+agent ran `/code-review <PR>` on each one:
+
+| PR | Work it holds |
+| --- | --- |
+| #20 | 4a–4c.10; only 4c.8–4c.10 were new, but real bugs anywhere in it are kept |
+| #21 | Sync Live Trivia fix |
+| #22 | Live report-sheet hold |
+| #25 | 4d.1 ChatGPT bar test |
+| #26 | D38 / D38b |
+| #27 | 4e + D39 |
+| #29 | 4f.1 + 4f.2 |
+
+The reviews gave 64 findings. Each is restated below as "R2 #PR.N" (e.g. R2 #29.1 is PR #29's first finding), so the
+fixing agent doesn't need the review output. The agent then checked them against `main` (`fa6979a1`; code identical to
+`b362b4b3`). The PRs' Gemini code was not flagged, because #29 removed it.
+
+**State when checked (read-only, $0, 2026-11-19):**
+- **`live_conversion_requests` is empty**, so every 4e finding is latent.
+- **No `provider='openai'` row in `llm_usage_logs` yet**, because 4f.2 merged today. The first nightly (2026-11-20)
+  will be the first real data for the tagging and cost findings.
+- **The private writer's runs take 5–6 minutes** (`gh run list -R AndrewSerulneck/hightop-question-writer`), against a
+  40-minute job limit.
+- **No data repair is needed** for any finding.
+
+**Findings with no change** (each recorded so it isn't re-raised):
+- **R2 #25.3** (the writer grades its own batch, so the bar test isn't independent): this was Andrew's decision (D35).
+  It runs in a separate ChatGPT session with its own prompt, and Andrew reviews every item.
+- **R2 #25.4** (the 40-minute job limit after grading doubled the calls): measured runs take 5–6 minutes. Revisit only
+  if a run passes 20 minutes.
+- **R2 #25.8** (the writer's grade lives in the item payload, so a re-post with fresh grades isn't idempotent): the
+  writer never re-grades on a retry, and it fits the 64 KB limit with room to spare.
+- **R2 #27.9, scope** (the D39 Current Events exemption also applies to Admin edits): D39 says it applies to the writer,
+  Keep and edits. 7d fixes only the comment and the duplicated constant.
+- **R2 #21.4–#21.7** (stale lines in old handoffs and an old status line): handoffs are history, so they aren't
+  rewritten. 7j adds a one-line banner to `..._PHASE_4C10_HANDOFF.md` pointing to the status line.
+
+**Shared ground rules for 7d–7j:**
+- **Branch.** One branch from `main` after 7a–7c merge: `fix/second-review-remedials`. One PR, or one per phase if
+  Andrew prefers.
+- **Migrations.** Each SQL change is a new `supabase migration new …`, PGlite-tested in its phase (harness
+  `scripts/test-speed-trivia-admission-sql.cjs`). They're **applied together in 7j with Andrew's OK**
+  (`supabase db push` always asks). The code that needs a migration merges only after it's applied.
+- **Function rules.** A new or replaced SECURITY DEFINER function revokes `public, anon, authenticated` and grants
+  `execute` to `service_role`.
+- **Frozen files.** `core.cjs` (the frozen, hash-pinned uniqueness policy) and the signed admission SQL function
+  (`20261013120000`) are not touched.
+- **Tests and git.** Tests use fakes, never production. Never `git checkout -- <file>`, `git stash` or `git reset`.
+- **Cost.** No new cron or poll. **Paid calls:** none added. Two phases change how existing calls are *priced or
+  capped* (7e) or how often GitHub is called (7g, fewer). Any probe with real OpenAI calls needs Andrew's OK first and
+  stays under $0.05.
+- **Order.** Run the phases one after another. Several share files:
+  - `lib/question-writer/process.cjs`: 7e, 7h
+  - `lib/question-writer/liveProcess.cjs`: 7f, 7h
+  - `lib/speed-trivia-uniqueness/runtime.cjs`: 7d
+- **Writer repo sync.** `tools/question-writer/*` changes must also be synced to the private writer repo
+  `AndrewSerulneck/hightop-question-writer` (7h), as in 4e's ship.
+- **Handoffs.** Each phase ends with `speed-trivia-backlog-and-quality-plan_PHASE_7<D…J>_HANDOFF.md`.
+
+#### Phase 7d — the repeat check on live edits (R2 #26.1–#26.9, #27.9)
+
+> **Run with: Opus 5.5 / high effort.**
+
+Files: `lib/speed-trivia-uniqueness/runtime.cjs`, `lib/speed-trivia-uniqueness/approval.cjs`, a new migration, tests.
+
+**R2 #26.1 (highest): a live edit can open a hole in Quick Keep's free approval.** Since D38, a live edit is compared
+only with live questions (`liveEdit`, evidence `comparisonScope: 'live-edit'`). Quick Keep's fast lane assumed that
+every later write was checked against the full bank, waiting questions included. Here's how it breaks:
+1. Waiting question P tests fact X and holds a full-bank "unique" admission.
+2. Live question L is edited to test X. The live-only check doesn't see P, so the edit saves.
+3. Andrew taps Keep on P. `speed_trivia_quick_keep` (latest `20261116014954`) approves it instantly.
+
+Two live questions now test X.
+
+**Fix:**
+- In a new migration, the fast lane in `speed_trivia_quick_keep` and in the Keep Queue's equivalent
+  (`20261115170333`, the `comparisonScope is null` check) also requires that **no admission with
+  `comparisonScope = 'live-edit'` is newer than P's admission**. Otherwise P takes the overnight path, which runs a real
+  check.
+- Read the current function definitions from the latest migration that defines each before replacing them.
+- Cost: a few extra overnight checks after an edit day, at about $0.0005 each.
+
+**R2 #26.2: what a live edit is compared with.** Live edits skip three kinds of row:
+- `history:` reservations (the previous fact of an edited question, which "must not return under another ID");
+- questions deleted for a wrong answer;
+- questions retired as repeats.
+
+**D45** (below) decides which of these should still block. **Default:** count `history:` reservations; keep ignoring
+deleted and waiting rows (D38).
+
+**R2 #26.3–#26.5, #26.7: D38b ("the old wording already repeated it") refuses edits it should allow.**
+- **#26.3:** two or more matches needing the judge. `cappedJudge` stops after the first non-unique verdict, so later
+  matches come back "uncertain" and the edit is refused.
+- **#26.4:** an edit that doesn't change the content (difficulty only) skips D38b entirely, so it's refused while a
+  rewording would pass.
+- **#26.5:** the loop stops after 3 passes, so an old question that already repeated 4 or more live questions can't be
+  edited.
+
+**Fix, one pass, no loop:**
+1. Before checking, work out the old version's live repeats once: run the same check for the **old** content against
+   the live index.
+2. Check the edit **once**, against the live index **minus that set** (filter at retrieval time; don't rebuild the index
+   view, R2 #26.6).
+3. Apply this whether or not the content changed.
+4. Record the excluded ids as `preexistingRepeats` in the evidence, as now.
+
+The judge calls are no more than today's, and often fewer: there are no repeated passes.
+
+**R2 #26.9:** compute `const scope = approvedOnly ? 'approved' : liveEdit ? 'live-edit' : null` once, and use it in the
+index choice, `evidence.comparisonScope` and the envelope. **R2 #27.9 (comment and constant only):** `recentFact`
+reuses `map.CURRENT_EVENTS`, and its comment says it covers the writer, Keep and edits (D39).
+
+**Tests** (`tests/scripts.speed-trivia-approved-only.test.ts` and `tests/lib.speed-trivia-uniqueness.test.ts`):
+- **#26.1, end to end in PGlite:** waiting P, then a live edit to P's fact, then Quick Keep sends P overnight.
+- **D38b:**
+  - two judged matches the old wording already repeated: the edit saves;
+  - four such matches: the edit saves;
+  - a difficulty-only edit on a live question with a live twin: it saves;
+  - a new repeat the edit would create: still refused.
+- **#26.8:** a waiting-row edit is refused by a **waiting** copy, and that copy is the only possible match in the
+  fixture.
+- **D45:** a live edit back to a reserved previous fact is refused (if Andrew keeps the default).
+- **Frozen gates:** the frozen repeat-check gates still pass (`npm run test`, the evaluation tests).
+
+**Model:** Opus 5.5 / high.
+
+#### Phase 7e — OpenAI calls: room to answer, true costs, bounded retries (R2 #29.1–#29.8, #29.10)
+
+> **Run with: Opus 5.5 / high effort.**
+
+Files:
+- `lib/question-variety/tagging.cjs`
+- `lib/openai/responses.cjs`
+- `scripts/process-speed-trivia-keep-queue.cjs`
+- `lib/llmCostTracker.ts`
+- `app/api/admin/trivia/questions/convert-live-export/route.ts`
+- `lib/liveTriviaExport.ts`
+- `scripts/tag-questions.cjs`
+- `lib/question-writer/process.cjs`
+
+**Step 0 (free): read the first OpenAI nights.**
+- Query `llm_usage_logs` (`provider='openai'`) and the Keep Queue run reports since 2026-11-20.
+- For each feature, note calls, `reasoningTokens` per call, and any `tagging-truncated-or-blocked` or `untagged`
+  refusals.
+- Record the numbers in the handoff. They set the token limits below and are the cost baseline for the before/after
+  comparison.
+
+**R2 #29.1: the tag call may run out of room.** `tagOne` uses `gpt-6.1-sol` at reasoning effort `low`, with
+`maxOutputTokens: 512`. Reasoning tokens count against that limit, so a reply can end "incomplete" before any JSON. The
+call is billed, and the question stays untagged ("No subject tag yet"). The 95/97/94% agreement was measured through
+`tag-questions`, which allows 8192 tokens.
+
+**Fix:**
+- Raise the limits to cover the measured reasoning tokens plus the answer, with headroom:
+  - `tagOne`: start at 2048;
+  - the Live repeat check (512) and the Live rewrite (1024), on the same model: the same review.
+- Add a test: an "incomplete" reply with `reasoningTokens` near the limit is counted and reported, never silently
+  untagged.
+- The cost per call is unchanged (billing is by usage). Only the budget reservation per call grows.
+
+**R2 #29.6: a billed failure is never recorded.** `runOpenAI` throws in `jsonOf` after a billed incomplete or refused
+reply, so the ledger row is skipped. **Fix:** record usage from the reply **before** parsing, in `tagOne` and in every
+caller that follows the same pattern. Grep for `jsonOf(` after `callJson(`.
+
+**R2 #29.2: the Keep Queue under-reserves tagging.** It reserves `TAG_DOLLARS = $0.0001` per tag call and never
+settles. A real `gpt-6.1-sol` call costs roughly $0.003–$0.006, so the D4 caps (`$5` a night, `$20` total) don't
+really limit tag spend. **Fix:**
+- Reserve with `openai.claimFor({ model, prompt, maxOutputTokens })` and settle from the reply's `usage.dollars`, as
+  the judge does.
+- Delete `TAG_DOLLARS` and the stale "~$0.0001" comments in `tagging.cjs` and `lib/speedTriviaTagging.ts`.
+- Expected effect: about 50 tags a night × ~$0.005 = ~$0.25 now counted against the $5 cap. Report the measured figure.
+
+**R2 #29.4: retries the callers don't expect.** `callJson` retries 429/5xx twice, with waits up to 20 s and a fresh
+timeout each attempt. Every caller's header still says "No automatic retries". Quick Keep (route `maxDuration = 120`)
+tags up to 25 questions, 4 at a time; in a 429 burst that can exceed 120 s, kill the request and lose the ledger rows.
+**Fix:**
+- `callJson` takes a `deadlineMs` (total, across attempts and waits).
+- Admin request paths pass a deadline that fits their route (Quick Keep: the whole batch inside ~90 s).
+- Nightly scripts keep today's retries.
+- Correct the five header comments to describe the real behaviour. The rate-limit/5xx retries stay: OpenAI doesn't
+  bill those.
+
+**R2 #29.5: Convert to Live export is unbounded.** It sends one `gpt-6.1-sol` call per selected id through
+`Promise.all`, with no cap or budget, and a failed call silently falls back to an un-rewritten question. **Fix:**
+- At most 25 ids a request (the route says so if more are sent), 4 at a time.
+- A per-request budget, through the same claim/settle as the nightly.
+- One ledger row per request.
+- The response counts the fallbacks, so the screen can say "N not rewritten".
+
+**R2 #29.7:** `scripts/tag-questions.cjs` `apiCeiling` reserves only the prompt's bytes, without the schema and request
+framing. Use `openai.claimFor(...)`, and write one ledger row per run.
+
+**R2 #29.3: the cost dashboard counts rows, not calls.** The new ledger writes one row per model per run, with the real
+count in `metadata.calls`. In `lib/llmCostTracker.ts`, count `metadata.calls` when present, else 1 per row.
+
+**R2 #29.8: the Speed backup bar test drops `sourceUrl`.** `rowFor` (`process.cjs`) has no `sourceUrl`, so an ungraded
+Current Events item reaches the OpenAI grader without its source and is likely marked possibly-wrong. Pass
+`sourceUrl: p.item.sourceUrl` into the scored row, as Live already does.
+
+**R2 #29.10:** `callOpenAIForLiveRewrite` in `lib/liveTriviaExport.ts` becomes an arrow function.
+
+**Tests:**
+- fakes for an incomplete reply, a billed refusal (a ledger row is written), the deadline across retries;
+- the Keep Queue settles real tag dollars;
+- the export caps and counts fallbacks;
+- `llmCostTracker` counts `metadata.calls`;
+- the Speed backup grader receives `sourceUrl`.
+
+**Model:** Opus 5.5 / high.
+
+#### Phase 7f — Speed → Live conversions can't get stuck (R2 #27.1–#27.8, #27.10)
+
+> **Run with: Opus 5.5 / high effort.**
+
+Files:
+- `lib/question-writer/brief.cjs`, `candidates.cjs`, `liveProcess.cjs`
+- `app/api/question-writer/conversions/*`
+- `components/admin/sections/SpeedTriviaQuickReview.tsx`, `TriviaListSection.tsx`
+- a new migration replacing `live_conversion_receive` (`20261119134654`)
+
+**R2 #27.1: a conversions-only post hides "Writer stopped" for Live.** `live_conversion_receive` creates the day's
+`question_writer_runs` row when it's missing. If the regular Live batch fails but conversions post, the run row exists,
+and `readWriterState` (`lib/speedTriviaQuickReview.ts`) never says "silent". (The Gemini fallback the reviewer
+mentions is gone since 4f.1.) **Fix:** `live_conversion_receive` no longer creates a run row: conversions are tracked in
+their own table. `processLiveDay` processes the day's conversions even when there's no run row.
+
+**R2 #27.2, #27.5: a request in `sent` can be stranded for good.** A conversion candidate is read only by its own day's
+nightly, inside a shared 60-row read (`MAX_ITEMS + MAX_CONVERSIONS`). Three things strand it:
+- a post after that day's nightly (e.g. a manual re-run);
+- a crash between settle and `settleRequest`;
+- more than 60 received rows (a same-day re-run sends the next 20).
+
+The request then shows "Converting" forever and can't be re-queued.
+
+**Fix:**
+- Conversions get their own bounded read, separate from the regular items.
+- The nightly also picks up conversion candidates still `received` on **earlier** run dates (one bounded read, ≤ 20
+  rows).
+- A `sent` request older than 3 days whose candidate is gone or settled goes back to `queued`, with the reason "Sent
+  again".
+- The brief sends conversions only if none were received for today's run date, so a re-run can't overfill the day.
+
+**R2 #27.3: an invalid rewrite loops nightly and can fail the job.** A rewrite that fails `validateLivePayload` is
+dropped without touching its request. The request stays `queued` and is re-sent every night. If every conversion that
+night is invalid, the post returns 422 and the writer job fails. **Fix:**
+- An invalid rewrite settles its request `failed`, reason "ChatGPT's rewrite didn't fit Live's format."
+- A post whose conversions are all invalid returns 200 with the counts.
+
+**R2 #27.4: an optional read can sink the Live brief.** A failure of the `live_conversion_brief` read throws
+`BriefError` for the whole brief. **Fix:** catch it, log it, and serve the brief without conversions.
+
+**R2 #27.6: a budget skip reads as "Not convertible".** **Fix:** a conversion skipped by the repeat-check budget goes
+back to `queued` (re-sent next night), not `failed`.
+
+**R2 #27.7: a waiting Speed question queued with L waits forever if it never goes live.** **Fix:** the nightly marks
+`queued` requests whose Speed question is now deleted or rejected as `failed`, with the reason "The Speed question
+wasn't kept."
+
+**R2 #27.8: Z can cancel a request that keypress didn't create.** `keep(true)` ignores the POST's `already` flag, so
+Undo (Z) cancels an earlier, separate Make Live. **Fix:** record `live: !already` in the undo history.
+
+**R2 #27.10:** `toggleLive` in `TriviaListSection.tsx` becomes an arrow function.
+
+**Tests:**
+- in PGlite: receive creates no run row, and the stranded-`sent` sweep;
+- in unit tests: the brief survives a failed conversion read; an all-invalid post returns 200 and fails each request
+  with its reason; a budget skip re-queues; a deleted Speed question fails its request; L-then-Z with `already=true`
+  leaves the request alone.
+
+**Model:** Opus 5.5 / high.
+
+#### Phase 7g — Live Publish, Speed answers, Admin edits (R2 #20.1–#20.5, #20.7, #20.9)
+
+> **Run with: Opus 5.5 / high effort.**
+
+Files:
+- `lib/liveTriviaGithub.ts`, `lib/liveTriviaReview.ts`
+- `lib/trivia.ts`, `app/api/trivia/route.ts`
+- `lib/speedTriviaAdmission.ts`
+- a new migration replacing `question_writer_receive` (`20261116030506`, or its latest redefinition)
+
+**R2 #20.1 (D10 boundary): a moved PR head still gets auto-merged.** On a 409 from the pinned-sha merge,
+`mergePublishPr` breaks the loop but then enables GitHub auto-merge **without** the sha pin. So a branch that someone
+pushed to could merge into the canonical Live JSON. **Fix:** return `false` immediately on 409 (leave it for Andrew,
+as the comment says). Enable auto-merge only after 405/422 ("checks pending"), never after 409.
+
+**R2 #20.4: the Speed answer POST grades any question id.** `getQuestionById` (`lib/trivia.ts:364`) doesn't filter on
+pool, status or hidden category. A client that knows an id can answer a `pending_review`, Live or hidden Current Events
+row, earn points, and receive its correct answer. **Fix:** the POST reads only
+`question_pool = 'anytime_blitz' and status = 'active'`, and refuses a category hidden for players. It answers 404 "Not
+available", records nothing and awards nothing.
+
+**R2 #20.2: an edit can keep its old subject tag.** When a live question is edited and the tag call before the save
+fails, the save goes through and returns before the post-save re-tag. The question keeps its old subject, so the star
+cap miscounts it. **Fix:** don't return early. When the early tag failed, run the existing post-save `tagSpeedQuestion`
+(it's already budgeted), so there's no extra call.
+
+**R2 #20.3: a recording failure says "Nothing changed" while a PR is open.** If
+`live_candidates_publish_record_pr` fails after GitHub opened the PR, the admin is told "Publish failed. Nothing
+changed." The rows stay `publishing` with no `pr_url`. **Fix:**
+- The message names the PR: "Publish opened PR #N but couldn't record it. Don't publish again."
+- Make one more record attempt.
+- The PR check (`reconcileLivePrs`) also finds `publishing` rows older than 10 minutes and settles them from the
+  `live-trivia-publish-*` branch's PR.
+
+**R2 #20.5: a retried identical batch hits the post limit.** `question_writer_receive` counts an identical-batch retry
+as one of the day's two posts, so a third identical retry gets 429 for a batch that's already stored. **Fix (new
+migration):** an identical batch returns the idempotent success **before** the post limit is counted.
+
+**R2 #20.7: the PR check slows every Live review load.** `reconcileLivePrs` runs before every Live Quick Review load:
+up to 10 GitHub calls in a row, 15–35 s when GitHub is slow. **Fix:** run it in parallel with the queue reads, and at
+most once a minute per instance (a module-level timestamp). Fewer GitHub calls, no new cost.
+
+**R2 #20.9: Undo's message is often wrong.** `liveUndo` says "Can't undo: already published." for every failed
+transition. **Fix:** read the row's status and say:
+- `pending_review`: "Already undone."
+- `publishing`: "Publishing now. Try again in a minute."
+- otherwise: "Can't undo: already published."
+
+**Tests:**
+- the 409 path doesn't call the auto-merge GraphQL mutation (fake GitHub);
+- the POST refuses a pending, Live or hidden row, with no `trivia_answers` insert;
+- an edit with a failed early tag is re-tagged after the save;
+- the record failure leaves a recoverable state that the PR check settles;
+- in PGlite, an identical third retry returns success;
+- the PR check runs at most once a minute;
+- the Undo message for each status.
+
+**Model:** Opus 5.5 / high.
+
+#### Phase 7h — the private writer: a failed grade never loses a batch (R2 #25.1, #25.2, #25.5–#25.7, #25.9, #25.10)
+
+> **Run with: Opus 5.5 / medium effort.**
+
+Files:
+- `tools/question-writer/write.mjs`, `grade.mjs`
+- `scripts/calibrate-chatgpt-bar-test.mjs`
+- `lib/question-writer/candidates.cjs`, `process.cjs`, `liveProcess.cjs`
+- `lib/speed-trivia-quality/audience.cjs`
+- `tests/tools.question-writer-grade.test.ts`
+
+Then sync `tools/question-writer/*` to `AndrewSerulneck/hightop-question-writer`.
+
+**R2 #25.1 (highest): a failed grade can look like a login failure and drop the day.** `write.mjs` tests its login
+regex (`/log ?in|401|unauthori[sz]ed|refresh token/`) against the combined output tail, which echoes the grading
+prompt. Here's how it breaks:
+1. A question mentions "log in".
+2. The grading call fails (a timeout gives a non-zero exit).
+3. The failure is read as "login needs renewing", and the process exits 3.
+4. That game's written batch is never posted, and the next game is skipped.
+
+With `--no-fallback`, the day gets nothing.
+
+**Fix:**
+- Match login errors only on codex's own error lines (stderr, not the echoed prompt).
+- **A failed or partial grading call never exits:** post the batch with the grades it has. Ungraded items get the
+  site's OpenAI backup bar test (4f.2).
+- Exit 3 is kept for a login failure on the **writing** call.
+
+**R2 #25.2: two items on one slot get the same grade.** `attachGrades` matches grades by slot number. **Fix:**
+- `write.mjs` keeps the first item per slot and logs the dropped ones.
+- `parsePost` (`candidates.cjs`) refuses a batch with a repeated slot number (400 "duplicate-slot").
+
+Both are needed: the server must not trust the writer for this.
+
+**R2 #25.7, #25.9: shared helpers.**
+- One `scoreBarTest(...)` helper replaces the near-identical "writer grade, else OpenAI backup" blocks in `process.cjs`
+  and `liveProcess.cjs`.
+- The grader-model regex lives in one small module, used by `candidates.cjs` and `audience.cjs` (it can't be required
+  from `candidates.cjs` without a circular require).
+- `audience.cjs` uses `map.isoDay`.
+
+**R2 #25.5, #25.6: the calibration script (it isn't run nightly).** Move `runCodex` (with the 15-minute kill timer and
+the usage-limit and login handling) into `grade.mjs` and use it from both `write.mjs` and the script. The script grades
+Current Events rows with the Current Events grading block. Re-running calibration is **not** in scope.
+
+**R2 #25.10:** the test imports with `@/tools/question-writer/grade.mjs`, with no `as string` cast. If the `.mjs` has
+no types, add a small `grade.d.mts`.
+
+**Tests:**
+- a grading failure with "log in" in the prompt still posts the batch;
+- a login failure on the writing call exits 3;
+- a repeated slot is dropped by the writer and refused by `parsePost`;
+- `scoreBarTest` gives the same results as both old blocks (Speed and Live fixtures).
+
+**After merge:**
+- Sync to the writer repo; diff the two copies afterwards.
+- Read the next writer run's log.
+
+**Model:** Opus 5.5 / medium.
+
+#### Phase 7i — player screens: the held report sheet, the Current Events tab (R2 #22.1–#22.9, #20.6, #20.8)
+
+> **Run with: Sonnet 5.5 / medium effort.**
+
+Files:
+- `app/trivia/live/page.tsx`
+- `components/trivia/ReportQuestionSheet.tsx`, `TriviaAppFrame.tsx`
+- `lib/speedTriviaCategoryVisibility.ts`
+- the quota route
+- `tests/components.report-question-sheet.test.ts`
+
+**One hook first (R2 #22.9, #22.6–#22.8).** Export `useHeldReport()` from `ReportQuestionSheet.tsx`. It holds:
+- the held report and its **draft** (reason and note);
+- the set of reported keys;
+- the close timer, in a ref cleared on unmount;
+- stable `onOpen` / `onSent` / `onClose` callbacks (`useCallback`).
+
+The Live page and the test both use it, replacing the hand copy (`LiveHarness`) and the source-regex test with a
+behaviour test of the hook. Delete the unused Live branch of `ReportQuestionSheet` (its only caller is Speed). Its props
+become `{ questionId; className? }`.
+
+**The fixes:**
+- **R2 #22.1:** a send that finishes after its sheet closed no longer closes a newer sheet. The timer belongs to the
+  report it was set for, and is cleared when that report changes or closes.
+- **R2 #22.3 (D46): the held sheet blocks the next question.** It covers the answer box and Submit on a timed question,
+  and tapping the dimmed area throws the typed note away. **Default:**
+  - When a new question starts while the sheet is open, the sheet shrinks to a small "Finish report" bar above the
+    answer box, with no backdrop. Tapping it reopens the sheet with the draft.
+  - Tapping outside never deletes typed text.
+- **R2 #22.2:** when the sheet closes during the answering phase, focus returns to the answer box.
+- **R2 #22.4:** the game-end reset clears the held report.
+- **R2 #22.5:** the draft lives in the hook, so a loading or "unavailable" render that unmounts the sheet loses nothing.
+  The sheet renders outside the early-return branches, or gets its draft back when it remounts.
+- **R2 #20.6: no stored user id means no Current Events tab.** `TriviaAppFrame` starts with Current Events hidden and
+  only updates from the quota fetch, which is skipped without a stored user id. A cookie-only player never sees Current
+  Events. **Fix:** fetch the hidden categories without a user id; the quota route already answers without one.
+- **R2 #20.8:** cache a **failed** visibility read for 60 s (fail-closed: Current Events stays hidden). In the quota
+  route, run the visibility read and `getTriviaQuota` in parallel.
+
+**Tests:**
+- the hook behaviour for each fix above;
+- the hidden-category fetch without a user id;
+- the failed-read cache.
+
+**Browser-verify** the Live page with the `verify` skill, from a scratchpad clone with mocked routes (CLAUDE.md): open a
+report, let the next question start, type an answer, finish the report. Check at 350 px.
+
+**Model:** Sonnet 5.5 / medium.
+
+#### Phase 7j — Sync Live Trivia safety, a workflow tripwire, banners; apply, verify, ship (R2 #21.1–#21.3)
+
+> **Run with: Sonnet 5.5 / medium effort.**
+
+**R2 #21.1: two Sync Live Trivia runs can prune each other's new rows.** `.github/workflows/sync-live-trivia.yml` has
+no `concurrency` group. A run on an older checkout can soft-delete slugs a newer run just added. **Fix:**
+`concurrency: { group: sync-live-trivia, cancel-in-progress: false }`.
+
+**R2 #21.2, #21.3: the `.env.local` trap could come back.** The sync was broken for about 5 months because a workflow
+called an npm script with `--env-file=.env.local`. **Fix:**
+- Add `tests/workflow-env-file-contract.test.ts`. It scans `.github/workflows/*.yml` for `npm run <script>` and fails
+  if that script in `package.json` uses `--env-file=`.
+- **Optional:** switch the script to `--env-file-if-exists` and the workflow back to `npm run live-trivia:import`. That
+  needs Node ≥ 22.9: CI and this workflow use `node-version: 20`, which reaches end of life in 2026. Do it only if CI
+  moves to Node 22 or 24 with the full suite green; otherwise record it as a follow-up.
+
+**Banner:** add one line at the top of `docs/speed-trivia-backlog-and-quality-plan_PHASE_4C10_HANDOFF.md`: "Historical
+(2026-11-17). D23 shipped, Sync Live Trivia fixed (PR #21), and Gemini is gone (D40); the plan's status line is
+current."
+
+**Ship (in order):**
+1. Run lint, typecheck, tests and build, one at a time.
+2. With Andrew's OK, `supabase db push` applies 7d's, 7f's and 7g's migrations. Verify each function's new behaviour
+   with a read-only call or a test insert and delete, as in 4f.2.
+3. Merge (Andrew's OK).
+4. Sync the writer repo (7h).
+5. After the next nightly:
+   - Keep Queue: tags succeed, and tag dollars are reported.
+   - `llm_usage_logs`: call counts are right on the LLM cost dashboard.
+   - Writer: the batch is posted.
+   - Live: Quick Review shows "Writer stopped" only when it should.
+6. Compare usage with 7e's step-0 baseline and report any material change (global cost rule).
+
+**Model:** Sonnet 5.5 / medium. This departs from the top tier, like 3d and 4c.4: one workflow line, one contract test,
+a banner, and applying migrations written and PGlite-tested in 7d, 7f and 7g. Andrew's OK gates the push and the merge.
 
 ## 5. Recommended path through the backlog (once Phases 0–3 exist)
 
@@ -2354,6 +3054,10 @@ Bowl week, the Oscars, March Madness, Halloween.
 | D40 | Andrew, 2026-11-19: "I'd like to take Gemini out of this process altogether. I simply don't trust it to write questions." | **Added as Phase 4f.** 4f.1 now: delete every Gemini writer ($0). 4f.2: the repeat checks, tagging and the ungraded bar test move to an OpenAI model through the OpenAI API, then the Gemini key leaves every workflow. Supersedes D13, D36's "later" step and §3's "Why keep Gemini at all". 4f.2 DONE 2026-11-19 (OpenAI key set; models picked by test; see the 4F2 handoff). |
 | D41 | Andrew, 2026-11-19: few people play yet, so skip Phase 5's monitoring? Is Phase 6 needed? | **Answered 2026-11-19:** Phase 5 skipped (revisit at ≥ 100 questions with ≥ 20 answers in a game). Phase 6 deferred until Live play grows or a "My answer was right" report arrives (~6 misses in all Live play so far). Order is now 4f.1 → 4f.2 → 7. |
 | D42 | Andrew, 2026-11-19: after 4f.2 merges, remove `GEMINI_API_KEY` from GitHub, Vercel and `.env.local`? ("Can I just leave them?") | **Answered: yes, leave them.** No code reads the key any more (`tests/no-gemini-writer-contract.test.ts`), so it does nothing. Only risk: an unused live key could be misused if it ever leaked; revoking it in Google AI Studio removes that whenever convenient. Agents never remove it. |
+| D43 | Phase 7 review #3: when seasonal events overlap, the soonest wins, so some never get a night (Valentine's Day 2027: 0, against a same-day Super Bowl). How should they share? (New, 2026-11-19.) | **Recommendation (default in 7b unless Andrew says otherwise): keep one seasonal slot per game per night (D34) and rotate through the events in the window, night by night.** Every event gets 4–12 Speed nights in 2027, with no cost change. The other choice is one per category per night (up to ~3 seasonal Speed slots on a busy February night). That changes D34 and crowds out regular variety. Live stays limited by its one-category night: the Stanley Cup Final gets 0 Live nights in 2027 unless its Live entry moves to another category. |
+| D44 | Phase 7 review #5: seasonal questions written on or just before the event go live after it, because they wait for Quick Review. What lead time? (New, 2026-11-19.) | **Recommendation (default in 7b unless Andrew says otherwise): slots run from 14 days to 3 days before the event** (12 nights, up from 11), so the last night's questions have 2–3 days for review. Same cost. Speed serves from the whole bank at random, so this only gets questions into the bank in time; giving seasonal questions more weight in play would be a separate idea. |
+| D45 | Second review R2 #26.2: since D38, an edit to a live question is compared with live questions only. It no longer meets (a) the **reserved previous fact** of another edited question, (b) questions **deleted for a wrong answer**, or (c) questions **retired as repeats**. Which should still block a live edit? (New, 2026-11-19.) | **Recommendation (default in 7d unless Andrew says otherwise): only (a).** A reserved fact exists so a fact players already saw doesn't come back under another question. (b) and (c) stay ignored, as D38 intended. Blocking a *correct* version of a fact because an old copy had a wrong answer helps no one, and a repeat-retired row's live twin is already compared. No cost change. |
+| D46 | Second review R2 #22.3: the Live report sheet now stays open into the next question (the report-sheet hold), but it covers the answer box on a timed question, and tapping outside throws the typed note away. What should happen? (New, 2026-11-19.) | **Recommendation (default in 7i unless Andrew says otherwise): when the next question starts, the sheet shrinks to a small "Finish report" bar above the answer box; tapping it reopens the sheet with the note still there, and tapping outside never deletes typed text.** The player can answer first and finish the report after. |
 
 ## 7. Standing rules
 

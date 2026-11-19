@@ -5,6 +5,7 @@ export type Calendar = { version?: string; note?: string; events: CalendarEvent[
 export type SeasonalEvent = { id: string; name: string; date: string; days: number; category: string; area: string };
 export const CALENDAR: Calendar;
 export const WINDOW_DAYS: number;
+export const LEAD_DAYS: number;
 export const WEEKDAYS: readonly string[];
 export function dateFor(rule: CalendarDate, year: number): string | null;
 export function validateCalendar(
@@ -18,4 +19,5 @@ export function seasonalFor(input: {
   today?: Date;
   calendar?: Calendar;
   windowDays?: number;
+  leadDays?: number;
 }): SeasonalEvent | null;
