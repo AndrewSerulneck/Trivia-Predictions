@@ -2,7 +2,7 @@ import { createRequire } from "node:module";
 import { describe, expect, it, vi } from "vitest";
 import { TRIVIA_CATEGORIES } from "@/lib/triviaCategories";
 
-// Phase 4a scripts against fake clients: no database, no ChatGPT, no Gemini.
+// Phase 4a scripts against fake clients: no database, no ChatGPT, no OpenAI API.
 const require = createRequire(import.meta.url);
 type Row = Record<string, unknown>;
 const seedScript = require("../scripts/seed-question-variety-map.cjs") as {
@@ -78,10 +78,10 @@ describe("tag-questions", () => {
   const questions = [1, 2, 3].map((n) => ({ id: `00000000-0000-4000-8000-00000000000${n}`, question: `Q${n}?`, options: ["Madonna", "B", "C", "D"], correct_answer: 0, category: "Music", created_at: "2026-07-01T00:00:00Z", question_pool: "anytime_blitz", answer_format: "multiple_choice", status: "pending_review" }));
   const tables = () => ({ question_coverage_areas: [...areas.map((a) => ({ ...a, game: "speed" }))], question_tags: [{ game: "speed", question_ref: questions[2].id }], trivia_questions: questions });
 
-  it("parses arguments and refuses an uncapped Gemini run", () => {
+  it("parses arguments and refuses an uncapped OpenAI API run", () => {
     expect(tagScript.parseArgs(["--game", "speed"])).toMatchObject({ provider: "codex", model: "gpt-6.1-sol", batch: 40 });
-    expect(() => tagScript.parseArgs(["--game", "speed", "--apply", "--provider", "gemini"])).toThrow(/max-dollars/);
-    expect(() => tagScript.parseArgs(["--game", "speed", "--apply", "--provider", "gemini", "--max-dollars", "3"])).toThrow(/max-dollars/);
+    expect(() => tagScript.parseArgs(["--game", "speed", "--apply", "--provider", "openai"])).toThrow(/max-dollars/);
+    expect(() => tagScript.parseArgs(["--game", "speed", "--apply", "--provider", "openai", "--max-dollars", "3"])).toThrow(/max-dollars/);
     expect(() => tagScript.parseArgs(["--game", "speed", "--sample", "5", "--apply"])).toThrow(/sample/);
     expect(() => tagScript.parseArgs(["--game", "trivia"])).toThrow(/speed or live/);
   });
@@ -160,9 +160,9 @@ describe("tag-questions", () => {
     expect(result).toMatchObject({ written: 1, refusedSubjectFull: [questions[0].id], failures: [] });
   });
 
-  it("never spends past the Gemini cap", async () => {
+  it("never spends past the API cap", async () => {
     const call = vi.fn(async () => ({ output: { items: [] }, dollars: 0.001 }));
-    const result = await tagScript.run({ client: fakeClient(tables()), args: tagScript.parseArgs(["--game", "speed", "--apply", "--provider", "gemini", "--max-dollars", "0.0001", "--batch", "1"]), call });
+    const result = await tagScript.run({ client: fakeClient(tables()), args: tagScript.parseArgs(["--game", "speed", "--apply", "--provider", "openai", "--max-dollars", "0.0001", "--batch", "1"]), call });
     expect(result).toMatchObject({ stopped: "budget" });
     expect(call).not.toHaveBeenCalled();
   });

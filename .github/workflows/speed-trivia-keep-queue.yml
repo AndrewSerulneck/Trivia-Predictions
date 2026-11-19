@@ -40,7 +40,7 @@ jobs:
 
       - name: Check kept questions
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SPEED_TRIVIA_ADMISSION_SECRET: ${{ secrets.SPEED_TRIVIA_ADMISSION_SECRET }}

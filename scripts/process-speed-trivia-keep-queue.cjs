@@ -13,7 +13,7 @@
  *       PAID: processes queued Keeps oldest first.
  *       Unique -> approved (signed admission, approved-only scope). Repeat -> retired with its match (D8).
  *       Uncertain, or edited after Keep -> left waiting under "Needs a look".
- *       No subject tag (star cap) -> tagged once (one Gemini call, charged $0.0001 to the run) and retried once;
+ *       No subject tag (star cap) -> tagged once (one OpenAI call, charged $0.0001 to the run) and retried once;
  *       still untagged -> "Needs a look" (Phase 4c.1).
  *       --precheck (D17): then, with what's left of the run, checks older undecided waiting questions (score ≥
  *       --min-score, best first) the same way WITHOUT approving. Repeat -> retired with its match (Repeats, Restore);
@@ -34,12 +34,14 @@ const path = require('node:path');
 const { clientFromEnv } = require('./lib/speedTriviaServiceClient.cjs');
 const core = require('../lib/speed-trivia-uniqueness/core.cjs');
 const runtime = require('../lib/speed-trivia-uniqueness/runtime.cjs');
-const gemini = require('../lib/speed-trivia-uniqueness/gemini.cjs');
+const judgeProvider = require('../lib/speed-trivia-uniqueness/openai.cjs');
+const openai = require('../lib/openai/responses.cjs');
+const ledger = require('../lib/openai/ledger.cjs');
 const approval = require('../lib/speed-trivia-uniqueness/approval.cjs');
 const tagging = require('../lib/question-variety/tagging.cjs');
 
 const PLAN = 'docs/speed-trivia-backlog-and-quality-plan';
-const MODEL = 'gemini-2.5-flash';
+const MODEL = judgeProvider.JUDGE_MODEL; // Phase 4f.2 (D40): OpenAI, was gemini-2.5-flash
 const MARK_PAGE = 500;
 const ROW_CHUNK = 100;
 const NOTE_MAX = 600;
@@ -165,9 +167,9 @@ const recordError = (report, id, error, kind) => {
 };
 const SUBJECT_FULL_NOTE = 'Subject full: 5 approved questions on this subject.';
 const UNTAGGED_NOTE = 'No subject tag yet.';
-const TAGGED_BY = `gemini:${tagging.TAG_MODEL}:keep-queue-v1`;
+const TAGGED_BY = `openai:${tagging.TAG_MODEL}:keep-queue-v1`;
 // Phase 4c.1: the real tagger. Tests inject a fake.
-const tagWith = client => row => tagging.tagOne({ client, row, apiKey: process.env.GEMINI_API_KEY, taggedBy: TAGGED_BY });
+const tagWith = client => row => tagging.tagOne({ client, row, apiKey: process.env.OPENAI_API_KEY, taggedBy: TAGGED_BY });
 const CHECK_NOTE = code => `Couldn't check (${code}). Keep it again or reject it.`;
 // The approved question a duplicate verdict matched, if it's still approved.
 const approvedMatch = (session, error) =>
@@ -363,6 +365,8 @@ const runPaid = async ({ client, queued, candidates, perRun, total, minutes, lim
   const summary = { queued, queue, prechecks: candidates.length, precheck, failure, seconds: Math.round((Date.now() - started) / 1000),
     dollars: { reserved: reservation.dollars, spent, usedBefore: reservation.used, total: reservation.total } };
   await finishRun(client, reservation.id, spent, summary);
+  // Phase 4f.2: one ledger row per model for this run (speed_trivia_queue_runs keeps the run's total, as before).
+  if (session) await ledger.recordBudget(client, { feature: 'speed_question_checks', budget: session.budget, metadata: { source: 'keep-queue', run: reservation.id } });
   return summary;
 };
 
@@ -412,16 +416,16 @@ const simulate = (calls, concurrency, probe = runtime.PROBE) => {
   return { old: { ...old, decision: verdict(oldExamined) }, new: { ...fresh, decision: verdict(started) } };
 };
 
-const measure = async ({ client, sample, maxDollars, estimateOnly, apiKey = process.env.GEMINI_API_KEY, secret = process.env.SPEED_TRIVIA_ADMISSION_SECRET }) => {
+const measure = async ({ client, sample, maxDollars, estimateOnly, apiKey = process.env.OPENAI_API_KEY, secret = process.env.SPEED_TRIVIA_ADMISSION_SECRET }) => {
   if (!secret || secret.length < 32) throw new Error('Missing SPEED_TRIVIA_ADMISSION_SECRET.');
-  if (!estimateOnly && !apiKey) throw new Error('Missing GEMINI_API_KEY.');
+  if (!estimateOnly && !apiKey) throw new Error('Missing OPENAI_API_KEY.');
   const budget = queueBudget({ dollars: estimateOnly ? 0.01 : maxDollars, minutes: 55 });
   const loading = Date.now();
-  const session = await runtime.createSession({ client, secret, budget, judge: { modelVersion: gemini.modelVersion(MODEL), adjudicate: async () => { throw new Error('unused'); } } });
+  const session = await runtime.createSession({ client, secret, budget, judge: { modelVersion: judgeProvider.modelVersion(MODEL), adjudicate: async () => { throw new Error('unused'); } } });
   const loadMs = Date.now() - loading;
   const view = approval.approvedIndex(session.index());
   const rows = await sampleLikelyKeeps(client, sample);
-  const version = gemini.modelVersion(MODEL), rate = gemini.RATES[MODEL];
+  const version = judgeProvider.modelVersion(MODEL), rate = openai.RATES[MODEL];
   const memory = new Map();
   const results = [];
   for (const row of rows) {
@@ -454,7 +458,7 @@ const measure = async ({ client, sample, maxDollars, estimateOnly, apiKey = proc
         return;
       }
       let actual = null;
-      const judge = gemini.createJudge({ model: MODEL, apiKey, cache: memory, budget: { reserve: budget.reserve, settle: (r, a) => { actual = a; budget.settle(r, a); } } });
+      const judge = judgeProvider.createJudge({ model: MODEL, apiKey, cache: memory, budget: { reserve: budget.reserve, settle: (r, a) => { actual = a; budget.settle(r, a); } } });
       const started = Date.now();
       const [verdict] = await budget.limit(judge.adjudicate([{ ...task, id: 'comparison' }]));
       calls[i] = { ...verdict, id: task.id, cached: false, first, ms: Date.now() - started, dollars: actual?.dollars ?? 0 };

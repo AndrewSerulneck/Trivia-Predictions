@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const core = require('../lib/speed-trivia-uniqueness/core.cjs');
-const gemini = require('../lib/speed-trivia-uniqueness/gemini.cjs');
+const judgeProvider = require('../lib/speed-trivia-uniqueness/openai.cjs');
 const retirement = require('../lib/speed-trivia-uniqueness/retirement.cjs');
 const support = require('./speed-trivia-phase2-support.cjs');
 const run = async ({ snapshot, planFile, planHash, oldJournal, output, cap, paid = false }) => {
@@ -21,7 +21,7 @@ const run = async ({ snapshot, planFile, planHash, oldJournal, output, cap, paid
   // Every handled failure after acquisition must release this run's lock.
   try {
     const cache = support.openCache(directory);
-    const judge = gemini.createJudge({ apiKey: process.env.GEMINI_API_KEY, budget, cache });
+    const judge = judgeProvider.createJudge({ apiKey: process.env.OPENAI_API_KEY, budget, cache });
     const journal = path.join(directory, 'adjudicated-pairs.jsonl'), comparisons = new Map();
     const read = file => fs.existsSync(file) ? fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map(JSON.parse) : [];
     for (const pair of read(oldJournal)) {

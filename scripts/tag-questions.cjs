@@ -5,7 +5,7 @@
  *   node --env-file=.env.local scripts/tag-questions.cjs --game speed                  # dry run: counts, no model calls
  *   ... --game speed --sample 40                                                      # one batch through ChatGPT, printed, no writes
  *   ... --game speed --apply [--limit 400] [--batch 40] [--concurrency 2]              # tag and save (ChatGPT, free)
- *   ... --game speed --apply --provider gemini --max-dollars 2.5                       # fallback, capped (plan: <= $2.50)
+ *   ... --game speed --apply --provider openai --max-dollars 2.5                       # OpenAI API, capped (Phase 4f.2; was Gemini)
  *   ... --game live ...                                                               # Live: reads the canonical JSON, read-only
  *   ... --game speed --unmapped --category "General Knowledge" [--apply]                # Phase 4a.1: re-tag rows with no area
  *
@@ -20,15 +20,15 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const map = require('../lib/question-variety/map.cjs');
-const { RATES } = require('../lib/speed-trivia-uniqueness/gemini.cjs');
-const { OUTPUT_SCHEMA, buildPrompt, toTags, runGemini } = require('../lib/question-variety/tagging.cjs');
+const { RATES } = require('../lib/openai/responses.cjs');
+const { OUTPUT_SCHEMA, TAG_MODEL, buildPrompt, toTags, runOpenAI } = require('../lib/question-variety/tagging.cjs');
 const codexExec = require('./lib/codexExec.cjs');
 const liveCats = require('../lib/live-trivia-quality/categories.cjs');
 
 const PAGE = 1000;
 const LIVE_DIR = path.resolve(__dirname, '../data/live-trivia/categories');
-const DEFAULT_MODEL = { codex: 'gpt-6.1-sol', gemini: 'gemini-2.5-flash' };
-const MAX_GEMINI_DOLLARS = 2.5; // plan cap for the fallback
+const DEFAULT_MODEL = { codex: 'gpt-6.1-sol', openai: TAG_MODEL };
+const MAX_API_DOLLARS = 2.5; // plan cap for the paid API
 const VERSION = 'tagging-v1';
 const RETAG_SUFFIX = 'area-retag-v2';
 
@@ -52,19 +52,19 @@ const parseArgs = argv => {
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (!map.isGame(args.game)) throw new Error('--game must be speed or live.');
-  if (!['codex', 'gemini'].includes(args.provider)) throw new Error('--provider must be codex or gemini.');
+  if (!['codex', 'openai'].includes(args.provider)) throw new Error('--provider must be codex or openai.');
   if (!Number.isInteger(args.batch) || args.batch < 1 || args.batch > 100) throw new Error('--batch must be 1-100.');
   if (!Number.isInteger(args.concurrency) || args.concurrency < 1 || args.concurrency > 4) throw new Error('--concurrency must be 1-4.');
   if (args.limit !== Infinity && (!Number.isInteger(args.limit) || args.limit < 1)) throw new Error('--limit must be a positive whole number.');
   if (!Number.isInteger(args.sample) || args.sample < 0 || args.sample > 100) throw new Error('--sample must be 0-100.');
   if (args.sample && args.apply) throw new Error('--sample never writes; drop --apply.');
   if (!['low', 'medium', 'high'].includes(args.effort)) throw new Error('--effort must be low, medium or high.');
-  if (args.provider === 'gemini' && (args.apply || args.sample)) {
-    if (!(args.maxDollars > 0) || args.maxDollars > MAX_GEMINI_DOLLARS) throw new Error(`--provider gemini needs --max-dollars above 0 and at most ${MAX_GEMINI_DOLLARS}.`);
+  if (args.provider === 'openai' && (args.apply || args.sample)) {
+    if (!(args.maxDollars > 0) || args.maxDollars > MAX_API_DOLLARS) throw new Error(`--provider openai needs --max-dollars above 0 and at most ${MAX_API_DOLLARS}.`);
   }
   if (args.unmapped && args.game !== 'speed') throw new Error('--unmapped is for Speed only.');
   args.model ||= DEFAULT_MODEL[args.provider];
-  if (args.provider === 'gemini' && !RATES[args.model]) throw new Error('Gemini model has no price configuration.');
+  if (args.provider === 'openai' && !RATES[args.model]) throw new Error('OpenAI model has no price configuration.');
   return args;
 };
 
@@ -123,8 +123,8 @@ const readQuestions = async (client, game) => {
 
 const runCodex = ({ prompt, model, effort }) => codexExec.runCodex({ prompt, model, effort, schema: OUTPUT_SCHEMA });
 
-/** Worst-case price of one Gemini call, reserved before it's made. */
-const geminiCeiling = (prompt, model) => (Buffer.byteLength(prompt) * RATES[model].input + 8192 * RATES[model].output) / 1e6;
+/** Worst-case price of one OpenAI API call, reserved before it's made. */
+const apiCeiling = (prompt, model) => (Buffer.byteLength(prompt) * RATES[model].input + 8192 * RATES[model].output) / 1e6;
 
 const isStarCap = error => /\bstar-cap\b/.test(error?.message ?? '');
 
@@ -177,11 +177,11 @@ const run = async ({ client, args, call = null, log = () => {} }) => {
   if (!args.apply && !args.sample) return summary;
 
   const taggedBy = `${args.provider}:${args.model}:${VERSION}${args.unmapped ? `:${RETAG_SUFFIX}` : ''}`;
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (args.provider === 'gemini' && !apiKey && !call) throw new Error('Missing GEMINI_API_KEY.');
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (args.provider === 'openai' && !apiKey && !call) throw new Error('Missing OPENAI_API_KEY.');
   const caller = call ?? (args.provider === 'codex'
     ? prompt => runCodex({ prompt, model: args.model, effort: args.effort })
-    : prompt => runGemini({ prompt, model: args.model, apiKey }));
+    : prompt => runOpenAI({ prompt, model: args.model, apiKey }));
 
   let remaining = plannedCount, written = 0, dollars = 0, tokens = 0, calls = 0, stopped = null, stillUnmapped = 0;
   const skipped = [], failures = [], sample = [], refusedSubjectFull = [];
@@ -198,8 +198,8 @@ const run = async ({ client, args, call = null, log = () => {} }) => {
       const { category, batch } = queue.shift();
       const areas = areasByCategory.get(category);
       const prompt = buildPrompt(category, areas, batch);
-      if (args.provider === 'gemini') {
-        const ceiling = geminiCeiling(prompt, args.model);
+      if (args.provider === 'openai') {
+        const ceiling = apiCeiling(prompt, args.model);
         if (dollars + ceiling > args.maxDollars) { stopped = 'budget'; return; }
         dollars += ceiling; // reserved; settled below
         try {
@@ -234,7 +234,7 @@ const run = async ({ client, args, call = null, log = () => {} }) => {
   await Promise.all(Array.from({ length: args.concurrency }, worker));
   await Promise.all(pendingWrites);
   return { ...summary, calls, written, ...(unmappedTags ? { stillUnmapped } : {}), refusedSubjectFull, skipped: skipped.length, skippedByReason: skipped.reduce((a, s) => ({ ...a, [s.reason]: (a[s.reason] ?? 0) + 1 }), {}),
-    failures, stopped, codexTokens: args.provider === 'codex' ? tokens : undefined, geminiDollars: args.provider === 'gemini' ? Number(dollars.toFixed(4)) : undefined,
+    failures, stopped, codexTokens: args.provider === 'codex' ? tokens : undefined, apiDollars: args.provider === 'openai' ? Number(dollars.toFixed(4)) : undefined,
     ...(args.sample ? { sample } : {}) };
 };
 
@@ -248,4 +248,4 @@ const main = async () => {
 
 if (require.main === module) main().catch(error => { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; });
 
-module.exports = { OUTPUT_SCHEMA, VERSION, RETAG_SUFFIX, parseArgs, buildPrompt, toTags, toRetags, batchesOf, geminiCeiling, readQuestions, writeTags, run };
+module.exports = { OUTPUT_SCHEMA, VERSION, RETAG_SUFFIX, parseArgs, buildPrompt, toTags, toRetags, batchesOf, apiCeiling, readQuestions, writeTags, run };

@@ -4,6 +4,8 @@ import { AdmissionError, createBudget, createSession } from "@/lib/speed-trivia-
 import { contentHash } from "@/lib/speed-trivia-uniqueness/core.cjs";
 import { computeSpeedTag, readSpeedSubjectKey, speedSubjectHasRoom, tagSpeedQuestion, writeSpeedTag } from "@/lib/speedTriviaTagging";
 import type { TagRow } from "@/lib/question-variety/tagging.cjs";
+import { recordUsage } from "@/lib/openai/ledger.cjs";
+import type { ModelUsage } from "@/lib/openai/ledger.cjs";
 import type { AdmissionRow, AdmissionSession } from "@/types/speedTriviaAdmission";
 import type { SpeedIndex, SpeedQuestion } from "@/types/speedTriviaUniqueness";
 
@@ -67,7 +69,27 @@ export const openSpeedTriviaAdmission = (options?: { elapsedMs: number; signal?:
   });
   return budget ? budget.limit(opening) : opening;
 };
-// Phase 4a.1 star cap: approval needs a subject tag. An untagged question is tagged once (one Gemini call) and retried;
+// Phase 4f.2: what a session's checks spent since it was last recorded, as one ledger row per model (none when no paid
+// call was made). A session can serve several saves (bulk Keep), so only the difference is written each time.
+const recordedSpend = new WeakMap<object, Record<string, ModelUsage>>();
+const recordSpend = async (session: AdmissionSession) => {
+  try {
+    const now = (session.budget.summary().byModel ?? {}) as Record<string, ModelUsage>;
+    const before = recordedSpend.get(session.budget) ?? {};
+    recordedSpend.set(session.budget, now);
+    const delta = Object.fromEntries(Object.entries(now).map(([model, entry]) => {
+      const old = before[model] ?? { calls: 0, inputTokens: 0, outputTokens: 0, dollars: 0 };
+      return [model, { calls: entry.calls - old.calls, inputTokens: entry.inputTokens - old.inputTokens, outputTokens: entry.outputTokens - old.outputTokens, dollars: entry.dollars - old.dollars }];
+    }));
+    await recordUsage(supabaseAdmin, { feature: "speed_question_checks", byModel: delta, metadata: { source: "admin" } });
+  } catch {
+    // The ledger never fails a save.
+  }
+};
+const recorded = async <T,>(session: AdmissionSession, attempt: () => Promise<T>): Promise<T> => {
+  try { return await attempt(); } finally { await recordSpend(session); }
+};
+// Phase 4a.1 star cap: approval needs a subject tag. An untagged question is tagged once (one OpenAI call) and retried;
 // if tagging fails, the 'untagged' refusal stands and the question stays waiting. `tagged` says it tagged (Phase 4c.1),
 // so a save doesn't tag the same content a second time.
 const withTag = async <T,>(row: AdmissionRow, attempt: () => Promise<T>): Promise<{ result: T; tagged: boolean }> => {
@@ -89,7 +111,7 @@ export const writeSpeedTrivia = async (patch: Record<string, unknown>, existing:
   const prospective = { ...(existing ?? {}), ...patch } as AdmissionRow;
   // Phase 4c.8 (post-4c.4 review #4, D15): the star cap is checked only when a row BECOMES active, so an edit that
   // keeps an approved question approved is tagged before the save. A move into a subject with 5 other approved
-  // questions is refused ('subject_full', 409) with nothing saved. Still one Gemini call per save; if it fails, the
+  // questions is refused ('subject_full', 409) with nothing saved. Still one OpenAI call per save; if it fails, the
   // save goes ahead and the old tag stays. The tag trigger (guard_speed_question_tag) stays the binding check.
   let earlyTag: TagRow | null = null;
   const tagBeforeSave = Boolean(existing && isActiveSpeed(existing) && isActiveSpeed(prospective) && changedContent(prospective, existing));
@@ -100,14 +122,14 @@ export const writeSpeedTrivia = async (patch: Record<string, unknown>, existing:
       throw new AdmissionError("subject_full", "Subject full.");
     }
   }
-  const { result, tagged } = await withTag(prospective, () => gate.write(patch, { existing }));
+  const { result, tagged } = await recorded(gate, () => withTag(prospective, () => gate.write(patch, { existing })));
   const saved = result.row;
   if (tagBeforeSave) {
     if (earlyTag && saved) await writeSpeedTag(earlyTag);
     return saved;
   }
   // Admin add/edit: a new question, or new content, gets its subject tag now (best effort; never blocks the save),
-  // unless withTag just tagged this content (one Gemini call per save, Phase 4c.1).
+  // unless withTag just tagged this content (one OpenAI call per save, Phase 4c.1).
   if (!tagged && saved?.question_pool === "anytime_blitz" && changedContent(saved, existing)) await tagSpeedQuestion(saved);
   return saved;
 };
@@ -115,7 +137,7 @@ export const writeSpeedTrivia = async (patch: Record<string, unknown>, existing:
 // An edit that keeps a live question live does too (D38); other edits, new generation and imports use the complete fact bank.
 export const approveSpeedTrivia = async (existing: AdmissionRow, session?: AdmissionSession): Promise<AdmissionRow> => {
   const gate = session ?? await openSpeedTriviaAdmission();
-  return (await withTag(existing, () => gate.write({ status: "active" }, { existing, approvedOnly: true }))).result.row;
+  return (await recorded(gate, () => withTag(existing, () => gate.write({ status: "active" }, { existing, approvedOnly: true })))).result.row;
 };
 export const convertSpeedTriviaToLive = async (patch: Record<string, unknown>, existing: AdmissionRow, session?: AdmissionSession): Promise<AdmissionRow> => {
   const gate = session ?? await openSpeedTriviaAdmission();

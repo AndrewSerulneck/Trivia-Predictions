@@ -57,7 +57,8 @@ describe("frozen release evaluation replay", () => {
     expect(core.hash(freshBytes)).toBe(fs.readFileSync("tests/fixtures/speed-trivia-uniqueness/evaluation-fresh-v1.sha256", "utf8").trim());
     expect(core.hash(evidenceBytes)).toBe(fs.readFileSync("tests/fixtures/speed-trivia-uniqueness/release-fresh-evaluation-v1.sha256", "utf8").trim());
     expect(core.hash(fs.readFileSync("lib/speed-trivia-uniqueness/core.cjs", "utf8"))).toBe(fresh.policyFrozenBeforeScoring.coreSha256);
-    expect(core.hash(fs.readFileSync("lib/speed-trivia-uniqueness/gemini.cjs", "utf8"))).toBe(fresh.policyFrozenBeforeScoring.providerSha256);
+    // The Gemini client this evidence was recorded with was deleted in Phase 4f.2 (D40); the replay below needs only
+    // core.cjs and the recorded verdicts. The OpenAI judge has its own evidence (speed-trivia-uniqueness-openai-release).
     const recorded = new Map(evidence.recordedComparisons.map(r => [r.key, r]));
     const replay = async (tasks: ComparisonTask[]): Promise<ComparisonResult[]> => tasks.map(t => {
       const r = recorded.get(core.pairKey(t.a, t.b, evidence.modelVersion));

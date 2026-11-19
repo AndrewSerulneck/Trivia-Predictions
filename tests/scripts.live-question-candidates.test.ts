@@ -89,7 +89,7 @@ const scorer = (scores: Record<string, number> = {}) => () => ({
 const judge = (verdicts: Record<string, Row> = {}) => () => ({
   check: async (c: Row) => verdicts[c.question as string] ?? { verdict: "distinct", how: "free" },
 });
-const env = { GEMINI_API_KEY: "test" };
+const env = { OPENAI_API_KEY: "test" };
 const run = (client: ReturnType<typeof memoryClient>, over: Row = {}) => live.processLiveDay({
   client, today: TODAY, env, corpus: [], createScorer: scorer(), createChecker: judge(), ...over,
 });
@@ -157,16 +157,16 @@ describe("processLiveDay", () => {
     ] });
     const report = await run(client, {
       createScorer: scorer({ "Which band recorded 'Kashmir' in 1975?": 2 }),
-      createChecker: judge({ [q2]: { verdict: "duplicate", match: { slug: "pg", question: "q", answer: "a" }, how: "gemini" },
-        [q3]: { verdict: "uncertain", match: { slug: "hoth", question: "Old HOTH?", answer: "Led Zeppelin" }, how: "gemini" } }),
+      createChecker: judge({ [q2]: { verdict: "duplicate", match: { slug: "pg", question: "q", answer: "a" }, how: "openai" },
+        [q3]: { verdict: "uncertain", match: { slug: "hoth", question: "Old HOTH?", answer: "Led Zeppelin" }, how: "openai" } }),
     });
     expect(report.rejected).toEqual({ "bar-test": 1, repeat: 1 });
-    expect(statusOf(client, "dup").reason).toBe("repeat: pg (gemini)");
+    expect(statusOf(client, "dup").reason).toBe("repeat: pg (openai)");
     expect(statusOf(client, "maybe")).toMatchObject({ status: "pending_review", possible_repeat: { slug: "hoth" } });
     expect(report.possibleRepeats).toBe(1);
   });
 
-  it("uses the writer's ChatGPT grade, keeps the score on a bar-test reject, and asks Gemini only for the rest (D35)", async () => {
+  it("uses the writer's ChatGPT grade, keeps the score on a bar-test reject, and asks the OpenAI API only for the rest (D35, 4f.2)", async () => {
     const grade = (over: Row = {}) => ({ version: "bar-test-live-v4", model: "gpt-6-astra", familiar: 5, fun: 4, estCorrect: 60, flags: [], ...over });
     const q2 = "Which band sang the 1977 hit 'Go Your Own Way'?";
     const q3 = "Which band released the 1973 album 'The Dark Side of the Moon'?";
@@ -178,7 +178,7 @@ describe("processLiveDay", () => {
     const seen: Row[] = [];
     const report = await run(client, { createScorer: () => ({ scoreBatch: async (rows: Row[]) => { seen.push(...rows); return scorer()().scoreBatch(rows); } }) });
     expect(seen.map(r => r.question)).toEqual([q3]);
-    expect((report as Report & { graded: Row }).graded).toEqual({ chatgpt: 2, gemini: 1 });
+    expect((report as Report & { graded: Row }).graded).toEqual({ chatgpt: 2, openai: 1 });
     expect(statusOf(client, "c1").audience).toMatchObject({ version: "bar-test-live-v4", model: "chatgpt:gpt-6-astra:bar-test-live-v4", score: 5 });
     expect(statusOf(client, "c2")).toMatchObject({ status: "rejected", reason: "bar-test:1", audience: expect.objectContaining({ score: 1 }) });
   });
@@ -237,7 +237,7 @@ describe("processLiveDay: conversions", () => {
     expect(client.touched.has("trivia_questions")).toBe(false);
   });
 
-  it("never sends an ungraded conversion to Gemini (D36) and isn't held by the day's target", async () => {
+  it("never sends an ungraded conversion for grading (D36) and isn't held by the day's target", async () => {
     const list = Array.from({ length: 16 }, (_, i) => candidate(`c${i}`, i + 1, payload({ question: `Which band recorded song number ${i}?`, subject: `Band ${i}` })));
     const client = memoryClient({ list: [...list, conv("k1", "r1", payload({ question: "Which band sang 'Hotel California'?", answer: "Eagles", acceptableAnswers: [], subject: "Eagles" }))],
       requests: [request("r1", "k1")] });
@@ -254,8 +254,8 @@ describe("processLiveDay: conversions", () => {
       conv("k1", "r1", dup),
       conv("k2", "r2", payload({ question: "Which of these bands recorded 'Stairway to Heaven'?" })),
     ], requests: [request("r1", "k1"), request("r2", "k2")] });
-    const report = await run(client, { createChecker: judge({ [dup.question as string]: { verdict: "duplicate", match: { slug: "eagles", question: "Who recorded Hotel California?", answer: "Eagles" }, how: "gemini" } }) });
-    expect(statusOf(client, "k1")).toMatchObject({ status: "rejected", reason: "repeat: eagles (gemini)" });
+    const report = await run(client, { createChecker: judge({ [dup.question as string]: { verdict: "duplicate", match: { slug: "eagles", question: "Who recorded Hotel California?", answer: "Eagles" }, how: "openai" } }) });
+    expect(statusOf(client, "k1")).toMatchObject({ status: "rejected", reason: "repeat: eagles (openai)" });
     expect(reqOf(client, "r1")).toMatchObject({ status: "failed", reason: "Already in Live: Who recorded Hotel California?" });
     expect(reqOf(client, "r2")).toMatchObject({ status: "failed", reason: "Breaks a Live rule (which-of-these)." });
     expect((report as Report & { conversions: Row }).conversions).toEqual({ examined: 2, waiting: 0, rejected: 2 });

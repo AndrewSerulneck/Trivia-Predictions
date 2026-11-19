@@ -1,4 +1,6 @@
-import { trackGeminiUsage } from "@/lib/llmCostTracker";
+import { callJson, jsonOf } from "@/lib/openai/responses.cjs";
+import { recordUsage } from "@/lib/openai/ledger.cjs";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 type PendingSpeedQuestion = {
   id: string;
@@ -118,65 +120,34 @@ export function buildFallbackLiveTriviaExportQuestion(row: PendingSpeedQuestion)
   };
 }
 
-function extractJsonObject(text: string): Record<string, unknown> {
-  const trimmed = String(text || "").trim();
-  if (!trimmed) {
-    throw new Error("Gemini returned an empty response.");
-  }
+// Phase 4f.2 (D40): the rewrite runs on the OpenAI API (Gemini before). Writing quality matters and an Admin converts
+// a handful at a time, so it uses the stronger model (~$0.003 a question).
+export const LIVE_REWRITE_MODEL = "gpt-6.1-sol";
+const REWRITE_SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["slug", "question", "answer", "acceptableAnswers", "answer_format", "category", "difficulty"],
+  properties: {
+    slug: { type: "string" }, question: { type: "string" }, answer: { type: "string" },
+    acceptableAnswers: { type: "array", items: { type: "string" } }, answer_format: { type: "string", enum: ["write_in"] },
+    category: { type: "string" }, difficulty: { type: "string" },
+  },
+};
 
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  const candidate = fenced ? fenced[1] : trimmed;
-  const parsed = JSON.parse(candidate) as Record<string, unknown>;
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("Gemini response JSON is not an object.");
-  }
-  return parsed;
-}
-
-async function callGeminiForLiveRewrite(prompt: string): Promise<Record<string, unknown>> {
-  const apiKey = String(process.env.GEMINI_API_KEY || "").trim();
-  if (!apiKey) {
-    throw new Error("Missing GEMINI_API_KEY.");
-  }
-
-  const model = String(process.env.GEMINI_MODEL || "gemini-2.5-flash").trim();
-  const endpoint =
-    process.env.GEMINI_API_URL ||
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-
-  const response = await fetch(`${endpoint}?key=${encodeURIComponent(apiKey)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3,
-        responseMimeType: "application/json",
-      },
-    }),
+async function callOpenAIForLiveRewrite(prompt: string, transport: typeof fetch = fetch): Promise<Record<string, unknown>> {
+  const reply = await callJson({
+    model: LIVE_REWRITE_MODEL, apiKey: process.env.OPENAI_API_KEY, prompt, schema: REWRITE_SCHEMA, name: "live_rewrite",
+    maxOutputTokens: 1024, timeoutMs: 30_000, transport,
   });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = data?.error?.message || response.statusText || "Unknown Gemini API error";
-    throw new Error(`Gemini API request failed (${response.status}): ${message}`);
-  }
-
-  // Track cost — fire-and-forget.
-  trackGeminiUsage(data.usageMetadata ?? {}, model, "live_trivia_rewrite").catch(() => {});
-
-  const text = (data?.candidates?.[0]?.content?.parts || [])
-    .map((part: { text?: string }) => (typeof part?.text === "string" ? part.text : ""))
-    .join("\n")
-    .trim();
-
-  return extractJsonObject(text);
+  await recordUsage(supabaseAdmin, { feature: "live_trivia_rewrite", byModel: { [LIVE_REWRITE_MODEL]: { calls: 1, ...reply.usage } } });
+  const parsed = jsonOf(reply, "live-rewrite");
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("live-rewrite-json-invalid");
+  return parsed as Record<string, unknown>;
 }
 
 function buildRewritePrompt(row: PendingSpeedQuestion): string {
   return [
     "Convert this multiple-choice trivia question into a high-quality LIVE write-in trivia question.",
-    "Return ONLY a JSON object with these keys:",
+    "Return a JSON object with these keys:",
     'slug, question, answer, acceptableAnswers, answer_format, category, difficulty',
     "",
     "Rules:",
@@ -233,10 +204,11 @@ export function normalizeConvertedLiveTriviaExportQuestion(
 }
 
 export async function convertSpeedQuestionToLiveTriviaExportQuestion(
-  row: PendingSpeedQuestion
+  row: PendingSpeedQuestion,
+  transport: typeof fetch = fetch
 ): Promise<LiveTriviaExportQuestion> {
   try {
-    const raw = await callGeminiForLiveRewrite(buildRewritePrompt(row));
+    const raw = await callOpenAIForLiveRewrite(buildRewritePrompt(row), transport);
     return normalizeConvertedLiveTriviaExportQuestion(raw, row);
   } catch {
     return buildFallbackLiveTriviaExportQuestion(row);

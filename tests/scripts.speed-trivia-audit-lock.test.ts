@@ -13,11 +13,11 @@ type Verdict = { id: string; decision: string; fact: string; explanation: string
 type Judge = { modelVersion: string; adjudicate: (tasks: Task[]) => Promise<Verdict[]> };
 const core = require("../lib/speed-trivia-uniqueness/core.cjs") as { hash: (input: string) => string; contentHash: (row: Row) => string; createCorpus: (rows: Row[], options: object) => { digest: string } };
 const support = require("../scripts/speed-trivia-phase2-support.cjs") as { readSnapshot: (directory: string) => { rows: Row[] }; privateDirectory: (directory: string) => string; openBudget: (directory: string, options: { dollars: number }) => Budget };
-const gemini = require("../lib/speed-trivia-uniqueness/gemini.cjs") as { createJudge: (options: { budget: Budget }) => Judge };
+const judgeProvider = require("../lib/speed-trivia-uniqueness/openai.cjs") as { createJudge: (options: { budget: Budget }) => Judge };
 type Input = { snapshot: string; planFile: string; planHash: string; oldJournal: string; output: string; cap: number; paid: boolean };
 const audit = require("../scripts/audit-speed-trivia-refresh.cjs") as { run: (input: Input) => Promise<{ coverage: { processed: number; failure: string | null } }> };
 const directories: string[] = [];
-const version = "gemini-2.5-flash:fact-judge-v2:thinking-0:batch-1";
+const version = "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1";
 const verdict = (id: string): Verdict => ({ id, decision: "unique", fact: "Distinct synthetic facts", explanation: "Synthetic comparison", qualityA: "sound", qualityB: "sound", confidence: "high" });
 
 const fixture = (count = 0) => {
@@ -35,7 +35,7 @@ const fixture = (count = 0) => {
   vi.spyOn(support, "privateDirectory").mockReturnValue(output);
   vi.stubGlobal("fetch", vi.fn(() => { throw new Error("Network forbidden in audit lock tests"); }));
   const judge = { modelVersion: version, adjudicate: vi.fn(async (input: Task[]) => input.map(task => verdict(task.id))) };
-  vi.spyOn(gemini, "createJudge").mockReturnValue(judge);
+  vi.spyOn(judgeProvider, "createJudge").mockReturnValue(judge);
   const input: Input = { snapshot, planFile, planHash: core.hash(bytes), oldJournal: path.join(directory, "old-journal.jsonl"), output, cap: 1, paid: true };
   return { input, judge, lock: path.join(output, "budget.jsonl.lock") };
 };
@@ -52,7 +52,7 @@ describe("one-time audit budget lock ownership", () => {
     if (kind === "old journal") fs.writeFileSync(input.oldJournal, "invalid JSON\n");
     if (kind === "refresh journal") fs.writeFileSync(path.join(input.output, "adjudicated-pairs.jsonl"), "invalid JSON\n");
     if (kind === "model drift") fs.writeFileSync(input.oldJournal, JSON.stringify({ modelVersion: "wrong-version" }) + "\n");
-    if (kind === "provider initialization") vi.mocked(gemini.createJudge).mockImplementationOnce(() => { throw new Error("Synthetic initialization failure"); });
+    if (kind === "provider initialization") vi.mocked(judgeProvider.createJudge).mockImplementationOnce(() => { throw new Error("Synthetic initialization failure"); });
     await expect(audit.run(input)).rejects.toThrow();
     expect(fs.existsSync(lock)).toBe(false);
     const retry = support.openBudget(input.output, { dollars: 1 }); retry.close();
@@ -64,7 +64,7 @@ describe("one-time audit budget lock ownership", () => {
     fs.writeFileSync(lock, "synthetic-owner");
     await expect(audit.run(input)).rejects.toMatchObject({ code: "EEXIST" });
     expect(fs.readFileSync(lock, "utf8")).toBe("synthetic-owner");
-    expect(gemini.createJudge).not.toHaveBeenCalled();
+    expect(judgeProvider.createJudge).not.toHaveBeenCalled();
   });
 
   it("keeps unsettled reservations charged across a startup failure and retry", async () => {
@@ -92,7 +92,7 @@ describe("one-time audit budget lock ownership", () => {
     });
     const release: Array<() => void> = [];
     let budget: Budget | undefined;
-    vi.mocked(gemini.createJudge).mockImplementation(options => {
+    vi.mocked(judgeProvider.createJudge).mockImplementation(options => {
       budget = options.budget;
       return { modelVersion: version, adjudicate: vi.fn(async tasks => {
         const claim = { dollars: 0.01, inputTokens: 1, outputTokens: 1 };

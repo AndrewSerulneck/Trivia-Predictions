@@ -1,0 +1,873 @@
+{
+  "version": "speed-uniqueness-release-evaluation-evaluation-fresh-v1-openai",
+  "createdDate": "2026-11-19",
+  "policyVersion": "speed-facts-v2",
+  "extractorVersion": "answer-concepts-v2",
+  "retrievalVersion": "union-answer-bm25-concepts-v4",
+  "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+  "fixtureHash": "828933ef70ce633a206a645387fca0181402f6ab3a582612cf7706de2730142e",
+  "coreSha256": "24ae8e137aa990be82e9a09b60e4b822fcc497248cf20ab342538e596d047660",
+  "providerSha256": "53a9c8f277008b2e7f295b7b6c3be2d9d13a01589f9eb1acdce99960ad4cc06b",
+  "corpusRevision": "snapshot:bf59e8249cba428662dd8c33e50b61c1",
+  "corpusDigest": "6de29b4cac5dd97946d1e948dd076f5eaa49ed96b273ad7a385a0f9d474859c1",
+  "corpusRows": 13801,
+  "scope": "Full-corpus retrieval; isolated-pair adjudication, NOT full-corpus distinct admission.",
+  "metrics": {
+    "all": {
+      "total": 36,
+      "duplicates": 18,
+      "duplicateDetected": 18,
+      "duplicateEscapes": 0,
+      "duplicateHolds": 0,
+      "distinct": 18,
+      "distinctAccepted": 18,
+      "uncertain": 0,
+      "uncertainEscapes": 0,
+      "retrievalFound": 18,
+      "retrievalComplete": 18
+    },
+    "heldOut": {
+      "total": 36,
+      "duplicates": 18,
+      "duplicateDetected": 18,
+      "duplicateEscapes": 0,
+      "duplicateHolds": 0,
+      "distinct": 18,
+      "distinctAccepted": 18,
+      "uncertain": 0,
+      "uncertainEscapes": 0,
+      "retrievalFound": 18,
+      "retrievalComplete": 18
+    },
+    "mandatory": {
+      "total": 0,
+      "duplicates": 0,
+      "duplicateDetected": 0,
+      "duplicateEscapes": 0,
+      "duplicateHolds": 0,
+      "distinct": 0,
+      "distinctAccepted": 0,
+      "uncertain": 0,
+      "uncertainEscapes": 0,
+      "retrievalFound": 0,
+      "retrievalComplete": 0
+    },
+    "exact": {
+      "total": 0,
+      "duplicates": 0,
+      "duplicateDetected": 0,
+      "duplicateEscapes": 0,
+      "duplicateHolds": 0,
+      "distinct": 0,
+      "distinctAccepted": 0,
+      "uncertain": 0,
+      "uncertainEscapes": 0,
+      "retrievalFound": 0,
+      "retrievalComplete": 0
+    }
+  },
+  "gates": true,
+  "budget": {
+    "dollars": 0.0043038,
+    "requests": 36,
+    "inputTokens": 27028,
+    "outputTokens": 3202,
+    "unsettled": 0
+  },
+  "recordedComparisons": [
+    {
+      "id": "st-fresh-001",
+      "key": "b740e2bc3f8177ba6a250710c7cb45cc5cda9cdcc81914b0c3ed72f71c0b8bbd",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "2d437ab90985415d32d4e06c7f2809ca5c16f8324b8e5f795918f6edc8225e14",
+      "result": {
+        "decision": "duplicate",
+        "fact": "The Cuban Missile Crisis occurred in 1962.",
+        "explanation": "Both questions ask for the year of the same historical event and give the same answer; the added description does not change the required knowledge.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-002",
+      "key": "f067a5e707afeabc81417ba0327765609a982f9d492701ce227544c9f523f9a0",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "a4c706dfa37aa437956303be200568908df839b49d3e1f6ec3689a2a9ce06159",
+      "result": {
+        "decision": "duplicate",
+        "fact": "The traditional date for the fall of the Western Roman Empire is 476 AD.",
+        "explanation": "Both questions ask for the same traditional year and give the same answer; the wording and distractors differ only.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-003",
+      "key": "d074daae0e32a87ad0228b2ccffec158e774f6c73441e7238ddd7727b4c44f45",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "c15f85f37e3615f7763e9b23379edfc61f22eb102249bacdebdb69fe28016867",
+      "result": {
+        "decision": "duplicate",
+        "fact": "Fearless (Taylor’s Version) was the first of Taylor Swift’s re-recorded albums released with “Taylor’s Version” in the title.",
+        "explanation": "Both questions ask which Taylor Swift album was first released as a re-recording with “Taylor’s Version” in its title; both answer Fearless.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-004",
+      "key": "4ef19cd7220579500b468a621c94df489c72364ef2ce7f2fc4e24c19f1a94568",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "1277792b7dfedc9cf54a445f96a58a947726bfcee91dad9d05e139936ba70958",
+      "result": {
+        "decision": "duplicate",
+        "fact": "The Spice Girls released the hit song “Wannabe.”",
+        "explanation": "Both ask which group released “Wannabe”; A adds the 1996 date and “Girl Power” clue, but these are extra clues to the same fact.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-005",
+      "key": "98c70641bcdb00baba66b979e7c92625f429631c1a21406e711cc13d649100d1",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "4146ea7e6b61053c212b1e0bfad18dc07906f0bfabda1e46872a69bc62915b4d",
+      "result": {
+        "decision": "duplicate",
+        "fact": "Diamond is the hardest naturally occurring mineral, with the highest Mohs hardness.",
+        "explanation": "Both questions ask for diamond as the hardest natural substance or mineral; the wording is a minor variation of the same knowledge.",
+        "qualityA": "uncertain",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-006",
+      "key": "40e78166baa04878e6fedc40873d33c3915e0da06ecb5303321d30885ea48107",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "28d67d6e0e539a2bc834be7e514adb95e65cc7ca791123327442a01b7f789826",
+      "result": {
+        "decision": "duplicate",
+        "fact": "Ionization is the process in which an atom or molecule gains or loses electrons and becomes an ion.",
+        "explanation": "Both questions ask for the same process; the wording differs only in whether it explicitly mentions a molecule and the resulting charge.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-007",
+      "key": "37a1228640282662f6b15b6f085df6e24271f2cf80c5f485fc6ba40d8e740065",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "59b2e95e1217094c41b437d2d8f0ef8ddb3950dd7429a287b812b925c9aa9e64",
+      "result": {
+        "decision": "duplicate",
+        "fact": "A Rugby Union team has 15 players on the field at one time.",
+        "explanation": "Both questions ask for the standard on-field team size in Rugby Union, and both give 15. The second question's wording is broader, but in this context it refers to the same match-playing team size.",
+        "qualityA": "sound",
+        "qualityB": "uncertain",
+        "confidence": "medium"
+      }
+    },
+    {
+      "id": "st-fresh-008",
+      "key": "0f3945f87ef8994b7fc3b10bb18397546510b11af8ca9ec2fd737a30db58b019",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "28be6829ead211c231e1fd8664628a71077192411d627838939666e9fdbc3434",
+      "result": {
+        "decision": "duplicate",
+        "fact": "Dressage is the equestrian discipline in which horse and rider perform a prescribed sequence of movements.",
+        "explanation": "Both questions ask for the same discipline; arena and memorization details are additional clues to that fact.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-009",
+      "key": "054c3295743e6986250ad7a8ea28e080c9c80b646f51cb0ff6ca878634acd654",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "d3fae8448cb0ba85567e193d1a7f88e18b00a69025c5a0cbbb6ecbec07caed91",
+      "result": {
+        "decision": "duplicate",
+        "fact": "The Spice Girls performed and released the hit song “Wannabe.”",
+        "explanation": "Both questions ask which girl group is associated with the same song, and both give the Spice Girls as the answer.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-010",
+      "key": "502094fe4a7cf29bd4b00296d7f352c60a0e6e266aa42d7a007cd446e3444a7e",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "8f7d02ad2449bc14418360508a7731fd9f8ae9685ad0a51b274869d9eafac720",
+      "result": {
+        "decision": "duplicate",
+        "fact": "New Orleans is widely regarded as the birthplace of jazz.",
+        "explanation": "Both questions ask which American city is regarded as jazz’s birthplace; the mention of Louis Armstrong adds context but does not change the fact tested.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-011",
+      "key": "a8f3e584cc4711facaa1e8260610f9242244a0e8117093666ffc1cdca2a5eeaf",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "2e207141aacbca21769df561ab4bccbacc4902b9488238ff0156830c3e2b4b78",
+      "result": {
+        "decision": "duplicate",
+        "fact": "Poseidon is the Greek god of the sea.",
+        "explanation": "Both questions ask for the same Greek deity associated with the sea, and both answers are Poseidon.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-012",
+      "key": "38a66d2847c5e3b91132ba93b174283e5e4fd7c7eb4f4d481b2622cde42fcb57",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "449e3ce5a5b0927293563f4a18d40fb8db75469f069497c3d71991c2b8abd3a9",
+      "result": {
+        "decision": "duplicate",
+        "fact": "The African elephant is the largest land animal.",
+        "explanation": "Both questions ask for the largest land animal and give African Elephant as the answer; the wording and distractor order do not change the required knowledge.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-013",
+      "key": "81a270d28b69c306ae10e73e71d3db29c9ef17e5ea941ccf5f73732c09376f48",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "b925168cc67cb8514361a3cdda52cd226677c7671c2aab8599c8f7616c191d71",
+      "result": {
+        "decision": "duplicate",
+        "fact": "The Sargasso Sea is the only sea on Earth with no coastline.",
+        "explanation": "Both questions ask the same geographic fact and give the same answer; the wording and distractors differ only superficially.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-014",
+      "key": "cd2c222f1e8cb131fb31683e7c7b86b829aa95fc57650cd25e21fc4b8da8257c",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "fb383b892a04e1d9dbff403b79ff0649dc71073235e96339e268422f8fca804e",
+      "result": {
+        "decision": "duplicate",
+        "fact": "The Sahara is the major desert covering much of North Africa.",
+        "explanation": "Both questions ask which desert covers much of North Africa, and both give Sahara as the answer; the wording and distractors differ only.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-015",
+      "key": "af54edc4120dbe9c3c79a1476cd89d657783cc79da313bf394d1188832a80de6",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "066fb8b98632ab3e62cb40eaf45b6f8b7bd8021869bf08bb1f38004804a09e00",
+      "result": {
+        "decision": "duplicate",
+        "fact": "Sea stars belong to the animal group Echinodermata.",
+        "explanation": "Both questions test that sea stars are echinoderms; the first adds examples of other echinoderms, but does not change the central fact.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-016",
+      "key": "66c747f2705e795495296b94cd4be6540b648689627dd30abd4ba9c284b35cf9",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "9006d506dd9479ac5a9ec052669e2295726b757d522d9683b56240a69ae2641a",
+      "result": {
+        "decision": "duplicate",
+        "fact": "The emu is native to Australia and is the world’s second-tallest living bird.",
+        "explanation": "Both questions ask for the emu using the same native-range and second-tallest-bird clues; the wording and distractor order differ only.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-017",
+      "key": "9fb14ee5b76993cd30a2f1c49560cbef0c8f4f363b6ef888674b57f722a2632a",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "a07688f79c2fb165f656433510943061e0f08adb9143e6dbcc640331b2d04269",
+      "result": {
+        "decision": "duplicate",
+        "fact": "Westeros is the central setting of A Song of Ice and Fire.",
+        "explanation": "Both questions ask which epic fantasy series is centered on Westeros and give the same answer; the extra Seven Kingdoms clue does not change the required knowledge.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-018",
+      "key": "63f7c66ad57bd7087ddd7aa7a68d0321a4d55655e5fed54c7d6704648100905c",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "c08d86c2017b6d8692ca03a937f792f055f823ac9ddd2a258756ad3f270541bb",
+      "result": {
+        "decision": "duplicate",
+        "fact": "Bram Stoker’s novel Dracula is associated with Transylvania and its vampire count.",
+        "explanation": "Both questions ask for the same novel; the Transylvania setting and vampire-count clue refer to the same knowledge.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-019",
+      "key": "757936173f7f1a947312b8be08410fd2ebaf6e24952a64a7ab784c768fd65ba4",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "2d437ab90985415d32d4e06c7f2809ca5c16f8324b8e5f795918f6edc8225e14",
+      "result": {
+        "decision": "unique",
+        "fact": "The Cuban Missile Crisis occurred in 1962; Taylor Swift's first re-recorded album released with “Taylor’s Version” in its title was Fearless.",
+        "explanation": "These ask about unrelated historical and music facts, with different answers and subjects.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-020",
+      "key": "94034d9edf9676843a96ea65cf908b64871a55ee08a05626d1a62ef2f287b559",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "a4c706dfa37aa437956303be200568908df839b49d3e1f6ec3689a2a9ce06159",
+      "result": {
+        "decision": "unique",
+        "fact": "The traditional date given for the fall of the Western Roman Empire is 476 AD; the other question asks which group released “Wannabe.”",
+        "explanation": "These concern unrelated historical and music facts, with different answers.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-021",
+      "key": "844ec3ef778e683bd3c8195479997f14905befbbd6387417f3b3b82ae16122ed",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "c15f85f37e3615f7763e9b23379edfc61f22eb102249bacdebdb69fe28016867",
+      "result": {
+        "decision": "unique",
+        "fact": "Taylor Swift's first album re-recorded and released as “(Taylor’s Version)” was Fearless; diamond is the hardest known natural mineral on the Mohs scale.",
+        "explanation": "These ask about unrelated facts: a Taylor Swift album release and the Mohs hardness of a mineral.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-022",
+      "key": "6ce87d071c77262e033bf0af01bb990ae395ca6166fe8caf0a2ae480b6d7ea5f",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "1277792b7dfedc9cf54a445f96a58a947726bfcee91dad9d05e139936ba70958",
+      "result": {
+        "decision": "unique",
+        "fact": "The Spice Girls released “Wannabe” in 1996; ionization is the process by which atoms gain or lose electrons to form ions.",
+        "explanation": "The questions test unrelated facts: a song and its performer versus a chemistry process.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-023",
+      "key": "aeea880aa40bca9b1c744677cdb8b89d4a9a12d5246fe6d0f30e6807fee8202b",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "4146ea7e6b61053c212b1e0bfad18dc07906f0bfabda1e46872a69bc62915b4d",
+      "result": {
+        "decision": "unique",
+        "fact": "Diamond is the hardest known natural substance; a Rugby Union team fields 15 players during a match.",
+        "explanation": "The questions test unrelated knowledge: a natural substance's hardness and the number of players in a Rugby Union team.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-024",
+      "key": "e5184840a850d97d05a5a7e62390efb20d31bd279b498818e2ef2af2b337c0e9",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "28d67d6e0e539a2bc834be7e514adb95e65cc7ca791123327442a01b7f789826",
+      "result": {
+        "decision": "unique",
+        "fact": "Ionization is the process by which an atom or molecule gains or loses electrons and becomes charged; dressage is an equestrian discipline involving a memorized sequence of movements.",
+        "explanation": "The questions test unrelated facts: one concerns a chemistry process, the other an equestrian discipline.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-025",
+      "key": "5acfe55ab23d9e2294dcb7e5e03a4636af1734500438ceeaae6eb847fd8ee383",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "59b2e95e1217094c41b437d2d8f0ef8ddb3950dd7429a287b812b925c9aa9e64",
+      "result": {
+        "decision": "unique",
+        "fact": "Rugby union teams have 15 players on the field at one time.",
+        "explanation": "A asks about the number of players in rugby union; B asks which group released “Wannabe.” These are distinct facts.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-026",
+      "key": "6acea63ed4c00a3c5b424add4cd8e042727e915dd8eb02ac78dcfce0b0ac7015",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "28be6829ead211c231e1fd8664628a71077192411d627838939666e9fdbc3434",
+      "result": {
+        "decision": "unique",
+        "fact": "Dressage is the equestrian discipline involving a set series of movements in a rectangular arena; New Orleans is associated with the origins of jazz and Louis Armstrong.",
+        "explanation": "The questions test unrelated knowledge: an equestrian discipline versus a city’s musical heritage.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-027",
+      "key": "486a34bd6585ec8f5a5d00187afb155b2000c775704302a62126340539408e3e",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "d3fae8448cb0ba85567e193d1a7f88e18b00a69025c5a0cbbb6ecbec07caed91",
+      "result": {
+        "decision": "unique",
+        "fact": "The Spice Girls performed the hit song “Wannabe.”",
+        "explanation": "A asks which group sang “Wannabe”; B asks for the Greek god of the sea, a separate fact.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-028",
+      "key": "fe34045b9fcfb2df52e3ce2a0e34bfdbefa8c8b477c98346a8e34a20b9bb878a",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "8f7d02ad2449bc14418360508a7731fd9f8ae9685ad0a51b274869d9eafac720",
+      "result": {
+        "decision": "unique",
+        "fact": "New Orleans is widely regarded as the birthplace of jazz; the African elephant is the largest land animal.",
+        "explanation": "The questions test unrelated facts: a city’s association with jazz and the largest land animal.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-029",
+      "key": "08f829c96502da471e6c92d62dc4ffcb1d1db8a6b308544a2b764177d459107b",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "2e207141aacbca21769df561ab4bccbacc4902b9488238ff0156830c3e2b4b78",
+      "result": {
+        "decision": "unique",
+        "fact": "Poseidon is the Greek god of the sea; the Sargasso Sea is the sea without a coastline.",
+        "explanation": "The questions require different knowledge: one asks about Greek mythology, the other about a geographic feature.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-030",
+      "key": "bfb0a07aecf3d57fe7a4667cb1ba657f99ccc740eadea5ef4bb8c57f998a0ed2",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "449e3ce5a5b0927293563f4a18d40fb8db75469f069497c3d71991c2b8abd3a9",
+      "result": {
+        "decision": "unique",
+        "fact": "The African elephant is the largest land animal; the Sahara covers most of North Africa.",
+        "explanation": "These ask about distinct facts: the largest land animal and the desert covering most of North Africa.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-031",
+      "key": "6d0161207740cf410af0a0b1acbd02c97ad84504c42b1454d48607cc8bde2340",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "b925168cc67cb8514361a3cdda52cd226677c7671c2aab8599c8f7616c191d71",
+      "result": {
+        "decision": "unique",
+        "fact": "The Sargasso Sea is the only sea without a coastline.",
+        "explanation": "A asks about the Sargasso Sea’s lack of coastline; B asks which animal group sea stars belong to. These are unrelated facts.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-032",
+      "key": "fa0d27052283d689751cf0187c3e82e9ca281d0d6c04a1c11dd6a2f8bb23fee3",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "fb383b892a04e1d9dbff403b79ff0649dc71073235e96339e268422f8fca804e",
+      "result": {
+        "decision": "unique",
+        "fact": "The Sahara covers much of North Africa; the emu is a flightless bird native to Australia and the second largest living bird by height.",
+        "explanation": "The questions test distinct facts about a desert and a bird.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-033",
+      "key": "0f077ee33ec553de21689edd82863556d8bea132fdb4e70b079ecbacb7c230cd",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "066fb8b98632ab3e62cb40eaf45b6f8b7bd8021869bf08bb1f38004804a09e00",
+      "result": {
+        "decision": "unique",
+        "fact": "Sea stars, sea urchins, and sand dollars are echinoderms; Westeros is central to A Song of Ice and Fire.",
+        "explanation": "The questions test unrelated knowledge: a marine invertebrate group versus the fantasy series featuring Westeros.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-034",
+      "key": "6305ce94f58b4d0103136885a904ff318f4892267e4e04b4c5caa864d58be09e",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "9006d506dd9479ac5a9ec052669e2295726b757d522d9683b56240a69ae2641a",
+      "result": {
+        "decision": "unique",
+        "fact": "The emu is a flightless Australian bird and the world's second-tallest bird.",
+        "explanation": "A asks about the emu's habitat and height ranking; B asks which Bram Stoker novel features a vampire count associated with Transylvania. These are unrelated facts.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-035",
+      "key": "fd911a55d420ff125e142905a7fe09986ee75a9a641b68bb3a899c049712ce50",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "a07688f79c2fb165f656433510943061e0f08adb9143e6dbcc640331b2d04269",
+      "result": {
+        "decision": "unique",
+        "fact": "Westeros is the main setting of A Song of Ice and Fire; the Cuban Missile Crisis occurred in 1962.",
+        "explanation": "The pair tests unrelated facts: a fantasy series’ setting and the year of a historical crisis.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "st-fresh-036",
+      "key": "7a81583e6f5da56f10182418e1ee7b84321e3496e8f44a3c4ece0ad76b5a876c",
+      "modelVersion": "openai:gpt-6-luna:fact-judge-v2:effort-none:batch-1",
+      "firstHash": "c08d86c2017b6d8692ca03a937f792f055f823ac9ddd2a258756ad3f270541bb",
+      "result": {
+        "decision": "unique",
+        "fact": "Dracula is the classic gothic horror novel associated with Transylvania; the Western Roman Empire traditionally fell in 476 AD.",
+        "explanation": "The questions test unrelated knowledge: a literary setting and novel, versus a historical date.",
+        "qualityA": "sound",
+        "qualityB": "sound",
+        "confidence": "high"
+      }
+    }
+  ],
+  "retrieval": [
+    {
+      "id": "st-fresh-001",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 25
+    },
+    {
+      "id": "st-fresh-002",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 31
+    },
+    {
+      "id": "st-fresh-003",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 32
+    },
+    {
+      "id": "st-fresh-004",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 29
+    },
+    {
+      "id": "st-fresh-005",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 35
+    },
+    {
+      "id": "st-fresh-006",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 33
+    },
+    {
+      "id": "st-fresh-007",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 29
+    },
+    {
+      "id": "st-fresh-008",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 27
+    },
+    {
+      "id": "st-fresh-009",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 27
+    },
+    {
+      "id": "st-fresh-010",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 33
+    },
+    {
+      "id": "st-fresh-011",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 30
+    },
+    {
+      "id": "st-fresh-012",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 31
+    },
+    {
+      "id": "st-fresh-013",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 28
+    },
+    {
+      "id": "st-fresh-014",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 30
+    },
+    {
+      "id": "st-fresh-015",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 27
+    },
+    {
+      "id": "st-fresh-016",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 25
+    },
+    {
+      "id": "st-fresh-017",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 35
+    },
+    {
+      "id": "st-fresh-018",
+      "label": "duplicate",
+      "split": "held-out",
+      "found": true,
+      "complete": true,
+      "hits": 31
+    },
+    {
+      "id": "st-fresh-019",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 25
+    },
+    {
+      "id": "st-fresh-020",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 31
+    },
+    {
+      "id": "st-fresh-021",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 32
+    },
+    {
+      "id": "st-fresh-022",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 29
+    },
+    {
+      "id": "st-fresh-023",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 35
+    },
+    {
+      "id": "st-fresh-024",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 33
+    },
+    {
+      "id": "st-fresh-025",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 29
+    },
+    {
+      "id": "st-fresh-026",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 27
+    },
+    {
+      "id": "st-fresh-027",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 27
+    },
+    {
+      "id": "st-fresh-028",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 33
+    },
+    {
+      "id": "st-fresh-029",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 30
+    },
+    {
+      "id": "st-fresh-030",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 31
+    },
+    {
+      "id": "st-fresh-031",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 28
+    },
+    {
+      "id": "st-fresh-032",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 30
+    },
+    {
+      "id": "st-fresh-033",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 27
+    },
+    {
+      "id": "st-fresh-034",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 25
+    },
+    {
+      "id": "st-fresh-035",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 35
+    },
+    {
+      "id": "st-fresh-036",
+      "label": "unique",
+      "split": "held-out",
+      "found": false,
+      "complete": true,
+      "hits": 31
+    }
+  ]
+}

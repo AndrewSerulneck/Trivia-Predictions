@@ -3,7 +3,7 @@
  *
  *   node --env-file=.env.local scripts/score-speed-trivia-backlog.cjs
  *       dry run: how many waiting questions need a score, and the estimated cost. Free.
- *   ... --calibrate --max-dollars 0.25 [--model gemini-2.5-flash-lite]
+ *   ... --calibrate --max-dollars 0.25 [--model gpt-6-luna]   (OpenAI API since Phase 4f.2; scores are bar-test-v6)
  *       PAID (cents): scores a fixed labelled set (approved = keep, recent rows Andrew deleted = reject) and prints
  *       agreement at each threshold. Writes docs/<plan>_PHASE_2_CALIBRATION_[<version>_]<model>_<date>.json.
  *   ... --score --max-dollars 2 --out <file.json> [--model ...] [--limit N]
@@ -20,7 +20,7 @@ const crypto = require('node:crypto');
 const { clientFromEnv } = require('./lib/speedTriviaServiceClient.cjs');
 const core = require('../lib/speed-trivia-uniqueness/core.cjs');
 const { createBudget } = require('../lib/speed-trivia-uniqueness/runtime.cjs');
-const { RATES } = require('../lib/speed-trivia-uniqueness/gemini.cjs');
+const { RATES } = require('../lib/openai/responses.cjs');
 const audience = require('../lib/speed-trivia-quality/audience.cjs');
 
 const POOL = 'anytime_blitz';
@@ -33,7 +33,7 @@ const PLAN = 'docs/speed-trivia-backlog-and-quality-plan';
 const COLUMNS = 'id,question,options,correct_answer,category,difficulty,status,question_pool,answer_format,image_url,image_context,created_at,speed_generation_metadata';
 
 const parseArgs = argv => {
-  const args = { mode: 'dry', model: 'gemini-2.5-flash', maxDollars: 0, out: '', write: '', apply: false, limit: Infinity };
+  const args = { mode: 'dry', model: audience.BAR_TEST_MODEL, maxDollars: 0, out: '', write: '', apply: false, limit: Infinity };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--calibrate') args.mode = 'calibrate';
@@ -76,7 +76,7 @@ const sample = (rows, seed, count) => rows
 const estimate = (rows, model) => {
   const rate = RATES[model];
   const calls = Math.ceil(rows.length / BATCH);
-  const systemBytes = Buffer.byteLength(audience.SYSTEM);
+  const systemBytes = Buffer.byteLength(audience.gradeBlock({ kind: 'regular' }).prompt);
   const itemBytes = rows.reduce((sum, row) => sum + Buffer.byteLength(JSON.stringify({ id: '40', category: row.category, q: row.question, options: row.options, answer: row.options[row.correct_answer] })), 0);
   // ~4 bytes per token for English JSON; ~45 output tokens per graded question.
   const input = (calls * systemBytes + itemBytes) / 4;
@@ -87,7 +87,7 @@ const estimate = (rows, model) => {
 /** Scores rows in batches with bounded concurrency. A failed batch is retried once, then skipped (rerun to fill). */
 const scoreAll = async (rows, { model, maxDollars, onBatch = () => {} }) => {
   const budget = createBudget({ dollars: maxDollars, inputTokens: 4_000_000, outputTokens: 2_000_000, requests: 1000, elapsedMs: 50 * 60_000 });
-  const scorer = audience.createAudienceScorer({ model, apiKey: process.env.GEMINI_API_KEY, budget });
+  const scorer = audience.createAudienceScorer({ model, apiKey: process.env.OPENAI_API_KEY, budget });
   const batches = [];
   for (let i = 0; i < rows.length; i += BATCH) batches.push(rows.slice(i, i + BATCH));
   const results = [];
