@@ -1,8 +1,9 @@
 name: Speed Trivia Keep Queue
 # Overnight repeat check for questions Andrew kept in Quick Review
 # (docs/speed-trivia-backlog-and-quality-plan.md, Phase 3). Approves unique ones, retires repeats with their match,
-# leaves uncertain ones under "Needs a look". Then (D17) pre-checks older waiting questions for repeats with what's
-# left of the run, without approving any. Paid only inside repository variables SPEED_TRIVIA_QUEUE_MAX_DOLLARS (per
+# leaves uncertain ones under "Needs a look". The D17 pre-check of older waiting questions (--precheck) is OFF since
+# 2026-11-19 (Andrew: spend only on Keeps; every Keep is still checked before it goes live). Paid only inside
+# repository variables SPEED_TRIVIA_QUEUE_MAX_DOLLARS (per
 # run) and SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS (all runs); either unset = the job only counts. Nothing to do = it exits
 # before loading the question bank.
 env:
@@ -47,7 +48,7 @@ jobs:
           SPEED_TRIVIA_QUEUE_MAX_DOLLARS: ${{ vars.SPEED_TRIVIA_QUEUE_MAX_DOLLARS }}
           SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS: ${{ vars.SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS }}
         run: |
-          node scripts/process-speed-trivia-keep-queue.cjs --apply --precheck --minutes 50 \
+          node scripts/process-speed-trivia-keep-queue.cjs --apply --minutes 50 \
             --report-dir "$RUNNER_TEMP/keep-queue-report"
 
       - name: Preserve run report
