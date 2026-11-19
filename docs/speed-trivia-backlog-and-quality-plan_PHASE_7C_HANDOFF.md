@@ -99,4 +99,7 @@
 
 ## Step 8 result (post-merge brief check)
 
-_Not yet run._
+_Not yet run._ PR #31 merged 2026-11-19 ~19:55 UTC (merge commit `ee19fbdd`; Vercel production deploy succeeded). The
+first writer run with `writer-v6` is the daily 00:30 UTC run on **2026-11-20**, then the Trivia Nightly. Whoever runs
+next does the step-8 check described in §1 above and records it here. (The agent that merged went on to 7d meanwhile;
+see `speed-trivia-backlog-and-quality-plan_PHASE_7D_HANDOFF.md`.)
