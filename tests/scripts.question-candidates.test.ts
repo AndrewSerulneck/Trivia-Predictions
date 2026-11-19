@@ -128,7 +128,7 @@ describe("nightly processing", () => {
       whyTrue: "Madonna released it in 1984." });
     expect(written).not.toHaveProperty("note"); // the note rides in the metadata, never in the row
     expect(client.tables.question_tags).toEqual([expect.objectContaining({ game: "speed", subject_key: "madonna", area_id: "a-pop", era: "1980s",
-      written_at: "2026-11-16T02:21:00Z", tagged_by: "chatgpt:gpt-6-astra:writer-v4" })]);
+      written_at: "2026-11-16T02:21:00Z", tagged_by: "chatgpt:gpt-6-astra:writer-v5" })]);
     expect(client.rpcs.map(r => r.name)).toEqual(["question_subject_stats", "speed_trivia_review_set_audience"]);
     const byId = new Map(client.tables.question_candidates.map(c => [c.id, c]));
     expect(byId.get("c1")).toMatchObject({ status: "pending_review", question_ref: written.id });

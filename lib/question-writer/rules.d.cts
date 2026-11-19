@@ -22,7 +22,7 @@ export const BAD_EXAMPLES: readonly { question: string; answer: string; why: str
 export const SPEED_OUTPUT_SCHEMA: object;
 type PromptInput = {
   kind: "regular" | "currentEvents";
-  slots: { n: number; category: string; area: string | null; era: string | null }[];
+  slots: { n: number; category: string; area: string | null; era: string | null; event?: string }[];
   avoid?: Record<string, string[]>;
   examples?: { category: string; question: string; answer: string }[];
   today: Date;
