@@ -15,12 +15,12 @@
   code merges after that.
 - **Cost:** no new paid calls. Some edits now cost a few extra fractions of a cent in checks. Once the migration is
   applied, **337 waiting questions** (admitted before today's 86 Admin edits) go to the overnight check when you
-  Keep them, about **$0.17 once**.
+  Keep them, about **$3.40 in all** (~1 cent each).
 - **Keep queue budget (settled 2026-11-19):** the overnight Keep queue had used $14.65 of its $20 lifetime cap, at
   ~$4.87 a night, almost all on the D17 pre-check of older waiting questions. Your call:
   - The nightly limit is now **$1** and the lifetime cap **$30** (repo variables, already set).
-  - The pre-check is turned off in **PR #32**, which needs your OK to merge. After the merge, the queue only spends on
-    questions you Keep (pennies a night, $0 on nights with no Keeps).
+  - The pre-check is turned off (**PR #32, merged** with your OK as `230f0ba9`). The queue now spends only on
+    questions you Keep (about 1 cent each; $0 on nights with no Keeps).
 - **Also merged today:** PR #31 (7a–7c), with your OK. It's deployed. The first seasonal (Thanksgiving) brief gets
   checked after tonight's 00:30 UTC writer run (7c step 8).
 
@@ -117,7 +117,10 @@
   - Andrew, 2026-11-19: `SPEED_TRIVIA_QUEUE_MAX_DOLLARS=1` and `SPEED_TRIVIA_QUEUE_TOTAL_DOLLARS=30`, set with
     `gh variable set`.
   - The D17 pre-check is off: `--precheck` is removed from `.github/workflows/speed-trivia-keep-queue.yml` on branch
-    `chore/keep-queue-no-precheck`, PR #32, which merges with his OK.
+    `chore/keep-queue-no-precheck`, PR #32, merged 2026-11-19 as `230f0ba9`.
+  - Cost per overnight check is ~$0.01 per question (pre-check: ~$4.87 for ~470), so the 337 rows 7d sends overnight
+    cost ~$3.40 in all (first estimated at $0.17). The $1 nightly limit spreads it over the nights they're Kept.
+  - Andrew understands the $30 is a lifetime total (not monthly); no monthly cap wanted.
   - The script and SQL are unchanged; add the flag back to restore the pre-check.
   - Waiting rows: 1,974 `pending_review`.
 - The fake judges in tests have **no pair cache**, so the final D38b check calls them again. The OpenAI judge
@@ -148,7 +151,6 @@
 
 ### 7. Open questions for Andrew
 
-- OK to merge PR #32 (pre-check off)? The budget question itself is answered: $1 nightly, $30 total.
 - OK with "a question may return to its own reserved fact" (the D45 refinement)?
 - One PR for 7d–7j, or one per phase?
 
