@@ -8,7 +8,7 @@ Previous note: `speed-trivia-backlog-and-quality-plan_PHASE_4E_SHIP_HANDOFF.md`.
 - **Gemini can no longer write a question anywhere.** The "backup writer" that used to step in on a day ChatGPT sent
   nothing, and the four old hand-run generators, are deleted. A day with no ChatGPT batch now simply produces no new
   questions; Quick Review still says "Writer stopped" after 2 silent days.
-- **Not live yet.** The work is on branch `feature/gemini-writers-out-4f1`, uncommitted/unpushed until you say so. No
+- **Not live yet.** The work is committed on branch `feature/gemini-writers-out-4f1` (not pushed, no PR yet). No
   database change, no data change, no cost ($0). Nothing needs doing from you except merging the PR when it is open.
 - **Gemini still checks.** The repeat checks, tagging and the rare ungraded bar test still call Gemini. That is
   Phase 4f.2, which needs your OpenAI API key and your OK on the cost.
@@ -23,7 +23,7 @@ Phase 7 can run first (plan order note); never run both at once.
 
 ### 2. Starting state
 - Branch `feature/gemini-writers-out-4f1`, cut from `chore/writer-schedule-on` (`ca303fa6`, which is not yet merged
-  to `main`). Nothing committed until the end of this session's work; check `git log`/`git status`.
+  to `main`). Committed locally as one commit; not pushed, no PR.
 - Also in the working tree, from the earlier planning session (not mine): edits to `CLAUDE.md`, `AGENTS.md` and the plan
   (D40/D41 text). Untracked clutter (`* 2.ts`, `* 2.m4a`, backfill logs) is not part of this phase; don't commit it.
 - No migration, no database write, no deploy, no paid call. The nightly workflow file changed, so the next
