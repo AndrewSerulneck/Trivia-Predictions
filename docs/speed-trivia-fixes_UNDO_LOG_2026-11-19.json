@@ -1,0 +1,1825 @@
+{
+ "note": "Rows as they were before the 2026-11-19 apply (round-2 refused fixes re-applied under D38, round-3 fix list, restore-with-fix of wrong-answer rows deleted that morning). Undo an edit: write these fields back through the admin edit. Undo a delete: restore through the Speed admission (restore). Undo a restore: set status 'deleted'.",
+ "before": [
+  {
+   "id": "033ce89a-4166-404e-b97c-ff54f366b294",
+   "question": "Which Roman emperor declared Christianity the state religion of the Roman Empire in the 4th century AD?",
+   "options": [
+    "Julius Caesar",
+    "Nero",
+    "Constantine I",
+    "Augustus"
+   ],
+   "correct_answer": 2,
+   "category": "History",
+   "status": "deleted",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "0380cc2c-2e3e-4fec-bc29-03210eb6cd5b",
+   "question": "Which game features a plumber named Mario and his brother Luigi, attempting to rescue Princess Peach?",
+   "options": [
+    "The Legend of Zelda",
+    "Super Mario Bros.",
+    "Minecraft",
+    "Pokémon Red"
+   ],
+   "correct_answer": 1,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "051cd93d-5c18-430c-bf26-ed4144b72988",
+   "question": "Which animal is known for having the largest brain-to-body mass ratio?",
+   "options": [
+    "Human",
+    "Bottlenose Dolphin",
+    "Blue Whale",
+    "Tree Shrew"
+   ],
+   "correct_answer": 3,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "07402dd3-feb5-452e-9a7a-0266abcb6e52",
+   "question": "What was the name of the powerful Aztec emperor who encountered Hernán Cortés?",
+   "options": [
+    "Atahualpa",
+    "Pachacuti",
+    "Moctezuma II",
+    "Cuauhtémoc"
+   ],
+   "correct_answer": 2,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "0de63207-886c-4867-b8ef-15795f4ab7a3",
+   "question": "How do snakes \"smell\" their environment?",
+   "options": [
+    "Through their nostrils",
+    "Using their ears",
+    "By flicking their tongue",
+    "With their skin"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "0e43a81a-3bad-4f1a-8a39-56ebf6f91d0a",
+   "question": "Which major battle is considered a turning point in the American Civil War?",
+   "options": [
+    "Battle of Antietam",
+    "Battle of Bull Run",
+    "Battle of Gettysburg",
+    "Siege of Vicksburg"
+   ],
+   "correct_answer": 2,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "0ecb8f31-8e9f-473a-af7e-4420d445350c",
+   "question": "Which famous Dutch painting depicts a young woman wearing a prominent headscarf and a pearl earring?",
+   "options": [
+    "The Starry Night",
+    "The Scream",
+    "American Gothic",
+    "Girl with a Pearl Earring"
+   ],
+   "correct_answer": 3,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "11d4236c-67cc-49a3-8b48-f5e1f0b98d68",
+   "question": "Before her solo career, in which girl group was Gwen Stefani the lead singer?",
+   "options": [
+    "Spice Girls",
+    "Destiny's Child",
+    "No Doubt",
+    "TLC"
+   ],
+   "correct_answer": 2,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "137dbeab-4369-4533-9729-425be257597b",
+   "question": "Which insect is capable of carrying objects many times its own weight?",
+   "options": [
+    "Fly",
+    "Ant",
+    "Mosquito",
+    "Beetle"
+   ],
+   "correct_answer": 1,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "141b897f-4931-41e9-b355-d647d094ead0",
+   "question": "Who sang the 1990s hit \"I Will Always Love You,\" famously covered by Whitney Houston?",
+   "options": [
+    "Mariah Carey",
+    "Celine Dion",
+    "Dolly Parton",
+    "Aretha Franklin"
+   ],
+   "correct_answer": 2,
+   "category": "Music",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "18a76c7b-f8d7-4b67-bc22-46100cfa4072",
+   "question": "What is the heaviest naturally occurring element?",
+   "options": [
+    "Gold",
+    "Uranium",
+    "Platinum",
+    "Plutonium"
+   ],
+   "correct_answer": 1,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "18a90489-aef9-48ba-9744-ae46f5579057",
+   "question": "In which sport would you find a \"penalty shootout\" to decide a drawn match?",
+   "options": [
+    "Basketball",
+    "Ice Hockey",
+    "Rugby",
+    "Soccer"
+   ],
+   "correct_answer": 3,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "197a3f66-c136-41f4-9266-5ff26bc1ff57",
+   "question": "What phenomenon causes a rainbow to appear?",
+   "options": [
+    "Reflection",
+    "Refraction",
+    "Diffraction",
+    "Absorption"
+   ],
+   "correct_answer": 1,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "1b015297-01bd-4848-b269-7d46850ac6a8",
+   "question": "The Battle of Thermopylae, where a small Greek force famously held off the Persian army, occurred during which conflict?",
+   "options": [
+    "Peloponnesian War",
+    "Trojan War",
+    "Persian Wars",
+    "Macedonian Wars"
+   ],
+   "correct_answer": 2,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "1da8bec9-d283-4348-9d0b-56a8cda708ca",
+   "question": "Which popular sitcom, created by Larry David and Jerry Seinfeld, is often described as a 'show about nothing'?",
+   "options": [
+    "Seinfeld",
+    "Curb Your Enthusiasm",
+    "Friends",
+    "Arrested Development"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "1e2c527b-92d2-469a-9332-a92a947fe89b",
+   "question": "Which city has hosted the Summer Olympic Games three times?",
+   "options": [
+    "Athens",
+    "Paris",
+    "London",
+    "Los Angeles"
+   ],
+   "correct_answer": 2,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "1f957156-40e3-4f59-92fe-7d690ef99571",
+   "question": "Which animal has a long, sticky tongue perfectly adapted for catching insects?",
+   "options": [
+    "Snake",
+    "Frog",
+    "Anteater",
+    "Lizard"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "1fe680fb-875d-44c0-977b-9711e834dba4",
+   "question": "Which continent lies entirely in the Northern and Western Hemispheres?",
+   "options": [
+    "Europe",
+    "Asia",
+    "North America",
+    "South America"
+   ],
+   "correct_answer": 2,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "24c00621-d65a-4554-940e-eb69feb399f1",
+   "question": "Which large land mammal is physically unable to jump?",
+   "options": [
+    "Rhinoceros",
+    "Hippopotamus",
+    "Elephant",
+    "Giraffe"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "259febb2-fbd0-4c2b-beef-bedab7386e3e",
+   "question": "Which of these is considered a primary color of light (RGB model)?",
+   "options": [
+    "Green",
+    "Orange",
+    "Purple",
+    "Blue"
+   ],
+   "correct_answer": 3,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "2959a71a-db7a-4853-9a0d-3bab2228b167",
+   "question": "Which class of animals includes sea stars and sea urchins?",
+   "options": [
+    "Mollusca",
+    "Arthropoda",
+    "Echinodermata",
+    "Cnidaria"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "29840ed8-a8cb-4415-bdba-c4417ccaffb6",
+   "question": "What social media platform is known for its short video format?",
+   "options": [
+    "TikTok",
+    "Instagram",
+    "Twitter",
+    "Facebook"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "2cebd663-1e9f-4a2e-8c91-5eba4e12f981",
+   "question": "Which animated film franchise features a character named Shrek?",
+   "options": [
+    "Toy Story",
+    "Ice Age",
+    "Despicable Me",
+    "Shrek"
+   ],
+   "correct_answer": 3,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "2d306e32-9ffd-4fb6-b340-0b72aaef5b25",
+   "question": "Which composer wrote the 'Symphony No. 5'?",
+   "options": [
+    "Wolfgang Amadeus Mozart",
+    "Ludwig van Beethoven",
+    "Johann Sebastian Bach",
+    "Pyotr Ilyich Tchaikovsky"
+   ],
+   "correct_answer": 1,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "2e37c543-034b-45ac-b0bc-f28153ba35e3",
+   "question": "Which of these is a primary color in the subtractive color model (CMYK)?",
+   "options": [
+    "Green",
+    "Orange",
+    "Purple",
+    "Blue"
+   ],
+   "correct_answer": 3,
+   "category": "General Knowledge",
+   "status": "deleted",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "2e7eb4e9-b14c-4e1c-961b-dc49f855f8a5",
+   "question": "What is the name of the feathered projectile used in badminton?",
+   "options": [
+    "Shuttlecock",
+    "Birdie",
+    "Featherball",
+    "Volley"
+   ],
+   "correct_answer": 0,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "2f03ceb5-ada4-4141-9d6c-6d0568fb8abd",
+   "question": "What is the name of the highest male vocal range in classical music?",
+   "options": [
+    "Baritone",
+    "Bass",
+    "Tenor",
+    "Countertenor"
+   ],
+   "correct_answer": 2,
+   "category": "Music",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "2f290295-17dd-4572-9c7f-76e795a27c6e",
+   "question": "Which of these terms is commonly used in baseball?",
+   "options": [
+    "Ace",
+    "Homerun",
+    "Goal",
+    "Try"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "3117263d-9f6b-4e09-a52d-1397cf0070b5",
+   "question": "Which novel features the character Jay Gatsby?",
+   "options": [
+    "The Catcher in the Rye",
+    "To Kill a Mockingbird",
+    "The Great Gatsby",
+    "Moby Dick"
+   ],
+   "correct_answer": 2,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "320c03af-36b5-4d04-9d35-d779e556af1a",
+   "question": "Which European country is known as the \"Netherlands\" and is famous for its tulips and windmills?",
+   "options": [
+    "Belgium",
+    "Denmark",
+    "Netherlands",
+    "Switzerland"
+   ],
+   "correct_answer": 2,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "394b084b-dde6-4e8e-a58b-d8209a0c18d0",
+   "question": "Which artist released the album '1989' in 2014 and re-recorded it as '1989 (Taylor's Version)'?",
+   "options": [
+    "Ariana Grande",
+    "Katy Perry",
+    "Taylor Swift",
+    "Billie Eilish"
+   ],
+   "correct_answer": 2,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "3a8663fa-e383-4320-a667-715941e876ba",
+   "question": "Which legendary basketball player is famously known by the nickname 'Air Jordan'?",
+   "options": [
+    "LeBron James",
+    "Kobe Bryant",
+    "Michael Jordan",
+    "Shaquille O'Neal"
+   ],
+   "correct_answer": 2,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "3b858e5d-2456-4cac-969e-fc37cbf9f29e",
+   "question": "Which animal builds large, complex structures called 'lodges' in water?",
+   "options": [
+    "Otter",
+    "Beaver",
+    "Muskrat",
+    "Platypus"
+   ],
+   "correct_answer": 1,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "3b9d0ee3-6530-47bc-a99b-b866e49c1fc6",
+   "question": "Which gas do humans exhale when they breathe out?",
+   "options": [
+    "Oxygen",
+    "Nitrogen",
+    "Carbon Dioxide",
+    "Methane"
+   ],
+   "correct_answer": 2,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "3e5c6408-e53f-42c0-a1ae-ce8c43399d21",
+   "question": "Which continent is almost entirely covered by ice?",
+   "options": [
+    "Arctic",
+    "Greenland",
+    "Antarctica",
+    "Siberia"
+   ],
+   "correct_answer": 2,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "3f29906b-a812-4535-aa07-e69d3f456ebb",
+   "question": "Which member of the Kardashian-Jenner family founded the highly successful cosmetics company Kylie Cosmetics?",
+   "options": [
+    "Kylie Jenner",
+    "Kim Kardashian",
+    "Khloé Kardashian",
+    "Kendall Jenner"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "45c2d560-32d7-43f5-b426-35be44b53ba6",
+   "question": "Who is generally considered the father of modern computing?",
+   "options": [
+    "Bill Gates",
+    "Steve Jobs",
+    "Alan Turing",
+    "Charles Babbage"
+   ],
+   "correct_answer": 3,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "49a292ae-227c-43cb-94a6-23ed0891cec3",
+   "question": "Which element is represented by the chemical symbol 'K'?",
+   "options": [
+    "Krypton",
+    "Potassium",
+    "Keratin",
+    "Kalium"
+   ],
+   "correct_answer": 1,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "49a892b7-24e2-4a46-ba14-a786c8e1e43a",
+   "question": "Which of these birds is flightless and native to New Zealand?",
+   "options": [
+    "Kiwi",
+    "Emu",
+    "Ostrich",
+    "Penguin"
+   ],
+   "correct_answer": 0,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "4a4f902d-6f28-42bd-ab5f-3b71dfa9e4c1",
+   "question": "Which bird is known for its distinctive blue feet, used in an elaborate courtship dance?",
+   "options": [
+    "Atlantic Puffin",
+    "Greater Flamingo",
+    "Blue-footed Booby",
+    "Indian Peacock"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "51f77449-eda3-4cda-a8ec-33e4868f1732",
+   "question": "In computing, what does \"URL\" stand for?",
+   "options": [
+    "Universal Resource Locator",
+    "Uniform Resource Link",
+    "United Resource Locator",
+    "Universal Reference Link"
+   ],
+   "correct_answer": 0,
+   "category": "General Knowledge",
+   "status": "deleted",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "564983f5-f803-4aba-ba6e-438649ec5b6f",
+   "question": "Which large, landlocked body of water is currently shrinking significantly?",
+   "options": [
+    "Caspian Sea",
+    "Black Sea",
+    "Aral Sea",
+    "Dead Sea"
+   ],
+   "correct_answer": 2,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "58de11ab-d297-44bf-8e48-36ae9a12740b",
+   "question": "Which popular battle royale video game features a 'storm' or 'zone' that continuously shrinks, forcing players closer together?",
+   "options": [
+    "Apex Legends",
+    "Call of Duty: Warzone",
+    "PUBG",
+    "Fortnite"
+   ],
+   "correct_answer": 3,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "5c8daa65-eaa7-4fe4-aacd-50dc54ba42d8",
+   "question": "The 'Pax Romana' refers to a long period of relative peace and stability in which empire?",
+   "options": [
+    "British Empire",
+    "Roman Empire",
+    "Persian Empire",
+    "Mughal Empire"
+   ],
+   "correct_answer": 1,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "65028048-67f5-4421-bc62-7f02e5884b7c",
+   "question": "Which animal can regenerate its lost limbs, heart, and even parts of its brain?",
+   "options": [
+    "Starfish",
+    "Salamander",
+    "Axolotl",
+    "Earthworm"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "66ec95ca-d796-4452-88c9-15244c253ee8",
+   "question": "The iconic 'Iron Throne' is a central symbol of power in which fantasy TV series?",
+   "options": [
+    "The Witcher",
+    "The Lord of the Rings",
+    "Game of Thrones",
+    "House of the Dragon"
+   ],
+   "correct_answer": 2,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "673386ea-2b6e-41e7-8016-b1fe955c282c",
+   "question": "What is the name of the wizard in 'The Lord of the Rings'?",
+   "options": [
+    "Dumbledore",
+    "Gandalf",
+    "Merlin",
+    "Saruman"
+   ],
+   "correct_answer": 1,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "696d9bb5-4a78-47b1-90b4-5889349f8d47",
+   "question": "Which gas is primarily responsible for the greenhouse effect on Earth?",
+   "options": [
+    "Oxygen",
+    "Nitrogen",
+    "Carbon Dioxide",
+    "Argon"
+   ],
+   "correct_answer": 2,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "69acf9b6-fc84-4074-8619-bd3e14525d8c",
+   "question": "Which Chinese dynasty built much of the Great Wall and unified China for the first time?",
+   "options": [
+    "Han Dynasty",
+    "Tang Dynasty",
+    "Qin Dynasty",
+    "Ming Dynasty"
+   ],
+   "correct_answer": 2,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "6a83df8e-d9ca-4c85-a69f-fc618799ab18",
+   "question": "Which country is home to Mount Everest, the world's highest peak, along its border?",
+   "options": [
+    "China",
+    "India",
+    "Nepal",
+    "Bhutan"
+   ],
+   "correct_answer": 2,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "6b5f5f0d-ec9c-45a8-b9f8-ed550e952b29",
+   "question": "The term 'birdie' is commonly used in which sport?",
+   "options": [
+    "Bowling",
+    "Golf",
+    "Badminton",
+    "Archery"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "6bdf0cfb-8a43-47c2-aed2-fdb5cca0fbd2",
+   "question": "Which large flightless bird is native to Australia?",
+   "options": [
+    "Ostrich",
+    "Emu",
+    "Rhea",
+    "Cassowary"
+   ],
+   "correct_answer": 1,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "6d38490a-52fe-4cb5-884f-b08e57209bfc",
+   "question": "Which of the Seven Wonders of the Ancient World was a massive lighthouse located in Egypt?",
+   "options": [
+    "The Hanging Gardens of Babylon",
+    "The Colossus of Rhodes",
+    "The Lighthouse of Alexandria",
+    "The Temple of Artemis at Ephesus"
+   ],
+   "correct_answer": 2,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "6e0e7c33-8469-4da0-9d4b-aa78b5856e87",
+   "question": "Which animated sitcom features a yellow family named Simpson?",
+   "options": [
+    "The Simpsons",
+    "Family Guy",
+    "South Park",
+    "American Dad!"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "6e226513-f4a2-4deb-abd7-6b66373ff029",
+   "question": "How many laps are in a standard Olympic-sized swimming pool for a 100-meter race?",
+   "options": [
+    "1",
+    "2",
+    "4",
+    "8"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "705f54c0-78f8-4b78-ae70-0e1cbb7ab784",
+   "question": "Gregor Mendel used which type of plant to discover the fundamental laws of inheritance?",
+   "options": [
+    "Corn",
+    "Fruit Flies",
+    "Pea Plants",
+    "Snapdragons"
+   ],
+   "correct_answer": 2,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "70e3d871-a091-42bd-a481-bd75c12e8e4a",
+   "question": "What is the musical term for playing very softly?",
+   "options": [
+    "Forte",
+    "Mezzo",
+    "Piano",
+    "Allegro"
+   ],
+   "correct_answer": 2,
+   "category": "Music",
+   "status": "deleted",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "72143644-3578-4ec7-8df4-62b20934ade9",
+   "question": "What is the highest possible score with three darts in a single turn without a double or triple?",
+   "options": [
+    "150",
+    "180",
+    "170",
+    "160"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "deleted",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "744f8d13-128a-4129-9ed2-96c55a52da3c",
+   "question": "Which fundamental force is responsible for the decay of radioactive isotopes?",
+   "options": [
+    "Strong nuclear force",
+    "Electromagnetic force",
+    "Weak nuclear force",
+    "Gravitational force"
+   ],
+   "correct_answer": 2,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "7562529f-119e-44ec-a93c-3147cb61a8cc",
+   "question": "Which play by Shakespeare features characters like Hamlet, Ophelia, and Claudius?",
+   "options": [
+    "Macbeth",
+    "Othello",
+    "Hamlet",
+    "King Lear"
+   ],
+   "correct_answer": 2,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "7d1fb55c-c978-4e12-b32f-be54721531bb",
+   "question": "Which animal is well-known for hibernating during winter?",
+   "options": [
+    "Deer",
+    "Rabbit",
+    "Squirrel",
+    "Bear"
+   ],
+   "correct_answer": 3,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "7e7cf2c1-89d9-46d5-b567-ab21654ea5cd",
+   "question": "Who led the Soviet Union during much of the Cold War, from the mid-1920s until his death in 1953?",
+   "options": [
+    "Vladimir Lenin",
+    "Joseph Stalin",
+    "Nikita Khrushchev",
+    "Mikhail Gorbachev"
+   ],
+   "correct_answer": 1,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "7fdb4f58-6dde-4583-9a9d-bcae215ff5da",
+   "question": "What is considered the smallest mammal in the world by weight and size?",
+   "options": [
+    "Pygmy Shrew",
+    "Etruscan Shrew",
+    "Bumblebee Bat",
+    "Least Weasel"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "81faf1a9-69af-42b5-9201-bbab9a810748",
+   "question": "Which European capital city is famous for its canals and is often called the 'Venice of the North'?",
+   "options": [
+    "Amsterdam",
+    "Brussels",
+    "Copenhagen",
+    "Stockholm"
+   ],
+   "correct_answer": 0,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "825ef2a7-e9fa-4e20-ad1b-6349bf890768",
+   "question": "Which of the following is considered the slowest mammal in the world?",
+   "options": [
+    "Three-toed Sloth",
+    "Giant Tortoise",
+    "Snail",
+    "Koala"
+   ],
+   "correct_answer": 0,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "8449724e-2ef6-45ae-b7be-4f0cf632c03f",
+   "question": "Which of Jupiter's moons is thought to have a significant subsurface ocean of liquid water?",
+   "options": [
+    "Io",
+    "Callisto",
+    "Europa",
+    "Ganymede"
+   ],
+   "correct_answer": 2,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "8a1a9b32-16bb-4829-b079-58878833a62a",
+   "question": "Which insect has its 'ears' located on its front legs?",
+   "options": [
+    "Grasshopper",
+    "Housefly",
+    "Butterfly",
+    "Ant"
+   ],
+   "correct_answer": 0,
+   "category": "Animals",
+   "status": "deleted",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "8b5e4f4f-b1cb-47f2-9798-51cf84d1e8fa",
+   "question": "Which marine creature is considered biologically immortal, capable of reverting to an earlier life stage?",
+   "options": [
+    "Blue Whale",
+    "Greenland Shark",
+    "Immortal Jellyfish",
+    "Giant Pacific Octopus"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "8f892355-ba0f-4f1f-8805-2714720f665b",
+   "question": "Mahatma Gandhi led which non-violent protest in 1930 against the British salt monopoly in India?",
+   "options": [
+    "The Salt March",
+    "The Quit India Movement",
+    "The Hunger Strike",
+    "The Dandi Protest"
+   ],
+   "correct_answer": 0,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "9204e8c0-2907-477c-9d12-cab1ef5e8685",
+   "question": "Which female athlete is the only one to have won Olympic gold in both the 100m and 200m sprints at the same Games while setting world records in both?",
+   "options": [
+    "Florence Griffith-Joyner",
+    "Wilma Rudolph",
+    "Allyson Felix",
+    "Elaine Thompson-Herah"
+   ],
+   "correct_answer": 0,
+   "category": "Sports",
+   "status": "deleted",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "93529b48-2aee-4a1c-9962-202ac1a9923e",
+   "question": "In the TV series \"The Office\" (US), which character frequently refers to himself as the \"Assistant to the Regional Manager\"?",
+   "options": [
+    "Dwight Schrute",
+    "Michael Scott",
+    "Jim Halpert",
+    "Andy Bernard"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "93f00b2f-4993-4a6d-b6da-cb83a8c36c08",
+   "question": "Which ancient civilization invented the concept of zero and the decimal system?",
+   "options": [
+    "Babylonians",
+    "Egyptians",
+    "Mayans",
+    "Indians"
+   ],
+   "correct_answer": 3,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "95a6924b-e4d3-4307-85d6-054570639250",
+   "question": "Which European capital city is historically known as the 'City of Seven Hills'?",
+   "options": [
+    "Athens",
+    "Paris",
+    "Rome",
+    "Lisbon"
+   ],
+   "correct_answer": 2,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "97778157-5d62-4af5-b41f-3479c6c3568d",
+   "question": "Who sculpted the famous statue of David?",
+   "options": [
+    "Leonardo da Vinci",
+    "Raphael",
+    "Donatello",
+    "Michelangelo"
+   ],
+   "correct_answer": 3,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "99e6c620-c5ec-4c65-9a31-72574bf03d8b",
+   "question": "How often are the Olympic Games held?",
+   "options": [
+    "Every 2 years",
+    "Every 3 years",
+    "Every 4 years",
+    "Every 5 years"
+   ],
+   "correct_answer": 2,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "9e9e18e4-b669-4a84-a974-fb73680adde9",
+   "question": "What do caterpillars primarily transform into?",
+   "options": [
+    "Butterfly",
+    "Beetle",
+    "Moth",
+    "Ladybug"
+   ],
+   "correct_answer": 0,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "9eff398c-cee2-4314-a705-a49aa277a483",
+   "question": "Which animated movie features a forgetful blue tang fish named Dory as a prominent character?",
+   "options": [
+    "Finding Nemo",
+    "Finding Dory",
+    "The Little Mermaid",
+    "Shark Tale"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "a15be98d-96d3-46fe-8335-ef40ab22b0e4",
+   "question": "Which legendary coach is credited with inventing the \"Triangle Offense\" in basketball?",
+   "options": [
+    "Red Auerbach",
+    "Phil Jackson",
+    "Gregg Popovich",
+    "Pat Riley"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "deleted",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "a268a8b9-560a-428a-b081-88841880469c",
+   "question": "Which popular 1990s sitcom is set in New York City and features six friends living in apartments across the hall from each other?",
+   "options": [
+    "Seinfeld",
+    "Friends",
+    "Frasier",
+    "Cheers"
+   ],
+   "correct_answer": 1,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "a65a803f-0598-4cee-878c-c22af3071530",
+   "question": "Which sea creature is considered the most venomous in the world?",
+   "options": [
+    "Stonefish",
+    "Box Jellyfish",
+    "Blue-Ringed Octopus",
+    "Sea Snake"
+   ],
+   "correct_answer": 1,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "b2c1db81-d72f-468c-a4b4-221fbfbc7a4d",
+   "question": "What is the national sport of Canada?",
+   "options": [
+    "Ice Hockey",
+    "Lacrosse",
+    "Basketball",
+    "Curling"
+   ],
+   "correct_answer": 0,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "bd17b8a6-1a66-4869-a5dc-dbecaf8591a8",
+   "question": "Which famous art movement is characterized by its use of bold colors and distorted figures, exemplified by artists like Pablo Picasso?",
+   "options": [
+    "Impressionism",
+    "Surrealism",
+    "Cubism",
+    "Renaissance"
+   ],
+   "correct_answer": 2,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "be5573c9-b0c9-4f6a-8995-73e476ebb6ba",
+   "question": "What fantasy series features the houses Stark, Lannister, and Targaryen?",
+   "options": [
+    "Game of Thrones",
+    "The Witcher",
+    "House of the Dragon",
+    "Lord of the Rings"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "c135140c-9034-4137-a9ad-1fb9af106f57",
+   "question": "What is the collective noun for a group of giraffes?",
+   "options": [
+    "Herd",
+    "Tower",
+    "Flock",
+    "Parade"
+   ],
+   "correct_answer": 1,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "cddd226d-a555-4660-85dc-a2d9470380dc",
+   "question": "Who led the Haitian Revolution, resulting in the first free black republic?",
+   "options": [
+    "Toussaint Louverture",
+    "Jean-Jacques Dessalines",
+    "Simon Bolivar",
+    "José de San Martín"
+   ],
+   "correct_answer": 0,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "cf6c4e53-38e3-453d-9e51-3368d096d939",
+   "question": "Which social media platform is primarily known for its disappearing photo and video messages, often called \"snaps\"?",
+   "options": [
+    "Instagram",
+    "Twitter",
+    "Snapchat",
+    "Facebook"
+   ],
+   "correct_answer": 2,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d015668b-d5fc-4c13-bf4a-df8fb08af902",
+   "question": "Which artist's debut album was titled 'Baduizm'?",
+   "options": [
+    "Lauryn Hill",
+    "Erykah Badu",
+    "Jill Scott",
+    "Alicia Keys"
+   ],
+   "correct_answer": 1,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d0e0baf7-868d-4b62-a84f-26804605759c",
+   "question": "Which of the following is the only country name in English that contains no vowels (excluding 'y')?",
+   "options": [
+    "Cyprus",
+    "Egypt",
+    "Kyrgyzstan",
+    "Syria"
+   ],
+   "correct_answer": 2,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d0e77bca-7ae5-4aa4-945a-93ebffba4beb",
+   "question": "What is the smallest discrete unit of a phenomenon, such as light, in quantum theory?",
+   "options": [
+    "Atom",
+    "Molecule",
+    "Quantum",
+    "Electron"
+   ],
+   "correct_answer": 2,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d110a996-e53e-4b12-9235-ad36e070cb3d",
+   "question": "Which gymnastic apparatus is a long, narrow, raised beam that gymnasts perform routines on?",
+   "options": [
+    "Uneven Bars",
+    "Vault",
+    "Parallel Bars",
+    "Balance Beam"
+   ],
+   "correct_answer": 3,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d12c29b6-c86a-4403-9f14-34b4c7037168",
+   "question": "What is the special milestone theme for the 50th season of the reality show 'Survivor' premiering in 2026?",
+   "options": [
+    "Winners at War 2",
+    "Retired Legends",
+    "All-Stars / Legends",
+    "New Era vs. Old School"
+   ],
+   "correct_answer": 2,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d23e8a27-f1b4-4f42-b66e-9b7ed7d3c5c5",
+   "question": "Which city is known for its iconic Sydney Opera House and Harbour Bridge?",
+   "options": [
+    "Melbourne",
+    "Brisbane",
+    "Perth",
+    "Sydney"
+   ],
+   "correct_answer": 3,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d4a1cab0-6df9-4033-8483-9e94003ed7fd",
+   "question": "Who was the last empress of China, de facto ruling for 47 years during the late Qing Dynasty?",
+   "options": [
+    "Wu Zetian",
+    "Empress Dowager Cixi",
+    "Empress Xiaocigao",
+    "Empress Xiaoxianchun"
+   ],
+   "correct_answer": 1,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d7249d67-63aa-4f39-98b7-ead3a63162a9",
+   "question": "Which iconic pop star famously kissed Madonna at the 2003 MTV Video Music Awards?",
+   "options": [
+    "Britney Spears",
+    "Christina Aguilera",
+    "Jennifer Lopez",
+    "Mariah Carey"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d7c66dcf-7a88-467e-a5da-ab98543605c3",
+   "question": "In which sport would you find events like the 'javelin throw' and 'discus throw'?",
+   "options": [
+    "Gymnastics",
+    "Swimming",
+    "Athletics",
+    "Weightlifting"
+   ],
+   "correct_answer": 2,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "d8ae031b-d17c-4953-8b65-c9c776ec1db2",
+   "question": "How many defending players must be between the attacker and the goal for the attacker to be onside?",
+   "options": [
+    "One",
+    "Two",
+    "Three",
+    "None"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "da85ff27-a524-4355-8252-2f0bdb911fe0",
+   "question": "Which sitcom is set in New York City and features six friends: Monica, Chandler, Phoebe, Rachel, Ross, and Joey?",
+   "options": [
+    "Seinfeld",
+    "How I Met Your Mother",
+    "Friends",
+    "The Big Bang Theory"
+   ],
+   "correct_answer": 2,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "daabf04d-955f-4342-b323-229cc8dfead8",
+   "question": "What is the only species of bear that is strictly carnivorous, primarily preying on seals?",
+   "options": [
+    "Grizzly Bear",
+    "Black Bear",
+    "Polar Bear",
+    "Panda Bear"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "dc14b8b1-743d-41f3-bd5d-7073b828113c",
+   "question": "When NBC's 'Today' premiered in 1952, host Dave Garroway was famously joined by a chimpanzee sidekick named what?",
+   "options": [
+    "J. Fred Muggs",
+    "Bubbles",
+    "Ham",
+    "Lancelot Link"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "dc58e2ac-3e7f-4819-8301-e06226c79b47",
+   "question": "In the popular game 'Minecraft', what material is typically used to craft a pickaxe that can mine diamonds?",
+   "options": [
+    "Stone",
+    "Iron",
+    "Gold",
+    "Diamond"
+   ],
+   "correct_answer": 1,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "df5f30cb-b320-407a-b7c6-b6f5f5a1fe68",
+   "question": "What is the only letter in the English alphabet that does not appear on the periodic table?",
+   "options": [
+    "J",
+    "X",
+    "Q",
+    "Z"
+   ],
+   "correct_answer": 0,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e02d1f24-1fce-4fdb-9d39-5038cc95393b",
+   "question": "Which species of bear is the only one native to the Southern Hemisphere?",
+   "options": [
+    "Spectacled Bear",
+    "Sun Bear",
+    "Sloth Bear",
+    "Asiatic Black Bear"
+   ],
+   "correct_answer": 0,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e02f5f4c-57a4-4b35-9a43-d5d38c917e19",
+   "question": "In competitive swimming, which stroke is performed lying on the back?",
+   "options": [
+    "Freestyle",
+    "Breaststroke",
+    "Butterfly",
+    "Backstroke"
+   ],
+   "correct_answer": 3,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e0e5ba20-3ae9-46ae-9399-75eb900ea008",
+   "question": "What unique adaptation allows some birds, like swifts, to spend almost their entire lives in flight, even sleeping while airborne?",
+   "options": [
+    "Specialized wing structure",
+    "High metabolism",
+    "Unilateral sleep",
+    "Extreme feather density"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e3b360ac-1bbe-49d1-9dc4-09d089c22029",
+   "question": "The 'Iron Curtain' was a term coined by Winston Churchill to describe the division between Western Europe and the Soviet bloc during which era?",
+   "options": [
+    "World War I",
+    "The Cold War",
+    "The Napoleonic Wars",
+    "The Victorian Era"
+   ],
+   "correct_answer": 1,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e44dff2c-9d59-4b18-bc37-3e1cadb33d10",
+   "question": "The theremin is unique among musical instruments for being played without physical contact. Which early electronic music pioneer is often associated with its development?",
+   "options": [
+    "Robert Moog",
+    "Leon Theremin",
+    "Brian Eno",
+    "John Cage"
+   ],
+   "correct_answer": 1,
+   "category": "Music",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e50085f9-8d5c-4733-b8f4-23ec72eb8b85",
+   "question": "Which insect has nearly 360-degree vision due to its compound eyes?",
+   "options": [
+    "Butterfly",
+    "Housefly",
+    "Dragonfly",
+    "Bee"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e6da816e-9a14-4549-8268-4a26d06b0bfc",
+   "question": "What is the term for a perfect game in baseball, where no opposing player reaches base?",
+   "options": [
+    "No-hitter",
+    "Shutout",
+    "Perfect game",
+    "Grand slam"
+   ],
+   "correct_answer": 2,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e6f89afd-6778-43ce-bf9a-bbac3e4f46b4",
+   "question": "Which large cat is known for having the strongest bite among all felines?",
+   "options": [
+    "Lion",
+    "Tiger",
+    "Jaguar",
+    "Leopard"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e721cef3-7928-4871-9165-db861aba59e5",
+   "question": "Which explorer's expedition was the first to successfully circumnavigate the globe?",
+   "options": [
+    "Christopher Columbus",
+    "Ferdinand Magellan",
+    "Vasco da Gama",
+    "Juan Sebastián Elcano"
+   ],
+   "correct_answer": 3,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "e9abfd97-5d75-4b2e-9e3b-70967fe7e2fe",
+   "question": "Which tech billionaire founded Tesla and SpaceX?",
+   "options": [
+    "Jeff Bezos",
+    "Bill Gates",
+    "Elon Musk",
+    "Mark Zuckerberg"
+   ],
+   "correct_answer": 2,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "ea827d03-6771-4143-aa57-61b303ee8da1",
+   "question": "Which classical music period immediately followed the Baroque period?",
+   "options": [
+    "Romantic",
+    "Classical",
+    "Renaissance",
+    "Modern"
+   ],
+   "correct_answer": 1,
+   "category": "Music",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "ebf26433-3a48-4323-83b5-c88b52fbfb12",
+   "question": "The Ottoman Empire was officially dissolved and replaced by the Republic of Turkey in which year?",
+   "options": [
+    "1918",
+    "1920",
+    "1922",
+    "1924"
+   ],
+   "correct_answer": 2,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "ec197d8e-7bce-4621-87c5-ee79e28582a9",
+   "question": "The internet meme 'Distracted Boyfriend' features a man looking at another woman while walking with his partner. Who plays the 'distracted boyfriend' in the original stock photo?",
+   "options": [
+    "It's a stock photo model",
+    "A famous actor",
+    "An unknown celebrity",
+    "A politician"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "ec21449a-2906-49f4-8f46-37bc9c32790a",
+   "question": "Which internet meme features a dog sitting calmly in a burning room saying 'This is fine'?",
+   "options": [
+    "Doge",
+    "Grumpy Cat",
+    "Disaster Girl",
+    "This is Fine Dog"
+   ],
+   "correct_answer": 3,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "ed41c294-29b4-422c-b958-9773a4fc3077",
+   "question": "The Hagia Sophia, originally built as a Christian cathedral, served as the patriarchal cathedral of the imperial capital of which empire?",
+   "options": [
+    "Roman Empire",
+    "Byzantine Empire",
+    "Ottoman Empire",
+    "Sasanian Empire"
+   ],
+   "correct_answer": 1,
+   "category": "History",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "edec5916-fa32-4a63-a4b7-0ebe05019eed",
+   "question": "Which reality television family stars in the show \"The Kardashians\" on Hulu, after \"Keeping Up with the Kardashians\"?",
+   "options": [
+    "The Osbournes",
+    "The Jenners",
+    "The Hiltons",
+    "The Kardashian-Jenners"
+   ],
+   "correct_answer": 3,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "ee05b67f-9927-41f0-8276-587b27a5a5d7",
+   "question": "What is a group of musicians who play together called?",
+   "options": [
+    "A solo",
+    "A duet",
+    "A band",
+    "A choir"
+   ],
+   "correct_answer": 2,
+   "category": "Music",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "eeb5e095-bf2c-4a49-9b15-fc7b6797208f",
+   "question": "What type of animal is a 'beluga'?",
+   "options": [
+    "Fish",
+    "Bird",
+    "Whale",
+    "Seal"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "efc6e21a-cb7f-4d8c-9d6a-9c9a354285e9",
+   "question": "What was the highest possible score a gymnast could achieve in the 'perfect 10' era of gymnastics judging?",
+   "options": [
+    "9.5",
+    "9.9",
+    "10.0",
+    "10.5"
+   ],
+   "correct_answer": 2,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "f0ef07a5-9003-4cd0-84db-e5207e58f689",
+   "question": "What is the official title of the third 'Knives Out' film announced for 2025/2026?",
+   "options": [
+    "Wake Up Dead Man",
+    "The Last Cut",
+    "Benoit's End",
+    "A Sharp Exit"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "f0f7fc8e-dac4-4713-bbf5-e6f010d1259e",
+   "question": "A fjord is a long, narrow, deep inlet of the sea between high cliffs, typically found in Norway and which other country?",
+   "options": [
+    "Sweden",
+    "Finland",
+    "Australia",
+    "New Zealand"
+   ],
+   "correct_answer": 3,
+   "category": "Geography",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "f21f9cf8-c4f3-4a49-837d-b5984b980bc6",
+   "question": "Who holds the record for the most goals scored in FIFA World Cup tournament history?",
+   "options": [
+    "Pelé",
+    "Miroslav Klose",
+    "Ronaldo (Brazilian)",
+    "Gerd Müller"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "f28fd586-ff35-41f4-90b6-1ee033d653be",
+   "question": "How many wickets are there in a standard game of cricket?",
+   "options": [
+    "1",
+    "2",
+    "3",
+    "4"
+   ],
+   "correct_answer": 1,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "f8625434-a24d-4c86-8476-d43b482625b4",
+   "question": "Which philosopher is known for the Socratic method?",
+   "options": [
+    "Plato",
+    "Aristotle",
+    "Socrates",
+    "Epicurus"
+   ],
+   "correct_answer": 2,
+   "category": "General Knowledge",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "fcd1fe8b-eabd-4d04-8b4b-01e58fce6fab",
+   "question": "An electric eel can generate a discharge of up to how many volts?",
+   "options": [
+    "100V",
+    "300V",
+    "600V",
+    "1000V"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "fdbc689d-77c7-49f3-896d-0cf6e8141dcd",
+   "question": "What was the first instrument Louis Armstrong learned to play?",
+   "options": [
+    "Trumpet",
+    "Trombone",
+    "Cornet",
+    "Clarinet"
+   ],
+   "correct_answer": 2,
+   "category": "Music",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "fdda959c-726e-4496-938d-c5ba9b596584",
+   "question": "Which popular sitcom revolves around six friends living in New York City, but does not feature a coffee shop called Central Perk?",
+   "options": [
+    "Seinfeld",
+    "Parks and Recreation",
+    "The Office",
+    "Curb Your Enthusiasm"
+   ],
+   "correct_answer": 0,
+   "category": "Pop Culture",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "fe1f1cdb-58ee-4238-9592-7468d5dad17a",
+   "question": "How many pins are set up at the beginning of a standard game of ten-pin bowling?",
+   "options": [
+    "8",
+    "9",
+    "10",
+    "12"
+   ],
+   "correct_answer": 2,
+   "category": "Sports",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  },
+  {
+   "id": "ff2ded52-9921-4d8a-9f8f-ce86753e038a",
+   "question": "Which type of human teeth are designed for grinding and crushing food?",
+   "options": [
+    "Incisors",
+    "Canines",
+    "Molars",
+    "Premolars"
+   ],
+   "correct_answer": 2,
+   "category": "Science",
+   "status": "active",
+   "question_pool": "anytime_blitz"
+  }
+ ]
+}

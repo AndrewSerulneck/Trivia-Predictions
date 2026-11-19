@@ -1,0 +1,512 @@
+{
+ "note": "Rows as they were before the 2026-11-18 fact-fix list (Andrew approved). Undo = write these fields back through the admin edit. Edits refused by the repeat check were soft-deleted instead (status deleted); restore = set status active.",
+ "before": [
+  {
+   "id": "00294032-b37f-4695-9568-d5ad0e2aa327",
+   "question": "What is the term for a star that has exhausted most of its nuclear fuel and collapsed into a very dense state?",
+   "options": [
+    "White Dwarf",
+    "Red Giant",
+    "Nebula",
+    "Pulsar"
+   ],
+   "correct_answer": 0,
+   "category": "Science",
+   "status": "active"
+  },
+  {
+   "id": "040e5af0-19fd-4afc-a8cc-b99da5bcf5b7",
+   "question": "Which British pop group was famous for songs like \"Dancing Queen\" and \"Mamma Mia\"?",
+   "options": [
+    "The Beatles",
+    "Queen",
+    "ABBA",
+    "Spice Girls"
+   ],
+   "correct_answer": 2,
+   "category": "Music",
+   "status": "active"
+  },
+  {
+   "id": "05d07203-dd29-4b0f-b544-e70e0e5a14c3",
+   "question": "What is the name of the traditional Mexican fermented corn dough beverage, often consumed during festivals like Day of the Dead?",
+   "options": [
+    "Horchata",
+    "Atole",
+    "Tepache",
+    "Pulque"
+   ],
+   "correct_answer": 1,
+   "category": "General Knowledge",
+   "status": "active"
+  },
+  {
+   "id": "2416e941-b8c3-4d19-a64a-228348e69272",
+   "question": "Which of these is a primary color?",
+   "options": [
+    "Green",
+    "Orange",
+    "Purple",
+    "Red"
+   ],
+   "correct_answer": 3,
+   "category": "General Knowledge",
+   "status": "active"
+  },
+  {
+   "id": "2936a7f5-9482-414e-8d3f-b58e82fd83a3",
+   "question": "Weight for weight, spider silk is stronger than which material?",
+   "options": [
+    "Steel",
+    "Kevlar",
+    "Aluminum",
+    "Both Steel and Kevlar"
+   ],
+   "correct_answer": 3,
+   "category": "Animals",
+   "status": "active"
+  },
+  {
+   "id": "2c167c57-2d44-4fac-8c14-09cb1cd96634",
+   "question": "Which creature has the largest brain relative to its body size?",
+   "options": [
+    "Human",
+    "Sperm Whale",
+    "Shrew",
+    "Dolphin"
+   ],
+   "correct_answer": 2,
+   "category": "Animals",
+   "status": "active"
+  },
+  {
+   "id": "52be0aa1-52d7-4277-b602-721473c14965",
+   "question": "Who was the first female pharaoh of ancient Egypt to rule in her own right?",
+   "options": [
+    "Hatshepsut",
+    "Nefertiti",
+    "Cleopatra VII",
+    "Sobekneferu"
+   ],
+   "correct_answer": 0,
+   "category": "History",
+   "status": "active"
+  },
+  {
+   "id": "6dd90ccf-d6a3-4388-95a3-468853745553",
+   "question": "Which genre of music, originating in Trinidad and Tobago, is characterized by its use of steelpan drums and calypso rhythms?",
+   "options": [
+    "Soca",
+    "Reggaeton",
+    "Steelpan music",
+    "Zouk"
+   ],
+   "correct_answer": 0,
+   "category": "Music",
+   "status": "active"
+  },
+  {
+   "id": "6df63884-f04e-40e1-ab4f-8758e98fb72c",
+   "question": "Which show 'invented' the television rerun to allow its lead actress time to recover after giving birth?",
+   "options": [
+    "The Goldbergs",
+    "I Love Lucy",
+    "The Donna Reed Show",
+    "Bewitched"
+   ],
+   "correct_answer": 1,
+   "category": "Pop Culture",
+   "status": "active"
+  },
+  {
+   "id": "6e0d6ed6-b931-4626-b55f-e3d54b6f094f",
+   "question": "Which ancient civilization is credited with inventing the abacus, an early calculating tool?",
+   "options": [
+    "Ancient Greece",
+    "Ancient Rome",
+    "Ancient China",
+    "Ancient Egypt"
+   ],
+   "correct_answer": 2,
+   "category": "General Knowledge",
+   "status": "active"
+  },
+  {
+   "id": "8dc1577e-c1e5-43ca-8978-be7643eda93e",
+   "question": "In which epic poem would you find the character Odysseus?",
+   "options": [
+    "The Aeneid",
+    "The Iliad",
+    "The Odyssey",
+    "Beowulf"
+   ],
+   "correct_answer": 2,
+   "category": "General Knowledge",
+   "status": "active"
+  },
+  {
+   "id": "945dc567-9dbf-4184-ad88-02f135efa76d",
+   "question": "Which country borders the most other countries?",
+   "options": [
+    "Russia",
+    "Brazil",
+    "Germany",
+    "China"
+   ],
+   "correct_answer": 3,
+   "category": "Geography",
+   "status": "active"
+  },
+  {
+   "id": "9cdfd9e6-78c1-4118-b18c-64e9bad9f061",
+   "question": "The earliest commercially available phonograph records, introduced in the late 19th century, were typically made from what material?",
+   "options": [
+    "Shellac",
+    "Vinyl",
+    "Wax",
+    "Aluminum"
+   ],
+   "correct_answer": 2,
+   "category": "Music",
+   "status": "active"
+  },
+  {
+   "id": "c0cdee2d-9cf7-4508-91d4-7c3cf36ab378",
+   "question": "Which is the longest river in the world, often disputed but generally accepted as such due to new measurements?",
+   "options": [
+    "Nile River",
+    "Amazon River",
+    "Yangtze River",
+    "Mississippi River"
+   ],
+   "correct_answer": 1,
+   "category": "Geography",
+   "status": "active"
+  },
+  {
+   "id": "c994585f-d7ee-45e2-93c7-d8fa95ca4193",
+   "question": "Which language, spoken primarily in Ethiopia, uses its own unique script called Ge'ez or Ethiopic?",
+   "options": [
+    "Somali",
+    "Amharic",
+    "Oromo",
+    "Tigrinya"
+   ],
+   "correct_answer": 1,
+   "category": "General Knowledge",
+   "status": "active"
+  },
+  {
+   "id": "d4893a5d-ec34-460a-86bd-e658e50b5b1d",
+   "question": "Which part of the human brain, located in the temporal lobe, is primarily responsible for processing auditory information and is involved in speech and language comprehension?",
+   "options": [
+    "Occipital lobe",
+    "Parietal lobe",
+    "Temporal lobe",
+    "Frontal lobe"
+   ],
+   "correct_answer": 2,
+   "category": "Science",
+   "status": "active"
+  },
+  {
+   "id": "ddb8f157-3f54-4912-9e1c-bd93bb1441d2",
+   "question": "From which animal do we get natural silk fibers?",
+   "options": [
+    "Spider",
+    "Silkworm",
+    "Caterpillar",
+    "Moth"
+   ],
+   "correct_answer": 1,
+   "category": "Animals",
+   "status": "active"
+  },
+  {
+   "id": "e05c4ed8-30f2-449c-9da1-ee9c59cf71d9",
+   "question": "What is the name of the musical symbol that indicates a note should be held for twice its usual duration?",
+   "options": [
+    "Fermata",
+    "Staccato",
+    "Tie",
+    "Whole note"
+   ],
+   "correct_answer": 0,
+   "category": "Music",
+   "status": "active"
+  },
+  {
+   "id": "f0f7fc8e-dac4-4713-bbf5-e6f010d1259e",
+   "question": "A fjord is a long, narrow, deep inlet of the sea between high cliffs, typically found in Norway and which other country?",
+   "options": [
+    "Sweden",
+    "Finland",
+    "Canada",
+    "New Zealand"
+   ],
+   "correct_answer": 3,
+   "category": "Geography",
+   "status": "active"
+  }
+ ],
+ "applied": [
+  {
+   "id": "040e5af0-19fd-4afc-a8cc-b99da5bcf5b7",
+   "patch": {
+    "question": "Which pop group had hits with \"Dancing Queen\" and \"Mamma Mia\"?"
+   }
+  },
+  {
+   "id": "52be0aa1-52d7-4277-b602-721473c14965",
+   "patch": {
+    "question": "Which woman ruled Egypt as pharaoh for about 20 years in the 1400s BC?",
+    "options": [
+     "Hatshepsut",
+     "Nefertiti",
+     "Boudicca",
+     "Theodora"
+    ],
+    "correct_answer": 0
+   }
+  },
+  {
+   "id": "e05c4ed8-30f2-449c-9da1-ee9c59cf71d9",
+   "patch": {
+    "question": "Which musical symbol means \"hold this note as long as you like\"?"
+   }
+  },
+  {
+   "id": "6e0d6ed6-b931-4626-b55f-e3d54b6f094f",
+   "patch": {
+    "question": "The suanpan is a traditional abacus from which country?",
+    "options": [
+     "Japan",
+     "China",
+     "India",
+     "Egypt"
+    ],
+    "correct_answer": 1
+   }
+  },
+  {
+   "id": "05d07203-dd29-4b0f-b544-e70e0e5a14c3",
+   "patch": {
+    "question": "Which warm Mexican drink is made from corn masa?"
+   }
+  },
+  {
+   "id": "c0cdee2d-9cf7-4508-91d4-7c3cf36ab378",
+   "patch": {
+    "question": "Which river is usually ranked the longest in the world?",
+    "options": [
+     "Nile River",
+     "Congo River",
+     "Yangtze River",
+     "Mississippi River"
+    ],
+    "correct_answer": 0
+   }
+  },
+  {
+   "id": "6df63884-f04e-40e1-ab4f-8758e98fb72c",
+   "patch": {
+    "question": "Which show helped make TV reruns common when its star took time off to have a baby?"
+   }
+  },
+  {
+   "id": "9cdfd9e6-78c1-4118-b18c-64e9bad9f061",
+   "patch": {
+    "question": "Before vinyl, 78 rpm records were mostly made of what?",
+    "options": [
+     "Shellac",
+     "Vinyl",
+     "Wax",
+     "Aluminum"
+    ],
+    "correct_answer": 0
+   }
+  },
+  {
+   "id": "2936a7f5-9482-414e-8d3f-b58e82fd83a3",
+   "patch": {
+    "status": "deleted"
+   }
+  },
+  {
+   "id": "2c167c57-2d44-4fac-8c14-09cb1cd96634",
+   "patch": {
+    "status": "deleted"
+   }
+  },
+  {
+   "id": "945dc567-9dbf-4184-ad88-02f135efa76d",
+   "patch": {
+    "options": [
+     "India",
+     "Brazil",
+     "Germany",
+     "China"
+    ],
+    "correct_answer": 3
+   }
+  },
+  {
+   "id": "f0f7fc8e-dac4-4713-bbf5-e6f010d1259e",
+   "patch": {
+    "options": [
+     "Sweden",
+     "Finland",
+     "Australia",
+     "New Zealand"
+    ],
+    "correct_answer": 3
+   }
+  },
+  {
+   "id": "2416e941-b8c3-4d19-a64a-228348e69272",
+   "patch": {
+    "options": [
+     "Pink",
+     "Orange",
+     "Purple",
+     "Red"
+    ],
+    "correct_answer": 3
+   }
+  },
+  {
+   "id": "8dc1577e-c1e5-43ca-8978-be7643eda93e",
+   "patch": {
+    "question": "Which epic poem follows Odysseus's 10-year journey home?"
+   }
+  },
+  {
+   "id": "00294032-b37f-4695-9568-d5ad0e2aa327",
+   "patch": {
+    "question": "What small, dense star will our Sun eventually become?"
+   }
+  },
+  {
+   "id": "c994585f-d7ee-45e2-93c7-d8fa95ca4193",
+   "patch": {
+    "options": [
+     "Somali",
+     "Amharic",
+     "Oromo",
+     "Swahili"
+    ],
+    "correct_answer": 1
+   }
+  },
+  {
+   "id": "ddb8f157-3f54-4912-9e1c-bd93bb1441d2",
+   "patch": {
+    "options": [
+     "Silkworm",
+     "Sheep",
+     "Alpaca",
+     "Goat"
+    ],
+    "correct_answer": 0
+   }
+  },
+  {
+   "id": "6dd90ccf-d6a3-4388-95a3-468853745553",
+   "patch": {
+    "status": "deleted"
+   }
+  },
+  {
+   "id": "d4893a5d-ec34-460a-86bd-e658e50b5b1d",
+   "patch": {
+    "question": "Which lobe of the brain mainly handles hearing and understanding speech?"
+   }
+  }
+ ],
+ "result": [
+  {
+   "id": "040e5af0-19fd-4afc-a8cc-b99da5bcf5b7",
+   "outcome": "deleted instead",
+   "why": "edit refused (uncertain)"
+  },
+  {
+   "id": "52be0aa1-52d7-4277-b602-721473c14965",
+   "outcome": "deleted instead",
+   "why": "edit refused (repeat of eac7a7b7, pending)"
+  },
+  {
+   "id": "e05c4ed8-30f2-449c-9da1-ee9c59cf71d9",
+   "outcome": "deleted instead",
+   "why": "edit refused (uncertain)"
+  },
+  {
+   "id": "6e0d6ed6-b931-4626-b55f-e3d54b6f094f",
+   "outcome": "edited"
+  },
+  {
+   "id": "05d07203-dd29-4b0f-b544-e70e0e5a14c3",
+   "outcome": "edited"
+  },
+  {
+   "id": "c0cdee2d-9cf7-4508-91d4-7c3cf36ab378",
+   "outcome": "deleted instead",
+   "why": "edit refused (repeat of ca621ab4 Nile/Africa)"
+  },
+  {
+   "id": "6df63884-f04e-40e1-ab4f-8758e98fb72c",
+   "outcome": "edited"
+  },
+  {
+   "id": "9cdfd9e6-78c1-4118-b18c-64e9bad9f061",
+   "outcome": "deleted instead",
+   "why": "edit refused (uncertain)"
+  },
+  {
+   "id": "2936a7f5-9482-414e-8d3f-b58e82fd83a3",
+   "outcome": "deleted"
+  },
+  {
+   "id": "2c167c57-2d44-4fac-8c14-09cb1cd96634",
+   "outcome": "deleted"
+  },
+  {
+   "id": "945dc567-9dbf-4184-ad88-02f135efa76d",
+   "outcome": "deleted instead",
+   "why": "edit refused (repeat of deleted c4ab6044)"
+  },
+  {
+   "id": "f0f7fc8e-dac4-4713-bbf5-e6f010d1259e",
+   "outcome": "edited"
+  },
+  {
+   "id": "2416e941-b8c3-4d19-a64a-228348e69272",
+   "outcome": "deleted instead",
+   "why": "edit refused (contradictory answers)"
+  },
+  {
+   "id": "8dc1577e-c1e5-43ca-8978-be7643eda93e",
+   "outcome": "edited"
+  },
+  {
+   "id": "00294032-b37f-4695-9568-d5ad0e2aa327",
+   "outcome": "edited"
+  },
+  {
+   "id": "c994585f-d7ee-45e2-93c7-d8fa95ca4193",
+   "outcome": "edited"
+  },
+  {
+   "id": "ddb8f157-3f54-4912-9e1c-bd93bb1441d2",
+   "outcome": "deleted instead",
+   "why": "edit refused (repeat of deleted 17a5f173)"
+  },
+  {
+   "id": "6dd90ccf-d6a3-4388-95a3-468853745553",
+   "outcome": "deleted"
+  },
+  {
+   "id": "d4893a5d-ec34-460a-86bd-e658e50b5b1d",
+   "outcome": "edited"
+  }
+ ]
+}

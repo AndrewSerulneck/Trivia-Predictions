@@ -112,7 +112,7 @@ export const writeSpeedTrivia = async (patch: Record<string, unknown>, existing:
   return saved;
 };
 // Manual approval compares only with questions already available to players.
-// Edits, new generation and imports continue to use the complete fact bank.
+// An edit that keeps a live question live does too (D38); other edits, new generation and imports use the complete fact bank.
 export const approveSpeedTrivia = async (existing: AdmissionRow, session?: AdmissionSession): Promise<AdmissionRow> => {
   const gate = session ?? await openSpeedTriviaAdmission();
   return (await withTag(existing, () => gate.write({ status: "active" }, { existing, approvedOnly: true }))).result.row;
