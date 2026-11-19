@@ -21,7 +21,7 @@ const AREAS = [
   { id: "l-ce", category: "Current Events", name: "Sports", eras: ["Past 12 months"], active: true },
 ];
 
-const memoryClient = ({ run = { source: "chatgpt", model: "gpt-6-astra", received: 1 } as Row | null, list = [] as Row[], inReview = [] as Row[], stats = [] as Row[] } = {}) => {
+const memoryClient = ({ run = { source: "chatgpt", model: "gpt-6-astra", received: 1 } as Row | null, list = [] as Row[], inReview = [] as Row[], stats = [] as Row[], requests = [] as Row[] } = {}) => {
   const tables: Record<string, Row[]> = {
     question_writer_runs: run ? [{ game: "live", run_date: DAY, ...run }] : [],
     question_candidates: [
@@ -29,6 +29,7 @@ const memoryClient = ({ run = { source: "chatgpt", model: "gpt-6-astra", receive
       ...inReview.map((c) => ({ game: "live", run_date: "2026-11-15", source: "chatgpt", ...c })),
     ],
     question_coverage_areas: AREAS.map((a) => ({ game: "live", ...a })),
+    live_conversion_requests: requests,
     // Read-only here (the fallback brief's examples). Any write to it fails the test: pool separation.
     trivia_questions: [],
   };
@@ -218,5 +219,68 @@ describe("processLiveDay", () => {
     const corpus = live.readLiveCorpus();
     expect(corpus.length).toBeGreaterThan(3000);
     expect(corpus[0]).toEqual(expect.objectContaining({ slug: expect.any(String), question: expect.any(String), answer: expect.any(String), category: expect.any(String) }));
+  });
+});
+
+// Phase 4e (D37): Speed -> Live rewrites. The slot is built by the site; conversionOf and fromSpeed by the database.
+describe("processLiveDay: conversions", () => {
+  const conv = (id: string, requestId: string, p: Row) => ({ id, slot: { n: 1, kind: "conversion", category: p.category, area: p.area, era: p.era },
+    payload: { ...p, conversionOf: requestId, fromSpeed: { id: "s1", question: "Speed?", answer: p.answer } } });
+  const request = (id: string, candidateId: string) => ({ id, candidate_id: candidateId, status: "sent", reason: null });
+  const reqOf = (client: ReturnType<typeof memoryClient>, id: string) => client.tables.live_conversion_requests.find((r) => r.id === id)!;
+
+  it("skips the slot match, the star cap and the score gate; a pass waits in review and marks the request done", async () => {
+    const graded = { ...payload({ category: "Movies", area: "Actors and performers", era: "1990s", subject: "Tom Hanks", answerIsPerson: true,
+      question: "Who played the title role in 'Forrest Gump'?", answer: "Tom Hanks", acceptableAnswers: ["Hanks"] }),
+      grade: { version: "bar-test-live-v4", familiar: 1, fun: 1, estCorrect: 10, flags: ["obscure-fact"], model: "gpt-6-astra" } };
+    const client = memoryClient({ list: [conv("k1", "r1", graded)], requests: [request("r1", "k1")],
+      stats: [{ subjectKey: "tom hanks", count: 9, lastWritten: "2026-11-15T00:00:00Z" }] });
+    const seen: Row[] = [];
+    const report = await run(client, { createScorer: () => ({ scoreBatch: async (rows: Row[]) => { seen.push(...rows); return []; } }) });
+    expect(seen).toEqual([]);
+    expect(statusOf(client, "k1")).toMatchObject({ status: "pending_review", tag: { overStarCap: true, subjectKey: "tom hanks" },
+      audience: expect.objectContaining({ score: 1 }) });
+    expect(reqOf(client, "r1")).toMatchObject({ status: "done", reason: null });
+    expect((report as Report & { conversions: Row }).conversions).toEqual({ examined: 1, waiting: 1, rejected: 0 });
+    expect(report.waiting).toBe(0);
+    expect(client.touched.has("trivia_questions")).toBe(false);
+  });
+
+  it("never sends an ungraded conversion to Gemini (D36) and isn't held by the day's target", async () => {
+    const list = Array.from({ length: 16 }, (_, i) => candidate(`c${i}`, i + 1, payload({ question: `Which band recorded song number ${i}?`, subject: `Band ${i}` })));
+    const client = memoryClient({ list: [...list, conv("k1", "r1", payload({ question: "Which band sang 'Hotel California'?", answer: "Eagles", acceptableAnswers: [], subject: "Eagles" }))],
+      requests: [request("r1", "k1")] });
+    const seen: Row[] = [];
+    await run(client, { createScorer: () => ({ scoreBatch: async (rows: Row[]) => { seen.push(...rows); return scorer()().scoreBatch(rows); } }) });
+    expect(seen.map((r) => r.id)).not.toContain("k1");
+    expect(statusOf(client, "k1")).toMatchObject({ status: "pending_review", audience: null });
+    expect(reqOf(client, "r1").status).toBe("done");
+  });
+
+  it("rejects a repeat and a broken Live rule, and records why on the request", async () => {
+    const dup = payload({ question: "Which band sang 'Hotel California'?", answer: "Eagles", acceptableAnswers: [], subject: "Eagles" });
+    const client = memoryClient({ list: [
+      conv("k1", "r1", dup),
+      conv("k2", "r2", payload({ question: "Which of these bands recorded 'Stairway to Heaven'?" })),
+    ], requests: [request("r1", "k1"), request("r2", "k2")] });
+    const report = await run(client, { createChecker: judge({ [dup.question as string]: { verdict: "duplicate", match: { slug: "eagles", question: "Who recorded Hotel California?", answer: "Eagles" }, how: "gemini" } }) });
+    expect(statusOf(client, "k1")).toMatchObject({ status: "rejected", reason: "repeat: eagles (gemini)" });
+    expect(reqOf(client, "r1")).toMatchObject({ status: "failed", reason: "Already in Live: Who recorded Hotel California?" });
+    expect(reqOf(client, "r2")).toMatchObject({ status: "failed", reason: "Breaks a Live rule (which-of-these)." });
+    expect((report as Report & { conversions: Row }).conversions).toEqual({ examined: 2, waiting: 0, rejected: 2 });
+  });
+
+  it("changes only a sent request that belongs to the candidate", async () => {
+    const client = memoryClient({ list: [conv("k1", "r1", payload())], requests: [{ id: "r1", candidate_id: "other", status: "sent", reason: null }] });
+    await run(client);
+    expect(statusOf(client, "k1").status).toBe("pending_review");
+    expect(reqOf(client, "r1").status).toBe("sent");
+  });
+
+  it("treats a candidate without a server-built conversion slot as a regular one", async () => {
+    const client = memoryClient({ list: [{ id: "x", slot: { n: 1, kind: "conversion", category: "Music" }, payload: payload() }] });
+    await run(client);
+    expect(statusOf(client, "x").status).toBe("pending_review");
+    expect(client.touched.has("live_conversion_requests")).toBe(false);
   });
 });

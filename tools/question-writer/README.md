@@ -27,6 +27,14 @@ is reviewed with the rest; the main repo never holds the login. Plan: `docs/spee
 - **Anything else**: run it again from the Actions tab ("Run workflow"). If it fails twice, that day gets no new
   questions, and Quick Review says "Writer stopped" after two days.
 - **"grading: … (Gemini grades these instead)"** in the log: the questions were still sent; the site graded them.
+- **"conversions: …"** in the log: the Speed questions you sent with Make Live stay queued and go again the next night.
+
+## Make Live (Phase 4e)
+
+On a night with Speed questions queued by **Make Live** (Admin question list, or key L in Quick Review), the Live brief
+adds a third prompt. ChatGPT rewrites each as a Live question with the same answer, or declines with a reason. The
+rewrites are graded like the rest and posted to `/api/question-writer/conversions` after the day's Live batch. The
+site sends at most 20 a night (`QUESTION_WRITER_CONVERSIONS_PER_NIGHT` on the site; 0 turns it off).
 
 ## Run it by hand
 

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as core from "@/lib/speed-trivia-uniqueness/core.cjs";
+import * as runtime from "@/lib/speed-trivia-uniqueness/runtime.cjs";
+import * as map from "@/lib/question-variety/map.cjs";
 import { createSpeedTriviaChecker, loadSpeedTriviaCorpus } from "@/lib/speedTriviaUniqueness";
 import type { ComparisonTask, ComparisonResult, SpeedQuestion } from "@/types/speedTriviaUniqueness";
 const row = (id: string, question = "Which country launched Sputnik 1?", answer = "Soviet Union", status: SpeedQuestion["status"] = "active"): SpeedQuestion => ({ id, slug: id, question, options: [answer, "Other"], correct_answer: 0, category: "History", question_pool: "anytime_blitz", answer_format: "multiple_choice", status });
@@ -52,6 +54,19 @@ describe("shared Speed Trivia fact checker", () => {
     expect((await core.checkCandidate(index, { ...candidate, correct_answer: 9 }, { modelVersion: "m", adjudicate: judge })).decision).toBe("uncertain");
     expect((await core.checkCandidate(index, candidate, { modelVersion: "m", adjudicate: async () => { throw new Error("timeout"); } })).decision).toBe("uncertain");
     expect((await core.checkCandidate(index, candidate, { modelVersion: "m", adjudicate: async () => [] })).decision).toBe("uncertain");
+  });
+  it("treats a Current Events fact the judge can't confirm as sound, never one it calls wrong (2026-11-19)", () => {
+    const verdict = (qualityA: ComparisonResult["qualityA"]): ComparisonResult => ({ id: "x", decision: "unique", fact: "f", explanation: "e", qualityA, qualityB: "sound", confidence: "high" });
+    const news = { ...row("n", "In July 2026, which country beat Argentina to win the men's World Cup?", "Spain"), category: runtime.RECENT_FACT_CATEGORY };
+    const regular = { ...news, category: "Sports" };
+    for (const quality of ["uncertain", "unverified"] as const) {
+      expect(runtime.recentFact(news, verdict(quality))).toMatchObject({ qualityA: "sound", recentFactUnconfirmed: true, decision: "unique" });
+      expect(runtime.recentFact(regular, verdict(quality)).qualityA).toBe(quality);
+    }
+    expect(runtime.recentFact(news, verdict("invalid")).qualityA).toBe("invalid");
+    expect(runtime.recentFact(news, verdict("sound"))).not.toHaveProperty("recentFactUnconfirmed");
+    expect(runtime.recentFact(news, { ...verdict("uncertain"), decision: "duplicate" }).decision).toBe("duplicate");
+    expect(runtime.RECENT_FACT_CATEGORY).toBe(map.CURRENT_EVENTS);
   });
   it("refuses overflow rather than silently dropping a same-answer competitor", async () => {
     const index = core.buildIndex(corpus(Array.from({ length: 140 }, (_, n) => row(String(n), `Different fact ${n}?`, "Taylor Swift"))));

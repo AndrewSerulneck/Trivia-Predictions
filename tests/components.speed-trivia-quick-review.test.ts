@@ -22,6 +22,10 @@ let repeated: (Row & { note?: string; match?: { id: string; question: string; an
 // Phase 4b: "Writer stopped" after two Gemini fallback days in a row.
 let writerStopped = false;
 const posts: Record<string, unknown>[] = [];
+// Phase 4e: Make Live requests ([method, questionId]); liveRefusal makes the queue call fail with that message.
+const liveCalls: [string, unknown][] = [];
+let liveRefusal: string | null = null;
+let liveSent: Set<string>;
 const gets: string[] = [];
 const respond = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }));
 
@@ -35,6 +39,11 @@ const fakeFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     return respond({ ok: true, total: waiting.length, items: waiting.slice(0, 50), counts, writerStopped });
   }
   const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+  if (url.endsWith("/live-conversions")) {
+    liveCalls.push([init.method, body.questionId]);
+    if (init.method === "DELETE") return respond({ ok: true, cancelled: !liveSent.has(body.questionId as string) });
+    return liveRefusal ? respond({ ok: false, error: liveRefusal }, 409) : respond({ ok: true, state: "queued", already: false });
+  }
   posts.push(body);
   const take = (rowId: string) => {
     const from = looking.some((r) => r.id === rowId) ? "needs_look" : "waiting";
@@ -101,6 +110,9 @@ beforeEach(() => {
   writerStopped = false;
   posts.length = 0;
   gets.length = 0;
+  liveCalls.length = 0;
+  liveRefusal = null;
+  liveSent = new Set();
   fakeFetch.mockClear();
   vi.stubGlobal("fetch", fakeFetch);
 });
@@ -317,5 +329,52 @@ describe("Speed Trivia Quick Review: the daily writer (Phase 4b)", () => {
     writerStopped = true;
     render(createElement(SpeedTriviaQuickReview));
     expect(await screen.findByText("Writer stopped")).toBeTruthy();
+  });
+});
+
+// Phase 4e (D37): L = Keep, then queue for Live; Undo cancels a still-queued request.
+describe("Speed Trivia Quick Review: Keep + Live (L)", () => {
+  it("keeps, queues for Live, and Undo cancels the request", async () => {
+    render(createElement(SpeedTriviaQuickReview));
+    expect(await screen.findByText("Question 1?")).toBeTruthy();
+    press("l");
+    expect(await screen.findByText("Kept. Queued for Live.")).toBeTruthy();
+    expect(posts[0]).toMatchObject({ action: "keep", rows: [{ id: "id-1" }] });
+    expect(liveCalls).toEqual([["POST", "id-1"]]);
+    press("z");
+    expect(await screen.findByText("Undone.")).toBeTruthy();
+    expect(liveCalls).toEqual([["POST", "id-1"], ["DELETE", "id-1"]]);
+    expect(await screen.findByText("Question 1?")).toBeTruthy();
+  });
+
+  it("says so when Undo can't cancel a request already sent to the writer", async () => {
+    liveSent.add("id-1");
+    render(createElement(SpeedTriviaQuickReview));
+    await screen.findByText("Question 1?");
+    fireEvent.click(screen.getByText("Keep + Live (L)"));
+    await screen.findByText("Kept. Queued for Live.");
+    press("z");
+    expect(await screen.findByText("Undone. Still queued for Live.")).toBeTruthy();
+  });
+
+  it("still keeps when the Live queue refuses, and shows why", async () => {
+    liveRefusal = "Already in Live.";
+    render(createElement(SpeedTriviaQuickReview));
+    await screen.findByText("Question 1?");
+    press("l");
+    expect(await screen.findByText("Not queued for Live: Already in Live.")).toBeTruthy();
+    expect(screen.getByText("Approved.")).toBeTruthy();
+    press("z");
+    await screen.findByText("Undone.");
+    expect(liveCalls).toEqual([["POST", "id-1"]]);
+  });
+
+  it("never queues a question the Keep left waiting (star cap)", async () => {
+    full = new Set(["id-1"]);
+    render(createElement(SpeedTriviaQuickReview));
+    await screen.findByText("Question 1?");
+    press("l");
+    expect(await screen.findByText("Subject full.")).toBeTruthy();
+    expect(liveCalls).toEqual([]);
   });
 });

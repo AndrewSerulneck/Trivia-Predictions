@@ -281,6 +281,12 @@ export const LiveTriviaQuickReview = () => {
                 {current.acceptableAnswers.length ? (
                   <p className="text-sm text-slate-600" data-testid="live-review-accepted">Also accept: {current.acceptableAnswers.join(" · ")}</p>
                 ) : null}
+                {current.fromSpeed ? (
+                  <p className="text-sm text-slate-600" data-testid="live-review-from-speed">
+                    From Speed: {current.fromSpeed.question} ({current.fromSpeed.answer})
+                  </p>
+                ) : null}
+                {current.overStarCap ? <p className="text-sm text-amber-700" data-testid="live-review-star-cap">Over star cap</p> : null}
                 {current.possibleRepeat ? (
                   <p className="text-sm text-amber-700" data-testid="live-review-repeat">
                     Possible repeat of: {current.possibleRepeat.question} ({current.possibleRepeat.answer})

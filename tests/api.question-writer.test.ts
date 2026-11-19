@@ -15,6 +15,7 @@ vi.mock("@/lib/supabaseAdmin", () => ({
 }));
 import { GET } from "@/app/api/question-writer/brief/route";
 import { POST } from "@/app/api/question-writer/candidates/route";
+import { POST as POST_CONVERSIONS } from "@/app/api/question-writer/conversions/route";
 
 const TOKEN = "t".repeat(43);
 const auth = { Authorization: `Bearer ${TOKEN}` };
@@ -100,5 +101,38 @@ describe("POST candidates", () => {
     expect((await post({ game: "speed", items: [item()] })).status).toBe(409);
     mocks.rpc.mockResolvedValueOnce({ data: null, error: { message: "writer-post-limit" } });
     expect((await post({ game: "speed", items: [item()] })).status).toBe(429);
+  });
+});
+
+// Phase 4e (D37): the writer's Speed -> Live rewrites.
+describe("POST /api/question-writer/conversions", () => {
+  const REQ = "85000000-0000-4000-8000-000000000001";
+  const convert = (body: unknown, headers: Record<string, string> = auth) =>
+    POST_CONVERSIONS(new Request("https://example.invalid/api/question-writer/conversions", { method: "POST", headers, body: typeof body === "string" ? body : JSON.stringify(body) }));
+  const rewrite = { question: "Rust-colored dust gives which planet its nickname?", answer: "Mars", acceptableAnswers: [], answerIsPerson: false,
+    category: "Science & Tech", area: "Astronomy and earth science", era: "Timeless", subject: "Mars", difficulty: "easy", sourceUrl: null, whyTrue: "Iron oxide." };
+
+  it("needs the writer token", async () => {
+    expect((await convert({ items: [{ requestId: REQ, declined: true, reason: "x" }] }, {})).status).toBe(401);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("stores rewrites and declines through live_conversion_receive only", async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: { runDate: "2026-11-19", received: 1, declined: 1, already: 0 }, error: null });
+    const response = await convert({ graderModel: "gpt-6-astra", items: [
+      { requestId: REQ, payload: rewrite }, { requestId: "85000000-0000-4000-8000-000000000002", declined: true, reason: "Too hard." }] });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, received: 1, declined: 1, invalid: 0 });
+    expect(mocks.rpc).toHaveBeenCalledTimes(1);
+    const [name, args] = mocks.rpc.mock.calls[0] as [string, { p_items: Record<string, unknown>[] }];
+    expect(name).toBe("live_conversion_receive");
+    expect(args.p_items[0]).toMatchObject({ requestId: REQ, slot: { kind: "conversion", category: "Science & Tech" } });
+    expect(mocks.tables).toEqual([]);
+  });
+
+  it("refuses malformed JSON, nothing usable and too many items", async () => {
+    expect((await convert("{")).status).toBe(400);
+    expect((await convert({ items: [{ requestId: REQ, payload: { question: "x" } }] })).status).toBe(422);
+    expect((await convert({ items: Array.from({ length: 21 }, () => ({ requestId: REQ, declined: true, reason: "x" })) })).status).toBe(413);
   });
 });

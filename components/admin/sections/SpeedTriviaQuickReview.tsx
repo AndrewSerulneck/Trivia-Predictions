@@ -16,16 +16,18 @@ import type {
   QuickReviewView,
 } from "@/types/speedTriviaQuickReview";
 
-// One Speed Trivia question at a time. → Keep, ← Reject, W wrong answer, E edit, S skip, Z undo.
+// One Speed Trivia question at a time. → Keep, ← Reject, W wrong answer, E edit, S skip, Z undo, L Keep and queue for
+// Live (Phase 4e, D37: the nightly ChatGPT writer rewrites it as a Live question; the Speed question stays).
 // Keep never runs a paid check: already-checked questions are approved at once, the rest wait for the overnight check
 // (scripts/process-speed-trivia-keep-queue.cjs). Its results show under "Needs a look" and "Repeats" (Restore = Undo).
 
 const ENDPOINT = "/api/admin/trivia/quick-review";
+const CONVERSIONS = "/api/admin/trivia/live-conversions";
 const REFILL_AT = 10;
 const PAGE_SIZE = 50; // QUICK_REVIEW_PAGE_LIMIT on the server
 
-/** queued: a Keep that went to the overnight check (counted under "queued" until undone). */
-type UndoEntry = { item: QuickReviewItem; kind: "keep" | "reject" | "skip"; queued?: boolean };
+/** queued: a Keep that went to the overnight check (counted under "queued" until undone). live: also queued for Live (L). */
+type UndoEntry = { item: QuickReviewItem; kind: "keep" | "reject" | "skip"; queued?: boolean; live?: boolean };
 type Draft = { question: string; options: string[]; correctAnswer: number };
 type Filter = { category: string; source: QuickReviewSource; sort: QuickReviewSort; score: string; view: QuickReviewView };
 
@@ -50,6 +52,14 @@ const postJson = async <T,>(body: unknown): Promise<T> => {
   const response = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const payload = (await response.json().catch(() => ({}))) as T & { ok?: boolean; error?: string };
   if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Quick Review failed. Try again.");
+  return payload;
+};
+
+/** Queue (POST) or cancel (DELETE) a Speed -> Live conversion. Throws with the server's message. */
+const sendConversion = async (method: "POST" | "DELETE", questionId: string) => {
+  const response = await fetch(CONVERSIONS, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ questionId }) });
+  const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; cancelled?: boolean };
+  if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Try again.");
   return payload;
 };
 
@@ -141,7 +151,7 @@ export const SpeedTriviaQuickReview = () => {
       .finally(() => { refilling.current = false; });
   }, [items, loading, exhausted, fetchPage]);
 
-  const advance = useCallback((item: QuickReviewItem, kind: UndoEntry["kind"], queued = false) => {
+  const advance = useCallback((item: QuickReviewItem, kind: UndoEntry["kind"], queued = false, live = false) => {
     setItems((prev) => prev.filter((row) => row.id !== item.id));
     if (kind !== "skip") setTotal((prev) => Math.max(0, prev - 1));
     if (kind !== "skip" && (queued || filter.view === "needs_look")) {
@@ -151,10 +161,11 @@ export const SpeedTriviaQuickReview = () => {
         needsLook: Math.max(0, prev.needsLook - (filter.view === "needs_look" ? 1 : 0)),
       }));
     }
-    setHistory((prev) => [...prev.slice(-49), { item, kind, queued }]);
+    setHistory((prev) => [...prev.slice(-49), { item, kind, queued, live }]);
   }, [filter.view]);
 
-  const keep = useCallback(async () => {
+  // live (L): after the Keep, queue the question for Live; only a Keep that was approved or queued is sent.
+  const keep = useCallback(async (live = false) => {
     if (!current || busy || draft || repeats) return;
     setBusy(true);
     setError("");
@@ -180,8 +191,21 @@ export const SpeedTriviaQuickReview = () => {
         setNotice(outcome === "subject_full" ? "Subject full." : "Couldn't tag.");
         return;
       }
-      advance(current, "keep", outcome === "queued");
-      setNotice(outcome === "approved" ? "Approved." : "Kept. Approved after the repeat check.");
+      const kept = outcome === "approved" ? "Approved." : "Kept. Approved after the repeat check.";
+      if (!live) {
+        advance(current, "keep", outcome === "queued");
+        setNotice(kept);
+        return;
+      }
+      try {
+        await sendConversion("POST", current.id);
+        advance(current, "keep", outcome === "queued", true);
+        setNotice("Kept. Queued for Live.");
+      } catch (err) {
+        advance(current, "keep", outcome === "queued");
+        setNotice(kept);
+        setError(`Not queued for Live: ${getErrorMessage(err, "Try again.")}`);
+      }
     } catch (err) {
       setError(getErrorMessage(err, "Keep failed."));
     } finally {
@@ -252,9 +276,11 @@ export const SpeedTriviaQuickReview = () => {
           needsLook: prev.needsLook + (view === "needs_look" ? 1 : 0),
         }));
       }
+      // An L also cancels its Live request while it is still queued.
+      const stillLive = last.live ? !(await sendConversion("DELETE", last.item.id).then((r) => r.cancelled === true, () => false)) : false;
       setHistory((prev) => prev.slice(0, -1));
       setItems((prev) => [...(back ? [last.item] : []), ...prev.filter((row) => row.id !== last.item.id)]);
-      setNotice("Undone.");
+      setNotice(stillLive ? "Undone. Still queued for Live." : "Undone.");
     } catch (err) {
       setError(getErrorMessage(err, "Can't undo."));
     } finally {
@@ -340,6 +366,7 @@ export const SpeedTriviaQuickReview = () => {
       const key = event.key.toLowerCase();
       const actions: Record<string, () => void> = repeats ? { s: skip } : {
         arrowright: () => void keep(),
+        l: () => void keep(true),
         arrowleft: () => void reject("quality"),
         w: () => void reject("wrong"),
         s: skip,
@@ -529,8 +556,10 @@ export const SpeedTriviaQuickReview = () => {
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Edit (E)</button>
           <button type="button" disabled={history.length === 0 || busy} onClick={() => void undo()}
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Undo (Z)</button>
+          <button type="button" disabled={!current || busy} onClick={() => void keep(true)}
+            className={`${buttonBase} ml-auto bg-slate-100 text-slate-700 hover:bg-slate-200`}>Keep + Live (L)</button>
           <button type="button" disabled={!current || busy} onClick={() => void keep()}
-            className={`${buttonBase} ml-auto bg-emerald-600 text-white hover:bg-emerald-700`}>Keep →</button>
+            className={`${buttonBase} bg-emerald-600 text-white hover:bg-emerald-700`}>Keep →</button>
         </div>
       ) : null}
 

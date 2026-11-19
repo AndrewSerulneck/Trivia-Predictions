@@ -51,7 +51,7 @@ type CandidateRow = {
   id: string;
   payload: Record<string, unknown>;
   edit: { answer?: string; acceptableAnswers?: string[] } | null;
-  tag: { area?: string | null; era?: string | null } | null;
+  tag: { area?: string | null; era?: string | null; overStarCap?: boolean } | null;
   audience: (QuickReviewAudience & Record<string, unknown>) | null;
   possible_repeat: { slug?: string; question?: string; answer?: string } | null;
   source: string;
@@ -66,6 +66,7 @@ const toItem = (row: CandidateRow): LiveReviewItem => {
   const sourceUrl = str(p.sourceUrl);
   const a = row.audience;
   const repeat = row.possible_repeat;
+  const speed = p.fromSpeed && typeof p.fromSpeed === "object" ? p.fromSpeed as Record<string, unknown> : null;
   return {
     id: row.id,
     question: str(p.question),
@@ -84,6 +85,8 @@ const toItem = (row: CandidateRow): LiveReviewItem => {
       : null,
     possibleRepeat: repeat?.question ? { slug: str(repeat.slug), question: str(repeat.question), answer: str(repeat.answer) } : null,
     edited: row.edit != null,
+    fromSpeed: speed && str(speed.question) ? { question: str(speed.question), answer: str(speed.answer) } : null,
+    overStarCap: row.tag?.overStarCap === true,
   };
 };
 
