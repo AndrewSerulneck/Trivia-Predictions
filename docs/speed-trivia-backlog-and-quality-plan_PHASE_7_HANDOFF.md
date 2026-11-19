@@ -11,15 +11,15 @@ Written 2026-11-19 by Claude (Opus 5.5; the plan names Opus 5.5 / medium).
 - **The list (20 events)** is in `data/question-variety/calendar.json`. Moving events (Super Bowl, Oscars, etc.) use
   approximate rules like "2nd Sunday of February". Within the 10-day window that's close enough, and an exact date can
   be added for any year.
-- **Is it live?** **No.** It's on branch `feature/seasonal-slots-phase7`. The plan (D34) says you approve the list once
-  before it goes on.
-- **What needs you:** approve the list (or tell me what to change). Then it gets merged.
+- **Is it live?** **Yes.** Andrew approved the 20-event list on 2026-11-19 and PR #30 was merged; it runs from the next
+  nightly.
+- **What needs you:** nothing.
 
 ## For the next agent
 
 ### 1. Next phase and scope
-- **Waiting on Andrew:** approval of `data/question-variety/calendar.json` (D34). Then rebase onto `main`, open or
-  merge the PR, and check the first brief (step 6 below).
+- **Done:** Andrew approved `data/question-variety/calendar.json` (D34) on 2026-11-19; PR #30 merged. Still to do: check
+  the first brief with a seasonal slot (step 6 below).
 - **Also open from 4f.2:** step 6, the production check after the first OpenAI nightly (see the
   `PHASE_4F2_HANDOFF.md` §8, step 3). Expect `provider='openai'` rows in `llm_usage_logs`.
 - **Then:** the second code review (4c.8 through 7), per the plan's order line.
@@ -104,8 +104,8 @@ Written 2026-11-19 by Claude (Opus 5.5; the plan names Opus 5.5 / medium).
   admitted with a normal tag.
 
 ### 7. Open questions for Andrew
-- Approve the 20-event list (names, the category and area each one writes into, and the approximate dates)?
+- None. The list was approved 2026-11-19.
 
 ### 8. Recommended first steps
-1. Once Andrew approves the list, merge the Phase 7 PR. Then do the step 6 check above.
+1. Do the step 6 check above after the next writer run.
 2. After tonight's nightly (00:30 UTC writer, then Trivia Nightly), run the 4f.2 production check.
