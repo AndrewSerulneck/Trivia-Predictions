@@ -72,7 +72,7 @@ describe("writing rules", () => {
     expect(live).toContain("must know the fact the question asks about, not just its subject");
     expect(live).toContain("A famous subject does not make an obscure fact about it fair game");
     expect(live).toContain("longest tongue relative to its body size");
-    expect(rules.WRITER_VERSION).toBe("writer-v4");
+    expect(rules.WRITER_VERSION).toBe("writer-v5");
   });
 
   it("asks Current Events for the month, a source and neutral facts, with web search", () => {
