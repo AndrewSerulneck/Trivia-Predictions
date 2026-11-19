@@ -22,11 +22,6 @@ const housekeeping = require("../scripts/speed-trivia-dated-housekeeping.cjs") a
   GATED_CATEGORIES: { category: string; threshold: number }[];
   run: (a: { client: unknown; args: { expireApply: boolean; monthly: boolean }; now?: Date }) => Promise<Row>;
 };
-const generation = require("../lib/speed-trivia-uniqueness/generation.cjs") as {
-  planTopics: (corpus: { rows: Row[] }) => { category: string }[];
-  DATED_CATEGORIES: readonly string[];
-};
-
 /** A tiny in-memory stand-in for the supabase-js query builder. */
 const fakeClient = (tables: Record<string, Row[]>, rpc: (name: string, args: Row) => unknown = () => null) => {
   const writes: { table: string; rows: Row[] }[] = [];
@@ -210,14 +205,5 @@ describe("dated housekeeping", () => {
     expect(housekeeping.GATED_CATEGORIES).toEqual(
       TRIVIA_CATEGORIES.filter((c) => c.minActiveToShow !== undefined).map((c) => ({ category: c.dbValue, threshold: c.minActiveToShow })),
     );
-  });
-});
-
-describe("Current Events and the old Gemini generator", () => {
-  it("is never planned by the generator (no month, source or expiry there)", () => {
-    expect(generation.DATED_CATEGORIES).toEqual(["Current Events"]);
-    const plan = generation.planTopics({ rows: [] }).map((p) => p.category);
-    expect(plan).not.toContain("Current Events");
-    expect(plan).toHaveLength(TRIVIA_CATEGORIES.length - 1);
   });
 });

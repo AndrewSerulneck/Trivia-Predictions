@@ -35,8 +35,8 @@ jobs:
 
       # Phase 4b: today's question-writer candidates (ChatGPT, from the private writer repo ~00:30 UTC) pass the hard
       # limits, star cap, bar test and the full-bank repeat check with signed admission, then wait in Quick Review.
-      # No ChatGPT batch today -> no new questions that day (D36, Andrew 2026-11-18: OpenAI only; the Gemini fallback
-      # writer is off via --no-fallback). Quick Review says "Writer stopped" after 2 silent days.
+      # No ChatGPT batch today -> no new questions that day (Andrew 2026-11-18: OpenAI only; the Gemini writers were
+      # deleted in Phase 4f.1, D40). Quick Review says "Writer stopped" after 2 silent days.
       - name: Check and admit the writer's Speed Trivia questions
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -45,7 +45,7 @@ jobs:
           SPEED_TRIVIA_ADMISSION_SECRET: ${{ secrets.SPEED_TRIVIA_ADMISSION_SECRET }}
           SPEED_TRIVIA_MAX_DOLLARS: ${{ vars.SPEED_TRIVIA_MAX_DOLLARS }}
         run: |
-          node scripts/process-question-candidates.cjs --game speed --no-fallback \
+          node scripts/process-question-candidates.cjs --game speed \
             --threshold "${{ vars.QUESTION_WRITER_SPEED_THRESHOLD || '3' }}" \
             --report "$RUNNER_TEMP/speed-trivia-report"
 
@@ -60,7 +60,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           QUESTION_WRITER_LIVE_MAX_DOLLARS: ${{ vars.QUESTION_WRITER_LIVE_MAX_DOLLARS || '0.25' }}
         run: |
-          node scripts/process-question-candidates.cjs --game live --no-fallback \
+          node scripts/process-question-candidates.cjs --game live \
             --threshold "${{ vars.QUESTION_WRITER_LIVE_THRESHOLD || '3' }}" \
             --report "$RUNNER_TEMP/live-trivia-report"
 

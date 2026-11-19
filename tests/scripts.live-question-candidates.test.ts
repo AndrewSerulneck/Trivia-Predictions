@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 const require = createRequire(import.meta.url);
 type Row = Record<string, unknown>;
 type Report = { source: string | null; examined: number; rejected: Record<string, number>; waiting: number; skipped: number;
-  waitingByKind: Record<string, number>; possibleRepeats: number; stopped: string | null; fallback: Row | null };
+  waitingByKind: Record<string, number>; possibleRepeats: number; stopped: string | null };
 const live = require("../lib/question-writer/liveProcess.cjs") as {
   processLiveDay: (input: Row) => Promise<Report>;
   readLiveCorpus: (dir?: string) => Row[];
@@ -30,7 +30,7 @@ const memoryClient = ({ run = { source: "chatgpt", model: "gpt-6-astra", receive
     ],
     question_coverage_areas: AREAS.map((a) => ({ game: "live", ...a })),
     live_conversion_requests: requests,
-    // Read-only here (the fallback brief's examples). Any write to it fails the test: pool separation.
+    // Read-only here (pool separation). Any write to it fails the test: pool separation.
     trivia_questions: [],
   };
   const touched = new Set<string>();
@@ -201,18 +201,9 @@ describe("processLiveDay", () => {
     expect((statusOf(client, "ce").tag as Row).expiresOn).toBe("2027-03-01");
   });
 
-  it("falls back to Gemini only when the day has no batch", async () => {
-    const client = memoryClient({ run: null });
-    let briefGame = "";
-    const report = await run(client, {
-      writeFallback: async ({ brief }: { brief: { game: string; prompts: { slots: Row[] }[] } }) => {
-        briefGame = brief.game;
-        return { items: [{ slot: { n: 1, category: "Music", area: "Classic rock", era: "1970s" }, payload: payload() }], dollars: 0.01, skipped: ["currentEvents"] };
-      },
-    });
-    expect(briefGame).toBe("live");
-    expect(report.source).toBe("gemini-fallback");
-    expect(report.waiting).toBe(1);
+  it("does nothing without a ChatGPT batch (no fallback writer, D40)", async () => {
+    const report = await run(memoryClient({ run: null }));
+    expect(report.stopped).toBe("no-candidates");
   });
 
   it("reads the real Live JSON as its repeat corpus", () => {

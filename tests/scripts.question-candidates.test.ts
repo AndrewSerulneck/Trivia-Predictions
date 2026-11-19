@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 const require = createRequire(import.meta.url);
 type Row = Record<string, unknown>;
 type Report = { source: string | null; examined: number; rejected: Record<string, number>; admitted: number; skipped: number;
-  admittedByKind: Record<string, number>; stopped: string | null; fallback: Record<string, unknown> | null; admittedIds: string[] };
+  admittedByKind: Record<string, number>; stopped: string | null; admittedIds: string[] };
 const processing = require("../lib/question-writer/process.cjs") as {
   processSpeedDay: (input: Record<string, unknown>) => Promise<Report>;
 };
@@ -172,25 +172,8 @@ describe("nightly processing", () => {
     expect(client.tables.question_candidates.find(c => c.status === "skipped")?.reason).toBe("daily-target");
   });
 
-  it("falls back to Gemini when today has no ChatGPT batch (D13), then gates the same way", async () => {
-    const client = memoryClient({ run: null });
-    let briefed: Row | null = null;
-    const writeFallback = async ({ brief, maxDollars }: { brief: Row; maxDollars: number }) => {
-      briefed = brief;
-      expect(maxDollars).toBe(0.1);
-      return { items: [{ slot: { n: 1, category: "Music", area: "Pop", era: "1980s" }, payload: payload() }], dollars: 0.004, skipped: ["currentEvents"] };
-    };
-    const session = fakeSession();
-    const report = await processing.processSpeedDay({ client, today: TODAY, env, writeFallback, createSession: session.create, createScorer: fakeScorer({}) });
-    expect(briefed).not.toBeNull();
-    expect(report.source).toBe("gemini-fallback");
-    expect(report.fallback).toMatchObject({ written: 1, dollars: 0.004 });
-    expect(report.admitted).toBe(1);
-    expect(session.writes[0].writerMeta).toMatchObject({ source: "gemini-fallback", model: "gemini-2.5-flash" });
-  });
-
-  it("does nothing without a batch when the fallback is off", async () => {
-    const report = await processing.processSpeedDay({ client: memoryClient({ run: null }), today: TODAY, env, fallback: false });
+  it("does nothing without a ChatGPT batch (no fallback writer, D40)", async () => {
+    const report = await processing.processSpeedDay({ client: memoryClient({ run: null }), today: TODAY, env });
     expect(report.stopped).toBe("no-candidates");
   });
 

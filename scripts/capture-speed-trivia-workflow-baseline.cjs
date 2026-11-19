@@ -45,7 +45,7 @@ const main = () => {
       // Existing logs lack raw candidates, billed tokens, actual model/fallback success and cost.
       candidateCount:null,billedTokens:null,spend:null});
   }
-  for (const source of ['.github/workflows/trivia-nightly.yml','scripts/generate-trivia-nightly.cjs','scripts/generate-trivia-questions.cjs','scripts/import-trivia-questions.cjs']) {
+  for (const source of ['.github/workflows/trivia-nightly.yml','scripts/import-trivia-questions.cjs']) {
     const remote = api(`contents/${source}?ref=${list.workflow_runs[0].head_sha}`);
     const content = Buffer.from(remote.content,'base64').toString('utf8');
     save('latest-'+path.basename(source), content);

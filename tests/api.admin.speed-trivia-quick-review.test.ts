@@ -378,17 +378,7 @@ describe("Quick Review writer source (Phase 4b)", () => {
     expect(mocks.rpc.mock.calls[1][1]).toMatchObject({ p_source: "gemini" });
   });
 
-  it("says Writer stopped only after two fallback days in a row", async () => {
-    mocks.rpc.mockReturnValue(ok({ total: 0, rows: [] }));
-    mocks.runs = [{ run_date: day(0), source: "gemini-fallback" }, { run_date: day(1), source: "gemini-fallback" }];
-    expect((await (await get()).json()).writerStopped).toBe(true);
-    mocks.runs = [{ run_date: day(0), source: "gemini-fallback" }, { run_date: day(1), source: "chatgpt" }];
-    expect((await (await get()).json()).writerStopped).toBe(false);
-    mocks.runs = [{ run_date: day(0), source: "gemini-fallback" }, { run_date: day(3), source: "gemini-fallback" }];
-    expect((await (await get()).json()).writerStopped).toBe(false);
-    mocks.runs = [];
-    expect((await (await get()).json()).writerStopped).toBe(false);
-  });
+
 
   it("says Writer stopped when no batch arrived for over 2 days, but not before the first run", async () => {
     mocks.rpc.mockReturnValue(ok({ total: 0, rows: [] }));

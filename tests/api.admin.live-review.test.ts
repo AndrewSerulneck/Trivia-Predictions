@@ -139,8 +139,6 @@ describe("Live review route", () => {
     expect((await (await get()).json()).writerStopped).toBe(false);
     mocks.runs = [{ run_date: day(5), source: "chatgpt" }];
     expect((await (await get()).json()).writerStopped).toBe(true);
-    mocks.runs = [{ run_date: day(0), source: "gemini-fallback" }, { run_date: day(1), source: "gemini-fallback" }];
-    expect((await (await get()).json()).writerStopped).toBe(true);
     mocks.runs = [{ run_date: day(0), source: "chatgpt" }];
     expect((await (await get()).json()).writerStopped).toBe(false);
   });

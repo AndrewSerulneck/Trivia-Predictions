@@ -2,8 +2,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 
-// Phase 4b of docs/speed-trivia-backlog-and-quality-plan.md: writing rules, the brief, the post parser and the Gemini
-// fallback writer. Fakes only; no network, no database.
+// Phase 4b of docs/speed-trivia-backlog-and-quality-plan.md: writing rules, the brief, the post parser. Fakes only; no network, no database.
 const require = createRequire(import.meta.url);
 type Item = { question: string; options: string[]; correctIndex: number; category: string; area: string | null; era: string | null;
   subject: string; difficulty: string; sourceUrl: string | null; whyTrue: string };
@@ -41,12 +40,6 @@ const candidates = require("../lib/question-writer/candidates.cjs") as {
   receive: (input: Record<string, unknown>) => Promise<unknown>;
   cleanModel: (value: unknown) => string | null;
 };
-const gemini = require("../lib/question-writer/geminiWriter.cjs") as {
-  GEMINI_SCHEMA: { properties: { items: { items: { required: string[]; properties: Record<string, unknown> } } } };
-  GEMINI_LIVE_SCHEMA: { properties: { items: { items: { required: string[]; properties: Record<string, unknown> } } } };
-  writeWithGemini: (input: Record<string, unknown>) => Promise<{ items: { slot: { n: number }; payload: Record<string, unknown> }[]; dollars: number; skipped: string[] }>;
-};
-
 const TODAY = new Date("2026-11-16T03:00:00Z");
 const good = (over: Partial<Item> = {}): Item => ({
   question: "Which band released the album 'Nevermind' in 1991?", options: ["Nirvana", "Pearl Jam", "Soundgarden", "Alice in Chains"],
@@ -121,15 +114,11 @@ describe("writing rules", () => {
     expect(speed).not.toContain("Percy Spencer");
   });
 
-  it("requires a whyTrue note in both games' schemas, the Gemini fallback's included", () => {
+  it("requires a whyTrue note in both games' schemas", () => {
     for (const schema of [rules.SPEED_OUTPUT_SCHEMA, rules.LIVE_OUTPUT_SCHEMA]) {
       const item = ((schema.properties as Record<string, { items: { required: string[]; properties: Record<string, unknown> } }>).items).items;
       expect(item.required).toContain("whyTrue");
       expect(item.properties.whyTrue).toEqual({ type: "string" });
-    }
-    for (const schema of [gemini.GEMINI_SCHEMA, gemini.GEMINI_LIVE_SCHEMA]) {
-      expect(schema.properties.items.items.required).toContain("whyTrue");
-      expect(schema.properties.items.items.properties.whyTrue).toEqual({ type: "STRING" });
     }
   });
 
@@ -328,36 +317,6 @@ describe("post parsing", () => {
   });
 });
 
-describe("Gemini fallback writer (D13)", () => {
-  const theBrief = {
-    prompts: [
-      { kind: "regular", webSearch: false, slots: [{ n: 1, category: "Music", area: "Pop", era: "1980s" }], prompt: "p" },
-      { kind: "currentEvents", webSearch: true, slots: [{ n: 2, category: "Current Events", area: "Sports", era: "2026-03" }], prompt: "p" },
-    ],
-  };
-  const reply = (items: unknown[]) => async () => new Response(JSON.stringify({
-    usageMetadata: { promptTokenCount: 4000, candidatesTokenCount: 1500 },
-    candidates: [{ finishReason: "STOP", content: { parts: [{ text: JSON.stringify({ items }) }] } }],
-  }), { status: 200 });
-
-  it("writes only the regular slots, inside $0.10", async () => {
-    let calls = 0;
-    const transport = async (...args: unknown[]) => { calls++; return reply([{ ...good(), slot: 1 }, { ...good(), slot: 7 }])(...(args as [])); };
-    const result = await gemini.writeWithGemini({ brief: theBrief, apiKey: "k", transport });
-    expect(calls).toBe(1);
-    expect(result.skipped).toEqual(["currentEvents"]);
-    expect(result.items.map(i => i.slot.n)).toEqual([1]);
-    expect(result.dollars).toBeGreaterThan(0);
-    expect(result.dollars).toBeLessThan(0.1);
-  });
-
-  it("never exceeds the cap, even when asked for more", async () => {
-    await expect(gemini.writeWithGemini({ brief: theBrief, apiKey: "k", maxDollars: 0.0001, transport: reply([]) })).rejects.toMatchObject({ code: "budget_exhausted" });
-    const source = readFileSync("lib/question-writer/geminiWriter.cjs", "utf8");
-    expect(source).toContain("Math.min(Number(maxDollars) || 0, FALLBACK_MAX_DOLLARS)");
-  });
-});
-
 // Phase 4e (D37): Speed -> Live conversions in the Live brief and the writer's post.
 describe("conversions", () => {
   const conv = require("../lib/question-writer/rules.cjs") as {
@@ -391,7 +350,7 @@ describe("conversions", () => {
     expect(speed.calls.rpc.map(c => (c as unknown[])[0])).not.toContain("live_conversion_brief");
   });
 
-  it("caps conversions per night by QUESTION_WRITER_CONVERSIONS_PER_NIGHT (0 = off) and skips the read for the fallback", async () => {
+  it("caps conversions per night by QUESTION_WRITER_CONVERSIONS_PER_NIGHT (0 = off)", async () => {
     const queued = Array.from({ length: 25 }, (_, i) => queuedRow(i + 1));
     const five = await brief.buildBrief({ client: fakeClient([], queued), game: "live", today: TODAY, env: { QUESTION_WRITER_CONVERSIONS_PER_NIGHT: "5" } });
     expect(five.prompts.find(p => p.kind === "conversion")!.conversions).toHaveLength(5);
@@ -400,9 +359,6 @@ describe("conversions", () => {
     const off = fakeClient([], queued);
     expect((await brief.buildBrief({ client: off, game: "live", today: TODAY, env: { QUESTION_WRITER_CONVERSIONS_PER_NIGHT: "0" } })).prompts.map(p => p.kind)).not.toContain("conversion");
     expect(off.calls.rpc.map(c => (c as unknown[])[0])).not.toContain("live_conversion_brief");
-    const fallback = fakeClient([], queued);
-    await brief.buildBrief({ client: fallback, game: "live", today: TODAY, conversions: false });
-    expect(fallback.calls.rpc.map(c => (c as unknown[])[0])).not.toContain("live_conversion_brief");
   });
 
   it("gives a Current Events original its era and source, and treats the Speed text as data", () => {
