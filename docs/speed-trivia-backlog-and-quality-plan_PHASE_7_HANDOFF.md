@@ -28,10 +28,9 @@ Written 2026-11-19 by Claude (Opus 5.5; the plan names Opus 5.5 / medium).
 ### 2. Starting state
 - **4f.1 + 4f.2:** migration `20261119153651_llm_usage_logs_openai.sql` was applied 2026-11-19 with Andrew's OK. Only
   that migration was pending. Verified by a service-role insert and delete of one `provider='openai'` row.
-  PR #29 (`feature/gemini-writers-out-4f1`) was opened. Andrew allowed the agent to merge it once CI passes. Check
-  `gh pr view 29` for whether it merged.
-- **Phase 7 branch:** `feature/seasonal-slots-phase7`, cut from `feature/gemini-writers-out-4f1` at `675b778b`.
-  After #29 merges, rebase it onto `main` (`git rebase origin/main`; the 4f commits drop out).
+  PR #29 (`feature/gemini-writers-out-4f1`) merged 2026-11-19 as `80396eb2` (all checks green), so 4f.1 + 4f.2 are
+  live from the next nightly.
+- **Phase 7 branch:** `feature/seasonal-slots-phase7`, rebased onto `main` (`80396eb2`), pushed; PR open, not merged.
 - No migration, no data change, no paid call in Phase 7.
 - `GEMINI_API_KEY` stays in GitHub, Vercel and `.env.local` (D42: Andrew chose to leave it, and nothing reads it).
 
@@ -108,6 +107,5 @@ Written 2026-11-19 by Claude (Opus 5.5; the plan names Opus 5.5 / medium).
 - Approve the 20-event list (names, the category and area each one writes into, and the approximate dates)?
 
 ### 8. Recommended first steps
-1. `gh pr view 29`. If it's merged, `git rebase origin/main` on `feature/seasonal-slots-phase7`, push, and open the
-   PR.
-2. Once Andrew approves the list, merge. Then do the step 6 check above.
+1. Once Andrew approves the list, merge the Phase 7 PR. Then do the step 6 check above.
+2. After tonight's nightly (00:30 UTC writer, then Trivia Nightly), run the 4f.2 production check.
