@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Flag, X } from "lucide-react";
 import { getUserId } from "@/lib/storage";
@@ -10,16 +10,87 @@ import {
   type QuestionReportReason,
 } from "@/lib/questionReportReasons";
 
-// Phase 4c.7 (D32): a Report button shown only after the answer is revealed, and its "What's wrong?" sheet.
-// Speed passes the question id; Live passes the slug. Speed uses ReportQuestionSheet (button + sheet, mounted per
-// question, keyed). Live uses ReportButton and ReportSheet apart: the page holds the sheet outside the question's
-// panel, so it stays open over the next question until the player sends or closes it (Andrew, 2026-11-17).
+// Phase 4c.7 (D32) + 7i: a Report button shown only after the answer is revealed, and its "What's wrong?" sheet.
+// Speed passes the question id; Live passes the slug. All sheet state (the open report, its draft, the reported
+// keys, the close timer) lives in useHeldReport, so a parent can keep a report open over the next question, shrink it
+// to a "Finish report" bar, and survive a loading render that unmounts the sheet (D46).
 
 export type ReportTarget = { game: "speed"; questionId: string } | { game: "live"; slug: string };
 
-type Status = "idle" | "sending" | "sent";
+export type ReportDraft = { writingOther: boolean; note: string; sent: boolean };
 
+type HeldReport = { key: string; target: ReportTarget };
+
+const EMPTY_DRAFT: ReportDraft = { writingOther: false, note: "", sent: false };
 const SENT_CLOSE_MS = 1200;
+
+export const useHeldReport = () => {
+  const [held, setHeld] = useState<HeldReport | null>(null);
+  const [minimized, setMinimized] = useState(false);
+  const [draft, setDraft] = useState<ReportDraft>(EMPTY_DRAFT);
+  const [reportedKeys, setReportedKeys] = useState<Readonly<Record<string, true>>>({});
+  const heldKey = useRef<string | null>(null);
+  const draftRef = useRef(draft);
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+  const timer = useRef<number | null>(null);
+
+  const clearTimer = useCallback(() => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+  }, []);
+  useEffect(() => clearTimer, [clearTimer]);
+
+  const close = useCallback(() => {
+    clearTimer();
+    heldKey.current = null;
+    setHeld(null);
+    setMinimized(false);
+    setDraft(EMPTY_DRAFT);
+  }, [clearTimer]);
+
+  const open = useCallback(
+    (key: string, target: ReportTarget) => {
+      clearTimer();
+      heldKey.current = key;
+      setHeld({ key, target });
+      setMinimized(false);
+      setDraft(EMPTY_DRAFT);
+    },
+    [clearTimer],
+  );
+
+  // The close timer belongs to the report it was set for: closing or opening another clears it.
+  const onSent = useCallback(
+    (key: string) => {
+      setReportedKeys((current) => ({ ...current, [key]: true }));
+      if (heldKey.current !== key) return;
+      setDraft((current) => ({ ...current, sent: true }));
+      clearTimer();
+      timer.current = window.setTimeout(() => {
+        timer.current = null;
+        if (heldKey.current === key) close();
+      }, SENT_CLOSE_MS);
+    },
+    [clearTimer, close],
+  );
+
+  const minimize = useCallback(() => setMinimized(true), []);
+  const restore = useCallback(() => setMinimized(false), []);
+  // Tapping outside or Escape: never throws typed text away. Closes only an untouched sheet.
+  const dismiss = useCallback(() => {
+    const current = draftRef.current;
+    if (current.note.trim().length > 0 && !current.sent) return;
+    close();
+  }, [close]);
+  const clearAll = useCallback(() => {
+    close();
+    setReportedKeys((current) => (Object.keys(current).length ? {} : current));
+  }, [close]);
+
+  return { held, minimized, draft, setDraft, reportedKeys, open, onSent, close, dismiss, minimize, restore, clearAll };
+};
 
 export const ReportButton = ({
   reported,
@@ -41,38 +112,43 @@ export const ReportButton = ({
   </button>
 );
 
-// Mounted only while open: each open starts fresh. After "Sent." it closes itself.
+// Controlled by useHeldReport: mount it while the report is open and visible. The draft survives an unmount.
 export const ReportSheet = ({
   target,
+  draft,
+  onDraftChange,
   onSent,
   onClose,
+  onDismiss,
 }: {
   target: ReportTarget;
+  draft: ReportDraft;
+  onDraftChange: (next: ReportDraft) => void;
   onSent: () => void;
   onClose: () => void;
+  onDismiss: () => void;
 }) => {
-  const [status, setStatus] = useState<Status>("idle");
-  const [writingOther, setWritingOther] = useState(false);
-  const [note, setNote] = useState("");
+  const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  const closeTimer = useRef<number | null>(null);
   const reasons = QUESTION_REPORT_REASONS[target.game];
-
-  useEffect(() => () => {
-    if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
-  }, []);
+  const { writingOther, note, sent } = draft;
+  const draftRef = useRef(draft);
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+  const patch = (next: Partial<ReportDraft>) => onDraftChange({ ...draftRef.current, ...next });
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onDismiss();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onDismiss]);
 
   const send = async (reason: QuestionReportReason) => {
-    if (status !== "idle") return;
-    setStatus("sending");
+    if (sending || sent) return;
+    setSending(true);
     setError("");
     try {
       const response = await fetch("/api/trivia/report", {
@@ -88,19 +164,17 @@ export const ReportSheet = ({
       });
       const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!response.ok || !payload.ok) throw new Error(payload.error || "Couldn't send. Try again.");
-      setStatus("sent");
       onSent();
-      closeTimer.current = window.setTimeout(onClose, SENT_CLOSE_MS);
     } catch (caught) {
-      setStatus("idle");
       setError(caught instanceof Error ? caught.message : "Couldn't send. Try again.");
     }
+    setSending(false);
   };
 
   const sheet = (
     <div
       className="fixed inset-0 z-[120] flex items-end justify-center bg-black/60"
-      onClick={onClose}
+      onClick={onDismiss}
       data-testid="report-question-backdrop"
     >
       <div
@@ -123,7 +197,7 @@ export const ReportSheet = ({
             <X aria-hidden="true" className="h-5 w-5" />
           </button>
         </div>
-        {status === "sent" ? (
+        {sent ? (
           <p role="status" className="py-6 text-center text-base font-bold text-emerald-300">
             Sent.
           </p>
@@ -131,7 +205,7 @@ export const ReportSheet = ({
           <div className="mt-3">
             <textarea
               value={note}
-              onChange={(event) => setNote(event.target.value.slice(0, QUESTION_REPORT_NOTE_MAX))}
+              onChange={(event) => patch({ note: event.target.value.slice(0, QUESTION_REPORT_NOTE_MAX) })}
               maxLength={QUESTION_REPORT_NOTE_MAX}
               rows={3}
               aria-label="Other"
@@ -140,7 +214,7 @@ export const ReportSheet = ({
             />
             <button
               type="button"
-              disabled={note.trim().length === 0 || status === "sending"}
+              disabled={note.trim().length === 0 || sending}
               onClick={() => void send("other")}
               className="tp-clean-button mt-2 w-full rounded-xl bg-slate-100 py-3 text-base font-black text-slate-950 disabled:opacity-50"
             >
@@ -153,8 +227,8 @@ export const ReportSheet = ({
               <li key={option.code}>
                 <button
                   type="button"
-                  disabled={status === "sending"}
-                  onClick={() => (option.code === "other" ? setWritingOther(true) : void send(option.code))}
+                  disabled={sending}
+                  onClick={() => (option.code === "other" ? patch({ writingOther: true }) : void send(option.code))}
                   className="tp-clean-button w-full py-3 text-left text-base font-bold text-slate-100 disabled:opacity-50"
                 >
                   {option.label}
@@ -176,16 +250,25 @@ export const ReportSheet = ({
 };
 
 // Button + sheet together, for a parent that mounts it per question (Speed).
-export const ReportQuestionSheet = (props: ReportTarget & { className?: string }) => {
-  const [open, setOpen] = useState(false);
-  const [reported, setReported] = useState(false);
-  const target: ReportTarget =
-    props.game === "speed" ? { game: "speed", questionId: props.questionId } : { game: "live", slug: props.slug };
-
+export const ReportQuestionSheet = ({ questionId, className }: { questionId: string; className?: string }) => {
+  const report = useHeldReport();
   return (
     <>
-      <ReportButton reported={reported} onOpen={() => setOpen(true)} className={props.className} />
-      {open ? <ReportSheet target={target} onSent={() => setReported(true)} onClose={() => setOpen(false)} /> : null}
+      <ReportButton
+        reported={Boolean(report.reportedKeys[questionId])}
+        onOpen={() => report.open(questionId, { game: "speed", questionId })}
+        className={className}
+      />
+      {report.held ? (
+        <ReportSheet
+          target={report.held.target}
+          draft={report.draft}
+          onDraftChange={report.setDraft}
+          onSent={() => report.onSent(report.held?.key ?? questionId)}
+          onClose={report.close}
+          onDismiss={report.dismiss}
+        />
+      ) : null}
     </>
   );
 };
