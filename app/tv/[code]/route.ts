@@ -20,7 +20,7 @@ const redirect = (target: string) => {
   return response;
 };
 
-export const GET = async (_request: NextRequest, { params }: { params: Promise<{ code: string }> }) => {
+export const GET = async (request: NextRequest, { params }: { params: Promise<{ code: string }> }) => {
   const { code: raw } = await params;
   const code = parseDisplayCode(raw);
   if (!code || !supabaseAdmin) return redirect(marketingUrl("/info"));
@@ -32,5 +32,7 @@ export const GET = async (_request: NextRequest, { params }: { params: Promise<{
     .maybeSingle<{ id: string }>();
 
   if (error || !data) return redirect(marketingUrl("/info"));
-  return redirect(gameUrl(`/venue/${encodeURIComponent(data.id)}/screen`));
+  // Only the keep-awake readout flag rides along; nothing else in the query is forwarded.
+  const awake = new URL(request.url).searchParams.get("awake") === "debug" ? "?awake=debug" : "";
+  return redirect(gameUrl(`/venue/${encodeURIComponent(data.id)}/screen${awake}`));
 };
