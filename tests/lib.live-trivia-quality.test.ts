@@ -63,9 +63,13 @@ describe("Live categories", () => {
 
   it("matches the Live variety map's categories and areas", () => {
     expect(Object.keys(draft.games.live).sort()).toEqual([...cats.LIVE_CATEGORIES].sort());
+    // The seeded areas keep their file's old subcategory; areas added later (variety-map-v3, 2026-11-20) use a slug of
+    // their name. Every mapped area must still be on the map.
     for (const [category, spec] of Object.entries(draft.games.live)) {
       if (category === cats.CURRENT_EVENTS) continue;
-      expect(Object.keys(cats.AREA_SUBCATEGORIES[category]).sort()).toEqual(spec.areas.map((a) => a.name).sort());
+      const names = spec.areas.map((a) => a.name);
+      for (const mapped of Object.keys(cats.AREA_SUBCATEGORIES[category])) expect(names).toContain(mapped);
+      for (const name of names) expect(cats.subcategoryFor(category, name)).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
     }
   });
 

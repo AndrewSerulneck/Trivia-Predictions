@@ -199,6 +199,29 @@ describe("slot choice", () => {
     expect(slots.nightPlan("speed", LIVE, TODAY)).toMatchObject({ categories: LIVE, ask: slots.ASK, deliver: slots.DELIVER, deliverTotal: 10 });
   });
 
+  it("reuses cells instead of sending a slot out with no area when a category has fewer cells than slots", () => {
+    // 2026-11-20: Live Science & Tech had 5 Timeless cells for a 24-slot night; 19 slots went out with no area.
+    const ids = ["physics", "biology", "astronomy", "medicine", "chemistry"];
+    const areas = ids.map((id) => area(id, "Science", ["Timeless"]));
+    const cells = [cell("physics", "Timeless", 3), cell("biology", "Timeless", 1)];
+    const night = slots.nightPlan("live", ["Science"], TODAY);
+    const result = slots.chooseSlots({ areas, cells, categories: night.categories, ask: night.ask, today: TODAY });
+    expect(result.regular).toHaveLength(slots.LIVE_ASK);
+    expect(result.regular.every((s) => s.areaId !== null && s.era === "Timeless")).toBe(true);
+    const per = result.regular.reduce<Record<string, number>>((acc, s) => ({ ...acc, [s.areaId as string]: (acc[s.areaId as string] ?? 0) + 1 }), {});
+    expect(Object.keys(per).sort()).toEqual([...ids].sort());
+    expect(Math.max(...Object.values(per)) - Math.min(...Object.values(per))).toBeLessThanOrEqual(1);
+    // Least covered first: the first five slots use every cell once, emptiest first.
+    expect(result.regular.slice(0, 5).map((s) => s.areaId).slice(-2)).toEqual(["biology", "physics"]);
+  });
+
+  it("reuses Current Events cells before falling back to area-less months", () => {
+    const areas = [area("politics", map.CURRENT_EVENTS, ["Past 12 months"])];
+    const result = slots.chooseSlots({ areas, categories: [map.CURRENT_EVENTS], today: TODAY, ask: { regular: 0, currentEvents: 30 } });
+    expect(result.currentEvents).toHaveLength(30);
+    expect(result.currentEvents.every((s) => s.areaId === "politics" && map.isMonthEra(s.era))).toBe(true);
+  });
+
   it("still gives a category with no areas its slots (category only)", () => {
     const result = slots.chooseSlots({ areas: [], categories: CATS, today: TODAY, ask: { regular: 4, currentEvents: 2 } });
     expect(result.regular).toHaveLength(4);
