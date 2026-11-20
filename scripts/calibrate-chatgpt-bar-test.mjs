@@ -9,12 +9,9 @@
 // Sets: Speed = the Phase 2 calibration rows (200 keep / 19 reject, plus 80 older-deleted and 22 recent-approved for
 // the score spread); Live = 50 evenly spaced questions from the Live JSON (all "keep"); trial = the 2026-11-17 writer
 // batch (16 Speed incl. 5 Current Events with web search, 24 Live), labelled by Andrew's Quick Review decisions.
-import { spawn } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import { createRequire } from "node:module";
-import { attachGrades, gradeItems, tokensUsed } from "../tools/question-writer/grade.mjs";
+import { attachGrades, gradeItems, runCodex } from "../tools/question-writer/grade.mjs";
 
 const require = createRequire(import.meta.url);
 const { clientFromEnv } = require("./lib/speedTriviaServiceClient.cjs");
@@ -33,25 +30,10 @@ const PHASE2 = "docs/speed-trivia-backlog-and-quality-plan_PHASE_2_CALIBRATION_b
 const TRIAL_DAY = "2026-11-17";
 const BATCH = 40;
 
-const runCodex = ({ prompt, schema, webSearch }) => new Promise((resolve, reject) => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "grade-"));
-  const work = path.join(dir, "work");
-  fs.mkdirSync(work);
-  fs.writeFileSync(path.join(dir, "schema.json"), JSON.stringify(schema));
-  const argv = [...(webSearch ? ["--search"] : []), "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check",
-    "--sandbox", "read-only", "-C", work, "-m", args.model, "-c", `model_reasoning_effort="${args.effort}"`,
-    "--output-schema", path.join(dir, "schema.json"), "-o", path.join(dir, "out.json"), "-"];
-  const child = spawn("codex", argv, { stdio: ["pipe", "ignore", "pipe"] });
-  let errTail = "";
-  child.stderr.on("data", (chunk) => { errTail = (errTail + chunk).slice(-4000); });
-  child.on("close", (code) => {
-    try {
-      if (code !== 0) throw new Error(`codex exited ${code}: ${errTail.slice(-300)}`);
-      resolve({ output: JSON.parse(fs.readFileSync(path.join(dir, "out.json"), "utf8")), tokens: tokensUsed(errTail) });
-    } catch (error) { reject(error); } finally { fs.rmSync(dir, { recursive: true, force: true }); }
-  });
-  child.stdin.end(prompt);
-});
+// The writer's own runner (Phase 7h, R2 #25.5): the same flags, the 15-minute kill timer and the login and usage-limit
+// handling.
+const grade = ({ prompt, schema, webSearch }) => runCodex({ prompt, schema, webSearch, model: args.model, effort: args.effort });
+const CURRENT_EVENTS = "Current Events";
 
 // One job = one grading call: { set, game, kind, entries:[{ id, label, written:{slot,payload}, row }] }.
 const jobs = [];
@@ -72,7 +54,11 @@ if (!args.only || args.only === "speed") {
   const entries = detail.filter((d) => byId.has(d.id)).map((d, i) => ({ id: d.id, label: d.label, gemini: d.score, row: byId.get(d.id),
     written: { slot: { n: i + 1 }, payload: speedPayload(byId.get(d.id)) } }));
   console.error(`speed: ${entries.length}/${detail.length} rows found`);
-  for (const part of chunk(entries, BATCH)) jobs.push({ set: "speed", game: "speed", kind: "regular", entries: part.map((e, i) => ({ ...e, written: { ...e.written, slot: { n: i + 1 } } })) });
+  // Current Events rows get the Current Events grading block (web search, the dated rules), as on the writer (R2 #25.6).
+  for (const kind of ["regular", "currentEvents"]) {
+    const list = entries.filter((e) => (e.row.category === CURRENT_EVENTS) === (kind === "currentEvents"));
+    for (const part of chunk(list, BATCH)) jobs.push({ set: "speed", game: "speed", kind, entries: part.map((e, i) => ({ ...e, written: { ...e.written, slot: { n: i + 1 } } })) });
+  }
 }
 if (!args.only || args.only === "live") {
   const corpus = readLiveCorpus();
@@ -80,7 +66,10 @@ if (!args.only || args.only === "live") {
   const picked = Array.from({ length: 50 }, (_, i) => corpus[Math.floor(i * step)]);
   const entries = picked.map((q, i) => ({ id: q.slug, label: "keep", row: q,
     written: { slot: { n: i + 1 }, payload: { question: q.question, answer: q.answer, acceptableAnswers: q.acceptableAnswers, category: q.category } } }));
-  jobs.push({ set: "live", game: "live", kind: "regular", entries });
+  for (const kind of ["regular", "currentEvents"]) {
+    const list = entries.filter((e) => (e.row.category === CURRENT_EVENTS) === (kind === "currentEvents"));
+    if (list.length) jobs.push({ set: "live", game: "live", kind, entries: list.map((e, i) => ({ ...e, written: { ...e.written, slot: { n: i + 1 } } })) });
+  }
 }
 if (!args.only || args.only === "trial") {
   const { data, error } = await client.from("question_candidates").select("id, game, slot, payload, status, reason, question_ref").eq("run_date", TRIAL_DAY);
@@ -94,7 +83,7 @@ if (!args.only || args.only === "trial") {
   };
   for (const game of ["speed", "live"]) {
     for (const kind of ["regular", "currentEvents"]) {
-      const list = data.filter((c) => c.game === game && (c.slot.category === "Current Events") === (kind === "currentEvents"));
+      const list = data.filter((c) => c.game === game && (c.slot.category === CURRENT_EVENTS) === (kind === "currentEvents"));
       if (!list.length) continue;
       jobs.push({ set: "trial", game, kind, entries: list.map((c) => ({ id: c.id, label: label(c), reason: c.reason, row: { id: c.id, ...c.payload },
         written: { slot: c.slot, payload: c.payload } })) });
@@ -113,7 +102,7 @@ const worker = async () => {
     const block = scorer.gradeBlock({ kind: job.kind, today });
     const written = job.entries.map((e) => ({ ...e.written }));
     try {
-      const result = await runCodex({ prompt: `${block.prompt}\n${JSON.stringify(gradeItems(written, block.fields))}`, schema: block.schema, webSearch: block.webSearch });
+      const result = await grade({ prompt: `${block.prompt}\n${JSON.stringify(gradeItems(written, block.fields))}`, schema: block.schema, webSearch: block.webSearch });
       tokens += result.tokens ?? 0;
       attachGrades(written, result.output, block.version);
       job.entries.forEach((e, i) => {

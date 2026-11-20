@@ -265,13 +265,21 @@ describe("brief", () => {
 describe("post parsing", () => {
   const slot = { n: 1, category: "Music", area: "Pop", era: "1980s" };
   it("keeps valid items, counts invalid ones, and refuses an empty or oversized post", () => {
-    const parsed = candidates.parsePost({ items: [{ slot, payload: good() }, { slot, payload: { question: 1 } }, { slot: { n: 99 }, payload: good() }] }, "speed");
+    const parsed = candidates.parsePost({ items: [{ slot, payload: good() }, { slot: { ...slot, n: 2 }, payload: { question: 1 } }, { slot: { n: 99 }, payload: good() }] }, "speed");
     expect(parsed.items).toHaveLength(1);
     expect(parsed.invalid).toBe(2);
     expect(() => candidates.parsePost({ items: [] }, "speed")).toThrow(expect.objectContaining({ status: 422 }));
     expect(() => candidates.parsePost({ items: Array.from({ length: 41 }, () => ({ slot, payload: good() })) }, "speed")).toThrow(expect.objectContaining({ status: 413 }));
     expect(() => candidates.parsePost({ nope: true }, "speed")).toThrow(expect.objectContaining({ status: 400 }));
     expect(() => candidates.parsePost({ items: [] }, "bingo")).toThrow(expect.objectContaining({ status: 404 }));
+  });
+
+  // Phase 7h (R2 #25.2): grades are matched by slot, so the server never trusts the writer to send one item per slot.
+  it("refuses a batch with a repeated slot number, even when one copy is invalid", () => {
+    const refused = expect.objectContaining({ status: 400, code: "duplicate_slot" });
+    expect(() => candidates.parsePost({ items: [{ slot, payload: good() }, { slot: { ...slot }, payload: good({ question: "Another?" }) }] }, "speed")).toThrow(refused);
+    expect(() => candidates.parsePost({ items: [{ slot, payload: good() }, { slot, payload: { question: 1 } }] }, "speed")).toThrow(refused);
+    expect(candidates.parsePost({ items: [{ slot, payload: good() }, { slot: { ...slot, n: 2 }, payload: good() }] }, "speed").items).toHaveLength(2);
   });
 
   it("keeps a valid writer grade in the payload and drops a bad one without dropping the item (D35)", () => {
@@ -425,4 +433,46 @@ describe("conversions", () => {
     expect(() => candidates.parseConversions({ items: Array.from({ length: 21 }, (_, i) => ({ requestId: REQ(i), declined: true, reason: "x" })) })).toThrow(/At most 20/);
     expect(() => candidates.parseConversions({ items: [{ requestId: "x" }] })).toThrow(/No valid items/);
   });
+});
+
+// Phase 7h (R2 #25.7): one bar-test helper for Speed and Live, with the old blocks' results.
+describe("scoreBarTest", () => {
+  type Audience = { score: number; model: string };
+  type Scorer = { writerGrade: (grade: unknown) => unknown; audienceFromWriter: (row: unknown, grade: never) => Audience };
+  const { scoreBarTest } = require("../lib/question-writer/barTest.cjs") as {
+    scoreBarTest: (input: { items: { id: string; grade: unknown; row: unknown; apiRow: { id: string } }[]; audience: Scorer;
+      scoreUngraded: (rows: { id: string }[]) => Promise<{ id: string; audience: unknown }[]> }) => Promise<{ audiences: Audience[]; graded: { chatgpt: number; openai: number } }>;
+  };
+  const speedAudience = require("../lib/speed-trivia-quality/audience.cjs") as Scorer & { GRADE_VERSION: string };
+  const liveAudience = require("../lib/live-trivia-quality/audience.cjs") as Scorer & { GRADE_VERSION: string };
+  const fixtures = {
+    speed: { audience: speedAudience, row: { id: "a", question: good().question, options: good().options, correct_answer: 0, category: "Music", status: "pending_review",
+      question_pool: "anytime_blitz", answer_format: "multiple_choice" } },
+    live: { audience: liveAudience, row: { question: "Who voiced the Genie in 'Aladdin'?", answer: "Robin Williams", acceptableAnswers: ["Williams"], category: "Movies" } },
+  };
+
+  for (const [game, { audience, row }] of Object.entries(fixtures)) {
+    it(`${game}: the writer's grade when valid, one API call for the rest, in item order`, async () => {
+      const grade = { version: audience.GRADE_VERSION, model: "gpt-6-astra", familiar: 4, fun: 4, estCorrect: 60, flags: [] };
+      const calls: { id: string }[][] = [];
+      const scoreUngraded = async (rows: { id: string }[]) => { calls.push(rows); return rows.map(r => ({ id: r.id, audience: { score: 2, model: "api" } })); };
+      const items = [
+        { id: "g", grade, row, apiRow: { id: "g", note: "n" } },
+        { id: "u", grade: { ...grade, version: "old" }, row, apiRow: { id: "u", note: "n" } },
+        { id: "m", grade: null, row, apiRow: { id: "m" } },
+      ];
+      const result = await scoreBarTest({ items, audience, scoreUngraded });
+      // As the old blocks: audienceFromWriter for the valid grade, the API reply for the others.
+      expect(result.audiences[0]).toEqual(audience.audienceFromWriter(row, audience.writerGrade(grade) as never));
+      expect(result.audiences.slice(1)).toEqual([{ score: 2, model: "api" }, { score: 2, model: "api" }]);
+      expect(result.graded).toEqual({ chatgpt: 1, openai: 2 });
+      expect(calls).toEqual([[{ id: "u", note: "n" }, { id: "m" }]]);
+      // All graded: no API call at all.
+      const none: unknown[] = [];
+      await scoreBarTest({ items: [items[0]], audience, scoreUngraded: async rows => { none.push(rows); return []; } });
+      expect(none).toEqual([]);
+      // A missing API reply is fatal, as before.
+      await expect(scoreBarTest({ items: [items[2]], audience, scoreUngraded: async () => [] })).rejects.toThrow("bar-test-result-missing");
+    });
+  }
 });

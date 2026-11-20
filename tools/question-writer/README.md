@@ -2,7 +2,8 @@
 
 Writes the day's Speed and Live Trivia questions with ChatGPT (your Pro plan, no money), grades them with ChatGPT in a
 separate session (the bar test), and sends both to the site. The site checks every one (rules, variety, the grade,
-repeats) before it shows up in Quick Review. `write.mjs` runs it; `grade.mjs` holds its small helpers.
+repeats) before it shows up in Quick Review. `write.mjs` runs it; `day.mjs` holds the day's loop and `grade.mjs` its small helpers (the `.d.mts` files are
+types for the main repo's tests).
 
 This folder is the source for the **private** repo `hightop-question-writer`. It lives in the main repo only so it
 is reviewed with the rest; the main repo never holds the login. Plan: `docs/speed-trivia-backlog-and-quality-plan.md`
@@ -23,10 +24,13 @@ is reviewed with the rest; the main repo never holds the login. Plan: `docs/spee
 ## If GitHub emails you that "Write questions" failed
 
 - **"ChatGPT login needs renewing"**: on your Mac, run `bash renew-login.sh` and follow the link it shows. Done.
+  Whatever that game had already written was still sent.
 - **"The site rejected the writer token"**: ask Claude to rotate `QUESTION_WRITER_TOKEN`.
 - **Anything else**: run it again from the Actions tab ("Run workflow"). If it fails twice, that day gets no new
   questions, and Quick Review says "Writer stopped" after two days.
-- **"grading: … (Gemini grades these instead)"** in the log: the questions were still sent; the site graded them.
+- **"grading: … (the site grades these instead)"** in the log: the questions were still sent; the site graded them.
+  A failed grading call never stops the run.
+- **"repeated slot(s) dropped"** in the log: ChatGPT wrote two questions for one slot; the first was kept.
 - **"conversions: …"** in the log: the Speed questions you sent with Make Live stay queued and go again the next night.
 
 ## Make Live (Phase 4e)
