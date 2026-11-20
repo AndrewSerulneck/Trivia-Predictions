@@ -70,7 +70,8 @@ describe("round leaderboard", () => {
 describe("final standings", () => {
   const f = read("TvFinalStandings.tsx");
   it("runs the coin explosion and a confetti shower once per game through the engine", () => {
-    expect(f).toContain("useFxMoment(`${revealKey}:final`)");
+    // Gated on a champion: an empty final (nobody scored) gets no celebration.
+    expect(f).toContain("useFxMoment(champion ? `${revealKey}:final` : null)");
     expect(f).toContain("fx.shower(");
     expect(f).toContain("fx.burst(");
     expect(f).toContain("colors: CONFETTI_COLORS");

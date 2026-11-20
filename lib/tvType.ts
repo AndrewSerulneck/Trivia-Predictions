@@ -8,8 +8,12 @@
 
 export type QuestionTypeScale = { size: number; leading: number };
 
-/** Question type scales down as it gets longer so it always fills the frame. */
-export function questionType(len: number): QuestionTypeScale {
+/**
+ * Question type scales down as it gets longer so it always fills the frame. Beside a picture the text column is
+ * about half as wide, so it steps down sooner (both TV panels pass the same flag, so the handoff never jumps).
+ */
+export function questionType(rawLen: number, besideMedia = false): QuestionTypeScale {
+  const len = besideMedia ? Math.round(rawLen * 1.6) : rawLen;
   if (len <= 60) return { size: 108, leading: 1.06 };
   if (len <= 110) return { size: 90, leading: 1.08 };
   if (len <= 170) return { size: 74, leading: 1.12 };

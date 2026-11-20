@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
+import { EmptyBoard } from "@/components/venue-screen/TvEmptyBoard";
 import { stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE, getPodiumAccent } from "@/lib/venueScreenBrand";
 
@@ -67,7 +68,8 @@ export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp 
 
   // The champion moment: the stinger's coin explosion around the crown, then confetti raining in the game colours.
   // Once per game, only while the room is watching (a reload on the final shows the settled podium).
-  const moment = useFxMoment(`${revealKey}:final`);
+  // No champion (nobody scored): no celebration.
+  const moment = useFxMoment(champion ? `${revealKey}:final` : null);
   const crownRef = useRef<HTMLDivElement>(null);
   useFxAt(moment, 600, (fx) => {
     fx.shower({ key: `${revealKey}:final:shower`, kind: "mixed", colors: CONFETTI_COLORS, count: 64, duration: 3.6 });
@@ -154,8 +156,8 @@ export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp 
 
         {/* ---- Podium ---- */}
         <div className="relative flex items-end justify-center" style={{ gap: 40, marginTop: 24, height: 520 }}>
-          {/* Spotlight cone behind first place */}
-          {!hideMotionOnly && (
+          {/* Spotlight cone behind first place (none when nobody scored) */}
+          {!hideMotionOnly && champion && (
             <motion.div
               className="pointer-events-none absolute"
               style={{
@@ -173,7 +175,9 @@ export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp 
             />
           )}
 
-          {[1, 0, 2].map((rankIdx) => {
+          {!champion ? (
+            <EmptyBoard />
+          ) : [1, 0, 2].map((rankIdx) => {
             const entry = podium[rankIdx];
             if (!entry) return <div key={rankIdx} style={{ width: 420 }} />;
             const s = PODIUM_BAR_STYLE[rankIdx];

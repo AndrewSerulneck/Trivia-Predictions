@@ -1,3 +1,5 @@
+import { LIVE_TRIVIA_QUESTIONS_PER_ROUND } from "@/lib/liveTriviaShared";
+import { toQuestionMedia } from "@/lib/questionMedia";
 import type { VenueScreenState } from "@/lib/venueScreen";
 import type { VenueScreenDebugMode } from "@/lib/venueScreenTiming";
 
@@ -20,6 +22,10 @@ export function applyVenueScreenDebugMode(
         totalRounds: 4,
         category: "Venue Screen QA",
         question: "This is a debug Live Trivia question for checking the public TV layout.",
+        // A real map, so `?mode=live-trivia` also checks the picture frame on a TV.
+        media: toQuestionMedia("/maps/geography-map-texas.png"),
+        questionIndex: 3,
+        questionsPerRound: LIVE_TRIVIA_QUESTIONS_PER_ROUND,
         correctAnswer: null,
         secondsRemaining: 45,
         revealEndsAt: null,

@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: { from: vi.fn() } }));
 
-import { LIVE_TRIVIA_ROUND_MS, REVEAL_HOLD_SECONDS, liveTriviaDurationMinutes, clampLiveTriviaRounds } from "@/lib/liveTriviaShared";
+import { LIVE_TRIVIA_QUESTIONS_PER_ROUND, LIVE_TRIVIA_ROUND_MS, REVEAL_HOLD_SECONDS, liveTriviaDurationMinutes, clampLiveTriviaRounds } from "@/lib/liveTriviaShared";
 import { LIVE_SHOWDOWN_TIMING } from "@/lib/liveShowdownEngine";
 
 describe("liveTriviaShared drift guard", () => {
@@ -18,6 +18,7 @@ describe("liveTriviaShared drift guard", () => {
 
   it("mirrors the engine's REST_WARNING_MS exactly", () => {
     expect(REVEAL_HOLD_SECONDS * 1000).toBe(LIVE_SHOWDOWN_TIMING.REST_WARNING_MS);
+    expect(LIVE_TRIVIA_QUESTIONS_PER_ROUND).toBe(LIVE_SHOWDOWN_TIMING.QUESTIONS_PER_ROUND);
   });
 });
 

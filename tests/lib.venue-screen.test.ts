@@ -219,6 +219,47 @@ describe("selectVenueScreenState", () => {
     expect(JSON.stringify(state)).not.toContain("LEAKED_ANSWER");
   });
 
+  it("carries the question's picture and number on question and reveal, never on the break", () => {
+    const withMap = (overrides: Record<string, unknown>) =>
+      makeLiveQuestion({
+        activeQuestion: { ...(makeLiveQuestion() as { activeQuestion: object }).activeQuestion, imageUrl: "/maps/geography-map-texas.png" },
+        ...overrides,
+      });
+    const blitz = { session: null, round: null, leaderboard: null, nextRoundStartsAt: null };
+
+    const question = selectVenueScreenState({ venue, liveTrivia: withMap({}), categoryBlitz: blitz, updatedAt });
+    expect(question.liveTrivia?.media).toMatchObject({ kind: "image", url: "/maps/geography-map-texas.png" });
+    expect(question.liveTrivia?.questionIndex).toBe(7);
+    expect(question.liveTrivia?.questionsPerRound).toBe(15);
+
+    const reveal = selectVenueScreenState({
+      venue,
+      liveTrivia: withMap({ activePhase: "rest_warning", revealedAnswer: "Atlanta" }),
+      categoryBlitz: blitz,
+      updatedAt,
+    });
+    expect(reveal.liveTrivia?.media?.url).toBe("/maps/geography-map-texas.png");
+
+    const intermission = selectVenueScreenState({
+      venue,
+      liveTrivia: withMap({ activePhase: "mid_game_break" }),
+      categoryBlitz: blitz,
+      updatedAt,
+    });
+    expect(intermission.liveTrivia?.phase).toBe("intermission");
+    expect(intermission.liveTrivia?.media).toBeNull();
+  });
+
+  it("a question with no picture has null media", () => {
+    const state = selectVenueScreenState({
+      venue,
+      liveTrivia: makeLiveQuestion(),
+      categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
+      updatedAt,
+    });
+    expect(state.liveTrivia?.media).toBeNull();
+  });
+
   it("prioritizes Live Trivia when Category Blitz overlaps", () => {
     const state = selectVenueScreenState({
       venue,

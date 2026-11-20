@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { pointIn, stageScale, useFx } from "@/components/venue-screen/fx/useFx";
+import { EmptyBoard } from "@/components/venue-screen/TvEmptyBoard";
 import { SCREEN_COLORS, SCREEN_EASE as EASE, getPodiumAccent, withAlpha } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
@@ -266,6 +267,7 @@ export function TvRoundBreak({
             Keyed on roundNumber only: the cascade replays once per round,
             and rows survive the 3s poll so `layout` can animate reorders. */}
         <div key={`board-${roundNumber}`} className="flex flex-1 flex-col" style={{ gap: 8, marginTop: 22 }}>
+          {ranked.length === 0 ? <EmptyBoard /> : null}
           <AnimatePresence initial={false}>
             {ranked.map((entry, i) => {
               const accent = i < 3 ? getPodiumAccent(i + 1) : null;

@@ -8,6 +8,8 @@ import { OneShotShine } from "@/components/venue-screen/fx/MomentOverlays";
 import { stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 import { questionType } from "@/lib/tvType";
+import { TvQuestionMedia } from "@/components/venue-screen/TvQuestionMedia";
+import type { QuestionMedia } from "@/lib/questionMedia";
 
 /* ------------------------------------------------------------------ *
  * <TvAnswerReveal />  — the reveal beat.
@@ -53,6 +55,10 @@ export type TvAnswerRevealProps = {
   totalSeconds?: number;
   /** The game's stable id; with the round it keys the correct-answer moment (plan §4 Phase 5). */
   gameId?: string;
+  /** The question's picture/video, kept up beside the answer (docs/live-trivia-display-media-and-standings-plan.md D2). */
+  media?: QuestionMedia | null;
+  /** What the rail says comes next (`revealNextLabel`); never promises standings that aren't next (D1). */
+  nextLabel?: string;
 };
 
 const GRADIENT = `linear-gradient(90deg, ${SCREEN_COLORS.cyan500} 0%, ${SCREEN_COLORS.blue600} 52%, ${SCREEN_COLORS.violet600} 100%)`;
@@ -77,6 +83,8 @@ export function TvAnswerReveal({
   category,
   totalSeconds,
   gameId,
+  media = null,
+  nextLabel = "Next question",
 }: TvAnswerRevealProps) {
   const reduceMotion = useReducedMotion();
   const revealKey = `${questionId ?? question}`;
@@ -111,7 +119,7 @@ export function TvAnswerReveal({
   const hideMotionOnly = useReducedMotionAfterHydration();
   const showBloom = !hideMotionOnly && !span.late;
 
-  const qType = questionType(question.length);
+  const qType = questionType(question.length, Boolean(media));
   const aSize = answerType(correctAnswer.length);
   const railColor = live <= 3 ? SCREEN_COLORS.amber500 : EMERALD.light;
 
@@ -175,72 +183,87 @@ export function TvAnswerReveal({
           </span>
         </motion.div>
 
-        {/* ---- Question, demoting ----
-            Transform-only (scale + y) so it stays compositor work and the
-            wrap points never change mid-animation. */}
-        <motion.div
-          style={{ transformOrigin: "left top", marginTop: 40, maxWidth: 1500 }}
-          initial={settled ? { scale: 0.72, opacity: 0.5, y: 0 } : { scale: 1, opacity: 1, y: 46 }}
-          animate={{ scale: 0.72, opacity: 0.5, y: 0 }}
-          transition={{ duration: settled ? 0 : 0.62, ease: EASE }}
-        >
-          <p style={{ fontSize: qType.size, lineHeight: qType.leading, fontWeight: 900, letterSpacing: "-0.02em", margin: 0 }}>
-            {question}
-          </p>
-        </motion.div>
+        {/* Question + answer on the left; the question's picture (if any) on the right. */}
+        <div className="flex min-h-0 flex-1">
+          <div className="flex min-w-0 flex-1 flex-col">
+            {/* ---- Question, demoting ----
+                Transform-only (scale + y) so it stays compositor work and the
+                wrap points never change mid-animation. */}
+            <motion.div
+              style={{ transformOrigin: "left top", marginTop: 40, maxWidth: 1500 }}
+              initial={settled ? { scale: 0.72, opacity: 0.5, y: 0 } : { scale: 1, opacity: 1, y: 46 }}
+              animate={{ scale: 0.72, opacity: 0.5, y: 0 }}
+              transition={{ duration: settled ? 0 : 0.62, ease: EASE }}
+            >
+              <p style={{ fontSize: qType.size, lineHeight: qType.leading, fontWeight: 900, letterSpacing: "-0.02em", margin: 0 }}>
+                {question}
+              </p>
+            </motion.div>
 
-        {/* ---- Answer ---- */}
-        <div className="relative flex flex-1 flex-col justify-center" style={{ marginTop: -20 }}>
-          <motion.div
-            className="relative flex items-center"
-            style={{ gap: 20 }}
-            initial={settled ? false : { opacity: 0, x: -34 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.45, ease: EASE, delay: T.eyebrow }}
-          >
-            <CheckBadge settled={settled} delay={T.eyebrow + 0.08} badgeRef={badgeRef} />
-            <span style={{ fontSize: 34, fontWeight: 900, letterSpacing: "0.36em", textTransform: "uppercase", color: EMERALD.light }}>
-              Correct answer
-            </span>
-          </motion.div>
+            {/* ---- Answer ---- */}
+            <div className="relative flex flex-1 flex-col justify-center" style={{ marginTop: -20 }}>
+              <motion.div
+                className="relative flex items-center"
+                style={{ gap: 20 }}
+                initial={settled ? false : { opacity: 0, x: -34 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.45, ease: EASE, delay: T.eyebrow }}
+              >
+                <CheckBadge settled={settled} delay={T.eyebrow + 0.08} badgeRef={badgeRef} />
+                <span style={{ fontSize: 34, fontWeight: 900, letterSpacing: "0.36em", textTransform: "uppercase", color: EMERALD.light }}>
+                  Correct answer
+                </span>
+              </motion.div>
 
-          <motion.div
-            className="relative"
-            style={{
-              fontSize: aSize,
-              fontWeight: 900,
-              lineHeight: 1.04,
-              letterSpacing: "-0.03em",
-              marginTop: 22,
-              maxWidth: 1560,
-              textShadow: `0 0 70px ${EMERALD.glow}3d`,
-              transformOrigin: "left center",
-            }}
-            initial={settled ? false : { opacity: 0, scale: 1.16, y: 26, filter: "blur(18px)" }}
-            animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.6, ease: EASE, delay: T.answer }}
-          >
-            {correctAnswer}
-            {moment ? (
-              <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-                <OneShotShine delayS={T.answer + 0.6} tint="rgba(209,250,229,0.5)" />
-              </span>
-            ) : null}
-          </motion.div>
+              <motion.div
+                className="relative"
+                style={{
+                  fontSize: aSize,
+                  fontWeight: 900,
+                  lineHeight: 1.04,
+                  letterSpacing: "-0.03em",
+                  marginTop: 22,
+                  maxWidth: 1560,
+                  textShadow: `0 0 70px ${EMERALD.glow}3d`,
+                  transformOrigin: "left center",
+                }}
+                initial={settled ? false : { opacity: 0, scale: 1.16, y: 26, filter: "blur(18px)" }}
+                animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 0.6, ease: EASE, delay: T.answer }}
+              >
+                {correctAnswer}
+                {moment ? (
+                  <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                    <OneShotShine delayS={T.answer + 0.6} tint="rgba(209,250,229,0.5)" />
+                  </span>
+                ) : null}
+              </motion.div>
 
-          <motion.div
-            style={{
-              height: 8,
-              borderRadius: 999,
-              marginTop: 30,
-              maxWidth: 1560,
-              background: `linear-gradient(90deg, ${EMERALD.light}, ${SCREEN_COLORS.cyan400} 70%, rgba(34,211,238,0))`,
-              transformOrigin: "left center",
-            }}
-            initial={settled ? false : { scaleX: 0, opacity: 0 }}
-            animate={{ scaleX: 1, opacity: 1 }}
-            transition={{ duration: 0.7, ease: EASE, delay: T.underline }}
-          />
+              <motion.div
+                style={{
+                  height: 8,
+                  borderRadius: 999,
+                  marginTop: 30,
+                  maxWidth: 1560,
+                  background: `linear-gradient(90deg, ${EMERALD.light}, ${SCREEN_COLORS.cyan400} 70%, rgba(34,211,238,0))`,
+                  transformOrigin: "left center",
+                }}
+                initial={settled ? false : { scaleX: 0, opacity: 0 }}
+                animate={{ scaleX: 1, opacity: 1 }}
+                transition={{ duration: 0.7, ease: EASE, delay: T.underline }}
+              />
+            </div>
+          </div>
+          {media ? (
+            <motion.div
+              className="shrink-0 self-center"
+              initial={settled ? false : { opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: EASE, delay: 0.2 }}
+            >
+              <TvQuestionMedia media={media} width={720} height={540} gap={64} />
+            </motion.div>
+          ) : null}
         </div>
 
         {/* ---- Depleting rail: deliberately not another ring (Prompt A
@@ -252,7 +275,7 @@ export function TvAnswerReveal({
         >
           <div className="flex items-baseline justify-between" style={{ marginBottom: 14 }}>
             <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: "0.3em", textTransform: "uppercase", color: "#94a3b8" }}>
-              Standings next
+              {nextLabel}
             </span>
             <span style={{ fontSize: 46, fontWeight: 900, color: railColor, fontVariantNumeric: "tabular-nums" }}>{shown}s</span>
           </div>
