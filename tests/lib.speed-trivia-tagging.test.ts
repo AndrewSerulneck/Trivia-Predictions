@@ -189,13 +189,27 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
     expect(mocks.upserts).toHaveLength(1);
   });
 
-  it("if OpenAI fails, saves anyway, keeps the old tag and makes no second call", async () => {
+  // Phase 7g (second review R2 #20.2): a failed early tag no longer returns before the post-save re-tag.
+  it("if the early tag fails, saves anyway and re-tags after the save", async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(openaiResponse(JSON.stringify({ items: [{}] }), {}, 400))
+      .mockResolvedValueOnce(openaiResponse(JSON.stringify({ items: [{ n: 1, area: "Reptiles", era: "Timeless", subject: "Komodo dragon" }] })));
+    vi.stubGlobal("fetch", fetch);
+    mocks.currentSubject = "chameleon";
+    const write = gate();
+    expect(await writeSpeedTrivia(edit, active, { write } as unknown as AdmissionSession)).toBe(savedRow);
+    expect(write).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(mocks.upserts).toEqual([[expect.objectContaining({ question_ref: active.id, subject_key: "komodo dragon" })]]);
+  });
+
+  it("if both tag calls fail, saves and keeps the old tag (two calls, never more)", async () => {
     const fetch = openai({}, false);
     vi.stubGlobal("fetch", fetch);
     mocks.currentSubject = "chameleon";
     const write = gate();
     expect(await writeSpeedTrivia(edit, active, { write } as unknown as AdmissionSession)).toBe(savedRow);
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
     expect(mocks.upserts).toEqual([]);
   });
 

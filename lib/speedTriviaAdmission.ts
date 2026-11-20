@@ -112,7 +112,8 @@ export const writeSpeedTrivia = async (patch: Record<string, unknown>, existing:
   // Phase 4c.8 (post-4c.4 review #4, D15): the star cap is checked only when a row BECOMES active, so an edit that
   // keeps an approved question approved is tagged before the save. A move into a subject with 5 other approved
   // questions is refused ('subject_full', 409) with nothing saved. Still one OpenAI call per save; if it fails, the
-  // save goes ahead and the old tag stays. The tag trigger (guard_speed_question_tag) stays the binding check.
+  // save goes ahead and is tagged after it instead (Phase 7g, R2 #20.2: no early return keeping the old subject).
+  // The tag trigger (guard_speed_question_tag) stays the binding check.
   let earlyTag: TagRow | null = null;
   const tagBeforeSave = Boolean(existing && isActiveSpeed(existing) && isActiveSpeed(prospective) && changedContent(prospective, existing));
   if (tagBeforeSave && existing) {
@@ -124,12 +125,13 @@ export const writeSpeedTrivia = async (patch: Record<string, unknown>, existing:
   }
   const { result, tagged } = await recorded(gate, () => withTag(prospective, () => gate.write(patch, { existing })));
   const saved = result.row;
-  if (tagBeforeSave) {
-    if (earlyTag && saved) await writeSpeedTag(earlyTag);
+  if (tagBeforeSave && earlyTag) {
+    if (saved) await writeSpeedTag(earlyTag);
     return saved;
   }
   // Admin add/edit: a new question, or new content, gets its subject tag now (best effort; never blocks the save),
-  // unless withTag just tagged this content (one OpenAI call per save, Phase 4c.1).
+  // unless withTag just tagged this content (one OpenAI call per save, Phase 4c.1). An edit whose early tag failed
+  // lands here too, so it isn't left with its old subject (a second call only after the first failed).
   if (!tagged && saved?.question_pool === "anytime_blitz" && changedContent(saved, existing)) await tagSpeedQuestion(saved);
   return saved;
 };

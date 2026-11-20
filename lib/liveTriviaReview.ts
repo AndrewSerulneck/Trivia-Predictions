@@ -3,7 +3,8 @@ import { randomUUID } from "node:crypto";
 import { LIVE_CATEGORIES, fileFor } from "@/lib/live-trivia-quality/categories.cjs";
 import { PublishError, planPublish } from "@/lib/live-trivia-quality/publish.cjs";
 import { isMatchableAnswer } from "@/lib/liveShowdownGrading";
-import { LiveGithubError, findOpenPublishPr, mergePublishPr, openPublishPr, readLiveFiles, readPrState } from "@/lib/liveTriviaGithub";
+import { LiveGithubError, findOpenPublishPr, findPublishPrsByClaim, mergePublishPr, openPublishPr, readLiveFiles, readPrState } from "@/lib/liveTriviaGithub";
+import type { PublishRecord } from "@/lib/liveTriviaGithub";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import type { QuickReviewAudience } from "@/types/speedTriviaQuickReview";
 import type { LivePublishResult, LiveReviewItem, LiveReviewPage, LiveReviewUndoResult } from "@/types/liveTriviaReview";
@@ -38,11 +39,15 @@ export type PublishDeps = {
   merge: typeof mergePublishPr;
   findOpenPr: typeof findOpenPublishPr;
   prState: typeof readPrState;
+  findClaimPrs: typeof findPublishPrsByClaim;
 };
 
 const DEFAULT_DEPS: PublishDeps = {
   readFiles: readLiveFiles, openPr: openPublishPr, merge: mergePublishPr, findOpenPr: findOpenPublishPr, prState: readPrState,
+  findClaimPrs: findPublishPrsByClaim,
 };
+
+type PrCheckDeps = Pick<PublishDeps, "prState" | "findClaimPrs">;
 
 export const isLiveReviewId = (value: unknown): value is string => typeof value === "string" && UUID.test(value);
 export const isLiveCategory = (value: unknown): value is string => typeof value === "string" && LIVE_CATEGORIES.includes(value);
@@ -93,9 +98,10 @@ const toItem = (row: CandidateRow): LiveReviewItem => {
 /**
  * The waiting Live candidates (best score first, then oldest; sorted in SQL, so a newer high scorer beyond the first
  * 200 still comes first, 4c.9 #5), the real number waiting, how many are kept for Publish, and how many wait on a
- * Publish PR. 3 reads, plus the PR check's GitHub call per waiting PR (usually none).
+ * Publish PR. The PR check runs alongside the reads and asks GitHub at most once a minute (Phase 7g, R2 #20.7);
+ * when it sends a closed PR's questions back to keep, the kept count is read again (one more count, rare).
  */
-export const readLiveReviewQueue = async (category: string | null, deps: Pick<PublishDeps, "prState"> = DEFAULT_DEPS): Promise<LiveReviewPage> => {
+export const readLiveReviewQueue = async (category: string | null, deps: PrCheckDeps = DEFAULT_DEPS): Promise<LiveReviewPage> => {
   const db = admin();
   let query = db.from("question_candidates")
     .select("id, payload, edit, tag, audience, possible_repeat, source, created_at", { count: "exact" })
@@ -104,15 +110,15 @@ export const readLiveReviewQueue = async (category: string | null, deps: Pick<Pu
   // jsonb numbers sort numerically; an unscored candidate goes last.
   const ordered = query.order("audience->score", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: true }).limit(LIVE_REVIEW_LIMIT);
-  // The PR check first, so a closed PR's questions are back in the kept count.
-  const waiting = await reconcileLivePrs(deps);
-  const [{ data, error, count }, kept] = await Promise.all([
-    ordered,
-    db.from("question_candidates").select("id", { count: "exact", head: true }).eq("game", "live").eq("status", "keep"),
-  ]);
+  const keptCount = () => db.from("question_candidates").select("id", { count: "exact", head: true }).eq("game", "live").eq("status", "keep");
+  const [check, { data, error, count }, firstKept] = await Promise.all([reconcileLivePrs(deps), ordered, keptCount()]);
+  const kept = check.reopened > 0 ? await keptCount() : firstKept;
   if (error || kept.error) throw new LiveReviewError("unavailable", "Couldn't load questions.", 503);
   const items = ((data ?? []) as CandidateRow[]).map(toItem);
-  return { total: Math.max(count ?? 0, items.length), items, kept: kept.count ?? 0, categories: [...LIVE_CATEGORIES], waiting };
+  return {
+    total: Math.max(count ?? 0, items.length), items, kept: kept.count ?? 0, categories: [...LIVE_CATEGORIES],
+    waiting: { waiting: check.waiting, prUrl: check.prUrl },
+  };
 };
 
 const transition = async (id: string, from: string[], fields: Record<string, unknown>) => {
@@ -133,10 +139,17 @@ export const liveDecide = (id: string, decision: "keep" | "reject") =>
 export const liveUndo = async (id: string): Promise<LiveReviewUndoResult> => {
   if (!(await transition(id, ["keep", "reject"], { status: "pending_review", decided_at: null }))) {
     const { data } = await admin().from("question_candidates").select("status").eq("id", id).eq("game", "live").maybeSingle();
-    const waiting = (data as { status?: string } | null)?.status === "pr_open";
-    throw new LiveReviewError("not_undoable", waiting ? "Waiting on GitHub." : "Can't undo: already published.", 409);
+    throw new LiveReviewError("not_undoable", undoRefusal((data as { status?: string } | null)?.status), 409);
   }
   return { id, status: "pending_review" };
+};
+
+/** Why Undo didn't apply, from the row's status now (Phase 7g, R2 #20.9). */
+export const undoRefusal = (status: string | undefined) => {
+  if (status === "pending_review") return "Already undone.";
+  if (status === "publishing") return "Publishing now. Try again in a minute.";
+  if (status === "pr_open") return "Waiting on GitHub.";
+  return "Can't undo: already published.";
 };
 
 // A number, money, a percent or a year may run past the 2-word limit, but it must hold a digit (4c.9 #6).
@@ -197,44 +210,104 @@ const writeTags = async (rows: { payload: Record<string, unknown> | null | undef
   if (error) console.warn("Live publish: tags not saved.");
 };
 
+/** The PR check asks GitHub at most this often per server instance, unless forced (Publish) (Phase 7g, R2 #20.7). */
+export const PR_CHECK_INTERVAL_MS = 60_000;
+let lastGithubCheck = 0;
+
+/** Tests only. */
+export const resetLivePrCheckThrottle = () => {
+  lastGithubCheck = 0;
+};
+
+type PrCheckRow = { status: string; pr_url: string | null; claimed_at: string | null; publish_claim: string | null };
+
+/** What one Publish did with its claimed rows, for live_candidates_publish_settle. Published rows: `published` or `pr_open`. */
+const settleRows = (record: Omit<PublishRecord, "claim">, prUrl: string, merged: boolean) => [
+  ...record.published.map(({ id, slug }) => ({ id, status: merged ? "published" : "pr_open", questionRef: slug, prUrl })),
+  ...record.already.map(({ id, slug }) => ({ id, status: "published", questionRef: slug, prUrl: "" })),
+  ...record.refused.map(({ id, reason }) => ({ id, status: "reject", reason: `publish:${reason}` })),
+];
+
 /**
  * The PR check (Phase 4c.2 step 6): for each Publish PR the database is waiting on (pr_open rows, and stale publishing
  * rows that have a pr_url), ask GitHub once and settle: merged -> published + tags; closed -> keep; open -> pr_open.
- * Usually 0 GitHub calls (no such rows). Never throws: a failure leaves the rows as they are.
- * Returns how many questions still wait on GitHub, and one PR link.
+ * Phase 7g (R2 #20.3): stale publishing rows with NO pr_url (Publish opened a PR but couldn't record it) are matched
+ * to their PR by claim (one GitHub list call), recorded and settled the same way.
+ * GitHub is asked at most once a minute per instance unless `force` (R2 #20.7); otherwise the waiting count comes
+ * from the database alone. Usually 0 GitHub calls (no such rows). Never throws: a failure leaves the rows as they are.
+ * Returns how many questions still wait on GitHub, one PR link, and how many went back to keep.
  */
-export const reconcileLivePrs = async (deps: Pick<PublishDeps, "prState"> = DEFAULT_DEPS): Promise<{ waiting: number; prUrl: string }> => {
+export const reconcileLivePrs = async (deps: PrCheckDeps = DEFAULT_DEPS, options: { force?: boolean } = {}): Promise<{ waiting: number; prUrl: string; reopened: number }> => {
   const db = admin();
-  const { data, error } = await db.from("question_candidates").select("id, status, pr_url, claimed_at")
+  const { data, error } = await db.from("question_candidates").select("id, status, pr_url, claimed_at, publish_claim")
     .eq("game", "live").in("status", ["pr_open", "publishing"]).limit(PR_ROWS_READ);
   if (error) {
     console.warn("Live PR check: couldn't read.");
-    return { waiting: 0, prUrl: "" };
+    return { waiting: 0, prUrl: "", reopened: 0 };
   }
   // A publishing row is the PR check's only once its claim is stale: a fresh one belongs to a running Publish.
   const stale = Date.now() - STALE_CLAIM_MS;
-  const rows = ((data ?? []) as { status: string; pr_url: string | null; claimed_at: string | null }[])
-    .filter((r) => r.pr_url && (r.status === "pr_open" || Date.parse(r.claimed_at ?? "") <= stale));
+  const all = (data ?? []) as PrCheckRow[];
+  const isStale = (r: PrCheckRow) => r.status === "publishing" && Date.parse(r.claimed_at ?? "") <= stale;
+  const rows = all.filter((r) => r.pr_url && (r.status === "pr_open" || isStale(r)));
+  const unrecorded = [...new Set(all.filter((r) => !r.pr_url && isStale(r) && r.publish_claim).map((r) => r.publish_claim as string))];
   const open = new Map<string, number>();
   for (const r of rows) if (r.status === "pr_open") open.set(r.pr_url as string, (open.get(r.pr_url as string) ?? 0) + 1);
+  let reopened = 0;
+  const summary = () => {
+    const waitingPrs = [...open].filter(([, n]) => n > 0);
+    return { waiting: waitingPrs.reduce((sum, [, n]) => sum + n, 0), prUrl: waitingPrs[0]?.[0] ?? "", reopened };
+  };
+  if (!rows.length && !unrecorded.length) return summary();
+  const now = Date.now();
+  if (!options.force && now - lastGithubCheck < PR_CHECK_INTERVAL_MS) return summary();
+  lastGithubCheck = now;
+
+  const settlePr = async (prUrl: string, state: "merged" | "closed" | "open") => {
+    const settled = await db.rpc("live_candidates_pr_settle", { p_pr_url: prUrl, p_state: state });
+    if (settled.error) throw new Error(settled.error.message);
+    const moved = (Array.isArray(settled.data) ? settled.data : []) as Moved[];
+    if (state === "merged") await writeTags(moved.map((m) => ({ payload: m.payload, tag: m.tag, slug: m.questionRef })));
+    if (state === "closed") reopened += moved.length;
+    if (state === "open") open.set(prUrl, (open.get(prUrl) ?? 0) + moved.length);
+    else open.delete(prUrl);
+  };
   const started = Date.now();
+
+  if (unrecorded.length) {
+    try {
+      const found = await deps.findClaimPrs(unrecorded);
+      for (const [claim, pr] of found) {
+        try {
+          const recorded = await db.rpc("live_candidates_publish_record_pr", {
+            p_claim: claim, p_pr_url: pr.url, p_rows: pr.record.published.map(({ id, slug }) => ({ id, questionRef: slug })),
+          });
+          if (recorded.error || recorded.data !== pr.record.published.length) throw new Error("record");
+          // As Publish would have: the PR's questions wait on it; the rest settle now. Then the PR's state applies.
+          const settled = await db.rpc("live_candidates_publish_settle", { p_claim: claim, p_rows: settleRows(pr.record, pr.url, false) });
+          if (settled.error) throw new Error("settle");
+          if (pr.state === "open") open.set(pr.url, (open.get(pr.url) ?? 0) + pr.record.published.length);
+          else await settlePr(pr.url, pr.state);
+        } catch {
+          console.warn("Live PR check: an unrecorded Publish couldn't be settled.");
+        }
+      }
+    } catch {
+      console.warn("Live PR check: couldn't look up unrecorded Publishes.");
+    }
+  }
+
   for (const prUrl of [...new Set(rows.map((r) => r.pr_url as string))].slice(0, PR_CHECK_LIMIT)) {
     if (Date.now() - started > PR_CHECK_BUDGET_MS) break;
     try {
       const state = await deps.prState(prUrl);
       if (!state) continue;
-      const settled = await db.rpc("live_candidates_pr_settle", { p_pr_url: prUrl, p_state: state });
-      if (settled.error) throw new Error(settled.error.message);
-      const moved = (Array.isArray(settled.data) ? settled.data : []) as Moved[];
-      if (state === "merged") await writeTags(moved.map((m) => ({ payload: m.payload, tag: m.tag, slug: m.questionRef })));
-      if (state === "open") open.set(prUrl, (open.get(prUrl) ?? 0) + moved.length);
-      else open.delete(prUrl);
+      await settlePr(prUrl, state);
     } catch {
       console.warn("Live PR check: a PR couldn't be checked.");
     }
   }
-  const waitingPrs = [...open].filter(([, n]) => n > 0);
-  return { waiting: waitingPrs.reduce((sum, [, n]) => sum + n, 0), prUrl: waitingPrs[0]?.[0] ?? "" };
+  return summary();
 };
 
 const NOT_RECORDED = "Published, but not recorded. Don't publish again; tell the developer.";
@@ -283,7 +356,7 @@ const planWithFreeSlugs = async (files: Map<string, string | null>, claimed: Cla
  */
 export const publishLive = async (deps: PublishDeps = DEFAULT_DEPS): Promise<LivePublishResult> => {
   const db = admin();
-  await reconcileLivePrs(deps);
+  await reconcileLivePrs(deps, { force: true });
   const claim = randomUUID();
   const { data, error } = await db.rpc("live_candidates_publish_claim", { p_claim: claim, p_limit: LIVE_PUBLISH_LIMIT });
   if (error) {
@@ -321,7 +394,8 @@ export const publishLive = async (deps: PublishDeps = DEFAULT_DEPS): Promise<Liv
     if (plan.changes.length) {
       const summary = `Adds ${plan.published.length} reviewed Live Trivia question${plan.published.length === 1 ? "" : "s"}: `
         + plan.changes.map((c) => `${c.path.split("/").pop()} +${c.added}${c.created ? " (new file)" : ""}`).join(", ");
-      pr = await deps.openPr(baseSha, plan.changes, summary);
+      pr = await deps.openPr(baseSha, plan.changes, summary,
+        { claim, published: plan.published, already: plan.already, refused: plan.refused });
     }
   } catch (err) {
     if (err instanceof LiveReviewError) throw err;
@@ -330,25 +404,24 @@ export const publishLive = async (deps: PublishDeps = DEFAULT_DEPS): Promise<Liv
     throw err;
   }
 
-  // The PR exists: record it on its rows before merging. If that fails, the rows stay claimed (never released):
-  // the 10-minute re-claim then meets the open-PR guard, or finds the entries on main once the PR merges.
+  // The PR exists: record it on its rows before merging, with one retry (the RPC is all or nothing, so a retry is
+  // safe). If both fail, the rows stay claimed (never released) and nothing merges: after 10 minutes the PR check finds
+  // the PR by its claim and settles them from the record in its body (Phase 7g, R2 #20.3).
   if (pr) {
-    const recorded = await db.rpc("live_candidates_publish_record_pr", {
-      p_claim: claim, p_pr_url: pr.url, p_rows: plan.published.map(({ id, slug }) => ({ id, questionRef: slug })),
+    const opened = pr;
+    const record = () => db.rpc("live_candidates_publish_record_pr", {
+      p_claim: claim, p_pr_url: opened.url, p_rows: plan.published.map(({ id, slug }) => ({ id, questionRef: slug })),
     });
-    if (recorded.error || recorded.data !== plan.published.length) {
+    const ok = (r: { error: unknown; data: unknown }) => !r.error && r.data === plan.published.length;
+    if (!ok(await record()) && !ok(await record())) {
       console.warn("Live publish: PR not recorded.");
-      throw failed();
+      throw new LiveReviewError("not_recorded", `Publish opened PR #${opened.number} but couldn't record it. Don't publish again.`, 502);
     }
   }
   const merged = pr ? await deps.merge(pr).catch(() => false) : false;
   const prUrl = pr?.url ?? "";
 
-  const rows = [
-    ...plan.published.map(({ id, slug }) => ({ id, status: merged ? "published" : "pr_open", questionRef: slug, prUrl })),
-    ...plan.already.map(({ id, slug }) => ({ id, status: "published", questionRef: slug, prUrl: "" })),
-    ...plan.refused.map(({ id, reason }) => ({ id, status: "reject", reason: `publish:${reason}` })),
-  ];
+  const rows = settleRows(plan, prUrl, merged);
   const settled = await db.rpc("live_candidates_publish_settle", { p_claim: claim, p_rows: rows });
   if (settled.error || settled.data !== rows.length) {
     console.warn("Live publish: settle failed.");

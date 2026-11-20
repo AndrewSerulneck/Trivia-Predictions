@@ -84,8 +84,65 @@ export const readLiveFiles = async (extra: string[] = []): Promise<LiveFiles> =>
   return { baseSha, files };
 };
 
-/** One commit with the appended files on a new branch from `baseSha`, and a PR to main. */
-export const openPublishPr = async (baseSha: string, changes: PublishChange[], summary: string): Promise<LivePullRequest> => {
+/**
+ * What one Publish planned for its claimed rows (Phase 7g, R2 #20.3). It rides in the PR body, so the PR check can
+ * still settle the rows if Publish opened the PR but couldn't record it on them.
+ */
+export type PublishRecord = {
+  claim: string;
+  published: { id: string; slug: string }[];
+  already: { id: string; slug: string }[];
+  refused: { id: string; reason: string }[];
+};
+
+const RECORD_MARK = "live-publish-record";
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SLUG = /^[a-z0-9][a-z0-9-]{0,199}$/;
+const REASON = /^[a-z0-9-]{1,60}$/;
+
+const recordComment = (record: PublishRecord) => `<!-- ${RECORD_MARK} ${JSON.stringify({
+  claim: record.claim,
+  published: record.published.map(({ id, slug }) => [id, slug]),
+  already: record.already.map(({ id, slug }) => [id, slug]),
+  refused: record.refused.map(({ id, reason }) => [id, reason]),
+})} -->`;
+
+/** The record in a Publish PR's body, strictly checked; null when absent, for another claim, or malformed. */
+export const readPublishRecord = (body: unknown, claim: string): PublishRecord | null => {
+  if (typeof body !== "string") return null;
+  const match = new RegExp(`<!-- ${RECORD_MARK} (\\{.*?\\}) -->`).exec(body);
+  if (!match) return null;
+  try {
+    const raw = JSON.parse(match[1]) as { claim?: unknown; published?: unknown; already?: unknown; refused?: unknown };
+    if (raw.claim !== claim) return null;
+    const pairs = (value: unknown, second: RegExp) => {
+      if (!Array.isArray(value) || value.length > 200) throw new Error("record");
+      return value.map((pair) => {
+        if (!Array.isArray(pair) || pair.length !== 2 || !UUID.test(String(pair[0])) || !second.test(String(pair[1]))) throw new Error("record");
+        return [String(pair[0]), String(pair[1])] as const;
+      });
+    };
+    const published = pairs(raw.published, SLUG).map(([id, slug]) => ({ id, slug }));
+    if (!published.length) return null;
+    return {
+      claim,
+      published,
+      already: pairs(raw.already, SLUG).map(([id, slug]) => ({ id, slug })),
+      refused: pairs(raw.refused, REASON).map(([id, reason]) => ({ id, reason })),
+    };
+  } catch {
+    return null;
+  }
+};
+
+/** A claim's short form in its Publish branch name: `live-trivia-publish-<stamp>-<first 8 hex of the claim>`. */
+const claimTag = (claim: string) => claim.replace(/-/g, "").slice(0, 8).toLowerCase();
+
+/**
+ * One commit with the appended files on a new branch from `baseSha`, and a PR to main. The branch ends with the
+ * claim's short form and the body carries the record (7g, R2 #20.3).
+ */
+export const openPublishPr = async (baseSha: string, changes: PublishChange[], summary: string, record: PublishRecord): Promise<LivePullRequest> => {
   const cfg = config();
   for (const change of changes) {
     assertLivePath(change.path);
@@ -93,8 +150,9 @@ export const openPublishPr = async (baseSha: string, changes: PublishChange[], s
       throw new LiveGithubError("path", "Publish may only create a new category's file.");
     }
   }
+  if (!UUID.test(record.claim)) throw new LiveGithubError("record", "Invalid Publish claim.");
   const stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 14);
-  const branch = `${PUBLISH_BRANCH_PREFIX}${stamp}-${Math.random().toString(36).slice(2, 8)}`;
+  const branch = `${PUBLISH_BRANCH_PREFIX}${stamp}-${claimTag(record.claim)}`;
   const baseCommit = await request<{ tree: { sha: string } }>(cfg, `${repoPath(cfg)}/git/commits/${baseSha}`);
   const tree = [];
   for (const change of changes) {
@@ -121,6 +179,8 @@ export const openPublishPr = async (baseSha: string, changes: PublishChange[], s
         "",
         "Append-only (D10): existing entries are unchanged; new entries are added at the end of each file.",
         "Kept in Admin → Quick Review (Live). Merging runs Sync Live Trivia (check, then import).",
+        "",
+        recordComment(record),
       ].join("\n"),
     }),
   });
@@ -151,12 +211,44 @@ export const readPrState = async (prUrl: string): Promise<LivePrState | null> =>
   return pr.body?.state === "closed" ? "closed" : "open";
 };
 
+/** Recent Publish PRs (any state) read per PR-check lookup of an unrecorded Publish. */
+const CLAIM_LOOKUP_PRS = 50;
+
+export type ClaimedPublishPr = { url: string; number: number; state: LivePrState; record: PublishRecord };
+
+/**
+ * Phase 7g (R2 #20.3): the PRs of Publishes that opened a PR but couldn't record it on their rows, by claim. One GET of
+ * the recent PRs to main; a PR counts only when its branch ends with the claim's short form AND its body carries a
+ * valid record for that exact claim. A claim with no such PR (none was opened, or it's older) is left out.
+ */
+export const findPublishPrsByClaim = async (claims: string[]): Promise<Map<string, ClaimedPublishPr>> => {
+  const found = new Map<string, ClaimedPublishPr>();
+  if (!claims.length) return found;
+  const cfg = config();
+  const list = await request<{ html_url: string; number: number; state?: string; merged_at?: string | null; body?: string | null; head?: { ref?: string } }[]>(cfg,
+    `${repoPath(cfg)}/pulls?state=all&base=${encodeURIComponent(cfg.base)}&sort=created&direction=desc&per_page=${CLAIM_LOOKUP_PRS}`);
+  for (const pr of Array.isArray(list.body) ? list.body : []) {
+    const ref = pr.head?.ref ?? "";
+    if (!ref.startsWith(PUBLISH_BRANCH_PREFIX)) continue;
+    for (const claim of claims) {
+      if (found.has(claim) || !ref.endsWith(`-${claimTag(claim)}`)) continue;
+      const record = readPublishRecord(pr.body, claim);
+      if (!record) continue;
+      const state: LivePrState = pr.merged_at ? "merged" : pr.state === "closed" ? "closed" : "open";
+      found.set(claim, { url: pr.html_url, number: pr.number, state, record });
+    }
+  }
+  return found;
+};
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Merge the PR at exactly `commitSha` (squash). main has no required checks, so GitHub's auto-merge can't be used;
- * this is the self-merge D10 describes. If GitHub won't merge yet (checks required later, or mergeability still
- * computing), auto-merge is requested instead; the PR then merges itself, or waits for Andrew on GitHub.
+ * this is the self-merge D10 describes. If GitHub won't merge yet (405/422: checks required later, or mergeability
+ * still computing), auto-merge is requested instead, pinned to the same commit; the PR then merges itself, or waits
+ * for Andrew on GitHub. A 409 (the head moved, or a conflict) returns at once and never requests auto-merge, so a
+ * branch someone pushed to can't merge into the canonical Live JSON (Phase 7g, R2 #20.1).
  */
 export const mergePublishPr = async (pr: LivePullRequest): Promise<boolean> => {
   const cfg = config();
@@ -169,13 +261,16 @@ export const mergePublishPr = async (pr: LivePullRequest): Promise<boolean> => {
       await request(cfg, `${repoPath(cfg)}/git/refs/heads/${encodeURIComponent(pr.branch)}`, { method: "DELETE" }, [404, 422]).catch(() => null);
       return true;
     }
-    if (result.status === 409) break; // head moved or conflict: leave it for Andrew
+    if (result.status === 409) return false; // head moved or conflict: leave it for Andrew
   }
   const node = await request<{ node_id: string }>(cfg, `${repoPath(cfg)}/pulls/${pr.number}`).catch(() => null);
   if (node?.body?.node_id) {
     await request(cfg, "/graphql", {
       method: "POST",
-      body: JSON.stringify({ query: "mutation($id:ID!){enablePullRequestAutoMerge(input:{pullRequestId:$id,mergeMethod:SQUASH}){clientMutationId}}", variables: { id: node.body.node_id } }),
+      body: JSON.stringify({
+        query: "mutation($id:ID!,$sha:GitObjectID!){enablePullRequestAutoMerge(input:{pullRequestId:$id,mergeMethod:SQUASH,expectedHeadOid:$sha}){clientMutationId}}",
+        variables: { id: node.body.node_id, sha: pr.commitSha },
+      }),
     }).catch(() => null);
   }
   return false;

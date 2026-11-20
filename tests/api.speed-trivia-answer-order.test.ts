@@ -5,11 +5,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Fake server client; no database.
 vi.mock("server-only", () => ({}));
 
-type Row = { id: string; question: string; options: string[]; correct_answer: number; category: string | null; difficulty: string };
+type Row = {
+  id: string; question: string; options: string[]; correct_answer: number; category: string | null; difficulty: string;
+  question_pool: string; status: string;
+};
 type Result = { data: unknown; error: unknown; count?: number };
 
 const mocks = vi.hoisted(() => ({
-  rows: [] as { id: string; question: string; options: string[]; correct_answer: number; category: string | null; difficulty: string }[],
+  rows: [] as Row[],
+  hidden: new Set<string>(),
   existing: null as null | { id: string; question_id: string; is_correct: boolean },
   inserts: [] as Record<string, unknown>[],
   insertError: null as null | { code: string },
@@ -23,7 +27,8 @@ const chain = (table: string) => {
   let head = false;
   const resolve = (single: boolean): Result => {
     if (table === "trivia_questions") {
-      const rows = mocks.rows.filter((row) => (filters.id === undefined ? true : row.id === filters.id));
+      // Every `.eq` filter applies (Phase 7g: the POST reads only Speed's active pool).
+      const rows = mocks.rows.filter((row) => Object.entries(filters).every(([key, value]) => (row as Record<string, unknown>)[key] === value));
       return single ? { data: rows[0] ?? null, error: null } : { data: head ? null : rows, count: rows.length, error: null };
     }
     if (table === "trivia_answers") {
@@ -50,7 +55,7 @@ const chain = (table: string) => {
 };
 
 vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: { from: (table: string) => chain(table) } }));
-vi.mock("@/lib/speedTriviaCategoryVisibility", () => ({ getHiddenSpeedCategories: async () => new Set<string>() }));
+vi.mock("@/lib/speedTriviaCategoryVisibility", () => ({ getHiddenSpeedCategories: async () => mocks.hidden }));
 vi.mock("@/lib/challengeCampaigns", () => ({ applyChallengeCampaignPoints: async () => ({ finalPoints: 2, multiplierApplied: 1 }) }));
 vi.mock("@/lib/serverSession", () => ({ isSessionEnforced: () => false, readSession: () => null }));
 vi.mock("@/lib/venuePresence", () => ({
@@ -68,6 +73,8 @@ const ROW: Row = {
   correct_answer: 2,
   category: "Science",
   difficulty: "easy",
+  question_pool: "anytime_blitz",
+  status: "active",
 };
 const PERM = questionOptionOrder(ROW.id, ROW.options);
 const SHOWN_CORRECT = PERM.indexOf(ROW.correct_answer);
@@ -86,6 +93,7 @@ const post = async (body: Record<string, unknown>) => {
 
 beforeEach(() => {
   mocks.rows = [ROW];
+  mocks.hidden = new Set();
   mocks.existing = null;
   mocks.inserts = [];
   mocks.insertError = null;
@@ -179,5 +187,55 @@ describe("POST /api/trivia without order (an open tab on the old script)", () =>
     expect(body.result).toMatchObject({ isCorrect: false, correctAnswer: ROW.correct_answer });
     expect(mocks.inserts).toEqual([expect.objectContaining({ answer: -1, is_correct: false })]);
     expect(mocks.userUpdates).toEqual([]);
+  });
+});
+
+// Phase 7g (second review R2 #20.4): the POST grades only a question the GET could serve. Anything else answers
+// 404 "Not available": no trivia_answers row, no points, and no correct answer in the reply.
+describe("POST /api/trivia only grades playable questions", () => {
+  const postRaw = (body: Record<string, unknown>) =>
+    POST(
+      new Request("https://example.invalid/api/trivia", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: "user-1", questionId: ROW.id, timeElapsed: 3, order: 1, ...body }),
+      })
+    );
+  const refused = async (body: Record<string, unknown> = {}) => {
+    const response = await postRaw({ answer: SHOWN_CORRECT, ...body });
+    expect(response.status).toBe(404);
+    const text = await response.text();
+    expect(JSON.parse(text)).toEqual({ ok: false, error: "Not available" });
+    expect(text).not.toMatch(/correctAnswer/);
+    expect(mocks.inserts).toEqual([]);
+    expect(mocks.userUpdates).toEqual([]);
+  };
+
+  it.each([
+    ["waiting for review", { status: "pending_review" }],
+    ["retired", { status: "deleted" }],
+    ["a Live question", { question_pool: "live_showdown" }],
+  ])("refuses %s", async (_label, over) => {
+    mocks.rows = [{ ...ROW, ...over }];
+    await refused();
+  });
+
+  it("refuses a question in a category hidden for players, and a time-out on it", async () => {
+    mocks.rows = [{ ...ROW, category: "Current Events" }];
+    mocks.hidden = new Set(["Current Events"]);
+    await refused();
+    await refused({ answer: -1 });
+  });
+
+  it("refuses an unknown or malformed id", async () => {
+    await refused({ questionId: "99999999-2222-4333-8444-555555555555" });
+    await refused({ questionId: "not-a-uuid" });
+  });
+
+  it("still grades an active Speed question in a visible category", async () => {
+    mocks.hidden = new Set(["Current Events"]);
+    const response = await postRaw({ answer: SHOWN_CORRECT });
+    expect(response.status).toBe(200);
+    expect(mocks.inserts).toHaveLength(1);
   });
 });
