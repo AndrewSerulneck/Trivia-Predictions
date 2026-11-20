@@ -1,0 +1,192 @@
+{
+  "mode": "apply",
+  "nullRows": 41,
+  "changes": [
+    {
+      "user_id": "3be3b704-1696-4097-817f-abefff808b51",
+      "venue_id": "venue-pacific-street",
+      "last_verified_at": "2026-07-16T19:01:24.993337+00:00"
+    },
+    {
+      "user_id": "c999d23a-82af-447c-bcca-25a47f7448d6",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-08-19T23:20:02.16817+00:00"
+    },
+    {
+      "user_id": "b9d1673f-8b6d-4fab-a67b-794030d28833",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-07-17T17:48:50.534923+00:00"
+    },
+    {
+      "user_id": "e77af6d9-56d3-4ebf-82c7-4f97dbcd38b3",
+      "venue_id": "venue-riverside",
+      "last_verified_at": "2026-07-27T23:24:31.48495+00:00"
+    },
+    {
+      "user_id": "ba4ab8f0-9732-43b0-ba24-2d202b8046d9",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-08-13T01:37:04.346736+00:00"
+    },
+    {
+      "user_id": "9320163e-4503-45b3-b7a3-82fc5e5a9b34",
+      "venue_id": "venue-riverside",
+      "last_verified_at": "2026-07-26T21:25:33.756163+00:00"
+    },
+    {
+      "user_id": "bdaf4fb4-739b-419c-b0e9-65e2ddc5d5c2",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-08-02T18:49:53.825645+00:00"
+    },
+    {
+      "user_id": "94245876-3000-441d-8c38-2639e8d60de8",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-08-28T20:05:25.995476+00:00"
+    },
+    {
+      "user_id": "0face595-4429-426f-95dd-20ab1c407b13",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-08-07T01:18:11.070853+00:00"
+    },
+    {
+      "user_id": "04a3c53b-e018-424b-9970-3e6a8f2d6356",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-08-19T23:53:31.113176+00:00"
+    },
+    {
+      "user_id": "3a6b0487-a414-4564-b648-94f3297e9ea6",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-08-09T22:47:21.04782+00:00"
+    },
+    {
+      "user_id": "4ce5c62c-5ef6-45ad-9149-19d8f0a68b75",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-08-14T23:20:28.426144+00:00"
+    },
+    {
+      "user_id": "29b9bba4-7b06-485c-af77-8361f7f83d86",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-08-25T23:57:45.429956+00:00"
+    },
+    {
+      "user_id": "5b9766c4-10b5-4d4a-8d51-3baba59e302c",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-08-15T16:50:14.822361+00:00"
+    },
+    {
+      "user_id": "7038f98c-8704-4c7b-a8ad-4d7b026eba8d",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-08-06T22:56:43.215136+00:00"
+    },
+    {
+      "user_id": "38704ed3-3680-4adf-8aad-92d8637c00b2",
+      "venue_id": "brunswick-grove",
+      "last_verified_at": "2026-08-30T23:49:39.588324+00:00"
+    },
+    {
+      "user_id": "50bcebc0-ccef-4294-835d-1ff18fd86111",
+      "venue_id": "brunswick-grove",
+      "last_verified_at": "2026-09-06T04:04:12.816916+00:00"
+    },
+    {
+      "user_id": "9e9aaf7c-f1a6-4adf-9b47-489c37aa9161",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-08-07T21:46:44.380375+00:00"
+    },
+    {
+      "user_id": "2e00d9c2-6f70-49f4-8ec8-72cd24ee2631",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-08-27T18:27:57.864478+00:00"
+    },
+    {
+      "user_id": "b1e1fa48-e43b-4f63-9175-ea5cf0bf7e5b",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-09-12T00:32:39.558275+00:00"
+    },
+    {
+      "user_id": "9ea45c10-c6bc-4455-b3bd-869db7df466b",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-09-12T01:15:25.197847+00:00"
+    },
+    {
+      "user_id": "7cba6685-3120-42ab-a265-a8484c6a65e7",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-09-30T23:19:29.401423+00:00"
+    },
+    {
+      "user_id": "3efdaa56-fa8d-465e-8cb6-0c385dcce059",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-09-30T23:57:09.738522+00:00"
+    },
+    {
+      "user_id": "e2dbf6cd-f0fe-4104-9585-ed83aa283725",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-09-18T02:13:10.156202+00:00"
+    },
+    {
+      "user_id": "73820951-60f5-4c5b-8174-6569b149985d",
+      "venue_id": "venue-riverside",
+      "last_verified_at": "2026-09-20T20:43:25.364953+00:00"
+    },
+    {
+      "user_id": "4486b70e-3b68-44b8-a4d4-169fd893703c",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-10-04T19:57:39.067583+00:00"
+    },
+    {
+      "user_id": "bcedf2b0-bfed-4adf-b622-f534f8081041",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-09-25T01:00:16.406201+00:00"
+    },
+    {
+      "user_id": "f989b2e0-cefd-4520-9c12-685e10dc8fff",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-10-31T18:41:38.329124+00:00"
+    },
+    {
+      "user_id": "1a53df36-f8c5-4e19-8f81-bb7f5e2cd1da",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-10-09T22:54:15.645957+00:00"
+    },
+    {
+      "user_id": "8e92a4fe-c4fe-4fe0-ab8f-1d0aafdea7b4",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-10-15T16:58:36.659804+00:00"
+    },
+    {
+      "user_id": "87ad601f-60d2-415f-a807-d9299d58eb97",
+      "venue_id": "brunswick-grove",
+      "last_verified_at": "2026-10-21T22:55:32.769237+00:00"
+    },
+    {
+      "user_id": "554fe43e-3b26-4f9e-9841-ffdacf3728d6",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-10-14T20:55:33.024207+00:00"
+    },
+    {
+      "user_id": "e724e673-ceb0-4c79-b35e-2ecd89a94792",
+      "venue_id": "venue-riverside",
+      "last_verified_at": "2026-10-28T00:36:52.341089+00:00"
+    },
+    {
+      "user_id": "82efb9d1-8e88-4ad1-bb06-6444a180ed4f",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-11-05T23:03:10.997235+00:00"
+    },
+    {
+      "user_id": "afa4ded1-cc69-423a-980a-80664ab5b4ba",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-11-07T23:02:59.933674+00:00"
+    },
+    {
+      "user_id": "9b052708-ee95-4acf-b205-a46da367eed2",
+      "venue_id": "venue-garden-state-bar",
+      "last_verified_at": "2026-11-08T04:17:19.403154+00:00"
+    },
+    {
+      "user_id": "90974ccb-b928-4df6-a2f9-6817d8ec2f08",
+      "venue_id": "venue-carrabba-s-italian-grill-east-brunswick",
+      "last_verified_at": "2026-11-09T19:29:58.54379+00:00"
+    }
+  ]
+}
+Updated 37 rows.

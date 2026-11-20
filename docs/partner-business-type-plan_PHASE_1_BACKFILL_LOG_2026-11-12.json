@@ -1,0 +1,37 @@
+{
+  "mode": "preview",
+  "capturedAt": "2026-11-12T21:46:02.958Z",
+  "columnExists": false,
+  "totalRows": 4,
+  "counts": {
+    "null": 4
+  },
+  "backfillTo": "bar_restaurant",
+  "undo": "update public.venue_owners set business_type = null where id in (<changes[].id>);",
+  "changes": [
+    {
+      "id": "64f046ff-a44f-47b4-acc1-94ff30288920",
+      "name": "Andrew Serulneck",
+      "email": "andrewserulneck@gmail.com",
+      "business_type": null
+    },
+    {
+      "id": "52941a2f-1f9d-4886-aaf2-6a74cd5875cb",
+      "name": "Marc Serulneck",
+      "email": "mserulneck@gmail.com",
+      "business_type": null
+    },
+    {
+      "id": "8acc4938-c808-4a32-a14a-298b8e7a7f17",
+      "name": "Sonny",
+      "email": "262sunny@gmail.com",
+      "business_type": null
+    },
+    {
+      "id": "ecc882c6-5d2e-48e4-abfc-7a996ad70072",
+      "name": "Sally",
+      "email": "ca8107@carrabbas.com",
+      "business_type": null
+    }
+  ]
+}

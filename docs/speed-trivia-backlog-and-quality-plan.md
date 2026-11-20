@@ -19,7 +19,7 @@ Created 2026-11-15. Owner: Andrew Serulneck.
 > | 7 | 7g — Live Publish, Speed answers, Admin edits | **Opus 5.5** | high | ✅ DONE 2026-11-20 (committed on `fix/second-review-remedials`, not pushed; migration `20261120151403` PGlite-tested, NOT applied — 7j applies it) (`..._PHASE_7G_HANDOFF.md`) |
 > | 8 | 7h — the private writer never loses a batch | **Opus 5.5** | medium | ✅ DONE 2026-11-20 (committed on `fix/second-review-remedials`, not pushed; no migration; writer-repo sync is 7j step 4) (`..._PHASE_7H_HANDOFF.md`) |
 > | 9 | 7i — player screens: report sheet, Current Events tab | **Sonnet 5.5** | medium | ✅ DONE 2026-11-20 (committed on `fix/second-review-remedials`, not pushed; no migration; browser check NOT done) (`..._PHASE_7I_HANDOFF.md`) |
-> | 10 | 7j — Sync safety, tripwire; apply, verify, ship | **Sonnet 5.5** | medium | ← **next** |
+> | 10 | 7j — Sync safety, tripwire; apply, verify, ship | **Sonnet 5.5** | medium | ◐ CODE DONE 2026-11-20 (committed `074aa23c`, not pushed); migration push, merge, writer sync, post-nightly check wait on Andrew's OK (`..._PHASE_7J_HANDOFF.md`) |
 > | — | 6 — Live grading misses | Opus 5.5 | high | deferred (D41) |
 >
 > When a phase finishes, its agent ticks it here and moves "← next" down one row.
