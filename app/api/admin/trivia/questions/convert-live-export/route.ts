@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/adminAuth";
-import { convertSpeedQuestionToLiveTriviaExportQuestion } from "@/lib/liveTriviaExport";
+import { convertForLiveExport, LIVE_EXPORT_MAX_IDS, type PendingSpeedQuestion } from "@/lib/liveTriviaExport";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+// Phase 7e (R2 #29.5): at most 25 questions, rewritten 4 at a time inside a 90 s, $0.25 budget.
+export const maxDuration = 120;
 
 type SpeedTriviaQuestionRow = {
   id: string;
@@ -39,6 +42,9 @@ export async function POST(request: Request) {
     if (ids.length === 0) {
       return NextResponse.json({ ok: false, error: "Select at least one question first." }, { status: 400 });
     }
+    if (ids.length > LIVE_EXPORT_MAX_IDS) {
+      return NextResponse.json({ ok: false, error: `Select at most ${LIVE_EXPORT_MAX_IDS} questions.` }, { status: 400 });
+    }
 
     const { data, error } = await supabaseAdmin
       .from("trivia_questions")
@@ -59,31 +65,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: "No eligible Speed Trivia questions were found." }, { status: 400 });
     }
 
-    const converted = await Promise.all(
-      rows.map(async (row) => {
-        const options = coerceOptions(row.options);
-        const answerIndex = Number(row.correct_answer);
-        const answer =
-          Number.isInteger(answerIndex) && answerIndex >= 0 && answerIndex < options.length ? options[answerIndex] : "";
-        if (!answer) {
-          throw new Error(`Question "${row.question}" is missing a usable correct answer.`);
-        }
-
-        return convertSpeedQuestionToLiveTriviaExportQuestion({
-          id: row.id,
-          slug: row.slug,
-          question: row.question,
-          options,
-          correctAnswer: answerIndex,
-          answer,
-          category: row.category,
-          difficulty: row.difficulty,
-        });
-      })
-    );
+    const pending: PendingSpeedQuestion[] = rows.map((row) => {
+      const options = coerceOptions(row.options);
+      const answerIndex = Number(row.correct_answer);
+      const answer =
+        Number.isInteger(answerIndex) && answerIndex >= 0 && answerIndex < options.length ? options[answerIndex] : "";
+      if (!answer) {
+        throw new Error(`Question "${row.question}" is missing a usable correct answer.`);
+      }
+      return {
+        id: row.id,
+        slug: row.slug,
+        question: row.question,
+        options,
+        correctAnswer: answerIndex,
+        answer,
+        category: row.category,
+        difficulty: row.difficulty,
+      };
+    });
+    const { items: converted, fallbacks } = await convertForLiveExport(pending);
 
     return NextResponse.json({
       ok: true,
+      fallbacks,
       items: converted.sort((a, b) => {
         const category = a.category.localeCompare(b.category);
         return category !== 0 ? category : a.question.localeCompare(b.question);

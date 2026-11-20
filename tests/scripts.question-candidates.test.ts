@@ -163,7 +163,12 @@ describe("nightly processing", () => {
       sourceUrl: "https://example.com/story" }), "Current Events");
     const client = memoryClient({ list: [...regular, ce] });
     const session = fakeSession({ "Which pop act had hit number 1 of 1985?": "duplicate" });
-    const report = await processing.processSpeedDay({ client, today: TODAY, env, createSession: session.create, createScorer: fakeScorer({}) });
+    const graded: Row[] = [];
+    const scorer = () => ({ scoreBatch: async (rows: Row[]) => { graded.push(...rows); return fakeScorer({})().scoreBatch(rows); } });
+    const report = await processing.processSpeedDay({ client, today: TODAY, env, createSession: session.create, createScorer: scorer });
+    // Phase 7e (R2 #29.8): the backup grader gets the Current Events source to check; others send none.
+    expect(graded.find(r => r.category === "Current Events")).toMatchObject({ sourceUrl: "https://example.com/story" });
+    expect(graded.filter(r => r.category !== "Current Events").every(r => !("sourceUrl" in r))).toBe(true);
     expect(report.admittedByKind).toEqual({ regular: 7, currentEvents: 1 });
     expect(report.rejected).toEqual({ repeat: 1 });
     expect(report.skipped).toBe(1);

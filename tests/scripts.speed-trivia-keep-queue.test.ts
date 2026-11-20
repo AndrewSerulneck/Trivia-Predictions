@@ -6,6 +6,7 @@ import * as core from "@/lib/speed-trivia-uniqueness/core.cjs";
 import * as runtime from "@/lib/speed-trivia-uniqueness/runtime.cjs";
 import type { AdmissionClient, AdmissionSession } from "@/types/speedTriviaAdmission";
 import type { ComparisonResult, ComparisonTask, SpeedQuestion } from "@/types/speedTriviaUniqueness";
+import { openaiResponse } from "./helpers/openaiReply";
 
 // Phase 3 overnight Keep queue on isolated PostgreSQL (PGlite) with a fixture judge. No network, no Supabase.
 const require = createRequire(import.meta.url);
@@ -27,7 +28,8 @@ type Prepared = { queued: number; stale: number; settled: number };
 type Reader = (client: AdmissionClient, ids: string[]) => Promise<Map<string, Record<string, unknown>>>;
 const queue = require("../scripts/process-speed-trivia-keep-queue.cjs") as {
   processQueue: (args: { client: AdmissionClient; session: AdmissionSession; marks: Mark[]; rows: Map<string, Record<string, unknown>>;
-    tag?: (row: Record<string, unknown>) => Promise<boolean> }) => Promise<Report & { tagCalls?: number; tagged?: number }>;
+    tag?: (row: Record<string, unknown>, budget: AdmissionSession["budget"]) => Promise<boolean> }) => Promise<Report & { tagCalls?: number; tagged?: number }>;
+  tagWith: (client: unknown, options?: { apiKey?: string; transport?: typeof fetch }) => (row: Record<string, unknown>, budget: unknown) => Promise<boolean>;
   simulate: (calls: Call[], concurrency: number) => { old: Side; new: Side };
   precheckPass: (args: { client: AdmissionClient; session: AdmissionSession; ids: string[]; read: Reader }) => Promise<PrecheckReport>;
   runPaid: (args: { client: AdmissionClient; queued: number; candidates: string[]; perRun: number; total: number; minutes: number; limit: number;
@@ -192,8 +194,10 @@ describe("Speed Trivia overnight Keep queue", () => {
     await db.exec("set role service_role;");
     // The fake tagger writes a real question_tags row (as tagOne would) only for the first question.
     const tagged: string[] = [];
-    const tag = async (row: Record<string, unknown>) => {
+    const budgets: unknown[] = [];
+    const tag = async (row: Record<string, unknown>, budget: unknown) => {
       tagged.push(String(row.id));
+      budgets.push(budget);
       if (row.id !== tags.id) return false;
       await db.exec("reset role;");
       await db.query("insert into question_tags(game,question_ref,category,subject,subject_key) values('speed',$1,'Animals','Chameleon','chameleon')", [row.id]);
@@ -211,8 +215,40 @@ describe("Speed Trivia overnight Keep queue", () => {
     expect(await outcome(tags.id)).toMatchObject({ outcome: "approved" });
     expect(await status(fails.id)).toBe("pending_review");
     expect(await outcome(fails.id)).toMatchObject({ outcome: "needs_look", note: "No subject tag yet." });
-    // Each tag call is charged $0.0001 to the run's dollar budget.
-    expect(real.budget.summary().dollars).toBeCloseTo(0.0002, 8);
+    // Phase 7e: the tagger gets the run's budget, to reserve and settle each call at its real cost.
+    expect(budgets).toEqual([real.budget, real.budget]);
+  });
+
+  it("Phase 7e (R2 #29.2): the real tagger settles each tag call's real cost on the run's budget", async () => {
+    const r = harness.row(id(1), "Which lizard can change its colour?", "Chameleon", "Animals");
+    await seed([r], "pending_review");
+    await keep([r]);
+    await db.exec("reset role;");
+    for (const file of ["supabase/migrations/20261115220356_question_variety_map.sql", "supabase/migrations/20261116014954_speed_trivia_star_cap.sql"]) {
+      await db.exec(readFileSync(file, "utf8"));
+    }
+    await db.exec("set role service_role;");
+    // The service-role calls tagOne makes: the category's areas (none: area null), the cost ledger, the tag upsert.
+    const ledgerRows: Record<string, unknown>[] = [];
+    const tagClient = { from: (table: string) => {
+      if (table === "question_coverage_areas") { const chain = { select: () => chain, eq: () => chain, order: async () => ({ data: [], error: null }) }; return chain; }
+      if (table === "llm_usage_logs") return { insert: async (rows: Record<string, unknown>[]) => { ledgerRows.push(...rows); return { error: null }; } };
+      return { upsert: async (rows: Record<string, unknown>[]) => {
+        await db.exec("reset role;");
+        for (const t of rows) await db.query("insert into question_tags(game,question_ref,category,subject,subject_key,tagged_by) values('speed',$1,$2,$3,$4,$5)", [t.question_ref, t.category, t.subject, t.subject_key, t.tagged_by]);
+        await db.exec("set role service_role;");
+        return { error: null };
+      } };
+    } };
+    const transport = (async () => openaiResponse(JSON.stringify({ items: [{ n: 1, area: null, era: null, subject: "Chameleon" }] }),
+      { input: 500, output: 300, reasoning: 250, model: "gpt-6.1-sol" })) as unknown as typeof fetch;
+    const session = await sessionWith(async tasks => tasks.map(sound));
+    const spent = () => Number(session.budget.summary().dollars);
+    const before = spent();
+    const report = await queue.processQueue({ client, session, marks: marksFor([r]), rows: await current([r.id]), tag: queue.tagWith(tagClient, { apiKey: "k", transport }) });
+    expect(report).toMatchObject({ approved: 1, tagCalls: 1, tagged: 1, stopped: null });
+    expect(spent() - before).toBeCloseTo((500 * 2 + 300 * 10) / 1e6, 12);
+    expect(ledgerRows).toEqual([expect.objectContaining({ feature: "question_tagging", metadata: expect.objectContaining({ calls: 1, reasoningTokens: 250 }) })]);
   });
 
   it("Phase 4c.1: a tag call past the run budget stops the run without tagging", async () => {
@@ -224,11 +260,14 @@ describe("Speed Trivia overnight Keep queue", () => {
       await db.exec(readFileSync(file, "utf8"));
     }
     await db.exec("set role service_role;");
-    let tagCalls = 0;
-    const session = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 0.00005 }),
+    // Phase 7e: the real tagger reserves the call's worst case (~$0.02 on gpt-6.1-sol) before sending anything.
+    let sent = 0;
+    const tagClient = { from: () => { const chain = { select: () => chain, eq: () => chain, order: async () => ({ data: [], error: null }) }; return chain; } };
+    const transport = (async () => { sent++; return openaiResponse("{}"); }) as unknown as typeof fetch;
+    const session = await runtime.createSession({ client, secret: harness.SECRET, budget: runtime.createBudget({ dollars: 0.005 }),
       judge: { modelVersion: "queue-fixture", adjudicate: async tasks => tasks.map(sound) } });
-    const report = await queue.processQueue({ client, session, marks: marksFor([r]), rows: await current([r.id]), tag: async () => { tagCalls++; return true; } });
-    expect(tagCalls).toBe(0);
+    const report = await queue.processQueue({ client, session, marks: marksFor([r]), rows: await current([r.id]), tag: queue.tagWith(tagClient, { apiKey: "k", transport }) });
+    expect(sent).toBe(0);
     expect(report).toMatchObject({ examined: 0, tagCalls: 0, stopped: "budget" });
     expect(await outcome(r.id)).toMatchObject({ outcome: "queued" });
   });

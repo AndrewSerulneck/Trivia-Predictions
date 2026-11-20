@@ -315,6 +315,7 @@ export function TriviaPendingReviewSection() {
       const payload = (await response.json()) as {
         ok: boolean;
         items?: LiveExportQuestion[];
+        fallbacks?: number;
         error?: string;
       };
       if (!response.ok || !payload.ok) {
@@ -331,7 +332,8 @@ export function TriviaPendingReviewSection() {
           return category !== 0 ? category : a.question.localeCompare(b.question);
         });
       });
-      setSuccess(`Added ${incoming.length} question(s) to the Live Trivia export list.`);
+      const fallbacks = payload.fallbacks ?? 0;
+      setSuccess(`Added ${incoming.length} question(s) to the Live Trivia export list.${fallbacks > 0 ? ` ${fallbacks} not rewritten.` : ""}`);
     } catch (err) {
       setError(getErrorMessage(err, "Failed to convert selected questions."));
     } finally {

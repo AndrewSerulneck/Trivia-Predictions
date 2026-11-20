@@ -139,6 +139,48 @@ function buildRangeFilter(range: "today" | "week" | "month" | "all"): { from: st
   return { from, to };
 }
 
+// The dashboard's widest range ("all") reads at most this many rows. The OpenAI ledger writes a few a night.
+const SUMMARY_ROW_LIMIT = 20_000;
+
+export type UsageSummaryRow = {
+  feature: LlmUsageFeature;
+  model: string;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cost_cents: number | string | null;
+  calls?: unknown;
+};
+
+/** Calls a ledger row stands for: metadata.calls when it's a positive whole number, else 1. */
+export const callsOf = (row: { calls?: unknown }): number => {
+  const calls = Number(row.calls);
+  return Number.isSafeInteger(calls) && calls > 0 ? calls : 1;
+};
+
+type Totals = { calls: number; inputTokens: number; outputTokens: number; costCents: number };
+
+/** Sum rows by feature and by model. */
+export const summarizeUsage = (rows: UsageSummaryRow[]): Pick<LlmCostSummary, "byFeature" | "byModel"> => {
+  const features = new Map<LlmUsageFeature, Totals>();
+  const models = new Map<string, Totals>();
+  const add = <K,>(map: Map<K, Totals>, key: K, row: UsageSummaryRow) => {
+    const entry = map.get(key) ?? { calls: 0, inputTokens: 0, outputTokens: 0, costCents: 0 };
+    entry.calls += callsOf(row);
+    entry.inputTokens += Number(row.input_tokens) || 0;
+    entry.outputTokens += Number(row.output_tokens) || 0;
+    entry.costCents += Number(row.cost_cents) || 0;
+    map.set(key, entry);
+  };
+  for (const row of rows) {
+    add(features, row.feature, row);
+    add(models, row.model, row);
+  }
+  return {
+    byFeature: [...features].map(([feature, totals]) => ({ feature, ...totals })),
+    byModel: [...models].map(([model, totals]) => ({ model, ...totals })),
+  };
+};
+
 /**
  * Query aggregated cost summary for the admin dashboard.
  */
@@ -170,37 +212,17 @@ export async function getCostSummary(
       .limit(50)
       .returns<LlmUsageLogRow[]>();
 
-    // Aggregate: by feature
-    const { data: byFeatureRaw } = await supabaseAdmin
+    // Totals: one bounded read, summed here (Phase 7e, R2 #29.3). An OpenAI ledger row covers a whole run, with the
+    // real call count in metadata.calls; any other row is one call.
+    const { data: usageRows } = await supabaseAdmin
       .from("llm_usage_logs")
-      .select("feature, count:feature, sum:input_tokens, sum:output_tokens, sum:cost_cents")
+      .select("feature, model, input_tokens, output_tokens, cost_cents, calls:metadata->calls")
       .gte("created_at", from)
       .lte("created_at", to)
-      .returns<{ feature: LlmUsageFeature; count: number; sum: { input_tokens: number; output_tokens: number; cost_cents: number } }[]>();
+      .limit(SUMMARY_ROW_LIMIT)
+      .returns<UsageSummaryRow[]>();
 
-    // Aggregate: by model
-    const { data: byModelRaw } = await supabaseAdmin
-      .from("llm_usage_logs")
-      .select("model, count:model, sum:input_tokens, sum:output_tokens, sum:cost_cents")
-      .gte("created_at", from)
-      .lte("created_at", to)
-      .returns<{ model: string; count: number; sum: { input_tokens: number; output_tokens: number; cost_cents: number } }[]>();
-
-    const byFeature = (byFeatureRaw ?? []).map((r) => ({
-      feature: r.feature,
-      calls: r.count,
-      inputTokens: r.sum.input_tokens,
-      outputTokens: r.sum.output_tokens,
-      costCents: Number(r.sum.cost_cents),
-    }));
-
-    const byModel = (byModelRaw ?? []).map((r) => ({
-      model: r.model,
-      calls: r.count,
-      inputTokens: r.sum.input_tokens,
-      outputTokens: r.sum.output_tokens,
-      costCents: Number(r.sum.cost_cents),
-    }));
+    const { byFeature, byModel } = summarizeUsage(usageRows ?? []);
 
     const totalCostCents = byFeature.reduce((acc, f) => acc + f.costCents, 0);
     const totalCalls = byFeature.reduce((acc, f) => acc + f.calls, 0);

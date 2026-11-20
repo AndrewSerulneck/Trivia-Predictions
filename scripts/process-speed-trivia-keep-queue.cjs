@@ -13,7 +13,8 @@
  *       PAID: processes queued Keeps oldest first.
  *       Unique -> approved (signed admission, approved-only scope). Repeat -> retired with its match (D8).
  *       Uncertain, or edited after Keep -> left waiting under "Needs a look".
- *       No subject tag (star cap) -> tagged once (one OpenAI call, charged $0.0001 to the run) and retried once;
+ *       No subject tag (star cap) -> tagged once (one OpenAI call, reserved on the run's budget and settled at its real
+ *       cost, ~$0.003-$0.006; Phase 7e) and retried once;
  *       still untagged -> "Needs a look" (Phase 4c.1).
  *       --precheck (D17): then, with what's left of the run, checks older undecided waiting questions (score ≥
  *       --min-score, best first) the same way WITHOUT approving. Repeat -> retired with its match (Repeats, Restore);
@@ -168,8 +169,10 @@ const recordError = (report, id, error, kind) => {
 const SUBJECT_FULL_NOTE = 'Subject full: 5 approved questions on this subject.';
 const UNTAGGED_NOTE = 'No subject tag yet.';
 const TAGGED_BY = `openai:${tagging.TAG_MODEL}:keep-queue-v1`;
-// Phase 4c.1: the real tagger. Tests inject a fake.
-const tagWith = client => row => tagging.tagOne({ client, row, apiKey: process.env.OPENAI_API_KEY, taggedBy: TAGGED_BY });
+// Phase 4c.1: the real tagger. Tests inject a fake. Phase 7e (R2 #29.2): the call is reserved on the run's budget with
+// openai.claimFor and settled from the reply's usage, like the repeat judge; a spent budget stops the run.
+const tagWith = (client, { apiKey = process.env.OPENAI_API_KEY, transport } = {}) => (row, budget) =>
+  tagging.tagOne({ client, row, apiKey, taggedBy: TAGGED_BY, budget, ...(transport ? { transport } : {}) });
 const CHECK_NOTE = code => `Couldn't check (${code}). Keep it again or reject it.`;
 // The approved question a duplicate verdict matched, if it's still approved.
 const approvedMatch = (session, error) =>
@@ -179,11 +182,11 @@ const approvedMatch = (session, error) =>
  * stopped='errors' at the breaker. A row's own problem sends it to Needs a look; a passing one leaves it queued. */
 const processQueue = async ({ client, session, marks, rows, breaker = createBreaker(), tag = tagWith(client) }) => {
   const report = { examined: 0, approved: 0, repeat: 0, needsLook: 0, subjectFull: 0, skipped: 0, tagCalls: 0, tagged: 0, stopped: null, errors: [], rowErrors: 0, transientErrors: 0 };
-  // One tag call, charged to the run's dollar budget first (a spent budget stops the run like any paid check).
+  // One tag call on the run's dollar budget: the tagger reserves and settles it, and a spent budget stops the run like
+  // any paid check (thrown before anything is sent, so it isn't counted as a call).
   const tagged = async row => {
-    session.budget.reserve({ dollars: tagging.TAG_DOLLARS, requests: 1 });
+    const ok = await tag(row, session.budget);
     report.tagCalls++;
-    const ok = await tag(row);
     if (ok) report.tagged++;
     return ok;
   };
@@ -547,4 +550,4 @@ const main = async () => {
 };
 
 if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
-module.exports = { parseArgs, prepare, processQueue, precheckPass, runPaid, runApply, simulate, queueBudget, classify };
+module.exports = { tagWith, parseArgs, prepare, processQueue, precheckPass, runPaid, runApply, simulate, queueBudget, classify };

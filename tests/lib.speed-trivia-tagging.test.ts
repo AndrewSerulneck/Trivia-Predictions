@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AdmissionError } from "@/lib/speed-trivia-uniqueness/runtime.cjs";
+import { AdmissionError, createBudget } from "@/lib/speed-trivia-uniqueness/runtime.cjs";
 import { openaiResponse } from "./helpers/openaiReply";
 import type { AdmissionRow, AdmissionSession } from "@/types/speedTriviaAdmission";
 
@@ -245,5 +245,75 @@ describe("Phase 4c.8: the star cap holds when an edit re-tags an approved questi
     expect(await tagOne({ client: client as never, row: row(), apiKey: "k", transport, write: false }))
       .toMatchObject({ question_ref: row().id, subject_key: "chameleon", area_id: "a1" });
     expect(await tagOne({ client: client as never, row: row(), apiKey: "k", transport: openai({}, false) as unknown as typeof fetch, write: false })).toBeNull();
+  });
+});
+
+describe("Phase 7e: a tag call has room to answer, is always counted, and is budgeted", () => {
+  // A service-role client fake: the category's areas, the cost ledger and the tag upsert.
+  const fakeClient = () => {
+    const ledgerRows: Record<string, unknown>[] = [];
+    const tags: unknown[] = [];
+    const client = {
+      from: (table: string) => {
+        if (table === "question_coverage_areas") {
+          const chain = { select: () => chain, eq: () => chain, order: async () => ({ data: [{ id: "a1", name: "Reptiles", eras: ["Timeless"], active: true, note: null }], error: null }) };
+          return chain;
+        }
+        if (table === "llm_usage_logs") return { insert: async (rows: Record<string, unknown>[]) => { ledgerRows.push(...rows); return { error: null }; } };
+        if (table === "question_tags") return { upsert: async (rows: unknown) => { tags.push(rows); return { error: null }; } };
+        throw new Error(`unexpected table ${table}`);
+      },
+    };
+    return { client, ledgerRows, tags };
+  };
+  const good = JSON.stringify({ items: [{ n: 1, area: "Reptiles", era: "Timeless", subject: "Chameleon" }] });
+
+  it("asks for 2,048 output tokens (reasoning counts against the limit)", async () => {
+    const { client } = fakeClient();
+    const transport = vi.fn(async (_url: string, _init: RequestInit) => openaiResponse(good, { model: "gpt-6.1-sol" }));
+    expect(await tagOne({ client, row: row(), apiKey: "k", transport: transport as unknown as typeof fetch })).toBe(true);
+    expect(JSON.parse(String(transport.mock.calls[0][1].body)).max_output_tokens).toBe(2048);
+  });
+
+  it("an incomplete reply that spent its tokens on reasoning is still counted and reported, never silently untagged", async () => {
+    const { client, ledgerRows, tags } = fakeClient();
+    const warn = vi.fn();
+    const transport = vi.fn(async () => openaiResponse("", { status: "incomplete", input: 300, output: 2048, reasoning: 2040, model: "gpt-6.1-sol" }));
+    expect(await tagOne({ client, row: row(), apiKey: "k", transport: transport as unknown as typeof fetch, warn })).toBe(false);
+    expect(tags).toEqual([]);
+    expect(ledgerRows).toEqual([expect.objectContaining({ feature: "question_tagging", model: "gpt-6.1-sol", input_tokens: 300, output_tokens: 2048,
+      cost_cents: Number((((300 * 2 + 2048 * 10) / 1e6) * 100).toFixed(4)), metadata: expect.objectContaining({ calls: 1, reasoningTokens: 2040 }) })]);
+    expect(warn).toHaveBeenCalledWith("Tagging: tagging-truncated-or-blocked (reasoning 2040, output 2048 of 2048 tokens).");
+    // A billed refusal is counted the same way.
+    const refusal = { model: "gpt-6.1-sol", status: "completed", output: [{ type: "message", content: [{ type: "refusal", refusal: "no" }] }], usage: { input_tokens: 300, output_tokens: 5 } };
+    expect(await tagOne({ client, row: row(), apiKey: "k", transport: (async () => new Response(JSON.stringify(refusal))) as unknown as typeof fetch, warn })).toBe(false);
+    expect(ledgerRows).toHaveLength(2);
+  });
+
+  it("reserves on the caller's budget and settles at the reply's real cost (settled without a model, so not counted twice)", async () => {
+    const { client, ledgerRows } = fakeClient();
+    const budget = createBudget({ dollars: 1 });
+    const transport = vi.fn(async () => openaiResponse(good, { input: 400, output: 120, reasoning: 90, model: "gpt-6.1-sol" }));
+    expect(await tagOne({ client, row: row(), apiKey: "k", transport: transport as unknown as typeof fetch, budget })).toBe(true);
+    expect(budget.summary().dollars).toBeCloseTo((400 * 2 + 120 * 10) / 1e6, 12);
+    expect(budget.summary().byModel).toEqual({});
+    expect(ledgerRows).toHaveLength(1);
+  });
+
+  it("a budget too small for the call stops the caller without calling OpenAI; other failures never throw", async () => {
+    const { client } = fakeClient();
+    const transport = vi.fn(async () => openaiResponse(good));
+    await expect(tagOne({ client, row: row(), apiKey: "k", transport: transport as unknown as typeof fetch, budget: createBudget({ dollars: 0.001 }) }))
+      .rejects.toMatchObject({ code: "budget_exhausted" });
+    expect(transport).not.toHaveBeenCalled();
+    expect(await tagOne({ client, row: row(), apiKey: "k", transport: (async () => { throw new Error("down"); }) as unknown as typeof fetch, budget: createBudget({ dollars: 1 }) })).toBe(false);
+  });
+
+  it("a spent deadline sends nothing", async () => {
+    const { client, ledgerRows } = fakeClient();
+    const transport = vi.fn(async () => openaiResponse(good));
+    expect(await tagOne({ client, row: row(), apiKey: "k", transport: transport as unknown as typeof fetch, deadlineMs: 0 })).toBe(false);
+    expect(transport).not.toHaveBeenCalled();
+    expect(ledgerRows).toEqual([]);
   });
 });

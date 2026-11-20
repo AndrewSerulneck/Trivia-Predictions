@@ -19,7 +19,7 @@ import type {
 
 // Speed Trivia Quick Review (docs/speed-trivia-backlog-and-quality-plan.md, Phase 1).
 // Every operation is one bounded RPC (supabase/migrations/20261115151703_speed_trivia_quick_review.sql). The one paid
-// call: Keep tags a waiting question that has no subject tag (Phase 4c.1; ~$0.0001 each, at most 25 per request).
+// call: Keep tags a waiting question that has no subject tag (Phase 4c.1; ~$0.003-$0.006 each, at most 25 per request).
 
 export const QUICK_REVIEW_PAGE_LIMIT = 50;
 export const QUICK_REVIEW_BATCH_LIMIT = 200;

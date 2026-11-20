@@ -82,6 +82,30 @@ describe("OpenAI transport", () => {
     expect(sleep).not.toHaveBeenCalled();
   });
 
+  it("Phase 7e (R2 #29.4): a deadline caps the whole call, retries and waits included", async () => {
+    let clock = 0;
+    const now = () => clock;
+    const sleep = async (ms: number) => { clock += ms; };
+    const busy = vi.fn(async () => { clock += 4000; return new Response("{}", { status: 503 }); });
+    const ask = (deadlineMs: number, transport: typeof fetch) => openai.callJson({ model: "gpt-6-luna", apiKey: "k", prompt: "Q", schema,
+      maxOutputTokens: 256, transport, sleep, now, deadlineMs });
+    // 4 s attempt + 1 s wait + 4 s attempt = 9 s; a third attempt would need a 3 s wait first, past the 12 s deadline.
+    await expect(ask(12_000, busy as unknown as typeof fetch)).rejects.toThrow(/^openai-http-503$/);
+    expect(busy).toHaveBeenCalledTimes(2);
+    expect(clock).toBe(9000);
+    // Each attempt's timeout is cut to what's left of the deadline.
+    clock = 0;
+    const seen: AbortSignal[] = [];
+    const ok = vi.fn(async (_url: string, init: RequestInit) => { seen.push(init.signal as AbortSignal); return openaiResponse('{"answer":"Mars"}'); });
+    expect((await ask(5000, ok as unknown as typeof fetch)).complete).toBe(true);
+    expect(seen).toHaveLength(1);
+    // No time left: nothing is sent, so nothing is billed.
+    const never = vi.fn();
+    await expect(ask(500, never as unknown as typeof fetch)).rejects.toThrow("openai-deadline");
+    expect(never).not.toHaveBeenCalled();
+    await expect(ask(-1, never as unknown as typeof fetch)).rejects.toThrow("invalid-deadline");
+  });
+
   it("reserves more than any reply can cost", () => {
     const claim = openai.claimFor({ model: "gpt-6.1-sol", prompt: "x".repeat(1000), maxOutputTokens: 512 });
     expect(claim).toMatchObject({ inputTokens: 3048, outputTokens: 512, requests: 1 });
@@ -90,16 +114,26 @@ describe("OpenAI transport", () => {
 });
 
 describe("budget tally and cost ledger", () => {
-  it("tallies settled usage per model in the budget summary", () => {
+  it("tallies settled usage per model in the budget summary, reasoning tokens included (Phase 7e)", () => {
     const budget = createBudget({ dollars: 1 });
-    for (const model of ["gpt-6-luna", "gpt-6-luna", "gpt-6.1-sol"]) {
+    for (const [model, reasoning] of [["gpt-6-luna", { thoughtTokens: 3 }], ["gpt-6-luna", {}], ["gpt-6.1-sol", { reasoningTokens: 7 }]] as const) {
       const reserved = budget.reserve({ dollars: 0.01, inputTokens: 100, outputTokens: 50, requests: 1 });
-      budget.settle(reserved, { dollars: 0.001, inputTokens: 80, outputTokens: 20, model });
+      budget.settle(reserved, { dollars: 0.001, inputTokens: 80, outputTokens: 20, model, ...reasoning });
     }
     expect(budget.summary().byModel).toEqual({
-      "gpt-6-luna": { calls: 2, inputTokens: 160, outputTokens: 40, dollars: 0.002 },
-      "gpt-6.1-sol": { calls: 1, inputTokens: 80, outputTokens: 20, dollars: 0.001 },
+      "gpt-6-luna": { calls: 2, inputTokens: 160, outputTokens: 40, reasoningTokens: 3, dollars: 0.002 },
+      "gpt-6.1-sol": { calls: 1, inputTokens: 80, outputTokens: 20, reasoningTokens: 7, dollars: 0.001 },
     });
+    // A settle without a model (a tag call on the Keep Queue's budget) counts against the cap but isn't tallied.
+    const reserved = budget.reserve({ dollars: 0.01, inputTokens: 100, outputTokens: 50, requests: 1 });
+    budget.settle(reserved, { dollars: 0.004, inputTokens: 80, outputTokens: 20 });
+    expect(Object.keys(budget.summary().byModel as Record<string, unknown>)).toEqual(["gpt-6-luna", "gpt-6.1-sol"]);
+    expect(budget.summary().dollars).toBeCloseTo(0.007, 10);
+  });
+
+  it("Phase 7e: keeps reasoning tokens in the ledger row's metadata", () => {
+    expect(ledger.rowsFor({ feature: "question_tagging", byModel: { "gpt-6.1-sol": { calls: 2, inputTokens: 10, outputTokens: 900, reasoningTokens: 850, dollars: 0.01 } } }))
+      .toEqual([expect.objectContaining({ output_tokens: 900, metadata: { calls: 2, reasoningTokens: 850 } })]);
   });
 
   it("writes one openai row per model, in cents, and nothing for an unknown feature or no spend", async () => {
