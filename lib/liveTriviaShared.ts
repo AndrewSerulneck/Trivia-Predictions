@@ -30,6 +30,25 @@ export const LIVE_TRIVIA_ROUND_MS = QUESTION_WINDOW_MS + MID_GAME_BREAK_MS;
  */
 export const REVEAL_HOLD_SECONDS = REST_WARNING_MS / 1000;
 
+/** Questions in one Live Trivia round (engine QUESTIONS_PER_ROUND). */
+export const LIVE_TRIVIA_QUESTIONS_PER_ROUND = QUESTIONS_PER_ROUND;
+
+/**
+ * What the TV's answer reveal says comes next. Standings appear only in the break after a round's last question,
+ * so the reveal never promises them otherwise (docs/live-trivia-display-media-and-standings-plan.md D1).
+ */
+export const revealNextLabel = (input: {
+  questionIndex: number | null;
+  questionsPerRound: number;
+  roundNumber: number | null;
+  totalRounds: number;
+}): string => {
+  const lastQuestion = input.questionIndex !== null && input.questionIndex >= input.questionsPerRound;
+  if (!lastQuestion) return "Next question";
+  const lastRound = input.roundNumber !== null && input.roundNumber >= input.totalRounds;
+  return lastRound ? "Final standings next" : "Standings next";
+};
+
 /** Rounds usable for a Live Trivia schedule — matches clampRounds() in the engine. */
 export const clampLiveTriviaRounds = (value: number): number => {
   if (!Number.isFinite(value)) return 1;

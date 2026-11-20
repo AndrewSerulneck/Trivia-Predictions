@@ -1,5 +1,5 @@
 import { TvAnswerReveal } from "@/components/venue-screen/TvAnswerReveal";
-import { REVEAL_HOLD_SECONDS } from "@/lib/liveTriviaShared";
+import { REVEAL_HOLD_SECONDS, revealNextLabel } from "@/lib/liveTriviaShared";
 import type { VenueScreenState } from "@/lib/venueScreen";
 
 type LiveTriviaState = Extract<VenueScreenState, { mode: "live-trivia" }>;
@@ -45,6 +45,8 @@ export function LiveTriviaRevealScreen({ state, nowMs }: LiveTriviaRevealScreenP
         nowMs={nowMs}
         updatedAtMs={updatedAtMs}
         gameId={live.gameId}
+        media={live.media}
+        nextLabel={revealNextLabel(live)}
       />
     </section>
   );

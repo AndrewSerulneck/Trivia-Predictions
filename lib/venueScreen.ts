@@ -4,6 +4,8 @@ import { driveVenueCategoryBlitz, getRoundResults, peekCategoryBlitz } from "@/l
 import { nextRoundStartAtMs } from "@/lib/categoryBlitzShared";
 import { resolveCategoryBlitzRoomId } from "@/lib/categoryBlitzRoom";
 import { getLiveShowdownState, type LiveShowdownState } from "@/lib/liveShowdownEngine";
+import { LIVE_TRIVIA_QUESTIONS_PER_ROUND } from "@/lib/liveTriviaShared";
+import { toQuestionMedia, type QuestionMedia } from "@/lib/questionMedia";
 import type { SquaresTvPayload } from "@/lib/squaresTv";
 import { getSquaresTvPayload } from "@/lib/squaresTvRead";
 import type { BracketTvPayload } from "@/lib/bracketsTv";
@@ -52,6 +54,13 @@ export type VenueScreenState =
         totalRounds: number;
         category: string | null;
         question: string | null;
+        // The question's picture/video. Only on "question" and "reveal"; null on
+        // "intermission" and "final" (docs/live-trivia-display-media-and-standings-plan.md).
+        media: QuestionMedia | null;
+        // 1-based question number within the round (null when unknown), and the
+        // round's length, so the reveal can say what comes next.
+        questionIndex: number | null;
+        questionsPerRound: number;
         // Present ONLY when phase === "reveal" (answers locked server-side);
         // null on every other phase. See selectVenueScreenState for the gate.
         correctAnswer: string | null;
@@ -518,6 +527,9 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
         totalRounds: liveTrivia.totalRounds,
         category: liveTrivia.activeQuestion?.category ?? liveTrivia.currentRoundCategory ?? null,
         question: liveTrivia.activeQuestion?.question ?? null,
+        media: phase === "question" || phase === "reveal" ? toQuestionMedia(liveTrivia.activeQuestion?.imageUrl) : null,
+        questionIndex: liveTrivia.currentQuestionIndex,
+        questionsPerRound: LIVE_TRIVIA_QUESTIONS_PER_ROUND,
         correctAnswer,
         secondsRemaining,
         revealEndsAt,

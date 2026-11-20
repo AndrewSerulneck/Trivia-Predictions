@@ -1729,7 +1729,7 @@ function LiveShowdownPageContent() {
                   </p>
                 ) : null}
                 {state.activeQuestion.imageUrl ? (
-                  <QuestionImage key={state.activeQuestion.questionId} src={state.activeQuestion.imageUrl} credit={state.activeQuestion.imageUrl.includes("wikimedia.org") ? "Map via Wikimedia Commons" : undefined} />
+                  <QuestionImage key={state.activeQuestion.questionId} src={state.activeQuestion.imageUrl} />
                 ) : null}
                 <p className="mt-2 text-3xl font-extrabold tracking-tight leading-tight text-slate-300">
                   {state.activeQuestion.question}
@@ -1798,7 +1798,7 @@ function LiveShowdownPageContent() {
               </p>
             ) : null}
             {state.activeQuestion?.imageUrl ? (
-              <QuestionImage key={state.activeQuestion.questionId} src={state.activeQuestion.imageUrl} credit={state.activeQuestion.imageUrl.includes("wikimedia.org") ? "Map via Wikimedia Commons" : undefined} />
+              <QuestionImage key={state.activeQuestion.questionId} src={state.activeQuestion.imageUrl} />
             ) : null}
             <p className="mt-2 text-3xl font-extrabold tracking-tight leading-tight">
               {state.activeQuestion?.question ? (

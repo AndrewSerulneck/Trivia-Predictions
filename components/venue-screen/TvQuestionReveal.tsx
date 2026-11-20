@@ -9,6 +9,8 @@ import { EdgeGlow, LightStreak } from "@/components/venue-screen/fx/MomentOverla
 import { useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as ease } from "@/lib/venueScreenBrand";
 import { questionType } from "@/lib/tvType";
+import { TvQuestionMedia } from "@/components/venue-screen/TvQuestionMedia";
+import type { QuestionMedia } from "@/lib/questionMedia";
 
 /* ------------------------------------------------------------------ *
  * <TvQuestionReveal />
@@ -41,6 +43,8 @@ export type TvQuestionRevealProps = {
   totalSeconds?: number;
   /** The game's stable id; with the round it keys the "question appears" light streak (plan §4 Phase 5). */
   gameId?: string;
+  /** The question's picture/video, shown beside the text (docs/live-trivia-display-media-and-standings-plan.md). */
+  media?: QuestionMedia | null;
 };
 
 const GRADIENT = `linear-gradient(90deg, ${SCREEN_COLORS.cyan500} 0%, ${SCREEN_COLORS.blue600} 52%, ${SCREEN_COLORS.violet600} 100%)`;
@@ -65,6 +69,7 @@ export function TvQuestionReveal({
   questionId,
   totalSeconds,
   gameId,
+  media = null,
 }: TvQuestionRevealProps) {
   const reduceMotion = useReducedMotion();
   const hideMotionOnly = useReducedMotionAfterHydration();
@@ -73,7 +78,7 @@ export function TvQuestionReveal({
   /* Reveal identity. Changing this remounts the animated subtree, so the
      entrance plays exactly once per question and a cold mount behaves
      identically to a prop change. No lifecycle assumptions anywhere. */
-  const revealKey = `${questionId ?? question}::${roundNumber}`;
+  const revealKey = `${questionId ?? question}::${roundNumber}::${media?.url ?? ""}`;
 
   /* Countdown interpolated purely from props: how much wall-clock time has
      passed since the server computed `secondsRemaining`, per the parent's
@@ -100,7 +105,7 @@ export function TvQuestionReveal({
   const shown = Math.ceil(live - 0.001);
 
   const words = useMemo(() => question.trim().split(/\s+/), [question]);
-  const type = questionType(question.length);
+  const type = questionType(question.length, Boolean(media));
   const perWord = Math.min(0.055, 1.5 / Math.max(words.length, 1));
 
   return (
@@ -207,8 +212,9 @@ export function TvQuestionReveal({
         </div>
 
         {/* ---- Question ---- */}
-        <div className="mt-6 flex flex-1 items-center" style={{ paddingRight: 120 }}>
+        <div className="mt-6 flex min-h-0 flex-1 items-center" style={{ paddingRight: media ? 0 : 120 }}>
           <motion.h1
+            className="min-w-0 flex-1"
             style={{
               fontSize: type.size,
               lineHeight: type.leading,
@@ -238,6 +244,16 @@ export function TvQuestionReveal({
               </motion.span>
             ))}
           </motion.h1>
+          {media ? (
+            <motion.div
+              className="shrink-0"
+              initial={reduceMotion ? false : { opacity: 0, x: 48 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease, delay: 0.22 }}
+            >
+              <TvQuestionMedia media={media} width={920} height={690} gap={72} />
+            </motion.div>
+          ) : null}
         </div>
 
         {/* ---- Round pips ---- */}
