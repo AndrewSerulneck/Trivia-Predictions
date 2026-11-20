@@ -22,7 +22,7 @@ const rules = require("../lib/question-writer/rules.cjs") as {
   cleanUrl: (value: unknown) => string | null;
 };
 const brief = require("../lib/question-writer/brief.cjs") as {
-  buildBrief: (input: { client: unknown; game: string; today?: Date; env?: Record<string, string>; conversions?: boolean }) => Promise<{
+  buildBrief: (input: { client: unknown; game: string; today?: Date; env?: Record<string, string>; conversions?: boolean; warn?: (message: string) => void }) => Promise<{
     runDate: string; deliver: Record<string, number>;
     prompts: { kind: string; webSearch: boolean; slots: { n: number; category: string; area: string | null; era: string | null }[]; prompt: string; schema: unknown;
       grade: { version: string; webSearch: boolean; fields: string[]; prompt: string; schema: { properties: { grades: { items: { required: string[]; properties: { flags: { items: { enum: string[] } } } } } } } };
@@ -169,17 +169,24 @@ const AREAS = [
   { id: "a1", category: "Music", name: "Pop", eras: ["1980s", "1990s", "2000s"], active: true },
   { id: "a2", category: "Current Events", name: "Sports", eras: ["Past 12 months"], active: true },
 ];
-const fakeClient = (examples: unknown[] = [], queued: unknown[] = []) => {
+// `receivedToday`: conversion candidates already posted for today's run date (Phase 7f); `failConversions` makes the
+// live_conversion_brief read fail.
+const fakeClient = (examples: unknown[] = [], queued: unknown[] = [], { receivedToday = [] as unknown[], failConversions = false } = {}) => {
   const calls: { rpc: unknown[]; from: string[] } = { rpc: [], from: [] };
-  const chain = { select: () => chain, eq: () => chain, order: () => chain, limit: async () => ({ data: examples, error: null }) };
+  const chainFor = (data: unknown[]) => {
+    const chain = { select: () => chain, eq: () => chain, order: () => chain, limit: async () => ({ data, error: null }) };
+    return chain;
+  };
   return {
     calls,
     rpc: async (name: string, args: unknown) => {
       calls.rpc.push([name, args]);
-      if (name === "live_conversion_brief") return { data: queued.slice(0, (args as { p_limit: number }).p_limit), error: null };
+      if (name === "live_conversion_brief") {
+        return failConversions ? { data: null, error: { message: "boom" } } : { data: queued.slice(0, (args as { p_limit: number }).p_limit), error: null };
+      }
       return { data: { areas: AREAS, cells: [], subjects: [{ subjectKey: "madonna", subject: "Madonna", categories: ["Music"], count: 7, lastWritten: null }] }, error: null };
     },
-    from: (table: string) => { calls.from.push(table); return chain; },
+    from: (table: string) => { calls.from.push(table); return chainFor(table === "question_candidates" ? receivedToday : examples); },
   };
 };
 
@@ -361,6 +368,23 @@ describe("conversions", () => {
     expect(off.calls.rpc.map(c => (c as unknown[])[0])).not.toContain("live_conversion_brief");
   });
 
+  // Phase 7f (second review R2 #27.2, #27.4).
+  it("sends no conversions on a re-run once today's have been received", async () => {
+    const client = fakeClient([], [queuedRow(1)], { receivedToday: [{ id: "c1" }] });
+    const result = await brief.buildBrief({ client, game: "live", today: TODAY });
+    expect(result.prompts.map(p => p.kind)).not.toContain("conversion");
+    expect(client.calls.rpc.map(c => (c as unknown[])[0])).not.toContain("live_conversion_brief");
+    expect(result.prompts.map(p => p.kind)).toContain("regular");
+  });
+
+  it("serves the Live brief without conversions when their read fails, and logs it", async () => {
+    const warnings: string[] = [];
+    const result = await brief.buildBrief({ client: fakeClient([], [queuedRow(1)], { failConversions: true }), game: "live", today: TODAY,
+      warn: (m: string) => warnings.push(m) });
+    expect(result.prompts.map(p => p.kind)).toEqual(["regular"]);
+    expect(warnings).toEqual(["[question-writer] brief: conversions skipped (Brief read failed (live_conversion_brief).)"]);
+  });
+
   it("gives a Current Events original its era and source, and treats the Speed text as data", () => {
     const text = conv.buildLiveConversionPrompt({ today: TODAY, areas: [], items: [
       { ...queuedRow(1, { category: "Current Events", era: "2026-10", sourceUrl: "https://example.com/a" }), n: 1 },
@@ -393,6 +417,11 @@ describe("conversions", () => {
       payload: { answer: "Mars", grade: { model: "gpt-6-astra" } } });
     expect(parsed.items[0].payload).not.toHaveProperty("slot");
     expect(parsed.items[1]).toEqual({ requestId: REQ(2), declined: true, reason: "Too hard to recall without choices." });
+    // Phase 7f (R2 #27.3): a rewrite that fails the Live schema is sent as failed, not dropped.
+    expect(parsed.items[2]).toEqual({ requestId: REQ(3), invalid: true });
+    expect(parsed.items).toHaveLength(3);
+    expect(candidates.parseConversions({ items: [{ requestId: REQ(4), payload: { question: "x" } }] }))
+      .toEqual({ items: [{ requestId: REQ(4), invalid: true }], invalid: 1, graded: 0 });
     expect(() => candidates.parseConversions({ items: Array.from({ length: 21 }, (_, i) => ({ requestId: REQ(i), declined: true, reason: "x" })) })).toThrow(/At most 20/);
     expect(() => candidates.parseConversions({ items: [{ requestId: "x" }] })).toThrow(/No valid items/);
   });

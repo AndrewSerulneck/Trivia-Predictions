@@ -27,7 +27,7 @@ export class BriefError extends Error {
   constructor(code: string, message: string);
 }
 type Client = { rpc: (...args: never[]) => unknown; from: (...args: never[]) => unknown };
-export function buildBrief(input: { client: Client; game: string; today?: Date; env?: Record<string, string | undefined>; conversions?: boolean; seasonalCalendar?: import("@/lib/question-variety/calendar.cjs").Calendar }): Promise<WriterBrief>;
+export function buildBrief(input: { client: Client; game: string; today?: Date; env?: Record<string, string | undefined>; conversions?: boolean; seasonalCalendar?: import("@/lib/question-variety/calendar.cjs").Calendar; warn?: (message: string) => void }): Promise<WriterBrief>;
 export function conversionsPerNight(env?: Record<string, string | undefined>): number;
 export function pickExamples(
   rows: { question: string; options: string[]; correct_answer: number; category: string }[],

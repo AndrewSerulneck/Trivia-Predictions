@@ -58,7 +58,7 @@ const postJson = async <T,>(body: unknown): Promise<T> => {
 /** Queue (POST) or cancel (DELETE) a Speed -> Live conversion. Throws with the server's message. */
 const sendConversion = async (method: "POST" | "DELETE", questionId: string) => {
   const response = await fetch(CONVERSIONS, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ questionId }) });
-  const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; cancelled?: boolean };
+  const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; cancelled?: boolean; already?: boolean };
   if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Try again.");
   return payload;
 };
@@ -198,8 +198,9 @@ export const SpeedTriviaQuickReview = () => {
         return;
       }
       try {
-        await sendConversion("POST", current.id);
-        advance(current, "keep", outcome === "queued", true);
+        // Undo cancels only a request this L created, never an earlier Make Live (Phase 7f, R2 #27.8).
+        const { already } = await sendConversion("POST", current.id);
+        advance(current, "keep", outcome === "queued", already !== true);
         setNotice("Kept. Queued for Live.");
       } catch (err) {
         advance(current, "keep", outcome === "queued");

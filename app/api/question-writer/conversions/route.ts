@@ -5,7 +5,8 @@ import { isWriterAuthorized } from "@/lib/questionWriterAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // The private writer posts its Speed -> Live rewrites here (docs/speed-trivia-backlog-and-quality-plan.md Phase 4e,
-// D37). Each becomes a Live writer candidate, gated by the nightly like any other; a decline records its reason.
+// D37). Each becomes a Live writer candidate, gated by the nightly like any other; a decline records its reason, and a
+// rewrite that fails the Live schema fails its request (Phase 7f), so the post still answers 200 with the counts.
 // Same writer token as /candidates; ≤ 20 items, ≤ 64 KB; idempotent per request. Nothing here writes trivia_questions.
 export const runtime = "nodejs";
 

@@ -21,7 +21,7 @@ const AREAS = [
   { id: "l-ce", category: "Current Events", name: "Sports", eras: ["Past 12 months"], active: true },
 ];
 
-const memoryClient = ({ run = { source: "chatgpt", model: "gpt-6-astra", received: 1 } as Row | null, list = [] as Row[], inReview = [] as Row[], stats = [] as Row[], requests = [] as Row[] } = {}) => {
+const memoryClient = ({ run = { source: "chatgpt", model: "gpt-6-astra", received: 1 } as Row | null, list = [] as Row[], inReview = [] as Row[], stats = [] as Row[], requests = [] as Row[], sweepError = null as string | null } = {}) => {
   const tables: Record<string, Row[]> = {
     question_writer_runs: run ? [{ game: "live", run_date: DAY, ...run }] : [],
     question_candidates: [
@@ -41,10 +41,17 @@ const memoryClient = ({ run = { source: "chatgpt", model: "gpt-6-astra", receive
     const filters: ((r: Row) => boolean)[] = [];
     let patch: Row | null = null;
     const rows = () => tables[table].filter((r) => filters.every((f) => f(r)));
+    // PostgREST JSON paths ("slot->>kind") as well as plain columns.
+    const get = (r: Row, k: string) => {
+      const [col, key] = k.split("->>");
+      return key === undefined ? r[col] : ((r[col] as Row | null | undefined)?.[key] ?? null);
+    };
     const builder = {
       select: () => builder,
-      eq: (k: string, v: unknown) => { filters.push((r) => r[k] === v); return builder; },
-      in: (k: string, v: unknown[]) => { filters.push((r) => v.includes(r[k])); return builder; },
+      eq: (k: string, v: unknown) => { filters.push((r) => get(r, k) === v); return builder; },
+      is: (k: string, v: null) => { filters.push((r) => get(r, k) === v); return builder; },
+      lte: (k: string, v: string) => { filters.push((r) => String(get(r, k)) <= v); return builder; },
+      in: (k: string, v: unknown[]) => { filters.push((r) => v.includes(get(r, k))); return builder; },
       order: () => builder,
       limit: async () => ({ data: rows(), error: null }),
       maybeSingle: async () => ({ data: rows()[0] ?? null, error: null }),
@@ -67,6 +74,7 @@ const memoryClient = ({ run = { source: "chatgpt", model: "gpt-6-astra", receive
     rpc: async (name: string, args: Row) => {
       rpcs.push(name);
       if (name === "question_subject_stats") return { data: stats, error: null };
+      if (name === "live_conversion_sweep") return sweepError ? { data: null, error: { message: sweepError } } : { data: { failed: 0, requeued: 0, done: 0 }, error: null };
       if (name === "question_variety_stats") return { data: { areas: AREAS, cells: [], subjects: [] }, error: null };
       if (name === "question_writer_receive") {
         tables.question_writer_runs.push({ game: "live", run_date: DAY, source: args.p_source, model: args.p_model, received: (args.p_items as Row[]).length });
@@ -232,7 +240,7 @@ describe("processLiveDay: conversions", () => {
     expect(statusOf(client, "k1")).toMatchObject({ status: "pending_review", tag: { overStarCap: true, subjectKey: "tom hanks" },
       audience: expect.objectContaining({ score: 1 }) });
     expect(reqOf(client, "r1")).toMatchObject({ status: "done", reason: null });
-    expect((report as Report & { conversions: Row }).conversions).toEqual({ examined: 1, waiting: 1, rejected: 0 });
+    expect((report as Report & { conversions: Row }).conversions).toEqual({ examined: 1, waiting: 1, rejected: 0, requeued: 0 });
     expect(report.waiting).toBe(0);
     expect(client.touched.has("trivia_questions")).toBe(false);
   });
@@ -258,7 +266,7 @@ describe("processLiveDay: conversions", () => {
     expect(statusOf(client, "k1")).toMatchObject({ status: "rejected", reason: "repeat: eagles (openai)" });
     expect(reqOf(client, "r1")).toMatchObject({ status: "failed", reason: "Already in Live: Who recorded Hotel California?" });
     expect(reqOf(client, "r2")).toMatchObject({ status: "failed", reason: "Breaks a Live rule (which-of-these)." });
-    expect((report as Report & { conversions: Row }).conversions).toEqual({ examined: 2, waiting: 0, rejected: 2 });
+    expect((report as Report & { conversions: Row }).conversions).toEqual({ examined: 2, waiting: 0, rejected: 2, requeued: 0 });
   });
 
   it("changes only a sent request that belongs to the candidate", async () => {
@@ -266,6 +274,46 @@ describe("processLiveDay: conversions", () => {
     await run(client);
     expect(statusOf(client, "k1").status).toBe("pending_review");
     expect(reqOf(client, "r1").status).toBe("sent");
+  });
+
+  // Phase 7f (second review R2 #27.1, #27.2, #27.5, #27.6).
+  it("processes conversions on a day with no regular batch (no run row), and leaves the regular reads alone", async () => {
+    const client = memoryClient({ run: null, list: [conv("k1", "r1", payload())], requests: [request("r1", "k1")] });
+    const report = await run(client);
+    expect(report).toMatchObject({ source: null, examined: 1, stopped: null });
+    expect(statusOf(client, "k1").status).toBe("pending_review");
+    expect(reqOf(client, "r1").status).toBe("done");
+    expect(client.rpcs[0]).toBe("live_conversion_sweep");
+  });
+
+  it("picks up a conversion still received from an earlier day, but not an earlier day's regular item", async () => {
+    const client = memoryClient({ list: [
+      { ...conv("k-old", "r1", payload()), run_date: "2026-11-14" },
+      { ...candidate("c-old", 1, payload({ question: "Which band recorded 'Black Dog'?", subject: "Led Zeppelin II" })), run_date: "2026-11-14" },
+      { ...conv("k-future", "r2", payload({ question: "Which band sang 'Hotel California'?", answer: "Eagles", acceptableAnswers: [], subject: "Eagles" })), run_date: "2026-11-17" },
+    ], requests: [request("r1", "k-old"), request("r2", "k-future")] });
+    const report = await run(client);
+    expect(report.examined).toBe(1);
+    expect(statusOf(client, "k-old").status).toBe("pending_review");
+    expect(statusOf(client, "c-old").status).toBe("received");
+    expect(statusOf(client, "k-future").status).toBe("received");
+  });
+
+  it("sends a conversion the budget didn't reach back to the queue instead of failing it", async () => {
+    const client = memoryClient({ list: [conv("k1", "r1", payload())], requests: [request("r1", "k1")] });
+    const broke = () => ({ check: async () => { throw Object.assign(new Error("budget"), { code: "budget_exhausted" }); } });
+    const report = await run(client, { createChecker: broke });
+    expect(statusOf(client, "k1")).toMatchObject({ status: "skipped", reason: "budget" });
+    expect(reqOf(client, "r1")).toMatchObject({ status: "queued", candidate_id: null, reason: null });
+    expect((report as Report & { conversions: Row }).conversions).toMatchObject({ requeued: 1 });
+  });
+
+  it("logs a failed sweep and carries on", async () => {
+    const warnings: string[] = [];
+    const client = memoryClient({ list: [candidate("c1", 1, payload())], sweepError: "boom" });
+    const report = await run(client, { warn: (m: string) => warnings.push(m) });
+    expect(report.waiting).toBe(1);
+    expect(warnings).toEqual([expect.stringContaining("conversion sweep skipped")]);
   });
 
   it("treats a candidate without a server-built conversion slot as a regular one", async () => {

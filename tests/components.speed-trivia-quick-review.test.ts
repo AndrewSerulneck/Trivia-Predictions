@@ -26,6 +26,7 @@ const posts: Record<string, unknown>[] = [];
 const liveCalls: [string, unknown][] = [];
 let liveRefusal: string | null = null;
 let liveSent: Set<string>;
+let liveQueued: Set<string>; // questions with an earlier, separate Make Live request (the POST answers already: true)
 const gets: string[] = [];
 const respond = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } }));
 
@@ -42,7 +43,8 @@ const fakeFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
   if (url.endsWith("/live-conversions")) {
     liveCalls.push([init.method, body.questionId]);
     if (init.method === "DELETE") return respond({ ok: true, cancelled: !liveSent.has(body.questionId as string) });
-    return liveRefusal ? respond({ ok: false, error: liveRefusal }, 409) : respond({ ok: true, state: "queued", already: false });
+    return liveRefusal ? respond({ ok: false, error: liveRefusal }, 409)
+      : respond({ ok: true, state: "queued", already: liveQueued.has(body.questionId as string) });
   }
   posts.push(body);
   const take = (rowId: string) => {
@@ -113,6 +115,7 @@ beforeEach(() => {
   liveCalls.length = 0;
   liveRefusal = null;
   liveSent = new Set();
+  liveQueued = new Set();
   fakeFetch.mockClear();
   vi.stubGlobal("fetch", fakeFetch);
 });
@@ -355,6 +358,18 @@ describe("Speed Trivia Quick Review: Keep + Live (L)", () => {
     await screen.findByText("Kept. Queued for Live.");
     press("z");
     expect(await screen.findByText("Undone. Still queued for Live.")).toBeTruthy();
+  });
+
+  // Phase 7f (second review R2 #27.8): Undo cancels only a request this L created.
+  it("leaves an earlier Make Live alone when Undo reverses an L that found it already queued", async () => {
+    liveQueued.add("id-1");
+    render(createElement(SpeedTriviaQuickReview));
+    await screen.findByText("Question 1?");
+    press("l");
+    await screen.findByText("Kept. Queued for Live.");
+    press("z");
+    expect(await screen.findByText("Undone.")).toBeTruthy();
+    expect(liveCalls).toEqual([["POST", "id-1"]]);
   });
 
   it("still keeps when the Live queue refuses, and shows why", async () => {
