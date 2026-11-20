@@ -23,6 +23,7 @@ const MIGRATIONS = [
   "supabase/migrations/20261116201904_live_question_candidates.sql",
   "supabase/migrations/20261117025917_live_publish_pr_open.sql",
   "supabase/migrations/20261119134654_live_conversion_requests.sql",
+  "supabase/migrations/20261120145222_live_conversions_cant_get_stuck.sql",
 ];
 const SPEED = "86000000-0000-4000-8000-000000000001";
 const WAITING = "86000000-0000-4000-8000-000000000002";
@@ -32,7 +33,21 @@ const CE = "86000000-0000-4000-8000-000000000005";
 
 let db: PGlite;
 const call = (name: string, args: Record<string, unknown>) => harness.call(db, name, args) as Promise<Record<string, unknown>>;
-const queue = (id: string) => call("live_conversion_queue", { p_question_id: id });
+// Each new request gets its own requested_at, one second apart, so queue order never ties (Phase 7f: the brief test
+// was flaky when two requests shared an instant and the uuid tie-break decided).
+let tick = 0;
+const queue = async (id: string) => {
+  const result = await call("live_conversion_queue", { p_question_id: id });
+  if (result.already === false) {
+    await db.query("update live_conversion_requests set requested_at = timestamptz '2026-11-20 00:00:00+00' + make_interval(secs => $2) where id = $1",
+      [result.id, ++tick]);
+  }
+  return result;
+};
+const sweep = async () => (await db.query<{ r: Record<string, number> }>("select public.live_conversion_sweep() r")).rows[0].r;
+// Ages a request's last change (the sweep acts on `sent` requests older than 3 days).
+const age = (requestId: unknown, days: number) =>
+  db.query("update live_conversion_requests set updated_at = now() - make_interval(days => $2) where id = $1", [requestId, days]);
 const cancel = (id: string) => call("live_conversion_cancel", { p_question_id: id });
 const brief = (limit = 20) => harness.call(db, "live_conversion_brief", { p_limit: limit }) as Promise<Record<string, unknown>[]>;
 const receive = (items: unknown[]) => call("live_conversion_receive", { p_items: items });
@@ -135,7 +150,8 @@ describe("live_conversion_receive", () => {
     expect(cand).toMatchObject({ game: "live", status: "received", source: "chatgpt", slot });
     expect(cand.payload).toMatchObject({ answer: "Mars", conversionOf: row.requestId,
       fromSpeed: { id: SPEED, question: "Which planet is called the Red Planet?", answer: "Mars" } });
-    expect((await db.query("select * from question_writer_runs where game='live'")).rows).toHaveLength(1);
+    // Phase 7f (R2 #27.1): a conversions-only post creates no run row, so it can't hide "Writer stopped".
+    expect((await db.query("select * from question_writer_runs where game='live'")).rows).toHaveLength(0);
     expect(await receive([{ requestId: row.requestId, slot, payload }])).toMatchObject({ received: 0, already: 1 });
     expect(Number((await db.query<{ n: number }>("select count(*)::int n from question_candidates")).rows[0].n)).toBe(1);
   });
@@ -170,6 +186,69 @@ describe("live_conversion_receive", () => {
   });
 });
 
+// Phase 7f (second review R2 #27.2, #27.3, #27.5, #27.7).
+describe("live_conversion_receive: invalid rewrites", () => {
+  it("fails a request whose rewrite didn't fit Live, once, and counts it", async () => {
+    await queue(SPEED);
+    const [row] = await brief();
+    expect(await receive([{ requestId: row.requestId, invalid: true }])).toMatchObject({ received: 0, failed: 1, already: 0 });
+    expect(await requestOf(SPEED)).toMatchObject({ status: "failed", reason: "ChatGPT's rewrite didn't fit Live's format.", candidate_id: null });
+    expect(await receive([{ requestId: row.requestId, invalid: true }])).toMatchObject({ failed: 0, already: 1 });
+    expect(await brief()).toEqual([]);
+  });
+});
+
+describe("live_conversion_sweep", () => {
+  const sendOne = async (id: string) => {
+    await queue(id);
+    const row = (await brief()).find((r) => r.question === (id === SPEED ? "Which planet is called the Red Planet?" : "In October 2026, who won?"))!;
+    await receive([{ requestId: row.requestId, slot, payload }]);
+    return requestOf(id);
+  };
+
+  it("fails a queued request whose Speed question was rejected or retired", async () => {
+    await queue(WAITING);
+    await queue(SPEED);
+    await db.exec("reset role;");
+    await db.query("update trivia_questions set status='deleted' where id=$1", [WAITING]);
+    await db.exec("set role service_role;");
+    expect(await sweep()).toEqual({ failed: 1, requeued: 0, done: 0 });
+    expect(await requestOf(WAITING)).toMatchObject({ status: "failed", reason: "The Speed question wasn't kept." });
+    expect((await requestOf(SPEED)).status).toBe("queued");
+  });
+
+  it("re-queues a request sent over 3 days ago whose candidate was settled without reaching review, or is gone", async () => {
+    const rejected = await sendOne(SPEED);
+    await db.query("update question_candidates set status='rejected', reason='schema' where id=$1", [rejected.candidate_id]);
+    const gone = await sendOne(CE);
+    await db.exec("reset role;");
+    await db.query("delete from question_candidates where id=$1", [gone.candidate_id]);
+    await db.exec("set role service_role;");
+    await age(rejected.id, 4);
+    await age(gone.id, 4);
+    expect(await sweep()).toEqual({ failed: 0, requeued: 2, done: 0 });
+    expect(await requestOf(SPEED)).toMatchObject({ status: "queued", candidate_id: null, reason: "Sent again" });
+    expect(await requestOf(CE)).toMatchObject({ status: "queued", candidate_id: null, reason: "Sent again" });
+    expect((await brief()).map((r) => r.requestId).sort()).toEqual([rejected.id, gone.id].sort());
+  });
+
+  it("marks one whose candidate reached Live review done, and leaves a received or recent one alone", async () => {
+    const reviewed = await sendOne(SPEED);
+    await db.query("update question_candidates set status='pending_review', question_ref='slug-1' where id=$1", [reviewed.candidate_id]);
+    const waiting = await sendOne(CE);
+    await age(reviewed.id, 4);
+    await age(waiting.id, 4);
+    expect(await sweep()).toEqual({ failed: 0, requeued: 0, done: 1 });
+    expect(await requestOf(SPEED)).toMatchObject({ status: "done", candidate_id: reviewed.candidate_id });
+    expect((await requestOf(CE)).status).toBe("sent");
+    // A recent one isn't touched even when its candidate was settled.
+    await db.query("update question_candidates set status='skipped', reason='budget' where id=$1", [waiting.candidate_id]);
+    await age(waiting.id, 1);
+    expect(await sweep()).toEqual({ failed: 0, requeued: 0, done: 0 });
+    expect((await requestOf(CE)).status).toBe("sent");
+  });
+});
+
 describe("live_conversion_status", () => {
   it("returns the newest non-cancelled request per question with its Live candidate's status", async () => {
     await queue(SPEED);
@@ -191,6 +270,7 @@ describe("grants", () => {
     await db.exec("reset role; set role anon;");
     await expect(db.query("select * from live_conversion_requests")).rejects.toThrow(/permission denied/);
     await expect(db.query("select public.live_conversion_brief(5)")).rejects.toThrow(/permission denied/);
+    await expect(db.query("select public.live_conversion_sweep()")).rejects.toThrow(/permission denied/);
     await db.exec("reset role; set role authenticated;");
     await expect(db.query(`select public.live_conversion_queue('${SPEED}')`)).rejects.toThrow(/permission denied/);
   });

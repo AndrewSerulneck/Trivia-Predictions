@@ -12,6 +12,11 @@ on:
     paths:
       - "data/live-trivia/categories/**"
 
+# Two runs at once could prune each other's new rows (R2 #21.1); queue, never cancel.
+concurrency:
+  group: sync-live-trivia
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest

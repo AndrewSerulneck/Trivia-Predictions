@@ -97,6 +97,51 @@
 
 7c step 8: Opus 5.5 / medium. 7d: Opus 5.5 / high (plan's top box).
 
-## Step 8 result (post-merge brief check)
+## Step 8 result (post-merge brief check) — DONE 2026-11-20
 
-_Not yet run._
+Checked read-only on 2026-11-20 by the 7e agent (Opus 5.5). $0.
+
+**For Andrew:** the first holiday question came out right. Thanksgiving's slot produced *"What does 'cornucopia,' the
+harvest decoration on Thanksgiving tables, literally mean?"* (answer: Horn of plenty). Its subject is "Cornucopia", not
+"Thanksgiving", so later Thanksgiving questions aren't blocked. It's waiting in Quick Review for you. **Separate
+problem found:** last night's Live batch lost 19 of its 24 questions (see below).
+
+- **Writer run:** private repo run `44696456019`, scheduled, started **07:38 UTC** (GitHub ran the 00:30 schedule ~7 h
+  late), took **10 m 40 s** (earlier runs 5–6 min; R2 #25.4 revisits only past 20 min). Speed: 16 written, 16 graded.
+  Live: 24 written, 24 graded.
+- **Brief:** the brief isn't stored, and `question_candidates.slot` keeps only n/category/area/era (by design,
+  `brief.cjs` `slotView`). Recomputed offline with the real calendar for 2026-11-20 07:38 UTC:
+  - Speed `seasonal` = Thanksgiving (`2026-11-26`, General Knowledge / Holidays and traditions).
+  - Live `seasonal` = null (a Science & Tech night).
+  - The stored Speed slot n=3 is `General Knowledge · Holidays and traditions · Timeless`, the seasonal cell 7c's
+    offline check predicted.
+- **Trivia Nightly** (`44715698023`, 10:01 UTC):
+  - The Thanksgiving item was admitted as `pending_review`, `ebee3806-e140-4e12-835c-0bd70b16e9ab`.
+  - `question_tags`: area "Holidays and traditions" (`6fca8a71-…`), era Timeless, subject "Cornucopia",
+    `tagged_by = chatgpt:gpt-6-astra:writer-v6`.
+  - Writer's grade: familiar 4, fun 3, estCorrect 75%.
+- **Speed night overall:** 8 admitted, 4 rejected as uncertain by the repeat check, 4 skipped at the daily target.
+- **Verdict:** the 7c rule works, so the server-side seasonal-subject reject stays unbuilt.
+
+**Found: Live nights in thin categories lose most of their questions (not a 7c bug; waits on Andrew).**
+- **What happened on 2026-11-20:** 0 of 24 Live questions were admitted.
+  - 19 were rejected `tag:unknown-area`, 5 as repeats.
+  - Each of the 19 came from a slot with `area: null`. The prompt shows that slot as `(any well-known area)`. The writer
+    echoed that text back as the area, and `map.validateTag` (writer: `allowUnmapped: false`) rejects it.
+- **Cause:** `slots.chooseSlots` never reuses a map cell (area × era).
+  - A Live night asks for 24 slots in one category. Science & Tech has 5 areas with only "Timeless" each, so 5 cells.
+  - The other 19 slots become `fallbackSlot` (no area), and those can never pass the writer's tag check.
+  - **2026-11-18** (Movies) lost 19 the same way, as `tag:missing-area`.
+- **Live categories short of 24 cells now:**
+  - Geography: 5
+  - Science & Tech: 5
+  - Art, Literature and Comics: 6
+  - Current Events: about 7 areas × the writing months; its fallback slots carry a month but no area.
+  - The other five categories have 28–47 cells.
+- **Cost:** no API money wasted. The 19 rejects stop at the free tag gate, and writing is on Andrew's ChatGPT plan. The
+  loss is the night's Live round.
+- **Fix options, both $0:**
+  - (a) **Recommended:** let `chooseSlots` reuse a category's cells, least-covered first, once every cell has a slot.
+    Keep the fallback slot only for a category with no areas. This is a pure-function change with tests.
+  - (b) Add more eras per area on the Variety page.
+- Not fixed in 7e (out of its scope).

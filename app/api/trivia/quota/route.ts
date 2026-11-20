@@ -6,12 +6,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = (searchParams.get("userId") ?? "").trim();
   // D11: the category picker reads gated-category visibility from this response it already loads.
-  const hiddenCategories = [...(await getHiddenSpeedCategories())];
-
-  if (!userId) {
-    return NextResponse.json({ ok: true, quota: null, hiddenCategories });
-  }
-
-  const quota = await getTriviaQuota(userId);
-  return NextResponse.json({ ok: true, quota, hiddenCategories });
+  // Both reads run at once; a request with no user id gets the categories only.
+  const [hidden, quota] = await Promise.all([getHiddenSpeedCategories(), userId ? getTriviaQuota(userId) : null]);
+  return NextResponse.json({ ok: true, quota, hiddenCategories: [...hidden] });
 }

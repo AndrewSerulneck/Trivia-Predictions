@@ -20,6 +20,8 @@ const MIGRATIONS = [
   "supabase/migrations/20261115220356_question_variety_map.sql",
   "supabase/migrations/20261116014954_speed_trivia_star_cap.sql",
   "supabase/migrations/20261116030506_question_writer_candidates.sql",
+  // Phase 7g (R2 #20.5): an identical retry is answered before the post limit.
+  "supabase/migrations/20261120151403_question_writer_retry_before_post_limit.sql",
 ];
 const HASH_A = "a".repeat(64);
 const HASH_B = "b".repeat(64);
@@ -58,11 +60,37 @@ describe("question_writer_receive", () => {
     expect(await scalar<number>("select count(*)::int from question_candidates")).toBe(1);
   });
 
-  it("refuses a second different batch, and a third post of any kind", async () => {
+  it("refuses a second different batch, every time", async () => {
     await receive(HASH_A, [item(1)]);
     await expect(receive(HASH_B, [item(2)])).rejects.toThrow(/writer-already-received/);
     await receive(HASH_A, [item(1)]);
-    await expect(receive(HASH_A, [item(1)])).rejects.toThrow(/writer-post-limit/);
+    await expect(receive(HASH_B, [item(2)])).rejects.toThrow(/writer-already-received|writer-post-limit/);
+    expect(await scalar<number>("select count(*)::int from question_candidates")).toBe(1);
+  });
+
+  // Phase 7g (second review R2 #20.5): before, the third identical retry got 'writer-post-limit' (429) for a batch
+  // that was already stored. A retry now writes nothing and always succeeds.
+  it("answers any number of identical retries idempotently, without counting them as posts", async () => {
+    await receive(HASH_A, [item(1), item(2)]);
+    for (let n = 0; n < 4; n++) expect(await receive(HASH_A, [item(1), item(2)])).toMatchObject({ received: 2, idempotent: true });
+    expect(await scalar<number>("select posts from question_writer_runs")).toBe(1);
+    expect(await scalar<number>("select count(*)::int from question_candidates")).toBe(2);
+  });
+
+  it("still refuses with writer-post-limit once the day's posts are used up", async () => {
+    await receive(HASH_A, [item(1)]);
+    await db.exec("reset role; update question_writer_runs set posts = 2, batch_hash = null; set role service_role;");
+    await expect(receive(HASH_B, [item(2)])).rejects.toThrow(/writer-post-limit/);
+  });
+
+  it("restates the grants: service_role only", async () => {
+    const grantees = (await db.query<{ grantee: string }>(
+      "select grantee from information_schema.routine_privileges where routine_name = 'question_writer_receive' and privilege_type = 'EXECUTE'",
+    )).rows.map((r) => r.grantee);
+    expect(grantees).toContain("service_role");
+    expect(grantees).not.toContain("anon");
+    expect(grantees).not.toContain("authenticated");
+    expect(grantees).not.toContain("PUBLIC");
   });
 
   it("keeps the fallback out once ChatGPT has posted (one batch a day)", async () => {

@@ -68,14 +68,17 @@ describe("Current Events visibility", () => {
     expect(visibleTriviaCategories(new Set(["Current Events"])).map((c) => c.dbValue)).not.toContain("Current Events");
   });
 
-  it("fails closed and caches the flag", async () => {
+  it("fails closed, caches the failed read for 60 s, then caches the good one", async () => {
+    const t0 = Date.now();
     mocks.flagError = { message: "down" };
-    expect([...(await getHiddenSpeedCategories())]).toEqual(["Current Events"]);
+    expect([...(await getHiddenSpeedCategories(t0))]).toEqual(["Current Events"]);
     mocks.flagError = null;
     mocks.flags = [{ category: "Current Events", visible: true }];
-    expect([...(await getHiddenSpeedCategories())]).toEqual([]);
-    expect([...(await getHiddenSpeedCategories())]).toEqual([]);
-    expect(mocks.flagReads).toBe(2); // the failed read isn't cached; the good one is
+    expect([...(await getHiddenSpeedCategories(t0 + 30_000))]).toEqual(["Current Events"]);
+    expect(mocks.flagReads).toBe(1);
+    expect([...(await getHiddenSpeedCategories(t0 + 61_000))]).toEqual([]);
+    expect([...(await getHiddenSpeedCategories(t0 + 62_000))]).toEqual([]);
+    expect(mocks.flagReads).toBe(2);
     resetHiddenSpeedCategoriesCache();
     mocks.flags = [];
     expect([...(await getHiddenSpeedCategories())]).toEqual(["Current Events"]);
@@ -106,5 +109,11 @@ describe("Current Events visibility", () => {
   it("rides on the quota response the picker already loads", async () => {
     const response = await quotaGet(new Request("https://example.invalid/api/trivia/quota"));
     expect(await response.json()).toEqual({ ok: true, quota: null, hiddenCategories: ["Current Events"] });
+  });
+
+  it("answers categories without a user id and runs the quota and flag reads together", async () => {
+    mocks.flags = [{ category: "Current Events", visible: true }];
+    const response = await quotaGet(new Request("https://example.invalid/api/trivia/quota?userId="));
+    expect(await response.json()).toEqual({ ok: true, quota: null, hiddenCategories: [] });
   });
 });

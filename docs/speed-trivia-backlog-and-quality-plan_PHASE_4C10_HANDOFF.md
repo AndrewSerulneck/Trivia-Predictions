@@ -1,3 +1,5 @@
+> Historical (2026-11-17). D23 shipped, Sync Live Trivia fixed (PR #21), and Gemini is gone (D40); the plan's status line is current.
+
 # Phase 4c.10 handoff: bulk Keep, the report limit, a cleanup; apply and verify
 
 Plan: `docs/speed-trivia-backlog-and-quality-plan.md` §4 "Phase 4c.10" (post-4c.4 review #7, #8, #9). Done 2026-11-17

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPlayerTriviaQuestions, submitTriviaAnswer, TriviaLimitReachedError } from "@/lib/trivia";
+import { getPlayerTriviaQuestions, submitTriviaAnswer, TriviaLimitReachedError, TriviaQuestionUnavailableError } from "@/lib/trivia";
 import { isSessionEnforced, readSession } from "@/lib/serverSession";
 import { maybeRequireActiveVenuePresenceForUser, venuePresenceErrorResponse } from "@/lib/venuePresence";
 
@@ -57,6 +57,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, result });
   } catch (error) {
+    if (error instanceof TriviaQuestionUnavailableError) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 404 });
+    }
     if (error instanceof TriviaLimitReachedError) {
       return NextResponse.json(
         { ok: false, error: error.message, quota: error.quota },

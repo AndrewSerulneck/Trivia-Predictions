@@ -20,7 +20,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const map = require('../lib/question-variety/map.cjs');
-const { RATES } = require('../lib/openai/responses.cjs');
+const { RATES, claimFor } = require('../lib/openai/responses.cjs');
+const ledger = require('../lib/openai/ledger.cjs');
 const { OUTPUT_SCHEMA, TAG_MODEL, buildPrompt, toTags, runOpenAI } = require('../lib/question-variety/tagging.cjs');
 const codexExec = require('./lib/codexExec.cjs');
 const liveCats = require('../lib/live-trivia-quality/categories.cjs');
@@ -124,7 +125,9 @@ const readQuestions = async (client, game) => {
 const runCodex = ({ prompt, model, effort }) => codexExec.runCodex({ prompt, model, effort, schema: OUTPUT_SCHEMA });
 
 /** Worst-case price of one OpenAI API call, reserved before it's made. */
-const apiCeiling = (prompt, model) => (Buffer.byteLength(prompt) * RATES[model].input + 8192 * RATES[model].output) / 1e6;
+// Phase 7e (R2 #29.7): the same reservation as every other OpenAI caller (prompt, schema and request framing).
+const API_MAX_OUTPUT_TOKENS = 8192;
+const apiCeiling = (prompt, model) => claimFor({ model, prompt, maxOutputTokens: API_MAX_OUTPUT_TOKENS }).dollars;
 
 const isStarCap = error => /\bstar-cap\b/.test(error?.message ?? '');
 
@@ -181,9 +184,16 @@ const run = async ({ client, args, call = null, log = () => {} }) => {
   if (args.provider === 'openai' && !apiKey && !call) throw new Error('Missing OPENAI_API_KEY.');
   const caller = call ?? (args.provider === 'codex'
     ? prompt => runCodex({ prompt, model: args.model, effort: args.effort })
-    : prompt => runOpenAI({ prompt, model: args.model, apiKey }));
+    : prompt => runOpenAI({ prompt, model: args.model, apiKey, maxOutputTokens: API_MAX_OUTPUT_TOKENS }));
 
   let remaining = plannedCount, written = 0, dollars = 0, tokens = 0, calls = 0, stopped = null, stillUnmapped = 0;
+  // Phase 7e (R2 #29.7): the API's settled usage, for one ledger row per run.
+  const billed = { calls: 0, inputTokens: 0, outputTokens: 0, reasoningTokens: 0, dollars: 0 };
+  const bill = usage => {
+    if (!usage) return;
+    billed.calls++; billed.inputTokens += usage.inputTokens ?? 0; billed.outputTokens += usage.outputTokens ?? 0;
+    billed.reasoningTokens += usage.reasoningTokens ?? 0; billed.dollars += usage.dollars ?? 0;
+  };
   const skipped = [], failures = [], sample = [], refusedSubjectFull = [];
   const queue = [];
   for (const unit of work) {
@@ -205,8 +215,13 @@ const run = async ({ client, args, call = null, log = () => {} }) => {
         try {
           const result = await caller(prompt);
           dollars += (result.dollars ?? ceiling) - ceiling;
+          bill(result.usage);
           handle(result, category, areas, batch);
-        } catch (error) { fail(error, category, batch); }
+        } catch (error) {
+          // A billed reply that couldn't be used carries its usage (R2 #29.6); anything else keeps the full reservation.
+          if (Number.isFinite(error?.dollars)) { dollars += error.dollars - ceiling; bill(error.usage); }
+          fail(error, category, batch);
+        }
       } else {
         try { handle(await caller(prompt), category, areas, batch); } catch (error) { fail(error, category, batch); }
       }
@@ -233,6 +248,9 @@ const run = async ({ client, args, call = null, log = () => {} }) => {
   }
   await Promise.all(Array.from({ length: args.concurrency }, worker));
   await Promise.all(pendingWrites);
+  if (args.provider === 'openai' && billed.calls) {
+    await ledger.recordUsage(client, { feature: 'question_tagging', byModel: { [args.model]: billed }, metadata: { taggedBy, source: 'tag-questions' } });
+  }
   return { ...summary, calls, written, ...(unmappedTags ? { stillUnmapped } : {}), refusedSubjectFull, skipped: skipped.length, skippedByReason: skipped.reduce((a, s) => ({ ...a, [s.reason]: (a[s.reason] ?? 0) + 1 }), {}),
     failures, stopped, codexTokens: args.provider === 'codex' ? tokens : undefined, apiDollars: args.provider === 'openai' ? Number(dollars.toFixed(4)) : undefined,
     ...(args.sample ? { sample } : {}) };

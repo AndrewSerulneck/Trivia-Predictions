@@ -130,9 +130,19 @@ describe("POST /api/question-writer/conversions", () => {
     expect(mocks.tables).toEqual([]);
   });
 
-  it("refuses malformed JSON, nothing usable and too many items", async () => {
+  it("refuses malformed JSON, no valid request id and too many items", async () => {
     expect((await convert("{")).status).toBe(400);
-    expect((await convert({ items: [{ requestId: REQ, payload: { question: "x" } }] })).status).toBe(422);
+    expect((await convert({ items: [{ requestId: "x", payload: rewrite }] })).status).toBe(422);
     expect((await convert({ items: Array.from({ length: 21 }, () => ({ requestId: REQ, declined: true, reason: "x" })) })).status).toBe(413);
+  });
+
+  // Phase 7f (second review R2 #27.3): an invalid rewrite fails its request instead of looping, and the post succeeds.
+  it("answers 200 with the counts when every rewrite is invalid, and sends each as failed", async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: { runDate: "2026-11-20", received: 0, declined: 0, failed: 1, already: 0 }, error: null });
+    const response = await convert({ items: [{ requestId: REQ, payload: { question: "x" } }] });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, received: 0, failed: 1, invalid: 1 });
+    const [, args] = mocks.rpc.mock.calls[0] as [string, { p_items: Record<string, unknown>[] }];
+    expect(args.p_items).toEqual([{ requestId: REQ, invalid: true }]);
   });
 });

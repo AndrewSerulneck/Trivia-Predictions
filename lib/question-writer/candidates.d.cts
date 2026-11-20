@@ -57,10 +57,12 @@ export function receive(input: {
 /** Phase 4e (D37): one conversion as stored by live_conversion_receive. */
 export type ConversionItem =
   | { requestId: string; declined: true; reason: string }
+  /** Phase 7f (R2 #27.3): the rewrite failed the Live schema; the database fails the request with a reason. */
+  | { requestId: string; invalid: true }
   | { requestId: string; slot: { n: number; kind: "conversion"; category: string; area: string | null; era: string | null };
       payload: LivePayload & { grade?: WriterGrade } };
 export function parseConversions(body: unknown): { items: ConversionItem[]; invalid: number; graded: number };
 export function receiveConversions(input: {
   client: { rpc: (...args: never[]) => unknown };
   items: ConversionItem[];
-}): Promise<{ runDate: string; received: number; declined: number; already: number }>;
+}): Promise<{ runDate: string; received: number; declined: number; failed: number; already: number }>;

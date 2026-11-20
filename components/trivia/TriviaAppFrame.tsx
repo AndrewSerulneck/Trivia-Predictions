@@ -30,14 +30,12 @@ export function TriviaAppFrame() {
   useEffect(() => {
     let cancelled = false;
     const loadQuota = async () => {
+      // No stored user id (a cookie-only player) still loads the visible categories; only the quota is skipped.
       const userId = (getUserId() ?? "").trim();
-      if (!userId) {
-        setQuota(null);
-        setQuotaSecondsRemaining(0);
-        return;
-      }
       try {
-        const response = await fetch(`/api/trivia/quota?userId=${encodeURIComponent(userId)}`, { cache: "no-store" });
+        const response = await fetch(userId ? `/api/trivia/quota?userId=${encodeURIComponent(userId)}` : "/api/trivia/quota", {
+          cache: "no-store",
+        });
         const payload = (await response.json().catch(() => null)) as {
           ok?: boolean;
           quota?: TriviaQuotaSnapshot | null;

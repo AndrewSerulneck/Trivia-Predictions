@@ -1,6 +1,6 @@
 {
-  "version": "variety-map-v2",
-  "note": "Variety map (docs/speed-trivia-backlog-and-quality-plan.md Phase 4a, D14). Andrew reviews it once; afterwards areas are edited on Admin -> Trivia Questions -> Variety. The seed script only ADDS missing areas; it never edits or removes one. Approved by Andrew 2026-11-15 with two additions to Speed Music (Classical music; Instruments and music basics). variety-map-v2 (Phase 4a.1, D20, approved by Andrew 2026-11-16): 13 General Knowledge areas and 8 Sports areas drafted from the questions no area fit; Speed Sports gains the eras \"Before 1950\" and \"Timeless\" for new areas (its first 14 areas keep the decades).",
+  "version": "variety-map-v3",
+  "note": "Variety map (docs/speed-trivia-backlog-and-quality-plan.md Phase 4a, D14). Andrew reviews it once; afterwards areas are edited on Admin -> Trivia Questions -> Variety. The seed script only ADDS missing areas; it never edits or removes one. Approved by Andrew 2026-11-15 with two additions to Speed Music (Classical music; Instruments and music basics). variety-map-v2 (Phase 4a.1, D20, approved by Andrew 2026-11-16): 13 General Knowledge areas and 8 Sports areas drafted from the questions no area fit; Speed Sports gains the eras \"Before 1950\" and \"Timeless\" for new areas (its first 14 areas keep the decades). variety-map-v3 (approved by Andrew 2026-11-20): Live Science & Tech (+20), Geography (+20), Art, Literature and Comics (+19) and History & Government (+4) gain areas, because a Live night asks for 24 questions in one category and these had only 5-6 cells (the 2026-11-20 Science & Tech night lost 19 of 24).",
   "eraSets": {
     "decades": [
       "1950s",
@@ -929,6 +929,63 @@
           },
           {
             "name": "Literary quotes and lines"
+          },
+          {
+            "name": "Shakespeare"
+          },
+          {
+            "name": "Children's books"
+          },
+          {
+            "name": "Fairy tales, fables and nursery rhymes"
+          },
+          {
+            "name": "Greek and Roman mythology"
+          },
+          {
+            "name": "Poetry and poets"
+          },
+          {
+            "name": "Young adult and fantasy series"
+          },
+          {
+            "name": "Mystery and horror"
+          },
+          {
+            "name": "Science fiction"
+          },
+          {
+            "name": "Modern bestsellers"
+          },
+          {
+            "name": "Authors and pen names"
+          },
+          {
+            "name": "Famous book characters"
+          },
+          {
+            "name": "Marvel heroes and villains"
+          },
+          {
+            "name": "DC heroes and villains"
+          },
+          {
+            "name": "Newspaper comic strips"
+          },
+          {
+            "name": "Famous paintings"
+          },
+          {
+            "name": "Sculpture and architecture"
+          },
+          {
+            "name": "Modern and pop art"
+          },
+          {
+            "name": "Broadway musicals"
+          },
+          {
+            "name": "Idioms and word origins"
           }
         ]
       },
@@ -949,6 +1006,66 @@
           },
           {
             "name": "Landmarks and wonders"
+          },
+          {
+            "name": "US state capitals"
+          },
+          {
+            "name": "US cities and nicknames"
+          },
+          {
+            "name": "World cities"
+          },
+          {
+            "name": "National parks"
+          },
+          {
+            "name": "Rivers and lakes"
+          },
+          {
+            "name": "Mountains and volcanoes"
+          },
+          {
+            "name": "Deserts, forests and natural wonders"
+          },
+          {
+            "name": "Oceans and seas"
+          },
+          {
+            "name": "Islands and island nations"
+          },
+          {
+            "name": "Polar regions"
+          },
+          {
+            "name": "Flags"
+          },
+          {
+            "name": "Currencies"
+          },
+          {
+            "name": "Languages of the world"
+          },
+          {
+            "name": "Foods by country"
+          },
+          {
+            "name": "Europe"
+          },
+          {
+            "name": "Asia"
+          },
+          {
+            "name": "Africa"
+          },
+          {
+            "name": "Latin America and the Caribbean"
+          },
+          {
+            "name": "Canada and Mexico"
+          },
+          {
+            "name": "Australia and the Pacific"
           }
         ]
       },
@@ -980,6 +1097,32 @@
           },
           {
             "name": "Wars, battles and conflicts"
+          },
+          {
+            "name": "Presidents and first ladies",
+            "eras": [
+              "1500-1799",
+              "1800s",
+              "1900-1945",
+              "1945-1999",
+              "2000-present"
+            ]
+          },
+          {
+            "name": "Royalty and empires"
+          },
+          {
+            "name": "Explorers and discoveries"
+          },
+          {
+            "name": "The Constitution and Supreme Court",
+            "eras": [
+              "1500-1799",
+              "1800s",
+              "1900-1945",
+              "1945-1999",
+              "2000-present"
+            ]
           }
         ]
       },
@@ -1057,6 +1200,66 @@
           },
           {
             "name": "Chemistry and the periodic table"
+          },
+          {
+            "name": "Animals and wildlife"
+          },
+          {
+            "name": "Plants and botany"
+          },
+          {
+            "name": "Dinosaurs and fossils"
+          },
+          {
+            "name": "Planets and the solar system"
+          },
+          {
+            "name": "Space exploration and astronauts"
+          },
+          {
+            "name": "Weather and climate"
+          },
+          {
+            "name": "Volcanoes, earthquakes and geology"
+          },
+          {
+            "name": "Oceans and marine life"
+          },
+          {
+            "name": "Human anatomy and organs"
+          },
+          {
+            "name": "Genetics and DNA"
+          },
+          {
+            "name": "Nutrition and vitamins"
+          },
+          {
+            "name": "Famous scientists and discoveries"
+          },
+          {
+            "name": "Inventions and inventors"
+          },
+          {
+            "name": "Computers and the internet"
+          },
+          {
+            "name": "Tech companies and founders"
+          },
+          {
+            "name": "Gadgets and consumer tech"
+          },
+          {
+            "name": "Cars, trains and aviation"
+          },
+          {
+            "name": "Energy and electricity"
+          },
+          {
+            "name": "Light, sound and color"
+          },
+          {
+            "name": "Units, measurements and famous numbers"
           }
         ]
       },

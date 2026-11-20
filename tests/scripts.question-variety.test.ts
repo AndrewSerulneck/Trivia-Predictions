@@ -160,6 +160,25 @@ describe("tag-questions", () => {
     expect(result).toMatchObject({ written: 1, refusedSubjectFull: [questions[0].id], failures: [] });
   });
 
+  it("Phase 7e (R2 #29.6, #29.7): settles a billed failure, reserves like every caller, writes one ledger row per run", async () => {
+    const billed = (dollars: number) => ({ inputTokens: 100, outputTokens: 50, reasoningTokens: 40, dollars });
+    let n = 0;
+    const call = vi.fn(async () => {
+      if (n++ === 0) throw Object.assign(new Error("tagging-truncated-or-blocked"), { usage: billed(0.004), dollars: 0.004 });
+      return { output: { items: [{ n: 1, area: "Pop", era: "1980s", subject: "Madonna" }] }, dollars: 0.003, usage: billed(0.003) };
+    });
+    const client = fakeClient(tables());
+    const result = await tagScript.run({ client, args: tagScript.parseArgs(["--game", "speed", "--apply", "--provider", "openai", "--max-dollars", "1", "--batch", "1", "--concurrency", "1"]), call });
+    expect(call).toHaveBeenCalledTimes(2);
+    expect(result.apiDollars).toBeCloseTo(0.007, 6);
+    const ledgerRows = client.writes.filter((w) => w.table === "llm_usage_logs").flatMap((w) => w.rows);
+    expect(ledgerRows).toEqual([expect.objectContaining({ feature: "question_tagging", model: "gpt-6.1-sol", input_tokens: 200, output_tokens: 100,
+      cost_cents: 0.7, metadata: expect.objectContaining({ calls: 2, reasoningTokens: 80, source: "tag-questions" }) })]);
+    const { claimFor } = await import("@/lib/openai/responses.cjs");
+    expect((tagScript as unknown as { apiCeiling: (p: string, m: string) => number }).apiCeiling("x".repeat(1000), "gpt-6.1-sol"))
+      .toBe(claimFor({ model: "gpt-6.1-sol", prompt: "x".repeat(1000), maxOutputTokens: 8192 }).dollars);
+  });
+
   it("never spends past the API cap", async () => {
     const call = vi.fn(async () => ({ output: { items: [] }, dollars: 0.001 }));
     const result = await tagScript.run({ client: fakeClient(tables()), args: tagScript.parseArgs(["--game", "speed", "--apply", "--provider", "openai", "--max-dollars", "0.0001", "--batch", "1"]), call });

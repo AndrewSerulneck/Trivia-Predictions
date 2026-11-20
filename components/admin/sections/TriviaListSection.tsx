@@ -114,7 +114,7 @@ export function TriviaListSection() {
   }, [speedIds]);
 
   // Queue a question for Live, or cancel it while it is still queued.
-  async function toggleLive(id: string) {
+  const toggleLive = async (id: string) => {
     const queued = liveStates[id]?.state === "queued";
     setLiveBusyId(id);
     setError("");
@@ -133,7 +133,7 @@ export function TriviaListSection() {
     } finally {
       setLiveBusyId(null);
     }
-  }
+  };
 
   const liveControl = (id: string) => {
     const live = liveStates[id] ?? { state: "none" as const };

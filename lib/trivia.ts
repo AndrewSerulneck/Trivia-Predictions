@@ -361,23 +361,47 @@ export async function getTriviaQuota(
   };
 }
 
-async function getQuestionById(questionId: string): Promise<TriviaQuestion | null> {
-  if (!questionId) {
-    return null;
+/** The answer POST names a question a player can't be served now (Phase 7g, R2 #20.4): 404, nothing recorded. */
+export class TriviaQuestionUnavailableError extends Error {
+  constructor() {
+    super("Not available");
+    this.name = "TriviaQuestionUnavailableError";
   }
+}
 
-  if (!supabaseAdmin) {
-    return FALLBACK_QUESTIONS.find((question) => question.id === questionId) ?? null;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The question an answer is graded against: only one the GET could serve (Phase 7g, R2 #20.4) — Speed's pool,
+ * active, and not in a category hidden for players (D11). Anything else (waiting for review, Live, retired, hidden
+ * Current Events, unknown) is null, so the POST awards nothing and never reveals its answer. The built-in fallback
+ * questions (served only when the database can't be read) are graded from the list, as before.
+ */
+async function getPlayableQuestionById(questionId: string): Promise<TriviaQuestion | null> {
+  const fallback = FALLBACK_QUESTIONS.find((question) => question.id === questionId);
+  if (fallback) {
+    return fallback;
+  }
+  if (!supabaseAdmin || !UUID.test(questionId)) {
+    return null;
   }
 
   const { data, error } = await supabaseAdmin
     .from("trivia_questions")
     .select("id, question, options, correct_answer, category, difficulty")
     .eq("id", questionId)
+    .eq("question_pool", "anytime_blitz")
+    .eq("status", "active")
     .maybeSingle<TriviaQuestionRow>();
 
-  if (error || !data) {
-    return FALLBACK_QUESTIONS.find((question) => question.id === questionId) ?? null;
+  if (error) {
+    throw new Error("Failed to submit answer.");
+  }
+  if (!data) {
+    return null;
+  }
+  if (data.category && (await getHiddenSpeedCategories()).has(data.category)) {
+    return null;
   }
 
   return mapQuestionRow(data);
@@ -392,9 +416,9 @@ export async function submitTriviaAnswer(params: {
   /** The pick is an index into the shown (shuffled) options (D31). Absent: an older script, stored order. */
   shownOrder?: boolean;
 }): Promise<{ isCorrect: boolean; correctAnswer: number; saved: boolean; alreadyAnswered?: boolean; pointsAwarded?: number; multiplierApplied?: number }> {
-  const question = await getQuestionById(params.questionId);
+  const question = await getPlayableQuestionById(params.questionId);
   if (!question) {
-    throw new Error("Question not found.");
+    throw new TriviaQuestionUnavailableError();
   }
 
   // Grade and store in stored order, so every `trivia_answers.answer` lines up with the stored options; reply with

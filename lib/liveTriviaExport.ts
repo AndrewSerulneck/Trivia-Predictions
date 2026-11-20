@@ -1,8 +1,10 @@
-import { callJson, jsonOf } from "@/lib/openai/responses.cjs";
-import { recordUsage } from "@/lib/openai/ledger.cjs";
+import { callJson, claimFor, jsonOf } from "@/lib/openai/responses.cjs";
+import { recordBudget } from "@/lib/openai/ledger.cjs";
+import { createBudget } from "@/lib/speed-trivia-uniqueness/runtime.cjs";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { AdmissionBudget } from "@/types/speedTriviaAdmission";
 
-type PendingSpeedQuestion = {
+export type PendingSpeedQuestion = {
   id: string;
   slug: string | null;
   question: string;
@@ -123,6 +125,16 @@ export function buildFallbackLiveTriviaExportQuestion(row: PendingSpeedQuestion)
 // Phase 4f.2 (D40): the rewrite runs on the OpenAI API (Gemini before). Writing quality matters and an Admin converts
 // a handful at a time, so it uses the stronger model (~$0.003 a question).
 export const LIVE_REWRITE_MODEL = "gpt-6.1-sol";
+// Phase 7e (R2 #29.1, #29.5): room for reasoning plus the JSON answer; a capped, budgeted request.
+const LIVE_REWRITE_MAX_OUTPUT_TOKENS = 2048;
+const LIVE_REWRITE_TIMEOUT_MS = 30_000;
+/** At most this many questions per request (the route refuses more). */
+export const LIVE_EXPORT_MAX_IDS = 25;
+const LIVE_EXPORT_CONCURRENCY = 4;
+/** One request's dollar ceiling: ~25 x $0.003 real, plus 4 worst-case reservations in flight (~$0.02 each). */
+export const LIVE_EXPORT_MAX_DOLLARS = 0.25;
+/** All of one request's rewrites, retries included (route maxDuration 120 s). */
+export const LIVE_EXPORT_DEADLINE_MS = 90_000;
 const REWRITE_SCHEMA = {
   type: "object", additionalProperties: false,
   required: ["slug", "question", "answer", "acceptableAnswers", "answer_format", "category", "difficulty"],
@@ -133,16 +145,21 @@ const REWRITE_SCHEMA = {
   },
 };
 
-async function callOpenAIForLiveRewrite(prompt: string, transport: typeof fetch = fetch): Promise<Record<string, unknown>> {
+// Reserved on the request's budget first and settled from the reply's usage before it is parsed, so a billed but
+// unusable reply is still counted (Phase 7e, R2 #29.6). The request writes one ledger row (convertForLiveExport).
+const callOpenAIForLiveRewrite = async (prompt: string, budget: AdmissionBudget, transport: typeof fetch = fetch): Promise<Record<string, unknown>> => {
+  const reservation = budget.reserve(claimFor({ model: LIVE_REWRITE_MODEL, prompt, maxOutputTokens: LIVE_REWRITE_MAX_OUTPUT_TOKENS }));
   const reply = await callJson({
     model: LIVE_REWRITE_MODEL, apiKey: process.env.OPENAI_API_KEY, prompt, schema: REWRITE_SCHEMA, name: "live_rewrite",
-    maxOutputTokens: 1024, timeoutMs: 30_000, transport,
+    maxOutputTokens: LIVE_REWRITE_MAX_OUTPUT_TOKENS, timeoutMs: LIVE_REWRITE_TIMEOUT_MS, transport, deadlineMs: budget.remainingTime(),
   });
-  await recordUsage(supabaseAdmin, { feature: "live_trivia_rewrite", byModel: { [LIVE_REWRITE_MODEL]: { calls: 1, ...reply.usage } } });
+  const { usage } = reply;
+  budget.settle(reservation, { dollars: usage.dollars, inputTokens: usage.inputTokens, outputTokens: usage.outputTokens,
+    reasoningTokens: usage.reasoningTokens, model: LIVE_REWRITE_MODEL });
   const parsed = jsonOf(reply, "live-rewrite");
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("live-rewrite-json-invalid");
   return parsed as Record<string, unknown>;
-}
+};
 
 function buildRewritePrompt(row: PendingSpeedQuestion): string {
   return [
@@ -203,14 +220,33 @@ export function normalizeConvertedLiveTriviaExportQuestion(
   };
 }
 
-export async function convertSpeedQuestionToLiveTriviaExportQuestion(
-  row: PendingSpeedQuestion,
-  transport: typeof fetch = fetch
-): Promise<LiveTriviaExportQuestion> {
-  try {
-    const raw = await callOpenAIForLiveRewrite(buildRewritePrompt(row), transport);
-    return normalizeConvertedLiveTriviaExportQuestion(raw, row);
-  } catch {
-    return buildFallbackLiveTriviaExportQuestion(row);
-  }
-}
+/**
+ * Convert up to LIVE_EXPORT_MAX_IDS Speed questions, LIVE_EXPORT_CONCURRENCY at a time, inside one request budget
+ * (LIVE_EXPORT_MAX_DOLLARS, LIVE_EXPORT_DEADLINE_MS). A question whose rewrite fails, or that the budget or deadline
+ * doesn't reach, gets the plain fallback and is counted in `fallbacks`. One ledger row per request.
+ */
+export const convertForLiveExport = async (
+  rows: PendingSpeedQuestion[],
+  { transport = fetch, now = Date.now }: { transport?: typeof fetch; now?: () => number } = {},
+): Promise<{ items: LiveTriviaExportQuestion[]; fallbacks: number }> => {
+  if (rows.length > LIVE_EXPORT_MAX_IDS) throw new Error(`At most ${LIVE_EXPORT_MAX_IDS} questions at a time.`);
+  const budget = createBudget({ dollars: LIVE_EXPORT_MAX_DOLLARS, elapsedMs: LIVE_EXPORT_DEADLINE_MS, now });
+  const items: LiveTriviaExportQuestion[] = new Array(rows.length);
+  let fallbacks = 0;
+  let next = 0;
+  const worker = async () => {
+    while (next < rows.length) {
+      const index = next++;
+      const row = rows[index];
+      try {
+        items[index] = normalizeConvertedLiveTriviaExportQuestion(await callOpenAIForLiveRewrite(buildRewritePrompt(row), budget, transport), row);
+      } catch {
+        items[index] = buildFallbackLiveTriviaExportQuestion(row);
+        fallbacks++;
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(LIVE_EXPORT_CONCURRENCY, rows.length) }, worker));
+  await recordBudget(supabaseAdmin, { feature: "live_trivia_rewrite", budget, metadata: { questions: rows.length, fallbacks } });
+  return { items, fallbacks };
+};

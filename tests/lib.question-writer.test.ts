@@ -22,7 +22,7 @@ const rules = require("../lib/question-writer/rules.cjs") as {
   cleanUrl: (value: unknown) => string | null;
 };
 const brief = require("../lib/question-writer/brief.cjs") as {
-  buildBrief: (input: { client: unknown; game: string; today?: Date; env?: Record<string, string>; conversions?: boolean }) => Promise<{
+  buildBrief: (input: { client: unknown; game: string; today?: Date; env?: Record<string, string>; conversions?: boolean; warn?: (message: string) => void }) => Promise<{
     runDate: string; deliver: Record<string, number>;
     prompts: { kind: string; webSearch: boolean; slots: { n: number; category: string; area: string | null; era: string | null }[]; prompt: string; schema: unknown;
       grade: { version: string; webSearch: boolean; fields: string[]; prompt: string; schema: { properties: { grades: { items: { required: string[]; properties: { flags: { items: { enum: string[] } } } } } } } };
@@ -169,17 +169,24 @@ const AREAS = [
   { id: "a1", category: "Music", name: "Pop", eras: ["1980s", "1990s", "2000s"], active: true },
   { id: "a2", category: "Current Events", name: "Sports", eras: ["Past 12 months"], active: true },
 ];
-const fakeClient = (examples: unknown[] = [], queued: unknown[] = []) => {
+// `receivedToday`: conversion candidates already posted for today's run date (Phase 7f); `failConversions` makes the
+// live_conversion_brief read fail.
+const fakeClient = (examples: unknown[] = [], queued: unknown[] = [], { receivedToday = [] as unknown[], failConversions = false } = {}) => {
   const calls: { rpc: unknown[]; from: string[] } = { rpc: [], from: [] };
-  const chain = { select: () => chain, eq: () => chain, order: () => chain, limit: async () => ({ data: examples, error: null }) };
+  const chainFor = (data: unknown[]) => {
+    const chain = { select: () => chain, eq: () => chain, order: () => chain, limit: async () => ({ data, error: null }) };
+    return chain;
+  };
   return {
     calls,
     rpc: async (name: string, args: unknown) => {
       calls.rpc.push([name, args]);
-      if (name === "live_conversion_brief") return { data: queued.slice(0, (args as { p_limit: number }).p_limit), error: null };
+      if (name === "live_conversion_brief") {
+        return failConversions ? { data: null, error: { message: "boom" } } : { data: queued.slice(0, (args as { p_limit: number }).p_limit), error: null };
+      }
       return { data: { areas: AREAS, cells: [], subjects: [{ subjectKey: "madonna", subject: "Madonna", categories: ["Music"], count: 7, lastWritten: null }] }, error: null };
     },
-    from: (table: string) => { calls.from.push(table); return chain; },
+    from: (table: string) => { calls.from.push(table); return chainFor(table === "question_candidates" ? receivedToday : examples); },
   };
 };
 
@@ -258,13 +265,21 @@ describe("brief", () => {
 describe("post parsing", () => {
   const slot = { n: 1, category: "Music", area: "Pop", era: "1980s" };
   it("keeps valid items, counts invalid ones, and refuses an empty or oversized post", () => {
-    const parsed = candidates.parsePost({ items: [{ slot, payload: good() }, { slot, payload: { question: 1 } }, { slot: { n: 99 }, payload: good() }] }, "speed");
+    const parsed = candidates.parsePost({ items: [{ slot, payload: good() }, { slot: { ...slot, n: 2 }, payload: { question: 1 } }, { slot: { n: 99 }, payload: good() }] }, "speed");
     expect(parsed.items).toHaveLength(1);
     expect(parsed.invalid).toBe(2);
     expect(() => candidates.parsePost({ items: [] }, "speed")).toThrow(expect.objectContaining({ status: 422 }));
     expect(() => candidates.parsePost({ items: Array.from({ length: 41 }, () => ({ slot, payload: good() })) }, "speed")).toThrow(expect.objectContaining({ status: 413 }));
     expect(() => candidates.parsePost({ nope: true }, "speed")).toThrow(expect.objectContaining({ status: 400 }));
     expect(() => candidates.parsePost({ items: [] }, "bingo")).toThrow(expect.objectContaining({ status: 404 }));
+  });
+
+  // Phase 7h (R2 #25.2): grades are matched by slot, so the server never trusts the writer to send one item per slot.
+  it("refuses a batch with a repeated slot number, even when one copy is invalid", () => {
+    const refused = expect.objectContaining({ status: 400, code: "duplicate_slot" });
+    expect(() => candidates.parsePost({ items: [{ slot, payload: good() }, { slot: { ...slot }, payload: good({ question: "Another?" }) }] }, "speed")).toThrow(refused);
+    expect(() => candidates.parsePost({ items: [{ slot, payload: good() }, { slot, payload: { question: 1 } }] }, "speed")).toThrow(refused);
+    expect(candidates.parsePost({ items: [{ slot, payload: good() }, { slot: { ...slot, n: 2 }, payload: good() }] }, "speed").items).toHaveLength(2);
   });
 
   it("keeps a valid writer grade in the payload and drops a bad one without dropping the item (D35)", () => {
@@ -361,6 +376,23 @@ describe("conversions", () => {
     expect(off.calls.rpc.map(c => (c as unknown[])[0])).not.toContain("live_conversion_brief");
   });
 
+  // Phase 7f (second review R2 #27.2, #27.4).
+  it("sends no conversions on a re-run once today's have been received", async () => {
+    const client = fakeClient([], [queuedRow(1)], { receivedToday: [{ id: "c1" }] });
+    const result = await brief.buildBrief({ client, game: "live", today: TODAY });
+    expect(result.prompts.map(p => p.kind)).not.toContain("conversion");
+    expect(client.calls.rpc.map(c => (c as unknown[])[0])).not.toContain("live_conversion_brief");
+    expect(result.prompts.map(p => p.kind)).toContain("regular");
+  });
+
+  it("serves the Live brief without conversions when their read fails, and logs it", async () => {
+    const warnings: string[] = [];
+    const result = await brief.buildBrief({ client: fakeClient([], [queuedRow(1)], { failConversions: true }), game: "live", today: TODAY,
+      warn: (m: string) => warnings.push(m) });
+    expect(result.prompts.map(p => p.kind)).toEqual(["regular"]);
+    expect(warnings).toEqual(["[question-writer] brief: conversions skipped (Brief read failed (live_conversion_brief).)"]);
+  });
+
   it("gives a Current Events original its era and source, and treats the Speed text as data", () => {
     const text = conv.buildLiveConversionPrompt({ today: TODAY, areas: [], items: [
       { ...queuedRow(1, { category: "Current Events", era: "2026-10", sourceUrl: "https://example.com/a" }), n: 1 },
@@ -393,7 +425,54 @@ describe("conversions", () => {
       payload: { answer: "Mars", grade: { model: "gpt-6-astra" } } });
     expect(parsed.items[0].payload).not.toHaveProperty("slot");
     expect(parsed.items[1]).toEqual({ requestId: REQ(2), declined: true, reason: "Too hard to recall without choices." });
+    // Phase 7f (R2 #27.3): a rewrite that fails the Live schema is sent as failed, not dropped.
+    expect(parsed.items[2]).toEqual({ requestId: REQ(3), invalid: true });
+    expect(parsed.items).toHaveLength(3);
+    expect(candidates.parseConversions({ items: [{ requestId: REQ(4), payload: { question: "x" } }] }))
+      .toEqual({ items: [{ requestId: REQ(4), invalid: true }], invalid: 1, graded: 0 });
     expect(() => candidates.parseConversions({ items: Array.from({ length: 21 }, (_, i) => ({ requestId: REQ(i), declined: true, reason: "x" })) })).toThrow(/At most 20/);
     expect(() => candidates.parseConversions({ items: [{ requestId: "x" }] })).toThrow(/No valid items/);
   });
+});
+
+// Phase 7h (R2 #25.7): one bar-test helper for Speed and Live, with the old blocks' results.
+describe("scoreBarTest", () => {
+  type Audience = { score: number; model: string };
+  type Scorer = { writerGrade: (grade: unknown) => unknown; audienceFromWriter: (row: unknown, grade: never) => Audience };
+  const { scoreBarTest } = require("../lib/question-writer/barTest.cjs") as {
+    scoreBarTest: (input: { items: { id: string; grade: unknown; row: unknown; apiRow: { id: string } }[]; audience: Scorer;
+      scoreUngraded: (rows: { id: string }[]) => Promise<{ id: string; audience: unknown }[]> }) => Promise<{ audiences: Audience[]; graded: { chatgpt: number; openai: number } }>;
+  };
+  const speedAudience = require("../lib/speed-trivia-quality/audience.cjs") as Scorer & { GRADE_VERSION: string };
+  const liveAudience = require("../lib/live-trivia-quality/audience.cjs") as Scorer & { GRADE_VERSION: string };
+  const fixtures = {
+    speed: { audience: speedAudience, row: { id: "a", question: good().question, options: good().options, correct_answer: 0, category: "Music", status: "pending_review",
+      question_pool: "anytime_blitz", answer_format: "multiple_choice" } },
+    live: { audience: liveAudience, row: { question: "Who voiced the Genie in 'Aladdin'?", answer: "Robin Williams", acceptableAnswers: ["Williams"], category: "Movies" } },
+  };
+
+  for (const [game, { audience, row }] of Object.entries(fixtures)) {
+    it(`${game}: the writer's grade when valid, one API call for the rest, in item order`, async () => {
+      const grade = { version: audience.GRADE_VERSION, model: "gpt-6-astra", familiar: 4, fun: 4, estCorrect: 60, flags: [] };
+      const calls: { id: string }[][] = [];
+      const scoreUngraded = async (rows: { id: string }[]) => { calls.push(rows); return rows.map(r => ({ id: r.id, audience: { score: 2, model: "api" } })); };
+      const items = [
+        { id: "g", grade, row, apiRow: { id: "g", note: "n" } },
+        { id: "u", grade: { ...grade, version: "old" }, row, apiRow: { id: "u", note: "n" } },
+        { id: "m", grade: null, row, apiRow: { id: "m" } },
+      ];
+      const result = await scoreBarTest({ items, audience, scoreUngraded });
+      // As the old blocks: audienceFromWriter for the valid grade, the API reply for the others.
+      expect(result.audiences[0]).toEqual(audience.audienceFromWriter(row, audience.writerGrade(grade) as never));
+      expect(result.audiences.slice(1)).toEqual([{ score: 2, model: "api" }, { score: 2, model: "api" }]);
+      expect(result.graded).toEqual({ chatgpt: 1, openai: 2 });
+      expect(calls).toEqual([[{ id: "u", note: "n" }, { id: "m" }]]);
+      // All graded: no API call at all.
+      const none: unknown[] = [];
+      await scoreBarTest({ items: [items[0]], audience, scoreUngraded: async rows => { none.push(rows); return []; } });
+      expect(none).toEqual([]);
+      // A missing API reply is fatal, as before.
+      await expect(scoreBarTest({ items: [items[2]], audience, scoreUngraded: async () => [] })).rejects.toThrow("bar-test-result-missing");
+    });
+  }
 });

@@ -1970,7 +1970,7 @@ export function TriviaGame({
               {/* Report (D32): only once the server's reply has revealed the answer, so never while the timer runs. */}
               {revealedCorrectAnswer !== null ? (
                 <div className="flex justify-end px-3.5 pt-2">
-                  <ReportQuestionSheet key={question.id} game="speed" questionId={question.id} />
+                  <ReportQuestionSheet key={question.id} questionId={question.id} />
                 </div>
               ) : null}
 

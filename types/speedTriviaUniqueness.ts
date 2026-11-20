@@ -43,6 +43,10 @@ export type AdmissionEvidence = {
   matchedRowIds: string[];
   comparisons: ComparisonResult[];
   retrieval?: RetrievalEvidence;
+  /** Set by the runtime: 'approved' (approval check) or 'live-edit' (D38); absent for a full-bank check. */
+  comparisonScope?: "approved" | "live-edit";
+  /** D38b: live questions the previous version already repeated, set aside for this live edit. */
+  preexistingRepeats?: string[];
 };
 export type CorpusReader = {
   readEvidence: () => Promise<{ count: number; revision: string }>;

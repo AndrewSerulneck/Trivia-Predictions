@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   merge: vi.fn(),
   findOpenPr: vi.fn(),
   prState: vi.fn(),
+  findClaimPrs: vi.fn(),
 }));
 vi.mock("@/lib/adminAuth", () => ({ requireAdminAuth: mocks.auth }));
 vi.mock("@/lib/liveTriviaGithub", () => ({
@@ -31,6 +32,7 @@ vi.mock("@/lib/liveTriviaGithub", () => ({
   mergePublishPr: mocks.merge,
   findOpenPublishPr: mocks.findOpenPr,
   readPrState: mocks.prState,
+  findPublishPrsByClaim: mocks.findClaimPrs,
 }));
 vi.mock("@/lib/supabaseAdmin", () => ({
   supabaseAdmin: {
@@ -98,6 +100,7 @@ vi.mock("@/lib/supabaseAdmin", () => ({
   },
 }));
 import { GET, POST } from "@/app/api/admin/trivia/live-review/route";
+import { resetLivePrCheckThrottle } from "@/lib/liveTriviaReview";
 
 const DIR = "data/live-trivia/categories";
 const id = (n: number) => `85000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -124,6 +127,8 @@ beforeEach(() => {
   mocks.slugReadError = false;
   mocks.findOpenPr.mockResolvedValue(null);
   mocks.prState.mockResolvedValue("open");
+  mocks.findClaimPrs.mockResolvedValue(new Map());
+  resetLivePrCheckThrottle();
 });
 
 describe("Live review route", () => {
@@ -161,6 +166,19 @@ describe("Live review route", () => {
     expect((await post({ action: "keep", id: "nope" })).status).toBe(400);
     mocks.rows[2].status = "published";
     expect((await post({ action: "undo", id: id(3) })).status).toBe(409);
+  });
+
+  it("Phase 7g (R2 #20.9): Undo says why it didn't apply", async () => {
+    const undoError = async (status: string) => {
+      mocks.rows[2].status = status;
+      const response = await post({ action: "undo", id: id(3) });
+      expect(response.status).toBe(409);
+      return (await response.json()).error;
+    };
+    expect(await undoError("pending_review")).toBe("Already undone.");
+    expect(await undoError("publishing")).toBe("Publishing now. Try again in a minute.");
+    expect(await undoError("pr_open")).toBe("Waiting on GitHub.");
+    expect(await undoError("published")).toBe("Can't undo: already published.");
   });
 
   it("edits the answer and acceptable answers, within the Live limits", async () => {
@@ -339,6 +357,7 @@ describe("Publish", () => {
 
     Object.assign(mocks.rows[2], { status: "pr_open", pr_url: PR, question_ref: "final-3" });
     mocks.prState.mockResolvedValueOnce("merged");
+    resetLivePrCheckThrottle(); // a minute later
     await get();
     expect(mocks.rows[2].status).toBe("published");
     expect(mocks.upserts[0].rows[0]).toMatchObject({ question_ref: "final-3", tagged_by: "writer:live-publish" });
@@ -372,14 +391,118 @@ describe("Publish", () => {
     expect(mocks.openPr).not.toHaveBeenCalled();
   });
 
-  it("a PR that can't be recorded stops before merging and keeps the claim", async () => {
+  it("a PR that can't be recorded is tried once more, then stops before merging, keeps the claim and names the PR", async () => {
     githubReady(true);
     fail.record = true;
-    expect((await post({ action: "publish" })).status).toBe(502);
+    const response = await post({ action: "publish" });
+    expect(response.status).toBe(502);
+    expect((await response.json()).error).toBe("Publish opened PR #9 but couldn't record it. Don't publish again.");
+    expect(calls("live_candidates_publish_record_pr")).toHaveLength(2);
     expect(mocks.merge).not.toHaveBeenCalled();
     expect(mocks.rows[2].status).toBe("publishing");
     expect(mocks.rows[2].pr_url).toBeUndefined();
     expect(calls("live_candidates_publish_settle")).toHaveLength(0);
+  });
+
+  it("a record that fails once and then succeeds goes on as normal", async () => {
+    githubReady(true);
+    let first = true;
+    const real = mocks.rpc.getMockImplementation()!;
+    mocks.rpc.mockImplementation(async (name: string, args: Row) => {
+      if (name === "live_candidates_publish_record_pr" && first) { first = false; return { data: null, error: { message: "timeout" } }; }
+      return real(name, args);
+    });
+    expect(await (await post({ action: "publish" })).json()).toMatchObject({ ok: true, merged: true, published: 1 });
+    expect(mocks.rows[2]).toMatchObject({ status: "published", pr_url: PR });
+  });
+
+  it("passes the claim and the whole plan to the PR, so the PR check can settle it later", async () => {
+    githubReady(true);
+    await post({ action: "publish" });
+    const [, , , record] = mocks.openPr.mock.calls[0] as [string, unknown, string, Row];
+    expect(record).toMatchObject({ claim: expect.stringMatching(/^[0-9a-f-]{36}$/), published: [{ id: id(3) }], already: [], refused: [] });
+  });
+
+  describe("Phase 7g (R2 #20.3): the PR check settles a Publish that opened a PR but couldn't record it", () => {
+    const CLAIM = "abcdef12-3456-4789-8abc-def012345678";
+    const unrecorded = () => {
+      Object.assign(mocks.rows[2], { status: "publishing", publish_claim: CLAIM, claimed_at: STALE(), question_ref: "x" });
+      mocks.rows.push(candidate(4, { status: "publishing", publish_claim: CLAIM, claimed_at: STALE(), question_ref: "y" }));
+      mocks.rows.push(candidate(5, { status: "publishing", publish_claim: CLAIM, claimed_at: STALE(), question_ref: "z" }));
+    };
+    const found = (state: string) => mocks.findClaimPrs.mockResolvedValue(new Map([[CLAIM, {
+      url: PR, number: 9, state,
+      record: { claim: CLAIM, published: [{ id: id(3), slug: "final-3" }], already: [{ id: id(4), slug: "on-main-4" }], refused: [{ id: id(5), reason: "expired" }] },
+    }]]));
+
+    it("merged: published with tags; the already row published, the refused one rejected", async () => {
+      unrecorded();
+      found("merged");
+      await get();
+      expect(mocks.findClaimPrs).toHaveBeenCalledWith([CLAIM]);
+      expect(mocks.rows[2]).toMatchObject({ status: "published", pr_url: PR, question_ref: "final-3", publish_claim: null });
+      expect(mocks.rows[3]).toMatchObject({ status: "published", question_ref: "on-main-4" });
+      expect(mocks.rows[4]).toMatchObject({ status: "reject", reason: "publish:expired" });
+      expect(mocks.upserts[0].rows[0]).toMatchObject({ question_ref: "final-3", tagged_by: "writer:live-publish" });
+    });
+
+    it("open: waits on GitHub (pr_open) and the page says so", async () => {
+      unrecorded();
+      found("open");
+      expect(await (await get()).json()).toMatchObject({ waiting: { waiting: 1, prUrl: PR } });
+      expect(mocks.rows[2]).toMatchObject({ status: "pr_open", pr_url: PR });
+    });
+
+    it("closed: back to keep, and the kept count shows it on the same load", async () => {
+      unrecorded();
+      found("closed");
+      const body = await (await get()).json();
+      expect(mocks.rows[2]).toMatchObject({ status: "keep", pr_url: null });
+      expect(body.kept).toBe(1);
+    });
+
+    it("no PR found (none was opened): left for the next Publish's re-claim", async () => {
+      unrecorded();
+      await get();
+      expect(mocks.rows[2]).toMatchObject({ status: "publishing", publish_claim: CLAIM });
+      expect(calls("live_candidates_publish_record_pr")).toHaveLength(0);
+    });
+
+    it("a fresh claim belongs to a running Publish: never looked up", async () => {
+      unrecorded();
+      mocks.rows.filter((r) => r.publish_claim === CLAIM).forEach((r) => { r.claimed_at = new Date().toISOString(); });
+      found("merged");
+      await get();
+      expect(mocks.findClaimPrs).not.toHaveBeenCalled();
+    });
+
+    it("a failed lookup leaves the rows as they are and the page still loads", async () => {
+      unrecorded();
+      mocks.findClaimPrs.mockRejectedValue(new Error("down"));
+      expect((await get()).status).toBe(200);
+      expect(mocks.rows[2]).toMatchObject({ status: "publishing" });
+    });
+  });
+
+  describe("Phase 7g (R2 #20.7): the PR check asks GitHub at most once a minute", () => {
+    it("a second load within a minute makes no GitHub call but still shows what waits", async () => {
+      Object.assign(mocks.rows[2], { status: "pr_open", pr_url: PR, question_ref: "final-3" });
+      await get();
+      expect(mocks.prState).toHaveBeenCalledTimes(1);
+      expect(await (await get()).json()).toMatchObject({ waiting: { waiting: 1, prUrl: PR } });
+      expect(mocks.prState).toHaveBeenCalledTimes(1);
+      resetLivePrCheckThrottle();
+      await get();
+      expect(mocks.prState).toHaveBeenCalledTimes(2);
+    });
+
+    it("Publish always checks, even right after a load", async () => {
+      Object.assign(mocks.rows[2], { status: "pr_open", pr_url: PR, question_ref: "final-3" });
+      await get();
+      mocks.prState.mockResolvedValueOnce("closed");
+      await post({ action: "publish" });
+      expect(mocks.prState).toHaveBeenCalledTimes(2);
+    });
   });
 
   it("an open Publish PR blocks a new one and sends the claims back to keep", async () => {

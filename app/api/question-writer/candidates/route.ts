@@ -6,7 +6,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // The private writer repo posts the day's candidates here (docs/speed-trivia-backlog-and-quality-plan.md Phase 4b).
 // It inserts into question_candidates and nothing else: no question is read, approved or published here.
-// Limits: ≤ 40 items, ≤ 64 KB, one batch per game per UTC day (a retry of it is idempotent), ≤ 2 posts a day.
+// Limits: ≤ 40 items, ≤ 64 KB, one batch per game per UTC day (a retry of it is always idempotent, Phase 7g), ≤ 2 posts a day.
 // Each item may carry the writer's bar-test grade (D35, Phase 4d.1); it is checked and kept inside the payload.
 export const runtime = "nodejs";
 
