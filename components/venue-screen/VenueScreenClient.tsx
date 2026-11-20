@@ -22,6 +22,7 @@ import { VenueScreenStatus } from "@/components/venue-screen/VenueScreenStatus";
 import { BRACKET_GAME_NAME, SQUARES_GAME_NAME } from "@/lib/venueGameCards";
 import { getVenueScreenTheme, type VenueScreenMode, type VenueScreenTheme } from "@/lib/venueScreenBrand";
 import type { VenueScreenState } from "@/lib/venueScreen";
+import { KeepAwakeReadout } from "@/components/venue-screen/KeepAwakeReadout";
 import { useKeepScreenAwake } from "@/lib/useKeepScreenAwake";
 import {
   getVenueScreenBurnInTransform,
@@ -37,6 +38,8 @@ type VenueScreenClientProps = {
   debugMode?: VenueScreenDebugMode | null;
   /** Play the intro stinger on open. False only for the dashboard thumbnail (`intro=0`). */
   intro?: boolean;
+  /** Show the keep-awake readout (`?awake=debug`). */
+  awakeDebug?: boolean;
 };
 
 const VENUE_SCREEN_FETCH_TIMEOUT_MS = 10_000;
@@ -244,7 +247,7 @@ function getRefreshErrorMessage(error: unknown): string {
   return "Unable to refresh venue screen. Keeping the last venue screen live.";
 }
 
-export function VenueScreenClient({ venueId, initialState, debugMode = null, intro = true }: VenueScreenClientProps) {
+export function VenueScreenClient({ venueId, initialState, debugMode = null, intro = true, awakeDebug = false }: VenueScreenClientProps) {
   const [state, setState] = useState(initialState);
   // The intro stinger plays over the screen on every open (docs/venue-display-hype-and-intro-stinger-plan.md
   // §8); the poll loop runs underneath. A go-live takeover that lands meanwhile waits for it.
@@ -439,6 +442,7 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null, int
       </ViewportFitCanvas>
       {/* Outside the scaled canvas: a fixed element inside a transformed parent isn't viewport-fixed. */}
       {introPlaying ? <TvIntroStinger onDone={endIntro} /> : null}
+      {awakeDebug ? <KeepAwakeReadout /> : null}
     </FxProvider>
   );
 }

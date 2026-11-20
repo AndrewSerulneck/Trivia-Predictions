@@ -10,7 +10,7 @@ export default async function VenueScreenPage({
   searchParams,
 }: {
   params: Promise<{ venueId: string }>;
-  searchParams?: Promise<{ mode?: string | string[]; intro?: string | string[] }>;
+  searchParams?: Promise<{ mode?: string | string[]; intro?: string | string[]; awake?: string | string[] }>;
 }) {
   const { venueId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
@@ -27,6 +27,7 @@ export default async function VenueScreenPage({
       initialState={applyVenueScreenDebugMode(initialState, debugMode, initialState.updatedAt)}
       debugMode={debugMode}
       intro={!isIntroDisabled(resolvedSearchParams.intro)}
+      awakeDebug={resolvedSearchParams.awake === "debug"}
     />
   );
 }

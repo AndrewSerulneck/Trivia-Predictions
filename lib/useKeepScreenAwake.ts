@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 // Keeps a TV (Fire TV, Google TV, smart-TV browsers) from dimming or starting its screensaver
 // while the venue display is up.
@@ -12,6 +12,10 @@ import { useEffect } from "react";
 //
 // Skipped when the page is embedded (the owner dashboard's preview iframes) so an owner's phone
 // isn't held awake by a thumbnail. No network beyond the immutable-cached 1 KB video, once.
+//
+// `enabled` lets a page run it only while needed (the owner dashboard's Expand overlay: the frame
+// inside is embedded, so the parent page holds the lock). `useKeepAwakeStatus` feeds the hidden
+// `?awake=debug` readout; updated on events only, never polled.
 
 export const KEEP_AWAKE_VIDEO_SRC = "/brand/web/keep-awake-v1.mp4";
 
@@ -21,6 +25,54 @@ type WakeLockHandle = {
 };
 type WakeLockSource = { request: (type: "screen") => Promise<WakeLockHandle> };
 
+export type KeepAwakeStatus = {
+  method: "wake-lock" | "video" | "none";
+  wakeLockSupported: boolean;
+  wakeLockHeld: boolean;
+  releaseCount: number;
+  lastError: string;
+  videoPlaying: boolean;
+  visibility: string;
+  sinceMs: number;
+};
+
+const INITIAL_STATUS: KeepAwakeStatus = {
+  method: "none",
+  wakeLockSupported: false,
+  wakeLockHeld: false,
+  releaseCount: 0,
+  lastError: "",
+  videoPlaying: false,
+  visibility: "unknown",
+  sinceMs: 0,
+};
+
+let status: KeepAwakeStatus = INITIAL_STATUS;
+let startedAt = 0;
+const listeners = new Set<() => void>();
+
+const setStatus = (patch: Partial<KeepAwakeStatus>) => {
+  status = { ...status, ...patch, sinceMs: startedAt ? Date.now() - startedAt : 0 };
+  listeners.forEach((listener) => listener());
+};
+
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+};
+
+export const useKeepAwakeStatus = (): KeepAwakeStatus =>
+  useSyncExternalStore(
+    subscribe,
+    () => status,
+    () => INITIAL_STATUS,
+  );
+
+const errorMessage = (error: unknown): string =>
+  error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+
 const isEmbedded = (): boolean => {
   try {
     return window.self !== window.top;
@@ -29,9 +81,12 @@ const isEmbedded = (): boolean => {
   }
 };
 
-export const useKeepScreenAwake = (): void => {
+export const useKeepScreenAwake = (enabled = true): void => {
   useEffect(() => {
-    if (isEmbedded()) return;
+    if (!enabled || isEmbedded()) return;
+    startedAt = Date.now();
+    status = INITIAL_STATUS;
+    setStatus({ visibility: document.visibilityState });
     let cancelled = false;
     let handle: WakeLockHandle | null = null;
     let acquiring = false;
@@ -58,10 +113,13 @@ export const useKeepScreenAwake = (): void => {
           opacity: "0.01",
           pointerEvents: "none",
         });
+        video.addEventListener("playing", () => setStatus({ videoPlaying: true }));
+        video.addEventListener("pause", () => setStatus({ videoPlaying: false }));
         document.body.appendChild(video);
       }
+      setStatus({ method: "video" });
       try {
-        void video.play().catch(() => undefined);
+        void video.play().catch((error: unknown) => setStatus({ lastError: errorMessage(error) }));
       } catch {
         // No media support — nothing else to try.
       }
@@ -70,6 +128,7 @@ export const useKeepScreenAwake = (): void => {
     const acquire = async () => {
       if (cancelled || handle || acquiring || document.visibilityState !== "visible") return;
       const source = (navigator as Navigator & { wakeLock?: WakeLockSource }).wakeLock;
+      setStatus({ wakeLockSupported: Boolean(source) });
       if (!source) {
         playVideo();
         return;
@@ -82,12 +141,15 @@ export const useKeepScreenAwake = (): void => {
           return;
         }
         handle = next;
+        setStatus({ method: "wake-lock", wakeLockHeld: true });
         // The system can drop the lock (power saving); take it again while still visible.
         next.addEventListener?.("release", () => {
           if (handle === next) handle = null;
+          setStatus({ wakeLockHeld: false, releaseCount: status.releaseCount + 1 });
           if (!cancelled && document.visibilityState === "visible") void acquire();
         });
-      } catch {
+      } catch (error) {
+        setStatus({ lastError: errorMessage(error) });
         playVideo();
       } finally {
         acquiring = false;
@@ -96,6 +158,7 @@ export const useKeepScreenAwake = (): void => {
 
     // The browser drops the lock and may pause media while the page is hidden.
     const onVisibility = () => {
+      setStatus({ visibility: document.visibilityState });
       if (document.visibilityState !== "visible") return;
       if (video) playVideo();
       void acquire();
@@ -106,6 +169,9 @@ export const useKeepScreenAwake = (): void => {
     return () => {
       cancelled = true;
       document.removeEventListener("visibilitychange", onVisibility);
+      startedAt = 0;
+      status = INITIAL_STATUS;
+      listeners.forEach((listener) => listener());
       const held = handle;
       handle = null;
       if (held) {
@@ -123,5 +189,5 @@ export const useKeepScreenAwake = (): void => {
         video = null;
       }
     };
-  }, []);
+  }, [enabled]);
 };

@@ -150,4 +150,18 @@ describe("keep the TV awake", () => {
     expect(hook).toMatch(/video\.loop = true/);
     expect(hook).toMatch(/window\.self !== window\.top/);
   });
+
+  it("takes an enabled switch, and the owner page holds the lock only while Expand is open", () => {
+    expect(read("lib/useKeepScreenAwake.ts")).toMatch(/useKeepScreenAwake = \(enabled = true\)/);
+    expect(read("app/owner/display/page.tsx")).toMatch(/useKeepScreenAwake\(displayExpanded\)/);
+  });
+
+  it("the readout is gated on awake=debug, and /tv forwards only that flag", () => {
+    expect(read("app/venue/[venueId]/screen/page.tsx")).toMatch(/awakeDebug=\{resolvedSearchParams\.awake === "debug"\}/);
+    expect(read("components/venue-screen/VenueScreenClient.tsx")).toMatch(/awakeDebug \? <KeepAwakeReadout/);
+    expect(read("app/owner/display/page.tsx")).toMatch(/get\("awake"\) === "debug"/);
+    const route = read("app/tv/[code]/route.ts");
+    expect(route).toMatch(/get\("awake"\) === "debug"/);
+    expect(route).not.toMatch(/\.search\b/);
+  });
 });

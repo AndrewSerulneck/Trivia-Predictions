@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { KeepAwakeReadout } from "@/components/venue-screen/KeepAwakeReadout";
+import { useKeepScreenAwake } from "@/lib/useKeepScreenAwake";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { withIntroDisabled } from "@/components/venue-screen/stingerTimeline";
 import { HightopLoader } from "@/components/ui/HightopLoader";
@@ -31,6 +33,12 @@ const OwnerDisplayPage = () => {
   const [copied, setCopied] = useState(false);
   const [showFireStick, setShowFireStick] = useState(false);
   const [displayExpanded, setDisplayExpanded] = useState(false);
+  // The Expand frame is embedded, so the hook skips it; this page holds the screen while it's open.
+  useKeepScreenAwake(displayExpanded);
+  const [awakeDebug, setAwakeDebug] = useState(false);
+  useEffect(() => {
+    setAwakeDebug(new URLSearchParams(window.location.search).get("awake") === "debug");
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -168,7 +176,7 @@ const OwnerDisplayPage = () => {
             <div className="overflow-hidden rounded-2xl border border-ht-hairline bg-ht-surface shadow-ht-card">
               <div className="flex items-center justify-between px-4 pt-4">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-ht-cyan-300">Preview</p>
-                <FullscreenExpander url={screenUrl} onExpandedChange={setDisplayExpanded} />
+                <FullscreenExpander url={screenUrl} onExpandedChange={setDisplayExpanded} awakeDebug={awakeDebug} />
               </div>
               <div className="mt-3">
                 <ScaledPreview url={screenUrl} paused={displayExpanded} />
@@ -206,9 +214,11 @@ const CONTROLS_HIDE_DELAY_MS = 3_500;
 function FullscreenExpander({
   url,
   onExpandedChange,
+  awakeDebug,
 }: {
   url: string;
   onExpandedChange: (expanded: boolean) => void;
+  awakeDebug: boolean;
 }) {
   const fsRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
@@ -324,6 +334,7 @@ function FullscreenExpander({
               allow="autoplay; fullscreen"
               className="pointer-events-none absolute left-0 top-0 h-full w-full max-w-none border-0"
             />
+            {awakeDebug ? <KeepAwakeReadout /> : null}
             <button
               type="button"
               onClick={handleClose}
