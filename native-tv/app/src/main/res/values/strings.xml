@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hightop Challenge TV</string>
+    <string name="offline_title">Can\'t connect.</string>
+    <string name="retry">Retry</string>
+    <string name="menu_change_venue">Change venue</string>
+    <string name="menu_reload">Reload</string>
+</resources>

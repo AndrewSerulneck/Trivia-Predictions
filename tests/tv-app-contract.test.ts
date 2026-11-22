@@ -155,3 +155,73 @@ describe("Connect screen copy (D10)", () => {
     expect(screen).toContain('router.push("/tv-app/demo")');
   });
 });
+
+// Phase 4: the Fire OS shell in native-tv/ must speak the same contract as lib/tvApp.ts.
+describe("the Fire OS app (native-tv/) matches the website", () => {
+  const nativeRoot = "native-tv";
+  const kotlin = (name: string) => read(`${nativeRoot}/app/src/main/java/com/hightopchallenge/tv/${name}`);
+  const listNativeText = (dir: string): string[] =>
+    readdirSync(path.resolve(repoRoot, dir)).flatMap((entry) => {
+      const rel = path.join(dir, entry);
+      if (statSync(path.resolve(repoRoot, rel)).isDirectory()) {
+        return entry.startsWith(".") || entry === "build" || entry === "out" ? [] : listNativeText(rel);
+      }
+      return /\.(kt|kts|xml|pro|properties|mjs|md)$/.test(entry) && !/ 2\./.test(entry) ? [rel] : [];
+    });
+
+  it("never sends the phone app's token", () => {
+    const offenders = listNativeText(nativeRoot).filter((file) => read(file).includes("HightopChallengeApp/"));
+    expect(offenders).toEqual([]);
+  });
+
+  it("uses the same UA token, bridge name and bridge methods", () => {
+    const policy = kotlin("TvPolicy.kt");
+    expect(policy).toContain(`const val TV_UA_TOKEN = "${TV_APP_UA_TOKEN}"`);
+    expect(policy).toContain('const val TV_BRIDGE_NAME = "HightopTV"');
+    const bridge = kotlin("TvBridge.kt");
+    const webBridge = read("lib/tvApp.ts");
+    for (const method of ["getVenueId", "setVenueId", "clearVenueId"]) {
+      expect(webBridge).toContain(`${method}?:`);
+      expect(bridge).toMatch(new RegExp(`@JavascriptInterface\\s+fun ${method}\\(`));
+    }
+    expect(read(`${nativeRoot}/app/proguard-rules.pro`)).toContain("com.hightopchallenge.tv.TvBridge");
+    expect(kotlin("MainActivity.kt")).toContain("addJavascriptInterface(TvBridge(prefs), TV_BRIDGE_NAME)");
+  });
+
+  it("starts on /tv-app, allows only the site's hosts, and its versionName parses as a UA version", () => {
+    const gradle = read(`${nativeRoot}/app/build.gradle.kts`);
+    expect(gradle).toContain('val siteStartUrl = "https://hightopchallenge.com/tv-app"');
+    expect(gradle).toContain('val siteHosts = "hightopchallenge.com,www.hightopchallenge.com,play.hightopchallenge.com"');
+    const versionName = /versionName = "([^"]+)"/.exec(gradle)?.[1] ?? "";
+    expect(tvAppVersion(`Base HightopChallengeTV/${versionName}`)).toBe(versionName);
+  });
+
+  it("is a separate app from the phone app", () => {
+    const tvId = /applicationId = "([^"]+)"/.exec(read(`${nativeRoot}/app/build.gradle.kts`))?.[1];
+    const phoneId = /applicationId "([^"]+)"/.exec(read("native/android/app/build.gradle"))?.[1];
+    expect(tvId).toBe("com.hightopchallenge.tv");
+    expect(phoneId).toBeTruthy();
+    expect(tvId).not.toBe(phoneId);
+  });
+
+  it("is a TV app with https only and no extra permissions", () => {
+    const manifest = read(`${nativeRoot}/app/src/main/AndroidManifest.xml`);
+    expect(manifest).toMatch(/android\.software\.leanback" android:required="true"/);
+    expect(manifest).toMatch(/android\.hardware\.touchscreen" android:required="false"/);
+    expect(manifest).toContain("android.intent.category.LEANBACK_LAUNCHER");
+    expect(manifest).toContain('android:banner="@drawable/tv_banner"');
+    expect(manifest).toContain('android:usesCleartextTraffic="false"');
+    const permissions = [...manifest.matchAll(/uses-permission android:name="([^"]+)"/g)].map((m) => m[1]).sort();
+    expect(permissions).toEqual(["android.permission.ACCESS_NETWORK_STATE", "android.permission.INTERNET"]);
+    expect(read(`${nativeRoot}/app/src/main/res/xml/network_security_config.xml`)).toContain(
+      'cleartextTrafficPermitted="false"',
+    );
+  });
+
+  it("keeps the screen on natively, so the web keep-awake hook stands down in the app", () => {
+    expect(kotlin("MainActivity.kt")).toContain("FLAG_KEEP_SCREEN_ON");
+    const hook = read("lib/useKeepScreenAwake.ts");
+    expect(hook).toContain('import { isTvApp } from "@/lib/tvApp"');
+    expect(hook).toMatch(/if \(isTvApp\(\)\) \{\s+setStatus\(\{ method: "native"/);
+  });
+});
