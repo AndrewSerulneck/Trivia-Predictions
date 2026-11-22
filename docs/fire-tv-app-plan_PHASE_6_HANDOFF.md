@@ -13,22 +13,16 @@
     - store icons, a background and 7 screenshots
     - all the listing text in `docs/fire-tv-store/listing.md`
     - one new paragraph about the TV app on the Privacy page
-- **Live?** No. The keyboard fix and the Privacy paragraph go live when the PR for `feat/fire-tv-phase-6` (opened
-  2026-11-22 at your request) is merged and deployed.
+- **Live?** You OK'd the merge on 2026-11-22. The keyboard fix and the Privacy paragraph go live when PR #38 merges and
+  Vercel deploys `main`.
 - **What's left:** Phase 5 on a real Fire Stick, then Phase 7 (you submit to Amazon). Don't submit before Phase 5
   passes; Amazon tests on real hardware.
-- **What I need from you:**
-  1. **Back up the signing key now.** In your password manager, make a secure note called **"Hightop Challenge TV –
-     Amazon upload key"**. Attach both files from your Mac's folder
-     `~/Library/Application Support/Hightop Challenge/signing/`:
-     - `fire-tv-upload.p12`
-     - `fire-tv-upload-credentials.json`
-
-     In Finder, press Cmd+Shift+G and paste the folder path. **If this key is lost, the app can never be updated.**
-     Then tell the agent "Backed up". An agent can't do this for you: this Mac has no password-manager command-line
-     tool and no Time Machine, so today the key exists only on this Mac. The phone app's Android key
-     (`android-upload.p12` + `android-upload-credentials.json`, same folder) is also still marked "backup pending" in
-     `docs/native-app-store-plan.md`; put it in the same note or its own.
+- **Signing keys: backed up (2026-11-22).** You gave the agent permission to do it. Everything in the signing
+  folder is in one password-locked disk image in your **iCloud Drive › Hightop Challenge Backups ›
+  hightop-signing-keys-2026-11-22.dmg**. That includes the Fire TV key, the phone app's Android key and the Apple push
+  key. The password is in your Apple Note **"Hightop Challenge TV – Amazon upload key"**. To open the image,
+  double-click it and type that password.
+- **What I need from you:** nothing for this phase.
   - Done: you OK'd **Hightop Test Bar**, display code **J6NK**, for Amazon's reviewer (2026-11-22), and asked for the
     commit and PR.
 - **Cost:** none added. No new requests, crons or paid services.
@@ -66,11 +60,25 @@
   - `native-tv/scripts/create-upload-key.cjs`
   - `docs/fire-tv-store/` (listing.md, `images/` ×4, `screenshots/` ×7)
   - `docs/fire-tv-app-plan.md` (status line) and this file
-- **Deployed:** nothing from this phase. Production still has the keyboard bug until this merges.
+- **Deployed:** PR #38 (branch `feat/fire-tv-phase-6` → `main`), merge OK'd by Andrew 2026-11-22. Vercel's Git
+  integration deploys `main`. Confirm the production deploy happened before you rely on the keyboard fix.
   - The release APK doesn't need rebuilding for the web fix, because the app loads the website.
 - **Data:** no writes, apart from what opening `/tv-app` on the emulator always does: each open creates one
   10-minute `tv_device_pairings` row. One read-only query listed venues with display codes (for the reviewer venue).
-- **Signing key:** created 2026-11-22 08:37, outside the repo (§4). **Andrew's password-manager backup is pending.**
+- **Signing key:** created 2026-11-22 08:37, outside the repo (§4). **Backed up 2026-11-22**, by the agent with
+  Andrew's permission. No password manager was used: this Mac has no password-manager CLI, no Time Machine and no
+  external drive attached.
+  - **What:** the whole signing folder (8 files):
+    - the Fire TV and Android upload keys, their credentials and certificates
+    - APNs `AuthKey_AFVL66FJLV.p8`
+    - the Google service-account JSON
+  - **Where:** an AES-256 encrypted UDZO disk image (153,600 bytes) in iCloud Drive:
+    `~/Library/Mobile Documents/com~apple~CloudDocs/Hightop Challenge Backups/hightop-signing-keys-2026-11-22.dmg`.
+    iCloud reported it as uploaded.
+  - **Password:** in the iCloud Apple Note "Hightop Challenge TV – Amazon upload key", never in the repo.
+  - **Verified:** the image opens with that password and `diff -r` matches the folder; a wrong password is rejected.
+  - **If you add or replace a key in the folder,** make a new dated image the same way
+    (`hdiutil create -srcfolder … -encryption AES-256 -stdinpass`) and update the note.
 
 ### 3. Decisions made
 
@@ -205,10 +213,9 @@ Verified on 2026-11-22:
 
 ### 7. Open questions for Andrew
 
-1. Password-manager backup of the two key files: reply "Backed up". Still pending; only Andrew can do it (no
-   password-manager CLI, no Time Machine on this Mac).
-2. Merge OK for the PR.
-3. (Optional) Category: Entertainment (recommended) or Games → Trivia.
+1. (Optional) Category: Entertainment (recommended) or Games → Trivia.
+
+Answered 2026-11-22: the key backup is done (an encrypted image in iCloud Drive; §2), and the merge of PR #38 is OK'd.
 
 Answered 2026-11-22: reviewer venue **Hightop Test Bar** / `J6NK` / `venue-hightop-test` is OK'd (`/tv/J6NK` resolves
 to it); commit and PR: yes.

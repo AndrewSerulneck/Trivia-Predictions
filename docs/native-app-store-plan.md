@@ -1868,12 +1868,15 @@ dollar cap.
     `D6:3F:6E:3E:B3:E3:BA:49:7E:A7:3B:AE:19:A3:56:3D:86:D7:8F:4A:9D:59:E6:16:2B:FD:22:99:06:ED:8C:4E`.
     Configured in production `ANDROID_APP_CERT_SHA256`; private Play app-signing key remains managed by Google.
   - Android upload keystore: `/Users/andrewserulneck/Library/Application Support/Hightop Challenge/signing/android-upload.p12`
-  - Android upload credentials: same private folder, `android-upload-credentials.json`; **backup to Andrew's password manager pending**.
+  - Android upload credentials: same private folder, `android-upload-credentials.json`. **Backed up 2026-11-22.** The
+    whole signing folder, including `AuthKey_AFVL66FJLV.p8`, is in an AES-256 encrypted image in iCloud Drive:
+    `Hightop Challenge Backups/hightop-signing-keys-2026-11-22.dmg`. The password is in the iCloud Apple Note
+    "Hightop Challenge TV – Amazon upload key". See `docs/fire-tv-app-plan_PHASE_6_HANDOFF.md` §2.
     Never commit/print the file contents. Folder mode 0700; keystore/credentials mode 0600.
   - Public upload certificate: same folder, `android-upload-certificate.pem`. This is **not** Google's Play app-signing certificate.
   - iOS distribution/APNs private-key locations remain unconfirmed here.
-    APNs **upload to Firebase confirmed by Andrew 2026-10-25**; key backup location and real-device delivery
-    are separate outstanding checks. Distribution signing uses Xcode-managed signing; no exported private-key
+    APNs **upload to Firebase confirmed by Andrew 2026-10-25**. The APNs key `AuthKey_AFVL66FJLV.p8` is backed up
+    in the same encrypted iCloud image (2026-11-22). Real-device delivery is still an outstanding check. Distribution signing uses Xcode-managed signing; no exported private-key
     backup was created by this release preparation.
 
 
