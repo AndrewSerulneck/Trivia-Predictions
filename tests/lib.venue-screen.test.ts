@@ -132,7 +132,7 @@ function makeCategoryRound(overrides: Partial<CategoryBlitzRound> = {}): Categor
 
 describe("selectVenueScreenState", () => {
   it("normalizes an active Live Trivia question without answer options", () => {
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeLiveQuestion(),
       categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
@@ -160,13 +160,13 @@ describe("selectVenueScreenState", () => {
       currentRound: 4,
       leaderboard: [{ rank: 1, userId: "u1", username: "casey", roundPoints: {}, totalPoints: 100, pointsThisRound: 0 }],
     };
-    const first = selectVenueScreenState({
+    const first = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeLiveQuestion({ ...base, occurrenceDate: "2026-07-02" }),
       categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
       updatedAt,
     });
-    const second = selectVenueScreenState({
+    const second = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeLiveQuestion({ ...base, occurrenceDate: "2026-07-09" }),
       categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
@@ -182,7 +182,7 @@ describe("selectVenueScreenState", () => {
   });
 
   it("surfaces the correct answer and a reveal deadline during the reveal beat", () => {
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeLiveQuestion({
         activePhase: "rest_warning",
@@ -204,7 +204,7 @@ describe("selectVenueScreenState", () => {
     // Defense in depth: the engine already withholds revealedAnswer while
     // answering, but selectVenueScreenState must ALSO drop it for any non-reveal
     // phase so a devtools-open venue TV can't read the answer early.
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeLiveQuestion({
         activePhase: "answering",
@@ -227,12 +227,12 @@ describe("selectVenueScreenState", () => {
       });
     const blitz = { session: null, round: null, leaderboard: null, nextRoundStartsAt: null };
 
-    const question = selectVenueScreenState({ venue, liveTrivia: withMap({}), categoryBlitz: blitz, updatedAt });
+    const question = selectVenueScreenState({ reservedGamesEnabled: true, venue, liveTrivia: withMap({}), categoryBlitz: blitz, updatedAt });
     expect(question.liveTrivia?.media).toMatchObject({ kind: "image", url: "/maps/geography-map-texas.png" });
     expect(question.liveTrivia?.questionIndex).toBe(7);
     expect(question.liveTrivia?.questionsPerRound).toBe(15);
 
-    const reveal = selectVenueScreenState({
+    const reveal = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: withMap({ activePhase: "rest_warning", revealedAnswer: "Atlanta" }),
       categoryBlitz: blitz,
@@ -240,7 +240,7 @@ describe("selectVenueScreenState", () => {
     });
     expect(reveal.liveTrivia?.media?.url).toBe("/maps/geography-map-texas.png");
 
-    const intermission = selectVenueScreenState({
+    const intermission = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: withMap({ activePhase: "mid_game_break" }),
       categoryBlitz: blitz,
@@ -251,7 +251,7 @@ describe("selectVenueScreenState", () => {
   });
 
   it("a question with no picture has null media", () => {
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeLiveQuestion(),
       categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },
@@ -261,7 +261,7 @@ describe("selectVenueScreenState", () => {
   });
 
   it("prioritizes Live Trivia when Category Blitz overlaps", () => {
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeLiveQuestion(),
       categoryBlitz: {
@@ -278,7 +278,7 @@ describe("selectVenueScreenState", () => {
   });
 
   it("normalizes an active Category Blitz round when Live Trivia is inactive", () => {
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeInactiveLive(),
       categoryBlitz: {
@@ -298,7 +298,7 @@ describe("selectVenueScreenState", () => {
   });
 
   it("maps a completed Category Blitz round to results mode", () => {
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeInactiveLive(),
       categoryBlitz: {
@@ -322,7 +322,7 @@ describe("selectVenueScreenState", () => {
   });
 
   it("maps a non-active incomplete Category Blitz round to intermission mode", () => {
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeInactiveLive(),
       categoryBlitz: {
@@ -356,7 +356,7 @@ describe("selectVenueScreenState", () => {
       },
     ];
 
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeInactiveLive({
         nextSchedule: {
@@ -400,7 +400,7 @@ describe("selectVenueScreenState", () => {
   it("an asleep continuous Category Blitz shows the idle screen with no Category Blitz invite", () => {
     // Sleep when idle (docs/category-blitz-how-to-play-plan.md Phase 5): the TV
     // never wakes the game. Andrew 2026-11-14: no Category Blitz "Next up" card at all.
-    const state = selectVenueScreenState({
+    const state = selectVenueScreenState({ reservedGamesEnabled: true,
       venue,
       liveTrivia: makeInactiveLive(),
       categoryBlitz: { session: null, round: null, leaderboard: null, nextRoundStartsAt: null },

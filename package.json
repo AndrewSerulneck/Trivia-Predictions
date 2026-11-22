@@ -8,6 +8,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
+    "tv:sports-inventory": "node --env-file=.env.local scripts/tv-sports-inventory.cjs",
     "test": "vitest run",
     "test:nfl-week-scope-sql": "node scripts/test-nfl-week-scope-sql.cjs",
     "test:ranked-places-sql": "node scripts/test-ranked-places-sql.cjs",

@@ -10,6 +10,7 @@ import {
   parseVenueScreenDebugMode,
 } from "@/lib/venueScreenTiming";
 import type { VenueScreenState } from "@/lib/venueScreen";
+import { EMPTY_CAROUSEL } from "@/lib/venueScreenCarouselShared";
 
 const nowMs = Date.parse("2026-07-02T20:00:00.000Z");
 
@@ -77,6 +78,7 @@ function makeState(mode: Exclude<VenueScreenState["mode"], "squares" | "bracket"
     idle: {
       nextLiveTrivia: null,
       sponsorSlots: [],
+      ...EMPTY_CAROUSEL,
     },
     updatedAt: nowMs,
   };

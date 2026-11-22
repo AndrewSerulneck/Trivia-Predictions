@@ -217,7 +217,51 @@ type NormalizedBallDontLieEvent = {
   winnerTeam: string | null;
   isCompleted: boolean;
   periodLabel: string | null;
+  /** Short team codes ("KC") when the feed has them; the venue TV shows these. */
+  homeAbbr?: string | null;
+  awayAbbr?: string | null;
+  /** The feed's own postseason flag; null when it doesn't say (never guessed). */
+  isPostseason?: boolean | null;
+  /**
+   * Venue TV only (Pick 'Em keeps `startsAt`, which its game ids are built from): the first full timestamp the feed
+   * gives. NHL rows carry a date-only `game_date` ahead of `start_time_utc`, so `startsAt` reads noon UTC for them.
+   */
+  tvStartsAt?: string | null;
+  /** Venue TV only: the feed's own game state, when it says one. */
+  tvFeedState?: "scheduled" | "live" | "final" | null;
+  /** Venue TV only: a better clock label than `periodLabel` where the feed allows (NHL: "P2 9:22"). */
+  tvPeriodLabel?: string | null;
 };
+
+/** The first full start timestamp a feed row gives (never a date-only field). */
+function extractTvStartIso(event: Record<string, unknown>): string | null {
+  for (const candidate of [event.start_time_utc, event.datetime, event.scheduled_time, event.starts_at, event.commence_time, event.start_time]) {
+    const raw = String(candidate ?? "").trim();
+    if (!raw || /^\d{4}-\d{2}-\d{2}$/.test(raw)) continue;
+    const ms = Date.parse(raw);
+    if (Number.isFinite(ms)) return new Date(ms).toISOString();
+  }
+  return null;
+}
+
+/** The feed's own state words: BallDontLie uses `status_state` (most leagues) or `game_state` (NHL). */
+function extractTvFeedState(event: Record<string, unknown>): "scheduled" | "live" | "final" | null {
+  const state = String(event.status_state ?? event.game_state ?? "").trim().toLowerCase();
+  if (["in_progress", "in progress", "live", "crit", "halftime"].includes(state)) return "live";
+  if (["final", "post", "off", "completed"].includes(state)) return "final";
+  if (["scheduled", "pre", "fut", "preview"].includes(state)) return "scheduled";
+  return null;
+}
+
+/** NHL: "P2 9:22", "Int 2" between periods, "OT"; null when the feed has no clock. */
+function formatTvHockeyLabel(event: Record<string, unknown>): string | null {
+  const period = Number(event.period);
+  if (!Number.isFinite(period) || period < 1) return null;
+  const name = period <= 3 ? `P${period}` : period === 4 ? "OT" : "SO";
+  if (event.in_intermission === true) return period <= 3 ? `Int ${period}` : name;
+  const clock = String(event.time_remaining ?? "").trim().replace(/^0(\d:)/, "$1");
+  return clock ? `${name} ${clock}` : name;
+}
 
 type PickEmDebugProbe = {
   sportKey: string;
@@ -1141,6 +1185,11 @@ async function fetchBallDontLieEventsForSportKey(
         ? formatCollegeFootballPeriodLabel(eventRecord)
         : formatPeriodLabel(event.time, event.time_in_period, provider.isSoccerMatch ?? false, typeof event.period === "number" ? event.period : null);
     const tennisWinner = tennisMode ? extractTennisWinner(eventRecord) : null;
+    const abbrOf = (value: unknown): string | null => {
+      const team = value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+      const code = String(team?.abbreviation ?? team?.tricode ?? "").trim();
+      return code && code.length <= 5 ? code : null;
+    };
 
     events.push({
       id: buildPickEmGameId({
@@ -1163,6 +1212,14 @@ async function fetchBallDontLieEventsForSportKey(
       winnerTeam: tennisWinner?.winnerTeam ?? null,
       isCompleted,
       periodLabel,
+      homeAbbr: tennisMode ? null : abbrOf(eventRecord.home_team) ?? abbrOf(eventRecord.home_team_data),
+      awayAbbr: tennisMode
+        ? null
+        : abbrOf(eventRecord.visitor_team) ?? abbrOf(eventRecord.away_team) ?? abbrOf(eventRecord.away_team_data),
+      isPostseason: typeof eventRecord.postseason === "boolean" ? eventRecord.postseason : null,
+      tvStartsAt: extractTvStartIso(eventRecord),
+      tvFeedState: extractTvFeedState(eventRecord),
+      tvPeriodLabel: provider.path.startsWith("/nhl/") ? formatTvHockeyLabel(eventRecord) : null,
     });
   }
 
@@ -1746,6 +1803,76 @@ export async function listPickEmProviderGames(
     }
   }
   return games;
+}
+
+/** One game for the venue TV's shared sports copy (docs/fire-tv-app-plan.md Phase 9, D27). */
+export type PickEmTvFeedGame = {
+  feedGameKey: string;
+  sportKey: string;
+  league: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeAbbr: string | null;
+  awayAbbr: string | null;
+  startsAt: string;
+  isFinal: boolean;
+  homeScore: number | null;
+  awayScore: number | null;
+  periodLabel: string | null;
+  isPostseason: boolean | null;
+  /** The feed's own state; null when it doesn't say (the TV then goes by the clock). */
+  feedState: "scheduled" | "live" | "final" | null;
+};
+
+/**
+ * The key that joins a Pick 'Em pick to the TV's copy of its game: the feed path plus the provider's event id. NFL
+ * Pick 'Em and the other leagues build `game_id` differently (team order), but both start with the provider id, and
+ * the short sport keys ("nfl", "nba") share their feed with the long ones. Null when the sport has no feed.
+ */
+export function pickEmFeedGameKey(sportKey: string, gameIdOrProviderId: string): string | null {
+  const provider = BDL_PATH_BY_SPORT_KEY[String(sportKey ?? "").trim()];
+  const providerEventId = extractProviderEventIdFromGameId(gameIdOrProviderId);
+  return provider && providerEventId ? `${provider.path}#${providerEventId}` : null;
+}
+
+/**
+ * One league's games starting in [fromIso, toIso), for the venue TV. The same feed reads Pick 'Em uses (counted by
+ * `[provider-calls]`). `ok` is false when the feed returned nothing at all, which can't be told apart from a
+ * failure, so the caller keeps what it already has.
+ */
+export async function listPickEmTvFeedGames(
+  sportKey: string,
+  fromIso: string,
+  toIso: string,
+): Promise<{ ok: boolean; games: PickEmTvFeedGame[] }> {
+  const fromMs = Date.parse(fromIso);
+  const toMs = Date.parse(toIso);
+  const events = await fetchBallDontLieEventsForSportKey(sportKey, fromIso, toIso, getLeagueLabelForSportKey(sportKey)).catch(
+    () => [] as NormalizedBallDontLieEvent[],
+  );
+  const games: PickEmTvFeedGame[] = [];
+  for (const event of events) {
+    const startsMs = Date.parse(event.tvStartsAt ?? event.startsAt);
+    const feedGameKey = pickEmFeedGameKey(sportKey, event.providerEventId);
+    if (!feedGameKey || !Number.isFinite(startsMs) || startsMs < fromMs || startsMs >= toMs) continue;
+    games.push({
+      feedGameKey,
+      sportKey,
+      league: event.league,
+      homeTeam: event.homeTeam,
+      awayTeam: event.awayTeam,
+      homeAbbr: event.homeAbbr ?? null,
+      awayAbbr: event.awayAbbr ?? null,
+      startsAt: new Date(startsMs).toISOString(),
+      isFinal: event.isCompleted || event.tvFeedState === "final",
+      homeScore: event.homeScore,
+      awayScore: event.awayScore,
+      periodLabel: event.tvPeriodLabel ?? event.periodLabel,
+      isPostseason: event.isPostseason ?? null,
+      feedState: event.tvFeedState ?? null,
+    });
+  }
+  return { ok: events.length > 0, games };
 }
 
 export async function listPickEmGames(params: {

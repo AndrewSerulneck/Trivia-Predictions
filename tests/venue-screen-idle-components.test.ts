@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { formatIdleCountdown, IdleVenueScreen } from "@/components/venue-screen/IdleVenueScreen";
 import { APP_DOWNLOAD_DISPLAY_URL, APP_DOWNLOAD_URL } from "@/lib/appDownloadLink";
 import type { VenueScreenState } from "@/lib/venueScreen";
+import { EMPTY_CAROUSEL } from "@/lib/venueScreenCarouselShared";
 
 type IdleState = Extract<VenueScreenState, { mode: "idle" }>;
 
@@ -31,6 +32,7 @@ function makeIdleState(overrides: Partial<IdleState["idle"]> = {}): IdleState {
         recurringDays: ["thu"],
       },
       sponsorSlots: [],
+      ...EMPTY_CAROUSEL,
       ...overrides,
     },
     updatedAt: nowMs,
