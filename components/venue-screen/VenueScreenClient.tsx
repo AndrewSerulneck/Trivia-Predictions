@@ -40,6 +40,8 @@ type VenueScreenClientProps = {
   intro?: boolean;
   /** Show the keep-awake readout (`?awake=debug`). */
   awakeDebug?: boolean;
+  /** Poll the state API. False only for the TV app's Try demo (`/tv-app/demo`), which supplies every state itself. */
+  poll?: boolean;
 };
 
 const VENUE_SCREEN_FETCH_TIMEOUT_MS = 10_000;
@@ -247,7 +249,14 @@ function getRefreshErrorMessage(error: unknown): string {
   return "Unable to refresh venue screen. Keeping the last venue screen live.";
 }
 
-export function VenueScreenClient({ venueId, initialState, debugMode = null, intro = true, awakeDebug = false }: VenueScreenClientProps) {
+export function VenueScreenClient({
+  venueId,
+  initialState,
+  debugMode = null,
+  intro = true,
+  awakeDebug = false,
+  poll = true,
+}: VenueScreenClientProps) {
   const [state, setState] = useState(initialState);
   // The intro stinger plays over the screen on every open (docs/venue-display-hype-and-intro-stinger-plan.md
   // §8); the poll loop runs underneath. A go-live takeover that lands meanwhile waits for it.
@@ -265,12 +274,18 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null, int
   // Date.now()-based staleness guard).
   const [liveTakeover, setLiveTakeover] = useState<{ key: number; gameLabel: GameLabel } | null>(null);
 
+  // Try demo: the page hands over each state itself; follow it (nothing polls).
+  useEffect(() => {
+    if (!poll) setState(initialState);
+  }, [initialState, poll]);
+
   useEffect(() => {
     const intervalId = window.setInterval(() => setNowMs(Date.now()), 1_000);
     return () => window.clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
+    if (!poll) return;
     let active = true;
     let timeoutId: number | null = null;
     let requestTimeoutId: number | null = null;
@@ -356,7 +371,7 @@ export function VenueScreenClient({ venueId, initialState, debugMode = null, int
       if (requestTimeoutId !== null) window.clearTimeout(requestTimeoutId);
       activeController?.abort();
     };
-  }, [debugMode, initialState, venueId]);
+  }, [debugMode, initialState, poll, venueId]);
 
   const themeMode: VenueScreenMode = state.mode === "live-trivia-pregame" ? "live-trivia" : state.mode;
   const theme = getVenueScreenTheme(themeMode, {

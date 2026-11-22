@@ -27,7 +27,8 @@
 export const NON_PLAYER_PATH_PREFIXES = ["/owner", "/admin"] as const;
 
 /**
- * Venue display (TV) paths: `/venue/<id>/screen` (and anything below it), `/tv` and `/tv/<code>`.
+ * Venue display (TV) paths: `/venue/<id>/screen` (and anything below it), `/tv` and `/tv/<code>`, and the
+ * Hightop Challenge TV app's `/tv-app` (Connect screen, Try demo; docs/fire-tv-app-plan.md Phase 3).
  *
  * The display is a spectator surface, not a player one. It gets NONE of the player runtime
  * (ads, adhesion banner, gameplay animations, transition overlay, analytics) — a Carrabba's
@@ -41,7 +42,9 @@ export const isVenueDisplayPath = (pathname: string | null | undefined): boolean
   return (
     /^\/venue\/[^/]+\/screen(\/|$)/.test(pathname) ||
     pathname === "/tv" ||
-    pathname.startsWith("/tv/")
+    pathname.startsWith("/tv/") ||
+    pathname === "/tv-app" ||
+    pathname.startsWith("/tv-app/")
   );
 };
 

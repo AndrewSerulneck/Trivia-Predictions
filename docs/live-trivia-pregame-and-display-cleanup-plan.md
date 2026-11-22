@@ -270,4 +270,5 @@ Q3 → yes, small, only if known. Q4 → no domain yet.
 - The display never offers Category Blitz as "Next up"; it shows Category Blitz only while a session is in play.
 - The pre-game window is `LIVE_TRIVIA_PREGAME_LEAD_MS`; the go-live takeover fires at the real start, never at pre-game start.
 - The TV only peeks at Category Blitz.
-- Partners set up a display only by the Display URL (`hightopchallenge.com/tv/<display_code>`); there is no pairing.
+- Set up by Display URL (`hightopchallenge.com/tv/<display_code>`), or by connecting the Hightop Challenge TV app (QR or
+  display code); a connection grants a venue id only (`docs/fire-tv-app-plan.md` D2, D9, Phase 3, 2026-11-22).

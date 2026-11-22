@@ -5,7 +5,7 @@ import { nativeAppPrePaintGuard } from "@/lib/nativeApp";
 
 export type StoreDevice = "ios" | "android" | "desktop";
 export const APP_STORE_PROMOTION_DISMISSED_KEY = "htc:app-store-promotion-dismissed";
-export const PLAYER_PROMOTION_PATH_PATTERN = "^/(?:owner|admin|tv|info|faqs|advertise|app|api|in-app-notice)(?:/|$)";
+export const PLAYER_PROMOTION_PATH_PATTERN = "^/(?:owner|admin|tv|tv-app|info|faqs|advertise|app|api|in-app-notice)(?:/|$)";
 
 /** Build-time public switch. Keep off until both listings are approved and live. */
 export const isAppStorePromotionEnabled = (): boolean =>

@@ -21,9 +21,10 @@ const PREVIEW_SOURCE_HEIGHT = 720;
 
 type Venue = { id: string; name: string; displayCode?: string | null };
 
-// Partners set up a display only by its Display URL, the short link
-// hightopchallenge.com/tv/<code> (docs/live-trivia-pregame-and-display-cleanup-plan.md,
-// Phase 4; code pairing was removed, D4). Copy is pinned by
+// Partners set up a display by its Display URL, the short link hightopchallenge.com/tv/<code>
+// (docs/live-trivia-pregame-and-display-cleanup-plan.md, Phase 4), or by connecting the
+// Hightop Challenge TV app: its QR opens /owner/display/connect, and typing the same 4-character
+// code works too (docs/fire-tv-app-plan.md Phase 3). Copy is pinned by
 // tests/owner-display-page-contract.test.ts.
 const OwnerDisplayPage = () => {
   const router = useRouter();
