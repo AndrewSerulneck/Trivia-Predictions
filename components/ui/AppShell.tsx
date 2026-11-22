@@ -17,6 +17,8 @@ const FULLSCREEN_PATHS = [
   "/fantasy",
   "/predictions",
   "/venue/",
+  // Hightop Challenge TV app (Connect screen, Try demo): a fixed full-screen TV canvas.
+  "/tv-app",
   "/active-games",
   "/pending-challenges",
   "/info",

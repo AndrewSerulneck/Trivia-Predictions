@@ -52,6 +52,10 @@ function isPublicPath(pathname: string): boolean {
   if (pathname === "/tv" || pathname.startsWith("/tv/")) {
     return true;
   }
+  // Hightop Challenge TV app start page + Try demo (docs/fire-tv-app-plan.md Phase 3): the TV never signs in.
+  if (pathname === "/tv-app" || pathname.startsWith("/tv-app/")) {
+    return true;
+  }
   if (pathname === "/api" || pathname.startsWith("/api/")) {
     return true;
   }

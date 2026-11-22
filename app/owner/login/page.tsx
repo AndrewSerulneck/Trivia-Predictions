@@ -6,6 +6,7 @@ import Link from "next/link";
 import { OwnerShell, ownerInputClass, ownerLabelClass, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
 import { HightopLoader } from "@/components/ui/HightopLoader";
 import { signupEntryPath } from "@/lib/selfServeSignup";
+import { safeOwnerReturnPath } from "@/lib/ownerAuthCodes";
 
 const EyeIcon = ({ open }: { open: boolean }) =>
   open ? (
@@ -74,7 +75,10 @@ const OwnerLoginPage = () => {
         return;
       }
       setNavigating(true);
-      router.push("/owner/dashboard");
+      // `?next=` brings a partner back to the page that sent them here (e.g. connecting a TV). Same-site
+      // /owner/ paths only (safeOwnerReturnPath), never an open redirect.
+      const next = safeOwnerReturnPath(new URLSearchParams(window.location.search).get("next"));
+      router.push(next ?? "/owner/dashboard");
     } catch {
       setError("Something went wrong. Please try again.");
       setSubmitting(false);

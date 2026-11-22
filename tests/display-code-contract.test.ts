@@ -12,7 +12,8 @@ import {
 import { marketingUrl } from "@/lib/domainSplit";
 
 // docs/live-trivia-pregame-and-display-cleanup-plan.md Phase 4 — the short display link.
-// Partners set up a display ONLY by hightopchallenge.com/tv/<display_code>; there is no pairing.
+// Partners set up a display by hightopchallenge.com/tv/<display_code>, or by connecting the Hightop Challenge TV app
+// (docs/fire-tv-app-plan.md Phase 3; tests/tv-app-contract.test.ts). The old "Link a TV" pairing stays gone.
 
 const read = (path: string) => readFileSync(path, "utf8");
 const migrationName = readdirSync("supabase/migrations").find((f) => f.endsWith("_venue_display_code.sql"));

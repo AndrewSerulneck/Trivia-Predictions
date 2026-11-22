@@ -153,6 +153,10 @@ export const classifyPage = (pathname: string): PageKind => {
     // bounced across hosts.
     pathname === "/tv" ||
     pathname.startsWith("/tv/") ||
+    // Hightop Challenge TV app start page (docs/fire-tv-app-plan.md Phase 3): the app loads one fixed URL, and its
+    // remembered venue lives in that origin's storage, so it must never be bounced across hosts.
+    pathname === "/tv-app" ||
+    pathname.startsWith("/tv-app/") ||
     hasFileExtension(pathname)
   ) {
     return "neutral";

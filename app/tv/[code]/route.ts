@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { parseDisplayCode } from "@/lib/displayCode";
+import { findVenueIdByDisplayCode } from "@/lib/displayCodeLookup";
 import { gameUrl, marketingUrl } from "@/lib/domainSplit";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // hightopchallenge.com/tv/<code> — the venue's short display link
 // (docs/live-trivia-pregame-and-display-cleanup-plan.md, Phase 4). Public (a TV has
@@ -22,17 +21,9 @@ const redirect = (target: string) => {
 
 export const GET = async (request: NextRequest, { params }: { params: Promise<{ code: string }> }) => {
   const { code: raw } = await params;
-  const code = parseDisplayCode(raw);
-  if (!code || !supabaseAdmin) return redirect(marketingUrl("/info"));
-
-  const { data, error } = await supabaseAdmin
-    .from("venues")
-    .select("id")
-    .eq("display_code", code)
-    .maybeSingle<{ id: string }>();
-
-  if (error || !data) return redirect(marketingUrl("/info"));
+  const venueId = await findVenueIdByDisplayCode(raw);
+  if (!venueId) return redirect(marketingUrl("/info"));
   // Only the keep-awake readout flag rides along; nothing else in the query is forwarded.
   const awake = new URL(request.url).searchParams.get("awake") === "debug" ? "?awake=debug" : "";
-  return redirect(gameUrl(`/venue/${encodeURIComponent(data.id)}/screen${awake}`));
+  return redirect(gameUrl(`/venue/${encodeURIComponent(venueId)}/screen${awake}`));
 };

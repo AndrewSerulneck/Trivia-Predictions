@@ -103,6 +103,24 @@ describe("Partner sign-in: the post-success loader always releases", () => {
     expect(submitButton().disabled).toBe(true);
   });
 
+  it("comes back to a safe ?next= page after sign-in (docs/fire-tv-app-plan.md Phase 3)", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => json({ ok: true })));
+    window.history.replaceState(null, "", "/owner/login?next=%2Fowner%2Fdisplay%2Fconnect%3Fc%3D7K3M9Q");
+    render(createElement(OwnerLoginPage));
+    await signIn();
+    expect(push).toHaveBeenCalledWith("/owner/display/connect?c=7K3M9Q");
+    window.history.replaceState(null, "", "/owner/login");
+  });
+
+  it("ignores an off-site ?next= and opens the dashboard", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => json({ ok: true })));
+    window.history.replaceState(null, "", "/owner/login?next=https%3A%2F%2Fevil.example%2Fowner%2Fx");
+    render(createElement(OwnerLoginPage));
+    await signIn();
+    expect(push).toHaveBeenCalledWith("/owner/dashboard");
+    window.history.replaceState(null, "", "/owner/login");
+  });
+
   it("a rejected sign-in needs no watchdog: the form comes straight back", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => json({ ok: false, error: "Wrong password." }, 401)));
     render(createElement(OwnerLoginPage));

@@ -1,0 +1,773 @@
+# Fire TV app plan ("Hightop Challenge TV")
+
+**Status:** Plan written 2026-11-21. **Phase 1 done 2026-11-21** (mockups, handoff
+`docs/fire-tv-app-plan_PHASE_1_HANDOFF.md`). **Phase 2 done 2026-11-22** (round 1 → D10–D20, round 2 → D21–D25).
+**Phase 3 in progress 2026-11-22** on branch `feat/fire-tv-connect`; see `docs/fire-tv-app-plan_PHASE_3_HANDOFF.md`.
+Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
+
+## Summary for Andrew
+
+Today a partner shows the venue display on a Fire TV Stick by opening Silk, signing in, clicking **Display** and
+copying the URL. This plan adds an Amazon Appstore app, **Hightop Challenge TV**, that does it in one step:
+
+1. Plug in the Fire TV Stick and open **Hightop Challenge TV**.
+2. The TV shows a QR code. Scan it with the phone you use for the partner dashboard and tap **Connect**. You can also
+   type your 4-character display code with the remote.
+3. The TV shows the venue display from then on, including after it's turned off and on.
+
+**What the TV shows at launch (D21):** Live Trivia and Pick 'Em only. Category Blitz, Super Bowl Squares and
+March Madness screens are kept but switched off until you say go (reserved phase R2).
+- During Live Trivia it shows the screens it shows today.
+- For the hour before Live Trivia it shows only the pre-game screen: a big "LIVE TRIVIA", the countdown and the
+  "Get the app" QR.
+- Between games it shows a **rotating carousel** of "sports bar" screens that keep the room looking up and get
+  watchers to scan in:
+  1. **Next Live Trivia** ("Every Thursday · 8:00 PM").
+  2. A **Pick 'Em Live Board** with the games that matter most at that bar right now.
+  3. The bar's **All-Time Leaderboard**.
+  4. **Prizes up for grabs**.
+  5. **Get the app**.
+- A **score ticker** runs along the bottom of the carousel, never over Live Trivia or Category Blitz.
+- Every screen except live questions and the Connect screen has a **"Get the app" QR** in the same corner.
+- Bingo **"Closest to Bingo"** is designed but reserved. It isn't built until you say go.
+
+**The app is a thin shell around the website.** The screens stay on hightopchallenge.com. So any screen we improve
+later reaches every TV automatically, without an app update or another Amazon review.
+
+**Two kinds of Fire TV Stick.** Most sticks run **Fire OS** (based on Android). Some newer ones run **Vega OS**, which
+can't run Android apps. We build and launch the Fire OS app first. A Vega version follows on the same store listing,
+and you'll need a Vega stick (about $30–40) to test it.
+
+**Amazon rejection risk.** Amazon rejects apps that are "just a website". This app does things a browser tab can't:
+- Its own connect screen.
+- The screen never sleeps (fixed natively, not with browser tricks).
+- Full remote control support.
+- A "can't connect" screen that recovers by itself.
+- A **Try demo** button so Amazon's reviewers can see a game without a venue account.
+
+**What you do yourself:**
+- Phase 2: review the mockups.
+- Phase 5: install a test version on your Fire Stick and test it.
+- Phase 7: submit the app to Amazon.
+- Phase 12: check the sports screens on a real TV.
+- Phase 14: test the Vega version and submit it.
+- Say yes when an agent asks to change the database (once, in Phase 3).
+
+Every step for each of these is in **"Andrew's steps"** below.
+
+**Cost:**
+- **Money:** $0 to Amazon, plus a Vega stick (about $30–40).
+- **Hosting:**
+  - A TV running the app costs the same as the same TV running the Display URL in Silk today.
+  - Connecting a TV costs a few hundred tiny requests, once.
+  - The sports screens reuse data our existing jobs already collect. They add no new paid sports-data calls and no
+    new scheduled jobs.
+  - Phase 9 measures today's usage before anything is built and tells you if the sports screens would change the
+    bill.
+
+## How connecting a TV works (plain English)
+
+The TV never signs in, and it never needs your password.
+
+1. The app opens on a **Connect** screen. It shows a QR code made just for that TV, which expires after 10 minutes.
+2. You point your phone camera at it. Your phone opens a Hightop Challenge page, like scanning a menu QR code.
+3. If your phone is already signed in to the partner dashboard (sign-in lasts 90 days on a phone), the page shows
+   your venue name and a **Connect** button. If you have more than one venue, you pick one first. If you aren't signed
+   in, you sign in with your email and password once, and the page comes back.
+4. When you tap **Connect**, your phone tells our server "the TV showing this QR code belongs to my venue". The TV
+   asks the server every few seconds whether anyone has connected it. Within about 3 seconds it gets the answer and
+   switches to your display.
+5. The TV remembers your venue. From then on, opening the app goes straight to your display. You can switch venues
+   from the remote's **Menu** (☰) button.
+
+**Why it's safe:** the TV only gets your venue's display, which is already public (anyone with your Display URL can
+see it). The TV is never signed in to your account. So nobody at the bar can use it to get into your dashboard.
+
+**The typing option:** your 4-character display code (the one in hightopchallenge.com/tv/K7P2) already identifies the
+venue's display. Typing it with the remote connects the TV the same way, with no phone. The QR code is the main
+option, because typing with a remote is slow. The code is a backup when no signed-in phone is around.
+
+**One catch:** a phone camera opens your phone's default browser (Safari on iPhone). If you use the dashboard in a
+different browser, you'll be asked to sign in once.
+
+## Decisions
+
+| # | Decision | Who / when |
+|---|---|---|
+| D1 | Fire OS app first. A Vega OS build follows on the same Appstore listing. | Andrew, 2026-11-21 |
+| D2 | Both ways to connect are on one TV screen: **phone QR (main)** and **typing the 4-character display code (backup)**. This replaces the "Display URL only, no pairing" rule (`docs/live-trivia-pregame-and-display-cleanup-plan.md` D4 / Standing rules). The Display URL in Silk keeps working unchanged. | Andrew, 2026-11-21 ("ease, speed and simplicity are paramount") |
+| D3 | All four sports concepts get mockups first: Pick 'Em Live Board, Bingo "Closest to Bingo", ticker rail, rotating idle carousel. Andrew picks, edits or cuts each one before any build. | Andrew, 2026-11-21 |
+| D4 | Uses Andrew's existing Amazon developer account. The store title is **Hightop Challenge TV**. | Andrew, 2026-11-21 |
+| D5 | The app is a thin native shell. Every screen is a web page on hightopchallenge.com, and the app's start page is `/tv-app`, shared by the Fire OS and Vega builds. | Planner, 2026-11-21. Reason: one set of screens, and no app update or Amazon review per screen change. |
+| D6 | The TV app identifies itself with its own user-agent token, `HightopChallengeTV/<version>`, read only by a new `lib/tvApp.ts`. It must never send `HightopChallengeApp/`, the phone app's token, or `proxy.ts` would swap the display for the "web only" notice. | Planner. Reason: the phone app is players-only (`docs/native-app-store-plan.md` Standing rules). |
+| D7 | Native value for Amazon review: connect screen, native keep-awake (`FLAG_KEEP_SCREEN_ON`), D-pad / Back / Menu handling, a native offline screen with auto-retry, and **Try demo**. | Planner. Reason: Amazon's "goes beyond a simple website" rule. |
+| D8 | The sports screens read only rows that existing crons already write: no new cron, no new API-Sports calls, no per-TV provider calls. | Planner. Reason: global cost rule. |
+| D9 | A connection gives the TV a venue id only, never a partner session or any partner privilege. | Planner. Reason: the display is public data, and a TV sits in a public room. |
+| D10 | **Name:** every TV screen says **"Hightop Challenge"** in full, never "Hightop" alone. **Connect screen:** the two ways to connect sit side by side as equal choices, labelled **"Option 1 · Scan with your phone"** and **"Option 2 · Type your display code"**, with a gold **OR** between them, so nobody thinks they need both. Try demo stays a small button top right. | Andrew, 2026-11-22 (asked for "Method #1 / #2 or something like that"; planner chose "Option", easy to change) |
+| D11 | **New carousel slide: All-Time Leaderboard.** The venue's top 10 by all-time points (the same `users.points` the player leaderboard's all-time view reads, `getLeaderboardForVenue` in `lib/leaderboard.ts`). Gold #1 only. Skipped when fewer than 3 players have points. The ticker shows on it. | Andrew, 2026-11-22 |
+| D12 | **Next Live Trivia slide:** "LIVE TRIVIA" is the largest text on the slide. The line under it follows the wording rules in Phase 9 step 3 (for example, a weekly Thursday game on a Tuesday reads **"Every Thursday · 8:00 PM"**). | Andrew, 2026-11-22. He asked whether "every Thursday" exists today: partly. The state already carries the schedule's `recurringDays`, but the idle line (`lib/venueScreenIdleLine.ts`) only says "Live Trivia · Thursday 8:00 PM", even when the game is 9 days away. |
+| D13 | **Final hour:** from 60 minutes before a scheduled Live Trivia game, the TV shows only the pre-game screen (today's `TvLiveTriviaPregame`, which already has the countdown and the "1 Get the app" QR), with a big "LIVE TRIVIA" title added. The window grows from 15 to 60 minutes (`LIVE_TRIVIA_PREGAME_LEAD_MS`). No carousel, no ticker in that hour. This replaces D1 ("15 minutes") of `docs/live-trivia-pregame-and-display-cleanup-plan.md`. | Andrew, 2026-11-22 (chose "stretch the pre-game screen" over a second, similar slide) |
+| D14 | **Precedence in the final hour (planner recommendation, not yet confirmed by Andrew):** from 60 to 15 minutes before the start, a Category Blitz round people are already playing keeps the screen (it's a live game; cutting it off would hide a round in progress). In the last 15 minutes pre-game wins, as today. Squares and Bracket yield to pre-game for the whole hour. | Planner, 2026-11-22. Reason: D13 would otherwise hide up to 45 minutes of live Category Blitz play. Andrew can overrule in round 2. |
+| D15 | **Ticker:** only on the idle carousel slides (all five, including the All-Time Leaderboard). **Never** on any Live Trivia screen (questions, reveals, standings, round breaks, pre-game) or any Category Blitz screen. Also off on Squares and Bracket (they are scoreboards of their own; planner choice). On the Pick 'Em slide the ticker skips games already on the board. | Andrew, 2026-11-22 (agreed with the no-ticker-during-questions recommendation and extended it to every in-game Live Trivia screen); Squares/Bracket and skip-on-board are planner choices. |
+| D16 | **"Get the app" QR on every screen** (`hightopchallenge.com/app`, the existing `AppDownloadQr` and `APP_DOWNLOAD_URL`), in one fixed bottom-right spot: every carousel slide (big on slide 5), pre-game (step 1, as today), Live Trivia standings, round breaks and final standings, Category Blitz intermission and results, Squares, Bracket. **Not** on Live Trivia questions or answer reveals, Category Blitz rounds, or the Connect screen. **One QR per screen:** it replaces the Pick 'Em board's "Scan to play" join QR. `/app` already sends phones to the store with a "No thanks, play in the browser" link, so nobody is stuck. A dedicated "Get the app" slide stays (slide 5). | Andrew, 2026-11-22 ("all screens should show the QR code and 'Get the app'"; chose "between questions only" for game screens). One-QR-per-screen is the planner's recommendation. |
+| D17 | **Bingo "Closest to Bingo" is reserved.** Its design stays in the mockups (section G). No code, no data reads, no slide until Andrew says go; then the reserved phase **R1** runs. | Andrew, 2026-11-22 ("not go live yet, but keep it reserved"; chose "build later") |
+| D18 | **Most relevant sports first.** The Pick 'Em board and ticker rank today's games for each venue with a rule-based score (Phase 9 step 4): this venue's own pick counts, league weight by local day and time, live > starting soon > final, and a boost for postseason or national primetime when the feed marks it. Seasons need no calendar: a league only counts when it has games today. The board shows the top 4 games (2×2); the ticker carries the next ones. No new provider calls (D8 stands). | Andrew, 2026-11-22 (asked for NFL on Sundays, college football on Saturdays, college basketball or NBA on other days); rules and top-4 layout are the planner's. |
+| D19 | **College basketball (men's and women's) is out of this plan.** Pick 'Em has no college basketball today (its leagues are in `lib/pickemSports.ts`). Adding it is a separate small plan that checks the sports provider's coverage and price first and asks Andrew before any cost. When it lands, D18's ranking includes it with no TV change, as long as its weights are added to the table. | Andrew, 2026-11-22 (chose "separate project, priced first") |
+| D20 | **Carousel:** 1 Next Live Trivia · 2 Pick 'Em board · 3 All-Time Leaderboard · 4 Prizes · 5 Get the app. 15 s each, 75 s loop (matches `IDLE_MOMENT_MS`). Slides with nothing to show are skipped. Bingo is not in the loop (D17). | Andrew, 2026-11-22 (from D11 and D17; 15 s confirmed in round 2, D23) |
+| D21 | **Launch content: Live Trivia and Pick 'Em only.** At launch the TV shows Live Trivia (pre-game, questions, reveals, standings) and Pick 'Em (NFL Pick 'Em and the other Pick 'Em leagues: Pick 'Em board, ticker, All-Time Leaderboard, Prizes, Get the app). **Category Blitz, Super Bowl Squares and March Madness Bracket TV screens are reserved:** the code stays and keeps working, but the display doesn't show them until Andrew says go (reserved phase **R2**). Try demo shows only launch content. **Open (asked 2026-11-22):** whether this also applies to the Display URL in Silk or only to the TV app; Phase 9 implements it either way and must have the answer first. | Andrew, 2026-11-22 ("I want to have it available, but I don't want it to be there when we go live with this. Let's start off with Live Trivia content and NFL Pick 'Em and Pick 'Em content first.") |
+| D22 | **Store art: Option 2 for every size** (mockups v2 section H: `icon2` 512×512 brand blue, `fire2` 1280×720 logo centered, `ban2` 320×180 logo only). **Keep the coin logo:** Andrew isn't concerned about the simulated-gambling question. The content-rating answers still state the facts: free to play, no wagering, venue prizes. | Andrew, 2026-11-22 ("I like Option 2 for the logos. I'm not concerned about the simulated gambling.") |
+| D23 | **Timing:** every slide stays up **15 s** unless a decision says otherwise. Try demo also shows each screen for 15 s. | Andrew, 2026-11-22 |
+| D24 | **Andrew's stick runs Fire OS** (he believes so; Phase 5 confirms with Settings → My Fire TV → About before installing). Vega OS stays planned (D1, Phases 13–14). | Andrew, 2026-11-22 |
+| D25 | Everything else in mockups v2 and D10–D20 is approved as drawn, including the planner choices flagged in round 1: "Option 1 / Option 2" (D10), D14 (applies once Category Blitz is turned back on, R2), D15, D16 and D18. | Andrew, 2026-11-22 ("I'll keep the rest of what you have here, it seems good.") |
+
+If you disagree with D5–D9, say so at the start of any phase.
+
+## Phases, model and effort
+
+"Agent" = a Claude Code session. Start each in a new session with: *"Do Phase N of docs/fire-tv-app-plan.md. Read the
+Phase N−1 handoff first."*
+
+| Phase | What | Who | Model / effort | Why this model |
+|---|---|---|---|---|
+| 1 | Mockups of every new TV screen + app icon/banner concepts | Agent | Sonnet 5.5 / high | Visual design, no production code. High effort (instead of the usual medium for UI) because a weak mockup wastes your review and a session. |
+| 2 | Review the mockups: keep / change / cut (done 2026-11-22: round 1 → D10–D20, round 2 → D21–D25) | **Andrew** | (reply in the Phase 1 chat) | Your taste decides it. An agent recording a round and republishing the mockups uses Sonnet 5.5 / medium (copy and mockup edits, no production code). |
+| 3 | Connect backend + `/tv-app` start page + Try demo + phone Connect page | Agent | Opus 5.5 / high | Migration, partner auth, `proxy.ts` edge rules, a public endpoint. |
+| 4 | Fire OS app (`native-tv/`, Kotlin WebView shell) | Agent | Opus 5.5 / high | New native project, store rules, UA trap, security of what the WebView may open. |
+| 5 | Install a test build on your Fire Stick and test it | **Andrew** + agent | Sonnet 5.5 / medium | Agent runs install commands and fixes small bugs; the device checklist is well defined. |
+| 6 | Release build, signing, store images, listing text, rating answers, reviewer notes | Agent | Sonnet 5.5 / medium | Well-specified build and copy work. |
+| 7 | Submit to the Amazon Appstore | **Andrew** | — | Console steps only Andrew can do. |
+| 8 | After approval: store link on `/owner/display` | Agent | Haiku 5.5 / low | One link and copy. Use Sonnet 5.5 / medium if the contract test needs new cases. |
+| 9 | Sports data inventory, cost baseline, state engine: carousel data, game ranking, All-Time Leaderboard read, Next Live Trivia wording, 60-minute pre-game and its precedence | Agent | Opus 5.5 / high | Shared engine (`selectVenueScreenState`), precedence, data reads, cost measurement. |
+| 10 | Build the Pick 'Em Live Board and All-Time Leaderboard slides | Agent | Sonnet 5.5 / high | UI fixed by the mockups. High (not medium) because display standing rules (effects keys, no replays on poll, precedence) are easy to break. |
+| 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
+| 12 | Real-TV check of the sports screens on a game day, then record results | **Andrew** + agent | Haiku 5.5 / low | Andrew checks; agent only records results and files fixes. |
+| 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | New SDK and toolchain, little prior art. |
+| 14 | Test on a Vega stick, then add the Vega build to the listing | **Andrew** + agent | Sonnet 5.5 / medium | Device install and console steps with agent help. |
+| 15 | Close-out: usage vs. baseline, standing rules, docs | Agent | Haiku 5.5 / low | Doc-only, plus one read-only usage comparison. |
+| R1 | **Reserved, runs only when Andrew says go (D17):** Bingo "Closest to Bingo" slide: data read, ranking of cards, UI, BINGO! moment | Agent | Opus 5.5 / high | Adds a read to the shared state engine and a moment that must never replay on a poll; one phase does both. |
+| R2 | **Reserved, runs only when Andrew says go (D21):** turn the Category Blitz, Super Bowl Squares and March Madness TV screens back on, add the corner "Get the app" QR to them (D16), add them to Try demo, real-TV check | Agent | Sonnet 5.5 / high | Phase 9 leaves a single switch in `selectVenueScreenState`, so this is a small change, but it touches the shared engine and four display screens; high effort for the precedence and QR-placement rules. |
+
+**Order:**
+- Phases 9–12 are website work. They can run any time after Phase 2, including while Amazon reviews Phase 7.
+- Run phases one at a time. Each code phase branches from up-to-date `main` after the previous PR merges.
+- Phase 13 can start after Phase 7 is approved.
+- R1 and R2 run only when Andrew says go.
+
+## Cost estimates
+
+The numbers are estimates. Phase 9 measures the real baseline (we have no Vercel Observability Plus, so it uses a log
+counter or the Vercel usage page; see memory note `reference_vercel_observability_plus_missing`).
+
+| Item | Estimate | Notes |
+|---|---|---|
+| Amazon developer account and listing | $0 | Already have the account. Free app, no fees. |
+| Vega test stick (Phase 14) | ~$30–40 once | Fire TV Stick 4K Select or another stick that says Vega OS. |
+| A TV left on the idle screen | ~4,300 state requests/day (one per 20 s, `IDLE_POLL_MS`) → ~130k/month per TV | **The same as Silk today; the app changes nothing per TV.** About 10–20 KB each → ~1.3–2.6 GB/month per TV. Vercel Pro includes 1M invocations and 1 TB transfer per month. Roughly 10 always-on TVs ≈ +$0–1/month; 100 ≈ ~$5–10/month. |
+| A TV during Live Trivia / Category Blitz | 1 request/s during questions and rounds (existing) | Unchanged. |
+| Connecting a TV | ≤ 200 tiny requests (one per 3 s, only while the Connect screen shows, 10-minute cap) + 1 short-lived table row | Once per TV. Negligible. |
+| Sports screens (Phases 9–11) | Target: ≤ 3 small bounded DB reads added to each idle state request (games + pick counts, Pick 'Em top 5, All-Time top 10); same 20 s poll | Data changes about once a minute (crons), so the TV never needs to ask faster. Idle responses are shared-cached (`s-maxage=15`), so TVs at the same venue share reads. Ranking the games is plain code: no extra reads. Phase 9 reports the measured cost before building. A faster or more costly option needs your OK first. |
+| Pre-game hour (D13) | +135 requests per TV per game night | 45 more minutes at the pre-game pace (10 s) instead of idle (20 s). Pre-game responses are `no-store`. Negligible. |
+| "Get the app" QR everywhere (D16) | 0 | Drawn on the TV from a fixed URL. |
+| New crons / provider calls | 0 | D8. |
+| Try demo | 0 DB writes | Reuses the existing debug modes. |
+
+If many more venues put up TVs because the app makes it easy, cost grows per TV in line with the "TV left on" row.
+Phase 15 compares actual usage with the Phase 9 baseline.
+
+---
+
+## Phase details (for the agents)
+
+Every agent: read `SYSTEM_CONTEXT.md`, the project `CLAUDE.md`, and the Standing rules sections of:
+- `docs/live-trivia-pregame-and-display-cleanup-plan.md`
+- `docs/venue-display-hype-and-intro-stinger-plan.md`
+- `docs/native-app-store-plan.md`
+
+Then read the previous phase's handoff. End every phase with `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md` and update
+this file's **Status** line.
+
+**Facts the planner found (2026-11-21):**
+- **Display routes:** `/venue/[venueId]/screen`, and the short link `/tv/<code>`. The short link 307-redirects to the
+  display route and drops the query string, except `awake=debug` on the keep-awake branch.
+  - `/tv` handling: `proxy.ts` (~line 52) and `lib/domainSplit.ts` (~154–155).
+  - Code lookup and link builders: `lib/displayCode.ts`.
+  - Code alphabet (4 Crockford characters, no I L O U): `lib/tvPairingShared.ts`.
+  - The column is `venues.display_code`. The old `tv_pairing_codes` table was dropped on 2026-11-14.
+- **Screen state:**
+  - `lib/venueScreen.ts`: `getVenueScreenState` → `selectVenueScreenState`.
+  - Modes: `live-trivia`, `live-trivia-pregame`, `category-blitz`, `squares`, `bracket`, `idle` (with
+    `nextLiveTrivia` and `sponsorSlots`).
+  - Precedence: Live Trivia > pregame > Category Blitz > Squares > Bracket > idle.
+- **Polling:** `lib/venueScreenTiming.ts` `getVenueScreenPollIntervalMs`.
+  - 1 s during a question, reveal or round; otherwise 4 s.
+  - Squares 15 s, bracket 30 s, idle 20 s.
+  - Debug modes: `parseVenueScreenDebugMode`.
+- **State API:** `app/api/venue-screen/state/route.ts`. Idle, squares and bracket use
+  `s-maxage=15, stale-while-revalidate=15`; everything else is `no-store`.
+- **Display path guard:** `isVenueDisplayPath` in `lib/playerRuntimePaths.ts`. No ads and no player runtime on display
+  paths.
+- **Partner auth:**
+  - Email and password at `/owner/login`.
+  - Cookie `tp_owner_sess`, HMAC-signed, 90 days (`lib/ownerSession.ts`).
+  - Server guard: `lib/requireOwnerAuth.ts`. Recovery redirect: `ownerAuthRecoveryPath` (`lib/ownerAuthCodes.ts`).
+- **`/owner/display` (`app/owner/display/page.tsx`):** shows the Display URL, a Fire Stick help panel, Expand and the
+  keep-awake readout. Its comment says "code pairing was removed, D4"; Phase 3 updates that comment.
+- **Phone app (`native/`, Capacitor):** players only. `lib/nativeApp.ts` is the only reader of the
+  `HightopChallengeApp/` token, and `proxy.ts` rewrites app-UA requests for `/owner`, `/tv` and `/admin` to
+  `app/in-app-notice/[page]`.
+  - Android builds need `JAVA_HOME=/opt/homebrew/opt/openjdk@21`.
+  - Gradle output goes in `~/Library/Caches/hightop-native/` (iCloud makes "name 2" duplicates in Documents).
+- **Android tools:** `adb` is at `~/Library/Android/sdk/platform-tools/adb`, but it is **not on PATH**.
+- **Signing keys:** the phone app's keys are in
+  `/Users/andrewserulneck/Library/Application Support/Hightop Challenge/signing/` (folder mode 0700, files 0600, never
+  printed or committed).
+- **Open keep-awake work:** branch `fix/firestick-keep-awake` has uncommitted keep-awake Phase 1 code
+  (`useKeepScreenAwake`, `KeepAwakeReadout`, `?awake=debug`); see `docs/firestick-keep-awake-plan.md`. Silk users
+  still need it. **Don't lose that work.** Never `git checkout -- <file>`, and don't build this plan on that branch.
+
+### Phase 1 — Mockups (Agent, Sonnet 5.5 / high)
+
+**Goal:** one private Artifact page that shows every new TV screen at 1920×1080 (scaled to fit) with realistic fake
+data, so Andrew can judge them. No repo code changes.
+
+1. Load the `artifact-design` skill (via `Artifact` quickstart, intent `other`). Read `lib/venueScreenBrand.ts` and
+   look at `components/venue-screen/` (`IdleVenueScreen.tsx`, `TvIdleAttract.tsx`, `SquaresTvScreen.tsx`,
+   `BracketTvScreen.tsx`, `SponsorRail.tsx`, `AppDownloadQr.tsx`) so the mockups match today's display look.
+2. Before drawing, check `types/index.ts` and `lib/pickem*.ts`, `lib/nflPickEm.ts` and `lib/sportsBingo.ts` for
+   which data plausibly exists:
+   - live scores and game status
+   - each venue's pick split per game
+   - venue leaderboards
+   - bingo squares remaining per card
+
+   Mark anything uncertain on the mockup with a small "data TBD" note for Andrew. Phase 9 confirms.
+3. Screens (each a labeled section):
+   - **A. Connect screen (TV app).**
+     - A large QR code, "Scan to connect", and "Or enter display code" with four character boxes.
+     - A small **Try demo** button.
+     - A focused-state example, because the remote's D-pad moves a visible focus ring.
+   - **B. Pick 'Em Live Board.**
+     - Live game tiles: teams, score, clock.
+     - This venue's pick split per game ("62% CHI").
+     - Top 5 venue leaderboard, plus a join QR.
+     - Show one "moment" state: a picked team scores and the tile flashes.
+   - **C. Bingo "Closest to Bingo".**
+     - The top 3–5 players' mini cards with "1 away" / "2 away".
+     - The squares still needed, plus a join QR.
+     - Show one "BINGO!" moment state.
+   - **D. Ticker rail.** A thin bottom strip: live scores · Pick 'Em leader · "Next Live Trivia 8:00 PM". Show it:
+     - over the idle screen
+     - over the Live Trivia leaderboard
+     - **two variants on a Live Trivia question screen: with the ticker and without it.** Andrew chooses. The
+       planner recommends *without* during questions, reveals and Category Blitz rounds (one focal point rule).
+   - **E. Idle carousel.**
+     - 4–5 slide frames: next game countdown, Pick 'Em board, bingo board, venue prizes, join QR.
+     - Proposed timing (e.g. 15 s per slide) and how it yields when a live game starts.
+   - **F. Store art.** Concepts for the 1280×720 Fire TV icon, the 320×180 launcher banner and the 512×512 icon.
+     Use existing brand art only, no new logos.
+4. Rules for the mockups:
+   - Minimal copy, one accent and one focal point per screen. No text under 12 px at 1080p.
+   - **"Casino energy" means light and motion (marquee lights, gold leaderboard), never chips, slots, cards or odds.**
+     Amazon's content rating asks about simulated gambling, and the games are free to play.
+5. Publish the Artifact (private) and give Andrew the link. Write the handoff with the screen list, the data-TBD
+   items and the Artifact URL. Phase 2 happens in the same chat. When Andrew answers, record his choices as D10+ in
+   this file and in the handoff.
+
+### Phase 2 — Mockup review (Andrew)
+
+See **Andrew's steps → Phase 2**.
+
+### Phase 3 — Connect backend, `/tv-app`, Try demo, phone Connect page (Agent, Opus 5.5 / high)
+
+**Goal:** everything the TV app needs on the website, testable in a laptop browser before any app exists.
+
+**Out of scope:** the native app; sports screens.
+
+**Branch:** `feat/fire-tv-connect` from up-to-date `main`. Carry this untracked plan file over and commit it in this
+phase.
+
+1. **Migration** (`supabase migration new tv_device_pairings`): table `public.tv_device_pairings`.
+   - **Columns:**
+     - `id` uuid pk
+     - `pair_code` text unique: 6 Crockford characters, shown in the QR URL
+     - `poll_secret_hash` text: the TV holds the raw 32-byte secret; store only its hash
+     - `venue_id` uuid null, references venues on delete cascade
+     - `claimed_at` and `expires_at` (default now() + 10 minutes)
+     - `created_at`
+   - **Grants and RLS:** grant `service_role` only, with RLS enabled and no `anon`/`authenticated` policies. Follow
+     `supabase/SECURE_TABLE_MIGRATION_CHECKLIST.md`; `tests/supabase-migration-grants-contract.test.ts` must pass.
+   - **`supabase db push` asks Andrew first.**
+2. **API (Node runtime, `lib/supabaseAdmin.ts` unchanged):**
+   - **`POST /api/tv-app/pairings`**
+     - Public, IP-rate-limited.
+     - Creates a row and returns `{ pairCode, pollSecret, expiresAt }`.
+     - Before inserting, deletes expired rows (one bounded `delete … where expires_at < now()`). No cron.
+   - **`GET /api/tv-app/pairings/status`**
+     - The TV sends its secret in a header, not the URL.
+     - Returns `{ state: "waiting" | "connected" | "expired", venueId? }`.
+     - On `connected` it deletes the row (read-once).
+     - `no-store`.
+   - **`POST /api/owner/tv-app/connect`**
+     - `requireOwnerAuth`.
+     - Body: `{ pairCode, venueId }`. Checks that the owner owns `venueId`, the code is unexpired and unclaimed.
+       Sets `venue_id` and `claimed_at`.
+     - Rate-limited per owner.
+   - **Display-code entry:**
+     - Resolve the 4-character code to a venueId by reusing `lib/displayCode.ts`. Don't write a second lookup.
+     - Public and IP-rate-limited, the same exposure as `/tv/<code>` today.
+     - Return only the venueId.
+3. **`/tv-app` page** (the app's start URL; works in any browser):
+   - If a remembered venueId exists (localStorage key `tp_tv_venue_id`, plus a native-bridge hook for Phase 4),
+     navigate to the display route via `gameUrl`. Otherwise show the Connect screen from the approved Phase 1 mockup.
+   - Polls status every 3 s **only while visible and unexpired**. When the code expires, it shows a new QR on the
+     next focus or key press (no silent regeneration loop).
+   - Code entry: 4 boxes with the on-screen keyboard. Tolerant input: uppercase it and map O→0, I/L→1, as
+     `lib/tvPairingShared.ts` does.
+   - Add `/tv-app` to `isVenueDisplayPath` (no ads, no player runtime) and make it public in `proxy.ts` and
+     `lib/domainSplit.ts`. Choose the host per the domain split.
+   - D-pad: every control reachable, a visible focus ring, sensible initial focus.
+4. **Phone page `/owner/display/connect?c=<pairCode>`:**
+   - Signed-out partners go through `ownerAuthRecoveryPath` and must come back to this page with the code. Add a safe
+     return path if one doesn't exist; same-site only, to prevent open redirects.
+   - Shows the venue name (with a picker when the owner has several) and one **Connect** button. Success copy:
+     "Connected." Expired: "Code expired. Scan the new one on your TV."
+5. **Try demo:** a button on `/tv-app` that cycles launch screens only (D21): idle "Get the app", pre-game, Live
+   Trivia question, reveal, round break and final standings, with fake data, 15 s each (D23). No DB writes, and no
+   real venue. Phase 11 adds the Pick 'Em slides; R2 adds Category Blitz, Squares and Bracket.
+   - **Check whether debug modes work in production today. If not, add a demo-only path that doesn't expose debug
+     on real venues.**
+   - Back exits the demo.
+6. **`lib/tvApp.ts`:** the only reader of the `HightopChallengeTV/` UA token (`isTvApp(userAgent)`), plus a contract
+   test like `tests/native-app-contract.test.ts`. Check that `lib/nativeApp.ts` never matches it.
+7. **Update the rules:**
+   - In `docs/live-trivia-pregame-and-display-cleanup-plan.md` Standing rules, replace "set up by Display URL only,
+     no pairing" with: "set up by Display URL, or by connecting the Hightop Challenge TV app (QR or display code);
+     a connection grants a venue id only."
+   - Update the matching row in the project `CLAUDE.md` feature-rules table.
+   - Update the comment in `app/owner/display/page.tsx`.
+   - Fix any contract test that pins the old wording.
+8. **Tests:**
+   - Unit tests: pairing lifecycle (create → claim → read-once → expired), ownership check, rate limits, code
+     normalization.
+   - Browser check from a scratchpad clone with mocked routes (never Andrew's :3000 server): Connect screen, demo
+     cycle, phone page.
+   - Then `npm run lint`, `npm run test`, `npx tsc --noEmit` (not at the same time as a build), `npm run build`.
+9. Open a PR. After Andrew OKs, run `db push`, merge and deploy. Run a live smoke test: open `/tv-app` in a laptop
+   browser, scan the QR with Andrew's phone (Andrew does this part), and confirm the laptop switches to the display.
+
+**Cost check for the handoff:** requests per pairing ≤ 200; rows live ≤ 10 minutes; no cron.
+
+### Phase 4 — Fire OS app (Agent, Opus 5.5 / high)
+
+**Goal:** a debug APK of `native-tv/` that Andrew can install in Phase 5.
+
+**Out of scope:** store submission and signing for release.
+
+**Branch:** `feat/fire-tv-app` from `main`.
+
+1. **Project:**
+   - A new standalone Gradle project in `native-tv/` (Kotlin, one Activity, AndroidX WebView). **Not Capacitor**:
+     nothing to bridge, and it keeps the phone app's rules untouched.
+   - Package id: suggest `com.hightopchallenge.tv`. Confirm it doesn't clash with the phone app's id in
+     `native/android`.
+   - Gradle build output goes outside iCloud (`~/Library/Caches/hightop-native-tv/`).
+   - `JAVA_HOME=/opt/homebrew/opt/openjdk@21`.
+2. **Manifest:**
+   - `android.software.leanback` required.
+   - `android.hardware.touchscreen` not required.
+   - A `LEANBACK_LAUNCHER` intent filter and a 320×180 `android:banner` from the Phase 1 art.
+   - Landscape only, internet permission only.
+   - minSdk: choose and justify. Planner suggests 25 (Fire OS 6 and up, sticks from about 2017 on). Older sticks' WebView may not
+     run today's site.
+3. **WebView:**
+   - Loads `https://<host>/tv-app`.
+   - JavaScript and DOM storage on.
+   - `mediaPlaybackRequiresUserGesture = false`, so the stinger sound plays.
+   - Appends ` HightopChallengeTV/<versionName>` to the UA. Never `HightopChallengeApp/`.
+   - **Only https URLs on the site's own hosts load in the WebView. Others are blocked, not opened** (a TV has no
+     browser to hand off to).
+   - No file access, and no mixed content.
+4. **Native features:**
+   - **Keep awake:** `FLAG_KEEP_SCREEN_ON` while the activity is visible. Tell the web hook to stand down when
+     `isTvApp`: `useKeepScreenAwake` should do nothing there. Coordinate with the keep-awake branch state.
+   - **Offline screen:** a native screen on load failure or no network, with automatic retry (backoff up to 30 s)
+     and a **Retry** button. Copy: "Can't connect." / "Retry".
+   - **Remote buttons:**
+     - D-pad goes to the WebView (spatial focus).
+     - **Back:** inside the demo or connect flow, goes back; on the display, exits the app.
+     - **Menu (☰):** a small native dialog with **Change venue** (clears the stored venue, then `/tv-app`) and
+       **Reload**.
+   - **Remembered venue:** a JS bridge (`HightopTV.getVenueId()` / `setVenueId()`) backed by SharedPreferences, in
+     case WebView localStorage gets cleared. `/tv-app` prefers the bridge when present.
+   - Resume after sleep or HDMI-off: reload if the page is stale.
+5. Build a debug APK. Write the exact install command for Phase 5:
+   `~/Library/Android/sdk/platform-tools/adb install -r <path>`.
+6. **Tests:** unit-test the URL allow-list and UA string, plus a contract test that `native-tv/` never contains
+   `HightopChallengeApp/`. If possible, run an Android TV emulator smoke test (optional; the real check is Phase 5).
+7. PR (website changes, if any, plus `native-tv/`). Merge only after Andrew's OK. The handoff lists the APK path.
+
+### Phase 5 — Device test (Andrew + agent, Sonnet 5.5 / medium)
+
+**Agent:**
+1. When Andrew gives the Fire Stick's IP, run `adb connect <ip>:5555`. Andrew approves the TV prompt.
+2. Install the APK and watch `adb logcat` for crashes.
+3. Go through the checklist in **Andrew's steps → Phase 5** with him. Fix small bugs, rebuild and reinstall.
+4. Record results in the handoff.
+5. Add a "Fire TV app" section to `docs/tv-display-physical-device-checklist.md`.
+
+### Phase 6 — Release build and store pack (Agent, Sonnet 5.5 / medium)
+
+1. **Upload keystore:**
+   - Create a separate one for the TV app in
+     `/Users/andrewserulneck/Library/Application Support/Hightop Challenge/signing/` as `fire-tv-upload.p12`, with
+     credentials in `fire-tv-upload-credentials.json`. Folder 0700, files 0600, **never printed or committed**.
+   - Tell Andrew to back up both files to his password manager.
+   - If Amazon's console offers its own app signing, note what it uses, but keep the upload key either way.
+2. **Release build:**
+   - `versionCode` 1 (increase on every upload).
+   - `versionName` "1.0.0" (under 50 characters).
+   - Minify on, with WebView JS-bridge classes kept.
+   - Pure Kotlin, so no native libraries and the 64-bit rule is met.
+   - Output: an APK (or an AAB if the console prefers it on the day).
+3. **Store assets** in `docs/fire-tv-store/`:
+   - 114×114 and 512×512 icons, 1280×720 Fire TV icon, 1920×1080 background. PNG, no transparency.
+   - 3–10 screenshots at 1920×1080: captured from the demo and real screens, no player names.
+   - **Check sizes against Amazon's current docs on the day.**
+4. **`docs/fire-tv-store/listing.md`:**
+   - Title, short description (key point in the first 200 characters), long description, 3–5 feature bullets.
+   - Keywords and category recommendation.
+   - Support URL `/support`, privacy URL `/privacy`.
+   - Content-rating answers, with the reason for each. No gambling: free games, venue prizes, no wagering.
+   - Data-collection answers: the app stores a venue id on the device and collects no personal data.
+   - **Reviewer notes:** "Press Try demo", plus a test venue display code. Ask Andrew which test venue to use, and
+     don't write its owner credentials in the file.
+5. Check `app/privacy/page.tsx` covers the TV app; add a short paragraph if not.
+6. Handoff: the exact file paths Andrew uploads in Phase 7.
+
+### Phase 7 — Submit (Andrew)
+
+See **Andrew's steps → Phase 7**.
+
+### Phase 8 — Store link on the dashboard (Agent, Haiku 5.5 / low)
+
+1. After approval, Andrew gives the Appstore link.
+2. On `/owner/display`, add a "Get the Fire TV app" link and update the Fire Stick help panel: app first, Silk
+   Display URL second. Minimal copy.
+3. Keep the Display URL as is.
+4. Update any copy-pinning test.
+5. PR, merge, deploy.
+
+### Phase 9 — Sports data, cost baseline, state engine (Agent, Opus 5.5 / high)
+
+**Goal:** new screen-state data for the approved sports screens, with measured cost. No new UI.
+
+**Out of scope:** Bingo (reserved, D17 → phase R1); college basketball (D19); any UI.
+
+1. **Inventory:** find exactly where each approved screen's data lives. For each field, write down the table, the
+   cron that writes it and how often it's updated:
+   - today's games across the Pick 'Em leagues, with live scores and status (the main risk: not stored today; see
+     the Phase 1 handoff §5)
+   - each venue's pick count and split per game
+   - the venue Pick 'Em leaderboard (top 5)
+   - the venue All-Time Leaderboard (top 10, `getLeaderboardForVenue(venueId, { timeframe: "all-time", limit: 10 })`
+     in `lib/leaderboard.ts`; confirm it is one `users` read ordered by `points`)
+   - whatever the provider gives that marks a game as postseason or national primetime (may be nothing; then that
+     boost is dropped, not faked)
+2. **Baseline:**
+   - Measure today's `/api/venue-screen/state` use for 3–7 days: requests per day, response size and DB time per
+     request. Use a temporary log counter if needed (no Observability Plus).
+   - Price the new reads. **Stop and tell Andrew if the cost changes materially.**
+3. **Next Live Trivia wording (D12):** a pure function next to `formatNextLiveTriviaLine` in
+   `lib/venueScreenIdleLine.ts` (keep the old one until its callers move). Runs on the TV after hydration, in the TV's
+   own time zone, as today. Input: `startsAt`, `recurringDays`, now. Output, with `title` "LIVE TRIVIA" shown above
+   it by the slide:
+   - weekly (`recurringDays` non-empty) and the next game is 1–6 days away → "Every Thursday · 8:00 PM"; several
+     days → "Every Tue & Thu · 8:00 PM"
+   - one-off tomorrow → "Tomorrow · 8:00 PM"; 2–6 days → "Thursday · 8:00 PM"
+   - 7 or more days away (including a weekly game with a skipped week) → "Dec 4 · 8:00 PM"
+   - today, more than 60 minutes out → "Tonight · 8:00 PM" from 5 PM on, otherwise "Today · 3:00 PM", plus a
+     "Starts in h:mm:ss" line
+   - in the past or missing → null (slide skipped)
+   - Unit-test every row, plus midnight and daylight-saving edges.
+4. **Game ranking (D18):** a pure, unit-tested `lib/tvSportsRelevance.ts`. Input: today's games for the Pick 'Em
+   leagues, this venue's pick count per game, the venue's time zone (`venues.timezone`, added in migration
+   `20260617000000_add_timezone_to_venues.sql`) and now. Output: games in order. Score from:
+   - **venue interest:** pick count at this venue for the game (already read for the pick split; the strongest
+     signal, and free)
+   - **league weight by local day and time**, one hand-tuned table in that file. Starting values: NFL highest Sunday
+     12–11 PM, Monday and Thursday nights; college football highest on Saturdays; NBA and NHL highest on weeknights;
+     soccer highest on weekend mornings; UFC on Saturday nights; tennis, WNBA and MLB in between. A league with no
+     games today never shows, so seasons need no calendar.
+   - **status:** live > starts within 2 hours > final within the last hour > later today; finals drop after 1 hour
+   - **big game:** postseason or national primetime, only if step 1 found a field for it
+   - Board = top 4. Ticker = the next ones (cap about 12), minus the board's games while the board is on screen.
+   - Ranking runs on the server inside the state request. Cap the games sent to the TV (≤ 16) so the idle response
+     stays small.
+5. **Engine:**
+   - The carousel is idle-mode data only: one `idle` payload carries `nextLiveTrivia` (now with the wording inputs),
+     `pickEm` (top 4 games, splits, top 5), `allTimeLeaderboard` (top 10, or null when fewer than 3 players),
+     `prizes` and `ticker`. No new top-level modes for these slides.
+   - **Pre-game hour (D13/D14):** `LIVE_TRIVIA_PREGAME_LEAD_MS` 15 → 60 minutes. Precedence, in
+     `selectVenueScreenState` only: Live Trivia > pre-game final 15 minutes > Category Blitz > pre-game 60→15
+     minutes > Squares > Bracket > idle. Update `tests/lib.venueScreen-pregame.test.ts` and D1 plus the Standing
+     rules of `docs/live-trivia-pregame-and-display-cleanup-plan.md` to say 60 minutes. Check the 1-second
+     look-ahead in `getVenueScreenPollIntervalMs` still lands on time.
+   - **Launch content (D21):** one switch in `selectVenueScreenState` keeps Category Blitz, Squares and Bracket off
+     the display (their reads are skipped too, so they cost nothing). Ask Andrew's answer to D21's open question
+     first (every display, or the TV app only). TV-app-only needs the TV to say so in the state request (for
+     example `&src=tv-app`), because idle responses are shared-cached by URL and can't vary by user-agent.
+   - Respect "missing data is unknown, never zero" (`docs/bingo-pickem-reliability-plan.md`).
+   - Bounded reads only; no per-player loops.
+6. **Polling:**
+   - Keep the idle 20 s and the existing `s-maxage=15` caching unless the baseline says otherwise.
+   - The data changes about once a minute, so 20 s is enough for every slide.
+7. Add debug modes for each new slide and for the pre-game hour, so the demo and Phase 10/11 can use them.
+8. Tests, then a PR.
+
+### Phase 10 — Pick 'Em Live Board + All-Time Leaderboard slides (Agent, Sonnet 5.5 / high)
+
+1. Build the approved designs (mockups v2 sections D and E) in `components/venue-screen/`, using
+   `lib/venueScreenBrand.ts` tokens (inline styles allowed there). Pick 'Em: 4 tiles (2×2), league label on each tile,
+   top 5 in the side column, no join QR (D16). All-Time Leaderboard: top 10 in two columns of 5, gold #1 only,
+   points with thousands separators.
+2. Leave the bottom 96 px (ticker) and the bottom-right "Get the app" spot free; Phase 11 fills them.
+3. Moments (score flash) fire only through `useFx` / `useFxMoment` keys and never replay on a poll tick.
+4. Check at 1920×1080 and 1280×720.
+5. Browser check with debug modes from a scratchpad clone, then a PR.
+
+### Phase 11 — Carousel, ticker, "Get the app" QR everywhere, pre-game title (Agent, Sonnet 5.5 / high)
+
+1. **Carousel (D20):** slides 1 Next Live Trivia, 2 Pick 'Em, 3 All-Time Leaderboard, 4 Prizes, 5 Get the app (today's
+   `TvIdleAttract` with "Hightop Challenge" in full). Rotates client-side from one state response, timed from the wall
+   clock like `TvIdleAttract`: no extra requests per slide. Skips empty slides. Dots above the ticker. Restarts at
+   slide 1 after a game.
+2. **Next Live Trivia slide (D12):** "LIVE TRIVIA" largest, wording from Phase 9 step 3.
+3. **Ticker (D15):** carousel only. Skips the board's games while slide 2 shows. Fixed right segment: next Live Trivia
+   short form ("Live Trivia · Thu 8:00 PM").
+4. **"Get the app" QR (D16):** one shared component built on `AppDownloadQr`, same bottom-right place and size on
+   every screen listed in D16; never on questions, reveals, Category Blitz rounds or the Connect screen. It never
+   moves, is never covered and never animates (the `AppDownloadQr` rule). Touching `LiveTriviaScreen`,
+   `TvFinalStandings` and `TvRoundBreak`: check each at 1920×1080 that nothing sits under the QR. Category Blitz,
+   Squares and Bracket screens get it in R2 (D21).
+5. **Pre-game (D13):** add the "LIVE TRIVIA" title to `TvLiveTriviaPregame`; the countdown must handle 60:00.
+6. **Name (D10):** grep the display components for a bare "Hightop" wordmark and make it "Hightop Challenge".
+7. A live game takes over immediately. Sponsor slots keep their current rules.
+8. Browser check, then a PR.
+
+### Phase 12 — Real-TV sports check (Andrew + agent, Haiku 5.5 / low)
+
+Andrew runs the checklist in **Andrew's steps → Phase 12** on a game day. The agent records the results in the
+handoff and in `docs/tv-display-physical-device-checklist.md`, and lists fixes as follow-ups.
+
+### Phase 13 — Vega OS build (Agent, Opus 5.5 / high)
+
+1. **Re-check Amazon's current Vega docs first.** The SDK is new and changes often.
+2. **Planner's notes (2026-11-21):**
+   - The app is React Native for Vega with `@amazon-devices/webview`, packaged as `.vpkg`.
+   - WebView loads a remote https URL with `source={{uri}}` and `hasTVPreferredFocus`. Spatial D-pad navigation is
+     on by default.
+   - `allowSystemKeyEvents` is needed to receive Back.
+   - Web-to-native messages use `window.ReactNativeWebView.postMessage`; native-to-web uses `injectJavaScript`.
+   - Debugging: `npm run build:debug`, `vda forward tcp:9229`, then `chrome://inspect`.
+   - No sideloading: device tests use the Vega developer tools.
+3. Put the project in `native-tv-vega/`, matching Phase 4:
+   - Same `/tv-app` start URL and UA token.
+   - Keep-awake via Vega's API.
+   - The same offline, Menu, Back and remembered-venue behavior. The bridge is `postMessage`-based; extend `/tv-app`
+     to detect it.
+4. Confirm on the day that a Vega build can be added to the existing listing, and write the exact console steps for
+   Phase 14.
+
+### Phase 14 — Vega test + submit (Andrew + agent, Sonnet 5.5 / medium)
+
+The agent installs onto Andrew's Vega stick with the Vega tools and runs the Phase 5 checklist. Andrew then adds the
+`.vpkg` to the listing using the steps in the Phase 13 handoff.
+
+### Phase 15 — Close-out (Agent, Haiku 5.5 / low)
+
+1. About 2 weeks after Phases 8 and 11 go live: compare state-API usage with the Phase 9 baseline and report any
+   material change to Andrew.
+2. Add a **"Standing rules (moved from CLAUDE.md, 2026-11-03)"** section to the end of this file. It holds:
+   - The TV app is a shell; screens live on the website.
+   - `lib/tvApp.ts` is the only reader of `HightopChallengeTV/`.
+   - The WebView loads only site hosts.
+   - A connection grants a venue id only.
+   - Pairing rows are short-lived and need no cron.
+   - Sports screens add no crons or provider calls.
+   - Every TV screen says "Hightop Challenge" in full.
+   - The ticker is only on the idle carousel, never on Live Trivia or Category Blitz.
+   - One QR per screen, the "Get the app" QR, in one fixed place; never on questions, reveals or the Connect screen.
+   - Game ranking lives only in `lib/tvSportsRelevance.ts`.
+3. Add a CLAUDE.md feature-rules row for the Fire TV app.
+4. Update `SYSTEM_CONTEXT.md` and the memory note.
+
+### Phase R1 — Bingo "Closest to Bingo" (reserved; Agent, Opus 5.5 / high)
+
+Runs only when Andrew says go (D17). Design: mockups v2 section G (`bingo1`, `bingo2`).
+1. Data: the top few active cards for the venue's live Bingo game and "squares away" from `sports_bingo_squares`
+   (see the Phase 1 handoff §5). One bounded read; only while a game with active cards is live.
+2. Add it as a carousel slide (with ticker and the corner "Get the app" QR, no join QR), skipped when no game is live.
+3. The BINGO! moment fires through `useFx` / `useFxMoment` keys only, once per win, never on a poll tick.
+4. Measure the added cost against the Phase 9 baseline before merging.
+
+---
+
+## Andrew's steps
+
+You never need to type code. When a step says "tell the agent", type it in the Claude Code chat.
+
+### Before you start: what kind of Fire TV Stick do you have?
+
+This decides whether your stick can run the first version.
+
+1. On the TV, press **Home** on the remote, then go right to **Settings** (the gear icon).
+2. Choose **My Fire TV**. On some sticks it's called **Device & Software**.
+3. Choose **About**. Write down the device name on the first line (e.g. "Fire TV Stick 4K Max").
+4. Look at the **Software version** line:
+   - **Fire OS** (e.g. "Fire OS 8.1"): this stick works for Phase 5.
+   - **Vega OS**: this stick is for Phase 14. For Phase 5 you'll need a stick that runs Fire OS. Most Fire TV Stick
+     4K Max and Fire TV Cube models do; check that the store listing says "Fire OS" before buying.
+5. Tell the agent in Phase 4 or 5 what you found.
+
+### Phase 2: review the mockups
+
+**Done 2026-11-22.** Round 1 became D10–D20 (mockups version 2); round 2 became D21–D25. The steps below are kept
+for history.
+
+1. Open https://claude.ai/artifact/YNP2Wft36uz6gtTq8WnDNE (private). It works best on a laptop or big screen.
+   "What changed since version 1" at the top lists your round-1 changes.
+2. For each section (A–H), choose **Keep**, **Change** (say what), or **Cut**.
+3. At the bottom, answer:
+   - which carousel slides to keep and how long each stays up
+   - store art options, and whether to keep the coin logo
+   - whether your Fire TV Stick runs Fire OS or Vega OS (see "Before you start")
+4. Also say whether you agree with D14 (a Category Blitz round in progress keeps the screen until 15 minutes before
+   Live Trivia).
+5. Press **Copy** and paste it into the same Claude Code chat. The agent records it and updates the plan. When
+   nothing is left to change, start Phase 3 in a new session.
+
+### Phase 3: say yes to the database change, then try connecting on a laptop
+
+1. During Phase 3 the agent will ask something like *"OK to run supabase db push?"*. It adds one small table that
+   holds TV connection codes for 10 minutes. Reply **yes**.
+2. When the agent asks to merge the pull request, reply **yes, merge it**. If it asks you to merge on GitHub instead:
+   1. Open the link it gives you.
+   2. Click the green **Merge pull request** button, then **Confirm merge**.
+   3. The website updates by itself in about 2–5 minutes.
+3. **Try it on a laptop:**
+   1. Open **hightopchallenge.com/tv-app** in the laptop's browser. You should see the Connect screen with a QR code.
+   2. On your phone, open the partner dashboard and make sure you're signed in.
+   3. Point your phone camera at the laptop's QR code and tap the link that pops up.
+   4. Tap **Connect**. Within a few seconds the laptop should switch to your venue display.
+   5. Tell the agent what happened. Say "it worked", or describe what you saw.
+
+### Phase 5: install the test app on your Fire Stick
+
+**Get ready:** your Mac and the Fire Stick must be on the **same Wi-Fi**. Start the Phase 5 chat first; the agent
+will ask for the IP address in step 3.
+
+1. **Turn on developer mode:**
+   1. On the TV: **Settings → My Fire TV → About**.
+   2. Highlight the **first line** (your device name) and press the **center button 7 times**.
+   3. A message says you're now a developer.
+   4. Press **Back** once. A new item, **Developer Options**, appears under My Fire TV.
+2. **Turn on the debugging switch:** **Settings → My Fire TV → Developer Options → ADB debugging → ON**. If a warning
+   appears, choose **OK**.
+3. **Find the Fire Stick's address:**
+   1. Go to **Settings → My Fire TV → About → Network**.
+   2. Write down **IP Address**. It looks like `192.168.1.37`.
+   3. Tell the agent: *"Fire Stick IP is 192.168.1.37."*
+4. **Allow the connection:** the agent connects from your Mac.
+   1. The TV shows **"Allow USB debugging?"**.
+   2. Tick **Always allow from this computer** and choose **OK**.
+   3. If you miss it, tell the agent and it will try again.
+5. **Open the app:**
+   1. The agent installs it.
+   2. On the TV press **Home**, then open **Your Apps & Channels** (the icon of small squares) and scroll to the end.
+      You'll find **Hightop Challenge TV** there.
+   3. To move it to the front, highlight it, press **Menu (☰) → Move**.
+6. **Test it.** Tell the agent the result of each check:
+   - The app opens on the Connect screen.
+   - **Scan the QR** with your phone and tap Connect. The TV switches to your display within a few seconds.
+   - **Menu (☰) → Change venue**, then connect again by **typing your display code** with the remote.
+   - **Try demo** shows game screens; **Back** leaves the demo.
+   - **Leave it on for 2 hours.** The TV never goes to the screensaver or sleeps.
+   - **Turn off your Wi-Fi** (or unplug the router) for 1 minute. The TV shows "Can't connect". Turn the Wi-Fi back
+     on. The display comes back by itself within about 30 seconds.
+   - **Press Home, then reopen the app.** It goes straight to your display, with no Connect screen.
+   - **Turn the TV off and on.** The display comes back.
+   - **During a real or test Live Trivia game,** questions, timer and sound work.
+7. **When the agent says you're done,** you can turn **ADB debugging** off again. Leave it on if more fixes are
+   coming.
+
+### Phase 6: save the signing key
+
+The agent creates the app's signing key. **If this key is lost, you can never update the app.**
+
+1. The agent gives you the names of two files in your Mac's private signing folder.
+2. Open your password manager and make a new secure note called **"Hightop Challenge TV – Amazon upload key"**.
+3. Attach both files, or paste the contents of the credentials file. The agent will tell you which. Save it.
+4. Tell the agent: *"Backed up."*
+
+### Phase 7: submit to the Amazon Appstore
+
+Have the Phase 6 handoff open. It lists the exact files and text to paste. Amazon renames screens now and then; if
+something doesn't match, take a screenshot and show the agent.
+
+1. Go to **developer.amazon.com**, click **Sign in**, then open the **Developer Console**.
+2. Go to **Apps & Services → My Apps**, then click **Add New App** → **Android** (Fire OS apps are Android apps).
+3. **App title:** `Hightop Challenge TV`. **Category:** the one in `docs/fire-tv-store/listing.md`. Click **Save**.
+4. **Availability & Pricing:**
+   - Choose the countries in the listing file (expected: United States).
+   - Choose **free**.
+   - For **release date**, choose as soon as it's approved.
+   - Save.
+5. **App File(s):**
+   1. Click **Upload** and choose the app file named in the Phase 6 handoff.
+   2. When it lists devices, **keep only the Fire TV devices checked**. Uncheck Fire tablets and non-Amazon devices.
+   3. Language: **English**. DRM: **No**.
+   4. Tick the export-compliance box. Save.
+6. **Description:** paste the title, short description, long description, feature bullets and keywords from the
+   listing file. Save.
+7. **Images & Multimedia:** upload each image from `docs/fire-tv-store/` into the box with the matching size. Upload
+   the screenshots. Save.
+8. **Content Rating:** answer each question as written in the listing file. Save.
+9. **Privacy and data:**
+   - Privacy policy URL: `https://hightopchallenge.com/privacy`.
+   - Answer the data questions as in the listing file. Save.
+10. **Notes for the reviewer** (the field is often called *Testing instructions*): paste the reviewer notes from the
+    listing file.
+11. **Optional but recommended: Live App Testing first.**
+    1. Open the **Live App Testing** tab, add yourself as a tester and start the test.
+    2. Amazon emails you a link. Install the app from Amazon onto your Fire Stick and check that it opens and connects.
+    3. Then come back.
+12. Click **Submit App**. The status changes to **Under review**.
+13. **Wait 3–10 working days.** It sometimes takes up to 2–3 weeks. Amazon emails you either way.
+    - **Approved:** the email or the console has the app's store link. Start Phase 8 and paste the link.
+    - **Rejected:** start a new chat: *"Fire TV app was rejected. Fix it per docs/fire-tv-app-plan.md."* Paste the
+      whole rejection email. Don't argue with Amazon in the console until the agent has read it.
+14. If the console stops you with a **tax or payment interview**, stop and tell the agent. Free apps usually don't
+    need it, but Amazon sometimes asks anyway.
+
+### Phase 12: check the sports screens on a real TV
+
+On a day with live games:
+1. Open **Hightop Challenge TV** (or the Display URL) at a venue.
+2. Note whether each carousel slide shows while nothing else is running, is readable from across the room, and has
+   the right scores.
+3. Check that the Pick 'Em board shows the games your crowd cares about (NFL on Sunday, college football on Saturday,
+   NBA or NHL on a weeknight).
+4. Check that the ticker never appears on a Live Trivia or Category Blitz screen.
+5. Scan the "Get the app" QR from across the room with your phone. It should open the store or the app page.
+6. One hour before a scheduled Live Trivia game, the TV should switch to the pre-game screen and stay there.
+7. Start a Live Trivia or Category Blitz game. It must take over the screen right away.
+8. Tell the agent what you saw. Photos of the TV help.
+
+### Phase 14: Vega stick
+
+1. Buy a Fire TV stick that says **Vega OS** (e.g. Fire TV Stick 4K Select), about $30–40. Set it up with your Amazon
+   account.
+2. Turn on developer mode the same way as in Phase 5, steps 1–2. Vega menus may differ slightly; the agent will
+   guide you.
+3. Run the same tests as in Phase 5, step 6.
+4. Add the Vega build to the store listing by following the steps in the Phase 13 handoff.

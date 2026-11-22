@@ -1,0 +1,751 @@
+<title>Hightop Challenge TV Mockups</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+/* Layout: one review column. Each screen is a 1920x1080 stage scaled to fit, then notes and a decision row.
+   Single dark look on purpose: the mockups are TV screens, so the page around them stays out of their way.
+   Version 2 (2026-11-22): Andrew's first round of changes. Logo is the published file logo.webp. */
+:root {
+  --bg: #060b18;
+  --panel: #0c1426;
+  --line: rgba(148, 163, 184, 0.2);
+  --fg: #e8eefc;
+  --muted: #94a3b8;
+  --cyan: #22d3ee;
+  --amber: #fbbf24;
+  --ok: #6ee7b7;
+  --font: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 80px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+h1 { font-size: clamp(30px, 5vw, 52px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h3 { font-size: 13px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+p { margin: 0; }
+.lede { color: var(--muted); max-width: 72ch; }
+.grad { background: linear-gradient(100deg, #fff 0%, var(--cyan) 50%, var(--amber) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+header.top { display: flex; flex-direction: column; gap: 16px; }
+nav.jump { display: flex; flex-wrap: wrap; gap: 8px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; padding-block: 10px; background: var(--bg); }
+nav.jump a { color: var(--fg); text-decoration: none; font-weight: 800; font-size: 14px; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; }
+nav.jump a:hover, nav.jump a:focus-visible { border-color: var(--cyan); outline: none; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card ul, ul.card { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+ul.card { padding-left: 40px; }
+.card li { min-width: 0; }
+.tbd, .ok, .new, .res { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 6px; padding: 1px 7px; vertical-align: 1px; }
+.tbd { color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.5); }
+.ok { color: var(--ok); border: 1px solid rgba(110, 231, 183, 0.5); }
+.new { color: var(--cyan); border: 1px solid rgba(34, 211, 238, 0.5); }
+.res { color: #c4b5fd; border: 1px solid rgba(196, 181, 253, 0.5); }
+section.screen { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 70px; }
+.sec-head { display: flex; flex-direction: column; gap: 6px; }
+.row { display: grid; gap: 22px; }
+.row.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 860px) { .row.two, .row.three { grid-template-columns: minmax(0, 1fr); } }
+figure { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+figcaption { font-size: 14px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
+figcaption b { color: var(--fg); font-weight: 800; }
+.frame { position: relative; overflow: hidden; border-radius: 10px; border: 1px solid var(--line); background: #000; width: 100%; }
+.frame > .tv { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.btn-sm { font: inherit; font-size: 13px; font-weight: 800; color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 3px 12px; cursor: pointer; }
+.btn-sm:hover, .btn-sm:focus-visible { border-color: var(--cyan); outline: none; }
+.decide { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 14px 18px; border: 1px dashed var(--line); border-radius: 12px; }
+.decide .lbl { font-weight: 900; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg label { cursor: pointer; font-weight: 800; font-size: 14px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; padding: 6px 16px; }
+.seg input:checked + span { background: var(--cyan); color: #04202a; }
+.seg input:focus-visible + span { outline: 2px solid var(--amber); outline-offset: -2px; }
+.decide input[type="text"], .decide select, textarea { font: inherit; color: var(--fg); background: #091022; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.decide input[type="text"] { flex: 1 1 220px; min-width: 0; }
+textarea { width: 100%; min-height: 170px; resize: vertical; font-size: 15px; }
+.timeline { display: flex; flex-wrap: wrap; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.timeline div { flex: 1 1 140px; padding: 10px 12px; font-size: 14px; font-weight: 700; border-right: 1px solid var(--line); min-width: 0; }
+.timeline div:last-child { border-right: 0; }
+.timeline div.off { color: var(--muted); background: rgba(196, 181, 253, 0.06); }
+.timeline small { display: block; color: var(--muted); font-weight: 600; }
+.tbl { overflow-x: auto; }
+.tbl table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+.tbl th, .tbl td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl th { color: var(--muted); font-weight: 800; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.tbl td.y { color: var(--ok); font-weight: 800; }
+.tbl td.n { color: var(--muted); font-weight: 800; }
+.chk { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.chk label { display: flex; gap: 8px; align-items: center; font-weight: 700; cursor: pointer; }
+.copy { align-self: flex-start; font: inherit; font-weight: 900; color: #04202a; background: var(--cyan); border: 0; border-radius: 10px; padding: 10px 20px; cursor: pointer; }
+.copy:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+/* ---------------- TV stage (design px, 1920x1080) ---------------- */
+.tv { font-family: var(--font); color: #f8fafc; overflow: hidden; background: #020617; }
+.tv * { box-sizing: border-box; }
+.tv.idle { background: radial-gradient(120% 90% at 12% 0%, rgba(6,182,212,0.20), transparent 48%), radial-gradient(120% 90% at 100% 100%, rgba(245,158,11,0.16), transparent 46%), linear-gradient(135deg, #020617 0%, #0a1428 52%, #020617 100%); }
+.tv.live { background: radial-gradient(120% 90% at 8% 0%, rgba(14,165,233,0.30), transparent 46%), radial-gradient(120% 90% at 100% 100%, rgba(124,58,237,0.32), transparent 44%), linear-gradient(135deg, #020617 0%, #0b1830 48%, #050b1c 100%); }
+.tv.pick { background: radial-gradient(120% 90% at 8% 0%, rgba(16,185,129,0.22), transparent 46%), radial-gradient(120% 90% at 100% 100%, rgba(245,158,11,0.16), transparent 44%), linear-gradient(135deg, #020617 0%, #06182a 50%, #040b18 100%); }
+.tv.lead { background: radial-gradient(120% 90% at 8% 0%, rgba(245,158,11,0.20), transparent 46%), radial-gradient(120% 90% at 100% 100%, rgba(6,182,212,0.16), transparent 44%), linear-gradient(135deg, #020617 0%, #14110a 50%, #040b18 100%); }
+.tv.bingo { background: radial-gradient(120% 90% at 8% 0%, rgba(124,58,237,0.26), transparent 46%), radial-gradient(120% 90% at 100% 100%, rgba(6,182,212,0.18), transparent 44%), linear-gradient(135deg, #020617 0%, #0e0f2e 50%, #050b1c 100%); }
+.tv .bar { position: absolute; left: 0; right: 0; top: 0; height: 6px; opacity: 0.5; background: linear-gradient(90deg, #06b6d4, #f59e0b 85%); }
+.tv .eyebrow { font-size: 32px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: #67e8f9; }
+.tv .plate { background: #fff; border-radius: 28px; padding: 0; display: block; flex: none; }
+.tv .plate svg { display: block; width: 100%; height: 100%; }
+.tv .wm { font-weight: 900; letter-spacing: -0.045em; line-height: 0.94; padding-bottom: 0.22em; margin-bottom: -0.22em; background: linear-gradient(100deg, #fff 0%, #22d3ee 46%, #fbbf24 100%); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; }
+
+/* "Get the app" dock: same place and size on every carousel and between-question screen. Never moves. */
+.dock { position: absolute; right: 70px; bottom: 130px; display: flex; align-items: center; gap: 26px; z-index: 3; }
+.dock.low { bottom: 44px; }
+.dock .tx { text-align: right; font-size: 46px; font-weight: 900; line-height: 1.05; }
+.dock .tx small { display: block; font-size: 30px; font-weight: 700; color: #94a3b8; margin-top: 8px; }
+
+/* A. Connect */
+.cn { position: absolute; inset: 0; padding: 64px 120px 76px; display: flex; flex-direction: column; gap: 44px; }
+.cn-hd { display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; }
+.cn-title { font-size: 100px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-top: 22px; }
+.cn-body { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr); min-height: 0; }
+.opt { border-radius: 36px; border: 4px solid rgba(148,163,184,0.28); background: rgba(255,255,255,0.04); padding: 36px 44px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 28px; min-width: 0; }
+.opt-tag { font-size: 30px; font-weight: 900; letter-spacing: 0.16em; text-transform: uppercase; color: #67e8f9; background: rgba(34,211,238,0.12); border: 2px solid rgba(103,232,249,0.35); border-radius: 999px; padding: 4px 26px; }
+.opt-h { font-size: 52px; font-weight: 900; letter-spacing: -0.02em; white-space: nowrap; }
+.opt-hint { font-size: 32px; font-weight: 700; color: #94a3b8; }
+.or { align-self: center; justify-self: center; width: 116px; height: 116px; border-radius: 999px; background: #fbbf24; color: #1b1203; font-size: 46px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(251,191,36,0.45); }
+.cn-code { display: flex; gap: 20px; }
+.cn-box { width: 124px; height: 156px; border-radius: 22px; border: 4px solid rgba(148,163,184,0.45); background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 98px; font-weight: 900; }
+.cn-btn { font-size: 40px; font-weight: 800; color: #cbd5e1; border: 4px solid rgba(148,163,184,0.45); border-radius: 999px; padding: 12px 44px; white-space: nowrap; }
+.focus { border-color: #67e8f9 !important; box-shadow: 0 0 0 8px rgba(34,211,238,0.28), 0 0 48px rgba(34,211,238,0.55); background: rgba(34,211,238,0.12) !important; color: #fff !important; }
+.cn-ok { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; }
+.cn-ok .okc { width: 220px; height: 220px; border-radius: 999px; background: rgba(110,231,183,0.15); border: 8px solid #6ee7b7; display: flex; align-items: center; justify-content: center; }
+
+/* Header shared by boards */
+.hd { display: flex; justify-content: space-between; align-items: flex-end; }
+.hd .t { font-size: 80px; font-weight: 900; letter-spacing: -0.035em; line-height: 1; }
+.hd .s { font-size: 40px; font-weight: 800; color: #94a3b8; margin-top: 8px; }
+.hd .r { font-size: 40px; font-weight: 800; color: #cbd5e1; text-align: right; }
+
+/* D. Pick 'Em */
+.pk { position: absolute; inset: 0; padding: 50px 78px 150px; display: flex; flex-direction: column; gap: 30px; }
+.pk-body { flex: 1; display: grid; grid-template-columns: 1fr 500px; gap: 48px; min-height: 0; }
+.pk-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 26px; min-height: 0; }
+.pk-tile { position: relative; border-radius: 28px; border: 3px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); padding: 22px 32px 24px; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; }
+.pk-top { display: flex; justify-content: space-between; font-size: 32px; font-weight: 800; color: #94a3b8; }
+.pk-top .lg { color: #e2e8f0; font-weight: 900; margin-right: 14px; }
+.pk-status.live { color: #6ee7b7; }
+.pk-row { display: flex; justify-content: space-between; align-items: baseline; line-height: 1; }
+.pk-team { font-size: 62px; font-weight: 900; letter-spacing: 0.03em; }
+.pk-score { font-size: 92px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.pk-row.lead .pk-score { color: #fcd34d; }
+.pk-split { height: 16px; border-radius: 999px; background: rgba(255,255,255,0.16); overflow: hidden; }
+.pk-split i { display: block; height: 100%; background: linear-gradient(90deg, #22d3ee, #6ee7b7); }
+.pk-lbl { display: flex; justify-content: space-between; font-size: 30px; font-weight: 700; color: #94a3b8; }
+.pk-lbl b { color: #f8fafc; font-weight: 900; }
+.pk-tile.flash { animation: flash 1.6s ease-in-out infinite; border-color: #fcd34d; background: rgba(252,211,77,0.12); }
+.pk-ribbon { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); white-space: nowrap; background: #fcd34d; color: #1b1203; font-size: 32px; font-weight: 900; letter-spacing: 0.08em; padding: 4px 22px; border-radius: 999px; }
+@keyframes flash { 0%, 100% { box-shadow: 0 0 0 rgba(252,211,77,0); } 50% { box-shadow: 0 0 60px rgba(252,211,77,0.7); } }
+.side { display: flex; flex-direction: column; gap: 22px; min-height: 0; }
+.side .lb { display: flex; flex-direction: column; gap: 10px; }
+.lb-row { display: flex; align-items: center; gap: 18px; height: 76px; padding: 0 22px; border-radius: 18px; background: rgba(255,255,255,0.06); font-size: 40px; font-weight: 800; }
+.lb-row .n { width: 40px; color: #94a3b8; font-weight: 900; }
+.lb-row .u { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-row .v { color: #fcd34d; font-weight: 900; font-variant-numeric: tabular-nums; }
+.lb-row.gold { background: linear-gradient(90deg, rgba(252,211,77,0.30), rgba(245,158,11,0.10)); border: 2px solid rgba(252,211,77,0.6); box-shadow: 0 0 36px rgba(245,158,11,0.3); }
+.lb-row.gold .n { color: #fcd34d; }
+
+/* E. All-time leaderboard */
+.at { position: absolute; inset: 0; padding: 50px 78px 150px; display: flex; flex-direction: column; gap: 40px; }
+.at-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; }
+.at-col { display: flex; flex-direction: column; gap: 14px; }
+.at-row { display: flex; align-items: center; gap: 26px; height: 86px; padding: 0 34px; border-radius: 22px; background: rgba(255,255,255,0.06); font-size: 48px; font-weight: 800; }
+.at-row .n { width: 56px; color: #94a3b8; font-weight: 900; font-variant-numeric: tabular-nums; }
+.at-row .u { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.at-row .v { font-weight: 900; font-variant-numeric: tabular-nums; color: #e2e8f0; }
+.at-row .v small { font-size: 30px; color: #94a3b8; margin-left: 8px; }
+.at-row.gold { background: linear-gradient(90deg, rgba(252,211,77,0.32), rgba(245,158,11,0.10)); border: 3px solid rgba(252,211,77,0.65); box-shadow: 0 0 40px rgba(245,158,11,0.32); }
+.at-row.gold .n, .at-row.gold .v { color: #fcd34d; }
+
+/* G. Bingo (reserved) */
+.bg { position: absolute; inset: 0; padding: 50px 78px 44px; display: flex; flex-direction: column; gap: 28px; }
+.bg-body { flex: 1; display: grid; grid-template-columns: 1fr 440px; gap: 40px; min-height: 0; }
+.bg-cards { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.bg-row { display: flex; gap: 22px; }
+.bcard { width: 420px; border-radius: 26px; border: 3px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.bcard.first { border-color: rgba(103,232,249,0.55); }
+.bcard-h { display: flex; justify-content: space-between; align-items: center; padding: 0 6px; }
+.bcard-h .u { font-size: 44px; font-weight: 900; }
+.away { font-size: 34px; font-weight: 900; color: #1b1203; background: #fcd34d; border-radius: 999px; padding: 2px 20px; }
+.away.two { background: #cbd5e1; }
+.bgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.bgrid i { aspect-ratio: 1; border-radius: 12px; background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.08); display: block; }
+.bgrid i.h { background: rgba(34,211,238,0.55); border-color: rgba(103,232,249,0.8); }
+.bgrid i.f { background: rgba(167,139,250,0.55); border-color: rgba(196,181,253,0.8); }
+.bgrid i.x { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.04); }
+.bgrid i.n { background: rgba(252,211,77,0.18); border: 4px solid #fcd34d; animation: need 1.8s ease-in-out infinite; }
+.bgrid i.g { background: #fcd34d; border-color: #fff3c4; box-shadow: 0 0 24px rgba(252,211,77,0.8); }
+@keyframes need { 0%, 100% { box-shadow: 0 0 0 rgba(252,211,77,0); } 50% { box-shadow: 0 0 26px rgba(252,211,77,0.75); } }
+.also { display: flex; gap: 18px; align-items: center; font-size: 36px; font-weight: 800; color: #94a3b8; }
+.chip { background: rgba(255,255,255,0.07); border-radius: 999px; padding: 8px 26px; color: #f8fafc; font-weight: 800; }
+.chip b { color: #cbd5e1; margin-left: 10px; }
+.legend { display: flex; gap: 34px; font-size: 28px; font-weight: 700; color: #94a3b8; align-items: center; }
+.legend i { display: inline-block; width: 30px; height: 30px; border-radius: 8px; vertical-align: -6px; margin-right: 10px; }
+.need { display: flex; flex-direction: column; gap: 14px; }
+.need-row { padding: 16px 22px; border-radius: 18px; background: rgba(252,211,77,0.08); border: 2px solid rgba(252,211,77,0.4); font-size: 36px; font-weight: 800; line-height: 1.15; }
+.need-row small { display: block; font-size: 28px; font-weight: 700; color: #94a3b8; margin-top: 4px; }
+.bingo-ov { position: absolute; inset: 0; background: rgba(2,6,23,0.94); display: flex; align-items: center; justify-content: center; gap: 90px; animation: pop 0.6s cubic-bezier(.16,1,.3,1) both; z-index: 4; }
+.bingo-ov .bgrid { width: 600px; gap: 9px; }
+.bingo-ov .word { font-size: 270px; font-weight: 900; letter-spacing: -0.04em; line-height: 0.9; background: linear-gradient(180deg, #fff3c4, #f59e0b); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 40px rgba(245,158,11,0.6)); }
+.bingo-ov .who { font-size: 96px; font-weight: 900; margin-top: 14px; }
+.bingo-ov .pts { font-size: 64px; font-weight: 900; color: #fcd34d; margin-top: 6px; }
+@keyframes pop { from { opacity: 0; transform: scale(1.06); } to { opacity: 1; transform: scale(1); } }
+
+/* F. Ticker */
+.tick { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: rgba(2,6,23,0.92); border-top: 2px solid rgba(103,232,249,0.28); display: flex; align-items: center; font-size: 36px; font-weight: 800; overflow: hidden; z-index: 2; }
+.tick .tag { flex: none; height: 100%; display: flex; align-items: center; padding: 0 34px; background: #0e7490; color: #fff; font-size: 30px; font-weight: 900; letter-spacing: 0.14em; }
+.tick .scroll { flex: 1; overflow: hidden; white-space: nowrap; min-width: 0; }
+.tick .track { display: inline-block; animation: tk 52s linear infinite; }
+.tick .track span { margin-right: 70px; color: #e2e8f0; }
+.tick .track span b { color: #fcd34d; font-weight: 900; margin: 0 8px; }
+.tick .track span i { font-style: normal; font-size: 26px; font-weight: 900; color: #67e8f9; letter-spacing: 0.08em; margin-right: 14px; }
+.tick .track em { font-style: normal; color: #94a3b8; font-size: 30px; margin-left: 6px; }
+@keyframes tk { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.tick .next { flex: none; padding: 0 40px; height: 100%; display: flex; align-items: center; border-left: 2px solid rgba(255,255,255,0.12); color: #fcd34d; font-weight: 900; }
+.lt { position: absolute; inset: 0; padding: 60px 110px 0; display: flex; flex-direction: column; }
+.lt-top { display: flex; justify-content: space-between; align-items: center; }
+.pill { font-size: 34px; font-weight: 900; color: #a5f3fc; background: rgba(34,211,238,0.12); border: 2px solid rgba(103,232,249,0.3); border-radius: 999px; padding: 8px 30px; }
+.lt-q { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 112px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; padding: 0 40px; text-wrap: balance; }
+.lt-foot { text-align: center; font-size: 40px; font-weight: 800; color: #94a3b8; padding-bottom: 36px; }
+.ring { width: 150px; height: 150px; border-radius: 999px; border: 10px solid #22d3ee; display: flex; align-items: center; justify-content: center; font-size: 76px; font-weight: 900; }
+.st-row { display: flex; align-items: center; gap: 28px; height: 96px; padding: 0 40px; border-radius: 22px; background: rgba(255,255,255,0.06); font-size: 56px; font-weight: 800; }
+.st-row .n { width: 60px; color: #94a3b8; font-weight: 900; }
+.st-row .u { flex: 1; }
+.st-row .v { font-weight: 900; font-variant-numeric: tabular-nums; color: #67e8f9; }
+.st-row.gold { background: linear-gradient(90deg, rgba(252,211,77,0.3), rgba(245,158,11,0.1)); border: 3px solid rgba(252,211,77,0.6); }
+.st-row.gold .n, .st-row.gold .v { color: #fcd34d; }
+.dots { position: absolute; left: 0; right: 0; bottom: 120px; display: flex; justify-content: center; gap: 18px; z-index: 2; }
+.dots i { width: 18px; height: 18px; border-radius: 999px; background: rgba(255,255,255,0.25); }
+.dots i.on { background: #67e8f9; box-shadow: 0 0 16px rgba(34,211,238,0.8); }
+
+/* C. Next Live Trivia + pre-game */
+.sl { position: absolute; inset: 0 0 96px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 26px; }
+.sl .when { font-size: 100px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; }
+.sl .when b { color: #fcd34d; font-weight: 900; }
+.sl .sub { font-size: 64px; font-weight: 800; color: #cbd5e1; font-variant-numeric: tabular-nums; }
+.sl .ven { font-size: 50px; font-weight: 800; color: #94a3b8; }
+.pg { position: absolute; inset: 0; padding: 46px 96px 56px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.pg .in { font-size: 44px; font-weight: 900; letter-spacing: 0.3em; text-transform: uppercase; color: #cbd5e1; margin-top: 18px; }
+.pg .cd { font-size: 200px; font-weight: 900; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; text-shadow: 0 0 60px rgba(34,211,238,0.4); }
+.pg-steps { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding-top: 56px; gap: 88px; }
+.step { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.step .lbl { display: flex; align-items: center; gap: 18px; font-size: 52px; font-weight: 900; }
+.step .lbl span { width: 70px; height: 70px; border-radius: 999px; background: #fff; color: #020617; display: flex; align-items: center; justify-content: center; font-size: 42px; }
+.lt-tile { width: 360px; height: 230px; border-radius: 26px; background: linear-gradient(150deg, #7c3aed, #2563eb); box-shadow: 0 20px 50px rgba(37,99,235,0.35); display: flex; flex-direction: column; justify-content: flex-end; padding: 26px 30px; text-align: left; }
+.lt-tile b { font-size: 50px; font-weight: 900; line-height: 1; }
+.lt-tile small { font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.9); margin-top: 8px; }
+
+/* E slides */
+.slp { position: absolute; inset: 0 0 96px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 56px; }
+.prz { width: 520px; padding: 36px 36px 34px; border-radius: 28px; background: rgba(255,255,255,0.06); border: 3px solid rgba(252,211,77,0.4); display: flex; flex-direction: column; gap: 18px; text-align: left; }
+.prz .n { font-size: 56px; font-weight: 900; line-height: 1.05; }
+.prz .m { font-size: 34px; font-weight: 700; color: #94a3b8; }
+.prz .pb { height: 18px; border-radius: 999px; background: rgba(255,255,255,0.14); overflow: hidden; }
+.prz .pb i { display: block; height: 100%; background: linear-gradient(90deg, #f59e0b, #fcd34d); }
+.prz .pts { font-size: 44px; font-weight: 900; color: #fcd34d; }
+
+/* Get the app slide */
+.id { position: absolute; inset: 0 0 96px; padding: 70px 130px; display: flex; align-items: center; justify-content: space-between; gap: 60px; }
+.id-l { display: flex; flex-direction: column; min-width: 0; }
+.id-r { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+.id-r .g { font-size: 76px; font-weight: 900; }
+.id-r .u { font-size: 40px; font-weight: 800; color: #e2e8f0; }
+
+/* H store art */
+.art { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.art img { display: block; }
+.tvpill { font-weight: 900; color: #04202a; background: #22d3ee; border-radius: 999px; letter-spacing: 0.1em; }
+
+@media (prefers-reduced-motion: reduce) { .tick .track, .pk-tile.flash, .bgrid i.n { animation: none; } .bingo-ov { animation: none; } }
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <h3>Fire TV app plan · Mockups version 2 · Nov 22, 2026</h3>
+  <h1><span class="grad">Hightop Challenge TV</span> mockups</h1>
+  <p class="lede">Every new TV screen at 1920×1080, scaled to fit. Scores, names and times are made up. Nothing here is built. This version has your first round of changes. Pick Keep, Change or Cut under each screen, then copy your answers from the bottom of the page into the chat.</p>
+  <nav class="jump" aria-label="Screens">
+    <a href="#v2">What changed</a><a href="#A">A Connect</a><a href="#B">B Carousel</a><a href="#C">C Live Trivia</a><a href="#D">D Pick 'Em</a><a href="#E">E Leaderboard</a><a href="#F">F Ticker + QR</a><a href="#G">G Bingo</a><a href="#H">H Store art</a><a href="#reply">Your answers</a>
+  </nav>
+</header>
+
+<section id="v2" class="card" style="scroll-margin-top:70px">
+  <h2>What changed since version 1</h2>
+  <ul>
+    <li><b>"Hightop Challenge"</b> in full on every screen, never "Hightop" alone.</li>
+    <li><b>Connect:</b> the two ways are now side by side as <b>Option 1</b> and <b>Option 2</b>, with a gold <b>OR</b> between them.</li>
+    <li><span class="new">new</span> <b>All-Time Leaderboard</b> slide (E). It replaces Bingo in the carousel.</li>
+    <li><b>Next Live Trivia:</b> "LIVE TRIVIA" is now the biggest thing on the slide. A weekly game reads "Every Thursday · 8:00 PM".</li>
+    <li><b>Final hour:</b> the pre-game screen now starts 60 minutes before Live Trivia instead of 15, and it's the only thing on the TV for that hour.</li>
+    <li><b>"Get the app" QR on every screen</b>, in the same corner, except the Connect screen and live questions and answer reveals.</li>
+    <li><b>Ticker:</b> only on the carousel slides. Never on any Live Trivia or Category Blitz screen.</li>
+    <li><b>Pick 'Em board:</b> shows the 4 games that matter most at this bar right now. The ticker carries the rest.</li>
+    <li><span class="res">reserved</span> <b>Bingo board</b> is kept as a design (G) but won't launch or be built until you say go.</li>
+  </ul>
+</section>
+
+<!-- ============ A ============ -->
+<section id="A" class="screen">
+  <div class="sec-head"><h3>A · TV app</h3><h2>Connect screen</h2>
+    <p class="lede">The partner picks one of two ways. Option 1 is a phone scan. Option 2 is typing the 4-character display code with the remote. The gold OR shows they don't need both.</p></div>
+  <div class="row three">
+    <figure><div class="frame" data-screen="connect1"></div><figcaption><b>A1 · First open</b><span>focus on first code box</span></figcaption></figure>
+    <figure><div class="frame" data-screen="connect2"></div><figcaption><b>A2 · Remote on Try demo</b><span>focus ring example</span></figcaption></figure>
+    <figure><div class="frame" data-screen="connect3"></div><figcaption><b>A3 · Connected</b><span>then loads the display</span></figcaption></figure>
+  </div>
+  <p class="lede">I used "Option 1 / Option 2" instead of "Method #1 / #2" because it reads more naturally. Say if you prefer "Method". This screen has no "Get the app" QR: a second QR here would confuse the person setting up the TV. When the code expires the TV shows "Press OK for a new code".</p>
+  <div class="decide" data-sec="A"></div>
+</section>
+
+<!-- ============ B ============ -->
+<section id="B" class="screen">
+  <div class="sec-head"><h3>B · Between games</h3><h2>Idle carousel</h2>
+    <p class="lede">Five slides, 15 seconds each, a 75-second loop. The ticker runs along the bottom of every slide. The "Get the app" QR sits in the same bottom-right corner on every slide. On slide 5 the QR is the whole slide.</p></div>
+  <div class="timeline" aria-label="Loop timing">
+    <div>1 · Next Live Trivia<small>15 s</small></div><div>2 · Pick 'Em board<small>15 s</small></div><div>3 · All-Time Leaderboard<small>15 s · new</small></div><div>4 · Prizes<small>15 s</small></div><div>5 · Get the app<small>15 s</small></div><div class="off">Bingo board<small>reserved, off</small></div>
+  </div>
+  <div class="row three">
+    <figure><div class="frame" data-screen="car1"></div><figcaption><b>1 · Next Live Trivia</b><span>see C</span></figcaption></figure>
+    <figure><div class="frame" data-screen="car2"></div><figcaption><b>2 · Pick 'Em board</b><span>see D</span></figcaption></figure>
+    <figure><div class="frame" data-screen="car3"></div><figcaption><b>3 · All-Time Leaderboard</b><span>see E</span></figcaption></figure>
+    <figure><div class="frame" data-screen="car4"></div><figcaption><b>4 · Prizes</b></figcaption></figure>
+    <figure><div class="frame" data-screen="car5"></div><figcaption><b>5 · Get the app</b><span>today's idle screen</span></figcaption></figure>
+  </div>
+  <ul class="card">
+    <li><b>What takes over the TV, in order:</b> a Live Trivia game, then the pre-game hour before it, then a Category Blitz round people are playing, then Super Bowl Squares or the March Madness Bracket, then this carousel.</li>
+    <li>When a game ends, the carousel starts again at slide 1.</li>
+    <li>A slide with nothing to show is skipped. No Live Trivia scheduled means no slide 1. No games today means no slide 2. The loop gets shorter, never empty.</li>
+    <li>One request feeds every slide. Rotating costs nothing extra.</li>
+  </ul>
+  <div class="decide" data-sec="B"></div>
+</section>
+
+<!-- ============ C ============ -->
+<section id="C" class="screen">
+  <div class="sec-head"><h3>C · Before the game</h3><h2>Next Live Trivia and the final hour</h2>
+    <p class="lede">"LIVE TRIVIA" is the biggest thing on the slide, so the room knows what's coming. The line under it changes with the schedule.</p></div>
+  <div class="row three">
+    <figure><div class="frame" data-screen="next1"></div><figcaption><b>C1 · Tuesday, weekly game on Thursdays</b></figcaption></figure>
+    <figure><div class="frame" data-screen="next2"></div><figcaption><b>C2 · Game day, 3 hours out</b></figcaption></figure>
+    <figure><div class="frame" data-screen="pregame"></div><figcaption><b>C3 · Final 60 minutes</b><span>the only screen</span></figcaption></figure>
+  </div>
+  <div class="card tbl">
+    <table>
+      <thead><tr><th>When</th><th>The TV says</th></tr></thead>
+      <tbody>
+        <tr><td>Weekly game, next one in 1–6 days</td><td>Every Thursday · 8:00 PM</td></tr>
+        <tr><td>Weekly on more than one day, same time</td><td>Every Tue &amp; Thu · 8:00 PM</td></tr>
+        <tr><td>One-off game tomorrow</td><td>Tomorrow · 8:00 PM</td></tr>
+        <tr><td>One-off game in 2–6 days</td><td>Thursday · 8:00 PM</td></tr>
+        <tr><td>7 or more days away (or a skipped week)</td><td>Dec 4 · 8:00 PM</td></tr>
+        <tr><td>Today, more than 60 minutes out</td><td>Tonight · 8:00 PM, plus "Starts in 2:58:10" (before 5 PM it says "Today")</td></tr>
+        <tr><td>The final 60 minutes</td><td>The pre-game screen (C3) replaces the carousel. No ticker.</td></tr>
+        <tr><td>Nothing scheduled</td><td>Slide skipped</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lede"><span class="ok">exists</span> The TV already gets the schedule's weekly days, so "Every Thursday" needs no new data. Today it says "Live Trivia · Thursday 8:00 PM" even when the game is 9 days away. The date rule above fixes that. C3 is today's pre-game screen with a big "LIVE TRIVIA" added, starting 60 minutes early instead of 15. A Category Blitz round people are already playing stays on screen until 15 minutes before start, so we don't cut off a round in progress.</p>
+  <div class="decide" data-sec="C"></div>
+</section>
+
+<!-- ============ D ============ -->
+<section id="D" class="screen">
+  <div class="sec-head"><h3>D · Carousel slide 2</h3><h2>Pick 'Em Live Board</h2>
+    <p class="lede">The 4 games that matter most at this bar right now, how this bar picked them, and the top 5. The ticker scrolls the other games and never repeats a game that's on the board.</p></div>
+  <div class="row two">
+    <figure><div class="frame" data-screen="pick1"></div><figcaption><b>D1 · NFL Sunday</b><span>NFL fills the board</span></figcaption></figure>
+    <figure><div class="frame" data-screen="pick3"></div><figcaption><b>D2 · Tuesday night in November</b><span>NBA + NHL mix</span></figcaption></figure>
+    <figure><div class="frame" data-screen="pick2" id="pick2"></div><figcaption><b>D3 · Moment: a picked team scores</b><button class="btn-sm" type="button" data-replay="pick2">Replay</button></figcaption></figure>
+  </div>
+  <ul class="card">
+    <li><b>How the TV picks the games.</b> Every game today gets a score from simple rules, and the top 4 go on the board:
+      <ul>
+        <li><b>The bar's own picks.</b> Games more people here picked rank higher. This is the smartest signal: it learns what this crowd cares about, for free.</li>
+        <li><b>Day and time.</b> NFL leads on Sunday afternoons and Monday and Thursday nights. College football leads on Saturdays. NBA and NHL lead on weeknights. Soccer leads on weekend mornings.</li>
+        <li><b>Live now</b> beats starting soon, which beats finished. Finals drop off after an hour.</li>
+        <li><b>Big games</b> (playoffs, national primetime) get a boost when the sports feed marks them.</li>
+      </ul></li>
+    <li>Seasons take care of themselves. A league only counts when it has games today, so there's no calendar to keep up.</li>
+    <li><span class="tbd">not yet</span> <b>College basketball</b> (men's and women's) isn't in Pick 'Em today. Adding it is a separate small project, priced first. Once it's added, the TV ranks it like any other league.</li>
+    <li><span class="tbd">data TBD</span> Live scores and the game clock aren't stored yet (see the plan's Phase 9). <span class="ok">exists</span> Pick split and top 5. Missing data shows "–", never 0.</li>
+  </ul>
+  <div class="decide" data-sec="D"></div>
+</section>
+
+<!-- ============ E ============ -->
+<section id="E" class="screen">
+  <div class="sec-head"><h3>E · Carousel slide 3 · new</h3><h2>All-Time Leaderboard</h2>
+    <p class="lede">The bar's top 10 players of all time, across every game. Gold is the one accent, for #1.</p></div>
+  <div class="row two">
+    <figure><div class="frame" data-screen="lead1"></div><figcaption><b>E1 · All-Time Leaderboard</b><span>with ticker</span></figcaption></figure>
+  </div>
+  <p class="lede"><span class="ok">exists</span> These are the same all-time points the players' leaderboard shows. It's one small read of 10 rows, cached for 15 seconds, so 100 TVs cost about the same as one. If a bar has fewer than 3 players, the slide is skipped.</p>
+  <div class="decide" data-sec="E"></div>
+</section>
+
+<!-- ============ F ============ -->
+<section id="F" class="screen">
+  <div class="sec-head"><h3>F · Everywhere</h3><h2>Ticker and "Get the app" QR</h2>
+    <p class="lede">The ticker runs only on carousel slides. The QR sits in the same bottom-right corner everywhere it appears, so people learn where to look.</p></div>
+  <div class="row two">
+    <figure><div class="frame" data-screen="stand"></div><figcaption><b>F1 · Live Trivia standings</b><span>QR, no ticker</span></figcaption></figure>
+    <figure><div class="frame" data-screen="quest"></div><figcaption><b>F2 · Live Trivia question</b><span>no QR, no ticker</span></figcaption></figure>
+  </div>
+  <div class="card tbl">
+    <table>
+      <thead><tr><th>Screen</th><th>Ticker</th><th>"Get the app" QR</th></tr></thead>
+      <tbody>
+        <tr><td>Carousel slides (incl. All-Time Leaderboard)</td><td class="y">Yes</td><td class="y">Yes, corner (big on slide 5)</td></tr>
+        <tr><td>Pre-game hour</td><td class="n">No</td><td class="y">Yes, step 1</td></tr>
+        <tr><td>Live Trivia standings, round breaks, final standings</td><td class="n">No</td><td class="y">Yes, corner</td></tr>
+        <tr><td>Live Trivia question, answer reveal</td><td class="n">No</td><td class="n">No</td></tr>
+        <tr><td>Category Blitz intermission and results</td><td class="n">No</td><td class="y">Yes, corner</td></tr>
+        <tr><td>Category Blitz round</td><td class="n">No</td><td class="n">No</td></tr>
+        <tr><td>Super Bowl Squares, March Madness Bracket</td><td class="n">No</td><td class="y">Yes, corner</td></tr>
+        <tr><td>Connect screen</td><td class="n">No</td><td class="n">No</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lede"><b>One QR per screen.</b> Version 1 had a "Scan to play" QR on the Pick 'Em board. Two QR codes on one screen makes people hesitate, so the "Get the app" QR replaces it. That QR already does the right thing: phones go to the app store, with a "No thanks, play in the browser" link for anyone who doesn't want the app. Squares and Bracket are scoreboards of their own, so I left the ticker off them.</p>
+  <div class="decide" data-sec="F"></div>
+</section>
+
+<!-- ============ G ============ -->
+<section id="G" class="screen">
+  <div class="sec-head"><h3>G · <span class="res">reserved</span> Not at launch</h3><h2>Bingo "Closest to Bingo"</h2>
+    <p class="lede">Kept as a design for later. Nothing is built until you say go. When it goes live it becomes a carousel slide with the ticker and the corner QR, like the others.</p></div>
+  <div class="row two">
+    <figure><div class="frame" data-screen="bingo1"></div><figcaption><b>G1 · Board at rest</b><span>reserved</span></figcaption></figure>
+    <figure><div class="frame" data-screen="bingo2" id="bingo2"></div><figcaption><b>G2 · Moment: BINGO!</b><button class="btn-sm" type="button" data-replay="bingo2">Replay</button></figcaption></figure>
+  </div>
+  <div class="decide" data-sec="G"></div>
+</section>
+
+<!-- ============ H ============ -->
+<section id="H" class="screen">
+  <div class="sec-head"><h3>H · Amazon Appstore</h3><h2>Store art</h2>
+    <p class="lede">Unchanged from version 1, still waiting on your pick. Existing logo only, on a solid ground (store images can't be see-through).</p></div>
+  <div class="row two">
+    <figure><div class="frame" data-screen="icon1" data-w="512" data-h="512" style="max-width:360px"></div><figcaption><b>512×512 icon · Option 1</b><span>dark, TV tag</span></figcaption></figure>
+    <figure><div class="frame" data-screen="icon2" data-w="512" data-h="512" style="max-width:360px"></div><figcaption><b>512×512 icon · Option 2</b><span>brand blue</span></figcaption></figure>
+  </div>
+  <div class="row two">
+    <figure><div class="frame" data-screen="fire1" data-w="1280" data-h="720"></div><figcaption><b>1280×720 Fire TV icon · Option 1</b><span>logo + name</span></figcaption></figure>
+    <figure><div class="frame" data-screen="fire2" data-w="1280" data-h="720"></div><figcaption><b>1280×720 Fire TV icon · Option 2</b><span>logo centered</span></figcaption></figure>
+  </div>
+  <div class="row two">
+    <figure><div class="frame" data-screen="ban1" data-w="320" data-h="180"></div><figcaption><b>320×180 launcher banner · Option 1</b><span>name in plain type</span></figcaption></figure>
+    <figure><div class="frame" data-screen="ban2" data-w="320" data-h="180"></div><figcaption><b>320×180 launcher banner · Option 2</b><span>logo only</span></figcaption></figure>
+  </div>
+  <p class="lede"><span class="tbd">check</span> The logo has gold coins on it. Amazon's rating form asks about simulated gambling. We'll answer "free to play, no wagering", but a coin-free mark on the store art avoids the question. Your call below.</p>
+  <div class="decide" data-sec="H"></div>
+</section>
+
+<section id="reply" class="card" style="scroll-margin-top:70px">
+  <h2>Your answers</h2>
+  <div class="decide" style="border-style:solid">
+    <span class="lbl">Carousel slides to keep</span>
+    <span class="chk" id="slides"></span>
+    <label for="secs">Seconds each <select id="secs"><option>10</option><option selected>15</option><option>20</option><option>30</option></select></label>
+  </div>
+  <div class="decide" style="border-style:solid">
+    <span class="lbl">Store art</span>
+    <label for="f-icon">512 icon <select id="f-icon"><option>1</option><option>2</option></select></label>
+    <label for="f-fire">Fire TV icon <select id="f-fire"><option>1</option><option>2</option></select></label>
+    <label for="f-ban">Banner <select id="f-ban"><option>1</option><option>2</option></select></label>
+  </div>
+  <div class="decide" style="border-style:solid">
+    <span class="lbl">Logo with coins on the store art?</span>
+    <span class="seg"><label><input type="radio" name="coins" value="keep the coin logo" checked><span>Keep it</span></label><label><input type="radio" name="coins" value="make a coin-free mark"><span>Coin-free mark</span></label></span>
+  </div>
+  <div class="decide" style="border-style:solid">
+    <span class="lbl">Your Fire TV Stick runs</span>
+    <span class="seg"><label><input type="radio" name="os" value="Fire OS"><span>Fire OS</span></label><label><input type="radio" name="os" value="Vega OS"><span>Vega OS</span></label><label><input type="radio" name="os" value="not checked yet" checked><span>Not checked</span></label></span>
+  </div>
+  <label for="out" style="font-weight:800">Copy this into the Claude Code chat</label>
+  <textarea id="out" readonly></textarea>
+  <button class="copy" id="copy" type="button">Copy</button>
+  <p id="copied" class="lede" hidden>Copied.</p>
+</section>
+
+</div>
+
+<script>
+var LOGO = "logo.webp";
+var QR_URL = "https://hightopchallenge.com/owner/display/connect?c=7K3M9Q";
+var APP_URL = "https://hightopchallenge.com/app";
+var VENUE = "The Rusty Anchor";
+
+function qr(url) {
+  try {
+    var q = qrcode(0, "M"); q.addData(url); q.make();
+    return q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  } catch (e) {
+    var cells = "";
+    for (var i = 0; i < 25; i++) for (var j = 0; j < 25; j++) if (((i * 7 + j * 13 + i * j) % 3) === 0 || (i < 7 && j < 7)) cells += '<rect x="' + j + '" y="' + i + '" width="1" height="1"/>';
+    return '<svg viewBox="0 0 25 25" fill="#020617">' + cells + "</svg>";
+  }
+}
+function plate(px, url) {
+  var pad = Math.round(px * 0.07);
+  return '<div class="plate" style="width:' + px + 'px;height:' + px + 'px;padding:' + pad + 'px">' + qr(url) + "</div>";
+}
+function dock(low) {
+  return '<div class="dock' + (low ? " low" : "") + '"><div class="tx">Get the app<small>Scan to play</small></div>' + plate(210, APP_URL) + "</div>";
+}
+function dotsBar(on) { var s = ""; for (var i = 1; i <= 5; i++) s += '<i class="' + (i === on ? "on" : "") + '"></i>'; return '<div class="dots">' + s + "</div>"; }
+
+/* ---------- ticker ---------- */
+function ti(lg, a, as, h, hs, st) { return "<span><i>" + lg + "</i>" + a + (as === "" ? "" : "<b>" + as + "</b>") + " " + h + (hs === "" ? "" : "<b>" + hs + "</b>") + "<em>" + st + "</em></span>"; }
+var TICK_ALL = ti("NFL", "KC", 21, "SEA", 17, "Q3 4:12") + ti("NFL", "BUF", 10, "MIA", 13, "Q2 0:48") + ti("NFL", "DET", 14, "GB", 14, "Half") + ti("NFL", "DAL", 20, "PHI", 27, "Final") + ti("NFL", "SF", "", "LAR", "", "8:20 PM") + ti("NBA", "LAL", 54, "BOS", 61, "Q3") + "<span>Pick 'Em leader: Maya R.<b>9–3</b></span>";
+var TICK_SUN_REST = ti("NFL", "SF", "", "LAR", "", "8:20 PM") + ti("NFL", "BAL", "", "CIN", "", "8:20 PM") + ti("NBA", "LAL", 54, "BOS", 61, "Q3") + ti("NHL", "NYR", 2, "TOR", 1, "P2") + "<span>Pick 'Em leader: Maya R.<b>9–3</b></span>";
+var TICK_TUE_REST = ti("NBA", "PHX", "", "DAL", "", "9:30 PM") + ti("NHL", "EDM", "", "VGK", "", "10:00 PM") + ti("NBA", "MIA", 102, "ATL", 98, "Final") + "<span>Pick 'Em leader: Dre T.<b>7–2</b></span>";
+function ticker(items) {
+  items = items || TICK_ALL;
+  return '<div class="tick"><div class="tag">LIVE</div><div class="scroll"><div class="track">' + items + items + '</div></div><div class="next">Live Trivia · Thu 8:00 PM</div></div>';
+}
+
+/* ---------- A. Connect ---------- */
+function connectBase(opts) {
+  var chars = opts.code || ["", "", "", ""];
+  var boxes = chars.map(function (c, i) { return '<div class="cn-box' + (opts.focusBox === i ? " focus" : "") + '">' + (c || "") + "</div>"; }).join("");
+  return '<div class="bar"></div><div class="cn">' +
+    '<div class="cn-hd"><div><div class="wm" style="font-size:76px">Hightop Challenge</div><div class="cn-title">Connect this TV</div></div>' +
+    '<div class="cn-btn' + (opts.focusDemo ? " focus" : "") + '">Try demo</div></div>' +
+    '<div class="cn-body">' +
+      '<div class="opt"><div class="opt-tag">Option 1</div><div class="opt-h">Scan with your phone</div>' + plate(380, QR_URL) + "</div>" +
+      '<div class="or">OR</div>' +
+      '<div class="opt"><div class="opt-tag">Option 2</div><div class="opt-h">Type your display code</div><div class="cn-code">' + boxes + '</div><div class="opt-hint">On your dashboard under Display</div></div>' +
+    "</div></div>";
+}
+function iconTick() { return '<svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#6ee7b7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'; }
+
+/* ---------- C. Next Live Trivia ---------- */
+function slideNext(kind) {
+  var when = kind === "tonight" ? "<b>Tonight</b> · 8:00 PM" : "Every <b>Thursday</b> · 8:00 PM";
+  var sub = kind === "tonight" ? '<div class="sub">Starts in 2:58:10</div>' : "";
+  return '<div class="bar"></div><div class="sl"><div class="wm" style="font-size:250px">LIVE TRIVIA</div><div class="when">' + when + "</div>" + sub + '<div class="ven">' + VENUE + "</div></div>" + dotsBar(1) + dock() + ticker();
+}
+function pregame() {
+  var person = '<svg viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="width:280px;height:280px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="9.5" r="3.2"/><path d="M5.8 18.6c1.4-2.6 3.6-3.9 6.2-3.9s4.8 1.3 6.2 3.9"/></svg>';
+  return '<div class="bar"></div><div class="pg"><div class="wm" style="font-size:170px">LIVE TRIVIA</div><div class="in">Starts in</div><div class="cd">42:17</div>' +
+    '<div class="pg-steps">' +
+      '<div class="step"><div class="lbl"><span>1</span>Get the app</div>' + plate(300, APP_URL) + "</div>" +
+      '<div class="step"><div class="lbl"><span>2</span>Sign in</div>' + person + "</div>" +
+      '<div class="step"><div class="lbl"><span>3</span>Tap Live Trivia</div><div style="height:300px;display:flex;align-items:center"><div class="lt-tile"><b>Live Trivia</b><small>Play with the room</small></div></div></div>' +
+    "</div></div>";
+}
+
+/* ---------- D. Pick 'Em ---------- */
+var SUN = [
+  { lg: "NFL", a: "KC", h: "SEA", as: 21, hs: 17, st: "Q3 4:12", live: 1, pct: 62, n: 31 },
+  { lg: "NFL", a: "DET", h: "GB", as: 14, hs: 14, st: "Halftime", live: 1, pct: 71, n: 29 },
+  { lg: "NFL", a: "BUF", h: "MIA", as: 10, hs: 13, st: "Q2 0:48", live: 1, pct: 48, n: 27 },
+  { lg: "NFL", a: "DAL", h: "PHI", as: 20, hs: 27, st: "Final", live: 0, pct: 35, n: 33 }
+];
+var TUE = [
+  { lg: "NBA", a: "LAL", h: "BOS", as: 88, hs: 91, st: "Q3 5:31", live: 1, pct: 58, n: 24 },
+  { lg: "NHL", a: "NYR", h: "TOR", as: 2, hs: 1, st: "P2 11:04", live: 1, pct: 66, n: 18 },
+  { lg: "NBA", a: "NYK", h: "MIL", as: 31, hs: 27, st: "Q1 2:10", live: 1, pct: 52, n: 15 },
+  { lg: "NBA", a: "GSW", h: "DEN", as: "–", hs: "–", st: "10:00 PM", live: 0, pct: 44, n: 12 }
+];
+function tile(g, flash) {
+  var num = typeof g.as === "number";
+  var aLead = num && g.as > g.hs, hLead = num && g.hs > g.as;
+  var lbl = flash ? "<b>KC scores · 19 here picked KC</b><span></span>" : "<b>" + g.pct + "% " + g.a + "</b><span>" + (100 - g.pct) + "% " + g.h + "</span>";
+  return '<div class="pk-tile' + (flash ? " flash" : "") + '">' + (flash ? '<div class="pk-ribbon">TOUCHDOWN +7</div>' : "") +
+    '<div class="pk-top"><span><span class="lg">' + g.lg + '</span><span class="pk-status' + (g.live ? " live" : "") + '">' + (g.live ? "● " : "") + g.st + "</span></span><span>" + g.n + " picks</span></div>" +
+    '<div class="pk-row' + (aLead ? " lead" : "") + '"><span class="pk-team">' + g.a + '</span><span class="pk-score">' + g.as + "</span></div>" +
+    '<div class="pk-row' + (hLead ? " lead" : "") + '"><span class="pk-team">' + g.h + '</span><span class="pk-score">' + g.hs + "</span></div>" +
+    '<div class="pk-split"><i style="width:' + g.pct + '%"></i></div><div class="pk-lbl">' + lbl + "</div></div>";
+}
+function pickBoard(o) {
+  var lb = o.tue ? [["Dre T.", "7–2"], ["Maya R.", "6–3"], ["Luis P.", "6–3"], ["Jess K.", "5–4"], ["Sam O.", "5–4"]] : [["Maya R.", "9–3"], ["Dre T.", "9–3"], ["Jess K.", "8–4"], ["Luis P.", "8–4"], ["Sam O.", "7–5"]];
+  var rows = lb.map(function (r, i) { return '<div class="lb-row' + (i === 0 ? " gold" : "") + '"><span class="n">' + (i + 1) + '</span><span class="u">' + r[0] + '</span><span class="v">' + r[1] + "</span></div>"; }).join("");
+  var games = o.tue ? TUE : SUN;
+  return '<div class="bar"></div><div class="pk"><div class="hd"><div><div class="t">Pick \'Em Live</div><div class="s">' + VENUE + '</div></div><div class="r">' + (o.tue ? "Tuesday night" : "NFL · Week 11") + "</div></div>" +
+    '<div class="pk-body"><div class="pk-grid">' + games.map(function (g, i) { return tile(g, o.flash && i === 0); }).join("") + "</div>" +
+    '<div class="side"><div class="eyebrow" style="color:#fcd34d;font-size:30px">Top 5 here</div><div class="lb">' + rows + "</div></div></div></div>" +
+    dotsBar(2) + dock() + ticker(o.tue ? TICK_TUE_REST : TICK_SUN_REST);
+}
+
+/* ---------- E. All-time leaderboard ---------- */
+function leaderboard() {
+  var r = [["Maya R.", 48210], ["Dre T.", 45975], ["Jess K.", 41300], ["Luis P.", 38640], ["Sam O.", 36015], ["Priya N.", 33480], ["Big Mike", 31220], ["Tasha W.", 29870], ["Ken H.", 27455], ["Rosie D.", 25190]];
+  function row(x, i) { return '<div class="at-row' + (i === 0 ? " gold" : "") + '"><span class="n">' + (i + 1) + '</span><span class="u">' + x[0] + '</span><span class="v">' + x[1].toLocaleString("en-US") + "<small>pts</small></span></div>"; }
+  return '<div class="bar"></div><div class="at"><div class="hd"><div><div class="t">All-Time Leaderboard</div><div class="s">' + VENUE + "</div></div></div>" +
+    '<div class="at-cols"><div class="at-col">' + r.slice(0, 5).map(row).join("") + '</div><div class="at-col">' + r.slice(5).map(function (x, i) { return row(x, i + 5); }).join("") + "</div></div></div>" +
+    dotsBar(3) + dock() + ticker();
+}
+
+/* ---------- B. other slides ---------- */
+function slidePrizes() {
+  var p = [["Free appetizer", "Ends Sun", "500 pts", 82], ["$10 off your tab", "Ends Nov 30", "1,200 pts", 41], ["Free pint", "Ends Sun", "300 pts", 66]];
+  return '<div class="bar"></div><div class="slp"><div class="eyebrow" style="color:#fcd34d">Prizes up for grabs</div><div style="display:flex;gap:40px">' +
+    p.map(function (x) { return '<div class="prz"><div class="n">' + x[0] + '</div><div class="m">' + x[1] + '</div><div class="pb"><i style="width:' + x[3] + '%"></i></div><div class="pts">' + x[2] + "</div></div>"; }).join("") + "</div></div>" + dotsBar(4) + dock() + ticker();
+}
+function slideApp() {
+  return '<div class="bar"></div><div class="id"><div class="id-l"><div class="wm" style="font-size:170px">Hightop</div><div class="wm" style="font-size:170px">Challenge</div>' +
+    '<div style="margin-top:50px;font-size:60px;font-weight:800;color:#e2e8f0">' + VENUE + '</div><div style="margin-top:18px;font-size:40px;font-weight:700;color:#94a3b8">Live Trivia every Thursday · 8:00 PM</div></div>' +
+    '<div class="id-r"><div class="g">Get the app</div>' + plate(540, APP_URL) + '<div class="u">hightopchallenge.com/app</div></div></div>' + dotsBar(5) + ticker();
+}
+
+/* ---------- F. in-game ---------- */
+function question() {
+  return '<div class="lt"><div class="lt-top"><span class="pill">Round 2 of 3 · Geography</span><div class="ring">18</div></div>' +
+    '<div class="lt-q">What is the capital city of Australia?</div><div class="lt-foot">Write your answer on your phone</div></div>';
+}
+function standings() {
+  var r = [["Maya R.", 1840], ["Dre T.", 1720], ["Jess K.", 1590], ["Luis P.", 1410], ["Sam O.", 1330]];
+  return '<div class="lt"><div class="lt-top"><div class="hd"><div class="t" style="font-size:96px">Standings</div></div><span class="pill">After round 2</span></div><div style="display:flex;flex-direction:column;gap:16px;margin-top:40px">' +
+    r.map(function (x, i) { return '<div class="st-row' + (i === 0 ? " gold" : "") + '"><span class="n">' + (i + 1) + '</span><span class="u">' + x[0] + '</span><span class="v">' + x[1].toLocaleString("en-US") + "</span></div>"; }).join("") + "</div></div>" + dock(true);
+}
+
+/* ---------- G. Bingo (reserved) ---------- */
+var CARDS = [
+  { u: "Maya R.", away: 1, c: "hphpp" + "phpxp" + "hhfnh" + "pphph" + "xpphp" },
+  { u: "Dre T.", away: 1, c: "pphph" + "hphxp" + "phfph" + "ppnpx" + "xphph" },
+  { u: "Jess K.", away: 2, c: "hpppx" + "phphp" + "phfpp" + "pppnp" + "xpphn" }
+];
+function grid(c, win) {
+  return '<div class="bgrid">' + c.split("").map(function (ch, i) { return '<i class="' + (win && win.indexOf(i) > -1 ? "g" : ch) + '"></i>'; }).join("") + "</div>";
+}
+function bcard(p, first) {
+  return '<div class="bcard' + (first ? " first" : "") + '"><div class="bcard-h"><span class="u">' + p.u + '</span><span class="away' + (p.away === 2 ? " two" : "") + '">' + p.away + " away</span></div>" + grid(p.c) + "</div>";
+}
+function bingoBoard() {
+  var needs = [["Kelce 6+ catches", "2 players need it"], ["Walker rushing TD", "1 player needs it"], ["Fourth-down stop", "1 player needs it"]];
+  return '<div class="bar"></div><div class="bg"><div class="hd"><div><div class="t">Closest to Bingo</div><div class="s">' + VENUE + '</div></div><div class="r">KC at SEA · Q3 4:12</div></div>' +
+    '<div class="bg-body"><div class="bg-cards"><div class="bg-row">' + CARDS.map(function (p, i) { return bcard(p, i === 0); }).join("") + "</div>" +
+    '<div class="also"><span>Also close</span><span class="chip">Luis P.<b>2 away</b></span><span class="chip">Sam O.<b>2 away</b></span></div>' +
+    '<div class="legend" style="margin-top:auto"><span><i style="background:rgba(34,211,238,.55)"></i>Hit</span><span><i style="background:rgba(252,211,77,.18);border:3px solid #fcd34d"></i>Finishes a line</span><span><i style="background:rgba(167,139,250,.55)"></i>Free</span></div></div>' +
+    '<div class="side"><div class="eyebrow" style="color:#fcd34d;font-size:28px;letter-spacing:0.1em">Squares that win it</div><div class="need">' +
+    needs.map(function (n) { return '<div class="need-row">' + n[0] + "<small>" + n[1] + "</small></div>"; }).join("") + "</div></div></div></div>" + dock(true);
+}
+function bingoWin() {
+  var won = "hphpp" + "phpxp" + "hhfhh" + "pphph" + "xpphp";
+  return bingoBoard() + '<div class="bingo-ov"><div style="width:600px">' + grid(won, [10, 11, 12, 13, 14]) + '</div><div><div class="word">BINGO!</div><div class="who">Maya R.</div><div class="pts">+100 pts</div></div></div>';
+}
+
+/* ---------- H. store art ---------- */
+function iconBase(variant) {
+  var tv = '<div class="tvpill" style="position:absolute;bottom:34px;right:34px;font-size:46px;padding:4px 28px">TV</div>';
+  if (variant === 1) return '<div class="art" style="background:radial-gradient(120% 90% at 12% 0%,rgba(6,182,212,.28),transparent 50%),radial-gradient(120% 90% at 100% 100%,rgba(245,158,11,.2),transparent 48%),#07101f"><img src="' + LOGO + '" width="430" height="430" alt="">' + tv + "</div>";
+  return '<div class="art" style="background:linear-gradient(160deg,#0ea5e9,#2563eb 60%,#1e3a8a)"><img src="' + LOGO + '" width="470" height="470" alt=""></div>';
+}
+function fireBase(variant) {
+  if (variant === 1) return '<div class="art" style="gap:40px;background:radial-gradient(120% 90% at 12% 0%,rgba(6,182,212,.28),transparent 50%),radial-gradient(120% 90% at 100% 100%,rgba(245,158,11,.2),transparent 48%),#07101f;padding:0 90px"><img src="' + LOGO + '" width="470" height="470" alt=""><div style="min-width:0;white-space:nowrap"><div class="wm" style="font-size:150px">Hightop</div><div style="font-size:74px;font-weight:900;margin-top:22px;line-height:1">Challenge TV</div></div></div>';
+  return '<div class="art" style="flex-direction:column;gap:6px;background:linear-gradient(160deg,#0ea5e9,#2563eb 60%,#1e3a8a)"><img src="' + LOGO + '" width="500" height="500" alt=""><div class="tvpill" style="font-size:54px;padding:2px 46px;margin-top:4px">TV</div></div>';
+}
+function bannerBase(variant) {
+  if (variant === 1) return '<div class="art" style="gap:6px;background:#07101f;padding:0 10px"><img src="' + LOGO + '" width="136" height="136" alt=""><div style="min-width:0;white-space:nowrap"><div class="wm" style="font-size:38px">Hightop</div><div style="font-size:21px;font-weight:900;line-height:1.05;margin-top:4px">Challenge TV</div></div></div>';
+  return '<div class="art" style="background:linear-gradient(160deg,#0ea5e9,#2563eb 60%,#1e3a8a)"><img src="' + LOGO + '" width="172" height="172" alt=""><div class="tvpill" style="position:absolute;right:12px;bottom:10px;font-size:20px;padding:0 12px">TV</div></div>';
+}
+
+var SCREENS = {
+  connect1: ["idle", function () { return connectBase({ focusBox: 0 }); }],
+  connect2: ["idle", function () { return connectBase({ focusDemo: true }); }],
+  connect3: ["idle", function () { return '<div class="bar"></div><div class="cn-ok"><div class="okc">' + iconTick() + '</div><div style="font-size:110px;font-weight:900;letter-spacing:-0.03em">Connected</div><div style="font-size:60px;font-weight:800;color:#94a3b8">' + VENUE + "</div></div>"; }],
+  car1: ["idle", function () { return slideNext("every"); }],
+  car2: ["pick", function () { return pickBoard({}); }],
+  car3: ["lead", leaderboard],
+  car4: ["idle", slidePrizes],
+  car5: ["idle", slideApp],
+  next1: ["idle", function () { return slideNext("every"); }],
+  next2: ["idle", function () { return slideNext("tonight"); }],
+  pregame: ["live", pregame],
+  pick1: ["pick", function () { return pickBoard({}); }],
+  pick2: ["pick", function () { return pickBoard({ flash: true }); }],
+  pick3: ["pick", function () { return pickBoard({ tue: true }); }],
+  lead1: ["lead", leaderboard],
+  stand: ["live", standings],
+  quest: ["live", question],
+  bingo1: ["bingo", bingoBoard],
+  bingo2: ["bingo", bingoWin],
+  icon1: ["", function () { return iconBase(1); }],
+  icon2: ["", function () { return iconBase(2); }],
+  fire1: ["", function () { return fireBase(1); }],
+  fire2: ["", function () { return fireBase(2); }],
+  ban1: ["", function () { return bannerBase(1); }],
+  ban2: ["", function () { return bannerBase(2); }]
+};
+
+document.querySelectorAll("[data-screen]").forEach(function (f) {
+  var def = SCREENS[f.dataset.screen]; if (!def) return;
+  var tv = document.createElement("div");
+  tv.className = "tv " + def[0];
+  tv.innerHTML = def[1]();
+  f.appendChild(tv);
+});
+
+function fit() {
+  document.querySelectorAll(".frame").forEach(function (f) {
+    var w = +f.dataset.w || 1920, h = +f.dataset.h || 1080, tv = f.firstElementChild;
+    if (!tv || !f.clientWidth) return;
+    var s = f.clientWidth / w;
+    f.style.height = h * s + "px";
+    tv.style.width = w + "px"; tv.style.height = h + "px"; tv.style.transform = "scale(" + s + ")";
+  });
+}
+fit();
+window.addEventListener("resize", fit);
+if (window.ResizeObserver) { var ro = new ResizeObserver(fit); document.querySelectorAll(".frame").forEach(function (f) { ro.observe(f); }); }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+
+document.querySelectorAll("[data-replay]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var f = document.getElementById(b.dataset.replay); if (!f) return;
+    f.firstElementChild.innerHTML = SCREENS[b.dataset.replay][1]();
+  });
+});
+
+/* decisions */
+var NAMES = { A: "Connect screen", B: "Idle carousel", C: "Next Live Trivia + final hour", D: "Pick 'Em board", E: "All-Time Leaderboard", F: "Ticker + QR rules", G: "Bingo (reserved)", H: "Store art" };
+document.querySelectorAll(".decide[data-sec]").forEach(function (d) {
+  var k = d.dataset.sec;
+  d.innerHTML = '<span class="lbl">' + k + " · " + NAMES[k] + '</span><span class="seg">' +
+    ["keep", "change", "cut"].map(function (v) { return '<label><input type="radio" name="d-' + k + '" value="' + v + '"' + (v === "keep" ? " checked" : "") + "><span>" + v[0].toUpperCase() + v.slice(1) + "</span></label>"; }).join("") +
+    '</span><input type="text" id="note-' + k + '" placeholder="What to change (optional)" aria-label="Note for ' + NAMES[k] + '">';
+});
+var slidesBox = document.getElementById("slides");
+["Next Live Trivia", "Pick 'Em board", "All-Time Leaderboard", "Prizes", "Get the app"].forEach(function (n, i) {
+  slidesBox.insertAdjacentHTML("beforeend", '<label><input type="checkbox" class="sl-c" id="sl-' + (i + 1) + '" value="' + (i + 1) + '" checked> ' + (i + 1) + " " + n + "</label>");
+});
+function val(name) { var r = document.querySelector('input[name="' + name + '"]:checked'); return r ? r.value : ""; }
+function build() {
+  var out = ["Mockups v2 answers:"];
+  Object.keys(NAMES).forEach(function (k) {
+    var v = val("d-" + k), note = document.getElementById("note-" + k).value.trim();
+    out.push(k + " (" + NAMES[k] + ") " + v + (note ? ": " + note : "") + ".");
+  });
+  var sl = Array.prototype.map.call(document.querySelectorAll(".sl-c:checked"), function (c) { return c.value; });
+  out.push("Carousel slides: " + (sl.length ? sl.join(", ") : "none") + ", " + document.getElementById("secs").value + " seconds each.");
+  out.push("Store art: 512 icon option " + document.getElementById("f-icon").value + ", Fire TV icon option " + document.getElementById("f-fire").value + ", banner option " + document.getElementById("f-ban").value + "; " + val("coins") + ".");
+  out.push("Fire TV Stick: " + val("os") + ".");
+  document.getElementById("out").value = out.join("\n");
+}
+document.addEventListener("input", build); document.addEventListener("change", build); build();
+document.getElementById("copy").addEventListener("click", function () {
+  var t = document.getElementById("out"), ok = document.getElementById("copied");
+  function done() { ok.hidden = false; setTimeout(function () { ok.hidden = true; }, 2000); }
+  try { navigator.clipboard.writeText(t.value).then(done, function () { t.select(); }); } catch (e) { t.select(); }
+});
+</script>

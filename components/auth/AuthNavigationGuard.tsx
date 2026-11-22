@@ -7,6 +7,7 @@ import { getSelectedVenueLock, setSelectedVenueLock } from "@/lib/authFastPath";
 import { PLAYER_DELETE_ACCOUNT_PATH } from "@/lib/accountDeletionShared";
 import { logAuthIncident } from "@/lib/authIncidentDebug";
 import { LEGAL_PAGE_PATHS } from "@/lib/legalInfo";
+import { isVenueDisplayPath } from "@/lib/playerRuntimePaths";
 import { isVenueScreenPath } from "@/lib/venueScreenPaths";
 
 function getVenueIdFromPath(pathname: string): string {
@@ -85,7 +86,8 @@ export function AuthNavigationGuard() {
     }
 
     const currentPath = pathname ?? "/";
-    if (isVenueScreenPath(currentPath)) {
+    // Display paths (the venue screen, the TV app's /tv-app) never follow the player session.
+    if (isVenueScreenPath(currentPath) || isVenueDisplayPath(currentPath)) {
       return;
     }
     // Admin is protected by dedicated admin auth; never apply venue/session redirects here.

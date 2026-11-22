@@ -88,7 +88,7 @@ describe("partner route transitions (Phase 4a)", () => {
     expect(login).toMatch(/<HightopLoader\b[^>]*variant="fullScreen"/);
     // The loader must be raised before the push, not after it.
     const loaderAt = login.indexOf("setNavigating(true)");
-    const pushAt = login.indexOf('router.push("/owner/dashboard")');
+    const pushAt = login.indexOf('router.push(next ?? "/owner/dashboard")');
     expect(loaderAt).toBeGreaterThan(-1);
     expect(loaderAt).toBeLessThan(pushAt);
   });

@@ -152,6 +152,20 @@ export const SIGNUP_RATE_LIMITS = {
    * venues at a time; 30/hour is far above that.
    */
   venueChangeOwner: { windowSeconds: 3600, max: 30 },
+  /**
+   * POST /api/tv-app/pairings (docs/fire-tv-app-plan.md Phase 3) — a TV's Connect screen asking for a connect code.
+   * Public, per IP. A TV asks once when the screen opens and again only after a code expires (10 minutes) and
+   * someone presses a button, so ~6/hour per TV; a bar setting up several TVs on one Wi-Fi stays far below 60.
+   * Each call is one insert into a table whose rows live 10 minutes.
+   */
+  tvPairCreate: { windowSeconds: 3600, max: 60 },
+  /**
+   * POST /api/tv-app/display-code — a TV typing a 4-character display code. Public, per IP. The code only reveals
+   * the display (already public via /tv/<code>, which has no limit); this cap just slows anyone walking the codes.
+   */
+  tvDisplayCode: { windowSeconds: 3600, max: 30 },
+  /** POST /api/owner/tv-app/connect — a signed-in partner connecting a TV. Per owner; a few TVs per visit. */
+  tvConnectOwner: { windowSeconds: 3600, max: 30 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitBucket = keyof typeof SIGNUP_RATE_LIMITS;
