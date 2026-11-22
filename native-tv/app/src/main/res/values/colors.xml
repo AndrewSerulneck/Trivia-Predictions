@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Matches the TV display (lib/venueScreenBrand.ts). -->
+<resources>
+    <color name="canvas">#FF020617</color>
+    <color name="surface">#FF0F172A</color>
+    <color name="border">#FF334155</color>
+    <color name="text">#FFF8FAFC</color>
+    <color name="accent">#FF06B6D4</color>
+    <color name="accent_dim">#FF0E7490</color>
+</resources>

@@ -4,7 +4,9 @@
 `docs/fire-tv-app-plan_PHASE_1_HANDOFF.md`). **Phase 2 done 2026-11-22** (round 1 → D10–D20, round 2 → D21–D25).
 **Phase 3 code done 2026-11-22**: PR #36 open on `feat/fire-tv-connect`; migration `20261122114719` applied
 2026-11-22. Waiting on Andrew's "merge it", then deploy and the laptop smoke test. See
-`docs/fire-tv-app-plan_PHASE_3_HANDOFF.md`.
+`docs/fire-tv-app-plan_PHASE_3_HANDOFF.md`. **Phase 4 done 2026-11-22**: `native-tv/` debug APK, on
+`feat/fire-tv-app` (stacked on #36). Next is Phase 5 (device test), after both PRs merge. See
+`docs/fire-tv-app-plan_PHASE_4_HANDOFF.md`.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
@@ -379,7 +381,8 @@ phase.
    - `android.software.leanback` required.
    - `android.hardware.touchscreen` not required.
    - A `LEANBACK_LAUNCHER` intent filter and a 320×180 `android:banner` from the Phase 1 art.
-   - Landscape only, internet permission only.
+   - Landscape only, internet permission only. (Built with `ACCESS_NETWORK_STATE` too, a normal no-prompt
+     permission, so the offline screen sees Wi-Fi drop while a page is up; see the Phase 4 handoff §3.)
    - minSdk: choose and justify. Planner suggests 25 (Fire OS 6 and up, sticks from about 2017 on). Older sticks' WebView may not
      run today's site.
 3. **WebView:**

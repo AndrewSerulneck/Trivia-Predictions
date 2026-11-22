@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { isTvApp } from "@/lib/tvApp";
 
 // Keeps a TV (Fire TV, Google TV, smart-TV browsers) from dimming or starting its screensaver
 // while the venue display is up.
@@ -9,6 +10,9 @@ import { useEffect, useSyncExternalStore } from "react";
 //    or the system drops it.
 // 2. Otherwise (unsupported, or the request is refused): a 1 KB silent, muted, looping video. TV
 //    platforms treat playing media as activity, which is what holds the screensaver off.
+//
+// Stands down inside the Hightop Challenge TV app: the app holds the screen on natively
+// (FLAG_KEEP_SCREEN_ON, docs/fire-tv-app-plan.md Phase 4), so no lock and no video there.
 //
 // Skipped when the page is embedded (the owner dashboard's preview iframes) so an owner's phone
 // isn't held awake by a thumbnail. No network beyond the immutable-cached 1 KB video, once.
@@ -26,7 +30,7 @@ type WakeLockHandle = {
 type WakeLockSource = { request: (type: "screen") => Promise<WakeLockHandle> };
 
 export type KeepAwakeStatus = {
-  method: "wake-lock" | "video" | "none";
+  method: "wake-lock" | "video" | "native" | "none";
   wakeLockSupported: boolean;
   wakeLockHeld: boolean;
   releaseCount: number;
@@ -86,6 +90,14 @@ export const useKeepScreenAwake = (enabled = true): void => {
     if (!enabled || isEmbedded()) return;
     startedAt = Date.now();
     status = INITIAL_STATUS;
+    if (isTvApp()) {
+      setStatus({ method: "native", visibility: document.visibilityState });
+      return () => {
+        startedAt = 0;
+        status = INITIAL_STATUS;
+        listeners.forEach((listener) => listener());
+      };
+    }
     setStatus({ visibility: document.visibilityState });
     let cancelled = false;
     let handle: WakeLockHandle | null = null;
