@@ -35,8 +35,15 @@ line before starting Phase 4.
 
 - **Finish Phase 3 first:**
   1. Ask Andrew, then run `supabase db push`. The only new migration is `20261122114719_tv_device_pairings.sql`.
-     Check `supabase migration list` first: the speed-trivia backlog plan has unapplied migrations (7d/7f/7g, per
-     memory). If `db push` would also apply those, **stop and ask Andrew**. They belong to another plan.
+     **Checked 2026-11-22 with `supabase migration list`:** every real migration up to `20261120151403` is applied
+     remotely, so this is the only real pending one.
+     **Trap:** about two dozen untracked iCloud duplicates such as
+     `supabase/migrations/20261115151703_speed_trivia_quick_review 2.sql` share the versions of applied migrations and
+     list as local-only. Before `db push`:
+     - move every `* 2.sql` out of `supabase/migrations/` into a scratchpad folder. That is reversible, and they aren't
+       tracked.
+     - run `supabase db push --dry-run` and confirm it names **only** `20261122114719`.
+     - if it names anything else, stop and ask Andrew.
   2. Merge PR #36 and wait for the Vercel deploy.
   3. Smoke test: Andrew opens `hightopchallenge.com/tv-app` on a laptop, scans the QR with his signed-in phone and
      taps Connect. The laptop should switch to his display within about 3 s.
