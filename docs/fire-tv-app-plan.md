@@ -2,7 +2,8 @@
 
 **Status:** Plan written 2026-11-21. **Phase 1 done 2026-11-21** (mockups, handoff
 `docs/fire-tv-app-plan_PHASE_1_HANDOFF.md`). **Phase 2 done 2026-11-22** (round 1 → D10–D20, round 2 → D21–D25).
-**Phase 3 in progress 2026-11-22** on branch `feat/fire-tv-connect`; see `docs/fire-tv-app-plan_PHASE_3_HANDOFF.md`.
+**Phase 3 code done 2026-11-22**: PR #36 open on `feat/fire-tv-connect`; waiting on Andrew's yes for `supabase db push`,
+then merge, deploy and the laptop smoke test. See `docs/fire-tv-app-plan_PHASE_3_HANDOFF.md`.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
