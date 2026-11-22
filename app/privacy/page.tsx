@@ -15,7 +15,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      summary={`${LEGAL_ENTITY_NAME} ("Hightop Challenge", "we", "us") runs venue-based games that people play on their phones at bars and restaurants. This policy explains what we collect, why, and the choices you have. It covers the Hightop Challenge website, the game at play.hightopchallenge.com, the Partner Dashboard, and any Hightop Challenge mobile app.`}
+      summary={`${LEGAL_ENTITY_NAME} ("Hightop Challenge", "we", "us") runs venue-based games that people play on their phones at bars and restaurants. This policy explains what we collect, why, and the choices you have. It covers the Hightop Challenge website, the game at play.hightopchallenge.com, the Partner Dashboard, any Hightop Challenge mobile app, and the Hightop Challenge TV app.`}
     >
       <LegalSection heading="Players: what we collect">
         <LegalList
@@ -74,6 +74,15 @@ export default function PrivacyPage() {
             "Names, emails and phone numbers you give us through the contact and advertising forms.",
           ]}
         />
+      </LegalSection>
+
+      <LegalSection heading="Hightop Challenge TV app">
+        <p>
+          The TV app shows a venue&apos;s game display. It has no sign-in and collects no personal information. It
+          remembers which venue it is connected to on the TV itself. When you connect a TV, we keep a short code that
+          expires after 10 minutes and, once used, the venue it was connected to. Like any website visit, our servers
+          receive the TV&apos;s IP address and device type.
+        </p>
       </LegalSection>
 
       <LegalSection heading="Venue partners: Instagram and Facebook (Share to social)">

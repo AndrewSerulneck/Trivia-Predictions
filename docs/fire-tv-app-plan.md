@@ -2,11 +2,12 @@
 
 **Status:** Plan written 2026-11-21. **Phase 1 done 2026-11-21** (mockups, handoff
 `docs/fire-tv-app-plan_PHASE_1_HANDOFF.md`). **Phase 2 done 2026-11-22** (round 1 → D10–D20, round 2 → D21–D25).
-**Phase 3 code done 2026-11-22**: PR #36 open on `feat/fire-tv-connect`; migration `20261122114719` applied
-2026-11-22. Waiting on Andrew's "merge it", then deploy and the laptop smoke test. See
-`docs/fire-tv-app-plan_PHASE_3_HANDOFF.md`. **Phase 4 done 2026-11-22**: `native-tv/` debug APK, on
-`feat/fire-tv-app` (stacked on #36). Next is Phase 5 (device test), after both PRs merge. See
-`docs/fire-tv-app-plan_PHASE_4_HANDOFF.md`.
+**Phases 3 and 4 merged and deployed 2026-11-22** (PRs #36, #37; handoffs `_PHASE_3_HANDOFF.md`, `_PHASE_4_HANDOFF.md`).
+**Phase 5 waiting on a Fire Stick** (Andrew has none to hand); an emulator smoke test ran instead and fixed the
+Back-after-demo keyboard bug. **Phase 6 done 2026-11-22** (ahead of Phase 5): upload key, signed release APK, store
+images, screenshots and `docs/fire-tv-store/listing.md`. See `docs/fire-tv-app-plan_PHASE_6_HANDOFF.md`. Signing
+keys backed up 2026-11-22 (an encrypted image in iCloud Drive; handoff §2). Phase 6 merged via PR #38. Phase 7
+(submit) waits for Phase 5 to pass.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
@@ -708,6 +709,9 @@ will ask for the IP address in step 3.
 ### Phase 6: save the signing key
 
 The agent creates the app's signing key. **If this key is lost, you can never update the app.**
+
+**Done 2026-11-22:** with your permission, the agent saved the keys in a password-locked image in iCloud Drive. The
+password is in the Apple Note "Hightop Challenge TV – Amazon upload key". The steps below are for any future key.
 
 1. The agent gives you the names of two files in your Mac's private signing folder.
 2. Open your password manager and make a new secure note called **"Hightop Challenge TV – Amazon upload key"**.

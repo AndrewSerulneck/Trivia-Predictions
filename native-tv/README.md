@@ -48,6 +48,26 @@ $ADB logcat -s HightopTV                         # shell logs (blocked navigatio
 Debug builds allow Chrome DevTools: `adb forward tcp:9339 localabstract:webview_devtools_remote_<pid>` (the socket
 name is in `adb shell cat /proc/net/unix`), then open `http://localhost:9339/json`.
 
+A debug and a release build are signed with different keys: `adb uninstall com.hightopchallenge.tv` before switching.
+
+## Release build (Phase 6)
+
+The upload key was created once on 2026-11-22 by `node native-tv/scripts/create-upload-key.cjs`, which refuses to run
+again. It lives outside the repo in `~/Library/Application Support/Hightop Challenge/signing/`
+(`fire-tv-upload.p12` + `fire-tv-upload-credentials.json`, alias `hightop-tv-upload`; public cert
+`fire-tv-upload-certificate.pem`, SHA-256 `81:22:DA:95:…:0B:AA:01`). **Never regenerate, print or commit it**; losing
+it means the app can never be updated. `app/build.gradle.kts` reads it for release builds (unsigned without it).
+
+```sh
+# Raise versionCode in app/build.gradle.kts first if this build will be uploaded after an earlier one.
+./gradlew --project-cache-dir "$HOME/Library/Caches/hightop-native-tv/gradle-project" clean lintRelease testReleaseUnitTest assembleRelease
+~/Library/Android/sdk/build-tools/36.0.0/apksigner verify --print-certs ~/Library/Caches/hightop-native-tv/app/outputs/apk/release/app-release.apk
+```
+
+Release: R8 minify + resource shrinking; `proguard-rules.pro` keeps the bridge method names (the class itself is
+renamed, which is fine). Copy each uploaded APK to
+`~/Library/Application Support/Hightop Challenge/releases/fire-tv/hightop-challenge-tv-<versionName>-vc<versionCode>.apk`.
+
 ## Point a debug build at another server
 
 ```sh
@@ -60,8 +80,9 @@ Only debug builds read `tvStartUrl`; that exact origin is then allowed too. Plai
 ## Art
 
 `node native-tv/art/render-art.mjs` (from the repo root) renders the approved Option 2 store art (plan D22) into the
-banner (`res/drawable-xhdpi/tv_banner.png`, 320×180) and launcher icons, plus 512×512 and 1280×720 masters in
-`native-tv/art/out/` (git-ignored) for Phase 6.
+banner (`res/drawable-xhdpi/tv_banner.png`, 320×180) and launcher icons, plus store masters in `native-tv/art/out/`
+(git-ignored): 512×512, 114×114, 1280×720 (`fire`, as approved) and `fire-store` (the same layout scaled into Amazon's
+882×448 safe area), and the 1920×1080 background. The uploaded copies are in `docs/fire-tv-store/images/`.
 
 ## Tests
 
