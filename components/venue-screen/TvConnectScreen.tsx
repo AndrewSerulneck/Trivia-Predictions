@@ -167,9 +167,15 @@ export const TvConnectScreen = () => {
   const [codeError, setCodeError] = useState<string | null>(null);
   const [codeBusy, setCodeBusy] = useState(false);
   const [focused, setFocused] = useState<"code" | "demo" | null>(null);
+  // Focus lands on the code boxes (`boxesRef`, not editable), never straight on the hidden input: on a TV a focused
+  // input opens the on-screen keyboard over the QR after any remote press (e.g. Back from Try demo), and that keyboard
+  // eats the next Back. OK, a tap or a typed character moves focus into the input, which opens the keyboard then.
+  // (`inputmode="none"` can't do this: Android's WebView keeps the remote's OK for itself on an input.) Phase 5.
+  const boxesRef = useRef<HTMLLabelElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const demoRef = useRef<HTMLButtonElement>(null);
   const creatingRef = useRef(false);
+  const reopenKeyboardRef = useRef(false);
 
   const goToDisplay = useCallback((venueId: string) => {
     rememberTvVenueId(venueId);
@@ -217,7 +223,7 @@ export const TvConnectScreen = () => {
   }, [createPairing]);
 
   useEffect(() => {
-    if (view === "connect") codeRef.current?.focus();
+    if (view === "connect") boxesRef.current?.focus();
   }, [view]);
 
   // Poll only while this screen is visible and the code is unexpired.
@@ -309,10 +315,17 @@ export const TvConnectScreen = () => {
         setCodeBusy(false);
       }
       setCode("");
-      codeRef.current?.focus();
+      // The input was disabled while busy, which blurred it; reopen the keyboard once it's enabled again.
+      reopenKeyboardRef.current = true;
     },
     [codeBusy, goToDisplay],
   );
+
+  useEffect(() => {
+    if (codeBusy || !reopenKeyboardRef.current) return;
+    reopenKeyboardRef.current = false;
+    codeRef.current?.focus();
+  }, [codeBusy]);
 
   const onCodeChange = (raw: string) => {
     const cleaned = [...normalizeTvCode(raw)].filter((ch) => DISPLAY_CODE_ALPHABET.includes(ch)).join("");
@@ -329,7 +342,20 @@ export const TvConnectScreen = () => {
       demoRef.current?.focus();
     } else if (focused === "demo" && (event.key === "ArrowDown" || event.key === "ArrowLeft")) {
       event.preventDefault();
+      boxesRef.current?.focus();
+    }
+  };
+
+  // On the boxes: OK opens the input (and the keyboard); a typed character (a real keyboard) goes straight in.
+  const onBoxesKeyDown = (event: React.KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
       codeRef.current?.focus();
+    } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      codeRef.current?.focus();
+      onCodeChange(code + event.key);
     }
   };
 
@@ -421,7 +447,20 @@ export const TvConnectScreen = () => {
             <div className="whitespace-nowrap font-black" style={{ fontSize: 52, letterSpacing: "-0.02em" }}>
               Type your display code
             </div>
-            <label className="relative flex cursor-text" style={{ gap: 20 }}>
+            <label
+              ref={boxesRef}
+              tabIndex={0}
+              onKeyDown={onBoxesKeyDown}
+              onFocus={(event) => {
+                if (event.target === event.currentTarget) setFocused("code");
+              }}
+              onBlur={(event) => {
+                if (event.target === event.currentTarget) setFocused(null);
+              }}
+              className="relative flex cursor-text outline-none"
+              style={{ gap: 20 }}
+              data-testid="tv-connect-code-boxes"
+            >
               <span className="sr-only">Display code</span>
               {chars.map((ch, i) => (
                 <span
@@ -451,6 +490,7 @@ export const TvConnectScreen = () => {
                 onFocus={() => setFocused("code")}
                 onBlur={() => setFocused(null)}
                 disabled={codeBusy}
+                tabIndex={-1}
                 inputMode="text"
                 autoCapitalize="characters"
                 autoComplete="off"
@@ -460,7 +500,7 @@ export const TvConnectScreen = () => {
                 aria-label="Display code"
                 data-testid="tv-connect-code"
                 // Invisible (opacity, not colour): global form CSS forces an !important border and focus ring on inputs.
-                className="absolute inset-0 h-full w-full cursor-text opacity-0"
+                className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
               />
             </label>
             <div className="font-bold" style={{ fontSize: 32, color: codeError ? SCREEN_COLORS.amber300 : "#94a3b8" }} aria-live="polite">

@@ -31,6 +31,23 @@ const designs = {
     column: true,
     body: `<img src="${logo}" width="500" height="500"><div style="${pill};font-size:54px;padding:2px 46px;margin-top:10px">TV</div>`,
   },
+  // Amazon's 1280×720 store icon: the same layout scaled into Amazon's 882×448 centre safe area (Phase 6; the
+  // approved size above puts the pill outside it, where the store's overlays can cover it).
+  "fire-store": {
+    w: 1280,
+    h: 720,
+    column: true,
+    body: `<img src="${logo}" width="372" height="372"><div style="${pill};font-size:40px;padding:2px 34px;margin-top:6px">TV</div>`,
+  },
+  // Amazon's 1920×1080 background: the store's text sits over the left, so the logo stays inside the right-hand
+  // 1214×830 subject area. Darker than the icon ground so white store text reads over it.
+  background: {
+    w: 1920,
+    h: 1080,
+    ground: "linear-gradient(110deg,#0b1224 0%,#0b1224 30%,#1e3a8a 70%,#2563eb 100%)",
+    justify: "flex-end",
+    body: `<img src="${logo}" width="640" height="640" style="margin-right:200px">`,
+  },
   // 320×180 launcher banner · Option 2: logo only, small "TV" pill bottom right.
   banner: {
     w: 320,
@@ -42,7 +59,7 @@ const designs = {
 const page = (d) => `<!doctype html><html><head><style>
 @font-face{font-family:N;font-weight:200 1000;src:url(${font}) format("woff2")}
 html,body{margin:0;width:${d.w}px;height:${d.h}px;overflow:hidden;font-family:N,sans-serif}
-.art{position:absolute;inset:0;display:flex;${d.column ? "flex-direction:column;" : ""}align-items:center;justify-content:center;background:${ground}}
+.art{position:absolute;inset:0;display:flex;${d.column ? "flex-direction:column;" : ""}align-items:center;justify-content:${d.justify ?? "center"};background:${d.ground ?? ground}}
 img{display:block}
 </style></head><body><div class="art">${d.body}</div></body></html>`;
 
@@ -71,4 +88,6 @@ const icon = path.join(out, "icon-512x512.png");
 for (const [density, size] of [["mdpi", 48], ["hdpi", 72], ["xhdpi", 96], ["xxhdpi", 144], ["xxxhdpi", 192]]) {
   resize(icon, size, path.join(res, `mipmap-${density}/ic_launcher.png`));
 }
-console.log("Rendered:", Object.keys(designs).join(", "));
+// Amazon's 114×114 small icon.
+resize(icon, 114, path.join(out, "icon-114x114.png"));
+console.log("Rendered:", Object.keys(designs).join(", "), "+ icon-114x114");
