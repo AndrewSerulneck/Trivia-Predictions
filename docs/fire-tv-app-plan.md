@@ -7,7 +7,7 @@
 Back-after-demo keyboard bug. **Phase 6 done 2026-11-22** (ahead of Phase 5): upload key, signed release APK, store
 images, screenshots and `docs/fire-tv-store/listing.md`. See `docs/fire-tv-app-plan_PHASE_6_HANDOFF.md`. Signing
 keys backed up 2026-11-22 (an encrypted image in iCloud Drive; handoff §2). Phase 6 merged via PR #38. Phase 7
-(submit) waits for Phase 5 to pass. **Phase 9 built 2026-11-22** on `feat/fire-tv-phase-9` (PR pending; data off until
+(submit) waits for Phase 5 to pass. **Phase 9 built 2026-11-22** on `feat/fire-tv-phase-9` (PR #39; data off until
 Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_snapshot.sql` not yet applied; the 3–7 day
 usage baseline starts when the PR deploys). See `docs/fire-tv-app-plan_PHASE_9_HANDOFF.md`.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.

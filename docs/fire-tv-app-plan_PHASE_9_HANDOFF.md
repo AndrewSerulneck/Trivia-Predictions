@@ -55,7 +55,7 @@ Phase 10 (Sonnet 5.5 / high): build the **Pick 'Em Live Board** and **All-Time L
 
 ### 2. Starting state
 
-- Branch `feat/fire-tv-phase-9`, from `origin/main` at `8e50214e` (PR #38 merge). One commit for this phase; PR opened
+- Branch `feat/fire-tv-phase-9`, from `origin/main` at `8e50214e` (PR #38 merge). One commit for this phase (`25ab0f62`); PR #39 opened
   against `main` (see the PR link in the chat / `gh pr list`). **Not merged, not deployed** at the time of writing.
   Branch Phase 10 from `main` after this PR merges.
 - **Left uncommitted on purpose** (not Phase 9 work, left in the working tree untouched):
