@@ -26,10 +26,18 @@
 
 ## For the next agent
 
-**Status (2026-11-22):** Phase 3 code is done, committed and pushed. PR #36 is open. **Not done yet:**
-`supabase db push` (waits on Andrew's yes), merge, deploy, and the live smoke test (Andrew scans a QR on a laptop
-running `/tv-app`). Whoever picks this up finishes those steps first, then updates this note and the plan's Status
-line before starting Phase 4.
+**Status (2026-11-22):** Phase 3 code is done, committed and pushed. PR #36 is open.
+
+**Update, later 2026-11-22 (Phase 4 session):**
+- **`supabase db push` done**, with Andrew's yes. The first push failed: `venues.id` is `text`, not `uuid`, and the
+  migration declared `venue_id uuid`. Nothing was applied (it failed at statement 0, and the remote column in
+  `supabase migration list` stayed empty). The never-applied file was then corrected in place to `venue_id text`,
+  dry-run again (only `20261122114719`), and pushed. Verified: service role reads the table (0 rows); anon gets 42501.
+- The 22 `* 2.sql` iCloud duplicates were moved to the Phase 4 session's scratchpad. All 22 are byte-identical to the
+  tracked originals, so nothing is lost if that folder is cleared. If iCloud recreates them, move them again before
+  the next `db push`.
+- **D21 answered (D26):** every display, the Silk Display URL included.
+- **Not done yet:** merge (Andrew will say "merge it"), deploy and the laptop smoke test.
 
 ### 1. Next phase goal and scope
 
@@ -196,9 +204,8 @@ line before starting Phase 4.
 
 ### 7. Open questions for Andrew
 
-- **Yes to `supabase db push`**, then merge (blocking Phase 3 close-out).
-- **D21 scope:** should Category Blitz, Squares and Bracket be off for every display (Silk Display URL too) or only in
-  the TV app? Recommendation: every display. Needed before Phase 9.
+- ~~Yes to `supabase db push`~~ (done 2026-11-22). Merge is still waiting on Andrew.
+- ~~D21 scope~~ answered: every display (D26).
 - Which test venue's display code goes in Amazon's reviewer notes (Phase 6; Try demo covers review without one).
 
 ### 8. Recommended first steps

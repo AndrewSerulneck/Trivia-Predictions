@@ -12,7 +12,7 @@ create table public.tv_device_pairings (
   id uuid primary key default gen_random_uuid(),
   pair_code text not null,
   poll_secret_hash text not null,
-  venue_id uuid null references public.venues (id) on delete cascade,
+  venue_id text null references public.venues (id) on delete cascade, -- venues.id is text
   claimed_at timestamptz null,
   expires_at timestamptz not null default (now() + interval '10 minutes'),
   created_at timestamptz not null default now(),

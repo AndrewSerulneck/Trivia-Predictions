@@ -2,8 +2,9 @@
 
 **Status:** Plan written 2026-11-21. **Phase 1 done 2026-11-21** (mockups, handoff
 `docs/fire-tv-app-plan_PHASE_1_HANDOFF.md`). **Phase 2 done 2026-11-22** (round 1 → D10–D20, round 2 → D21–D25).
-**Phase 3 code done 2026-11-22**: PR #36 open on `feat/fire-tv-connect`; waiting on Andrew's yes for `supabase db push`,
-then merge, deploy and the laptop smoke test. See `docs/fire-tv-app-plan_PHASE_3_HANDOFF.md`.
+**Phase 3 code done 2026-11-22**: PR #36 open on `feat/fire-tv-connect`; migration `20261122114719` applied
+2026-11-22. Waiting on Andrew's "merge it", then deploy and the laptop smoke test. See
+`docs/fire-tv-app-plan_PHASE_3_HANDOFF.md`.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
@@ -115,11 +116,12 @@ different browser, you'll be asked to sign in once.
 | D18 | **Most relevant sports first.** The Pick 'Em board and ticker rank today's games for each venue with a rule-based score (Phase 9 step 4): this venue's own pick counts, league weight by local day and time, live > starting soon > final, and a boost for postseason or national primetime when the feed marks it. Seasons need no calendar: a league only counts when it has games today. The board shows the top 4 games (2×2); the ticker carries the next ones. No new provider calls (D8 stands). | Andrew, 2026-11-22 (asked for NFL on Sundays, college football on Saturdays, college basketball or NBA on other days); rules and top-4 layout are the planner's. |
 | D19 | **College basketball (men's and women's) is out of this plan.** Pick 'Em has no college basketball today (its leagues are in `lib/pickemSports.ts`). Adding it is a separate small plan that checks the sports provider's coverage and price first and asks Andrew before any cost. When it lands, D18's ranking includes it with no TV change, as long as its weights are added to the table. | Andrew, 2026-11-22 (chose "separate project, priced first") |
 | D20 | **Carousel:** 1 Next Live Trivia · 2 Pick 'Em board · 3 All-Time Leaderboard · 4 Prizes · 5 Get the app. 15 s each, 75 s loop (matches `IDLE_MOMENT_MS`). Slides with nothing to show are skipped. Bingo is not in the loop (D17). | Andrew, 2026-11-22 (from D11 and D17; 15 s confirmed in round 2, D23) |
-| D21 | **Launch content: Live Trivia and Pick 'Em only.** At launch the TV shows Live Trivia (pre-game, questions, reveals, standings) and Pick 'Em (NFL Pick 'Em and the other Pick 'Em leagues: Pick 'Em board, ticker, All-Time Leaderboard, Prizes, Get the app). **Category Blitz, Super Bowl Squares and March Madness Bracket TV screens are reserved:** the code stays and keeps working, but the display doesn't show them until Andrew says go (reserved phase **R2**). Try demo shows only launch content. **Open (asked 2026-11-22):** whether this also applies to the Display URL in Silk or only to the TV app; Phase 9 implements it either way and must have the answer first. | Andrew, 2026-11-22 ("I want to have it available, but I don't want it to be there when we go live with this. Let's start off with Live Trivia content and NFL Pick 'Em and Pick 'Em content first.") |
+| D21 | **Launch content: Live Trivia and Pick 'Em only.** At launch the TV shows Live Trivia (pre-game, questions, reveals, standings) and Pick 'Em (NFL Pick 'Em and the other Pick 'Em leagues: Pick 'Em board, ticker, All-Time Leaderboard, Prizes, Get the app). **Category Blitz, Super Bowl Squares and March Madness Bracket TV screens are reserved:** the code stays and keeps working, but the display doesn't show them until Andrew says go (reserved phase **R2**). Try demo shows only launch content. **Applies to every display**, the Display URL in Silk included (D26). | Andrew, 2026-11-22 ("I want to have it available, but I don't want it to be there when we go live with this. Let's start off with Live Trivia content and NFL Pick 'Em and Pick 'Em content first.") |
 | D22 | **Store art: Option 2 for every size** (mockups v2 section H: `icon2` 512×512 brand blue, `fire2` 1280×720 logo centered, `ban2` 320×180 logo only). **Keep the coin logo:** Andrew isn't concerned about the simulated-gambling question. The content-rating answers still state the facts: free to play, no wagering, venue prizes. | Andrew, 2026-11-22 ("I like Option 2 for the logos. I'm not concerned about the simulated gambling.") |
 | D23 | **Timing:** every slide stays up **15 s** unless a decision says otherwise. Try demo also shows each screen for 15 s. | Andrew, 2026-11-22 |
 | D24 | **Andrew's stick runs Fire OS** (he believes so; Phase 5 confirms with Settings → My Fire TV → About before installing). Vega OS stays planned (D1, Phases 13–14). | Andrew, 2026-11-22 |
 | D25 | Everything else in mockups v2 and D10–D20 is approved as drawn, including the planner choices flagged in round 1: "Option 1 / Option 2" (D10), D14 (applies once Category Blitz is turned back on, R2), D15, D16 and D18. | Andrew, 2026-11-22 ("I'll keep the rest of what you have here, it seems good.") |
+| D26 | **D21 covers every display.** Category Blitz, Squares and Bracket also stay off TVs that use the Display URL in Silk. So the Phase 9 switch in `selectVenueScreenState` is global: no `&src=tv-app` flag, and idle responses stay shared-cached by URL. | Andrew, 2026-11-22 ("should also stay off TVs that use the Display URL in Silk today. One behavior is simpler and costs less.") |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -514,9 +516,8 @@ See **Andrew's steps → Phase 7**.
      rules of `docs/live-trivia-pregame-and-display-cleanup-plan.md` to say 60 minutes. Check the 1-second
      look-ahead in `getVenueScreenPollIntervalMs` still lands on time.
    - **Launch content (D21):** one switch in `selectVenueScreenState` keeps Category Blitz, Squares and Bracket off
-     the display (their reads are skipped too, so they cost nothing). Ask Andrew's answer to D21's open question
-     first (every display, or the TV app only). TV-app-only needs the TV to say so in the state request (for
-     example `&src=tv-app`), because idle responses are shared-cached by URL and can't vary by user-agent.
+     every display, the Silk Display URL included (D26). Their reads are skipped too, so they cost nothing. No
+     per-client flag.
    - Respect "missing data is unknown, never zero" (`docs/bingo-pickem-reliability-plan.md`).
    - Bounded reads only; no per-player loops.
 6. **Polling:**
