@@ -1,8 +1,8 @@
 # Fire TV plan — Phase T2 handoff
 
 **For Andrew:** A weekly GitHub Action now refreshes the NFL star snapshot and commits it straight to `main` (your call,
-D32), so the freshness test stops turning CI red every two weeks. It isn't live yet: merge PR #45 (T3), then PR #46 (this),
-then tell the agent to trigger the first run. If BallDontLie is down or returns a much smaller player list, the run fails
+D32), so the freshness test stops turning CI red every two weeks. **Live 2026-11-23:** #45 and #46 merged; the first run
+(manual) committed `467fcd35` to `main`. Next scheduled run: Tue 2026-12-01 10:00 UTC. If BallDontLie is down or returns a much smaller player list, the run fails
 without committing, and GitHub emails you about the failed run. Website/CI only, no store release.
 
 ## For the next agent
@@ -30,11 +30,14 @@ without committing, and GitHub emails you about the failed run. Website/CI only,
 6. **Verified:** `--dry-run --if-in-season --guard` with the real key: in season, 571 current / 602 prior players, exit 0.
    With `BALLDONTLIE_API_KEY=bogus`: "--guard: not writing, a season_stats fetch failed", exit 1, snapshot untouched.
    With a blank key: exits 1 before writing. `npx eslint` on the script clean; `npm run test` 7892 passed.
-   **Unverified:** the workflow itself on GitHub (needs both PRs on `main`).
-7. **Open for Andrew:** merge #45 then #46.
-8. **First steps next:** after the merges, `gh workflow run nfl-star-index-weekly.yml`, then `gh run watch`; confirm a
-   `github-actions[bot]` commit "Refresh NFL star index snapshot (weekly)" on `main` and record the run id here. Separately,
-   `tests/lib.sportsBingo.nfl-flavor-squares.test.ts` > "caps the Tier-1 block per board and per team…" flaked once on PR
-   #44 (likely unseeded random, like T3); worth a T3-style fix. Next plan phase: N1 (Opus 5.5 / high).
+   **On GitHub, 2026-11-23:** #45 merged (`7a85696f`), #46 merged (`0bd94034`); `gh workflow run` → run 45268818494, all
+   steps green, in season, 571 current / 602 prior, 0 entrants / 0 drop-offs. Bot commit `467fcd35` "Refresh NFL star
+   index snapshot (weekly)" on `main` changed only `generatedAt`. That's expected: the timestamp is what the 14-day
+   freshness test reads, so every in-season week commits even when no player moves.
+   **Still unverified:** a cron-triggered run (first Tue 2026-12-01) and the `git pull --rebase` retry path.
+7. **Open for Andrew:** nothing.
+8. **First steps next:** glance at the 2026-12-01 run (`gh run list --workflow nfl-star-index-weekly.yml`). The
+   `nfl-flavor-squares` flake from PR #44 was a 5 s timeout, not randomness; PR #47 gives its board loops 30 s. Next plan
+   phase: N1 (Opus 5.5 / high).
 
 Model: done on Opus 5.5 (Andrew switched the session), above the plan's Sonnet 5.5 / medium.
