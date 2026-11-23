@@ -5,10 +5,26 @@ import type { ReactNode } from "react";
 // (design px, before the scale):
 //   - the bottom 96 is the ticker and the dots sit at 120 from the bottom: slides keep 150 free below their content;
 //   - the "Get the app" QR is bottom-right (right 70, bottom 130, plate 210): slides keep that corner empty.
+// The carousel (TvCarousel) draws the ticker, dots and QR above the slide in one frame of the same size.
 export const TV_SLIDE_DESIGN_WIDTH = 1920;
 export const TV_SLIDE_DESIGN_HEIGHT = 1080;
 const STAGE_WIDTH = 2304;
 export const TV_SLIDE_SCALE = STAGE_WIDTH / TV_SLIDE_DESIGN_WIDTH;
+
+/** The 1920×1080 design frame, scaled to the stage. Anything drawn inside uses the mockups' pixels. */
+export const TvDesignFrame = ({ children, className }: { children: ReactNode; className?: string }) => (
+  <div
+    className={`absolute left-0 top-0 ${className ?? ""}`}
+    style={{
+      width: TV_SLIDE_DESIGN_WIDTH,
+      height: TV_SLIDE_DESIGN_HEIGHT,
+      transform: `scale(${TV_SLIDE_SCALE})`,
+      transformOrigin: "top left",
+    }}
+  >
+    {children}
+  </div>
+);
 
 type TvSlideCanvasProps = {
   background: string;
@@ -24,17 +40,7 @@ export const TvSlideCanvas = ({ background, testId, children }: TvSlideCanvasPro
       className="absolute inset-x-0 top-0"
       style={{ height: 6, opacity: 0.5, background: "linear-gradient(90deg, #06b6d4, #f59e0b 85%)" }}
     />
-    <div
-      className="absolute left-0 top-0"
-      style={{
-        width: TV_SLIDE_DESIGN_WIDTH,
-        height: TV_SLIDE_DESIGN_HEIGHT,
-        transform: `scale(${TV_SLIDE_SCALE})`,
-        transformOrigin: "top left",
-      }}
-    >
-      {children}
-    </div>
+    <TvDesignFrame>{children}</TvDesignFrame>
   </div>
 );
 

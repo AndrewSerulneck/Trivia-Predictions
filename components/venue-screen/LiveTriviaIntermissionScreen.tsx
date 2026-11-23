@@ -2,6 +2,8 @@ import { TvFinalStandings } from "@/components/venue-screen/TvFinalStandings";
 import { TvRoundBreak } from "@/components/venue-screen/TvRoundBreak";
 import type { VenueScreenState } from "@/lib/venueScreen";
 
+const ROUND_BREAK_MAX_ROWS = 7;
+
 type LiveTriviaState = Extract<VenueScreenState, { mode: "live-trivia" }>;
 
 type LiveTriviaIntermissionScreenProps = {
@@ -40,6 +42,8 @@ export function LiveTriviaIntermissionScreen({ state, nowMs }: LiveTriviaIntermi
         name: entry.username,
         score: entry.points,
       }))}
+      // Seven rows, not the default eight: the eighth would sit under the corner "Get the app" QR (D16).
+      maxRows={ROUND_BREAK_MAX_ROWS}
       secondsRemaining={live.secondsRemaining}
       nowMs={nowMs}
       updatedAtMs={state.updatedAt}

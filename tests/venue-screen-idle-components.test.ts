@@ -39,8 +39,9 @@ function makeIdleState(overrides: Partial<IdleState["idle"]> = {}): IdleState {
   };
 }
 
+// The "Get the app" slide (slide 5), pinned: the rest of the carousel is covered by tests/venue-screen-carousel.test.ts.
 const render = (state = makeIdleState()) =>
-  renderToStaticMarkup(React.createElement(IdleVenueScreen, { state, nowMs }));
+  renderToStaticMarkup(React.createElement(IdleVenueScreen, { state, nowMs, previewSlide: "app" }));
 
 describe("Idle venue screen components", () => {
   it("is an app-download screen: Get the app, the permanent short link, the venue name once", () => {
@@ -49,12 +50,12 @@ describe("Idle venue screen components", () => {
     expect(html).toContain("Get the app");
     expect(html).toContain(APP_DOWNLOAD_DISPLAY_URL);
     expect(html).toContain('data-testid="app-download-qr"');
-    expect(html).toContain("Hightop");
+    expect(html).toContain("Hightop<br/>Challenge");
     expect(html.match(/Hightop Pub TV/g)?.length).toBe(1);
   });
 
   it("draws the QR for the permanent app link, white plate, no motion on it", () => {
-    const qr = render().split('data-testid="app-download-qr"')[1] ?? "";
+    const qr = (render().split('data-testid="app-download-qr"')[1] ?? "").split("</svg>")[0];
     expect(qr).toContain("<svg");
     expect(qr).toContain('fill="#ffffff"');
     expect(qr).not.toMatch(/animate|transform|opacity/i);
@@ -70,8 +71,10 @@ describe("Idle venue screen components", () => {
     expect(html).not.toContain("Grab a table");
   });
 
-  it("renders the same markup with or without a scheduled game (the small line is device-time text, added after hydration)", () => {
-    expect(render()).toBe(render(makeIdleState({ nextLiveTrivia: null })));
+  it("leaves the next-game line to after hydration (it is device-time text: the server's zone is not the venue's)", () => {
+    const html = render(makeIdleState({ nextLiveTrivia: { startsAt: "2026-07-09T00:00:00.000Z", title: "Live Trivia", firstRoundCategory: null, recurringDays: ["wed"] } }));
+    expect(html).not.toContain("idle-next-live-trivia");
+    expect(html).not.toContain("Live Trivia");
   });
 
   it("formats longer idle countdowns for large TV display", () => {

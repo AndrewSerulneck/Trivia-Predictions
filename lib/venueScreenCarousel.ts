@@ -35,11 +35,11 @@ import {
 export { EMPTY_CAROUSEL, type VenueScreenCarouselData };
 
 /**
- * Off until the carousel screens exist (Phase 11 turns it on). While off, an idle state request does none of the
- * reads above and never refreshes the sports copy, so nothing is spent before a TV can show it. Debug modes and
- * Try demo use fixtures and work either way.
+ * On since Phase 11 (2026-11-23), when the carousel screens shipped. Turning it off again makes an idle state request
+ * do none of the reads above and never refresh the sports copy: the slides then skip themselves and the TV shows the
+ * "Get the app" screen. Debug modes and Try demo use fixtures and work either way.
  */
-export const TV_CAROUSEL_DATA_ENABLED = false;
+export const TV_CAROUSEL_DATA_ENABLED = true;
 
 const ALL_TIME_MIN_PLAYERS = 3;
 const ALL_TIME_SIZE = 10;

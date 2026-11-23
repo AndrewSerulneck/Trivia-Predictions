@@ -21,9 +21,8 @@ import { countVenueScreenStateRequest, resetVenueScreenUsageCounter } from "@/li
 const now = Date.parse("2026-11-22T20:00:00.000Z");
 
 describe("launch switch", () => {
-  it("is off until the carousel screens ship (Phase 11): no reads, no feed refresh", async () => {
-    expect(TV_CAROUSEL_DATA_ENABLED).toBe(false);
-    await expect(getVenueScreenCarousel("venue-1", now)).resolves.toEqual(EMPTY_CAROUSEL);
+  it("is on since the carousel screens shipped (Phase 11)", () => {
+    expect(TV_CAROUSEL_DATA_ENABLED).toBe(true);
   });
 });
 

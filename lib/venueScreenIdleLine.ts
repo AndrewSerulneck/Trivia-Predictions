@@ -1,32 +1,37 @@
-// The one small line on the idle display: "Live Trivia · Thursday 8:00 PM" (Andrew, 2026-11-14, Q5).
-// Pure. Day and time are in the display device's own time zone (the TV sits in the venue), so callers render this
-// only after hydration; the server's zone is not the venue's.
+// Wording for the idle display's Next Live Trivia slide, ticker and "Get the app" screen. Pure. Day and time are in
+// the display device's own time zone (the TV sits in the venue), so callers render these only after hydration; the
+// server's zone is not the venue's.
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const dayKey = (d: Date): number => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
 
-export function formatNextLiveTriviaLine(startsAt: string | null | undefined, nowMs: number): string | null {
-  if (!startsAt) return null;
-  const startMs = Date.parse(startsAt);
-  if (!Number.isFinite(startMs) || startMs <= nowMs) return null;
+/** "1:05:09", "42:17", "2d 03h" (the idle countdown); "Schedule coming soon" when unknown. */
+export function formatIdleCountdown(seconds: number | null): string {
+  if (seconds === null) return "Schedule coming soon";
 
-  const start = new Date(startMs);
-  const daysAway = Math.round((dayKey(start) - dayKey(new Date(nowMs))) / DAY_MS);
-  const day =
-    daysAway <= 0
-      ? "Today"
-      : daysAway === 1
-        ? "Tomorrow"
-        : start.toLocaleDateString(undefined, { weekday: "long" });
-  const time = start.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  return `Live Trivia · ${day} ${time}`;
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const days = Math.floor(safeSeconds / 86_400);
+  const hours = Math.floor((safeSeconds % 86_400) / 3_600);
+  const minutes = Math.floor((safeSeconds % 3_600) / 60);
+  const remainingSeconds = safeSeconds % 60;
+
+  if (days > 0) return `${days}d ${String(hours).padStart(2, "0")}h`;
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+  }
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+/** The pre-game countdown: minutes only, so the first second of the final hour reads "60:00" (D13). */
+export function formatPregameCountdown(seconds: number): string {
+  const safe = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // The Next Live Trivia carousel slide (docs/fire-tv-app-plan.md D12, Phase 9 step 3). "LIVE TRIVIA" is the slide's
 // title; this is the line under it. Same rules as above: pure, the TV's own clock and zone, after hydration.
-// `formatNextLiveTriviaLine` stays until its callers move (Phase 11).
 
 const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const WEEKDAY_LONG = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
@@ -102,4 +107,25 @@ export function formatNextLiveTriviaShort(startsAt: string | null | undefined, n
         ? start.toLocaleDateString("en-US", { month: "short", day: "numeric" })
         : WEEKDAY_SHORT[start.getDay()];
   return `Live Trivia · ${day} ${clockTime(start)}`;
+}
+
+/**
+ * The line under the wordmark on the "Get the app" slide: "Live Trivia every Thursday · 8:00 PM",
+ * "Live Trivia · Tomorrow 8:00 PM". Null when there is no upcoming game.
+ */
+export function formatNextLiveTriviaSentence(when: NextLiveTriviaWhen | null): string | null {
+  if (!when) return null;
+  if (when.line.startsWith("Every ")) return `Live Trivia ${when.line[0].toLowerCase()}${when.line.slice(1)}`;
+  return `Live Trivia · ${when.line.replace(" · ", " ")}`;
+}
+
+/**
+ * Splits `NextLiveTriviaWhen.line` so the slide can set the day in gold: "Every Thursday · 8:00 PM" →
+ * { lead: "Every ", accent: "Thursday", time: "8:00 PM" }; "Tonight · 8:00 PM" → { lead: "", accent: "Tonight", ... }.
+ */
+export function splitNextLiveTriviaLine(line: string): { lead: string; accent: string; time: string } {
+  const [day, ...rest] = line.split(" · ");
+  const time = rest.join(" · ");
+  if (day.startsWith("Every ")) return { lead: "Every ", accent: day.slice("Every ".length), time };
+  return { lead: "", accent: day, time };
 }

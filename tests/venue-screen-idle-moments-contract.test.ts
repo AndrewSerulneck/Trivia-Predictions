@@ -39,7 +39,7 @@ describe("idle screen moments", () => {
     expect(idle).not.toContain("!reduceMotion &&");
     expect(idle).toContain("reduceMotion ? undefined :");
     // Device-time text only after hydration.
-    expect(idle).toContain("hydrated ? formatNextLiveTriviaLine");
+    expect(idle).toContain("hydrated ? formatNextLiveTriviaSentence(");
   });
 
   it("keeps the wall-clock drift", () => {

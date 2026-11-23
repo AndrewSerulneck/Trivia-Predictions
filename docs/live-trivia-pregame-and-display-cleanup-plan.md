@@ -276,3 +276,9 @@ Q3 → yes, small, only if known. Q4 → no domain yet.
 - The TV only peeks at Category Blitz.
 - Set up by Display URL (`hightopchallenge.com/tv/<display_code>`), or by connecting the Hightop Challenge TV app (QR or
   display code); a connection grants a venue id only (`docs/fire-tv-app-plan.md` D2, D9, Phase 3, 2026-11-22).
+- Idle is the carousel (`docs/fire-tv-app-plan.md` D20, Phase 11): Next Live Trivia, Pick 'Em board, All-Time Leaderboard,
+  Prizes, Get the app; 15 s each; slides with nothing to show skip themselves. The ticker (D15) shows only on the carousel,
+  never on a Live Trivia or Category Blitz screen. The corner "Get the app" QR (D16, `TvAppDock`) shows on carousel slides
+  1–4, the pre-game (its step 1), and the Live Trivia round break and final standings; never on a question, a reveal, a
+  Category Blitz round or the Connect screen. It never moves, is never covered, and the stage twinkles stay off every screen
+  that carries it. Every display screen says "Hightop Challenge" in full, never "Hightop" alone. Rules in `lib/tvCarousel.ts`.

@@ -15,6 +15,7 @@ import { StageTwinkles } from "@/components/venue-screen/fx/StageTwinkles";
 import { ShineSweep } from "@/components/venue-screen/fx/ShineSweep";
 import { SquaresTvScreen } from "@/components/venue-screen/SquaresTvScreen";
 import { ScreenTransition } from "@/components/venue-screen/ScreenTransition";
+import { TvAppCorner } from "@/components/venue-screen/TvAppDock";
 import { TvGoLiveTakeover, type GameLabel } from "@/components/venue-screen/TvGoLiveTakeover";
 import { TvLiveTriviaPregame } from "@/components/venue-screen/TvLiveTriviaPregame";
 import { TvIntroStinger } from "@/components/venue-screen/TvIntroStinger";
@@ -37,7 +38,7 @@ type VenueScreenClientProps = {
   venueId: string;
   initialState: VenueScreenState;
   debugMode?: VenueScreenDebugMode | null;
-  /** Debug only: pin one idle carousel slide (`?mode=carousel&slide=pick-em`). */
+  /** Pin one idle carousel slide (`?mode=carousel&slide=pick-em`, Try demo). Null = the carousel rotates. */
   previewSlide?: VenueScreenPreviewSlide | null;
   /** Play the intro stinger on open. False only for the dashboard thumbnail (`intro=0`). */
   intro?: boolean;
@@ -383,6 +384,10 @@ export function VenueScreenClient({
     secondary: state.venue.screenBrandSecondary,
   });
   const transitionKey = getScreenTransitionKey(state);
+  // D16: the corner QR is on the round break and final standings (the two Live Trivia screens that aren't a question or
+  // a reveal). The round break caps its list at seven rows and the final strip ends above the QR (checked at 1920×1080).
+  const showsCornerQr =
+    state.mode === "live-trivia" && (state.liveTrivia.phase === "intermission" || state.liveTrivia.phase === "final");
   const screenTransform =
     state.mode === "idle" ||
     state.mode === "squares" ||
@@ -402,8 +407,10 @@ export function VenueScreenClient({
         <main className="h-full w-full overflow-hidden bg-slate-950 text-white">
           <div className="relative flex h-full flex-col" style={{ background: theme.stageGradient }}>
             <BrandStage ambientA={theme.ambientA} ambientB={theme.ambientB} />
-            {/* The twinkle canvas sits above the stage, so it stays off the two screens with the app QR (never covered). */}
-            {introPlaying || state.mode === "idle" || state.mode === "live-trivia-pregame" ? null : <StageTwinkles />}
+            {/* The twinkle canvas sits above the stage, so it stays off every screen with the app QR (never covered). */}
+            {introPlaying || state.mode === "idle" || state.mode === "live-trivia-pregame" || showsCornerQr ? null : (
+              <StageTwinkles />
+            )}
             <div
               className="flex h-full flex-col will-change-transform"
               style={{ transform: screenTransform }}
@@ -432,6 +439,7 @@ export function VenueScreenClient({
               ) : null}
               {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} previewSlide={previewSlide} /> : null}
             </div>
+            {showsCornerQr ? <TvAppCorner low /> : null}
             {liveTakeover && !introPlaying ? (
               <TvGoLiveTakeover
                 key={liveTakeover.key}

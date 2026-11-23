@@ -1,3 +1,4 @@
+import { isTvCarouselSlideId, type TvCarouselSlideId } from "@/lib/tvCarousel";
 import type { VenueScreenState } from "@/lib/venueScreen";
 
 /**
@@ -14,8 +15,8 @@ export type VenueScreenDebugMode =
   | "carousel-weeknight"
   | "carousel-empty";
 
-/** `?slide=` with a `carousel*` debug mode pins one idle slide (Phase 10 preview; Phase 11's carousel can keep it). */
-export type VenueScreenPreviewSlide = "pick-em" | "all-time";
+/** `?slide=` with a `carousel*` debug mode pins one idle carousel slide (`lib/tvCarousel.ts`): preview and screenshots. */
+export type VenueScreenPreviewSlide = TvCarouselSlideId;
 
 export const parseVenueScreenPreviewSlide = (
   value: string | string[] | undefined,
@@ -23,7 +24,7 @@ export const parseVenueScreenPreviewSlide = (
 ): VenueScreenPreviewSlide | null => {
   if (!debugMode || !debugMode.startsWith("carousel")) return null;
   const raw = (Array.isArray(value) ? value[0] : value)?.trim().toLowerCase();
-  return raw === "pick-em" || raw === "all-time" ? raw : null;
+  return isTvCarouselSlideId(raw) ? raw : null;
 };
 
 export const VENUE_SCREEN_DEBUG_MODES: VenueScreenDebugMode[] = [

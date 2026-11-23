@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { IdleVenueScreen } from "@/components/venue-screen/IdleVenueScreen";
 import { TvAllTimeLeaderboard } from "@/components/venue-screen/TvAllTimeLeaderboard";
 import { TvPickEmBoard } from "@/components/venue-screen/TvPickEmBoard";
+import type { TvCarouselSlideId } from "@/lib/tvCarousel";
 import type { VenueScreenState } from "@/lib/venueScreen";
 import { debugCarousel, EMPTY_CAROUSEL } from "@/lib/venueScreenCarouselShared";
 import { parseVenueScreenPreviewSlide } from "@/lib/venueScreenTiming";
@@ -45,7 +46,7 @@ describe("Pick 'Em Live Board slide", () => {
     expect(html.match(/>NFL</g)?.length).toBeGreaterThanOrEqual(4);
   });
 
-  it("has no join QR and leaves the ticker, dots and QR corner to Phase 11", () => {
+  it("has no join QR and leaves the ticker, dots and QR corner to the carousel", () => {
     const html = board();
     expect(html).not.toContain("app-download-qr");
     expect(html).not.toContain("Scan to play");
@@ -87,24 +88,27 @@ describe("All-Time Leaderboard slide", () => {
     expect(html.match(/rgba\(252,211,77,0\.32\)/g)).toHaveLength(1);
   });
 
-  it("has no QR of its own (Phase 11's shared corner owns it)", () => {
+  it("has no QR of its own (the carousel's shared corner owns it)", () => {
     expect(html).not.toContain("app-download-qr");
   });
 });
 
 describe("idle preview", () => {
-  const render = (previewSlide: "pick-em" | "all-time" | null, state = idleState()) =>
+  const render = (previewSlide: TvCarouselSlideId | null, state = idleState()) =>
     renderToStaticMarkup(React.createElement(IdleVenueScreen, { state, nowMs: NOW, previewSlide }));
 
-  it("pins a slide only when asked; otherwise the idle screen is unchanged", () => {
+  it("pins a slide when asked; otherwise the carousel starts at its first slide with something to show", () => {
     expect(render("pick-em")).toContain("tv-pickem-board");
     expect(render("all-time")).toContain("tv-alltime-leaderboard");
-    expect(render(null)).toContain("Get the app");
-    expect(render(null)).not.toContain("tv-pickem-board");
+    expect(render("app")).not.toContain("tv-pickem-board");
+    // No Live Trivia is scheduled in this state, so the Pick 'Em board is the first slide.
+    expect(render(null)).toContain("tv-pickem-board");
   });
 
-  it("falls back to the idle screen when the slide has no data", () => {
-    expect(render("pick-em", idleState(EMPTY_CAROUSEL))).toContain("Get the app");
+  it("falls back to the rotation when the pinned slide has no data", () => {
+    const html = render("pick-em", idleState(EMPTY_CAROUSEL));
+    expect(html).not.toContain("tv-pickem-board");
+    expect(html).toContain("Get the app");
   });
 
   it("reads ?slide= only with a carousel debug mode", () => {
@@ -113,5 +117,8 @@ describe("idle preview", () => {
     expect(parseVenueScreenPreviewSlide("pick-em", null)).toBeNull();
     expect(parseVenueScreenPreviewSlide("pick-em", "idle")).toBeNull();
     expect(parseVenueScreenPreviewSlide("nope", "carousel")).toBeNull();
+    for (const slide of ["next", "pick-em", "all-time", "prizes", "app"]) {
+      expect(parseVenueScreenPreviewSlide(slide, "carousel-empty")).toBe(slide);
+    }
   });
 });
