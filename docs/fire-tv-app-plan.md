@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** Next: N1. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 built 2026-11-23 (PR #48, all checks green; waiting for Andrew to merge; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** Next: merge #48, then N3 on the first NHL game day after deploy. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -139,6 +139,7 @@ different browser, you'll be asked to sign in once.
 | D29 | **NHL Pick 'Em start-time bug is fixed in this plan** as phases N1–N3 (found in Phase 9: NHL games show and lock at 7 AM New York time). They are website-only, independent of the TV phases, and can run any time. | Andrew, 2026-11-23 ("Can you add that as a phase (or multiple phases) to this plan?") |
 | D30 | **The two tests that fail on `main` are fixed in this plan** as phases T1–T2. T1 fixes both now. T2 stops the NFL snapshot test from failing again every two weeks in season. Neither comes from TV work, but both turn every PR's CI red, PR #41 included. | Andrew, 2026-11-23 ("Develop solutions to these two failures … add those solutions as a phase (or multiple phases) to this plan") |
 | D31 | **`tests/lib.sportsBingo.nfl-star-tilt.test.ts` "puts stars on boards materially more often than chance" is seeded (phase T3).** It draws unseeded random boards and failed CI on PR #41 (star share 0.27 vs > 0.3), then passed on rerun. | Andrew, 2026-11-23 ("Sure") |
+| D33 | **NHL Pick 'Em fix (N1's choice): prefer a real timestamp in every league.** `extractEventStartIso` takes the first full timestamp and falls back to a date-only field only when none exists. NHL `startsAt` and `game_id` move to the real puck-drop; every other league's are unchanged (each already sends a full timestamp first). No migration: production has no NHL picks, tiebreaker guesses or lines. N2 also stops grading a pick whose game the feed still calls "scheduled" (NHL sends 0–0 before puck-drop, which the 4-hour rule would grade as a push), and labels NHL periods with the TV's hockey helper. Replaces the planner's "keep the id" recommendation in N1 step 4. | N1 agent, 2026-11-23, from evidence in `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md` §4–5. Andrew may overrule. |
 | D32 | **The weekly NFL star-snapshot refresh (T2) commits straight to `main`, no PR.** The script's `--guard` refuses to write when a BallDontLie fetch fails or the current slate shrinks below half, because no person reads the diff before it lands. The "Allow GitHub Actions to create and approve pull requests" setting is not needed and stays as it was. | Andrew, 2026-11-23 ("Just commit it straight to main unless there's a problem. I don't want to have to merge a PR every week.") |
 
 If you disagree with D5–D9, say so at the start of any phase.
@@ -170,8 +171,8 @@ handoff of the row above it first."*
 | 10 (merge) | Finish Phase 10: update PR #41 from `main`, confirm CI passes, merge (deploys; the slides stay preview-only until Phase 11) | Agent | Haiku 5.5 / low | After T1 merges | Mechanical: branch update, check CI, merge. No new code. |
 | T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that commits the refresh to `main` (D30, D32) | Agent | Sonnet 5.5 / medium | After T1; within 14 days of T1's refresh while NFL is in season. Needs your yes on the secret | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
 | T3 | Stop the random star-tilt test from failing CI: seed its random numbers (D31) | Agent | Haiku 5.5 / low | Anytime; before N1 | One test file; `installSeededRandom` already exists in it. |
-| N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | After T2 | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
-| N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | After N1's handoff (and your answer, if N1 asks one) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
+| N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | Done 2026-11-23 (D33; `_PHASE_N1_HANDOFF.md`) | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
+| N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | Built 2026-11-23 (PR #48 green, awaiting merge; `_PHASE_N2_HANDOFF.md`) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
 | N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | First NHL game day after N2 deploys | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
 | 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | After N3 | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
 | 12 | Real-TV check of the sports screens on a game day, then record results | **Andrew** + agent | Haiku 5.5 / low | A game day after Phase 11 deploys | Andrew checks; agent only records results and files fixes. |
@@ -683,6 +684,9 @@ Read-only. No code changes, no writes to production.
 
 ### Phase N2 — NHL Pick 'Em start time: fix (Agent, Opus 5.5 / high)
 
+**N1 chose D33** (real timestamp first in every league; NHL ids change; no migration). Its handoff §8 has the exact
+steps and supersedes steps 2 and 4 below where they differ.
+
 1. Branch from up-to-date `main`. Follow the N1 handoff's chosen fix.
 2. Tests first: an NHL row with both `game_date` and `start_time_utc` gives the real start time and (with the
    recommended fix) the same `game_id` as today; every other league's id is unchanged (snapshot a sample row per
@@ -698,7 +702,8 @@ Read-only. No code changes, no writes to production.
 On the first NHL game day after N2 deploys (read-only):
 1. The NHL list shows each game's real puck-drop time in the venue's zone.
 2. A pick can be placed after 7 AM New York and before puck-drop; it locks at puck-drop.
-3. Picks made before N2 still show as picked and settle after the game (check `pickem_picks` rows).
+3. Picks made before N2 still show as picked and settle after the game (check `pickem_picks` rows). N1 found none
+   on 2026-11-23; if N2's pre-deploy check also finds none, record "none to check".
 4. The live period label reads "P1", "P2", "OT", not "Inn.".
 5. Record results in the N3 handoff; close D29 in this file's status line, or list fixes for a follow-up.
 
