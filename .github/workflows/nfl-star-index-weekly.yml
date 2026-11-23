@@ -1,0 +1,66 @@
+name: NFL Star Index Weekly
+# Fire TV plan phase T2 (D30): keeps data/sports-bingo/nfl-star-index.json under the 14-day
+# freshness test while NFL is in season. Commits straight to main (Andrew, 2026-11-23); the
+# script's --guard refuses to write on a failed fetch or a sharply shrunk slate.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+on:
+  schedule:
+    # Tuesdays 10:00 UTC, after Monday night's stats settle.
+    - cron: "0 10 * * 2"
+  workflow_dispatch:
+
+concurrency:
+  group: nfl-star-index-weekly
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Refresh snapshot (skips off-season)
+        env:
+          BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+        run: |
+          node --conditions react-server --import tsx scripts/refresh-nfl-star-index.cjs \
+            --if-in-season --guard | tee "$RUNNER_TEMP/refresh.log"
+
+      - name: Commit to main
+        run: |
+          if git diff --quiet -- data/sports-bingo/nfl-star-index.json; then
+            echo "No snapshot change."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/sports-bingo/nfl-star-index.json
+          {
+            echo "Refresh NFL star index snapshot (weekly)"
+            echo
+            grep -E '^\[bingo:stars:nfl\] (current|prior)|Entrants|Drop-offs' "$RUNNER_TEMP/refresh.log" || true
+          } > "$RUNNER_TEMP/msg.txt"
+          git commit -q -F "$RUNNER_TEMP/msg.txt"
+          for attempt in 1 2 3; do
+            git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0
+            sleep 10
+          done
+          echo "Push failed after 3 attempts." >&2
+          exit 1

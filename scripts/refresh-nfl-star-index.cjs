@@ -23,6 +23,10 @@
  * Usage:
  *   npm run bingo:stars:nfl              # compute + write + print the diff vs. the committed file
  *   npm run bingo:stars:nfl:dry-run      # compute + print the diff only, don't write
+ *
+ * Unattended (`.github/workflows/nfl-star-index-weekly.yml`, Fire TV plan phase T2) adds
+ * `--if-in-season --guard`: exit 0 without writing off-season, and refuse to write (exit 1) when a
+ * fetch failed or the current slate shrank sharply, because that commit lands on `main` unread.
  */
 
 const fs = require("node:fs");
@@ -32,8 +36,32 @@ const DIR = path.join(__dirname, "..", "data", "sports-bingo");
 const SNAPSHOT_PATH = path.join(DIR, "nfl-star-index.json");
 const DIFF_PREVIEW_COUNT = 15;
 
+// --guard: the current slate may not shrink below this share of the committed one (same season).
+const GUARD_MIN_CURRENT_RATIO = 0.5;
+
 function parseArgs(argv) {
-  return { dryRun: argv.includes("--dry-run") };
+  return {
+    dryRun: argv.includes("--dry-run"),
+    ifInSeason: argv.includes("--if-in-season"),
+    guard: argv.includes("--guard"),
+  };
+}
+
+// Returns a reason to refuse writing, or null. `fetchNFLSeasonStats` swallows errors into [], so a
+// BallDontLie outage would otherwise overwrite the snapshot with empty slates.
+function guardFailure({ failed, previous, snapshot }) {
+  if (failed.current || failed.prior) {
+    return `a season_stats fetch failed (current=${failed.current}, prior=${failed.prior})`;
+  }
+  if (snapshot.prior.players.length === 0) {
+    return "the prior slate came back empty";
+  }
+  const previousCount = previous?.season === snapshot.season ? previous.current.players.length : 0;
+  const nextCount = snapshot.current.players.length;
+  if (previousCount > 0 && nextCount < previousCount * GUARD_MIN_CURRENT_RATIO) {
+    return `the current slate shrank from ${previousCount} to ${nextCount} players`;
+  }
+  return null;
 }
 
 // Single number a player's season standing can be diffed on: the mean of the two percentiles the
@@ -90,7 +118,16 @@ function printDiff(previous, next) {
 }
 
 async function main() {
-  const { dryRun } = parseArgs(process.argv.slice(2));
+  const { dryRun, ifInSeason, guard } = parseArgs(process.argv.slice(2));
+
+  if (ifInSeason) {
+    const { NFL_SPORT_KEY, resolveLeagueSeasonStatus } = await import("../lib/leagueSeasonStatus.ts");
+    const seasonInfo = await resolveLeagueSeasonStatus(NFL_SPORT_KEY);
+    if (seasonInfo.status !== "in_season") {
+      console.log(`[bingo:stars:nfl] NFL is ${seasonInfo.status}; nothing to refresh.`);
+      return;
+    }
+  }
 
   const {
     fetchNFLSeasonStats,
@@ -104,7 +141,12 @@ async function main() {
   const priorSeason = resolvePriorNFLSeasonYear(now);
 
   console.log(`[bingo:stars:nfl] Pulling /nfl/v1/season_stats for season=${season} and season=${priorSeason}...`);
-  const [currentRows, priorRows] = await Promise.all([fetchNFLSeasonStats(season), fetchNFLSeasonStats(priorSeason)]);
+  const currentFailure = { failed: false };
+  const priorFailure = { failed: false };
+  const [currentRows, priorRows] = await Promise.all([
+    fetchNFLSeasonStats(season, { failure: currentFailure }),
+    fetchNFLSeasonStats(priorSeason, { failure: priorFailure }),
+  ]);
   console.log(`[bingo:stars:nfl] current: ${currentRows.length} rows, prior: ${priorRows.length} rows`);
 
   // `computeNFLSeasonStarIndex` only sees playerId (it's a pure function over the percentile math),
@@ -146,6 +188,19 @@ async function main() {
 
   const previous = fs.existsSync(SNAPSHOT_PATH) ? JSON.parse(fs.readFileSync(SNAPSHOT_PATH, "utf8")) : null;
   printDiff(previous, snapshot);
+
+  if (guard) {
+    const reason = guardFailure({
+      failed: { current: currentFailure.failed, prior: priorFailure.failed },
+      previous,
+      snapshot,
+    });
+    if (reason) {
+      console.error(`\n[bingo:stars:nfl] --guard: not writing, ${reason}.`);
+      process.exitCode = 1;
+      return;
+    }
+  }
 
   if (dryRun) {
     console.log("\n--dry-run: not writing.");
