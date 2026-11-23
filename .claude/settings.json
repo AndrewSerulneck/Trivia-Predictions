@@ -37,7 +37,8 @@
       "Bash(supabase link *)",
       "Bash(supabase gen types *)",
       "Bash(vercel env ls *)",
-      "Bash(vercel env add *)"
+      "Bash(vercel env add *)",
+      "Bash(gh pr merge *)"
     ],
     "deny": [
       "Bash(vercel env rm *)",

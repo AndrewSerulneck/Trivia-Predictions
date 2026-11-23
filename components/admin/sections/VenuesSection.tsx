@@ -796,6 +796,25 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
     setVenueList(venues);
   }, [venues]);
 
+  // Display codes (Hightop Challenge TV app, Option 2). Reloaded when the list grows, so a new venue shows its code.
+  const [displayCodes, setDisplayCodes] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/admin?resource=venue-display-codes", { cache: "no-store" });
+        const payload = (await res.json()) as { ok: boolean; codes?: Record<string, string> };
+        if (!cancelled && payload.ok && payload.codes) setDisplayCodes(payload.codes);
+      } catch {
+        // Codes are a convenience; the table works without them.
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [venueList.length]);
+
   const sortedVenues = useMemo(() => {
     // Dedupe by id defensively — a duplicate id would otherwise collide as a
     // React key and drop/duplicate table rows.
@@ -1014,6 +1033,11 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
                         <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-semibold ${venue.screenEnabled === false ? "bg-slate-200 text-slate-700" : "bg-emerald-100 text-emerald-800"}`}>
                           {venue.screenEnabled === false ? "Disabled" : "Enabled"}
                         </span>
+                        {displayCodes[venue.id] ? (
+                          <span className="text-sm font-semibold tracking-widest text-slate-900" title="Display code">
+                            {displayCodes[venue.id]}
+                          </span>
+                        ) : null}
                         <a href={`/venue/${encodeURIComponent(venue.id)}/screen`} target="_blank" rel="noreferrer" className="text-xs font-semibold text-indigo-600 hover:underline">
                           Preview screen
                         </a>

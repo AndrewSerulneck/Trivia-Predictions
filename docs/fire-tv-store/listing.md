@@ -24,6 +24,15 @@ console complains.
 **Category note:** the TV shows the game; people play it on their phones. Under **Games → Trivia**, a reviewer may
 expect to play with the remote and fail the app for "no gameplay". **Entertainment** describes what the TV app does.
 
+## Amazon console IDs (not secret)
+
+Recorded 2026-11-23. Not used by the app (no DRM, no in-app purchases); keep for Amazon support.
+
+| Field | Value |
+|---|---|
+| App ID | `amzn1.devportal.mobileapp.40a765b23bb84ce49109cafe420be156` |
+| Release ID (first release) | `amzn1.devportal.apprelease.8d69b4bca5344d92aae2f7cb2e0ffc5f` |
+
 ## Short description
 
 Paste as is (≈ 190 characters; the key point is in the first sentence):

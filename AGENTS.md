@@ -16,6 +16,12 @@ them; it documents recurring processes and active implementation-plan pointers b
 
 **AI for trivia questions: OpenAI / ChatGPT first (Andrew, repeated; recorded 2026-11-18).** Writing, grading, fact-checking and any new question-pipeline AI step use ChatGPT (Codex on his plan, in the private writer repo) or another OpenAI model. Gemini comes out altogether (D40, 2026-11-19): 4f.1 deleted every Gemini writer; 4f.2 moved the repeat checks, tagging and the backup bar test to the OpenAI API (`lib/openai/`). No Gemini anywhere; never add one. Full rule: `CLAUDE.md` §Trivia and Category Blitz content.
 
+**Native app releases are automatic (Andrew, 2026-11-23).** When you finish a change to a native app's shell (`native/` or `native-tv/`), release it yourself to every store it ships in, without being asked:
+- iOS and Google Play: `native/scripts/store-release.cjs` (runbook `docs/native-app-release-runbook.md`)
+- Fire TV: `npm run fire-tv:release`
+
+Tests and lint must pass first. Report and record what you submitted. Website-only changes need no store release. Full rule: `CLAUDE.md` §Native app releases.
+
 ## Models in phased plans — always
 
 Name models from the **planning agent's own family** (Claude → Claude models, Codex → Codex/GPT models, any

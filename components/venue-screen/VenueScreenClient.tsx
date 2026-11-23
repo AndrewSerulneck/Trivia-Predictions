@@ -30,12 +30,15 @@ import {
   getVenueScreenRetryDelayMs,
   isGoLiveTransition,
   type VenueScreenDebugMode,
+  type VenueScreenPreviewSlide,
 } from "@/lib/venueScreenTiming";
 
 type VenueScreenClientProps = {
   venueId: string;
   initialState: VenueScreenState;
   debugMode?: VenueScreenDebugMode | null;
+  /** Debug only: pin one idle carousel slide (`?mode=carousel&slide=pick-em`). */
+  previewSlide?: VenueScreenPreviewSlide | null;
   /** Play the intro stinger on open. False only for the dashboard thumbnail (`intro=0`). */
   intro?: boolean;
   /** Show the keep-awake readout (`?awake=debug`). */
@@ -253,6 +256,7 @@ export function VenueScreenClient({
   venueId,
   initialState,
   debugMode = null,
+  previewSlide = null,
   intro = true,
   awakeDebug = false,
   poll = true,
@@ -426,7 +430,7 @@ export function VenueScreenClient({
                   <BracketTvScreen state={state} accent={theme.accent} />
                 </ScreenTransition>
               ) : null}
-              {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} /> : null}
+              {state.mode === "idle" ? <IdleVenueScreen state={state} nowMs={nowMs} previewSlide={previewSlide} /> : null}
             </div>
             {liveTakeover && !introPlaying ? (
               <TvGoLiveTakeover

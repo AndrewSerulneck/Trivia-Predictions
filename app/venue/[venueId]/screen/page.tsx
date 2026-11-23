@@ -3,14 +3,14 @@ import { VenueScreenClient } from "@/components/venue-screen/VenueScreenClient";
 import { isIntroDisabled } from "@/components/venue-screen/stingerTimeline";
 import { applyVenueScreenDebugMode } from "@/lib/venueScreenDebug";
 import { getVenueScreenState } from "@/lib/venueScreen";
-import { parseVenueScreenDebugMode } from "@/lib/venueScreenTiming";
+import { parseVenueScreenDebugMode, parseVenueScreenPreviewSlide } from "@/lib/venueScreenTiming";
 
 export default async function VenueScreenPage({
   params,
   searchParams,
 }: {
   params: Promise<{ venueId: string }>;
-  searchParams?: Promise<{ mode?: string | string[]; intro?: string | string[]; awake?: string | string[] }>;
+  searchParams?: Promise<{ mode?: string | string[]; intro?: string | string[]; awake?: string | string[]; slide?: string | string[] }>;
 }) {
   const { venueId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
@@ -26,6 +26,7 @@ export default async function VenueScreenPage({
       venueId={venueId}
       initialState={applyVenueScreenDebugMode(initialState, debugMode, initialState.updatedAt)}
       debugMode={debugMode}
+      previewSlide={parseVenueScreenPreviewSlide(resolvedSearchParams.slide, debugMode)}
       intro={!isIntroDisabled(resolvedSearchParams.intro)}
       awakeDebug={resolvedSearchParams.awake === "debug"}
     />

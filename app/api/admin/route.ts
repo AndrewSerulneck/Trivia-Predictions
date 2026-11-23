@@ -334,6 +334,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: true, accounts });
     }
 
+    // Display codes for Admin → Venues (one bounded read). A rep types the code on the Hightop Challenge TV app's
+    // Connect screen (Option 2) to show any venue's display without the partner signing in (docs/fire-tv-app-plan.md).
+    if (resource === "venue-display-codes") {
+      const { data, error } = await supabaseAdmin!.from("venues").select("id, display_code");
+      if (error) throw new Error(error.message ?? "Failed to load display codes.");
+      const codes: Record<string, string> = {};
+      for (const row of (data ?? []) as Array<{ id: string; display_code: string | null }>) {
+        if (row.display_code) codes[row.id] = row.display_code;
+      }
+      return NextResponse.json({ ok: true, codes }, { headers: { "Cache-Control": "no-store" } });
+    }
+
     if (resource === "hidden-venues") {
       const venues = await listHiddenVenues();
       return NextResponse.json({ ok: true, venues });
