@@ -1,6 +1,6 @@
 # Fire TV app plan ("Hightop Challenge TV")
 
-**Status:** Plan written 2026-11-21. **Phase 1 done 2026-11-21** (mockups, handoff
+**Status:** Plan written 2026-11-21. **Phase 7: 1.0.0 (vc1) submitted 2026-11-23** (no DRM, Fire TV only; App ID `amzn1.devportal.mobileapp.40a765b23bb84ce49109cafe420be156`). **Phase 8b done 2026-11-23:** `npm run fire-tv:release` (see `native-tv/scripts/release.cjs`; keys `AMAZON_APPSTORE_CLIENT_ID/_SECRET` in `.env.local`; dry-run verified; Amazon blocks it while a release is in review). **Phase 1 done 2026-11-21** (mockups, handoff
 `docs/fire-tv-app-plan_PHASE_1_HANDOFF.md`). **Phase 2 done 2026-11-22** (round 1 → D10–D20, round 2 → D21–D25).
 **Phases 3 and 4 merged and deployed 2026-11-22** (PRs #36, #37; handoffs `_PHASE_3_HANDOFF.md`, `_PHASE_4_HANDOFF.md`).
 **Phase 5 waiting on a Fire Stick** (Andrew has none to hand); an emulator smoke test ran instead and fixed the
@@ -12,6 +12,8 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 2026-11-23; the 3–7 day usage baseline started at deploy). See `docs/fire-tv-app-plan_PHASE_9_HANDOFF.md`.
 **Phase 10 built 2026-11-23** on `feat/fire-tv-phase-10` (PR #41; Pick 'Em Live Board + All-Time Leaderboard slides; preview only,
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
+**2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
+start-time bug is now phases N1–N3 of this plan (D29). Next: Phase 11, and N1 any time.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
@@ -131,6 +133,8 @@ different browser, you'll be asked to sign in once.
 | D26 | **D21 covers every display.** Category Blitz, Squares and Bracket also stay off TVs that use the Display URL in Silk. So the Phase 9 switch in `selectVenueScreenState` is global: no `&src=tv-app` flag, and idle responses stay shared-cached by URL. | Andrew, 2026-11-22 ("should also stay off TVs that use the Display URL in Silk today. One behavior is simpler and costs less.") |
 
 | D27 | **Sports data: refresh only while a TV is on.** Today's games and live scores weren't stored anywhere (Pick 'Em asks BallDontLie per page view; the every-minute Pick 'Em job asks only after a picked game starts, and production had 38 picks in 30 days, so reusing its data would leave the board empty most days). So one shared copy of today's games (`tv_sports_games`) serves every venue. An idle state request reads it and, after its response, refreshes the leagues that are due (`claim_tv_sports_refresh`): 2 min while a league has a game live or starting within 2 h (MMA and tennis 10 min), 15 min with games later today, 6 h with none, 30 min when the feed is silent. No TV on the carousel → no feed requests. No cron. BallDontLie is a flat subscription, so $0 more. | Andrew, 2026-11-22 (chose "Refresh only while a TV is on" over "no new feed calls", in Phase 9) |
+| D28 | **Prizes slide: no per-player progress bar.** The mockup's bar shows one player's progress, which doesn't fit a TV that a whole room reads. Phase 11 builds the slide without it. | Andrew, 2026-11-23 ("This is fine with me.") |
+| D29 | **NHL Pick 'Em start-time bug is fixed in this plan** as phases N1–N3 (found in Phase 9: NHL games show and lock at 7 AM New York time). They are website-only, independent of the TV phases, and can run any time. | Andrew, 2026-11-23 ("Can you add that as a phase (or multiple phases) to this plan?") |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -149,6 +153,7 @@ Phase N−1 handoff first."*
 | 6 | Release build, signing, store images, listing text, rating answers, reviewer notes | Agent | Sonnet 5.5 / medium | Well-specified build and copy work. |
 | 7 | Submit to the Amazon Appstore | **Andrew** | — | Console steps only Andrew can do. |
 | 8 | After approval: store link on `/owner/display` | Agent | Haiku 5.5 / low | One link and copy. Use Sonnet 5.5 / medium if the contract test needs new cases. |
+| 8b | Hands-off shell releases: `npm run fire-tv:release` (bump, build, sign, verify, upload via Amazon App Submission API, submit) | Agent | Sonnet 5.5 / medium | Well-defined build script; no data or money. **Done 2026-11-23** (dry run passed; first real use after 1.0.0 is approved). |
 | 9 | Sports data inventory, cost baseline, state engine: carousel data, game ranking, All-Time Leaderboard read, Next Live Trivia wording, 60-minute pre-game and its precedence | Agent | Opus 5.5 / high | Shared engine (`selectVenueScreenState`), precedence, data reads, cost measurement. |
 | 10 | Build the Pick 'Em Live Board and All-Time Leaderboard slides | Agent | Sonnet 5.5 / high | UI fixed by the mockups. High (not medium) because display standing rules (effects keys, no replays on poll, precedence) are easy to break. |
 | 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
@@ -156,6 +161,9 @@ Phase N−1 handoff first."*
 | 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | New SDK and toolchain, little prior art. |
 | 14 | Test on a Vega stick, then add the Vega build to the listing | **Andrew** + agent | Sonnet 5.5 / medium | Device install and console steps with agent help. |
 | 15 | Close-out: usage vs. baseline, standing rules, docs | Agent | Haiku 5.5 / low | Doc-only, plus one read-only usage comparison. |
+| N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
+| N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
+| N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
 | R1 | **Reserved, runs only when Andrew says go (D17):** Bingo "Closest to Bingo" slide: data read, ranking of cards, UI, BINGO! moment | Agent | Opus 5.5 / high | Adds a read to the shared state engine and a moment that must never replay on a poll; one phase does both. |
 | R2 | **Reserved, runs only when Andrew says go (D21):** turn the Category Blitz, Super Bowl Squares and March Madness TV screens back on, add the corner "Get the app" QR to them (D16), add them to Try demo, real-TV check | Agent | Sonnet 5.5 / high | Phase 9 leaves a single switch in `selectVenueScreenState`, so this is a small change, but it touches the shared engine and four display screens; high effort for the precedence and QR-placement rules. |
 
@@ -164,6 +172,8 @@ Phase N−1 handoff first."*
 - Run phases one at a time. Each code phase branches from up-to-date `main` after the previous PR merges.
 - Phase 13 can start after Phase 7 is approved.
 - R1 and R2 run only when Andrew says go.
+- N1–N3 (NHL) are independent of the TV phases and can run before, between or after them, one at a time. N2 waits for
+  N1's handoff; N3 runs on the first NHL game day after N2 is deployed.
 
 ## Cost estimates
 
@@ -550,7 +560,7 @@ See **Andrew's steps → Phase 7**.
 ### Phase 11 — Carousel, ticker, "Get the app" QR everywhere, pre-game title (Agent, Sonnet 5.5 / high)
 
 1. **Carousel (D20):** slides 1 Next Live Trivia, 2 Pick 'Em, 3 All-Time Leaderboard, 4 Prizes, 5 Get the app (today's
-   `TvIdleAttract` with "Hightop Challenge" in full). Rotates client-side from one state response, timed from the wall
+   `TvIdleAttract` with "Hightop Challenge" in full). The Prizes slide has no per-player progress bar (D28). Rotates client-side from one state response, timed from the wall
    clock like `TvIdleAttract`: no extra requests per slide. Skips empty slides. Dots above the ticker. Restarts at
    slide 1 after a game.
 2. **Next Live Trivia slide (D12):** "LIVE TRIVIA" largest, wording from Phase 9 step 3.
@@ -612,6 +622,61 @@ The agent installs onto Andrew's Vega stick with the Vega tools and runs the Pha
    - Game ranking lives only in `lib/tvSportsRelevance.ts`.
 3. Add a CLAUDE.md feature-rules row for the Fire TV app.
 4. Update `SYSTEM_CONTEXT.md` and the memory note.
+
+### Phase N1 — NHL Pick 'Em start time: investigate and decide (Agent, Opus 5.5 / high)
+
+**The bug (found in Phase 9; see `docs/fire-tv-app-plan_PHASE_9_HANDOFF.md`):** `extractEventStartIso` in
+`lib/pickem.ts` tries `event.game_date` before `event.start_time_utc`. BallDontLie's NHL feed sends `game_date` as a
+date only, which normalizes to 12:00 UTC (7 AM New York). So NHL Pick 'Em lists the wrong time and probably locks
+picks from 7 AM. `formatPeriodLabel` also labels NHL periods "Inn. 1". The venue TV is not affected: it uses
+`tvStartsAt`, `tvFeedState` and `tvPeriodLabel` ("P1 9:16").
+
+**Why it needs care:** `buildPickEmGameId` puts `startsAt` inside the id (`<providerId>__<startsAt>__<home>__<away>`).
+Correcting the time changes every NHL `game_id`. Ids are stored in `pickem_picks`, the frozen lines
+(`lib/pickemFrozenLines.ts`), push game-reminder opt-ins (`push_game_reminder_optins`) and possibly tiebreakers
+(`lib/pickemPrizeTiebreaker.ts`, `lib/nflPickEmTiebreaker.ts`). Settlement already falls back to the provider id and
+then to team names (`lib/pickem.ts`, the pending loop), so old picks should still grade, but a player's existing pick
+might show as "not picked" on the list, or let them pick twice.
+
+Read-only. No code changes, no writes to production.
+1. **Every league, not just NHL.** For each league in `BDL_PATH_BY_SPORT_KEY` (`lib/pickem.ts`), fetch one day of
+   real feed rows (a handful of calls in total; BallDontLie is a flat subscription) and record which start fields each
+   league sends and in what form. List every league where `extractEventStartIso` picks a date-only or wrong field.
+2. **Every place a Pick 'Em `game_id` is stored or matched:** grep `game_id` and `gameId` across `lib/`, `app/api/`,
+   `components/` and `supabase/migrations/`. For each: table or file, how it matches (exact id, provider id, team
+   names), and what breaks if the id changes.
+3. **Production counts (read-only, `node --env-file=.env.local`):** open NHL picks, NHL frozen lines, NHL reminder
+   opt-ins, and NHL picks in the last 30 days. Does any current pick show the lock problem (an NHL pick placed after
+   12:00 UTC on game day that was refused, or `starts_at` at `T12:00:00`)?
+4. **Choose the fix.** Planner's recommendation: **keep the id, fix the time.** Build the NHL id from the same
+   value it uses today (the date-normalized `game_date`), but use `start_time_utc` for `startsAt`, the list and the
+   lock. No id changes, no data migration, nothing for players to notice except the right time. If step 2 shows the
+   id can't stay stable safely, write the fallback instead (new ids plus a one-time remap of open rows in a new
+   migration, applied only with Andrew's yes) and ask Andrew before N2.
+5. Also decide the NHL period label for the Pick 'Em list (reuse the TV's hockey label helper rather than adding a
+   second one).
+6. Write the decision, the evidence and N2's exact steps into the N1 handoff.
+
+### Phase N2 — NHL Pick 'Em start time: fix (Agent, Opus 5.5 / high)
+
+1. Branch from up-to-date `main`. Follow the N1 handoff's chosen fix.
+2. Tests first: an NHL row with both `game_date` and `start_time_utc` gives the real start time and (with the
+   recommended fix) the same `game_id` as today; every other league's id is unchanged (snapshot a sample row per
+   league); a pick is open until the real puck-drop and locked after it; NHL periods read as hockey periods, not
+   "Inn.".
+3. Points move only via `pay_pickem_points`, and won/lost picks are never re-graded
+   (`docs/pickem-college-football-and-prize-plan.md`, `docs/bingo-pickem-reliability-plan.md` standing rules).
+4. If N1 chose the fallback: a new migration for the remap, with an undo log, applied only after Andrew says yes.
+5. `npm run test`, `npm run lint`, `npx tsc --noEmit`, then a PR. Website only: no store release.
+
+### Phase N3 — NHL Pick 'Em start time: game-day check (Agent, Haiku 5.5 / low)
+
+On the first NHL game day after N2 deploys (read-only):
+1. The NHL list shows each game's real puck-drop time in the venue's zone.
+2. A pick can be placed after 7 AM New York and before puck-drop; it locks at puck-drop.
+3. Picks made before N2 still show as picked and settle after the game (check `pickem_picks` rows).
+4. The live period label reads "P1", "P2", "OT", not "Inn.".
+5. Record results in the N3 handoff; close D29 in this file's status line, or list fixes for a follow-up.
 
 ### Phase R1 — Bingo "Closest to Bingo" (reserved; Agent, Opus 5.5 / high)
 

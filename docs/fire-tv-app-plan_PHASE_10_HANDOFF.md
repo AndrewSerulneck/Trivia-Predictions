@@ -23,9 +23,8 @@ even after it merges:** the slides only appear when you open a TV address with `
 
 **What's left:** Phase 11 (carousel, ticker, "Get the app" QR on every screen, "LIVE TRIVIA" title on the pre-game).
 
-**What needs you:** nothing blocks Phase 11. Still open from Phase 9: (1) the NHL Pick 'Em start-time bug, which needs
-its own small plan (NHL games show and lock at 7 AM New York time); (2) the Prizes slide's per-player progress bar
-doesn't fit a TV, so Phase 11 will drop it unless you say otherwise.
+**What needs you:** nothing blocks Phase 11. Both questions from Phase 9 are answered (2026-11-23): the Prizes slide
+drops its per-player progress bar (plan D28), and the NHL Pick 'Em start-time bug is now phases N1–N3 of the plan (D29).
 
 **See it:** with the dev server on :3000 open `/venue/<a venue id>/screen?mode=carousel&slide=pick-em&intro=0`, or
 `...mode=carousel-weeknight&slide=pick-em`, or `...mode=carousel&slide=all-time`. (Fixture data; relative times, so the
@@ -120,8 +119,8 @@ Bingo (R1), Category Blitz/Squares/Bracket (R2), college basketball (D19), the N
   feed timing; a 12+ character username at 48 px (it ellipsizes, not checked visually).
 
 ### 7. Open questions for Andrew
-1. NHL Pick 'Em start-time bug: make it its own small plan? (From Phase 9.)
-2. Prizes slide: drop the mockup's progress bar? (Phase 11 will drop it unless told otherwise.)
+None. Answered 2026-11-23: (1) NHL Pick 'Em start-time bug → phases N1–N3 in the plan (D29); (2) Prizes slide → no
+progress bar (D28).
 
 ### 8. First steps for Phase 11
 1. Read this note, the plan's Phase 11 section, D15/D16/D20/D21, and `docs/fire-tv-app-plan_PHASE_9_HANDOFF.md` §4 (idle
