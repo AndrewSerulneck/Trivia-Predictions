@@ -4568,6 +4568,150 @@
       "category": "Music",
       "difficulty": "hard",
       "subcategory": "classic-rock"
+    },
+    {
+      "slug": "the-bee-gees-songs-for-saturday-night-fever-helped-define-what-dance-music-genre",
+      "question": "The Bee Gees' songs for 'Saturday Night Fever' helped define what dance-music genre?",
+      "answer": "Disco",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "kenny-g-became-a-smooth-jazz-star-in-the-1980s-playing-what-wind-instrument",
+      "question": "Kenny G became a smooth-jazz star in the 1980s playing what wind instrument?",
+      "answer": "Saxophone",
+      "acceptableAnswers": [
+        "Sax",
+        "Soprano saxophone",
+        "Soprano sax"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "at-newport-in-1965-bob-dylan-shocked-folk-purists-by-playing-an-electric-version-of-what",
+      "question": "At Newport in 1965, Bob Dylan shocked folk purists by playing an electric version of what instrument?",
+      "answer": "Guitar",
+      "acceptableAnswers": [
+        "Electric guitar"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "in-carl-perkins-1956-hit-what-material-are-the-shoes-you-should-stay-off-made-of",
+      "question": "In Carl Perkins' 1956 hit, what material are the shoes you should stay off made of?",
+      "answer": "Suede",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "easy",
+      "subcategory": "albums-songs-lyrics"
+    },
+    {
+      "slug": "nirvanas-1991-album-nevermind-helped-take-what-seattle-associated-rock-genre-into-the",
+      "question": "Nirvana's 1991 album 'Nevermind' helped take what Seattle-associated rock genre into the mainstream?",
+      "answer": "Grunge",
+      "acceptableAnswers": [
+        "Grunge rock"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "what-pitch-correction-technology-gave-t-pains-vocals-their-signature-robotic-sound-on-his",
+      "question": "What pitch-correction technology gave T-Pain's vocals their signature robotic sound on his 2000s hits?",
+      "answer": "Auto-Tune",
+      "acceptableAnswers": [
+        "Autotune"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "which-band-scored-a-1998-hit-with-i-dont-want-to-miss-a-thing-from-armageddon",
+      "question": "Which band scored a 1998 hit with 'I Don't Want to Miss a Thing' from 'Armageddon'?",
+      "answer": "Aerosmith",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "in-bon-jovis-livin-on-a-prayer-what-is-the-name-of-tommys-girlfriend",
+      "question": "In Bon Jovi's 'Livin' on a Prayer,' what is the name of Tommy's girlfriend?",
+      "answer": "Gina",
+      "acceptableAnswers": [
+        "Jeena"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "classic-rock"
+    },
+    {
+      "slug": "what-music-festival-marked-its-25th-anniversary-in-1994-with-a-famously-muddy-sequel",
+      "question": "What music festival marked its 25th anniversary in 1994 with a famously muddy sequel?",
+      "answer": "Woodstock",
+      "acceptableAnswers": [
+        "Woodstock Festival",
+        "Woodstock '94",
+        "Woodstock 1994"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "what-bass-heavy-electronic-genre-did-skrillex-help-bring-into-the-mainstream-in-the-early",
+      "question": "What bass-heavy electronic genre did Skrillex help bring into the mainstream in the early 2010s?",
+      "answer": "Dubstep",
+      "acceptableAnswers": [
+        "Brostep"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "genres-instruments-terminology"
+    },
+    {
+      "slug": "what-record-label-launched-elvis-presleys-recording-career-in-memphis-in-1954",
+      "question": "What record label launched Elvis Presley's recording career in Memphis in 1954?",
+      "answer": "Sun Records",
+      "acceptableAnswers": [
+        "Sun",
+        "Sun Record Company"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "hard",
+      "subcategory": "music-history-events"
+    },
+    {
+      "slug": "buddy-holly-fronted-what-insect-named-band-on-the-1957-hit-thatll-be-the-day",
+      "question": "Buddy Holly fronted what insect-named band on the 1957 hit 'That'll Be the Day'?",
+      "answer": "The Crickets",
+      "acceptableAnswers": [
+        "Crickets",
+        "Buddy Holly and the Crickets"
+      ],
+      "answer_format": "write_in",
+      "category": "Music",
+      "difficulty": "medium",
+      "subcategory": "band-lineups"
     }
   ]
 }

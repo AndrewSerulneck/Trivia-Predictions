@@ -1,0 +1,171 @@
+{
+  "categoryName": "Current Events",
+  "questions": [
+    {
+      "slug": "in-june-2026-which-actor-returned-as-the-voice-of-cowboy-woody-in-toy-story-5",
+      "question": "In June 2026, which actor returned as the voice of cowboy Woody in Toy Story 5?",
+      "answer": "Tom Hanks",
+      "acceptableAnswers": [
+        "Hanks"
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "medium",
+      "subcategory": "entertainment-and-celebrities",
+      "expires_on": "2027-06-01",
+      "sourceUrl": "https://www.rogerebert.com/reviews/toy-story-5-movie-review-2026"
+    },
+    {
+      "slug": "in-september-2026-amazon-added-shopping-alerts-to-which-assistant-also-the-voice-of-echo",
+      "question": "In September 2026, Amazon added shopping alerts to which assistant, also the voice of Echo speakers?",
+      "answer": "Alexa",
+      "acceptableAnswers": [
+        "Amazon Alexa",
+        "Alexa for Shopping"
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "medium",
+      "subcategory": "business-and-tech",
+      "expires_on": "2027-09-01",
+      "sourceUrl": "https://techcrunch.com/2026/09/01/amazon-alexa-can-now-alert-you-when-something-new-might-tempt-you-to-shop/"
+    },
+    {
+      "slug": "in-june-2026-spacex-made-its-stock-market-debut-under-which-billionaire-founder",
+      "question": "In June 2026, SpaceX made its stock-market debut under which billionaire founder?",
+      "answer": "Elon Musk",
+      "acceptableAnswers": [
+        "Musk"
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "easy",
+      "subcategory": "business-and-tech",
+      "expires_on": "2027-06-01",
+      "sourceUrl": "https://finance.yahoo.com/markets/stocks/articles/road-spacexs-juggernaut-ipo-155425632.html"
+    },
+    {
+      "slug": "in-october-2026-which-mission-impossible-star-played-an-oil-tycoon-in-digger",
+      "question": "In October 2026, which Mission: Impossible star played an oil tycoon in Digger?",
+      "answer": "Tom Cruise",
+      "acceptableAnswers": [
+        "Cruise"
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "easy",
+      "subcategory": "entertainment-and-celebrities",
+      "expires_on": "2027-10-01",
+      "sourceUrl": "https://www.radiotimes.com/movies/digger-tom-cruise-review/"
+    },
+    {
+      "slug": "in-august-2026-a-total-solar-eclipse-darkened-reykjavik-the-capital-of-what-island-nation",
+      "question": "In August 2026, a total solar eclipse darkened Reykjavik, the capital of what island nation?",
+      "answer": "Iceland",
+      "acceptableAnswers": [
+        "Republic of Iceland"
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "medium",
+      "subcategory": "science-health-and-space",
+      "expires_on": "2027-08-01",
+      "sourceUrl": "https://grapevine.is/news/2026/08/14/grapevine-readers-august-12-2026-eclipse-photos-cloud-cover-didnt-harsh-our-vibes/"
+    },
+    {
+      "slug": "in-april-2026-reed-hastings-announced-his-board-exit-from-what-streaming-giant-that-began",
+      "question": "In April 2026, Reed Hastings announced his board exit from what streaming giant that began by mailing DVDs?",
+      "answer": "Netflix",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "medium",
+      "subcategory": "business-and-tech",
+      "expires_on": "2027-04-01",
+      "sourceUrl": "https://news.bloomberglaw.com/tech-and-telecom-law/netflix-co-founder-reed-hastings-to-leave-board-in-june"
+    },
+    {
+      "slug": "in-march-2026-which-company-introduced-the-599-macbook-neo-laptop",
+      "question": "In March 2026, which company introduced the $599 MacBook Neo laptop?",
+      "answer": "Apple",
+      "acceptableAnswers": [
+        "Apple Inc."
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "easy",
+      "subcategory": "business-and-tech",
+      "expires_on": "2027-03-01",
+      "sourceUrl": "https://www.apple.com/gw/newsroom/2026/03/say-hello-to-macbook-neo/"
+    },
+    {
+      "slug": "in-january-2026-which-toy-company-unveiled-a-smart-brick-that-adds-lights-and-sounds-to",
+      "question": "In January 2026, which toy company unveiled a Smart Brick that adds lights and sounds to its plastic building sets?",
+      "answer": "Lego",
+      "acceptableAnswers": [
+        "The Lego Group"
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "easy",
+      "subcategory": "business-and-tech",
+      "expires_on": "2027-01-01",
+      "sourceUrl": "https://www.lego.com/en-us/aboutus/news/2026/december/lego-smart-play-announcement"
+    },
+    {
+      "slug": "in-july-2026-which-director-brought-homers-the-odyssey-to-movie-theaters-with-matt-damon",
+      "question": "In July 2026, which director brought Homer's The Odyssey to movie theaters with Matt Damon as Odysseus?",
+      "answer": "Christopher Nolan",
+      "acceptableAnswers": [
+        "Nolan",
+        "Chris Nolan"
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "hard",
+      "subcategory": "entertainment-and-celebrities",
+      "expires_on": "2027-07-01",
+      "sourceUrl": "https://www.rogerebert.com/reviews/the-odyssey-christopher-nolan-matt-damon-film-review-2026"
+    },
+    {
+      "slug": "in-july-2026-which-country-beat-argentina-10-to-win-the-mens-soccer-world-cup",
+      "question": "In July 2026, which country beat Argentina 1–0 to win the men's soccer World Cup?",
+      "answer": "Spain",
+      "acceptableAnswers": [
+        "España"
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "hard",
+      "subcategory": "sports",
+      "expires_on": "2027-07-01",
+      "sourceUrl": "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/spain-argentina-final-report-highlights"
+    },
+    {
+      "slug": "in-october-2026-which-company-behind-mario-released-switch-sports-resort-for-its-newest",
+      "question": "In October 2026, which company behind Mario released Switch Sports Resort for its newest console?",
+      "answer": "Nintendo",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "medium",
+      "subcategory": "business-and-tech",
+      "expires_on": "2027-10-01",
+      "sourceUrl": "https://www.nintendo.co.jp/ir/pdf/2026/261105_3e.pdf"
+    },
+    {
+      "slug": "in-november-2026-xbox-celebrated-its-25th-anniversary-as-the-gaming-brand-of-which-company",
+      "question": "In November 2026, Xbox celebrated its 25th anniversary as the gaming brand of which company?",
+      "answer": "Microsoft",
+      "acceptableAnswers": [
+        "Microsoft Corporation"
+      ],
+      "answer_format": "write_in",
+      "category": "Current Events",
+      "difficulty": "medium",
+      "subcategory": "business-and-tech",
+      "expires_on": "2027-11-01",
+      "sourceUrl": "https://news.xbox.com/en-us/2026/11/15/xbox-25th-anniversary-the-magazine/"
+    }
+  ]
+}

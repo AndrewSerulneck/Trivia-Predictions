@@ -4820,6 +4820,171 @@
         "I Love Lucy"
       ],
       "subcategory": "television-history"
+    },
+    {
+      "slug": "what-song-asks-whatcha-gonna-do-in-the-opening-theme-of-cops",
+      "question": "What song asks 'Whatcha gonna do?' in the opening theme of Cops?",
+      "answer": "Bad Boys",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "reality-competition"
+    },
+    {
+      "slug": "what-starship-does-captain-kirk-command-in-the-original-star-trek",
+      "question": "What starship does Captain Kirk command in the original Star Trek?",
+      "answer": "Enterprise",
+      "acceptableAnswers": [
+        "USS Enterprise",
+        "U.S.S. Enterprise",
+        "NCC-1701"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "drama-cable"
+    },
+    {
+      "slug": "who-won-the-first-season-of-american-idol-in-2002",
+      "question": "Who won the first season of American Idol in 2002?",
+      "answer": "Kelly Clarkson",
+      "acceptableAnswers": [
+        "Clarkson"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "who-served-as-johnny-carsons-announcer-and-sidekick-when-his-tonight-show-run-began-in",
+      "question": "Who served as Johnny Carson's announcer and sidekick when his Tonight Show run began in 1962?",
+      "answer": "Ed McMahon",
+      "acceptableAnswers": [
+        "McMahon",
+        "Edward McMahon"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "snl-late-night-recent"
+    },
+    {
+      "slug": "who-played-sonny-crockett-the-pastel-wearing-detective-on-miami-vice",
+      "question": "Who played Sonny Crockett, the pastel-wearing detective on Miami Vice?",
+      "answer": "Don Johnson",
+      "acceptableAnswers": [
+        "Johnson"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
+    },
+    {
+      "slug": "which-actress-played-sweet-but-scatterbrained-rose-nylund-on-the-golden-girls",
+      "question": "Which actress played sweet but scatterbrained Rose Nylund on The Golden Girls?",
+      "answer": "Betty White",
+      "acceptableAnswers": [
+        "White"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "sitcoms-comedy"
+    },
+    {
+      "slug": "in-2025-saturday-night-live-celebrated-what-numbered-anniversary-with-a-prime-time-special",
+      "question": "In 2025, Saturday Night Live celebrated what numbered anniversary with a prime-time special?",
+      "answer": "50",
+      "acceptableAnswers": [
+        "50th",
+        "Fifty",
+        "Fiftieth"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "snl-late-night-recent"
+    },
+    {
+      "slug": "in-what-country-do-bluey-her-sister-bingo-and-their-parents-live",
+      "question": "In what country do Bluey, her sister Bingo, and their parents live?",
+      "answer": "Australia",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "animated-series"
+    },
+    {
+      "slug": "what-cartoon-hero-raises-his-sword-and-shouts-by-the-power-of-grayskull",
+      "question": "What cartoon hero raises his sword and shouts, 'By the power of Grayskull'?",
+      "answer": "He-Man",
+      "acceptableAnswers": [
+        "Heman"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "animated-series"
+    },
+    {
+      "slug": "who-played-fox-mulder-the-fbi-agent-who-wanted-to-believe-on-the-x-files",
+      "question": "Who played Fox Mulder, the FBI agent who wanted to believe, on The X-Files?",
+      "answer": "David Duchovny",
+      "acceptableAnswers": [
+        "Duchovny"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "drama-cable"
+    },
+    {
+      "slug": "what-kind-of-animal-is-bullwinkle-the-cartoon-partner-of-rocky-the-flying-squirrel",
+      "question": "What kind of animal is Bullwinkle, the cartoon partner of Rocky the flying squirrel?",
+      "answer": "Moose",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "animated-series"
+    },
+    {
+      "slug": "what-game-show-lost-longtime-host-alex-trebek-in-2020",
+      "question": "What game show lost longtime host Alex Trebek in 2020?",
+      "answer": "Jeopardy!",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "easy",
+      "subcategory": "television-history"
+    },
+    {
+      "slug": "what-animated-educational-series-featured-the-songs-conjunction-junction-and-im-just-a",
+      "question": "What animated educational series featured the songs 'Conjunction Junction' and 'I'm Just a Bill'?",
+      "answer": "Schoolhouse Rock!",
+      "acceptableAnswers": [
+        "School House Rock"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "animated-series"
+    },
+    {
+      "slug": "which-cable-network-originally-aired-both-breaking-bad-and-mad-men",
+      "question": "Which cable network originally aired both Breaking Bad and Mad Men?",
+      "answer": "AMC",
+      "acceptableAnswers": [
+        "American Movie Classics"
+      ],
+      "answer_format": "write_in",
+      "category": "Television",
+      "difficulty": "medium",
+      "subcategory": "television-history"
     }
   ]
 }
