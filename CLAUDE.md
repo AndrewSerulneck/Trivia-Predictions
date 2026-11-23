@@ -41,6 +41,20 @@ the table.
 - Build: `npm run build` · Lint: `npm run lint` · Tests: `npm run test` (Vitest)
 - Typecheck: `npx tsc --noEmit` (fresh clone: `npx next typegen` first). Never run typecheck and build at the same time.
 
+## Native app releases — automatic (Andrew, 2026-11-23)
+When you finish a change to a native app's **shell** (anything under `native/` or `native-tv/`: plugins, config,
+icons, permissions, version), release it yourself to every store it ships in. Don't wait to be asked. Website changes
+need no release: the phone apps load `play.hightopchallenge.com` and the TV app loads the TV pages.
+- **iOS + Google Play:** build with a raised build number / version code, then upload and submit using
+  `native/scripts/store-release.cjs` (Google Play: `play-upload`, then `play-promote` with a staged `--fraction`;
+  iOS: upload via `xcodebuild -exportArchive`, then `asc-prepare` and `asc-submit`).
+  Runbook: `docs/native-app-release-runbook.md`.
+- **Fire TV (Amazon):** `npm run fire-tv:release` (bump, build, sign check, upload, submit). It stops if a release is
+  still in review.
+- Run the tests and lint first; never release a failing build. Store review can't be skipped. Report what was
+  submitted (version / build) and record it in the feature's plan and handoff.
+- Keys live in `~/Library/Application Support/Hightop Challenge/signing/` and `.env.local`; never print them.
+
 ## Do Not Touch (Hard Boundaries)
 - **`.env.local` is APPEND-ONLY; values are never read, printed or exposed** (~75 live secrets). Add with
   `echo 'KEY=value' >> .env.local` (always `>>`). See names only: `cut -d= -f1 .env.local | sort`. Never

@@ -192,8 +192,10 @@ node native/scripts/store-release.cjs asc-submit --version X            # App Re
 ```
 
 iOS upload itself stays `xcodebuild -exportArchive` with an options plist whose `destination` is `upload`. Order:
-build → upload both → testers install → device checks → **Andrew's go-ahead** → `asc-submit` / `play-promote`.
-Never submit or promote before the device checks pass and Andrew says so.
+build → tests/lint pass → upload both → `asc-submit` / `play-promote` (staged `--fraction`).
+**Changed 2026-11-23 (Andrew):** agents release shell changes to every store automatically when the work is done;
+no separate go-ahead is needed (`CLAUDE.md` §Native app releases). Device checks by testers still help but no longer
+block submission.
 
 ## Release timing and recovery
 
