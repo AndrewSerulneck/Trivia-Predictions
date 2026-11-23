@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). Next: T1. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** Next: confirm #41 CI, merge it, then T2. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -164,7 +164,7 @@ handoff of the row above it first."*
 | 8b | Hands-off shell releases: `npm run fire-tv:release` (bump, build, sign, verify, upload via Amazon App Submission API, submit) | Agent | Sonnet 5.5 / medium | Done 2026-11-23 (dry run passed; first real use after 1.0.0 is approved) | Well-defined build script; no data or money. |
 | 9 | Sports data inventory, cost baseline, state engine: carousel data, game ranking, All-Time Leaderboard read, Next Live Trivia wording, 60-minute pre-game and its precedence | Agent | Opus 5.5 / high | Done; merged and deployed 2026-11-23 (PR #39) | Shared engine (`selectVenueScreenState`), precedence, data reads, cost measurement. |
 | 10 | Build the Pick 'Em Live Board and All-Time Leaderboard slides | Agent | Sonnet 5.5 / high | Built 2026-11-23; PR #41 open; merged in the "10 (merge)" row | UI fixed by the mockups. High (not medium) because display standing rules (effects keys, no replays on poll, precedence) are easy to break. |
-| T1 | Fix the two tests that fail on `main`: one test line in question-variety; refresh the NFL star snapshot (D30) | Agent | Haiku 5.5 / low | **Next.** Now | A one-line test change and one existing generator script, with no app code, migration or deploy. Use Sonnet 5.5 / medium if the snapshot diff looks wrong. |
+| T1 | Fix the two tests that fail on `main`: one test line in question-variety; refresh the NFL star snapshot (D30) | Agent | Haiku 5.5 / low | Done 2026-11-23 (PR #43) | A one-line test change and one existing generator script, with no app code, migration or deploy. Use Sonnet 5.5 / medium if the snapshot diff looks wrong. |
 | 10 (merge) | Finish Phase 10: update PR #41 from `main`, confirm CI passes, merge (deploys; the slides stay preview-only until Phase 11) | Agent | Haiku 5.5 / low | After T1 merges | Mechanical: branch update, check CI, merge. No new code. |
 | T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that opens a refresh PR (D30) | Agent | Sonnet 5.5 / medium | After T1; within 14 days of T1's refresh while NFL is in season. Needs your yes on the secret | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
 | N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | After T2 | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
