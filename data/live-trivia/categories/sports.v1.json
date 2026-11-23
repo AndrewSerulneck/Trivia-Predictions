@@ -4874,6 +4874,171 @@
       "difficulty": "medium",
       "subcategory": "football",
       "answer_format": "write_in"
+    },
+    {
+      "slug": "which-hockey-star-nicknamed-the-great-one-led-edmonton-to-four-stanley-cups-in-the-1980s",
+      "question": "Which hockey star nicknamed 'The Great One' led Edmonton to four Stanley Cups in the 1980s?",
+      "answer": "Wayne Gretzky",
+      "acceptableAnswers": [
+        "Gretzky"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "which-american-swimmer-won-eight-gold-medals-at-the-2008-beijing-olympics",
+      "question": "Which American swimmer won eight gold medals at the 2008 Beijing Olympics?",
+      "answer": "Michael Phelps",
+      "acceptableAnswers": [
+        "Phelps"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "which-country-did-the-us-hockey-team-defeat-in-the-1980-miracle-on-ice",
+      "question": "Which country did the U.S. hockey team defeat in the 1980 'Miracle on Ice'?",
+      "answer": "Soviet Union",
+      "acceptableAnswers": [
+        "USSR",
+        "U.S.S.R.",
+        "The Soviet Union",
+        "Soviets"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "which-city-hosted-the-summer-olympics-in-2021-after-a-one-year-pandemic-delay",
+      "question": "Which city hosted the Summer Olympics in 2021 after a one-year pandemic delay?",
+      "answer": "Tokyo",
+      "acceptableAnswers": [
+        "Tokyo, Japan"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "to-what-city-did-the-brooklyn-dodgers-move-in-1958",
+      "question": "To what city did the Brooklyn Dodgers move in 1958?",
+      "answer": "Los Angeles",
+      "acceptableAnswers": [
+        "LA",
+        "L.A."
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "what-team-ended-a-108-year-world-series-title-drought-in-2016",
+      "question": "What team ended a 108-year World Series title drought in 2016?",
+      "answer": "Chicago Cubs",
+      "acceptableAnswers": [
+        "Cubs"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "introduced-in-the-american-league-in-1973-the-designated-hitter-bats-in-place-of-which",
+      "question": "Introduced in the American League in 1973, the designated hitter bats in place of which position?",
+      "answer": "Pitcher",
+      "acceptableAnswers": [
+        "The pitcher"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "rules-terminology"
+    },
+    {
+      "slug": "in-1954-roger-bannister-became-the-first-person-to-run-a-mile-in-less-than-how-many",
+      "question": "In 1954, Roger Bannister became the first person to run a mile in less than how many minutes?",
+      "answer": "Four",
+      "acceptableAnswers": [
+        "4",
+        "Four minutes",
+        "4 minutes"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "records-statistics"
+    },
+    {
+      "slug": "in-what-sport-did-simone-biles-win-three-gold-medals-at-the-2024-paris-olympics",
+      "question": "In what sport did Simone Biles win three gold medals at the 2024 Paris Olympics?",
+      "answer": "Gymnastics",
+      "acceptableAnswers": [
+        "Artistic gymnastics"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "easy",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "which-baseball-team-broke-the-curse-of-the-bambino-by-winning-the-2004-world-series",
+      "question": "Which baseball team broke the 'Curse of the Bambino' by winning the 2004 World Series?",
+      "answer": "Red Sox",
+      "acceptableAnswers": [
+        "Boston Red Sox",
+        "Boston"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "historical-moments"
+    },
+    {
+      "slug": "which-center-fielder-nicknamed-the-say-hey-kid-made-the-catch-in-the-1954-world-series",
+      "question": "Which center fielder nicknamed the 'Say Hey Kid' made 'The Catch' in the 1954 World Series?",
+      "answer": "Willie Mays",
+      "acceptableAnswers": [
+        "Mays"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "hard",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "which-quarterback-guaranteed-a-jets-victory-before-super-bowl-iii-in-1969",
+      "question": "Which quarterback guaranteed a Jets victory before Super Bowl III in 1969?",
+      "answer": "Joe Namath",
+      "acceptableAnswers": [
+        "Namath",
+        "Broadway Joe"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "notable-figures"
+    },
+    {
+      "slug": "which-nfl-team-recorded-the-super-bowl-shuffle-during-its-championship-season-in-1985",
+      "question": "Which NFL team recorded 'The Super Bowl Shuffle' during its championship season in 1985?",
+      "answer": "Chicago Bears",
+      "acceptableAnswers": [
+        "Bears",
+        "Chicago"
+      ],
+      "answer_format": "write_in",
+      "category": "Sports",
+      "difficulty": "medium",
+      "subcategory": "teams-franchises"
     }
   ]
 }
