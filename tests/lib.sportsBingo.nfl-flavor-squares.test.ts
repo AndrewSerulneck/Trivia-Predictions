@@ -737,6 +737,10 @@ describe("feed call volume", () => {
 // --- Board composition ---------------------------------------------------------------------------
 
 describe("board composition", () => {
+  // These tests build 25-40 whole boards after a fresh module import (beforeEach resets modules).
+  // ~1.4 s locally, but a loaded CI runner pushed one past Vitest's 5 s default (PR #44, 2026-11-23).
+  const BOARD_LOOP_TIMEOUT_MS = 30_000;
+
   it("caps the Tier-1 block per board and per team, and still fills 24 squares", async () => {
     const { buildSportsBingoBoardFromBallDontLieGame } = await import("@/lib/sportsBingo");
     const { buildNFLMarketModel } = await import("@/lib/sportsBingoOdds");
@@ -767,7 +771,7 @@ describe("board composition", () => {
       }
     }
     expect(boards).toBe(40);
-  });
+  }, BOARD_LOOP_TIMEOUT_MS);
 
   it("BINGO_NFL_TIER1_MAX_PER_BOARD=0 actually zeroes the Tier-1 block (kill switch)", async () => {
     // Regression for the `parseInt(env) || 3` bug: "0" parses to the falsy number 0, so `|| 3`
@@ -789,7 +793,7 @@ describe("board composition", () => {
       const tier1 = built.squares.filter((square) => !square.isFree && isNFLTeamStatsResolver(square.resolver));
       expect(tier1).toHaveLength(0);
     }
-  });
+  }, BOARD_LOOP_TIMEOUT_MS);
 
   it("puts flavor squares on essentially every board", async () => {
     // The point of the phase: a board should no longer be 23 restatements of the spread and the
@@ -821,7 +825,7 @@ describe("board composition", () => {
       Math.random = originalRandom;
     }
     expect(withFlavor).toBe(25);
-  });
+  }, BOARD_LOOP_TIMEOUT_MS);
 
   it("labels every flavor square as a sentence, never as a resolver kind", async () => {
     const { buildSportsBingoBoardFromBallDontLieGame } = await import("@/lib/sportsBingo");

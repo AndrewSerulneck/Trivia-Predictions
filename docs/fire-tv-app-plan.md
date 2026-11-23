@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done 2026-11-23 (PR #46 stacked on #45; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`); its first run needs both merged.** Next: N1. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** Next: N1. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
