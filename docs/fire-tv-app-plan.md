@@ -14,7 +14,8 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). Next: T1, then Phase 11; N1 any time.
+(including #41); the fixes are phases T1–T2 (D30). Next: T1. The phase table under "Phases, model and effort" is in
+run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
@@ -142,44 +143,47 @@ If you disagree with D5–D9, say so at the start of any phase.
 
 ## Phases, model and effort
 
+**The rows are in run order. Work down them.** The top rows are done or waiting on Amazon; start at the row marked **Next**. If a row's
+"Starts when" isn't true yet, skip it and come back. Run one row at a time: each code phase branches from up-to-date
+`main` after the previous PR merges.
+
 "Agent" = a Claude Code session. Start each in a new session with: *"Do Phase N of docs/fire-tv-app-plan.md. Read the
-Phase N−1 handoff first."*
+handoff of the row above it first."*
 
-| Phase | What | Who | Model / effort | Why this model |
-|---|---|---|---|---|
-| 1 | Mockups of every new TV screen + app icon/banner concepts | Agent | Sonnet 5.5 / high | Visual design, no production code. High effort (instead of the usual medium for UI) because a weak mockup wastes your review and a session. |
-| 2 | Review the mockups: keep / change / cut (done 2026-11-22: round 1 → D10–D20, round 2 → D21–D25) | **Andrew** | (reply in the Phase 1 chat) | Your taste decides it. An agent recording a round and republishing the mockups uses Sonnet 5.5 / medium (copy and mockup edits, no production code). |
-| 3 | Connect backend + `/tv-app` start page + Try demo + phone Connect page | Agent | Opus 5.5 / high | Migration, partner auth, `proxy.ts` edge rules, a public endpoint. |
-| 4 | Fire OS app (`native-tv/`, Kotlin WebView shell) | Agent | Opus 5.5 / high | New native project, store rules, UA trap, security of what the WebView may open. |
-| 5 | Install a test build on your Fire Stick and test it | **Andrew** + agent | Sonnet 5.5 / medium | Agent runs install commands and fixes small bugs; the device checklist is well defined. |
-| 6 | Release build, signing, store images, listing text, rating answers, reviewer notes | Agent | Sonnet 5.5 / medium | Well-specified build and copy work. |
-| 7 | Submit to the Amazon Appstore | **Andrew** | — | Console steps only Andrew can do. |
-| 8 | After approval: store link on `/owner/display` | Agent | Haiku 5.5 / low | One link and copy. Use Sonnet 5.5 / medium if the contract test needs new cases. |
-| 8b | Hands-off shell releases: `npm run fire-tv:release` (bump, build, sign, verify, upload via Amazon App Submission API, submit) | Agent | Sonnet 5.5 / medium | Well-defined build script; no data or money. **Done 2026-11-23** (dry run passed; first real use after 1.0.0 is approved). |
-| 9 | Sports data inventory, cost baseline, state engine: carousel data, game ranking, All-Time Leaderboard read, Next Live Trivia wording, 60-minute pre-game and its precedence | Agent | Opus 5.5 / high | Shared engine (`selectVenueScreenState`), precedence, data reads, cost measurement. |
-| 10 | Build the Pick 'Em Live Board and All-Time Leaderboard slides | Agent | Sonnet 5.5 / high | UI fixed by the mockups. High (not medium) because display standing rules (effects keys, no replays on poll, precedence) are easy to break. |
-| 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
-| 12 | Real-TV check of the sports screens on a game day, then record results | **Andrew** + agent | Haiku 5.5 / low | Andrew checks; agent only records results and files fixes. |
-| 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | New SDK and toolchain, little prior art. |
-| 14 | Test on a Vega stick, then add the Vega build to the listing | **Andrew** + agent | Sonnet 5.5 / medium | Device install and console steps with agent help. |
-| 15 | Close-out: usage vs. baseline, standing rules, docs | Agent | Haiku 5.5 / low | Doc-only, plus one read-only usage comparison. |
-| N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
-| N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
-| N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
-| T1 | Fix the two tests that fail on `main`: one test line in question-variety; refresh the NFL star snapshot (D30) | Agent | Haiku 5.5 / low | A one-line test change and one existing generator script, with no app code, migration or deploy. Use Sonnet 5.5 / medium if the snapshot diff looks wrong. |
-| T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that opens a refresh PR (D30) | Agent | Sonnet 5.5 / medium | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
-| R1 | **Reserved, runs only when Andrew says go (D17):** Bingo "Closest to Bingo" slide: data read, ranking of cards, UI, BINGO! moment | Agent | Opus 5.5 / high | Adds a read to the shared state engine and a moment that must never replay on a poll; one phase does both. |
-| R2 | **Reserved, runs only when Andrew says go (D21):** turn the Category Blitz, Super Bowl Squares and March Madness TV screens back on, add the corner "Get the app" QR to them (D16), add them to Try demo, real-TV check | Agent | Sonnet 5.5 / high | Phase 9 leaves a single switch in `selectVenueScreenState`, so this is a small change, but it touches the shared engine and four display screens; high effort for the precedence and QR-placement rules. |
+| Phase | What | Who | Model / effort | Starts when / status | Why this model |
+|---|---|---|---|---|---|
+| 1 | Mockups of every new TV screen + app icon/banner concepts | Agent | Sonnet 5.5 / high | Done 2026-11-21 | Visual design, no production code. High effort (instead of the usual medium for UI) because a weak mockup wastes your review and a session. |
+| 2 | Review the mockups: keep / change / cut | **Andrew** | (reply in the Phase 1 chat) | Done 2026-11-22 (round 1 → D10–D20, round 2 → D21–D25) | Your taste decides it. An agent recording a round and republishing the mockups uses Sonnet 5.5 / medium (copy and mockup edits, no production code). |
+| 3 | Connect backend + `/tv-app` start page + Try demo + phone Connect page | Agent | Opus 5.5 / high | Done; merged and deployed 2026-11-22 (PR #36) | Migration, partner auth, `proxy.ts` edge rules, a public endpoint. |
+| 4 | Fire OS app (`native-tv/`, Kotlin WebView shell) | Agent | Opus 5.5 / high | Done; merged 2026-11-22 (PR #37) | New native project, store rules, UA trap, security of what the WebView may open. |
+| 6 | Release build, signing, store images, listing text, rating answers, reviewer notes | Agent | Sonnet 5.5 / medium | Done 2026-11-22 (PR #38) | Well-specified build and copy work. |
+| 7 | Submit to the Amazon Appstore | **Andrew** | — | Submitted 2026-11-23; in Amazon review | Console steps only Andrew can do. |
+| 8b | Hands-off shell releases: `npm run fire-tv:release` (bump, build, sign, verify, upload via Amazon App Submission API, submit) | Agent | Sonnet 5.5 / medium | Done 2026-11-23 (dry run passed; first real use after 1.0.0 is approved) | Well-defined build script; no data or money. |
+| 9 | Sports data inventory, cost baseline, state engine: carousel data, game ranking, All-Time Leaderboard read, Next Live Trivia wording, 60-minute pre-game and its precedence | Agent | Opus 5.5 / high | Done; merged and deployed 2026-11-23 (PR #39) | Shared engine (`selectVenueScreenState`), precedence, data reads, cost measurement. |
+| 10 | Build the Pick 'Em Live Board and All-Time Leaderboard slides | Agent | Sonnet 5.5 / high | Built 2026-11-23; PR #41 open; merged in the "10 (merge)" row | UI fixed by the mockups. High (not medium) because display standing rules (effects keys, no replays on poll, precedence) are easy to break. |
+| T1 | Fix the two tests that fail on `main`: one test line in question-variety; refresh the NFL star snapshot (D30) | Agent | Haiku 5.5 / low | **Next.** Now | A one-line test change and one existing generator script, with no app code, migration or deploy. Use Sonnet 5.5 / medium if the snapshot diff looks wrong. |
+| 10 (merge) | Finish Phase 10: update PR #41 from `main`, confirm CI passes, merge (deploys; the slides stay preview-only until Phase 11) | Agent | Haiku 5.5 / low | After T1 merges | Mechanical: branch update, check CI, merge. No new code. |
+| T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that opens a refresh PR (D30) | Agent | Sonnet 5.5 / medium | After T1; within 14 days of T1's refresh while NFL is in season. Needs your yes on the secret | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
+| N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | After T2 | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
+| N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | After N1's handoff (and your answer, if N1 asks one) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
+| N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | First NHL game day after N2 deploys | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
+| 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | After N3 | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
+| 12 | Real-TV check of the sports screens on a game day, then record results | **Andrew** + agent | Haiku 5.5 / low | A game day after Phase 11 deploys | Andrew checks; agent only records results and files fixes. |
+| 5 | Install a test build on your Fire Stick and test it | **Andrew** + agent | Sonnet 5.5 / medium | When you have a Fire Stick. Do it as soon as one arrives, even out of order | Agent runs install commands and fixes small bugs; the device checklist is well defined. |
+| 8 | After approval: store link on `/owner/display` | Agent | Haiku 5.5 / low | After Amazon approves 1.0.0 | One link and copy. Use Sonnet 5.5 / medium if the contract test needs new cases. |
+| 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | After Amazon approves 1.0.0 | New SDK and toolchain, little prior art. |
+| 14 | Test on a Vega stick, then add the Vega build to the listing | **Andrew** + agent | Sonnet 5.5 / medium | After Phase 13, with a Vega stick | Device install and console steps with agent help. |
+| 15 | Close-out: usage vs. baseline, standing rules, docs | Agent | Haiku 5.5 / low | Last | Doc-only, plus one read-only usage comparison. |
+| R1 | **Reserved, runs only when Andrew says go (D17):** Bingo "Closest to Bingo" slide: data read, ranking of cards, UI, BINGO! moment | Agent | Opus 5.5 / high | Only when you say go (D17) | Adds a read to the shared state engine and a moment that must never replay on a poll; one phase does both. |
+| R2 | **Reserved, runs only when Andrew says go (D21):** turn the Category Blitz, Super Bowl Squares and March Madness TV screens back on, add the corner "Get the app" QR to them (D16), add them to Try demo, real-TV check | Agent | Sonnet 5.5 / high | Only when you say go (D21) | Phase 9 leaves a single switch in `selectVenueScreenState`, so this is a small change, but it touches the shared engine and four display screens; high effort for the precedence and QR-placement rules. |
 
-**Order:**
-- Phases 9–12 are website work. They can run any time after Phase 2, including while Amazon reviews Phase 7.
-- Run phases one at a time. Each code phase branches from up-to-date `main` after the previous PR merges.
-- Phase 13 can start after Phase 7 is approved.
-- R1 and R2 run only when Andrew says go.
-- N1–N3 (NHL) are independent of the TV phases and can run before, between or after them, one at a time. N2 waits for
-  N1's handoff; N3 runs on the first NHL game day after N2 is deployed.
-- **T1 runs first, before PR #41 merges**, as its own small PR from `main`; then re-run #41's CI. T2 can run any time
-  after T1, and must run before the snapshot goes stale again (14 days after T1's refresh, while NFL is in season).
+**Why this order (2026-11-23):**
+- **T1 first:** two tests fail on `main`, so every PR's CI is red until it merges.
+- **N1–N3 before Phase 11:** the NHL bug hurts players now (picks lock at 7 AM New York on every NHL game day). Phase 11
+  only adds TV screens. The NHL phases are independent of the TV phases, so if you'd rather do 11 first, swap them.
+- **Phase 5** needs a Fire Stick and **8 / 13** need Amazon's approval. They sit where they're likely to become possible,
+  but run them as soon as they can.
+- **R1 and R2** run only when you say go.
 
 ## Cost estimates
 
