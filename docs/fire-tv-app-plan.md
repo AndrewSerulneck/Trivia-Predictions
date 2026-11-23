@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** Next: T2 (waits on Andrew's secret yes). The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done 2026-11-23 (PR #46 stacked on #45; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`); its first run needs both merged.** Next: N1. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -139,6 +139,7 @@ different browser, you'll be asked to sign in once.
 | D29 | **NHL Pick 'Em start-time bug is fixed in this plan** as phases N1–N3 (found in Phase 9: NHL games show and lock at 7 AM New York time). They are website-only, independent of the TV phases, and can run any time. | Andrew, 2026-11-23 ("Can you add that as a phase (or multiple phases) to this plan?") |
 | D30 | **The two tests that fail on `main` are fixed in this plan** as phases T1–T2. T1 fixes both now. T2 stops the NFL snapshot test from failing again every two weeks in season. Neither comes from TV work, but both turn every PR's CI red, PR #41 included. | Andrew, 2026-11-23 ("Develop solutions to these two failures … add those solutions as a phase (or multiple phases) to this plan") |
 | D31 | **`tests/lib.sportsBingo.nfl-star-tilt.test.ts` "puts stars on boards materially more often than chance" is seeded (phase T3).** It draws unseeded random boards and failed CI on PR #41 (star share 0.27 vs > 0.3), then passed on rerun. | Andrew, 2026-11-23 ("Sure") |
+| D32 | **The weekly NFL star-snapshot refresh (T2) commits straight to `main`, no PR.** The script's `--guard` refuses to write when a BallDontLie fetch fails or the current slate shrinks below half, because no person reads the diff before it lands. The "Allow GitHub Actions to create and approve pull requests" setting is not needed and stays as it was. | Andrew, 2026-11-23 ("Just commit it straight to main unless there's a problem. I don't want to have to merge a PR every week.") |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -167,7 +168,7 @@ handoff of the row above it first."*
 | 10 | Build the Pick 'Em Live Board and All-Time Leaderboard slides | Agent | Sonnet 5.5 / high | Built 2026-11-23; PR #41 open; merged in the "10 (merge)" row | UI fixed by the mockups. High (not medium) because display standing rules (effects keys, no replays on poll, precedence) are easy to break. |
 | T1 | Fix the two tests that fail on `main`: one test line in question-variety; refresh the NFL star snapshot (D30) | Agent | Haiku 5.5 / low | Done 2026-11-23 (PR #43) | A one-line test change and one existing generator script, with no app code, migration or deploy. Use Sonnet 5.5 / medium if the snapshot diff looks wrong. |
 | 10 (merge) | Finish Phase 10: update PR #41 from `main`, confirm CI passes, merge (deploys; the slides stay preview-only until Phase 11) | Agent | Haiku 5.5 / low | After T1 merges | Mechanical: branch update, check CI, merge. No new code. |
-| T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that opens a refresh PR (D30) | Agent | Sonnet 5.5 / medium | After T1; within 14 days of T1's refresh while NFL is in season. Needs your yes on the secret | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
+| T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that commits the refresh to `main` (D30, D32) | Agent | Sonnet 5.5 / medium | After T1; within 14 days of T1's refresh while NFL is in season. Needs your yes on the secret | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
 | T3 | Stop the random star-tilt test from failing CI: seed its random numbers (D31) | Agent | Haiku 5.5 / low | Anytime; before N1 | One test file; `installSeededRandom` already exists in it. |
 | N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | After T2 | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
 | N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | After N1's handoff (and your answer, if N1 asks one) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
@@ -737,7 +738,8 @@ Neither failure comes from TV work. Ship one small PR from `main`, then re-run #
 
 **Why.** The freshness test exists so nobody has to remember to refresh (prop-bingo plan 9c #4). But each refresh only
 lasts 14 days. Until the NFL season ends in February, CI goes red again every two weeks unless someone reruns T1 step 3.
-T2 automates that run and keeps the human read of the diff.
+T2 automates that run. **Superseded by D32:** it commits straight to `main` (no PR) behind the script's `--guard`;
+steps 1–3 below describe the original PR design and are kept for history.
 1. **Ask Andrew first.** He adds a GitHub secret `BALLDONTLIE_API_KEY`. The agent never reads or handles the value. He
    runs `gh secret set BALLDONTLIE_API_KEY` (it prompts for the value) or uses GitHub → Settings → Secrets → Actions.
    Today's secrets don't include it: `CRON_SECRET`, `GEMINI_API_KEY`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_URL`,
