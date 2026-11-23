@@ -159,6 +159,17 @@ export function getVenueScreenTheme(
   };
 }
 
+/**
+ * Full-bleed backgrounds for the idle carousel's board slides (docs/fire-tv-app-plan.md mockups v2 `.tv.pick`,
+ * `.tv.lead`): green-and-amber for the Pick 'Em board, amber-and-cyan for the All-Time Leaderboard.
+ */
+export const TV_SLIDE_BACKGROUNDS = {
+  pickEm:
+    "radial-gradient(120% 90% at 8% 0%, rgba(16,185,129,0.22), transparent 46%), radial-gradient(120% 90% at 100% 100%, rgba(245,158,11,0.16), transparent 44%), linear-gradient(135deg, #020617 0%, #06182a 50%, #040b18 100%)",
+  allTime:
+    "radial-gradient(120% 90% at 8% 0%, rgba(245,158,11,0.20), transparent 46%), radial-gradient(120% 90% at 100% 100%, rgba(6,182,212,0.16), transparent 44%), linear-gradient(135deg, #020617 0%, #14110a 50%, #040b18 100%)",
+} as const;
+
 /** Podium accent for a leaderboard rank (1=gold, 2=silver, 3=bronze). */
 export type PodiumAccent = {
   ring: string;

@@ -14,6 +14,18 @@ export type VenueScreenDebugMode =
   | "carousel-weeknight"
   | "carousel-empty";
 
+/** `?slide=` with a `carousel*` debug mode pins one idle slide (Phase 10 preview; Phase 11's carousel can keep it). */
+export type VenueScreenPreviewSlide = "pick-em" | "all-time";
+
+export const parseVenueScreenPreviewSlide = (
+  value: string | string[] | undefined,
+  debugMode: VenueScreenDebugMode | null,
+): VenueScreenPreviewSlide | null => {
+  if (!debugMode || !debugMode.startsWith("carousel")) return null;
+  const raw = (Array.isArray(value) ? value[0] : value)?.trim().toLowerCase();
+  return raw === "pick-em" || raw === "all-time" ? raw : null;
+};
+
 export const VENUE_SCREEN_DEBUG_MODES: VenueScreenDebugMode[] = [
   "live-trivia",
   "live-trivia-pregame",
