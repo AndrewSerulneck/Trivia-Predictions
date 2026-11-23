@@ -25,6 +25,7 @@ even after it merges:** the slides only appear when you open a TV address with `
 
 **What needs you:** nothing blocks Phase 11. Both questions from Phase 9 are answered (2026-11-23): the Prizes slide
 drops its per-player progress bar (plan D28), and the NHL Pick 'Em start-time bug is now phases N1–N3 of the plan (D29).
+PR #41's CI is red only from two tests that also fail on `main`; plan phase T1 fixes both and should merge first (D30).
 
 **See it:** with the dev server on :3000 open `/venue/<a venue id>/screen?mode=carousel&slide=pick-em&intro=0`, or
 `...mode=carousel-weeknight&slide=pick-em`, or `...mode=carousel&slide=all-time`. (Fixture data; relative times, so the
@@ -97,9 +98,11 @@ Bingo (R1), Category Blitz/Squares/Bracket (R2), college basketball (D19), the N
   ≤16 games, so promotion alone never flashes.
 - **`vitest` only runs `*.test.ts`** here, not `.tsx`; render components with `React.createElement` +
   `renderToStaticMarkup` (see `tests/venue-screen-board-slides.test.ts`).
-- **Full-suite flakiness under load:** on this machine `npm run test` showed 3 failures in one run
-  (`lib.question-variety`, `lib.sportsBingo.nfl-star-index-freshness`, a PGlite-based test) that all pass when run alone.
-  They are timeouts/clock-dependent and not from this phase; re-run those files alone before assuming a regression.
+- **Two tests fail on `main` and on PR #41's CI (corrected 2026-11-23):**
+  `tests/lib.question-variety.test.ts` › "covers every Live Trivia category file plus Current Events" and
+  `tests/lib.sportsBingo.nfl-star-index-freshness.test.ts`. They fail every time, also when run alone; an earlier note
+  here called them flaky, which was wrong. Neither comes from this phase. The fixes are plan phases T1–T2 (D30). A
+  PGlite-based test can still time out under load; re-run it alone before assuming a regression.
 - Scratch clone browser testing: the clone needs `data/` (symlink it) or the state route fails on the Category Blitz
   letter index. Stub `getVenueScreenState` in the clone's `lib/venueScreen.ts` (returns an idle state; the route's
   `?mode=` fixtures then add the carousel). `next dev --webpack -p 3133`; kill only your own PID.

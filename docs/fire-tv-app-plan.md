@@ -13,7 +13,8 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 **Phase 10 built 2026-11-23** on `feat/fire-tv-phase-10` (PR #41; Pick 'Em Live Board + All-Time Leaderboard slides; preview only,
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
-start-time bug is now phases N1–N3 of this plan (D29). Next: Phase 11, and N1 any time.
+start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
+(including #41); the fixes are phases T1–T2 (D30). Next: T1, then Phase 11; N1 any time.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
@@ -135,6 +136,7 @@ different browser, you'll be asked to sign in once.
 | D27 | **Sports data: refresh only while a TV is on.** Today's games and live scores weren't stored anywhere (Pick 'Em asks BallDontLie per page view; the every-minute Pick 'Em job asks only after a picked game starts, and production had 38 picks in 30 days, so reusing its data would leave the board empty most days). So one shared copy of today's games (`tv_sports_games`) serves every venue. An idle state request reads it and, after its response, refreshes the leagues that are due (`claim_tv_sports_refresh`): 2 min while a league has a game live or starting within 2 h (MMA and tennis 10 min), 15 min with games later today, 6 h with none, 30 min when the feed is silent. No TV on the carousel → no feed requests. No cron. BallDontLie is a flat subscription, so $0 more. | Andrew, 2026-11-22 (chose "Refresh only while a TV is on" over "no new feed calls", in Phase 9) |
 | D28 | **Prizes slide: no per-player progress bar.** The mockup's bar shows one player's progress, which doesn't fit a TV that a whole room reads. Phase 11 builds the slide without it. | Andrew, 2026-11-23 ("This is fine with me.") |
 | D29 | **NHL Pick 'Em start-time bug is fixed in this plan** as phases N1–N3 (found in Phase 9: NHL games show and lock at 7 AM New York time). They are website-only, independent of the TV phases, and can run any time. | Andrew, 2026-11-23 ("Can you add that as a phase (or multiple phases) to this plan?") |
+| D30 | **The two tests that fail on `main` are fixed in this plan** as phases T1–T2. T1 fixes both now. T2 stops the NFL snapshot test from failing again every two weeks in season. Neither comes from TV work, but both turn every PR's CI red, PR #41 included. | Andrew, 2026-11-23 ("Develop solutions to these two failures … add those solutions as a phase (or multiple phases) to this plan") |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -164,6 +166,8 @@ Phase N−1 handoff first."*
 | N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
 | N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
 | N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
+| T1 | Fix the two tests that fail on `main`: one test line in question-variety; refresh the NFL star snapshot (D30) | Agent | Haiku 5.5 / low | A one-line test change and one existing generator script, with no app code, migration or deploy. Use Sonnet 5.5 / medium if the snapshot diff looks wrong. |
+| T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that opens a refresh PR (D30) | Agent | Sonnet 5.5 / medium | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
 | R1 | **Reserved, runs only when Andrew says go (D17):** Bingo "Closest to Bingo" slide: data read, ranking of cards, UI, BINGO! moment | Agent | Opus 5.5 / high | Adds a read to the shared state engine and a moment that must never replay on a poll; one phase does both. |
 | R2 | **Reserved, runs only when Andrew says go (D21):** turn the Category Blitz, Super Bowl Squares and March Madness TV screens back on, add the corner "Get the app" QR to them (D16), add them to Try demo, real-TV check | Agent | Sonnet 5.5 / high | Phase 9 leaves a single switch in `selectVenueScreenState`, so this is a small change, but it touches the shared engine and four display screens; high effort for the precedence and QR-placement rules. |
 
@@ -174,6 +178,8 @@ Phase N−1 handoff first."*
 - R1 and R2 run only when Andrew says go.
 - N1–N3 (NHL) are independent of the TV phases and can run before, between or after them, one at a time. N2 waits for
   N1's handoff; N3 runs on the first NHL game day after N2 is deployed.
+- **T1 runs first, before PR #41 merges**, as its own small PR from `main`; then re-run #41's CI. T2 can run any time
+  after T1, and must run before the snapshot goes stale again (14 days after T1's refresh, while NFL is in season).
 
 ## Cost estimates
 
@@ -677,6 +683,73 @@ On the first NHL game day after N2 deploys (read-only):
 3. Picks made before N2 still show as picked and settle after the game (check `pickem_picks` rows).
 4. The live period label reads "P1", "P2", "OT", not "Inn.".
 5. Record results in the N3 handoff; close D29 in this file's status line, or list fixes for a follow-up.
+
+### Phase T1 — Fix the two tests that fail on `main` (Agent, Haiku 5.5 / low)
+
+Both tests fail every time, on `main` and in PR #41's CI (`validate` job, run 45251097245: 2 failed, 7889 passed).
+Neither failure comes from TV work. Ship one small PR from `main`, then re-run #41's CI.
+1. Branch `fix/main-red-tests` from up-to-date `main`.
+2. **Question variety.** `tests/lib.question-variety.test.ts`, test "covers every Live Trivia category file plus Current
+   Events" (around line 112). It builds the expected list as `[...live, map.CURRENT_EVENTS]`. PR #40 (`34039de3`) added
+   `data/live-trivia/categories/current-events.json`, whose `categoryName` is `"Current Events"`. So `live` already holds
+   it and the expected list names it twice (10 entries against 9 received). The code is right: `draft.games.live` has
+   each category once. The fix is to change only the test, to `[...new Set([...live, map.CURRENT_EVENTS])].sort()`, which
+   keeps it passing whether or not a Current Events file exists. Don't touch the draft map, `lib/question-variety/` or
+   the Live Trivia JSON (CLAUDE.md: that JSON is canonical).
+3. **NFL star snapshot.**
+   - **Cause.** `tests/lib.sportsBingo.nfl-star-index-freshness.test.ts` fails while NFL is in season when
+     `data/sports-bingo/nfl-star-index.json` is more than 14 days old (`NFL_STAR_INDEX_SNAPSHOT_MAX_AGE_DAYS`,
+     `lib/sportsBingoNflStars.ts`). The snapshot's `generatedAt` is `2026-11-09T06:32:05Z`, so it went stale on
+     2026-11-23.
+   - **Preview.** Run `npm run bingo:stars:nfl:dry-run` and read the diff it prints: entrants, drop-offs and biggest
+     movers. Sanity check: the names are real current NFL starters, the slate isn't empty, and there's no mass
+     drop-off.
+   - **Refresh.** Run `npm run bingo:stars:nfl` and commit the file it writes. Never hand-edit the snapshot. It's
+     generated (`docs/prop-bingo-nfl-plan.md` Phase 9c).
+   - **Requirements and cost.** The script needs `.env.local` (`BALLDONTLIE_API_KEY`) and makes a few BallDontLie calls
+     on the flat subscription, so no extra cost.
+   - **Live effect.** None: `resolveNFLStarIndex` already refreshes itself on a 24 h cache. The snapshot is only the
+     cold-start fallback and the baseline for the diff.
+4. Run the two files alone (`npx vitest run tests/lib.question-variety.test.ts
+   tests/lib.sportsBingo.nfl-star-index-freshness.test.ts`), then `npm run test` and `npm run lint`. Open the PR with
+   the snapshot diff summary in its body, then merge. It's website-only, so no store release.
+5. After it merges, update #41 from `main` (or re-run its CI) and confirm `validate` passes. Short handoff:
+   `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`.
+
+### Phase T2 — Keep the NFL star snapshot fresh on its own (Agent, Sonnet 5.5 / medium)
+
+**Why.** The freshness test exists so nobody has to remember to refresh (prop-bingo plan 9c #4). But each refresh only
+lasts 14 days. Until the NFL season ends in February, CI goes red again every two weeks unless someone reruns T1 step 3.
+T2 automates that run and keeps the human read of the diff.
+1. **Ask Andrew first.** He adds a GitHub secret `BALLDONTLIE_API_KEY`. The agent never reads or handles the value. He
+   runs `gh secret set BALLDONTLIE_API_KEY` (it prompts for the value) or uses GitHub → Settings → Secrets → Actions.
+   Today's secrets don't include it: `CRON_SECRET`, `GEMINI_API_KEY`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPABASE_URL`,
+   `OPENAI_API_KEY`, `SPEED_TRIVIA_ADMISSION_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `THESPORTSDB_API_KEY`,
+   `VERCEL_DEPLOY_HOOK_URL`. Also ask whether he wants the bot's PR merged by him, or committed straight to `main`. The
+   recommendation is a PR, because the plan's "the diff is the check-in" means a person reads it.
+2. **Add `.github/workflows/nfl-star-index-weekly.yml`**, modelled on `headshots-weekly.yml`.
+   - **Triggers:** Tuesdays at 10:00 UTC (after Monday night's stats settle), plus `workflow_dispatch`.
+   - **Setup:** Node 20 like `ci.yml`, then `npm ci`.
+   - **Run:** `node --conditions react-server --import tsx scripts/refresh-nfl-star-index.cjs`, with `env` from
+     secrets. There's no `.env.local` in CI.
+   - **Skip off-season:** first check `resolveLeagueSeasonStatus("americanfootball_nfl")` with a short `node` step, and
+     do nothing when it isn't `in_season`. The freshness test is inert off-season anyway.
+   - **Output:** force-push the new snapshot to the fixed branch `bot/nfl-star-index`, then open a PR (or update the
+     open one) with `gh pr create`. Put the script's diff output in the PR body.
+   - **Permissions:** `contents: write` and `pull-requests: write`.
+3. **Traps.**
+   - **No checks on the bot's PR.** A PR opened with `GITHUB_TOKEN` doesn't trigger other workflows. That's fine for
+     one data file, but it's why the diff goes in the PR body.
+   - **Repo setting.** "Allow GitHub Actions to create and approve pull requests" must be on. Check it with `gh api
+     repos/AndrewSerulneck/Trivia-Predictions/actions/permissions/workflow`. Changing it needs Andrew's yes.
+   - **The file always changes.** The script rewrites `generatedAt` on every run, so every run produces a diff.
+4. **Cost.** About 17 runs per season. Each makes a few BallDontLie calls (flat subscription, $0) and uses about 3
+   GitHub Actions minutes, so roughly 50 minutes a season within the free allowance. Off-season runs exit in under a
+   minute.
+5. **Verify.** Trigger it with `gh workflow run nfl-star-index-weekly.yml`, confirm the PR it opens and its diff body,
+   and record the run id in the handoff.
+6. **Fallback if Andrew declines the secret.** Keep T1's manual refresh and add a reminder line to the plan's status
+   line. Don't weaken the test into a skip on CI, because then nobody would notice a stale snapshot.
 
 ### Phase R1 — Bingo "Closest to Bingo" (reserved; Agent, Opus 5.5 / high)
 
