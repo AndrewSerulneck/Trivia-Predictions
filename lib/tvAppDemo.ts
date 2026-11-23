@@ -8,6 +8,7 @@
 import { LIVE_TRIVIA_QUESTIONS_PER_ROUND } from "@/lib/liveTriviaShared";
 import { toQuestionMedia } from "@/lib/questionMedia";
 import type { ScreenLeaderboardEntry, VenueScreenState, VenueScreenVenue } from "@/lib/venueScreen";
+import { EMPTY_CAROUSEL } from "@/lib/venueScreenCarouselShared";
 
 export const TV_DEMO_STEP_MS = 15_000;
 
@@ -76,6 +77,8 @@ export const TV_DEMO_STEPS: ReadonlyArray<{ id: string; build: (nowMs: number) =
           recurringDays: ["thu"],
         },
         sponsorSlots: [],
+        // Phase 11 puts the carousel slides into the demo (debugCarousel in lib/venueScreenCarouselShared.ts).
+        ...EMPTY_CAROUSEL,
       },
       updatedAt: nowMs,
     }),

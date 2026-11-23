@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { applyVenueScreenDebugMode } from "@/lib/venueScreenDebug";
 import { getVenueScreenState } from "@/lib/venueScreen";
 import { parseVenueScreenDebugMode } from "@/lib/venueScreenTiming";
+import { countVenueScreenStateRequest } from "@/lib/venueScreenUsageCounter";
 
 export async function GET(request: Request) {
   try {
@@ -25,7 +26,12 @@ export async function GET(request: Request) {
         ? { "Cache-Control": "s-maxage=15, stale-while-revalidate=15" }
         : { "Cache-Control": "no-store" };
 
-    return NextResponse.json(screenState, { headers: cacheHeaders });
+    // Serialized once, so the baseline counter can record the response size (Phase 9 step 2).
+    const body = JSON.stringify(screenState);
+    if (!debugMode) {
+      countVenueScreenStateRequest({ mode: screenState.mode, durationMs: Date.now() - nowMs, bytes: body.length });
+    }
+    return new NextResponse(body, { headers: { "Content-Type": "application/json", ...cacheHeaders } });
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Failed to load venue screen state." },

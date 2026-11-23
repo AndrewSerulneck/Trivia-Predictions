@@ -11,7 +11,13 @@ import { getSquaresTvPayload } from "@/lib/squaresTvRead";
 import type { BracketTvPayload } from "@/lib/bracketsTv";
 import { getBracketTvPayload } from "@/lib/bracketsTvRead";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getVenueScreenPollIntervalMs, LIVE_TRIVIA_PREGAME_LEAD_MS } from "@/lib/venueScreenTiming";
+import { EMPTY_CAROUSEL, getVenueScreenCarousel, type VenueScreenCarouselData } from "@/lib/venueScreenCarousel";
+import {
+  getVenueScreenPollIntervalMs,
+  LIVE_TRIVIA_PREGAME_LEAD_MS,
+  LIVE_TRIVIA_PREGAME_PRIORITY_MS,
+  VENUE_SCREEN_RESERVED_GAMES_ENABLED,
+} from "@/lib/venueScreenTiming";
 import { getVenueById } from "@/lib/venues";
 import type { CategoryBlitzRound, CategoryBlitzSession, Venue } from "@/types";
 
@@ -75,8 +81,8 @@ export type VenueScreenState =
       updatedAt: number;
     }
   | {
-      // The 15 minutes before a scheduled Live Trivia game (LIVE_TRIVIA_PREGAME_LEAD_MS).
-      // Beats Category Blitz, Squares and March Madness; only a live game beats it.
+      // The hour before a scheduled Live Trivia game (LIVE_TRIVIA_PREGAME_LEAD_MS, D13). A live game beats it;
+      // its last 15 minutes also beat a Category Blitz round in play (D14, once R2 turns Category Blitz back on).
       ok: true;
       mode: "live-trivia-pregame";
       venue: VenueScreenVenue;
@@ -140,7 +146,7 @@ export type VenueScreenState =
         // No Category Blitz here: the display shows Category Blitz only while
         // someone is playing a round (Andrew, 2026-11-14), never as "Next up".
         sponsorSlots: VenueScreenSponsorSlot[];
-      };
+      } & VenueScreenCarouselData;
       updatedAt: number;
     };
 
@@ -171,7 +177,11 @@ export type VenueScreenSelectionInput = {
   categoryBlitz: VenueScreenCategoryBlitzInput;
   idle?: {
     sponsorSlots?: VenueScreenSponsorSlot[];
+    /** Carousel slides 2–4 (Pick 'Em, All-Time Leaderboard, Prizes); absent = nothing to show. */
+    carousel?: VenueScreenCarouselData;
   };
+  /** D21 switch; defaults to VENUE_SCREEN_RESERVED_GAMES_ENABLED (tests set it to check R2's precedence). */
+  reservedGamesEnabled?: boolean;
   /** Present only when Squares should replace the idle screen (see getSquaresTvPayload). */
   squares?: SquaresTvPayload | null;
   /** Present only when March Madness should replace the idle screen (see getBracketTvPayload). */
@@ -482,10 +492,15 @@ export function getLiveTriviaPregame(liveTrivia: LiveShowdownState, nowMs: numbe
 }
 
 // Display precedence (one place only): Live Trivia active, incl. final standings >
-// Live Trivia pre-game > Category Blitz (only while someone is playing) > Squares >
-// March Madness > idle.
+// pre-game's last 15 minutes > Category Blitz (only while someone is playing) >
+// pre-game 60 → 15 minutes > Squares > March Madness > idle (docs/fire-tv-app-plan.md D13/D14).
+// With the reserved games off (D21, today) that is: Live Trivia > pre-game hour > idle.
 export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueScreenState {
-  const { venue, liveTrivia, categoryBlitz, updatedAt } = input;
+  const { venue, liveTrivia, updatedAt } = input;
+  const reservedGamesEnabled = input.reservedGamesEnabled ?? VENUE_SCREEN_RESERVED_GAMES_ENABLED;
+  const categoryBlitz: VenueScreenCategoryBlitzInput = reservedGamesEnabled
+    ? input.categoryBlitz
+    : { session: null, round: null, leaderboard: null, nextRoundStartsAt: null };
 
   if (liveTrivia.isGameActive) {
     const leaderboard = liveTrivia.leaderboard ? toLeaderboard(liveTrivia.leaderboard) : null;
@@ -542,17 +557,23 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
   }
 
   const pregame = getLiveTriviaPregame(liveTrivia, updatedAt);
-  if (pregame) {
-    return {
-      ok: true,
-      mode: "live-trivia-pregame",
-      venue,
-      liveTrivia: null,
-      categoryBlitz: null,
-      idle: null,
-      pregame,
-      updatedAt,
-    };
+  const pregameState = (value: VenueScreenPregame): VenueScreenState => ({
+    ok: true,
+    mode: "live-trivia-pregame",
+    venue,
+    liveTrivia: null,
+    categoryBlitz: null,
+    idle: null,
+    pregame: value,
+    updatedAt,
+  });
+  // The last 15 minutes beat everything but a live game.
+  if (pregame && Date.parse(pregame.startsAt) - updatedAt <= LIVE_TRIVIA_PREGAME_PRIORITY_MS) {
+    return pregameState(pregame);
+  }
+  // 60 → 15 minutes out: a Category Blitz round people are already playing keeps the screen (D14).
+  if (pregame && !categoryBlitz.session) {
+    return pregameState(pregame);
   }
 
   if (categoryBlitz.session) {
@@ -583,7 +604,9 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
     };
   }
 
-  if (input.squares) {
+  if (pregame) return pregameState(pregame);
+
+  if (reservedGamesEnabled && input.squares) {
     return {
       ok: true,
       mode: "squares",
@@ -596,7 +619,7 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
     };
   }
 
-  if (input.bracket) {
+  if (reservedGamesEnabled && input.bracket) {
     return {
       ok: true,
       mode: "bracket",
@@ -625,6 +648,7 @@ export function selectVenueScreenState(input: VenueScreenSelectionInput): VenueS
           }
         : null,
       sponsorSlots: input.idle?.sponsorSlots ?? [],
+      ...(input.idle?.carousel ?? EMPTY_CAROUSEL),
     },
     updatedAt,
   };
@@ -641,37 +665,47 @@ export async function getVenueScreenState(
   if (!venue) return null;
 
   const now = new Date(nowMs);
+  const reservedGamesEnabled = VENUE_SCREEN_RESERVED_GAMES_ENABLED;
+  const noCategoryBlitz: VenueScreenCategoryBlitzInput = {
+    session: null,
+    round: null,
+    leaderboard: null,
+    nextRoundStartsAt: null,
+  };
   const [screenConfig, liveTrivia, categoryBlitz] = await Promise.all([
     getVenueScreenBranding(safeVenueId),
     getLiveShowdownState(nowMs, safeVenueId, ""),
-    getCategoryBlitzInput(safeVenueId, now),
+    // D21: off displays never even peek at Category Blitz.
+    reservedGamesEnabled ? getCategoryBlitzInput(safeVenueId, now) : Promise.resolve(noCategoryBlitz),
   ]);
 
   if (!screenConfig.screenEnabled) {
     return null;
   }
 
-  // Squares and March Madness replace only the idle screen, so they are read only when nothing else
-  // is live (each read is zero I/O outside its own season).
+  // Squares, March Madness and the carousel replace only the idle screen, so they are read only when nothing
+  // else is on (Squares and March Madness are zero I/O outside their seasons, and off at launch: D21).
   const wouldBeIdle =
     !liveTrivia.isGameActive && !getLiveTriviaPregame(liveTrivia, nowMs) && !categoryBlitz.session;
-  const [sponsorSlots, squares, bracket] = await Promise.all([
+  const [sponsorSlots, squares, bracket, carousel] = await Promise.all([
     screenConfig.screenSponsorRotationEnabled
       ? getActiveVenueScreenSponsors(safeVenueId, nowMs)
       : Promise.resolve<VenueScreenSponsorSlot[]>([]),
-    wouldBeIdle ? getSquaresTvPayload(safeVenueId, nowMs) : Promise.resolve(null),
-    wouldBeIdle ? getBracketTvPayload(safeVenueId, nowMs) : Promise.resolve(null),
+    wouldBeIdle && reservedGamesEnabled ? getSquaresTvPayload(safeVenueId, nowMs) : Promise.resolve(null),
+    wouldBeIdle && reservedGamesEnabled ? getBracketTvPayload(safeVenueId, nowMs) : Promise.resolve(null),
+    wouldBeIdle ? getVenueScreenCarousel(safeVenueId, nowMs) : Promise.resolve(EMPTY_CAROUSEL),
   ]);
 
   return selectVenueScreenState({
     venue: toScreenVenue(venue, screenConfig.branding),
     liveTrivia,
     categoryBlitz,
-    idle: { sponsorSlots },
+    idle: { sponsorSlots, carousel },
     squares,
     bracket,
+    reservedGamesEnabled,
     updatedAt: nowMs,
   });
 }
 
-export { getVenueScreenPollIntervalMs };
+export { getVenueScreenPollIntervalMs, VENUE_SCREEN_RESERVED_GAMES_ENABLED };

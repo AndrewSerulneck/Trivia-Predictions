@@ -22,6 +22,7 @@ import {
   getVenueScreenPollIntervalMs,
   isGoLiveTransition,
   LIVE_TRIVIA_PREGAME_LEAD_MS,
+  LIVE_TRIVIA_PREGAME_PRIORITY_MS,
   parseVenueScreenDebugMode,
 } from "@/lib/venueScreenTiming";
 import type { CategoryBlitzRound, CategoryBlitzSession } from "@/types";
@@ -123,13 +124,32 @@ const awakeBlitz = (nowMs: number) => ({
 
 const select = (nowMs: number, liveTrivia = inactiveLive(), categoryBlitz: VenueScreenSelectionInput["categoryBlitz"] = noBlitz) =>
   selectVenueScreenState({ venue, liveTrivia, categoryBlitz, updatedAt: nowMs });
+// Category Blitz, Squares and March Madness back on (reserved phase R2), to check their precedence now.
+const selectWithReserved = (
+  nowMs: number,
+  categoryBlitz: VenueScreenSelectionInput["categoryBlitz"] = noBlitz,
+  extra: Partial<VenueScreenSelectionInput> = {},
+) =>
+  selectVenueScreenState({
+    venue,
+    liveTrivia: inactiveLive(),
+    categoryBlitz,
+    updatedAt: nowMs,
+    reservedGamesEnabled: true,
+    ...extra,
+  });
+const squaresAndBracket = {
+  squares: { phase: "live" } as unknown as VenueScreenSelectionInput["squares"],
+  bracket: { key: "x" } as unknown as VenueScreenSelectionInput["bracket"],
+};
 
 describe("Live Trivia pre-game window", () => {
-  it("is 15 minutes", () => {
-    expect(LIVE_TRIVIA_PREGAME_LEAD_MS).toBe(15 * 60_000);
+  it("is 60 minutes, with a 15-minute last stretch (D13, D14)", () => {
+    expect(LIVE_TRIVIA_PREGAME_LEAD_MS).toBe(60 * 60_000);
+    expect(LIVE_TRIVIA_PREGAME_PRIORITY_MS).toBe(15 * 60_000);
   });
 
-  it("opens exactly 15:00 before the start, not a millisecond earlier", () => {
+  it("opens exactly 60:00 before the start, not a millisecond earlier", () => {
     expect(select(startMs - LIVE_TRIVIA_PREGAME_LEAD_MS - 1).mode).toBe("idle");
     const state = select(startMs - LIVE_TRIVIA_PREGAME_LEAD_MS);
     expect(state.mode).toBe("live-trivia-pregame");
@@ -163,37 +183,83 @@ describe("Live Trivia pre-game window", () => {
   });
 });
 
-describe("display precedence", () => {
-  it("pre-game beats a Category Blitz round someone started (their phone game is unaffected)", () => {
-    const now = startMs - 5 * 60_000;
-    const state = select(now, inactiveLive(), awakeBlitz(now));
-    expect(state.mode).toBe("live-trivia-pregame");
-    expect(state.categoryBlitz).toBeNull();
+describe("display precedence, launch content (D21: Category Blitz, Squares and Bracket off)", () => {
+  it("never shows Category Blitz, even while someone plays and no Live Trivia is near", () => {
+    const now = startMs - LIVE_TRIVIA_PREGAME_LEAD_MS - 60_000;
+    expect(select(now, inactiveLive(), awakeBlitz(now)).mode).toBe("idle");
+    expect(select(now, inactiveLive(null), awakeBlitz(now)).mode).toBe("idle");
+  });
+
+  it("pre-game holds the whole hour over a Category Blitz round", () => {
+    for (const minutesOut of [59, 30, 16, 5]) {
+      const now = startMs - minutesOut * 60_000;
+      expect(select(now, inactiveLive(), awakeBlitz(now)).mode).toBe("live-trivia-pregame");
+    }
+  });
+
+  it("ignores Squares and March Madness on the idle screen", () => {
+    const state = selectVenueScreenState({
+      venue,
+      liveTrivia: inactiveLive(null),
+      categoryBlitz: noBlitz,
+      ...squaresAndBracket,
+      updatedAt: startMs,
+    });
+    expect(state.mode).toBe("idle");
+  });
+
+  it("never offers Category Blitz on the idle screen; idle carries the carousel data", () => {
+    const state = select(startMs - 2 * 60 * 60_000);
+    expect(state.mode).toBe("idle");
+    expect(Object.keys(state.idle ?? {})).toEqual(["nextLiveTrivia", "sponsorSlots", "pickEm", "allTimeLeaderboard", "prizes"]);
+  });
+});
+
+describe("display precedence with the reserved games on (R2)", () => {
+  it("60 → 15 minutes out, a Category Blitz round in play keeps the screen (D14)", () => {
+    for (const minutesOut of [59, 30, 16]) {
+      const now = startMs - minutesOut * 60_000;
+      expect(selectWithReserved(now, awakeBlitz(now)).mode).toBe("category-blitz");
+    }
+  });
+
+  it("the last 15 minutes beat a Category Blitz round (their phone game is unaffected)", () => {
+    for (const ms of [LIVE_TRIVIA_PREGAME_PRIORITY_MS, 5 * 60_000, 1_000]) {
+      const now = startMs - ms;
+      const state = selectWithReserved(now, awakeBlitz(now));
+      expect(state.mode).toBe("live-trivia-pregame");
+      expect(state.categoryBlitz).toBeNull();
+    }
+  });
+
+  it("without a round in play, pre-game takes the whole hour", () => {
+    expect(selectWithReserved(startMs - 59 * 60_000).mode).toBe("live-trivia-pregame");
   });
 
   it("shows Category Blitz while someone plays and no Live Trivia is near", () => {
     const now = startMs - LIVE_TRIVIA_PREGAME_LEAD_MS - 60_000;
-    expect(select(now, inactiveLive(), awakeBlitz(now)).mode).toBe("category-blitz");
-    expect(select(now, inactiveLive(null), awakeBlitz(now)).mode).toBe("category-blitz");
+    expect(selectWithReserved(now, awakeBlitz(now)).mode).toBe("category-blitz");
   });
 
-  it("pre-game beats Squares and March Madness", () => {
+  it("pre-game beats Squares and March Madness for the whole hour", () => {
+    for (const minutesOut of [59, 30, 1]) {
+      expect(selectWithReserved(startMs - minutesOut * 60_000, noBlitz, squaresAndBracket).mode).toBe("live-trivia-pregame");
+    }
+    expect(selectWithReserved(startMs - 2 * 60 * 60_000, noBlitz, squaresAndBracket).mode).toBe("squares");
+  });
+
+  it("a live game beats everything", () => {
     const now = startMs - 60_000;
-    const state = selectVenueScreenState({
-      venue,
-      liveTrivia: inactiveLive(),
-      categoryBlitz: noBlitz,
-      squares: { phase: "live" } as unknown as VenueScreenSelectionInput["squares"],
-      bracket: { key: "x" } as unknown as VenueScreenSelectionInput["bracket"],
-      updatedAt: now,
-    });
-    expect(state.mode).toBe("live-trivia-pregame");
-  });
-
-  it("never offers Category Blitz on the idle screen", () => {
-    const state = select(startMs - 2 * 60 * 60_000);
-    expect(state.mode).toBe("idle");
-    expect(Object.keys(state.idle ?? {})).toEqual(["nextLiveTrivia", "sponsorSlots"]);
+    expect(
+      selectVenueScreenState({
+        venue,
+        liveTrivia: activeLive(),
+        categoryBlitz: awakeBlitz(now),
+        ...squaresAndBracket,
+        reservedGamesEnabled: true,
+        updatedAt: now,
+      }).mode,
+    ).toBe("live-trivia");
   });
 });
 
@@ -223,6 +289,7 @@ describe("poll pace", () => {
   const pregameAt = (nowMs: number) => select(nowMs) as VenueScreenState;
 
   it("polls every 10 s in pre-game and every 2 s in the last minute", () => {
+    expect(getVenueScreenPollIntervalMs(pregameAt(startMs - 59 * 60_000))).toBe(10_000);
     expect(getVenueScreenPollIntervalMs(pregameAt(startMs - 10 * 60_000))).toBe(10_000);
     expect(getVenueScreenPollIntervalMs(pregameAt(startMs - 60_001))).toBe(10_000);
     expect(getVenueScreenPollIntervalMs(pregameAt(startMs - 60_000))).toBe(2_000);
@@ -244,5 +311,11 @@ describe("debug mode", () => {
     const state = applyVenueScreenDebugMode(select(startMs - 3 * 60 * 60_000), "live-trivia-pregame", startMs);
     expect(state.mode).toBe("live-trivia-pregame");
     expect(state.mode === "live-trivia-pregame" && state.pregame.firstRoundCategory).toBe("History");
+  });
+
+  it("renders the start of the pre-game hour", () => {
+    expect(parseVenueScreenDebugMode("pregame-hour")).toBe("pregame-hour");
+    const state = applyVenueScreenDebugMode(select(startMs - 3 * 60 * 60_000), "pregame-hour", startMs);
+    expect(state.mode === "live-trivia-pregame" && Date.parse(state.pregame.startsAt) - startMs).toBe(59 * 60_000 + 30_000);
   });
 });

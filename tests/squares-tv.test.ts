@@ -90,21 +90,25 @@ describe("selectVenueScreenState with Squares", () => {
   const squares = buildSquaresTvPayload(board(), NOW);
 
   it("replaces the idle screen", () => {
-    const state = selectVenueScreenState({ venue, liveTrivia: idleLive, categoryBlitz: noBlitz, squares, updatedAt: NOW });
+    const state = selectVenueScreenState({ reservedGamesEnabled: true, venue, liveTrivia: idleLive, categoryBlitz: noBlitz, squares, updatedAt: NOW });
     expect(state.mode).toBe("squares");
   });
 
+  it("stays off every display at launch (D21) until reserved phase R2", () => {
+    expect(selectVenueScreenState({ venue, liveTrivia: idleLive, categoryBlitz: noBlitz, squares, updatedAt: NOW }).mode).toBe("idle");
+  });
+
   it("is idle when there is no Squares payload", () => {
-    expect(selectVenueScreenState({ venue, liveTrivia: idleLive, categoryBlitz: noBlitz, squares: null, updatedAt: NOW }).mode).toBe("idle");
+    expect(selectVenueScreenState({ reservedGamesEnabled: true, venue, liveTrivia: idleLive, categoryBlitz: noBlitz, squares: null, updatedAt: NOW }).mode).toBe("idle");
   });
 
   it("never beats a live Live Trivia game", () => {
     const live = { ...idleLive, isGameActive: true, activePhase: "answering", secondsRemaining: 10, totalRounds: 3, currentRound: 1, scheduleId: "s", occurrenceDate: "d", leaderboard: null, isFinalResultsWindow: false, activeQuestion: null, revealedAnswer: null, currentRoundCategory: null, venueName: null } as unknown as VenueScreenSelectionInput["liveTrivia"];
-    expect(selectVenueScreenState({ venue, liveTrivia: live, categoryBlitz: noBlitz, squares, updatedAt: NOW }).mode).toBe("live-trivia");
+    expect(selectVenueScreenState({ reservedGamesEnabled: true, venue, liveTrivia: live, categoryBlitz: noBlitz, squares, updatedAt: NOW }).mode).toBe("live-trivia");
   });
 
   it("polls at the cached cadence, no faster", () => {
-    const state = selectVenueScreenState({ venue, liveTrivia: idleLive, categoryBlitz: noBlitz, squares, updatedAt: NOW });
+    const state = selectVenueScreenState({ reservedGamesEnabled: true, venue, liveTrivia: idleLive, categoryBlitz: noBlitz, squares, updatedAt: NOW });
     expect(getVenueScreenPollIntervalMs(state)).toBe(15_000);
   });
 });

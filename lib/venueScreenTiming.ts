@@ -1,16 +1,48 @@
 import type { VenueScreenState } from "@/lib/venueScreen";
 
-export type VenueScreenDebugMode = VenueScreenState["mode"];
+/**
+ * `?mode=` fixtures (lib/venueScreenDebug.ts). The state modes, plus (docs/fire-tv-app-plan.md Phase 9 step 7):
+ * - `pregame-hour`: the pre-game screen 59:30 before the start (the D13 hour)
+ * - `carousel`: idle with every carousel slide filled (NFL Sunday board)
+ * - `carousel-weeknight`: idle, an NBA + NHL weeknight board
+ * - `carousel-empty`: idle with nothing to show but "Get the app"
+ */
+export type VenueScreenDebugMode =
+  | VenueScreenState["mode"]
+  | "pregame-hour"
+  | "carousel"
+  | "carousel-weeknight"
+  | "carousel-empty";
 
 export const VENUE_SCREEN_DEBUG_MODES: VenueScreenDebugMode[] = [
   "live-trivia",
   "live-trivia-pregame",
   "category-blitz",
   "idle",
+  "pregame-hour",
+  "carousel",
+  "carousel-weeknight",
+  "carousel-empty",
 ];
 
-/** The display switches to the Live Trivia pre-game screen this long before the scheduled start. */
-export const LIVE_TRIVIA_PREGAME_LEAD_MS = 15 * 60_000;
+/**
+ * Launch content (docs/fire-tv-app-plan.md D21, D26): every display shows Live Trivia and the idle carousel only.
+ * Category Blitz, Super Bowl Squares and March Madness stay built but off, on the TV app and the Silk Display URL
+ * alike, and their reads are skipped (selectVenueScreenState / getVenueScreenState), and so are their prizes on the
+ * Prizes slide. Reserved phase R2 turns this on, only when Andrew says go.
+ */
+export const VENUE_SCREEN_RESERVED_GAMES_ENABLED = false;
+
+/**
+ * The display switches to the Live Trivia pre-game screen this long before the scheduled start: 60 minutes
+ * (docs/fire-tv-app-plan.md D13; was 15).
+ */
+export const LIVE_TRIVIA_PREGAME_LEAD_MS = 60 * 60_000;
+/**
+ * The pre-game's last stretch, which beats even a Category Blitz round in play (D14). Before it (60 → 15 minutes),
+ * a round people are already playing keeps the screen. Only matters once Category Blitz is back on TVs (R2).
+ */
+export const LIVE_TRIVIA_PREGAME_PRIORITY_MS = 15 * 60_000;
 /** Pre-game poll pace; the last {@link PREGAME_FINAL_STRETCH_MS} polls faster so go-live lands on time. */
 export const PREGAME_POLL_MS = 10_000;
 export const PREGAME_FINAL_STRETCH_MS = 60_000;

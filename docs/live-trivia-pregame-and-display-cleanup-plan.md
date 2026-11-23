@@ -34,7 +34,7 @@ A shorter domain (~$10–60 a year): not now (Andrew, 2026-11-14).
 
 | # | Decision | Source |
 |---|---|---|
-| D1 | Pre-game screen starts **15 minutes** before the scheduled start and stays up until the game goes live. | Andrew |
+| D1 | Pre-game screen starts **60 minutes** before the scheduled start and stays up until the game goes live. (Was 15 minutes; changed by `docs/fire-tv-app-plan.md` D13, 2026-11-22. A Category Blitz round in play keeps the screen until 15 minutes out, D14, once R2 turns Category Blitz back on.) | Andrew |
 | D2 | Pre-game steps: download the Hightop Challenge app (QR), sign in, tap **Live Trivia** (shown as the Venue Home button). | Andrew |
 | D3 | No ads of any kind on the display URL. Ads on the Live Trivia display may come later as a deliberate feature, never by leakage. | Andrew |
 | D4 | Remove Link a TV. `/tv` → redirect to `/info`; delete pairing pages/APIs/lib/tests; a **new** migration drops `tv_pairing_codes` (`supabase db push` asks Andrew first). | Andrew (Q 2026-11-14) |
@@ -266,9 +266,13 @@ Q3 → yes, small, only if known. Q4 → no domain yet.
 
 - No ads, adhesion banners, player animations, transition overlay or player analytics on display paths
   (`isVenueDisplayPath`); a future Live Trivia display ad is its own feature, not the player ad runtime.
-- Display precedence is D8 and lives only in `selectVenueScreenState`.
+- Display precedence is D8 and lives only in `selectVenueScreenState`. Since 2026-11-22 (`docs/fire-tv-app-plan.md`
+  Phase 9): Live Trivia > pre-game's last 15 min > Category Blitz > pre-game 60→15 min > Squares > Bracket > idle;
+  Category Blitz, Squares and Bracket are switched off on every display (`VENUE_SCREEN_RESERVED_GAMES_ENABLED`, D21)
+  until reserved phase R2.
 - The display never offers Category Blitz as "Next up"; it shows Category Blitz only while a session is in play.
-- The pre-game window is `LIVE_TRIVIA_PREGAME_LEAD_MS`; the go-live takeover fires at the real start, never at pre-game start.
+- The pre-game window is `LIVE_TRIVIA_PREGAME_LEAD_MS` (60 minutes since 2026-11-22, `docs/fire-tv-app-plan.md` D13); the
+  go-live takeover fires at the real start, never at pre-game start.
 - The TV only peeks at Category Blitz.
 - Set up by Display URL (`hightopchallenge.com/tv/<display_code>`), or by connecting the Hightop Challenge TV app (QR or
   display code); a connection grants a venue id only (`docs/fire-tv-app-plan.md` D2, D9, Phase 3, 2026-11-22).

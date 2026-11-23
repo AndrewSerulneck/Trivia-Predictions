@@ -7,7 +7,9 @@
 Back-after-demo keyboard bug. **Phase 6 done 2026-11-22** (ahead of Phase 5): upload key, signed release APK, store
 images, screenshots and `docs/fire-tv-store/listing.md`. See `docs/fire-tv-app-plan_PHASE_6_HANDOFF.md`. Signing
 keys backed up 2026-11-22 (an encrypted image in iCloud Drive; handoff §2). Phase 6 merged via PR #38. Phase 7
-(submit) waits for Phase 5 to pass.
+(submit) waits for Phase 5 to pass. **Phase 9 built 2026-11-22** on `feat/fire-tv-phase-9` (PR #39; data off until
+Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_snapshot.sql` not yet applied; the 3–7 day
+usage baseline starts when the PR deploys). See `docs/fire-tv-app-plan_PHASE_9_HANDOFF.md`.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
 ## Summary for Andrew
@@ -106,7 +108,7 @@ different browser, you'll be asked to sign in once.
 | D5 | The app is a thin native shell. Every screen is a web page on hightopchallenge.com, and the app's start page is `/tv-app`, shared by the Fire OS and Vega builds. | Planner, 2026-11-21. Reason: one set of screens, and no app update or Amazon review per screen change. |
 | D6 | The TV app identifies itself with its own user-agent token, `HightopChallengeTV/<version>`, read only by a new `lib/tvApp.ts`. It must never send `HightopChallengeApp/`, the phone app's token, or `proxy.ts` would swap the display for the "web only" notice. | Planner. Reason: the phone app is players-only (`docs/native-app-store-plan.md` Standing rules). |
 | D7 | Native value for Amazon review: connect screen, native keep-awake (`FLAG_KEEP_SCREEN_ON`), D-pad / Back / Menu handling, a native offline screen with auto-retry, and **Try demo**. | Planner. Reason: Amazon's "goes beyond a simple website" rule. |
-| D8 | The sports screens read only rows that existing crons already write: no new cron, no new API-Sports calls, no per-TV provider calls. | Planner. Reason: global cost rule. |
+| D8 | The sports screens read only rows that existing crons already write: no new cron, no new API-Sports calls, no per-TV provider calls. **Relaxed by D27** (feed calls allowed, only while a TV is on, shared by all TVs). | Planner. Reason: global cost rule. |
 | D9 | A connection gives the TV a venue id only, never a partner session or any partner privilege. | Planner. Reason: the display is public data, and a TV sits in a public room. |
 | D10 | **Name:** every TV screen says **"Hightop Challenge"** in full, never "Hightop" alone. **Connect screen:** the two ways to connect sit side by side as equal choices, labelled **"Option 1 · Scan with your phone"** and **"Option 2 · Type your display code"**, with a gold **OR** between them, so nobody thinks they need both. Try demo stays a small button top right. | Andrew, 2026-11-22 (asked for "Method #1 / #2 or something like that"; planner chose "Option", easy to change) |
 | D11 | **New carousel slide: All-Time Leaderboard.** The venue's top 10 by all-time points (the same `users.points` the player leaderboard's all-time view reads, `getLeaderboardForVenue` in `lib/leaderboard.ts`). Gold #1 only. Skipped when fewer than 3 players have points. The ticker shows on it. | Andrew, 2026-11-22 |
@@ -125,6 +127,8 @@ different browser, you'll be asked to sign in once.
 | D24 | **Andrew's stick runs Fire OS** (he believes so; Phase 5 confirms with Settings → My Fire TV → About before installing). Vega OS stays planned (D1, Phases 13–14). | Andrew, 2026-11-22 |
 | D25 | Everything else in mockups v2 and D10–D20 is approved as drawn, including the planner choices flagged in round 1: "Option 1 / Option 2" (D10), D14 (applies once Category Blitz is turned back on, R2), D15, D16 and D18. | Andrew, 2026-11-22 ("I'll keep the rest of what you have here, it seems good.") |
 | D26 | **D21 covers every display.** Category Blitz, Squares and Bracket also stay off TVs that use the Display URL in Silk. So the Phase 9 switch in `selectVenueScreenState` is global: no `&src=tv-app` flag, and idle responses stay shared-cached by URL. | Andrew, 2026-11-22 ("should also stay off TVs that use the Display URL in Silk today. One behavior is simpler and costs less.") |
+
+| D27 | **Sports data: refresh only while a TV is on.** Today's games and live scores weren't stored anywhere (Pick 'Em asks BallDontLie per page view; the every-minute Pick 'Em job asks only after a picked game starts, and production had 38 picks in 30 days, so reusing its data would leave the board empty most days). So one shared copy of today's games (`tv_sports_games`) serves every venue. An idle state request reads it and, after its response, refreshes the leagues that are due (`claim_tv_sports_refresh`): 2 min while a league has a game live or starting within 2 h (MMA and tennis 10 min), 15 min with games later today, 6 h with none, 30 min when the feed is silent. No TV on the carousel → no feed requests. No cron. BallDontLie is a flat subscription, so $0 more. | Andrew, 2026-11-22 (chose "Refresh only while a TV is on" over "no new feed calls", in Phase 9) |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -171,7 +175,7 @@ counter or the Vercel usage page; see memory note `reference_vercel_observabilit
 | A TV left on the idle screen | ~4,300 state requests/day (one per 20 s, `IDLE_POLL_MS`) → ~130k/month per TV | **The same as Silk today; the app changes nothing per TV.** About 10–20 KB each → ~1.3–2.6 GB/month per TV. Vercel Pro includes 1M invocations and 1 TB transfer per month. Roughly 10 always-on TVs ≈ +$0–1/month; 100 ≈ ~$5–10/month. |
 | A TV during Live Trivia / Category Blitz | 1 request/s during questions and rounds (existing) | Unchanged. |
 | Connecting a TV | ≤ 200 tiny requests (one per 3 s, only while the Connect screen shows, 10-minute cap) + 1 short-lived table row | Once per TV. Negligible. |
-| Sports screens (Phases 9–11) | Target: ≤ 3 small bounded DB reads added to each idle state request (games + pick counts, Pick 'Em top 5, All-Time top 10); same 20 s poll | Data changes about once a minute (crons), so the TV never needs to ask faster. Idle responses are shared-cached (`s-maxage=15`), so TVs at the same venue share reads. Ranking the games is plain code: no extra reads. Phase 9 reports the measured cost before building. A faster or more costly option needs your OK first. |
+| Sports screens (Phases 9–11) | **As built (Phase 9):** 4 small bounded reads added to each idle state request that reaches the function (games copy ≤ 300 rows, this venue's picks with usernames, All-Time top 10, prizes ≤ 12), minus the Category Blitz peek and the Squares/Bracket reads that D21 turns off. Plus one tiny claim call per server instance per 30 s, and feed refreshes per D27 (~15–30 BallDontLie requests per 2 min while a TV is on during games, ~0 otherwise; flat subscription). About +5 KB per idle response. Same 20 s poll. | Data changes about once a minute (crons), so the TV never needs to ask faster. Idle responses are shared-cached (`s-maxage=15`), so TVs at the same venue share reads. Ranking the games is plain code: no extra reads. Phase 9 reports the measured cost before building. A faster or more costly option needs your OK first. |
 | Pre-game hour (D13) | +135 requests per TV per game night | 45 more minutes at the pre-game pace (10 s) instead of idle (20 s). Pre-game responses are `no-store`. Negligible. |
 | "Get the app" QR everywhere (D16) | 0 | Drawn on the TV from a fixed URL. |
 | New crons / provider calls | 0 | D8. |
