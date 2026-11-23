@@ -2,6 +2,10 @@
 
 Written 2026-11-23 by the agent that did Phase 11 (Claude Sonnet 5.5, as the plan names).
 
+> **Update 2026-11-23 (after this note was written):** PR #49 merged and deployed. Andrew moved the device reviews
+> (Phases 5 and 12) to the end of the plan, on the store build after Amazon approves 1.0.0 (D34). So the next row is
+> **N3**, not Phase 12; the Phase 12 steps below still apply when it runs.
+
 ## For Andrew (plain English)
 
 **What changed.** Every venue TV now shows the real carousel when nothing is playing: **Next Live Trivia → Pick 'Em
