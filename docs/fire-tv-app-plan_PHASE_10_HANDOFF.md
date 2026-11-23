@@ -17,7 +17,7 @@ Written 2026-11-23 by the agent that did Phase 10 (Claude Sonnet 5.5, high effor
   match the mockups you approved. When a score changes while the board is up, that tile flashes for a few seconds with
   a ribbon ("KC +7") and "61% here picked KC". It never repeats on a refresh.
 
-**Is it live?** The code is in a pull request (see the PR link in the chat), not merged. **Nothing changes on any TV
+**Is it live?** The code is in PR #41, not merged. **Nothing changes on any TV
 even after it merges:** the slides only appear when you open a TV address with `?mode=carousel&slide=pick-em` (or
 `slide=all-time`). Phase 11 builds the rotation that shows them for real and switches the sports data on.
 
@@ -45,8 +45,7 @@ Bingo (R1), Category Blitz/Squares/Bracket (R2), college basketball (D19), the N
   **applied to production** 2026-11-23 (only migration that was pending). Verified: both tables readable by the service
   role; `claim_tv_sports_refresh(['__verify__'], 30)` returned the key, a second call returned `[]`; the test row was
   deleted afterwards. No other data written.
-- Phase 10: branch `feat/fire-tv-phase-10`, from `origin/main` at `92af7e06`. One commit; PR opened against `main`
-  (link in the chat). **Not merged, not deployed** when written.
+- Phase 10: branch `feat/fire-tv-phase-10`, from `origin/main` at `92af7e06`. One commit; PR #41 opened against `main`. **Not merged, not deployed** when written.
 - **Left uncommitted on purpose** (other sessions' work, in the working tree; never commit them as part of Phase 11
   unless Andrew says so): `.claude/settings.json`, `AGENTS.md`, `CLAUDE.md`, `app/api/admin/route.ts`,
   `components/admin/sections/VenuesSection.tsx`, `docs/fire-tv-store/listing.md`, `docs/native-app-release-runbook.md`,
