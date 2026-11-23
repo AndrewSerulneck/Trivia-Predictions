@@ -147,6 +147,9 @@ If you disagree with D5–D9, say so at the start of any phase.
 "Starts when" isn't true yet, skip it and come back. Run one row at a time: each code phase branches from up-to-date
 `main` after the previous PR merges.
 
+**Agents: keep this table in run order (Andrew, 2026-11-23).** When you finish a phase, update its status cell in
+place. When you add a phase, insert it where it should run. Never re-sort the rows by phase number.
+
 "Agent" = a Claude Code session. Start each in a new session with: *"Do Phase N of docs/fire-tv-app-plan.md. Read the
 handoff of the row above it first."*
 
