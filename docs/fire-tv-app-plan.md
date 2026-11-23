@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** Next: confirm #41 CI, merge it, then T2. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. Next: T2 (and T3, D31: seed the flaky star-tilt test). The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -138,6 +138,7 @@ different browser, you'll be asked to sign in once.
 | D28 | **Prizes slide: no per-player progress bar.** The mockup's bar shows one player's progress, which doesn't fit a TV that a whole room reads. Phase 11 builds the slide without it. | Andrew, 2026-11-23 ("This is fine with me.") |
 | D29 | **NHL Pick 'Em start-time bug is fixed in this plan** as phases N1–N3 (found in Phase 9: NHL games show and lock at 7 AM New York time). They are website-only, independent of the TV phases, and can run any time. | Andrew, 2026-11-23 ("Can you add that as a phase (or multiple phases) to this plan?") |
 | D30 | **The two tests that fail on `main` are fixed in this plan** as phases T1–T2. T1 fixes both now. T2 stops the NFL snapshot test from failing again every two weeks in season. Neither comes from TV work, but both turn every PR's CI red, PR #41 included. | Andrew, 2026-11-23 ("Develop solutions to these two failures … add those solutions as a phase (or multiple phases) to this plan") |
+| D31 | **`tests/lib.sportsBingo.nfl-star-tilt.test.ts` "puts stars on boards materially more often than chance" is seeded (phase T3).** It draws unseeded random boards and failed CI on PR #41 (star share 0.27 vs > 0.3), then passed on rerun. | Andrew, 2026-11-23 ("Sure") |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -167,6 +168,7 @@ handoff of the row above it first."*
 | T1 | Fix the two tests that fail on `main`: one test line in question-variety; refresh the NFL star snapshot (D30) | Agent | Haiku 5.5 / low | Done 2026-11-23 (PR #43) | A one-line test change and one existing generator script, with no app code, migration or deploy. Use Sonnet 5.5 / medium if the snapshot diff looks wrong. |
 | 10 (merge) | Finish Phase 10: update PR #41 from `main`, confirm CI passes, merge (deploys; the slides stay preview-only until Phase 11) | Agent | Haiku 5.5 / low | After T1 merges | Mechanical: branch update, check CI, merge. No new code. |
 | T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that opens a refresh PR (D30) | Agent | Sonnet 5.5 / medium | After T1; within 14 days of T1's refresh while NFL is in season. Needs your yes on the secret | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
+| T3 | Stop the random star-tilt test from failing CI: seed its random numbers (D31) | Agent | Haiku 5.5 / low | Anytime; before N1 | One test file; `installSeededRandom` already exists in it. |
 | N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | After T2 | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
 | N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | After N1's handoff (and your answer, if N1 asks one) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
 | N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | First NHL game day after N2 deploys | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
@@ -635,6 +637,14 @@ The agent installs onto Andrew's Vega stick with the Vega tools and runs the Pha
    - Game ranking lives only in `lib/tvSportsRelevance.ts`.
 3. Add a CLAUDE.md feature-rules row for the Fire TV app.
 4. Update `SYSTEM_CONTEXT.md` and the memory note.
+
+### Phase T3 — Seed the star-tilt test (Agent, Haiku 5.5 / low)
+
+In `tests/lib.sportsBingo.nfl-star-tilt.test.ts`, the test "puts stars on boards materially more often than chance"
+(~line 343) uses real `Math.random`. Call `installSeededRandom(<seed>)` (defined ~line 218, used by the next test) at its
+start. Pick a seed whose star share clears 0.3 with margin; check the share isn't borderline across several seeds so the
+assertion still proves the tilt. Change only that test. Run the file, `npm run test`, `npm run lint`; website-only PR,
+no store release. Short handoff: `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`.
 
 ### Phase N1 — NHL Pick 'Em start time: investigate and decide (Agent, Opus 5.5 / high)
 
