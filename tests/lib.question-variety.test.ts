@@ -112,7 +112,7 @@ describe("the draft map", () => {
   it("covers every Live Trivia category file plus Current Events", () => {
     const dir = "data/live-trivia/categories";
     const live = new Set(readdirSync(dir).map((f) => (JSON.parse(readFileSync(path.join(dir, f), "utf8")) as { categoryName: string }).categoryName));
-    expect(Object.keys(draft.games.live).sort()).toEqual([...live, map.CURRENT_EVENTS].sort());
+    expect(Object.keys(draft.games.live).sort()).toEqual([...new Set([...live, map.CURRENT_EVENTS])].sort());
   });
 
   it("keeps the plan's era ranges and reaches every American war, not just two", () => {
