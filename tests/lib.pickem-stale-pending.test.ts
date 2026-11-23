@@ -529,3 +529,77 @@ describe("a win is counted only by the run that graded it (F23)", () => {
     expect(result.won + result.lost).toBe(1);
   });
 });
+
+// Fire TV plan N2 (D33): the NHL feed sends 0–0 for a game that hasn't started. The 4-hour rule must never grade a
+// game the feed still calls "scheduled" (it would be a push); a real final grades as before.
+describe("a game the feed still calls scheduled is never graded (D33)", () => {
+  const nhlRow = (overrides: MockRow = {}): MockRow => ({
+    id: 3328426,
+    game_date: "2026-11-23",
+    start_time_utc: "2026-11-24T00:00:00.000Z",
+    home_team: { id: 1, full_name: "New Jersey Devils", tricode: "NJD" },
+    away_team: { id: 9, full_name: "Columbus Blue Jackets", tricode: "CBJ" },
+    home_score: 0,
+    away_score: 0,
+    game_state: "FUT",
+    status_state: "scheduled",
+    time_remaining: "00:00",
+    ...overrides,
+  });
+  const nhlPick = (overrides: MockRow = {}): MockRow => ({
+    ...collegePick(),
+    id: "nhl",
+    sport_slug: "nhl",
+    sport_key: "icehockey_nhl",
+    league: "NHL",
+    game_id: "3328426__2026-11-24T00:00:00.000Z__newjerseydevils__columbusbluejackets",
+    home_team_id: "1",
+    away_team_id: "9",
+    selected_team_id: "1",
+    selected_team: "New Jersey Devils",
+    selected_side: "home",
+    home_team: "New Jersey Devils",
+    away_team: "Columbus Blue Jackets",
+    game_label: "Columbus Blue Jackets at New Jersey Devils",
+    starts_at: "2026-11-24T00:00:00.000Z",
+    scoring_mode: null,
+    ...overrides,
+  });
+  const feed = (row: MockRow) =>
+    store.fetchBallDontLieList.mockImplementation((path: string) => Promise.resolve(path === "/nhl/v1/games" ? [row] : []));
+
+  it("a pick made under the old noon start stays pending while the game is still scheduled", async () => {
+    // Before N2 an NHL pick was stored with a noon start; 4 h later the 0–0 pre-game score graded it a push.
+    store.tables.pickem_picks = [
+      nhlPick({ game_id: "3328426__2026-11-23T12:00:00.000Z__newjerseydevils__columbusbluejackets", starts_at: "2026-11-23T12:00:00.000Z" }),
+    ];
+    feed(nhlRow());
+    at("2026-11-23T16:30:00.000Z");
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(pickById("nhl")).toMatchObject({ status: "pending", home_score: null, away_score: null });
+    expect(result).toMatchObject({ settledCount: 0, push: 0 });
+  });
+
+  it("grades the same pick once the feed says final", async () => {
+    store.tables.pickem_picks = [nhlPick()];
+    feed(nhlRow({ home_score: 3, away_score: 2, game_state: "OFF", status_state: "final", period: 3 }));
+    at("2026-11-24T03:00:00.000Z");
+
+    const result = await settlePendingPickEmPicks();
+
+    expect(pickById("nhl")).toMatchObject({ status: "won", home_score: 3, away_score: 2, winning_team_id: "1" });
+    expect(result).toMatchObject({ settledCount: 1, won: 1 });
+  });
+
+  it("grades from scores after 4 h when the feed has stopped calling it scheduled", async () => {
+    store.tables.pickem_picks = [nhlPick({ selected_team_id: "9", selected_team: "Columbus Blue Jackets", selected_side: "away" })];
+    feed(nhlRow({ home_score: 4, away_score: 1, game_state: "", status_state: null }));
+    at("2026-11-24T04:30:00.000Z");
+
+    await settlePendingPickEmPicks();
+
+    expect(pickById("nhl")).toMatchObject({ status: "lost", home_score: 4, away_score: 1 });
+  });
+});

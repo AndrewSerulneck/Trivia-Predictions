@@ -223,8 +223,8 @@ type NormalizedBallDontLieEvent = {
   /** The feed's own postseason flag; null when it doesn't say (never guessed). */
   isPostseason?: boolean | null;
   /**
-   * Venue TV only (Pick 'Em keeps `startsAt`, which its game ids are built from): the first full timestamp the feed
-   * gives. NHL rows carry a date-only `game_date` ahead of `start_time_utc`, so `startsAt` reads noon UTC for them.
+   * Venue TV only: the first full timestamp the feed gives, in the TV's own field order. Since D33 `startsAt` also
+   * prefers a full timestamp, so the two agree for every league the TV shows.
    */
   tvStartsAt?: string | null;
   /** Venue TV only: the feed's own game state, when it says one. */
@@ -253,8 +253,8 @@ function extractTvFeedState(event: Record<string, unknown>): "scheduled" | "live
   return null;
 }
 
-/** NHL: "P2 9:22", "Int 2" between periods, "OT"; null when the feed has no clock. */
-function formatTvHockeyLabel(event: Record<string, unknown>): string | null {
+/** NHL (Pick 'Em and the venue TV): "P2 9:22", "Int 2" between periods, "OT"; null when the feed has no clock. */
+function formatHockeyPeriodLabel(event: Record<string, unknown>): string | null {
   const period = Number(event.period);
   if (!Number.isFinite(period) || period < 1) return null;
   const name = period <= 3 ? `P${period}` : period === 4 ? "OT" : "SO";
@@ -554,6 +554,11 @@ function extractTennisWinner(event: Record<string, unknown>): { winnerTeamId: st
   };
 }
 
+/**
+ * A game's start: the first full timestamp in the list, else the first date-only value (at 12:00Z). NHL rows carry a
+ * date-only `game_date` ahead of `start_time_utc`; taking it first put every NHL game at 7 AM New York (D33).
+ * Game ids are built from this value, so the list order must not change for leagues that already give a timestamp.
+ */
 function extractEventStartIso(event: Record<string, unknown>): string | null {
   const rawCandidates = [
     event.scheduled_time,
@@ -566,9 +571,10 @@ function extractEventStartIso(event: Record<string, unknown>): string | null {
     event.start_time_utc,
     event.main_card_start_time,
     event.scheduled_at,
-  ];
-  for (const candidate of rawCandidates) {
-    const normalized = normalizeBallDontLieGameStartIso(String(candidate ?? "").trim());
+  ].map((candidate) => String(candidate ?? "").trim());
+  const isDateOnly = (raw: string) => /^\d{4}-\d{2}-\d{2}$/.test(raw);
+  for (const raw of [...rawCandidates.filter((value) => !isDateOnly(value)), ...rawCandidates.filter(isDateOnly)]) {
+    const normalized = normalizeBallDontLieGameStartIso(raw);
     if (normalized) {
       return normalized;
     }
@@ -1180,10 +1186,13 @@ async function fetchBallDontLieEventsForSportKey(
       ? parseScore((eventRecord.player2_game_score as number | string | null | undefined) ?? null)
       : extractAwayScore(eventRecord);
     const isCompleted = isBallDontLieFinalStatus(eventRecord);
+    const isHockey = provider.path.startsWith("/nhl/");
     const periodLabel =
       sportKey === COLLEGE_FOOTBALL_SPORT_KEY
         ? formatCollegeFootballPeriodLabel(eventRecord)
-        : formatPeriodLabel(event.time, event.time_in_period, provider.isSoccerMatch ?? false, typeof event.period === "number" ? event.period : null);
+        : isHockey
+          ? formatHockeyPeriodLabel(eventRecord)
+          : formatPeriodLabel(event.time, event.time_in_period, provider.isSoccerMatch ?? false, typeof event.period === "number" ? event.period : null);
     const tennisWinner = tennisMode ? extractTennisWinner(eventRecord) : null;
     const abbrOf = (value: unknown): string | null => {
       const team = value && typeof value === "object" ? (value as Record<string, unknown>) : null;
@@ -1219,7 +1228,7 @@ async function fetchBallDontLieEventsForSportKey(
       isPostseason: typeof eventRecord.postseason === "boolean" ? eventRecord.postseason : null,
       tvStartsAt: extractTvStartIso(eventRecord),
       tvFeedState: extractTvFeedState(eventRecord),
-      tvPeriodLabel: provider.path.startsWith("/nhl/") ? formatTvHockeyLabel(eventRecord) : null,
+      tvPeriodLabel: isHockey ? formatHockeyPeriodLabel(eventRecord) : null,
     });
   }
 
@@ -2975,7 +2984,10 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     const providerWinnerTeamName = String(scoreEvent.winner_team ?? "").trim();
     const startsAtMs = Date.parse(row.starts_at);
     const isStale = Number.isFinite(startsAtMs) && nowMs - startsAtMs >= staleFinalizeMs;
-    const canFinalizeFromScores = homeScore !== null && awayScore !== null && isStale;
+    // A game the feed still calls "scheduled" hasn't started, so it can't be over: NHL sends 0–0 before puck-drop,
+    // which would grade as a push (D33). College Football has its own gate below.
+    const feedSaysScheduled = String(scoreEvent.status_state ?? "").trim().toLowerCase() === "scheduled";
+    const canFinalizeFromScores = homeScore !== null && awayScore !== null && isStale && !feedSaysScheduled;
     const canFinalizeFromProviderWinner = providerWinnerTeamId.length > 0 || providerWinnerTeamName.length > 0;
     const collegeGate =
       row.sport_key === COLLEGE_FOOTBALL_SPORT_KEY
