@@ -3,7 +3,7 @@
 **For Andrew:** A weekly GitHub Action now refreshes the NFL star snapshot and commits it straight to `main` (your call,
 D32), so the freshness test stops turning CI red every two weeks. **Live 2026-11-23:** #45 and #46 merged; the first run
 (manual) committed `467fcd35` to `main`. Next scheduled run: Tue 2026-12-01 10:00 UTC. If BallDontLie is down or returns a much smaller player list, the run fails
-without committing, and GitHub emails you about the failed run. Website/CI only, no store release.
+without committing, and GitHub emails you about the failed run (true only since CR1.3; before it, the run went green). Website/CI only, no store release.
 
 ## For the next agent
 
