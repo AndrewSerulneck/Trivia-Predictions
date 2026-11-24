@@ -2,7 +2,7 @@
 
 Created: 2026-09-12. Requested by Andrew Serulneck.
 
-**Reopened 2026-11-24 for two remedial phases from the Fire TV plan's CR1 code review: CR1.2 (Pick 'Em game id and grading guards, F24–F28) and CR1.6 (BallDontLie season probe, F38). Both awaiting Andrew's OK.** Findings: `docs/fire-tv-app-plan.md` "CR1 review findings"; review handoff `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`. Phase details: "Remedial phases from the CR1 code review" below. Everything else in this plan stays complete.
+**Reopened 2026-11-24 for two remedial phases from the Fire TV plan's CR1 code review: CR1.2 (Pick 'Em game id and grading guards, F24–F28) and CR1.6 (BallDontLie season probe, F38). Both approved by Andrew 2026-11-24.** Findings: `docs/fire-tv-app-plan.md` "CR1 review findings"; review handoff `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`. Phase details: "Remedial phases from the CR1 code review" below. Everything else in this plan stays complete.
 
 **Status: Complete and developer-accepted, 2026-09-19. Andrew confirmed authenticated Prop Bingo works after the atomic-grading migration and explicitly closed the plan. Phase 6 historical reconciliation was intentionally skipped; no past results will be repaired. All offline gates pass (2,620 tests, zero failures; NFL 288/288; MLB 142/142; build 179 pages), and the 16-game NFL provider validator passes. The additive migration is applied and verified on linked Supabase project `pkmxupsayzshvpirkaav`; no board/reward result was changed. Physical-device layout and real-game timing remain useful routine operational monitoring, not open phases or release blockers. Final handoff: [Phase 7](bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md). Release record: [2026-09-19](bingo-pickem-reliability-release-record-2026-09-19.md). Phase 6 decision: [skipped handoff](bingo-pickem-reliability-plan_PHASE_6_HANDOFF.md). Earlier handoffs: [Phase 5](bingo-pickem-reliability-plan_PHASE_5_HANDOFF.md), [Phase 4](bingo-pickem-reliability-plan_PHASE_4_HANDOFF.md), [Phase 3](bingo-pickem-reliability-plan_PHASE_3_HANDOFF.md), [Phase 2](bingo-pickem-reliability-plan_PHASE_2_HANDOFF.md), [Phase 1](bingo-pickem-reliability-plan_PHASE_1_HANDOFF.md), [Phase 0](bingo-pickem-reliability-plan_PHASE_0_HANDOFF.md).**
 
@@ -232,7 +232,7 @@ line numbers on `main` `75b47740`). The bugs live in this plan's code (`lib/pick
 remedial phases). Production on 2026-11-24: 137 picks (NBA, WNBA, MLB, NFL), 0 NHL, 0 duplicate picks on one real game,
 0 provider games under more than one `game_id` — so no data repair is needed today.
 
-### Phase CR1.2 — Pick 'Em game id and grading guards (Agent, Claude Opus 5.5 / high) — Awaiting Andrew's OK
+### Phase CR1.2 — Pick 'Em game id and grading guards (Agent, Claude Opus 5.5 / high) — Approved by Andrew 2026-11-24
 
 **Fixes F24–F28.** Branch `fix/pickem-game-id-and-grading` from up-to-date `main`. No migration expected; if one turns
 out to be needed it becomes its own phase and needs Andrew's yes before `supabase db push`. Standing rules that apply:
@@ -264,7 +264,7 @@ each assertion to the correct behaviour, watch it fail, then fix.
    pairs, provider games with more than one id) and record the counts. Full handoff
    `docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md` (points path).
 
-### Phase CR1.6 — BallDontLie season probe keeps its row (Agent, Claude Sonnet 5.5 / medium) — Awaiting Andrew's OK
+### Phase CR1.6 — BallDontLie season probe keeps its row (Agent, Claude Sonnet 5.5 / medium) — Approved by Andrew 2026-11-24
 
 **Fixes F38.** `hasUpcomingGamesInWindow` (`lib/sportsBingo.ts:1245`) calls `fetchBallDontLieList(path, query,
 { maxPages: 1, failure })` with `per_page: 1`. `lib/ballDontLieClient.ts` treats "a `next_cursor` exists after the last

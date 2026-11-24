@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **Phase 11 merged and deployed 2026-11-23** (PR #49; carousel, ticker, "Get the app" QR, pre-game title; carousel data switched ON; `docs/fire-tv-app-plan_PHASE_11_HANDOFF.md`). **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** **T4 built 2026-11-23 (PR #51 merged 2026-11-24, `72ff0638` + `287a1951`; `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`; D35).** **T4 reviewed 2026-11-23 (two passes): the fix is right, but its new test can't catch the bug, plus four smaller issues → remedial phases T4.1 (finish T4 on PR #51) and T4.2 (pre-existing Quick Review bugs); D36.** **2026-11-23: no other phase of this plan has had a code review** (no PR review, no handoff mentions one), so review phases CR1–CR3 were added (D37). **T4.1 done 2026-11-24 (on PR #51; `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`).** **T4.2 done 2026-11-24 (PR #52 merged; `docs/fire-tv-app-plan_PHASE_T4.2_HANDOFF.md`).** **CR1 done 2026-11-24 (PR #54; read-only; nothing urgent; findings F7–F43 under "CR1 review findings"; remedial phases CR1.1–CR1.7 awaiting Andrew's OK, CR1.2 and CR1.6 in `docs/bingo-pickem-reliability-plan.md`; `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`).** Next: CR2, CR3, and the CR1 remedial phases once Andrew says yes; everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** **T4 built 2026-11-23 (PR #51 merged 2026-11-24, `72ff0638` + `287a1951`; `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`; D35).** **T4 reviewed 2026-11-23 (two passes): the fix is right, but its new test can't catch the bug, plus four smaller issues → remedial phases T4.1 (finish T4 on PR #51) and T4.2 (pre-existing Quick Review bugs); D36.** **2026-11-23: no other phase of this plan has had a code review** (no PR review, no handoff mentions one), so review phases CR1–CR3 were added (D37). **T4.1 done 2026-11-24 (on PR #51; `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`).** **T4.2 done 2026-11-24 (PR #52 merged; `docs/fire-tv-app-plan_PHASE_T4.2_HANDOFF.md`).** **CR1 done 2026-11-24 (PR #54; read-only; nothing urgent; findings F7–F43 under "CR1 review findings"; remedial phases CR1.1–CR1.7 approved by Andrew 2026-11-24, F41 yes, CR1.2 and CR1.6 in `docs/bingo-pickem-reliability-plan.md`; `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`).** Next: CR2, CR3, and the approved CR1 remedial phases; everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -182,13 +182,13 @@ handoff of the row above it first."*
 | T4 | Stop the Live Quick Review undo test from failing CI at random: fix the race behind it (D35) | Agent | Sonnet 5.5 / medium | Done; merged 2026-11-24 (PR #51; reviewed → T4.1, T4.2) | A timing race in an admin component and its test needs diagnosis, not just a seed; small scope, no data, migration or store release. |
 | T4.1 | **Remedial (T4 review):** finish T4 on PR #51: a regression test that fails on `fd3bf936`, restore the dropped check, git-ignore `.claude/worktrees/`, correct the handoff, then merge | Agent | Sonnet 5.5 / medium | Done 2026-11-24 (on PR #51; `_PHASE_T4.1_HANDOFF.md`) | One test file plus two doc/config lines, but the test must reach a React effect-timing window; Haiku would likely write another test that passes on the old code. |
 | CR1 | **Code review, high risk (D37):** PRs #36 (Phase 3: connect backend, migration, partner auth, `proxy.ts`, public endpoint), #39 (Phase 9: shared state engine, migration, cost), #48 (N2: Pick 'Em locking and grading), #37 (Phase 4: WebView security), #46 (T2: Action that commits to `main`) | Agent | Opus 5.5 / high | Done 2026-11-24 (F7–F43; `_PHASE_CR1_HANDOFF.md`) | Auth, migrations, security-definer functions, points and a public endpoint, all live in production; a missed bug here costs the most. |
-| CR1.1 | **Remedial (CR1, F14, F16):** TV Prizes slide shows a points target only for real points-target prizes, and only open prizes | Agent | Sonnet 5.5 / medium | **Awaiting Andrew's OK.** Live wrong text today, so first | One read function and its test; web only, no data. |
-| CR1.2 | **Remedial (CR1, F24–F28), in `docs/bingo-pickem-reliability-plan.md`:** Pick 'Em: a moved start time can't hide a pick or allow a second, paid one; grading waits for the real start; postponed games don't grade as a push | Agent | Opus 5.5 / high | **Awaiting Andrew's OK.** Before NHL picks build up | Points and pick matching in the shared Pick 'Em engine. |
-| CR1.3 | **Remedial (CR1, F36, F37, F39, F40, F43; asks about F41):** weekly NFL star workflow fails loudly, runs at season start, guards the prior slate | Agent | Sonnet 5.5 / medium | **Awaiting Andrew's OK.** Before the first scheduled run, Tue 2026-12-01 | A workflow file, one script guard and contract tests; well specified. |
-| CR1.4 | **Remedial (CR1, F15, F17, F18, F19–F22):** TV sports feed: empty league isn't a failure, no noon-UTC "live" games, playoff OT labels, usage counter and finals fixes | Agent | Opus 5.5 / high | **Awaiting Andrew's OK** | Touches the shared Pick 'Em feed helper and the refresh engine; Pick 'Em callers must not change. |
-| CR1.5 | **Remedial (CR1, F7–F11, F35):** TV Connect screen: last-second connect, one poll loop, clock skew, retry wording, no create per key; keep-awake readout | Agent | Sonnet 5.5 / medium | **Awaiting Andrew's OK** | Client timing in one component plus one server helper; fake-timer tests. Web only. |
-| CR1.6 | **Remedial (CR1, F38), in `docs/bingo-pickem-reliability-plan.md`:** the BallDontLie season probe keeps its one row | Agent | Sonnet 5.5 / medium | **Awaiting Andrew's OK** | One fetch option and a test. |
-| CR1.7 | **Remedial (CR1, F29–F34):** Fire TV shell 1.0.1: a 5xx or certificate error shows "Can't connect." and retries; bridge limited to site frames; no retries in background; crash-restart cap | Agent | Opus 5.5 / high | **Awaiting Andrew's OK.** After Amazon approves 1.0.0 (a release can't be submitted while one is in review) | WebView callback order, security hardening and a store release. |
+| CR1.1 | **Remedial (CR1, F14, F16):** TV Prizes slide shows a points target only for real points-target prizes, and only open prizes | Agent | Sonnet 5.5 / medium | **Approved by Andrew 2026-11-24.** Live wrong text today, so first | One read function and its test; web only, no data. |
+| CR1.2 | **Remedial (CR1, F24–F28), in `docs/bingo-pickem-reliability-plan.md`:** Pick 'Em: a moved start time can't hide a pick or allow a second, paid one; grading waits for the real start; postponed games don't grade as a push | Agent | Opus 5.5 / high | **Approved by Andrew 2026-11-24.** Before NHL picks build up | Points and pick matching in the shared Pick 'Em engine. |
+| CR1.3 | **Remedial (CR1, F36, F37, F39, F40, F43; asks about F41):** weekly NFL star workflow fails loudly, runs at season start, guards the prior slate | Agent | Sonnet 5.5 / medium | **Approved by Andrew 2026-11-24.** Before the first scheduled run, Tue 2026-12-01 | A workflow file, one script guard and contract tests; well specified. |
+| CR1.4 | **Remedial (CR1, F15, F17, F18, F19–F22):** TV sports feed: empty league isn't a failure, no noon-UTC "live" games, playoff OT labels, usage counter and finals fixes | Agent | Opus 5.5 / high | **Approved by Andrew 2026-11-24** | Touches the shared Pick 'Em feed helper and the refresh engine; Pick 'Em callers must not change. |
+| CR1.5 | **Remedial (CR1, F7–F11, F35):** TV Connect screen: last-second connect, one poll loop, clock skew, retry wording, no create per key; keep-awake readout | Agent | Sonnet 5.5 / medium | **Approved by Andrew 2026-11-24** | Client timing in one component plus one server helper; fake-timer tests. Web only. |
+| CR1.6 | **Remedial (CR1, F38), in `docs/bingo-pickem-reliability-plan.md`:** the BallDontLie season probe keeps its one row | Agent | Sonnet 5.5 / medium | **Approved by Andrew 2026-11-24** | One fetch option and a test. |
+| CR1.7 | **Remedial (CR1, F29–F34):** Fire TV shell 1.0.1: a 5xx or certificate error shows "Can't connect." and retries; bridge limited to site frames; no retries in background; crash-restart cap | Agent | Opus 5.5 / high | **Approved by Andrew 2026-11-24.** After Amazon approves 1.0.0 (a release can't be submitted while one is in review) | WebView callback order, security hardening and a store release. |
 | T4.2 | **Remedial (T4 review, pre-existing bugs):** Quick Review: Z pressed while a save runs is kept (D36); no Keep / Reject while "Loading…" or from a stale category; "Loading…" (not "Nothing left.") before the first load. Live, and Speed where the same code exists | Agent | Sonnet 5.5 / high | Done; merged 2026-11-24 (PR #52; `_PHASE_T4.2_HANDOFF.md`) | Admin UI only, well specified, but async ordering: a mistake undoes or decides the wrong question, so high effort. No data, migration or store release. |
 | CR2 | **Code review, display and release (D37):** PRs #41 (Phase 10 slides, plus Phase 8b's `native-tv/scripts/release.cjs`, commit `e69bc60e`), #49 (Phase 11: carousel, ticker, QR, pre-game title), #38 (Phase 6: release build, store pack, keyboard fix) | Agent | Sonnet 5.5 / high | After CR1 | Screens with written standing rules (effects keys, no replay on poll, precedence, one QR) and one script that handles signing keys and store credentials; high effort to check each rule. |
 | CR3 | **Code review, small fixes (D37):** PRs #43 (T1), #45 (T3), #47 (flavor-squares timeout), #50 (Pick 'Em stale-load recheck, N3) | Agent | Sonnet 5.5 / medium | After CR2 | Small test and client fixes; Haiku tends to miss whether a test really guards what it claims (the T4 lesson), so mid tier. |
@@ -922,7 +922,7 @@ are on `main` `75b47740`. Every check that passed is listed in `docs/fire-tv-app
 overlay" (WebView doesn't post `onPageFinished` for `pushState`); "finished NHL games keep a clock label" (the TV shows
 "Final"); the old-id open-page case (0 picks since deploy); Pacific / Hawaii day filtering (correct).
 
-### Phase CR1.1 — TV Prizes slide: real targets, open prizes only (Agent, Sonnet 5.5 / medium) — Awaiting Andrew's OK
+### Phase CR1.1 — TV Prizes slide: real targets, open prizes only (Agent, Sonnet 5.5 / medium) — Approved by Andrew 2026-11-24
 
 **Fixes F14, F16.** Web only; no migration, data change or store release. Branch `fix/tv-prizes-slide-target` from
 up-to-date `main`.
@@ -944,7 +944,7 @@ up-to-date `main`.
 Fixes F24–F28. Full phase details are in that plan under "Phase CR1.2". Reproduction test:
 `docs/fire-tv-app-plan_CR1_evidence/pickem-game-id-and-grading-repro.test.ts.txt`.
 
-### Phase CR1.3 — Weekly NFL star workflow: fail loudly, run at season start (Agent, Sonnet 5.5 / medium) — Awaiting Andrew's OK
+### Phase CR1.3 — Weekly NFL star workflow: fail loudly, run at season start (Agent, Sonnet 5.5 / medium) — Approved by Andrew 2026-11-24
 
 **Fixes F36, F37, F39, F40, F43; asks about F41.** Do it before Tue 2026-12-01 10:00 UTC (first scheduled run) if
 possible. Branch `fix/nfl-star-workflow-hardening`.
@@ -961,11 +961,11 @@ possible. Branch `fix/nfl-star-workflow-hardening`.
    or `pipefail`; a schedule fires on Sep 1; checkout has `persist-credentials: false`); guard unit tests (prior
    602 → 12 refused; wrong-season rows refused; 571 → 292 current still allowed).
 4. Correct `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`'s "the run fails … and GitHub emails you" (true only after this fix).
-5. **Ask Andrew (F41):** skip Vercel builds when the only changed file is `data/sports-bingo/nfl-star-index.json`
-   (saves ~17 production builds a season)? It needs a `vercel.json` `ignoreCommand` (CLAUDE.md: don't touch without
-   his instruction) or a dashboard setting. Record his answer as a decision. Short handoff note.
+5. **F41 — Andrew said yes (2026-11-24):** skip the Vercel build when the only changed file is
+   `data/sports-bingo/nfl-star-index.json` (saves ~17 production builds a season). This is his instruction to add a
+   `vercel.json` `ignoreCommand` for exactly that case; change nothing else in `vercel.json`. Short handoff note.
 
-### Phase CR1.4 — TV sports feed fixes (Agent, Opus 5.5 / high) — Awaiting Andrew's OK
+### Phase CR1.4 — TV sports feed fixes (Agent, Opus 5.5 / high) — Approved by Andrew 2026-11-24
 
 **Fixes F15, F17, F18, F19, F20, F21, F22.** Web only. Branch `fix/tv-sports-feed-review`. **Pick 'Em callers of
 `lib/pickem.ts` must behave exactly as today** — change TV-only wrappers where possible and keep every Pick 'Em test
@@ -986,7 +986,7 @@ passing unchanged.
 5. Estimate BallDontLie calls per day before and after (Cost table); report. Tests, lint, typecheck, PR, CI, merge;
    check `tv_sports_refresh` due times after one refresh on the deploy (select only). Full handoff (touches a shared engine).
 
-### Phase CR1.5 — TV Connect screen timing (Agent, Sonnet 5.5 / medium) — Awaiting Andrew's OK
+### Phase CR1.5 — TV Connect screen timing (Agent, Sonnet 5.5 / medium) — Approved by Andrew 2026-11-24
 
 **Fixes F7, F8, F9, F10, F11, F35.** Web only. Branch `fix/tv-connect-timing`.
 1. `components/venue-screen/TvConnectScreen.tsx` poll effect (≈ 228-275): when `Date.now() >= deadline`, do one final
@@ -1006,7 +1006,7 @@ passing unchanged.
 
 Fixes F38. Full phase details are in that plan under "Phase CR1.6".
 
-### Phase CR1.7 — Fire TV shell 1.0.1: recovery and hardening (Agent, Opus 5.5 / high) — Awaiting Andrew's OK
+### Phase CR1.7 — Fire TV shell 1.0.1: recovery and hardening (Agent, Opus 5.5 / high) — Approved by Andrew 2026-11-24
 
 **Fixes F29–F34.** Starts only after Amazon approves 1.0.0 (`npm run fire-tv:release` refuses while a release is in
 review). Branch `fix/fire-tv-shell-recovery`. Ends with a store release (CLAUDE.md §Native app releases): 1.0.1,

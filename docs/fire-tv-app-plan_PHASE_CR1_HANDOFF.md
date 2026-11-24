@@ -29,7 +29,7 @@
 
 ### 1. Next phase and scope
 Next in the table: **CR2** (read-only review of PRs #41, #49, #38; Sonnet 5.5 / high), then **CR3**. The CR1
-remedial phases **CR1.1–CR1.7** are written and marked "Awaiting Andrew's OK". Don't start one until he says yes.
+remedial phases **CR1.1–CR1.7** were **approved by Andrew on 2026-11-24**; he'll run them in a separate session.
 - CR1.1, CR1.3, CR1.4, CR1.5 and CR1.7: in `docs/fire-tv-app-plan.md`, "Phase details".
 - CR1.2 and CR1.6: in `docs/bingo-pickem-reliability-plan.md`, "Remedial phases from the CR1 code review", because
   that plan owns that code.
@@ -181,8 +181,8 @@ Nothing in the app changed. Review targets, as of `main` `75b47740`:
 - Whether BallDontLie NHL rows change `start_time_utc` (F24's trigger).
 
 ### 7. Open questions for Andrew
-1. Approve CR1.1–CR1.7, or a subset?
-2. In CR1.3, should Vercel skip building when only `data/sports-bingo/nfl-star-index.json` changed (F41)?
+1. ~~Approve CR1.1–CR1.7?~~ Answered 2026-11-24: all approved.
+2. ~~F41~~ Answered 2026-11-24: yes, CR1.3 adds a `vercel.json` `ignoreCommand` for snapshot-only commits.
 3. Do you want an edge rate limit on `/api/tv-app/pairings/status` and `/tv/<code>` (F12)? The default is no.
 
 ### 8. Recommended first steps
