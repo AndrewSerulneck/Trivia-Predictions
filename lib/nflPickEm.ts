@@ -901,6 +901,14 @@ function mapBDLGame(game: BDLGame): NFLGameFetchResult {
   };
 }
 
+function providerIdOfNFLPickEmGameId(gameId: string): string {
+  const index = gameId.indexOf("__");
+  return index === -1 ? gameId : gameId.slice(0, index);
+}
+
+/** How far a pick's stored start can sit from its game's current start and still be looked up (F44). */
+const NFL_MOVED_GAME_LOOKUP_MS = 21 * 24 * 60 * 60 * 1000;
+
 function toNFLPickEmGameId(game: Pick<NFLGameFetchResult, "id" | "startsAt" | "awayTeam" | "homeTeam">): string {
   return `${game.id}__${game.startsAt}__${game.awayTeam}__${game.homeTeam}`;
 }
@@ -1435,10 +1443,19 @@ export async function listNFLPickEmGames(params: {
       .gte("starts_at", new Date(span.startMs).toISOString())
       .lt("starts_at", new Date(span.endMsExclusive).toISOString());
 
-    const pickMap = new Map(picks?.map(p => [p.game_id, p]));
-    
+    // A game id embeds the feed's start time, so a moved game gets a new id (CR1.2.1, F44): a pick is
+    // found by the exact id, else by the provider's game id (canceled picks never stand in).
+    const pickMap = new Map<string, NonNullable<typeof picks>[number]>();
+    for (const p of picks ?? []) {
+      pickMap.set(p.game_id, p);
+      const providerId = providerIdOfNFLPickEmGameId(p.game_id);
+      if (p.status !== "canceled" && providerId !== p.game_id && !pickMap.has(providerId)) {
+        pickMap.set(providerId, p);
+      }
+    }
+
     for (const game of nflGames) {
-      const pick = pickMap.get(game.id);
+      const pick = pickMap.get(game.id) ?? pickMap.get(providerIdOfNFLPickEmGameId(game.id));
       if (pick) {
         game.userPickId = pick.id;
         game.userPickTeam = pick.selected_team;
@@ -1641,7 +1658,7 @@ export async function submitNFLPickEmPick(params: {
   const gameLabel = `${game.awayTeam} vs ${game.homeTeam}`;
   
   // Check for existing pick
-  const { data: existing, error: existingError } = await supabaseAdmin
+  const { data: exactPick, error: existingError } = await supabaseAdmin
     .from("pickem_picks")
     .select(PICKEM_PICK_SELECT)
     .eq("user_id", params.userId)
@@ -1652,10 +1669,39 @@ export async function submitNFLPickEmPick(params: {
   if (existingError) {
     throw new Error(existingError.message ?? "Failed to verify existing pick.");
   }
+
+  // The same real game under an older id (its start time moved, F44) is the same pick: switch its side.
+  let existing = exactPick;
+  if (!existing) {
+    const providerId = providerIdOfNFLPickEmGameId(game.id);
+    const gameStartMs = Date.parse(game.startsAt);
+    if (providerId !== game.id && Number.isFinite(gameStartMs)) {
+      const { data: moved, error: movedError } = await supabaseAdmin
+        .from("pickem_picks")
+        .select(PICKEM_PICK_SELECT)
+        .eq("user_id", params.userId)
+        .eq("sport_slug", NFL_PICKEM_SPORT_SLUG)
+        .gte("starts_at", new Date(gameStartMs - NFL_MOVED_GAME_LOOKUP_MS).toISOString())
+        .lte("starts_at", new Date(gameStartMs + NFL_MOVED_GAME_LOOKUP_MS).toISOString());
+      if (movedError) {
+        throw new Error(movedError.message ?? "Failed to verify existing pick.");
+      }
+      const matches = ((moved ?? []) as PickEmPickRow[]).filter(
+        (row) =>
+          row.game_id !== game.id &&
+          row.status !== "canceled" &&
+          providerIdOfNFLPickEmGameId(row.game_id) === providerId
+      );
+      existing = matches.find((row) => row.status === "pending") ?? matches[0] ?? null;
+      if (existing && existing.venue_id !== params.venueId) {
+        throw new Error("You already made a pick for this game.");
+      }
+    }
+  }
   
   if (existing) {
-    // Check if pick is locked
-    const startsAtMs = new Date(existing.starts_at).getTime();
+    // Check if pick is locked (a moved game locks at its current start, not the stored one)
+    const startsAtMs = Math.max(new Date(existing.starts_at).getTime(), new Date(game.startsAt).getTime());
     if (!Number.isFinite(startsAtMs) || Date.now() >= startsAtMs + PICKEM_LOCK_GRACE_MS) {
       throw new Error("This pick is locked because the game has started.");
     }
