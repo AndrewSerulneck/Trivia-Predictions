@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **Phase 11 merged and deployed 2026-11-23** (PR #49; carousel, ticker, "Get the app" QR, pre-game title; carousel data switched ON; `docs/fire-tv-app-plan_PHASE_11_HANDOFF.md`). **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** Next: N3 on the first NHL game day after N2's deploy; then everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** Next: T4 (intermittent Live Quick Review test, D35) any time; then everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -142,6 +142,7 @@ different browser, you'll be asked to sign in once.
 | D33 | **NHL Pick 'Em fix (N1's choice): prefer a real timestamp in every league.** `extractEventStartIso` takes the first full timestamp and falls back to a date-only field only when none exists. NHL `startsAt` and `game_id` move to the real puck-drop; every other league's are unchanged (each already sends a full timestamp first). No migration: production has no NHL picks, tiebreaker guesses or lines. N2 also stops grading a pick whose game the feed still calls "scheduled" (NHL sends 0–0 before puck-drop, which the 4-hour rule would grade as a push), and labels NHL periods with the TV's hockey helper. Replaces the planner's "keep the id" recommendation in N1 step 4. | N1 agent, 2026-11-23, from evidence in `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md` §4–5. Andrew may overrule. |
 | D32 | **The weekly NFL star-snapshot refresh (T2) commits straight to `main`, no PR.** The script's `--guard` refuses to write when a BallDontLie fetch fails or the current slate shrinks below half, because no person reads the diff before it lands. The "Allow GitHub Actions to create and approve pull requests" setting is not needed and stays as it was. | Andrew, 2026-11-23 ("Just commit it straight to main unless there's a problem. I don't want to have to merge a PR every week.") |
 | D34 | **Device reviews move to the end.** Phases 5 (app test) and 12 (sports screens on a real TV) run after Amazon approves 1.0.0, on the **store build** installed from the Amazon Appstore, not a sideloaded APK. Nobody outside Hightop Challenge is told about the app before then, so a device bug found late reaches no one. Phase 8's dashboard link waits for Phase 5 to pass, because that link is how partners find the app (planner's call, to keep the app unannounced until reviewed). | Andrew, 2026-11-23 ("I don't have a firestick currently, but no one is going to use the Fire TV app before us anyway … let's just move the review phases to the end of this plan and we'll review the app ourselves when it is available on the Amazon Fire TV store.") |
+| D35 | **`tests/components.live-trivia-quick-review.test.ts` "shows a possible repeat … undoes with Z" is made reliable (phase T4).** It failed CI once on PR #49 (2026-11-23: no `live-review-card` after pressing Z, timed out at 1033 ms), then passed on the same commit. It is a timing race, not random data, so it can't be seeded like T3 (D31). | Andrew, 2026-11-23 ("Add the fix to the intermittent test to the plan.") |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -175,7 +176,8 @@ handoff of the row above it first."*
 | N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | Done 2026-11-23 (D33; `_PHASE_N1_HANDOFF.md`) | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
 | N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | Built 2026-11-23 (PR #48 green, awaiting merge; `_PHASE_N2_HANDOFF.md`) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
 | 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | Done; merged 2026-11-23 (PR #49; ran before N3 at Andrew's request; `_PHASE_11_HANDOFF.md`) | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
-| N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | **Next.** First NHL game day after N2 deploys (N2 merged 2026-11-23) | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
+| N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | Done 2026-11-23 (`_PHASE_N3_HANDOFF.md`) | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
+| T4 | Stop the Live Quick Review undo test from failing CI at random: fix the race behind it (D35) | Agent | Sonnet 5.5 / medium | Anytime; can run now while N3 waits for an NHL game day | A timing race in an admin component and its test needs diagnosis, not just a seed; small scope, no data, migration or store release. |
 | 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | After Amazon approves 1.0.0 | New SDK and toolchain, little prior art. |
 | 5 | Review the app: install **Hightop Challenge TV from the Amazon Appstore** on your Fire Stick and test it (D34) | **Andrew** + agent | Sonnet 5.5 / medium | After Amazon approves 1.0.0 and you have a Fire Stick | Agent reads crash logs if needed and fixes small bugs; the device checklist is well defined. |
 | 12 | Review the sports screens on a real TV on a game day, then record results (D34) | **Andrew** + agent | Haiku 5.5 / low | Same sitting as Phase 5 if it's a game day; otherwise the next game day | Andrew checks; agent only records results and files fixes. |
@@ -192,6 +194,7 @@ handoff of the row above it first."*
 - **Reviews last (D34, 2026-11-23):** Phases 5 and 12 wait until the app is live in the Amazon Appstore and you have a
   Fire Stick; you test the store build, not a sideloaded one. **Phase 8** (the dashboard link) waits for Phase 5, because
   it's how partners find the app. **13** needs Amazon's approval; **14** needs a Vega stick.
+- **T4** (the intermittent test) can run any time; it's listed after N3 only because N3 is already marked Next.
 - **R1 and R2** run only when you say go.
 
 ## Cost estimates
@@ -655,6 +658,33 @@ In `tests/lib.sportsBingo.nfl-star-tilt.test.ts`, the test "puts stars on boards
 start. Pick a seed whose star share clears 0.3 with margin; check the share isn't borderline across several seeds so the
 assertion still proves the tilt. Change only that test. Run the file, `npm run test`, `npm run lint`; website-only PR,
 no store release. Short handoff: `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`.
+
+### Phase T4 — Make the Live Quick Review undo test reliable (Agent, Sonnet 5.5 / medium)
+
+**The failure (D35):** `tests/components.live-trivia-quick-review.test.ts`, "shows a possible repeat and the accepted
+answers, rejects with ← and undoes with Z" (~line 87), failed once in PR #49's CI (2026-11-23):
+`TestingLibraryElementError: Unable to find an element by: [data-testid="live-review-card"]` after 1033 ms, i.e. the
+`waitFor` at ~line 95 timed out after pressing Z. Same commit passed in the other run; 7930 other tests passed.
+
+**Likely cause (planner's reading; confirm it):** `components/admin/sections/LiveTriviaQuickReview.tsx` registers its
+`keydown` listener in a `useEffect` that depends on `undo`, and `undo` closes over `history` and `busy`. After ←, the
+test sees "Nothing left." as soon as the reject renders, then presses Z at once. If the effect that swaps in the new
+listener hasn't run yet, the old listener calls the old `undo`, which sees an empty `history` (or `busy`) and returns,
+so the card never comes back. A slow CI runner widens that gap. A fast human pressing ← then Z could hit the same thing.
+
+1. Branch from up-to-date `main`. Reproduce or rule out the race: e.g. run the file many times
+   (`for i in $(seq 50); do npx vitest run tests/components.live-trivia-quick-review.test.ts || break; done`), and/or
+   force it by pressing Z before effects flush.
+2. Fix the cause, not the timeout. Preferred: the key handler reads the latest `decide` / `skip` / `startEdit` /
+   `undo` / `draft` through a ref, so the listener is registered once and is never stale. Keep the same keys and
+   behavior. Don't just raise the `waitFor` timeout or add a sleep. If the cause turns out to be something else, fix
+   that and say what it was in the handoff.
+3. Add a test that presses ← then Z with no wait in between and expects the card back (fails before the fix if the race
+   is the cause).
+4. Check the Speed Quick Review (`components/admin/sections/*QuickReview*.tsx`) for the same listener pattern; fix it
+   the same way if present, with a test.
+5. Run the file 50+ times clean, then `npm run test`, `npm run lint`, `npx tsc --noEmit`; PR. Website (admin) only: no
+   store release. Short handoff: `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`.
 
 ### Phase N1 — NHL Pick 'Em start time: investigate and decide (Agent, Opus 5.5 / high)
 
