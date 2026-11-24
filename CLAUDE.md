@@ -36,6 +36,23 @@ is unknown, state the family and uncertainty; never invent a version. An agent t
 uses the nearest equivalent tier and records the substitution in its handoff. A new plan is incomplete without
 the table.
 
+## Code review findings become remedial phases — automatic (Andrew, 2026-11-24)
+Every code review (a plan's review phase such as CR1, a `/code-review` run, or a review Andrew asks for) ends by
+writing each verified finding worth fixing, with the fix you worked out, into a plan as a **remedial phase**. Do it
+without being asked; a review isn't finished until its fixes are in the plans.
+- **Which plan:** the plan that owns the affected code. Use the reviewed plan if one of its own phases introduced the
+  bug. If the code belongs to another feature (see "Feature rules" below), put the phase in that feature's plan and
+  leave a one-line pointer in the reviewed plan's findings table. If no plan owns it, use the reviewed plan.
+- **Form:** a findings row (`#`, finding, `file:line`, introduced / pre-existing / nit, severity, failure scenario,
+  fix, phase); a phase-table row named after the review (`CR1.1`, `CR1.2`, … or `T4.1`) with model, effort and
+  reason; and a "Phase details" section a fresh agent can follow with no other context, including the test that
+  must fail before the fix. Group findings by branch and risk. A migration or data fix gets its own phase on the
+  top model.
+- **Gate:** adding the phase is automatic; doing it waits for Andrew's OK ("Awaiting Andrew's OK"). Exception: a
+  live security hole, data leak, wrong points or lost picks is reported to him at once, at the top of the handoff.
+- Findings you couldn't verify are recorded as "plausible, unverified", with an investigate step if worth one.
+- Update each touched plan's status line and the review's handoff to list the new phases.
+
 ## Build and Test Commands
 - Dev server: `npm run dev` (Andrew runs it on :3000 — never use it for tests that write data; never `pkill next`)
 - Build: `npm run build` · Lint: `npm run lint` · Tests: `npm run test` (Vitest)

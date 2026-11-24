@@ -22,6 +22,8 @@ them; it documents recurring processes and active implementation-plan pointers b
 
 Tests and lint must pass first. Report and record what you submitted. Website-only changes need no store release. Full rule: `CLAUDE.md` §Native app releases.
 
+**Code review findings become remedial phases, automatically (Andrew, 2026-11-24).** Every code review (a plan's review phase such as CR1, a `/code-review` run, or one Andrew asks for) ends by writing each verified finding worth fixing, with its fix, into the plan that owns the affected code as a remedial phase (`CR1.1`, `CR1.2`, …): a findings row, a phase-table row with model, effort and reason, and a "Phase details" section a fresh agent can follow, including the test that must fail before the fix. Code owned by another feature goes in that feature's plan, with a pointer in the reviewed plan. Don't ask before adding them; doing them waits for Andrew's OK, except a live security hole, data leak, wrong points or lost picks, which is reported to him at once. Full rule: `CLAUDE.md` §Code review findings become remedial phases.
+
 ## Models in phased plans — always
 
 Name models from the **planning agent's own family** (Claude → Claude models, Codex → Codex/GPT models, any

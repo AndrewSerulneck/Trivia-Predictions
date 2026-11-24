@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **Phase 11 merged and deployed 2026-11-23** (PR #49; carousel, ticker, "Get the app" QR, pre-game title; carousel data switched ON; `docs/fire-tv-app-plan_PHASE_11_HANDOFF.md`). **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** **T4 built 2026-11-23 (PR #51 merged 2026-11-24, `72ff0638` + `287a1951`; `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`; D35).** **T4 reviewed 2026-11-23 (two passes): the fix is right, but its new test can't catch the bug, plus four smaller issues → remedial phases T4.1 (finish T4 on PR #51) and T4.2 (pre-existing Quick Review bugs); D36.** **2026-11-23: no other phase of this plan has had a code review** (no PR review, no handoff mentions one), so review phases CR1–CR3 were added (D37). **T4.1 done 2026-11-24 (on PR #51; `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`).** **T4.2 built 2026-11-24 (PR open; `docs/fire-tv-app-plan_PHASE_T4.2_HANDOFF.md`).** Next: CR1, CR2, CR3; everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** **T4 built 2026-11-23 (PR #51 merged 2026-11-24, `72ff0638` + `287a1951`; `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`; D35).** **T4 reviewed 2026-11-23 (two passes): the fix is right, but its new test can't catch the bug, plus four smaller issues → remedial phases T4.1 (finish T4 on PR #51) and T4.2 (pre-existing Quick Review bugs); D36.** **2026-11-23: no other phase of this plan has had a code review** (no PR review, no handoff mentions one), so review phases CR1–CR3 were added (D37). **T4.1 done 2026-11-24 (on PR #51; `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`).** **T4.2 done 2026-11-24 (PR #52 merged; `docs/fire-tv-app-plan_PHASE_T4.2_HANDOFF.md`).** **CR1 done 2026-11-24 (PR #54; read-only; nothing urgent; findings F7–F43 under "CR1 review findings"; remedial phases CR1.1–CR1.7 awaiting Andrew's OK, CR1.2 and CR1.6 in `docs/bingo-pickem-reliability-plan.md`; `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`).** Next: CR2, CR3, and the CR1 remedial phases once Andrew says yes; everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -173,16 +173,23 @@ handoff of the row above it first."*
 | 10 | Build the Pick 'Em Live Board and All-Time Leaderboard slides | Agent | Sonnet 5.5 / high | Built 2026-11-23; PR #41 open; merged in the "10 (merge)" row | UI fixed by the mockups. High (not medium) because display standing rules (effects keys, no replays on poll, precedence) are easy to break. |
 | T1 | Fix the two tests that fail on `main`: one test line in question-variety; refresh the NFL star snapshot (D30) | Agent | Haiku 5.5 / low | Done 2026-11-23 (PR #43) | A one-line test change and one existing generator script, with no app code, migration or deploy. Use Sonnet 5.5 / medium if the snapshot diff looks wrong. |
 | 10 (merge) | Finish Phase 10: update PR #41 from `main`, confirm CI passes, merge (deploys; the slides stay preview-only until Phase 11) | Agent | Haiku 5.5 / low | After T1 merges | Mechanical: branch update, check CI, merge. No new code. |
-| T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that commits the refresh to `main` (D30, D32) | Agent | Sonnet 5.5 / medium | After T1; within 14 days of T1's refresh while NFL is in season. Needs your yes on the secret | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
-| T3 | Stop the random star-tilt test from failing CI: seed its random numbers (D31) | Agent | Haiku 5.5 / low | Anytime; before N1 | One test file; `installSeededRandom` already exists in it. |
+| T2 | Keep the NFL star snapshot fresh on its own: weekly GitHub Action that commits the refresh to `main` (D30, D32) | Agent | Sonnet 5.5 / medium | Done 2026-11-23 (PR #46; ran on Opus 5.5; `_PHASE_T2_HANDOFF.md`) | A new workflow and a repo secret, both well specified. The secret needs Andrew's yes. |
+| T3 | Stop the random star-tilt test from failing CI: seed its random numbers (D31) | Agent | Haiku 5.5 / low | Done 2026-11-23 (PR #45; `_PHASE_T3_HANDOFF.md`) | One test file; `installSeededRandom` already exists in it. |
 | N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | Done 2026-11-23 (D33; `_PHASE_N1_HANDOFF.md`) | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
-| N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | Built 2026-11-23 (PR #48 green, awaiting merge; `_PHASE_N2_HANDOFF.md`) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
+| N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | Done; merged 2026-11-23 (PR #48; `_PHASE_N2_HANDOFF.md`) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
 | 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | Done; merged 2026-11-23 (PR #49; ran before N3 at Andrew's request; `_PHASE_11_HANDOFF.md`) | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
 | N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | Done 2026-11-23 (`_PHASE_N3_HANDOFF.md`) | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
 | T4 | Stop the Live Quick Review undo test from failing CI at random: fix the race behind it (D35) | Agent | Sonnet 5.5 / medium | Done; merged 2026-11-24 (PR #51; reviewed → T4.1, T4.2) | A timing race in an admin component and its test needs diagnosis, not just a seed; small scope, no data, migration or store release. |
 | T4.1 | **Remedial (T4 review):** finish T4 on PR #51: a regression test that fails on `fd3bf936`, restore the dropped check, git-ignore `.claude/worktrees/`, correct the handoff, then merge | Agent | Sonnet 5.5 / medium | Done 2026-11-24 (on PR #51; `_PHASE_T4.1_HANDOFF.md`) | One test file plus two doc/config lines, but the test must reach a React effect-timing window; Haiku would likely write another test that passes on the old code. |
-| CR1 | **Code review, high risk (D37):** PRs #36 (Phase 3: connect backend, migration, partner auth, `proxy.ts`, public endpoint), #39 (Phase 9: shared state engine, migration, cost), #48 (N2: Pick 'Em locking and grading), #37 (Phase 4: WebView security), #46 (T2: Action that commits to `main`) | Agent | Opus 5.5 / high | **Next.** After T4.1 (read-only, so it doesn't wait on any branch) | Auth, migrations, security-definer functions, points and a public endpoint, all live in production; a missed bug here costs the most. |
-| T4.2 | **Remedial (T4 review, pre-existing bugs):** Quick Review: Z pressed while a save runs is kept (D36); no Keep / Reject while "Loading…" or from a stale category; "Loading…" (not "Nothing left.") before the first load. Live, and Speed where the same code exists | Agent | Sonnet 5.5 / high | Built 2026-11-24 (branch `fix/quick-review-busy-loading`; `_PHASE_T4.2_HANDOFF.md`) | Admin UI only, well specified, but async ordering: a mistake undoes or decides the wrong question, so high effort. No data, migration or store release. |
+| CR1 | **Code review, high risk (D37):** PRs #36 (Phase 3: connect backend, migration, partner auth, `proxy.ts`, public endpoint), #39 (Phase 9: shared state engine, migration, cost), #48 (N2: Pick 'Em locking and grading), #37 (Phase 4: WebView security), #46 (T2: Action that commits to `main`) | Agent | Opus 5.5 / high | Done 2026-11-24 (F7–F43; `_PHASE_CR1_HANDOFF.md`) | Auth, migrations, security-definer functions, points and a public endpoint, all live in production; a missed bug here costs the most. |
+| CR1.1 | **Remedial (CR1, F14, F16):** TV Prizes slide shows a points target only for real points-target prizes, and only open prizes | Agent | Sonnet 5.5 / medium | **Awaiting Andrew's OK.** Live wrong text today, so first | One read function and its test; web only, no data. |
+| CR1.2 | **Remedial (CR1, F24–F28), in `docs/bingo-pickem-reliability-plan.md`:** Pick 'Em: a moved start time can't hide a pick or allow a second, paid one; grading waits for the real start; postponed games don't grade as a push | Agent | Opus 5.5 / high | **Awaiting Andrew's OK.** Before NHL picks build up | Points and pick matching in the shared Pick 'Em engine. |
+| CR1.3 | **Remedial (CR1, F36, F37, F39, F40, F43; asks about F41):** weekly NFL star workflow fails loudly, runs at season start, guards the prior slate | Agent | Sonnet 5.5 / medium | **Awaiting Andrew's OK.** Before the first scheduled run, Tue 2026-12-01 | A workflow file, one script guard and contract tests; well specified. |
+| CR1.4 | **Remedial (CR1, F15, F17, F18, F19–F22):** TV sports feed: empty league isn't a failure, no noon-UTC "live" games, playoff OT labels, usage counter and finals fixes | Agent | Opus 5.5 / high | **Awaiting Andrew's OK** | Touches the shared Pick 'Em feed helper and the refresh engine; Pick 'Em callers must not change. |
+| CR1.5 | **Remedial (CR1, F7–F11, F35):** TV Connect screen: last-second connect, one poll loop, clock skew, retry wording, no create per key; keep-awake readout | Agent | Sonnet 5.5 / medium | **Awaiting Andrew's OK** | Client timing in one component plus one server helper; fake-timer tests. Web only. |
+| CR1.6 | **Remedial (CR1, F38), in `docs/bingo-pickem-reliability-plan.md`:** the BallDontLie season probe keeps its one row | Agent | Sonnet 5.5 / medium | **Awaiting Andrew's OK** | One fetch option and a test. |
+| CR1.7 | **Remedial (CR1, F29–F34):** Fire TV shell 1.0.1: a 5xx or certificate error shows "Can't connect." and retries; bridge limited to site frames; no retries in background; crash-restart cap | Agent | Opus 5.5 / high | **Awaiting Andrew's OK.** After Amazon approves 1.0.0 (a release can't be submitted while one is in review) | WebView callback order, security hardening and a store release. |
+| T4.2 | **Remedial (T4 review, pre-existing bugs):** Quick Review: Z pressed while a save runs is kept (D36); no Keep / Reject while "Loading…" or from a stale category; "Loading…" (not "Nothing left.") before the first load. Live, and Speed where the same code exists | Agent | Sonnet 5.5 / high | Done; merged 2026-11-24 (PR #52; `_PHASE_T4.2_HANDOFF.md`) | Admin UI only, well specified, but async ordering: a mistake undoes or decides the wrong question, so high effort. No data, migration or store release. |
 | CR2 | **Code review, display and release (D37):** PRs #41 (Phase 10 slides, plus Phase 8b's `native-tv/scripts/release.cjs`, commit `e69bc60e`), #49 (Phase 11: carousel, ticker, QR, pre-game title), #38 (Phase 6: release build, store pack, keyboard fix) | Agent | Sonnet 5.5 / high | After CR1 | Screens with written standing rules (effects keys, no replay on poll, precedence, one QR) and one script that handles signing keys and store credentials; high effort to check each rule. |
 | CR3 | **Code review, small fixes (D37):** PRs #43 (T1), #45 (T3), #47 (flavor-squares timeout), #50 (Pick 'Em stale-load recheck, N3) | Agent | Sonnet 5.5 / medium | After CR2 | Small test and client fixes; Haiku tends to miss whether a test really guards what it claims (the T4 lesson), so mid tier. |
 | 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | After Amazon approves 1.0.0 | New SDK and toolchain, little prior art. |
@@ -814,7 +821,8 @@ after T4.1 merges. Admin page only: website deploy, no store release, no data or
 5. **Propose remedial phases** for the findings worth fixing: insert rows right after the review's row in the phase
    table (`CR<N>.1`, `CR<N>.2`, …), each with model / effort and reason, and a "Phase details" section like T4.1 / T4.2.
    Mark each **"Awaiting Andrew's OK"**. Group by branch and risk; a migration or data fix is its own phase on
-   Opus 5.5 / high and needs Andrew's yes before any `supabase db push`.
+   Opus 5.5 / high and needs Andrew's yes before any `supabase db push`. A fix to code another feature plan owns goes
+   in that plan instead, with a pointer here (`CLAUDE.md` §Code review findings become remedial phases, 2026-11-24).
 6. **Urgent:** a live security hole, data leak, wrong points or lost picks goes at the top of the handoff's summary for
    Andrew, in plain English, with what it affects today. Still don't fix it unasked.
 7. Handoff: `docs/fire-tv-app-plan_PHASE_CR<N>_HANDOFF.md` (full structure, since findings may touch auth and data).
@@ -861,6 +869,162 @@ check the 5-second recheck runs once, never loops or polls (cost rule), and can'
 response. **Last step of CR3:** ask Andrew whether every future code phase should end with `/code-review high` on its PR
 before merge, recorded in its handoff (costs one review per PR; would have caught the T4 test gap). Record his answer
 as a decision.
+
+### CR1 review findings (2026-11-24, on `main` `75b47740`)
+
+Five Opus 5.5 / high review agents, one per PR, each ran `/code-review high <N>` and then the checks above. The
+reviewing session then re-checked the main findings itself (F7, F8, F14, F15, F24–F26, F29, F36: by reading the
+code, re-running the Pick 'Em repro, and the T2 run log). **Nothing urgent:** no security hole, data leak, wrong
+points or lost picks today (production: 0 NHL picks ever; 0 duplicate picks on one game in any sport). Line numbers
+are on `main` `75b47740`. Every check that passed is listed in `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md` §6.
+
+| # | Finding | Where | Kind | Severity | Failure scenario → fix | Phase |
+|---|---|---|---|---|---|---|
+| F7 | A partner who connects in the last ~3 s of a code sees "Connected." but the TV shows "Code expired". The next create deletes the claimed row. Verified (fake-timer repro). | `components/venue-screen/TvConnectScreen.tsx:236-239`; `lib/tvConnect.ts:61, :92` | Introduced (#36) | Low | Tick stops at the local deadline without a last status read → read status once before showing expired; cleanup spares rows claimed < 60 s ago. | CR1.5 |
+| F8 | Hiding and re-showing the Connect screen while a status fetch is in flight starts a second poll loop (20 calls in 30 s instead of 10). Verified (repro). | `TvConnectScreen.tsx:266-270` | Introduced (#36) | Low (cost) | `onVisible` calls `tick()` while the earlier tick awaits its fetch → in-flight flag or generation counter. | CR1.5 |
+| F9 | A TV clock ahead of the server shortens every QR's life; > 10 min ahead, every QR is expired on arrival. Verified (repro). | `TvConnectScreen.tsx:198, :238` | Introduced (#36) | Low | Server's absolute `expiresAt` compared with `Date.now()` → deadline = receipt time + TTL; server's `expired` is the authority. | CR1.5 |
+| F10 | Retrying a connect that already succeeded says "Code expired." | `lib/tvConnect.ts:131-141` | Introduced (#36) | Nit | Lost response, partner taps again → on 0 rows, read the code; claimed for the same venue → ok. | CR1.5 |
+| F11 | In "Can't connect.", every key press or focus sends a new create (each a rejected POST after a 429). | `TvConnectScreen.tsx:280-291` | Introduced (#36) | Nit | Honour `Retry-After`; renew only on OK / Enter. | CR1.5 |
+| F12 | `/api/tv-app/pairings/status` has no rate limit (by design, per its comment; same exposure as `/tv/<code>`). | `app/api/tv-app/pairings/status/route.ts:16` | Introduced (#36) | Nit | Accepted; an edge (WAF) limit only if Andrew wants one. | None |
+| F13 | New `app/tv-app/*` pages use `function` declarations (CLAUDE.md: arrow functions); 33 other pages do too. | `app/tv-app/page.tsx:5`, `layout.tsx:12`, `demo/page.tsx:4` | Introduced (#36) | Nit | Convert when next touched. | None |
+| F14 | **TV Prizes slide shows a made-up points target:** "1 pts" under game-winner / ranked prizes and "100 pts" under leaderboard prizes. `points_required_to_win` is a NOT NULL placeholder for those. **5 of 7 active prizes in production show it today.** Verified (code + production select). | `lib/venueScreenCarousel.ts:157-162`; `components/venue-screen/TvPrizesSlide.tsx:47-48` | Introduced (#39; live since Phase 11 turned the data on) | Medium (wrong text on TVs; no points move) | Show the number only when `challenge_mode = 'progress'` and win condition is `points_threshold` (null counts as that, as in `normalizeWinCondition`). | CR1.1 |
+| F15 | A league with no games counts as a failed feed: 30-min retry instead of 6 h, logged as `no-reply`, which hides real outages. Verified (production `tv_sports_refresh` due times). | `lib/pickem.ts:1882` (`ok: events.length > 0`); `lib/tvSportsSnapshot.ts:66` | Introduced (#39) | Low (~800 extra BallDontLie calls a day with a TV on; flat plan, $0) | Report whether any request succeeded; empty success → `ok: true`. Optionally count "later" only for games within ~18 h. | CR1.4 |
+| F16 | Prizes slide can advertise closed or not-yet-open prizes (filters only `is_active` and no winner). 0 rows today. | `lib/venueScreenCarousel.ts:138-149` | Introduced (#39) | Low | Select the schedule columns and drop closed / not-open rows with the existing pure helpers; never finalize from the TV poll. | CR1.1 |
+| F17 | Date-only feeds (tennis) can fall back to noon UTC and show "live" for 8 h. Plausible, unverified (no tennis rows now). | `lib/pickem.ts:1862` (with `:1164-1168`) | Introduced (#39) | Low | When `tvStartsAt` is null, skip the row on the TV. | CR1.4 |
+| F18 | Hockey period 5+ is labelled "SO" (playoff 2OT+), and a shootout shows "SO 0:00". Shared by the TV and, since N2, Pick 'Em. | `lib/pickem.ts:260` | Introduced (#39) | Nit (matters from April) | Postseason: 4 → "OT", n ≥ 5 → "{n−3}OT"; "SO" without a clock. | CR1.4 |
+| F19 | The `[tv-state]` usage counter drops each instance's last partial window, so the Phase 15 baseline undercounts. | `lib/venueScreenUsageCounter.ts:27` | Introduced (#39) | Nit | Log with the window end, or flush via `after()`; note the limit in Phase 15. | CR1.4 |
+| F20 | `bytes` counts characters, not bytes. | `app/api/venue-screen/state/route.ts:32` | Introduced (#39) | Nit | `Buffer.byteLength(body)`. | CR1.4 |
+| F21 | "Today" is 30 min short in half-hour time zones (no live impact: all 17 venues are America/New_York). | `lib/venueScreenCarousel.ts:50-57` | Introduced (#39) | Nit | Step in 15-min increments. | CR1.4 |
+| F22 | A failed read of existing rows resets `final_seen_at`, so a final can stay up to 8 h instead of 1 h. | `lib/tvSportsSnapshot.ts:171-177, :191` | Introduced (#39) | Nit | On that read error, keep stored values and log. | CR1.4 |
+| F23 | `function` declarations in new files. | `lib/tvSportsSnapshot.ts`, `lib/venueScreenCarousel.ts`, `lib/venueScreenIdleLine.ts` | Introduced (#39) | Nit | Convert when next touched. | None |
+| F24 | **Pick 'Em: when a game's start time changes, its `game_id` changes;** the player's pick disappears from the list and a second pick on the same game is accepted, **and both are paid**. Verified (repro A, B). | `lib/pickem.ts:1736` (map keyed by full id, so the `providerEventId` fallback at `:2054` never matches), `:2403` (exact-id duplicate check), `:396`, `:576` | Pre-existing in every league; newly reaches NHL via #48 | Medium (0 NHL picks so far) | Key the map by provider id too; duplicate check by user + provider id. | CR1.2 (Pick 'Em plan) |
+| F25 | Grading's 4-hour rule counts from the pick's stored start, so a game moved later can be graded mid-game on the live score. Verified (repro C). | `lib/pickem.ts:2986` | Pre-existing | Medium | Count from `max(row.starts_at, feed commence_time)`. | CR1.2 (Pick 'Em plan) |
+| F26 | Only `status_state === "scheduled"` blocks grading; a postponed / "PRE" game at 0–0 grades as a push 4 h after start. Code path verified (repro D); real feed values unverified. | `lib/pickem.ts:2989` | Pre-existing | Low (a push pays nothing) | Decide from `status_state` and `game_state` as `extractTvFeedState` does; postponed → canceled. | CR1.2 (Pick 'Em plan) |
+| F27 | Win notifications group and link by the UTC date (`/pickem?date=` opens the next day for a 7 PM ET game). | `lib/pickem.ts:2913` | Pre-existing | Low | Group by venue-local date. | CR1.2 (Pick 'Em plan) |
+| F28 | Settlement's team-name fallback takes the first game with the same teams, which can be a different game. Plausible, unverified. | `lib/pickem.ts:2948` | Pre-existing | Low | Also require start within 12 h. | CR1.2 (Pick 'Em plan) |
+| F29 | **Fire TV app: a 5xx hides "Can't connect." at once and stops retrying.** Current WebView fires `onPageStarted` at commit, after `onReceivedHttpError`, and it clears `mainFrameFailed`; `onPageFinished` then hides the overlay and cancels the retry. Verified from the app code + Chromium WebView source; not yet seen on a device. | `native-tv/app/src/main/java/com/hightopchallenge/tv/MainActivity.kt:181-184, :192-196, :208-209, :129-131` | Introduced (#37) | Medium (TV stays on an error page during a Vercel 502/504 until someone presses Reload; breaks D7) | Track failures per load generation; only a clean `onPageFinished` of that generation may hide. | CR1.7 |
+| F30 | A certificate error on the first load shows no overlay and never retries (`loadingUrl` isn't set yet when the error arrives). Still secure (`cancel()`). Partly verified. | `MainActivity.kt:199-205` | Introduced (#37) | Low–medium | Record the main-frame URL in `load()` / `shouldOverrideUrlLoading`, or treat any SSL error during a main-frame load as offline. | CR1.7 |
+| F31 | `window.HightopTV` is injected into frames of any origin (`allowsFrame` allows any https host, `data:`, `blob:`). Not exploitable today: no TV page embeds a third-party frame. The bridge can only get / set / clear the venue id. | `MainActivity.kt:93`; `native-tv/.../TvPolicy.kt:49-53` | Introduced (#37) | Low (hardening) | Limit frames to site hosts + `about:blank`; optionally `addWebMessageListener` with origin rules. | CR1.7 |
+| F32 | The retry loop and network callback keep running while the app is in the background. | `MainActivity.kt:299-305` | Introduced (#37) | Nit | Pause in `onPause`, resume in `onResume`. | CR1.7 |
+| F33 | The `/owner` / `/admin` block compares the raw encoded path (`/%6Fwner` passes the check). Not exploitable: production redirects all variants to `/`, and redirect targets are re-checked. | `TvPolicy.kt:40-41` | Introduced (#37) | Nit | Match the decoded, normalized path. | CR1.7 (optional) |
+| F34 | A renderer that keeps crashing recreates the activity with no limit, and the destroyed WebView still gets `onPause`. Plausible, unverified. | `MainActivity.kt:215-220` | Introduced (#37) | Nit | Guard + cap at 3 restarts in 5 min, then show the offline overlay. | CR1.7 |
+| F35 | In the TV app, the `?awake=debug` readout's visibility never updates (the native branch returns before the listener). | `lib/useKeepScreenAwake.ts:93-99` | Introduced (#37) | Nit (debug only; site code) | Add the listener in the native branch. | CR1.5 |
+| F36 | **The weekly NFL star run goes green when the guard refuses, the API fails or the key is missing**, so no email is sent. The step runs `bash -e` without `pipefail`, so `node … \| tee` exits with `tee`'s 0. The T2 handoff's "GitHub emails you" is wrong. Verified (run 45268818494 log shows `bash -e {0}`; mock repro of 7 failure cases). | `.github/workflows/nfl-star-index-weekly.yml:42-44` | Introduced (#46) | Medium (two bad Tuesdays → snapshot > 14 days → every PR's CI red, unannounced) | `shell: bash` (gives `-eo pipefail`); JSON sanity check before `git add`; fix the handoff. | CR1.3 |
+| F37 | CI goes red for ~4–6 days at each season start: the window opens Sep 1, the cron runs Tuesdays only (2027: Sep 1 is a Wednesday → red until Tue Sep 7). | `nfl-star-index-weekly.yml:11`; `lib/leagueSeasonStatus.ts:98` | Introduced (#46) | Low–medium | Add a Sep 1 cron, and/or a cheap Friday run that exits unless the snapshot is > 6 days old. | CR1.3 |
+| F38 | The season probe asks for 1 row with `maxPages: 1`, and `page_limit` then marks it failed and returns `[]` whenever a `next_cursor` exists, so the in-season check is always false and re-probes every 5 min. Verified (T2 run log `page_limit`; mock). | `lib/sportsBingo.ts:1245`; `lib/ballDontLieClient.ts` (`page_limit`) | Pre-existing (`62f027cd`) | Low | First-page-only probe that keeps its rows. | CR1.6 (Pick 'Em plan) |
+| F39 | The guard doesn't refuse a shrunken prior slate (602 → 12) or rows from the wrong season. Verified (mock). | `scripts/refresh-nfl-star-index.cjs:56-63` | Introduced (#46) | Low (snapshot is read by tests and scripts, not at runtime) | 50 % rule for `prior` too; refuse > 5 % wrong-season rows. | CR1.3 |
+| F40 | A rebase conflict on the JSON leaves the rebase stopped; all 3 attempts fail with a misleading message. Safe (nothing pushed). Verified (throwaway repo). | `nfl-star-index-weekly.yml:61-64` | Introduced (#46) | Nit | `git rebase --abort` and say "conflict with a concurrent snapshot change". | CR1.3 |
+| F41 | Each weekly bot commit builds a production deploy on Vercel (~17 a season), though the file isn't read at runtime. Disclosed only after the fact. | `nfl-star-index-weekly.yml:62`; no ignored-build step | Introduced (#46) | Nit (cost) | Ignored Build Step for that one file; needs `vercel.json` or the dashboard → **Andrew decides**. | CR1.3 asks |
+| F42 | The phase table's T2, T3 and N2 rows were stale. | this file | Doc | Nit | Fixed in this review. | Done |
+| F43 | `actions/checkout` keeps the `contents: write` token in `.git/config` during `npm ci`; a compromised npm postinstall could push to `main`. Plausible, standard exposure. | `nfl-star-index-weekly.yml:26` | Introduced (#46) | Nit | `persist-credentials: false`; give the token to the commit step only. | CR1.3 |
+
+**Dropped after checking:** "focus lost after a wrong code" (fixed by `f807f751`); "a same-document navigation hides the
+overlay" (WebView doesn't post `onPageFinished` for `pushState`); "finished NHL games keep a clock label" (the TV shows
+"Final"); the old-id open-page case (0 picks since deploy); Pacific / Hawaii day filtering (correct).
+
+### Phase CR1.1 — TV Prizes slide: real targets, open prizes only (Agent, Sonnet 5.5 / medium) — Awaiting Andrew's OK
+
+**Fixes F14, F16.** Web only; no migration, data change or store release. Branch `fix/tv-prizes-slide-target` from
+up-to-date `main`.
+1. `lib/venueScreenCarousel.ts` `readPrizes` (≈ line 135): add `challenge_mode, win_condition` and the schedule
+   columns (`start_date, end_date, end_day, end_time, recurring_type, schedule_type`) to the select. Set
+   `pointsRequired` only when `challenge_mode === "progress"` and the win condition normalizes to `points_threshold`
+   (reuse `normalizeWinCondition` from `lib/challengeCampaigns.ts`; null / empty = `points_threshold`); else `null`.
+2. Drop rows whose window is closed or not yet open, using the existing pure schedule / close helpers in
+   `lib/challengeCampaigns.ts` (find the ones `listChallengeCampaigns` uses). **Never call anything that finalizes** —
+   the comment at `readPrizes` explains why a TV poll must not.
+3. Tests in `tests/lib.venueScreenCarousel.test.ts` (mock `supabaseAdmin`), each failing on today's code: a
+   `game_winner` row with pts 1 → `pointsRequired: null`; a `leaderboard` row with pts 100 → `null`; a `progress` /
+   `points_threshold` row with pts 500 → `500`; a one-time row whose end date was yesterday and has no winner → excluded.
+4. `npm run test`, `npm run lint`, `npx tsc --noEmit`; PR; CI green; merge (auto-merge rule). Check `/venue/<id>/screen?mode=carousel&slide=prizes`
+   on the deploy shows no "pts" under the game-winner prizes. Short handoff note `_PHASE_CR1.1_HANDOFF.md`.
+
+### Phase CR1.2 — Pick 'Em game id and grading guards (in `docs/bingo-pickem-reliability-plan.md`)
+
+Fixes F24–F28. Full phase details are in that plan under "Phase CR1.2". Reproduction test:
+`docs/fire-tv-app-plan_CR1_evidence/pickem-game-id-and-grading-repro.test.ts.txt`.
+
+### Phase CR1.3 — Weekly NFL star workflow: fail loudly, run at season start (Agent, Sonnet 5.5 / medium) — Awaiting Andrew's OK
+
+**Fixes F36, F37, F39, F40, F43; asks about F41.** Do it before Tue 2026-12-01 10:00 UTC (first scheduled run) if
+possible. Branch `fix/nfl-star-workflow-hardening`.
+1. `.github/workflows/nfl-star-index-weekly.yml`: `shell: bash` on the refresh step (GitHub then runs
+   `bash --noprofile --norc -eo pipefail`); `persist-credentials: false` on checkout and set the push URL with the
+   token only in the commit step; before `git add`, `node -e "JSON.parse(require('fs').readFileSync('data/sports-bingo/nfl-star-index.json','utf8'))"`;
+   on a failed `git pull --rebase`, `git rebase --abort` and print "Conflict with a concurrent snapshot change." then
+   exit 1. Add a second cron so a run fires within a day of the season window opening (Sep 1, `lib/leagueSeasonStatus.ts:98`),
+   e.g. `"5 0 1 9 *"`.
+2. `scripts/refresh-nfl-star-index.cjs` guard (≈ lines 56-63): apply the 50 % shrink rule to `prior` against
+   `previous.prior` when the prior season matches (at rollover compare against `previous.current`); refuse when more
+   than 5 % of rows have `row.season` ≠ the requested season. Export the guard function so it can be unit-tested.
+3. Tests that fail today: `tests/nfl-star-index-workflow-contract.test.ts` (every `run:` with `| tee` has `shell: bash`
+   or `pipefail`; a schedule fires on Sep 1; checkout has `persist-credentials: false`); guard unit tests (prior
+   602 → 12 refused; wrong-season rows refused; 571 → 292 current still allowed).
+4. Correct `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`'s "the run fails … and GitHub emails you" (true only after this fix).
+5. **Ask Andrew (F41):** skip Vercel builds when the only changed file is `data/sports-bingo/nfl-star-index.json`
+   (saves ~17 production builds a season)? It needs a `vercel.json` `ignoreCommand` (CLAUDE.md: don't touch without
+   his instruction) or a dashboard setting. Record his answer as a decision. Short handoff note.
+
+### Phase CR1.4 — TV sports feed fixes (Agent, Opus 5.5 / high) — Awaiting Andrew's OK
+
+**Fixes F15, F17, F18, F19, F20, F21, F22.** Web only. Branch `fix/tv-sports-feed-review`. **Pick 'Em callers of
+`lib/pickem.ts` must behave exactly as today** — change TV-only wrappers where possible and keep every Pick 'Em test
+passing unchanged.
+1. F15: make the BallDontLie events fetch report whether any request succeeded (a TV-only wrapper or an extra return
+   field), and have `listPickEmTvFeedGames` (`lib/pickem.ts` ≈ 1882) return `ok: anySucceeded`. An empty success then
+   gets the 6 h interval (`lib/tvSportsSnapshot.ts:66`) and only a real error gets 30 min / `no-reply`. Optionally
+   count "later" (15 min) only for games starting within ~18 h. Test: fetch mocked to 200 `{data: []}` →
+   `ok === true`, next refresh 6 h out.
+2. F17: in the TV feed, skip rows where `tvStartsAt` is null instead of using the date-only `startsAt`. Test with a
+   tennis-shaped event whose only date is `start_date`.
+3. F18: `lib/pickem.ts:260` hockey label: postseason period 4 → "OT", n ≥ 5 → "{n−3}OT"; "SO" with no clock. Test
+   period 5 postseason → "2OT". This label also shows on Pick 'Em; that change is intended.
+4. F19: `lib/venueScreenUsageCounter.ts` — log the last partial window (e.g. flush via `after()`), or record the
+   limit in the Phase 15 compare notes. F20: `Buffer.byteLength(body)` at `app/api/venue-screen/state/route.ts:32`.
+   F21: 15-minute steps in `lib/venueScreenCarousel.ts:50-57`. F22: in `lib/tvSportsSnapshot.ts` (≈ 171-191), if
+   reading existing rows errors, keep stored `final_seen_at` (don't write finals) and log.
+5. Estimate BallDontLie calls per day before and after (Cost table); report. Tests, lint, typecheck, PR, CI, merge;
+   check `tv_sports_refresh` due times after one refresh on the deploy (select only). Full handoff (touches a shared engine).
+
+### Phase CR1.5 — TV Connect screen timing (Agent, Sonnet 5.5 / medium) — Awaiting Andrew's OK
+
+**Fixes F7, F8, F9, F10, F11, F35.** Web only. Branch `fix/tv-connect-timing`.
+1. `components/venue-screen/TvConnectScreen.tsx` poll effect (≈ 228-275): when `Date.now() >= deadline`, do one final
+   status read before showing expired (F7); add an in-flight flag so `onVisible` doesn't start a second chain (F8);
+   set the deadline from receipt time (`Date.now() + (Date.parse(expiresAt) − serverNow)` or `+ TV_PAIR_TTL_MS`) and
+   let the server's `expired` answer decide (F9); in "Can't connect.", honour `Retry-After` and renew only on OK /
+   Enter, not on every key or focus (F11, ≈ 280-291).
+2. `lib/tvConnect.ts`: cleanup at `:61` spares rows claimed in the last 60 s (F7); in `claimTvPairing` (≈ 131-141), on
+   0 rows read the code and return ok when it's claimed for the same venue (F10).
+3. `lib/useKeepScreenAwake.ts:93-99`: add the `visibilitychange` listener in the native branch (F35).
+4. Tests that fail today: jsdom + fake timers in a `TvConnectScreen` test (claim just before expiry → `tv-connected`;
+   hidden / visible toggled during a held fetch → 10 status calls in 30 s, not 20; server `expiresAt` already past on
+   the TV clock → still polls); `tests/lib.tvConnect.test.ts` (second claim of the same code by the same venue → ok).
+   Tests, lint, typecheck, PR, CI, merge. Short handoff note.
+
+### Phase CR1.6 — BallDontLie season probe (in `docs/bingo-pickem-reliability-plan.md`)
+
+Fixes F38. Full phase details are in that plan under "Phase CR1.6".
+
+### Phase CR1.7 — Fire TV shell 1.0.1: recovery and hardening (Agent, Opus 5.5 / high) — Awaiting Andrew's OK
+
+**Fixes F29–F34.** Starts only after Amazon approves 1.0.0 (`npm run fire-tv:release` refuses while a release is in
+review). Branch `fix/fire-tv-shell-recovery`. Ends with a store release (CLAUDE.md §Native app releases): 1.0.1,
+versionCode 2.
+1. F29: in `MainActivity.kt`, stop clearing the failure in `onPageStarted`. Keep a load generation, bumped in `load()`
+   and on each allowed main-frame `shouldOverrideUrlLoading`; record a failure against the current generation; only
+   `onPageFinished` of a generation with no failure may `hideOffline()`. Extract the state into a small pure Kotlin
+   class (TvPolicy style) and unit-test both callback orders (start → error → finish, and error → start → finish).
+2. F30: record the main-frame URL in `load()` and in `shouldOverrideUrlLoading` (redirects included) and compare SSL
+   errors against it, or treat any SSL error during a main-frame load as offline. Keep `handler.cancel()`.
+3. F31: `TvPolicy.allowsFrame` allows only the site hosts and `about:blank`; extend `TvPolicyTest.kt` (`https://example.com`
+   and `data:` frames blocked). F33 (optional): match the decoded path with repeated slashes collapsed and `;` params
+   stripped; tests for `/%6Fwner/display`.
+4. F32: `onPause` removes `retryRunnable` / `networkLostRunnable` and sets `paused`; `onResume` retries if the overlay
+   is showing. F34: a `webViewGone` guard, and at most 3 renderer restarts in 5 minutes, then the offline overlay.
+5. Verify on the emulator with a debug build: `-PtvStartUrl` pointing at a tiny local server that returns 503 → overlay
+   stays and retries at 2 / 4 / 8 / 16 / 30 s; emulator clock set to 2020 → overlay and retries. Then tests, lint,
+   `npm run fire-tv:release`. Record version and submission in this plan and a full handoff.
 
 ### Phase N1 — NHL Pick 'Em start time: investigate and decide (Agent, Opus 5.5 / high)
 
