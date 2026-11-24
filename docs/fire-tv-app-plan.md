@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **Phase 11 merged and deployed 2026-11-23** (PR #49; carousel, ticker, "Get the app" QR, pre-game title; carousel data switched ON; `docs/fire-tv-app-plan_PHASE_11_HANDOFF.md`). **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** Next: T4 (intermittent Live Quick Review test, D35) any time; then everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** **T4 built 2026-11-23 (PR #51 open, `72ff0638`, awaiting merge; `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`; D35).** **T4 reviewed 2026-11-23 (two passes): the fix is right, but its new test can't catch the bug, plus four smaller issues → remedial phases T4.1 (finish T4 on PR #51) and T4.2 (pre-existing Quick Review bugs); D36.** **2026-11-23: no other phase of this plan has had a code review** (no PR review, no handoff mentions one), so review phases CR1–CR3 were added (D37). **T4.1 done 2026-11-24 (on PR #51; `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`).** Next: CR1, T4.2, CR2, CR3; everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -143,6 +143,8 @@ different browser, you'll be asked to sign in once.
 | D32 | **The weekly NFL star-snapshot refresh (T2) commits straight to `main`, no PR.** The script's `--guard` refuses to write when a BallDontLie fetch fails or the current slate shrinks below half, because no person reads the diff before it lands. The "Allow GitHub Actions to create and approve pull requests" setting is not needed and stays as it was. | Andrew, 2026-11-23 ("Just commit it straight to main unless there's a problem. I don't want to have to merge a PR every week.") |
 | D34 | **Device reviews move to the end.** Phases 5 (app test) and 12 (sports screens on a real TV) run after Amazon approves 1.0.0, on the **store build** installed from the Amazon Appstore, not a sideloaded APK. Nobody outside Hightop Challenge is told about the app before then, so a device bug found late reaches no one. Phase 8's dashboard link waits for Phase 5 to pass, because that link is how partners find the app (planner's call, to keep the app unannounced until reviewed). | Andrew, 2026-11-23 ("I don't have a firestick currently, but no one is going to use the Fire TV app before us anyway … let's just move the review phases to the end of this plan and we'll review the app ourselves when it is available on the Amazon Fire TV store.") |
 | D35 | **`tests/components.live-trivia-quick-review.test.ts` "shows a possible repeat … undoes with Z" is made reliable (phase T4).** It failed CI once on PR #49 (2026-11-23: no `live-review-card` after pressing Z, timed out at 1033 ms), then passed on the same commit. It is a timing race, not random data, so it can't be seeded like T3 (D31). | Andrew, 2026-11-23 ("Add the fix to the intermittent test to the plan.") |
+| D36 | **Quick Review keys while a save is running (T4.2):** a **Z** pressed while a Keep or Reject is still saving is remembered and runs the moment that save finishes, but only if it still undoes that same question (a failed save drops it). Every other key pressed while busy stays ignored, as today, because the next question isn't on screen yet and a key must never decide a question the reviewer hasn't seen. The same rule stops Keep / Reject / Skip / Edit while "Loading…" shows. No new on-screen text: the disabled buttons already show it's busy. | Planner, 2026-11-23, from the T4 review. Reason: undo is the one key that always means a question already seen. Andrew may overrule (e.g. "just ignore Z too"). |
+| D37 | **Every merged phase of this plan gets a code review (CR1–CR3)**, riskiest first. Reviews are read-only: they record verified findings and propose fixes as remedial phases marked "awaiting Andrew's OK". Nothing is fixed without his yes, except that a live security or data-loss problem is reported to him at once. | Andrew, 2026-11-23 ("Yes, add the review phase to the plan"), after the T4 review showed no other phase had been reviewed. Split into three phases and their order: planner. |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -177,7 +179,12 @@ handoff of the row above it first."*
 | N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | Built 2026-11-23 (PR #48 green, awaiting merge; `_PHASE_N2_HANDOFF.md`) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
 | 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | Done; merged 2026-11-23 (PR #49; ran before N3 at Andrew's request; `_PHASE_11_HANDOFF.md`) | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
 | N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | Done 2026-11-23 (`_PHASE_N3_HANDOFF.md`) | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
-| T4 | Stop the Live Quick Review undo test from failing CI at random: fix the race behind it (D35) | Agent | Sonnet 5.5 / medium | Anytime; can run now while N3 waits for an NHL game day | A timing race in an admin component and its test needs diagnosis, not just a seed; small scope, no data, migration or store release. |
+| T4 | Stop the Live Quick Review undo test from failing CI at random: fix the race behind it (D35) | Agent | Sonnet 5.5 / medium | Built 2026-11-23 (PR #51 open, `72ff0638`; not merged; reviewed → T4.1, T4.2) | A timing race in an admin component and its test needs diagnosis, not just a seed; small scope, no data, migration or store release. |
+| T4.1 | **Remedial (T4 review):** finish T4 on PR #51: a regression test that fails on `fd3bf936`, restore the dropped check, git-ignore `.claude/worktrees/`, correct the handoff, then merge | Agent | Sonnet 5.5 / medium | Done 2026-11-24 (on PR #51; `_PHASE_T4.1_HANDOFF.md`) | One test file plus two doc/config lines, but the test must reach a React effect-timing window; Haiku would likely write another test that passes on the old code. |
+| CR1 | **Code review, high risk (D37):** PRs #36 (Phase 3: connect backend, migration, partner auth, `proxy.ts`, public endpoint), #39 (Phase 9: shared state engine, migration, cost), #48 (N2: Pick 'Em locking and grading), #37 (Phase 4: WebView security), #46 (T2: Action that commits to `main`) | Agent | Opus 5.5 / high | After T4.1 (read-only, so it doesn't wait on any branch) | Auth, migrations, security-definer functions, points and a public endpoint, all live in production; a missed bug here costs the most. |
+| T4.2 | **Remedial (T4 review, pre-existing bugs):** Quick Review: Z pressed while a save runs is kept (D36); no Keep / Reject while "Loading…" or from a stale category; "Loading…" (not "Nothing left.") before the first load. Live, and Speed where the same code exists | Agent | Sonnet 5.5 / high | **Next.** After PR #51 merges | Admin UI only, well specified, but async ordering: a mistake undoes or decides the wrong question, so high effort. No data, migration or store release. |
+| CR2 | **Code review, display and release (D37):** PRs #41 (Phase 10 slides, plus Phase 8b's `native-tv/scripts/release.cjs`, commit `e69bc60e`), #49 (Phase 11: carousel, ticker, QR, pre-game title), #38 (Phase 6: release build, store pack, keyboard fix) | Agent | Sonnet 5.5 / high | After CR1 | Screens with written standing rules (effects keys, no replay on poll, precedence, one QR) and one script that handles signing keys and store credentials; high effort to check each rule. |
+| CR3 | **Code review, small fixes (D37):** PRs #43 (T1), #45 (T3), #47 (flavor-squares timeout), #50 (Pick 'Em stale-load recheck, N3) | Agent | Sonnet 5.5 / medium | After CR2 | Small test and client fixes; Haiku tends to miss whether a test really guards what it claims (the T4 lesson), so mid tier. |
 | 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | After Amazon approves 1.0.0 | New SDK and toolchain, little prior art. |
 | 5 | Review the app: install **Hightop Challenge TV from the Amazon Appstore** on your Fire Stick and test it (D34) | **Andrew** + agent | Sonnet 5.5 / medium | After Amazon approves 1.0.0 and you have a Fire Stick | Agent reads crash logs if needed and fixes small bugs; the device checklist is well defined. |
 | 12 | Review the sports screens on a real TV on a game day, then record results (D34) | **Andrew** + agent | Haiku 5.5 / low | Same sitting as Phase 5 if it's a game day; otherwise the next game day | Andrew checks; agent only records results and files fixes. |
@@ -195,6 +202,11 @@ handoff of the row above it first."*
   Fire Stick; you test the store build, not a sideloaded one. **Phase 8** (the dashboard link) waits for Phase 5, because
   it's how partners find the app. **13** needs Amazon's approval; **14** needs a Vega stick.
 - **T4** (the intermittent test) can run any time; it's listed after N3 only because N3 is already marked Next.
+- **T4.1 before T4.2:** T4.1 makes PR #51 mergeable with a test that actually guards the fix; T4.2 changes behavior, so it
+  gets its own PR from `main` and isn't mixed into a test-only fix.
+- **CR1 right after T4.1 (D37):** it reviews live auth, migrations and points code, which matter more than T4.2's admin
+  fix. Reviews are read-only, so they don't block or wait on any branch. CR2 and CR3 follow in falling order of risk.
+  Any remedial phase a review proposes is inserted right after that review's row, marked "awaiting Andrew's OK".
 - **R1 and R2** run only when you say go.
 
 ## Cost estimates
@@ -685,6 +697,170 @@ so the card never comes back. A slow CI runner widens that gap. A fast human pre
    the same way if present, with a test.
 5. Run the file 50+ times clean, then `npm run test`, `npm run lint`, `npx tsc --noEmit`; PR. Website (admin) only: no
    store release. Short handoff: `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`.
+
+### T4 review findings (2026-11-23, two review passes on PR #51 / `72ff0638`)
+
+The fix in `components/admin/sections/LiveTriviaQuickReview.tsx` (handler in `onKeyRef`, swapped in a
+`useLayoutEffect`, listener bound once) is correct. Findings, with the phase that fixes each:
+
+| # | Finding | Where | Kind | Fixed in |
+|---|---|---|---|---|
+| F1 | The new test "undoes with Z pressed the instant a reject renders" can't catch the bug. It waits for "Nothing left." before pressing Z, which gives the old code's effect time to swap in the fresh listener, so `fd3bf936` passes it too (the T4 handoff says so: 15/15). It also drops the `posts` check the original test has. | `tests/components.live-trivia-quick-review.test.ts:99` | Introduced by T4 | T4.1 |
+| F2 | Plan status said "T4 done" while PR #51 is open; the handoff names no PR or commit. | `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md:15`, status line | Introduced by T4 | Status line and T4 row corrected 2026-11-23 with this table; handoff in T4.1 |
+| F3 | The handoff says `tmp/` and `.claude/worktrees/` are "both git-ignored". Only `tmp/` is in `.gitignore`; `.claude/worktrees/` is ignored only by this machine's `.git/info/exclude`, which a fresh clone or CI doesn't have. | `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md:12`, `.gitignore` | Introduced by T4 | T4.1 |
+| F4 | A key pressed while a Keep / Reject is still saving is dropped silently: `decide` and `undo` return when `busy`. On a slow network, ← then Z within the request time leaves the reject applied while the reviewer thinks it was undone. | `LiveTriviaQuickReview.tsx:95, :121` | Pre-existing | T4.2 (D36) |
+| F5 | Keep / Reject / Skip / Edit still work while "Loading…" shows. `reload()` sets `loading` but leaves the old `items`, so after a category change → decides a question from the old category that isn't on screen. Out-of-order responses (A → B → C quickly) can also leave the wrong category's list showing. | `LiveTriviaQuickReview.tsx:64–92, :193` | Pre-existing | T4.2 |
+| F6 | "Nothing left." flashes before the first load: `loading` starts `false` with an empty list, so the first render shows the empty message. | `LiveTriviaQuickReview.tsx:50, :248` | Pre-existing | T4.2 |
+
+### Phase T4.1 — Finish T4 on PR #51 (Agent, Sonnet 5.5 / medium)
+
+**Remedial (F1–F3).** Work on the existing branch `fix/live-quick-review-undo-race` (PR #51), not a new one. Don't touch
+the component: its fix is right.
+
+1. `git fetch && git checkout fix/live-quick-review-undo-race && git pull`. If `main` moved, merge `main` in.
+2. **Replace the test at ~line 99** with two tests that each **fail on `fd3bf936`** and pass on the branch:
+   - **a. Behavior (preferred):** press Z in the window between the commit that renders "Nothing left." and the
+     passive effects that follow it. That window is exactly where the old `useEffect` swap left a stale handler. Use a
+     `MutationObserver` on the container: its callback runs as a microtask after React's commit, before the
+     scheduler task that flushes passive effects. In the callback, the first time "Nothing left." is in the DOM,
+     disconnect and `window.dispatchEvent(new KeyboardEvent("keydown", { key: "z" }))` (plain dispatch; `fireEvent`
+     wraps `act`, which flushes effects first and closes the window). Then `await waitFor(...)` for the card and
+     assert `posts.map((p) => p.action)` equals `["reject", "undo"]`.
+   - **b. Structural guard:** `vi.spyOn(window, "addEventListener")`, render, make three decisions (→, ←, Z) with
+     waits between, and assert `keydown` was registered exactly once. On `fd3bf936` it re-registers per changed
+     handler, so the count is > 1.
+   - **Prove both fail on the old code** without disturbing this checkout: `git worktree add <scratchpad>/t4-old
+     fd3bf936`, copy only the new test file into it, run `npx vitest run tests/components.live-trivia-quick-review.test.ts`
+     there (symlink or `npm ci` for `node_modules`), record the failures, then `git worktree remove`. **Never** run
+     `git checkout -- <file>` or `git checkout fd3bf936 -- <file>` in the main checkout (memory: it destroyed work
+     before). If (a) can't be made to fail on the old code reliably in jsdom, keep (b) alone, delete (a), and say so in
+     the handoff; don't ship a test that passes on both.
+3. Restore the dropped check: the original "rejects with ← and undoes with Z" test (~line 87) still asserts
+   `["reject", "undo"]`; make sure the new test (a) does too, and that the duplicate at ~line 99 is gone.
+4. Add `.claude/worktrees/` to `.gitignore` (next to `tmp/`), so the git ignore matches the `eslint.config.mjs`
+   ignore on every clone (F3).
+5. Fix the handoff `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`: name PR #51 and the commits; replace "both git-ignored"
+   with the truth after step 4; replace "Unverified: the race never reproduced" with what test (a)/(b) showed on
+   `fd3bf936`; "Next phase: T4.2".
+6. Run the test file 50× clean (`for i in $(seq 50); do npx vitest run tests/components.live-trivia-quick-review.test.ts || break; done`),
+   then `npm run test`, `npm run lint`, `npx tsc --noEmit` (not at the same time as a build). Push; wait for CI
+   green on PR #51; merge (website deploy of an admin page; no store release).
+7. Update the plan: T4 row → "Done; merged <date> (PR #51)", T4.1 row → done, T4.2 → **Next**; status line to match.
+   Short handoff: `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`.
+
+### Phase T4.2 — Quick Review: keys while busy or loading (Agent, Sonnet 5.5 / high)
+
+**Remedial (F4–F6), pre-existing bugs, behavior per D36.** Branch `fix/quick-review-busy-loading` from up-to-date `main`
+after T4.1 merges. Admin page only: website deploy, no store release, no data or migration. No new on-screen text
+(CLAUDE.md minimal copy).
+
+1. **Z while a save runs (F4, D36)** in `components/admin/sections/LiveTriviaQuickReview.tsx`:
+   - Keep a ref `inFlightRef` set by `decide` to `{ id: current.id }` for the length of its POST, cleared in `finally`.
+   - In the key handler: if the key is Z and `busy` and `inFlightRef.current` is set, store
+     `queuedUndoRef.current = inFlightRef.current.id` and return (one slot; a second Z while still busy does nothing
+     more). Z while busy with no decision in flight (an undo, edit save or publish running) stays ignored.
+   - An effect on `[busy, history, undo]`: when `!busy` and `queuedUndoRef.current` is set, clear it, then call
+     `undo()` **only if** `history.at(-1)?.item.id` equals the queued id. A failed or "Already decided." save adds no
+     history entry, so the queued Z is dropped and never undoes an older decision.
+   - Clear `queuedUndoRef` in the category-change effect (with `setHistory([])`) and when Publish starts.
+   - Every other key while busy: unchanged (ignored).
+2. **Nothing acts while loading (F5):**
+   - `reload()` clears `items` and `beyondPage` when it starts, so `current` is null and the buttons disable.
+   - `decide`, `skip`, `startEdit` and `undo` also return early when `loading` (belt and braces), and the buttons'
+     `disabled` includes `loading`.
+   - Ignore stale responses: a `reloadSeqRef` counter incremented per call; a response whose number isn't the latest
+     sets nothing (including `loading`).
+   - While loading, the "N left" line shows nothing rather than a stale or zero count.
+3. **First render (F6):** `useState(true)` for `loading`, so the first paint is "Loading…".
+4. **Speed Quick Review** (`components/admin/sections/SpeedTriviaQuickReview.tsx`): it shares the patterns (its
+   `undo` returns on `busy` ~line 264; `loading` starts `false` ~line 76; "Nothing left." ~line 465; decisions don't
+   check `loading`). Apply the same three fixes where the code is the same, mind its extra states (`repeats`,
+   `exhausted`, refill at `REFILL_AT`, bulk Keep / Reject, filters), with matching tests in its test file. If a fix
+   doesn't fit Speed's flow, leave Speed unchanged for that item and say why in the handoff.
+5. **Tests** (`tests/components.live-trivia-quick-review.test.ts`, and Speed's), using a deferred `fetch` mock (a
+   promise the test resolves by hand):
+   - ← with the reject POST held, Z, release → card back, posts `["reject", "undo"]`.
+   - ← with the reject POST failing (500), Z during it → no undo POST, the earlier decision stays.
+   - ← held, → pressed, release → only `["reject"]` posted (unseen question not decided).
+   - Category change with the GET held: → and ← post nothing, "Loading…" shows; release → new category's question.
+   - Two category changes with the first GET resolving last → the second category's list shows.
+   - First render with the GET held → "Loading…" present, "Nothing left." absent.
+   - Keep every existing test passing unchanged (the "250 left" / "249 left" test must still pass).
+6. Run both test files 50× clean, then `npm run test`, `npm run lint`, `npx tsc --noEmit`; PR; CI green; merge.
+   Update the plan (T4.2 row, status line) and write `docs/fire-tv-app-plan_PHASE_T4.2_HANDOFF.md` (short note is
+   enough: admin UI only, no data).
+
+### Phases CR1–CR3 — Code review of the merged work (D37)
+
+**Why:** as of 2026-11-23 only T4 had been reviewed. Every other code PR of this plan was merged without a review
+(PR comments are only Vercel's bot; no handoff mentions one). PR #44 is doc-only and is skipped.
+
+**How every review phase works (CR1, CR2, CR3):**
+
+1. **Read-only.** No code edits, commits, PRs, migrations or database writes. Read-only production queries are fine
+   (`node --env-file=.env.local …` with the service-role client, `select` only), to check whether a suspected bug has
+   already happened in the data. Never print `.env.local` values.
+2. Start from up-to-date `main`. For each PR: read its description and handoff note, then `gh pr diff <N>`, then the
+   **current** code of every file it touched (later commits may have changed or fixed it). Run the review with the
+   `code-review` skill at **high** effort on the PR (`/code-review high <N>`); never `max` or `ultra` unless Andrew
+   asks (they're billed and start many agents). Then do the PR-specific checks below yourself; the skill doesn't know
+   this project's standing rules.
+3. **Verify every finding before recording it:** point at the exact line and show the failure path, or reproduce it
+   with a test in a scratchpad worktree (`git worktree add <scratchpad>/cr <ref>`), never in the main checkout. Drop
+   anything you can't verify, or record it as "plausible, unverified".
+4. **Record findings** in this file under a heading `### CR<N> review findings (<date>)`, in the same table form as the
+   T4 findings: `#` (continue the numbering: CR1 starts at F7), finding, `file:line`, kind (**introduced by the PR** /
+   **pre-existing** / **nit**), severity, failure scenario, proposed fix, and the remedial phase that fixes it.
+5. **Propose remedial phases** for the findings worth fixing: insert rows right after the review's row in the phase
+   table (`CR<N>.1`, `CR<N>.2`, …), each with model / effort and reason, and a "Phase details" section like T4.1 / T4.2.
+   Mark each **"Awaiting Andrew's OK"**. Group by branch and risk; a migration or data fix is its own phase on
+   Opus 5.5 / high and needs Andrew's yes before any `supabase db push`.
+6. **Urgent:** a live security hole, data leak, wrong points or lost picks goes at the top of the handoff's summary for
+   Andrew, in plain English, with what it affects today. Still don't fix it unasked.
+7. Handoff: `docs/fire-tv-app-plan_PHASE_CR<N>_HANDOFF.md` (full structure, since findings may touch auth and data).
+   Update the review's row and the status line.
+
+**CR1 — high risk (Opus 5.5 / high).** Check at least:
+- **#36 (Phase 3):** the pairing table's migration grants `service_role` and has RLS
+  (`tests/supabase-migration-grants-contract.test.ts`); any SECURITY DEFINER function revokes `public, anon,
+  authenticated`; the public connect endpoint can't be brute-forced (4-character display code: rate limits, expiry,
+  attempts per code and per IP); a connection grants a venue id only, never a partner session (D9); no `auth.users`
+  adoption or deletion; `proxy.ts` auth-gate default unchanged; no `middleware.ts`; Try demo writes nothing; pairing rows
+  need no cron.
+- **#39 (Phase 9):** `tv_sports_games` migration grants; `claim_tv_sports_refresh` execute rights and that two server
+  instances can't both refresh; precedence lives only in `selectVenueScreenState` and matches D13, D14, D21, D26;
+  shared-cached idle responses (`s-maxage=15`) can't serve one venue's data to another (cache key = full URL with the
+  venue); missing data is "unknown", never zero; no player id leaves the server; reads are bounded as the Cost table
+  says (≤ 300 games, top 10, ≤ 12 prizes); no feed calls when no TV is on (D27).
+- **#48 (N2):** points move only through `pay_pickem_points`; won/lost picks are never re-graded; a "scheduled" game
+  is never graded; `game_id` / `startsAt` changes strand no existing pick, frozen line or reminder (check production for
+  NHL rows created since the deploy); other leagues unchanged (D33).
+- **#37 (Phase 4):** the WebView loads only site hosts (redirects and `target=_blank` included); the UA is
+  `HightopChallengeTV/<version>` and never contains `HightopChallengeApp/` (D6); no JavaScript bridge a web page could
+  misuse; exported activities and intents; cleartext traffic off; file access off; keep-awake and offline retry can't
+  loop.
+- **#46 (T2):** workflow `permissions` are minimal; secrets never reach logs; no untrusted input in `run:` steps; the
+  `--guard` refuses a bad or shrunken slate (D32); a failed run can't push a broken file to `main`.
+
+**CR2 — display and release (Sonnet 5.5 / high).** Check at least:
+- **#41 (Phase 10) and #49 (Phase 11):** each rule in the display standing rules
+  (`docs/venue-display-hype-and-intro-stinger-plan.md`, `docs/live-trivia-pregame-and-display-cleanup-plan.md`): game
+  moments only through `useFx` / `useFxMoment` keys, nothing replays on a poll tick, no player runtime or ads on display
+  paths; D15 (ticker only on carousel slides, skips games already on the board); D16 (one "Get the app" QR per screen,
+  fixed spot, never on questions, reveals, Category Blitz rounds or Connect); D10 ("Hightop Challenge" in full); D20 /
+  D23 (slide order, 15 s, empty slides skipped); D28 (no progress bar); text ≥ 12 px; Tailwind / venue-screen token
+  rules; the `TV_CAROUSEL_DATA_ENABLED` switch.
+- **Phase 8b, `native-tv/scripts/release.cjs` (in #41, `e69bc60e`):** never prints or logs a key or token; stops on a
+  release in review; can't upload an unsigned or debug build or reuse a version code.
+- **#38 (Phase 6):** release signing config keeps keys out of the repo; the keyboard fix; store listing copy matches
+  D10 and D22.
+
+**CR3 — small fixes (Sonnet 5.5 / medium).** For each of #43, #45, #47, #50: does the change do what its title says,
+and does each new or changed test fail without the fix (prove it in a scratchpad worktree, as T4.1 does)? For #50 also
+check the 5-second recheck runs once, never loops or polls (cost rule), and can't overwrite newer data with an older
+response. **Last step of CR3:** ask Andrew whether every future code phase should end with `/code-review high` on its PR
+before merge, recorded in its handoff (costs one review per PR; would have caught the T4 test gap). Record his answer
+as a decision.
 
 ### Phase N1 — NHL Pick 'Em start time: investigate and decide (Agent, Opus 5.5 / high)
 
