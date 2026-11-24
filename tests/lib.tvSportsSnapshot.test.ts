@@ -11,6 +11,7 @@ vi.mock("@/lib/pickem", async (importOriginal) => {
 type Call = { table: string; op: string; args: unknown[] };
 const calls: Call[] = [];
 let claimed: string[] = [];
+let finalSeenReadError: { message: string } | null = null;
 const builder = (table: string) => {
   const chain: Record<string, unknown> = {};
   const record = (op: string) => (...args: unknown[]) => {
@@ -26,7 +27,12 @@ const builder = (table: string) => {
     calls.push({ table, op: "delete", args: [] });
     return chain;
   };
-  chain.then = (resolve: (value: unknown) => unknown) => resolve({ data: [], error: null });
+  chain.then = (resolve: (value: unknown) => unknown) =>
+    resolve(
+      table === "tv_sports_games" && calls.some((call) => call.table === table && call.op === "not") && finalSeenReadError
+        ? { data: null, error: finalSeenReadError }
+        : { data: [], error: null },
+    );
   return chain;
 };
 vi.mock("@/lib/supabaseAdmin", () => ({
@@ -45,6 +51,7 @@ import {
   refreshTvSportsIfDue,
   TV_SPORT_KEYS,
   TV_SPORTS_EMPTY_REFRESH_MS,
+  TV_SPORTS_LATER_HORIZON_MS,
   TV_SPORTS_LATER_REFRESH_MS,
   TV_SPORTS_LIVE_REFRESH_MS,
   TV_SPORTS_NO_REPLY_REFRESH_MS,
@@ -58,6 +65,7 @@ const at = (offsetMs: number, isFinal = false) => ({ startsAt: new Date(now + of
 beforeEach(() => {
   calls.length = 0;
   claimed = [];
+  finalSeenReadError = null;
   listPickEmTvFeedGames.mockReset();
 });
 
@@ -98,6 +106,69 @@ describe("nextTvSportsRefreshMs", () => {
     expect(nextTvSportsRefreshMs("basketball_nba", { ok: false, games: [] }, now)).toBe(now + TV_SPORTS_NO_REPLY_REFRESH_MS);
     // A "live" game from 9 hours ago is stale, not busy.
     expect(nextTvSportsRefreshMs("basketball_nba", { ok: true, games: [at(-9 * HOUR)] }, now)).toBe(now + TV_SPORTS_EMPTY_REFRESH_MS);
+  });
+});
+
+describe("nextTvSportsRefreshMs: later games hold the 15-minute pace only within 18 h (CR1.4, F15)", () => {
+  it("a game 17 h out → 15 min; 19 h out → 6 h (a 6 h wait still reaches it 13 h early)", () => {
+    expect(TV_SPORTS_LATER_HORIZON_MS).toBe(18 * HOUR);
+    expect(nextTvSportsRefreshMs("americanfootball_nfl", { ok: true, games: [at(17 * HOUR)] }, now)).toBe(
+      now + TV_SPORTS_LATER_REFRESH_MS,
+    );
+    expect(nextTvSportsRefreshMs("americanfootball_nfl", { ok: true, games: [at(19 * HOUR)] }, now)).toBe(
+      now + TV_SPORTS_EMPTY_REFRESH_MS,
+    );
+  });
+});
+
+const nbaGame = (overrides: Record<string, unknown> = {}) => ({
+  feedGameKey: "/nba/v1/games#1",
+  sportKey: "basketball_nba",
+  league: "NBA",
+  homeTeam: "Boston Celtics",
+  awayTeam: "Los Angeles Lakers",
+  homeAbbr: "BOS",
+  awayAbbr: "LAL",
+  startsAt: new Date(now - 3 * HOUR).toISOString(),
+  isFinal: true,
+  homeScore: 110,
+  awayScore: 100,
+  periodLabel: "Final",
+  isPostseason: null,
+  feedState: "final",
+  ...overrides,
+});
+
+describe("refreshTvSportsIfDue: final_seen_at (CR1.4, F22)", () => {
+  it("a failed read of stored finals leaves final_seen_at out of the write, and is logged", async () => {
+    claimed = ["basketball_nba"];
+    finalSeenReadError = { message: "timeout" };
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "info").mockImplementation(() => undefined);
+    listPickEmTvFeedGames.mockResolvedValue({ ok: true, games: [nbaGame()] });
+    await refreshTvSportsIfDue(now);
+    const rows = calls.find((call) => call.table === "tv_sports_games" && call.op === "upsert")?.args[0] as Array<
+      Record<string, unknown>
+    >;
+    expect(rows[0].is_final).toBe(true);
+    expect("final_seen_at" in rows[0]).toBe(false);
+    expect(error).toHaveBeenCalledWith("[tv-sports] final-seen-read-failed", "timeout");
+    error.mockRestore();
+  });
+
+  it("reads stored finals for every league it writes, including one with a failed request", async () => {
+    claimed = ["basketball_nba"];
+    vi.spyOn(console, "info").mockImplementation(() => undefined);
+    listPickEmTvFeedGames.mockResolvedValue({ ok: false, games: [nbaGame()] });
+    await refreshTvSportsIfDue(now);
+    const readIn = calls.find(
+      (call, index) => call.table === "tv_sports_games" && call.op === "in" && calls[index - 1]?.op === "select",
+    );
+    expect(readIn?.args).toEqual(["sport_key", ["basketball_nba"]]);
+    const rows = calls.find((call) => call.table === "tv_sports_games" && call.op === "upsert")?.args[0] as Array<
+      Record<string, unknown>
+    >;
+    expect(rows[0].final_seen_at).toBe(new Date(now).toISOString());
   });
 });
 

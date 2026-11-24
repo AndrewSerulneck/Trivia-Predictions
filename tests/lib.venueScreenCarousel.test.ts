@@ -7,6 +7,7 @@ vi.mock("@/lib/supabaseAdmin", () => ({ supabaseAdmin: null }));
 
 import {
   getVenueScreenCarousel,
+  localDayBounds,
   summarizeVenuePicks,
   TV_CAROUSEL_DATA_ENABLED,
   tvPrizeHeadline,
@@ -132,6 +133,25 @@ describe("debug modes (Phase 9 step 7)", () => {
       expect(game.awayScore).toBeNull();
     }
     expect(readFileSync("lib/venueScreenCarouselShared.ts", "utf8")).not.toMatch(/"[^"]*\bReward\b[^"]*"/);
+  });
+});
+
+describe("localDayBounds: the venue's real midnight (CR1.4, F21)", () => {
+  it("half- and quarter-hour zones get midnight to the minute; New York and DST days still work", () => {
+    const at = Date.parse("2026-11-24T10:07:00.000Z");
+    expect(localDayBounds(at, "Asia/Kolkata")).toEqual({
+      startMs: Date.parse("2026-11-23T18:30:00.000Z"),
+      endMs: Date.parse("2026-11-24T18:30:00.000Z"),
+    });
+    expect(localDayBounds(at, "Asia/Kathmandu").startMs).toBe(Date.parse("2026-11-23T18:15:00.000Z"));
+    expect(localDayBounds(at, "America/St_Johns").startMs).toBe(Date.parse("2026-11-24T03:30:00.000Z"));
+    expect(localDayBounds(at, "America/New_York")).toEqual({
+      startMs: Date.parse("2026-11-24T05:00:00.000Z"),
+      endMs: Date.parse("2026-11-25T05:00:00.000Z"),
+    });
+    // 2026-11-01: New York falls back, a 25-hour day.
+    const fallBack = localDayBounds(Date.parse("2026-11-01T16:00:00.000Z"), "America/New_York");
+    expect(fallBack).toEqual({ startMs: Date.parse("2026-11-01T04:00:00.000Z"), endMs: Date.parse("2026-11-02T05:00:00.000Z") });
   });
 });
 

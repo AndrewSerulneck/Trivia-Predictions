@@ -8,8 +8,8 @@ import "server-only";
 //   - no TV on the carousel → no feed requests at all;
 //   - many TVs → still one refresh per league per interval, for every venue together.
 // Intervals: 2 min while a league has a game live or starting within 2 h (MMA and tennis 10 min: their feeds take
-// more requests), 15 min with games later today, 6 h with none (off-season leagues cost ~nothing), 30 min when the
-// feed returned nothing (a failure looks the same, so the old rows stay).
+// more requests), 15 min with games later (within 18 h), 6 h with none (off-season leagues cost ~nothing), 30 min
+// when a feed request failed (the old rows stay). An empty answer is "no games", not a failure (CR1.4, F15).
 
 import { after } from "next/server";
 import { COLLEGE_FOOTBALL_SPORT_KEY } from "@/lib/pickemCollegeFootball";
@@ -44,6 +44,8 @@ export const TV_SPORTS_SLOW_FEED_REFRESH_MS = 10 * MINUTE_MS;
 export const TV_SPORTS_LATER_REFRESH_MS = 15 * MINUTE_MS;
 export const TV_SPORTS_EMPTY_REFRESH_MS = 6 * 60 * MINUTE_MS;
 export const TV_SPORTS_NO_REPLY_REFRESH_MS = 30 * MINUTE_MS;
+/** A game further out than this doesn't hold the 15-minute pace; a 6 h wait still reaches it ≥ 12 h before it starts. */
+export const TV_SPORTS_LATER_HORIZON_MS = 18 * 60 * MINUTE_MS;
 /** How long a claim holds a league while its refresh runs (a crashed refresh retries after this). */
 const CLAIM_LEASE_SECONDS = 120;
 /** One instance asks to claim at most this often (most asks find nothing due). */
@@ -71,7 +73,7 @@ export const nextTvSportsRefreshMs = (
     if (!Number.isFinite(startMs) || game.isFinal) continue;
     if (game.feedState === "live") busy = true;
     else if (startMs <= nowMs ? nowMs - startMs <= TV_LIVE_STALE_MS : startMs - nowMs <= TV_STARTS_SOON_MS) busy = true;
-    else if (startMs > nowMs) later = true;
+    else if (startMs > nowMs && startMs - nowMs <= TV_SPORTS_LATER_HORIZON_MS) later = true;
   }
   if (busy) return nowMs + (SLOW_FEEDS.has(sportKey) ? TV_SPORTS_SLOW_FEED_REFRESH_MS : TV_SPORTS_LIVE_REFRESH_MS);
   return nowMs + (later ? TV_SPORTS_LATER_REFRESH_MS : TV_SPORTS_EMPTY_REFRESH_MS);
@@ -167,13 +169,17 @@ export async function refreshTvSportsIfDue(nowMs: number = Date.now()): Promise<
 
     const games = results.flatMap((result) => result.games);
     if (games.length > 0) {
-      // Keep the first time each game was seen final (finals leave the TV an hour later).
-      const { data: existing } = await admin
+      // Keep the first time each game was seen final (finals leave the TV an hour later). Read for every league
+      // being written, including one with a failed request that still returned some games.
+      const { data: existing, error: existingError } = await admin
         .from("tv_sports_games")
         .select("feed_game_key, final_seen_at")
-        .in("sport_key", okKeys)
+        .in("sport_key", [...new Set(games.map((game) => game.sportKey))])
         .not("final_seen_at", "is", null)
         .returns<Array<{ feed_game_key: string; final_seen_at: string }>>();
+      // F22: if that read fails, leave final_seen_at out of the write so the stored values stay (a column missing
+      // from every row isn't touched by the upsert); a new final then waits for the next refresh to get one.
+      if (existingError) console.error("[tv-sports] final-seen-read-failed", existingError.message);
       const finalSeen = new Map((existing ?? []).map((row) => [row.feed_game_key, row.final_seen_at]));
       const rows = new Map<string, Record<string, unknown>>();
       for (const game of games) {
@@ -188,7 +194,7 @@ export async function refreshTvSportsIfDue(nowMs: number = Date.now()): Promise<
           starts_at: game.startsAt,
           is_final: game.isFinal,
           feed_state: game.feedState,
-          final_seen_at: game.isFinal ? finalSeen.get(game.feedGameKey) ?? runIso : null,
+          ...(existingError ? {} : { final_seen_at: game.isFinal ? finalSeen.get(game.feedGameKey) ?? runIso : null }),
           home_score: game.homeScore,
           away_score: game.awayScore,
           period_label: game.periodLabel,

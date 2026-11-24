@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     // Serialized once, so the baseline counter can record the response size (Phase 9 step 2).
     const body = JSON.stringify(screenState);
     if (!debugMode) {
-      countVenueScreenStateRequest({ mode: screenState.mode, durationMs: Date.now() - nowMs, bytes: body.length });
+      countVenueScreenStateRequest({ mode: screenState.mode, durationMs: Date.now() - nowMs, bytes: Buffer.byteLength(body) });
     }
     return new NextResponse(body, { headers: { "Content-Type": "application/json", ...cacheHeaders } });
   } catch (error) {

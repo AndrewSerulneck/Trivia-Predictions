@@ -47,13 +47,18 @@ const ALL_TIME_SIZE = 10;
 const PRIZES_SHOWN = 3;
 const HOUR_MS = 60 * 60 * 1000;
 
-/** The venue's local midnight at the start and end of today, as epoch ms (DST-safe: probes hour by hour). */
-const localDayBounds = (nowMs: number, timeZone: string): { startMs: number; endMs: number } => {
+const QUARTER_HOUR_MS = 15 * 60 * 1000;
+
+/**
+ * The venue's local midnight at the start and end of today, as epoch ms. DST-safe: probes in 15-minute steps, so
+ * half- and quarter-hour zones (India, Nepal, Newfoundland) get their real midnight (CR1.4, F21). Exported for tests.
+ */
+export const localDayBounds = (nowMs: number, timeZone: string): { startMs: number; endMs: number } => {
   const today = localPartsOf(nowMs, timeZone).dayKey;
-  let startMs = nowMs - (nowMs % HOUR_MS);
-  while (localPartsOf(startMs - HOUR_MS, timeZone).dayKey === today) startMs -= HOUR_MS;
-  let endMs = startMs + HOUR_MS;
-  while (localPartsOf(endMs, timeZone).dayKey === today) endMs += HOUR_MS;
+  let startMs = nowMs - (nowMs % QUARTER_HOUR_MS);
+  while (localPartsOf(startMs - QUARTER_HOUR_MS, timeZone).dayKey === today) startMs -= QUARTER_HOUR_MS;
+  let endMs = startMs + QUARTER_HOUR_MS;
+  while (localPartsOf(endMs, timeZone).dayKey === today) endMs += QUARTER_HOUR_MS;
   return { startMs, endMs };
 };
 
