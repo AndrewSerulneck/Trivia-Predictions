@@ -96,14 +96,39 @@ describe("Live Quick Review", () => {
     expect(posts.map((p) => p.action)).toEqual(["reject", "undo"]);
   });
 
-  it("undoes with Z pressed the instant a reject renders (no stale key handler)", async () => {
+  it("undoes with Z pressed between the commit that shows a reject and the effects after it (no stale key handler)", async () => {
     waiting = [waiting[1]];
-    render(createElement(LiveTriviaQuickReview));
+    const { container } = render(createElement(LiveTriviaQuickReview));
     await waitFor(() => expect(card()).toBeTruthy());
+    // A MutationObserver callback runs as a microtask right after React's commit, before the task that flushes
+    // passive effects: the window where a useEffect-swapped listener is still the old one. A plain dispatch
+    // (not fireEvent, which wraps act and flushes effects first) presses Z inside it.
+    let pressed = false;
+    const observer = new MutationObserver(() => {
+      if (pressed || !container.textContent?.includes("Nothing left.")) return;
+      pressed = true;
+      observer.disconnect();
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "z" }));
+    });
+    observer.observe(container, { childList: true, subtree: true, characterData: true });
+    fireEvent.keyDown(window, { key: "ArrowLeft" });
+    await waitFor(() => expect(pressed).toBe(true));
+    await waitFor(() => expect(card().textContent).toContain("Live question 2?"));
+    expect(posts.map((p) => p.action)).toEqual(["reject", "undo"]);
+  });
+
+  it("binds the key listener once, however many decisions are made", async () => {
+    const add = vi.spyOn(window, "addEventListener");
+    render(createElement(LiveTriviaQuickReview));
+    await waitFor(() => expect(card().textContent).toContain("Live question 1?"));
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    await waitFor(() => expect(card().textContent).toContain("Live question 2?"));
     fireEvent.keyDown(window, { key: "ArrowLeft" });
     await waitFor(() => expect(screen.getByText("Nothing left.")).toBeTruthy());
     fireEvent.keyDown(window, { key: "z" });
     await waitFor(() => expect(card().textContent).toContain("Live question 2?"));
+    expect(add.mock.calls.filter(([type]) => type === "keydown")).toHaveLength(1);
+    add.mockRestore();
   });
 
   it("edits the answer and acceptable answers with E", async () => {
