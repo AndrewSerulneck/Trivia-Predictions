@@ -2,7 +2,8 @@
 import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LiveTriviaQuickReview } from "@/components/admin/sections/LiveTriviaQuickReview";
 
 // Quick Review, Live mode (docs/speed-trivia-backlog-and-quality-plan.md Phase 4c) against a fake in-memory server.
@@ -17,6 +18,8 @@ let waiting: Item[];
 /** The server's real waiting count; null = just the page (4c.9 #5). */
 let total: number | null;
 let kept: number;
+/** When set, a GET for a category answers from here instead of `waiting`. */
+let byCategory: Record<string, Item[]> | null;
 let prWaiting: { waiting: number; prUrl: string };
 let publishResult: Record<string, unknown>;
 const posts: Record<string, unknown>[] = [];
@@ -24,7 +27,9 @@ const respond = (body: unknown, status = 200) => Promise.resolve(new Response(JS
 
 const fakeFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
   if (!init?.method || init.method === "GET") {
-    return respond({ ok: true, total: total ?? waiting.length, items: waiting, kept, categories: ["Music", "Movies", "Current Events"], waiting: prWaiting });
+    const category = new URL(String(input), "http://x").searchParams.get("category") ?? "";
+    const list = byCategory ? byCategory[category] ?? [] : waiting;
+    return respond({ ok: true, total: total ?? list.length, items: list, kept, categories: ["Music", "Movies", "Current Events"], waiting: prWaiting });
   }
   const body = JSON.parse(String(init.body)) as Record<string, unknown>;
   posts.push(body);
@@ -38,6 +43,7 @@ const fakeFetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
 beforeEach(() => {
   waiting = [item(1), item(2, { possibleRepeat: { slug: "old", question: "Who sang Thriller?", answer: "Michael Jackson" }, acceptableAnswers: ["Two"] })];
   kept = 2;
+  byCategory = null;
   total = null;
   prWaiting = { waiting: 0, prUrl: "" };
   publishResult = { prUrl: "https://github.com/o/r/pull/3", merged: true, waiting: false, published: 2, already: 0, refused: 0, files: [] };
@@ -191,5 +197,123 @@ describe("Live Quick Review: conversions", () => {
     await waitFor(() => expect(card().textContent).toContain("Live question 2?"));
     expect(screen.queryByTestId("live-review-from-speed")).toBeNull();
     expect(screen.queryByTestId("live-review-star-cap")).toBeNull();
+  });
+});
+
+// D36 (phase T4.2): keys while a save runs or a list loads. A held request is a promise the test settles by hand.
+type Held = { url: string; body: Record<string, unknown> | null; release: (status?: number) => Promise<void> };
+/** Hold every request `match` picks; the rest go to the fake server. `sent` lists every POST at the moment it is sent. */
+const hold = (match: (url: string, init?: RequestInit) => boolean) => {
+  const held: Held[] = [];
+  const sent: string[] = [];
+  vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null;
+    if (init?.method === "POST" && body) sent.push(`${body.action}:${body.id ?? ""}`);
+    if (!match(String(input), init)) return fakeFetch(input, init);
+    return new Promise<Response>((resolve) => {
+      held.push({
+        url: String(input), body,
+        release: async (status) => { await act(async () => { resolve(status ? await respond({ ok: false, error: "Server error." }, status) : await fakeFetch(input, init)); }); },
+      });
+    });
+  }));
+  return { held, sent };
+};
+const isPost = (action: string) => (_url: string, init?: RequestInit) => init?.method === "POST" && JSON.parse(String(init.body)).action === action;
+const isList = (_url: string, init?: RequestInit) => !init?.method || init.method === "GET";
+const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+
+describe("Live Quick Review: keys while a save runs or a list loads (D36)", () => {
+  it("runs a Z pressed during a Reject save once the save finishes", async () => {
+    waiting = [item(1)];
+    render(createElement(LiveTriviaQuickReview));
+    await waitFor(() => expect(card()).toBeTruthy());
+    const { held, sent } = hold(isPost("reject"));
+    fireEvent.keyDown(window, { key: "ArrowLeft" });
+    fireEvent.keyDown(window, { key: "z" });
+    expect(sent).toEqual(["reject:id-1"]);
+    await held[0].release();
+    await waitFor(() => expect(card().textContent).toContain("Live question 1?"));
+    expect(sent).toEqual(["reject:id-1", "undo:id-1"]);
+    expect(screen.getByText("Undone.")).toBeTruthy();
+  });
+
+  it("drops a Z queued during a failed save; the earlier decision stays", async () => {
+    waiting = [item(1), item(2)];
+    render(createElement(LiveTriviaQuickReview));
+    await waitFor(() => expect(card().textContent).toContain("Live question 1?"));
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    await waitFor(() => expect(card().textContent).toContain("Live question 2?"));
+    const { held, sent } = hold(isPost("reject"));
+    fireEvent.keyDown(window, { key: "ArrowLeft" });
+    fireEvent.keyDown(window, { key: "z" });
+    await held[0].release(500);
+    await waitFor(() => expect(screen.getByText("Server error.")).toBeTruthy());
+    await settle();
+    expect(sent).toEqual(["reject:id-2"]);
+    expect(card().textContent).toContain("Live question 2?");
+    expect(screen.getByRole("button", { name: "Undo (Z)" }).hasAttribute("disabled")).toBe(false);
+  });
+
+  it("ignores → pressed during a save: the next question was never seen", async () => {
+    waiting = [item(1), item(2)];
+    render(createElement(LiveTriviaQuickReview));
+    await waitFor(() => expect(card().textContent).toContain("Live question 1?"));
+    const { held, sent } = hold(isPost("reject"));
+    fireEvent.keyDown(window, { key: "ArrowLeft" });
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    await held[0].release();
+    await waitFor(() => expect(card().textContent).toContain("Live question 2?"));
+    await settle();
+    expect(sent).toEqual(["reject:id-1"]);
+  });
+
+  it("decides nothing while a new category loads, then shows that category's question", async () => {
+    byCategory = { "": [item(1)], Movies: [item(5, { category: "Movies" })] };
+    render(createElement(LiveTriviaQuickReview));
+    await waitFor(() => expect(card().textContent).toContain("Live question 1?"));
+    const { held, sent } = hold(isList);
+    fireEvent.change(screen.getByLabelText("Category"), { target: { value: "Movies" } });
+    expect(screen.getByText("Loading…")).toBeTruthy();
+    expect(screen.queryByTestId("live-review-card")).toBeNull();
+    expect(screen.queryByText(/ left$/)).toBeNull();
+    for (const key of ["ArrowRight", "ArrowLeft", "s", "e", "z"]) fireEvent.keyDown(window, { key });
+    for (const name of ["← Reject", "Keep →", "Skip (S)", "Edit (E)"]) expect(screen.getByRole("button", { name }).hasAttribute("disabled")).toBe(true);
+    expect(sent).toEqual([]);
+    await held[0].release();
+    await waitFor(() => expect(card().textContent).toContain("Live question 5?"));
+    expect(sent).toEqual([]);
+  });
+
+  it("shows the last category picked when the first answer arrives last", async () => {
+    byCategory = { "": [item(1)], Movies: [item(5, { category: "Movies" })], "Current Events": [item(6, { category: "Current Events" })] };
+    render(createElement(LiveTriviaQuickReview));
+    await waitFor(() => expect(card().textContent).toContain("Live question 1?"));
+    const { held } = hold(isList);
+    fireEvent.change(screen.getByLabelText("Category"), { target: { value: "Movies" } });
+    fireEvent.change(screen.getByLabelText("Category"), { target: { value: "Current Events" } });
+    expect(held).toHaveLength(2);
+    await held[1].release();
+    await waitFor(() => expect(card().textContent).toContain("Live question 6?"));
+    await held[0].release();
+    await settle();
+    expect(card().textContent).toContain("Live question 6?");
+    expect(screen.queryByText("Loading…")).toBeNull();
+  });
+
+  it("paints Loading…, not Nothing left., on the very first render", () => {
+    // Server-side render = the first paint; a client effect that sets loading comes too late to count.
+    const html = renderToString(createElement(LiveTriviaQuickReview));
+    expect(html).toContain("Loading…");
+    expect(html).not.toContain("Nothing left.");
+  });
+
+  it("shows Loading…, not Nothing left., before the first list arrives", async () => {
+    const { held } = hold(isList);
+    render(createElement(LiveTriviaQuickReview));
+    expect(screen.getByText("Loading…")).toBeTruthy();
+    expect(screen.queryByText("Nothing left.")).toBeNull();
+    await held[0].release();
+    await waitFor(() => expect(card().textContent).toContain("Live question 1?"));
   });
 });

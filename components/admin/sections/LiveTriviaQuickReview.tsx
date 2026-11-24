@@ -47,7 +47,8 @@ export const LiveTriviaQuickReview = () => {
   const [waiting, setWaiting] = useState<LiveReviewPage["waiting"]>({ waiting: 0, prUrl: "" });
   const [categories, setCategories] = useState<string[]>([]);
   const [publishing, setPublishing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // True from the first paint, so "Nothing left." never flashes before the first load.
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -61,16 +62,27 @@ export const LiveTriviaQuickReview = () => {
   const [whyOpenId, setWhyOpenId] = useState<string | null>(null);
   const whyOpen = Boolean(current?.whyTrue) && whyOpenId === current?.id;
 
+  // A Keep / Reject save in flight (kept until the render after it commits) and a Z pressed meanwhile (D36).
+  const inFlightRef = useRef<{ id: string; done: boolean } | null>(null);
+  const queuedUndoRef = useRef<string | null>(null);
+  const decidedRef = useRef<UndoEntry | null>(null);
+  const reloadSeqRef = useRef(0);
+
   const reload = useCallback(async () => {
+    const seq = ++reloadSeqRef.current;
     setLoading(true);
     setError("");
     setDraft(null);
+    // Nothing from the old list stays on screen to be decided while the new one loads.
+    setItems([]);
+    setBeyondPage(0);
     try {
       const params = new URLSearchParams();
       if (category) params.set("category", category);
       const response = await fetch(`${ENDPOINT}?${params.toString()}`, { cache: "no-store" });
       const payload = (await response.json().catch(() => ({}))) as Partial<LiveReviewPage> & { ok?: boolean; error?: string };
       if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Couldn't load questions.");
+      if (seq !== reloadSeqRef.current) return;
       const loaded = payload.items ?? [];
       setItems(loaded);
       setBeyondPage(Math.max(0, (payload.total ?? loaded.length) - loaded.length));
@@ -79,20 +91,25 @@ export const LiveTriviaQuickReview = () => {
       setWaiting(payload.waiting ?? { waiting: 0, prUrl: "" });
       if (payload.categories) setCategories(payload.categories);
     } catch (err) {
-      setError(getErrorMessage(err, "Couldn't load questions."));
+      if (seq === reloadSeqRef.current) setError(getErrorMessage(err, "Couldn't load questions."));
     } finally {
-      setLoading(false);
+      if (seq === reloadSeqRef.current) setLoading(false);
     }
   }, [category]);
 
   useEffect(() => {
     setHistory([]);
+    queuedUndoRef.current = null;
+    decidedRef.current = null;
     setNotice("");
     void reload();
   }, [reload]);
 
   const decide = useCallback(async (decision: "keep" | "reject") => {
-    if (!current || busy || draft) return;
+    if (!current || busy || loading || draft) return;
+    const flight = { id: current.id, done: false };
+    inFlightRef.current = flight;
+    decidedRef.current = null;
     setBusy(true);
     setError("");
     try {
@@ -100,25 +117,28 @@ export const LiveTriviaQuickReview = () => {
       setItems((prev) => prev.filter((row) => row.id !== current.id));
       if (!decided) { setNotice("Already decided."); return; }
       if (decision === "keep") setKept((prev) => prev + 1);
-      setHistory((prev) => [...prev.slice(-49), { item: current, kind: decision }]);
+      const entry: UndoEntry = { item: current, kind: decision };
+      decidedRef.current = entry;
+      setHistory((prev) => [...prev.slice(-49), entry]);
       setNotice(decision === "keep" ? "Kept." : "Rejected.");
     } catch (err) {
       setError(getErrorMessage(err, decision === "keep" ? "Keep failed." : "Reject failed."));
     } finally {
+      flight.done = true;
       setBusy(false);
     }
-  }, [current, busy, draft]);
+  }, [current, busy, loading, draft]);
 
   const skip = useCallback(() => {
-    if (!current || busy || draft) return;
+    if (!current || busy || loading || draft) return;
     setItems((prev) => [...prev.slice(1), prev[0]].filter(Boolean) as LiveReviewItem[]);
     setHistory((prev) => [...prev.slice(-49), { item: current, kind: "skip" }]);
     setNotice("");
-  }, [current, busy, draft]);
+  }, [current, busy, loading, draft]);
 
   const undo = useCallback(async () => {
     const last = history[history.length - 1];
-    if (!last || busy || draft) return;
+    if (!last || busy || loading || draft) return;
     setBusy(true);
     setError("");
     try {
@@ -134,14 +154,28 @@ export const LiveTriviaQuickReview = () => {
     } finally {
       setBusy(false);
     }
-  }, [history, busy, draft]);
+  }, [history, busy, loading, draft]);
+
+  // A Z pressed while a Keep / Reject was saving runs when that save finishes, only if it saved and its entry is
+  // still the last one: a failed or "Already decided." save never undoes an older decision (D36).
+  useEffect(() => {
+    if (busy) return;
+    const flight = inFlightRef.current;
+    if (flight && !flight.done) return;
+    inFlightRef.current = null;
+    const queued = queuedUndoRef.current;
+    if (queued === null) return;
+    queuedUndoRef.current = null;
+    const last = history[history.length - 1];
+    if (last && last === decidedRef.current && last.item.id === queued && last.kind !== "skip") void undo();
+  }, [busy, history, undo]);
 
   const startEdit = useCallback(() => {
-    if (!current || busy) return;
+    if (!current || busy || loading) return;
     setDraft({ answer: current.answer, acceptable: current.acceptableAnswers.join("\n") });
     setError("");
     setNotice("");
-  }, [current, busy]);
+  }, [current, busy, loading]);
 
   const saveEdit = useCallback(async () => {
     if (!current || !draft) return;
@@ -161,7 +195,8 @@ export const LiveTriviaQuickReview = () => {
   }, [current, draft]);
 
   const publish = useCallback(async () => {
-    if (busy || draft || kept === 0) return;
+    if (busy || loading || draft || kept === 0) return;
+    queuedUndoRef.current = null;
     if (!window.confirm(`Publish ${kept.toLocaleString()} to Live Trivia?`)) return;
     setBusy(true);
     setPublishing(true);
@@ -183,7 +218,7 @@ export const LiveTriviaQuickReview = () => {
       setPublishing(false);
       setBusy(false);
     }
-  }, [busy, draft, kept, reload]);
+  }, [busy, loading, draft, kept, reload]);
 
   // The listener is bound once and calls the newest handler. The handler is swapped in a layout
   // effect (before paint), so a key pressed the moment a decision renders never meets a stale
@@ -197,7 +232,11 @@ export const LiveTriviaQuickReview = () => {
         arrowleft: () => void decide("reject"),
         s: skip,
         e: startEdit,
-        z: () => void undo(),
+        z: () => {
+          // A save is running: remember the Z for when it finishes. Any other key stays ignored while busy.
+          if (inFlightRef.current) { queuedUndoRef.current = inFlightRef.current.id; return; }
+          void undo();
+        },
       };
       const action = actions[event.key.toLowerCase()];
       if (!action) return;
@@ -224,15 +263,15 @@ export const LiveTriviaQuickReview = () => {
             {categories.map((name) => <option key={name} value={name}>{name}</option>)}
           </select>
         </div>
-        <button type="button" disabled={busy || kept === 0} onClick={() => void publish()}
+        <button type="button" disabled={busy || loading || kept === 0} onClick={() => void publish()}
           className={`${buttonBase} bg-indigo-600 text-white hover:bg-indigo-700`}>
           {publishing ? "Publishing…" : `Publish (${kept.toLocaleString()})`}
         </button>
       </div>
 
-      <p className="text-sm font-semibold text-slate-700" role="status" aria-live="polite">
-        {(items.length + beyondPage).toLocaleString()} left
-        {waiting.waiting > 0 ? (
+      <p className="min-h-5 text-sm font-semibold text-slate-700" role="status" aria-live="polite">
+        {loading ? null : `${(items.length + beyondPage).toLocaleString()} left`}
+        {!loading && waiting.waiting > 0 ? (
           <span className="ml-3 font-normal text-amber-700" data-testid="live-review-waiting">
             {waiting.waiting.toLocaleString()} waiting on GitHub
             {waiting.prUrl ? <a href={waiting.prUrl} target="_blank" rel="noreferrer" className="ml-2 font-semibold underline">PR</a> : null}
@@ -310,15 +349,15 @@ export const LiveTriviaQuickReview = () => {
 
       {!draft ? (
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" disabled={!current || busy} onClick={() => void decide("reject")}
+          <button type="button" disabled={!current || busy || loading} onClick={() => void decide("reject")}
             className={`${buttonBase} bg-rose-600 text-white hover:bg-rose-700`}>← Reject</button>
-          <button type="button" disabled={!current || busy} onClick={skip}
+          <button type="button" disabled={!current || busy || loading} onClick={skip}
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Skip (S)</button>
-          <button type="button" disabled={!current || busy} onClick={startEdit}
+          <button type="button" disabled={!current || busy || loading} onClick={startEdit}
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Edit (E)</button>
-          <button type="button" disabled={history.length === 0 || busy} onClick={() => void undo()}
+          <button type="button" disabled={history.length === 0 || busy || loading} onClick={() => void undo()}
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Undo (Z)</button>
-          <button type="button" disabled={!current || busy} onClick={() => void decide("keep")}
+          <button type="button" disabled={!current || busy || loading} onClick={() => void decide("keep")}
             className={`${buttonBase} ml-auto bg-emerald-600 text-white hover:bg-emerald-700`}>Keep →</button>
         </div>
       ) : null}
