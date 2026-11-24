@@ -2,13 +2,14 @@
 //
 // Fake states for a fake venue, so Amazon's reviewers (and anyone without a venue) can see the TV screens. No
 // database, no real venue, no request: /tv-app/demo hands these to VenueScreenClient with `poll={false}`.
-// Launch content only (D21): Live Trivia and the idle "Get the app" screen. Phase 11 adds the Pick 'Em slides;
-// reserved phase R2 adds Category Blitz, Squares and Bracket. Each screen stays 15 s (D23).
+// Launch content only (D21): the five idle carousel slides (Phase 11) and Live Trivia; reserved phase R2 adds
+// Category Blitz, Squares and Bracket. Each screen stays 15 s (D23).
 
 import { LIVE_TRIVIA_QUESTIONS_PER_ROUND } from "@/lib/liveTriviaShared";
 import { toQuestionMedia } from "@/lib/questionMedia";
 import type { ScreenLeaderboardEntry, VenueScreenState, VenueScreenVenue } from "@/lib/venueScreen";
-import { EMPTY_CAROUSEL } from "@/lib/venueScreenCarouselShared";
+import { TV_CAROUSEL_ORDER, type TvCarouselSlideId } from "@/lib/tvCarousel";
+import { debugCarousel } from "@/lib/venueScreenCarouselShared";
 
 export const TV_DEMO_STEP_MS = 15_000;
 
@@ -59,30 +60,35 @@ const nextThursdayEvening = (nowMs: number): string => {
   return date.toISOString();
 };
 
-/** The demo's screens, in order. Each builder takes the moment its step starts, so every countdown is fresh. */
-export const TV_DEMO_STEPS: ReadonlyArray<{ id: string; build: (nowMs: number) => VenueScreenState }> = [
-  {
-    id: "idle",
-    build: (nowMs) => ({
-      ok: true,
-      mode: "idle",
-      venue: TV_DEMO_VENUE,
-      liveTrivia: null,
-      categoryBlitz: null,
-      idle: {
-        nextLiveTrivia: {
-          startsAt: nextThursdayEvening(nowMs),
-          title: "Live Trivia",
-          firstRoundCategory: null,
-          recurringDays: ["thu"],
-        },
-        sponsorSlots: [],
-        // Phase 11 puts the carousel slides into the demo (debugCarousel in lib/venueScreenCarouselShared.ts).
-        ...EMPTY_CAROUSEL,
-      },
-      updatedAt: nowMs,
-    }),
+const idleState = (nowMs: number): VenueScreenState => ({
+  ok: true,
+  mode: "idle",
+  venue: TV_DEMO_VENUE,
+  liveTrivia: null,
+  categoryBlitz: null,
+  idle: {
+    nextLiveTrivia: {
+      startsAt: nextThursdayEvening(nowMs),
+      title: "Live Trivia",
+      firstRoundCategory: null,
+      recurringDays: ["thu"],
+    },
+    sponsorSlots: [],
+    ...debugCarousel("sunday", nowMs),
   },
+  updatedAt: nowMs,
+});
+
+type DemoStep = {
+  id: string;
+  build: (nowMs: number) => VenueScreenState;
+  /** The carousel slide this step pins (the demo shows each for its own 15 s, instead of rotating). */
+  slide?: TvCarouselSlideId;
+};
+
+/** The demo's screens, in order. Each builder takes the moment its step starts, so every countdown is fresh. */
+export const TV_DEMO_STEPS: ReadonlyArray<DemoStep> = [
+  ...TV_CAROUSEL_ORDER.map((slide): DemoStep => ({ id: `slide-${slide}`, build: idleState, slide })),
   {
     id: "pregame",
     build: (nowMs) => ({

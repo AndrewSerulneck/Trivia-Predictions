@@ -3,7 +3,7 @@
 **Status:** Plan written 2026-11-21. **Phase 7: 1.0.0 (vc1) submitted 2026-11-23** (no DRM, Fire TV only; App ID `amzn1.devportal.mobileapp.40a765b23bb84ce49109cafe420be156`). **Phase 8b done 2026-11-23:** `npm run fire-tv:release` (see `native-tv/scripts/release.cjs`; keys `AMAZON_APPSTORE_CLIENT_ID/_SECRET` in `.env.local`; dry-run verified; Amazon blocks it while a release is in review). **Phase 1 done 2026-11-21** (mockups, handoff
 `docs/fire-tv-app-plan_PHASE_1_HANDOFF.md`). **Phase 2 done 2026-11-22** (round 1 → D10–D20, round 2 → D21–D25).
 **Phases 3 and 4 merged and deployed 2026-11-22** (PRs #36, #37; handoffs `_PHASE_3_HANDOFF.md`, `_PHASE_4_HANDOFF.md`).
-**Phase 5 waiting on a Fire Stick** (Andrew has none to hand); an emulator smoke test ran instead and fixed the
+**Phase 5 moved to the end (D34): Andrew reviews the store build once Amazon approves it**; an emulator smoke test ran instead and fixed the
 Back-after-demo keyboard bug. **Phase 6 done 2026-11-22** (ahead of Phase 5): upload key, signed release APK, store
 images, screenshots and `docs/fire-tv-store/listing.md`. See `docs/fire-tv-app-plan_PHASE_6_HANDOFF.md`. Signing
 keys backed up 2026-11-22 (an encrypted image in iCloud Drive; handoff §2). Phase 6 merged via PR #38. Phase 7
@@ -12,9 +12,9 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 2026-11-23; the 3–7 day usage baseline started at deploy). See `docs/fire-tv-app-plan_PHASE_9_HANDOFF.md`.
 **Phase 10 built 2026-11-23** on `feat/fire-tv-phase-10` (PR #41; Pick 'Em Live Board + All-Time Leaderboard slides; preview only,
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
-**2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
+**Phase 11 merged and deployed 2026-11-23** (PR #49; carousel, ticker, "Get the app" QR, pre-game title; carousel data switched ON; `docs/fire-tv-app-plan_PHASE_11_HANDOFF.md`). **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 built 2026-11-23 (PR #48, all checks green; waiting for Andrew to merge; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** Next: merge #48, then N3 on the first NHL game day after deploy. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** Next: N3 on the first NHL game day after N2's deploy; then everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -60,9 +60,9 @@ and you'll need a Vega stick (about $30–40) to test it.
 
 **What you do yourself:**
 - Phase 2: review the mockups.
-- Phase 5: install a test version on your Fire Stick and test it.
+- Phase 5: once Amazon approves the app, install it from the Appstore on a Fire Stick and test it.
 - Phase 7: submit the app to Amazon.
-- Phase 12: check the sports screens on a real TV.
+- Phase 12: check the sports screens on a real TV (same day as Phase 5 if it's a game day).
 - Phase 14: test the Vega version and submit it.
 - Say yes when an agent asks to change the database (once, in Phase 3).
 
@@ -141,6 +141,7 @@ different browser, you'll be asked to sign in once.
 | D31 | **`tests/lib.sportsBingo.nfl-star-tilt.test.ts` "puts stars on boards materially more often than chance" is seeded (phase T3).** It draws unseeded random boards and failed CI on PR #41 (star share 0.27 vs > 0.3), then passed on rerun. | Andrew, 2026-11-23 ("Sure") |
 | D33 | **NHL Pick 'Em fix (N1's choice): prefer a real timestamp in every league.** `extractEventStartIso` takes the first full timestamp and falls back to a date-only field only when none exists. NHL `startsAt` and `game_id` move to the real puck-drop; every other league's are unchanged (each already sends a full timestamp first). No migration: production has no NHL picks, tiebreaker guesses or lines. N2 also stops grading a pick whose game the feed still calls "scheduled" (NHL sends 0–0 before puck-drop, which the 4-hour rule would grade as a push), and labels NHL periods with the TV's hockey helper. Replaces the planner's "keep the id" recommendation in N1 step 4. | N1 agent, 2026-11-23, from evidence in `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md` §4–5. Andrew may overrule. |
 | D32 | **The weekly NFL star-snapshot refresh (T2) commits straight to `main`, no PR.** The script's `--guard` refuses to write when a BallDontLie fetch fails or the current slate shrinks below half, because no person reads the diff before it lands. The "Allow GitHub Actions to create and approve pull requests" setting is not needed and stays as it was. | Andrew, 2026-11-23 ("Just commit it straight to main unless there's a problem. I don't want to have to merge a PR every week.") |
+| D34 | **Device reviews move to the end.** Phases 5 (app test) and 12 (sports screens on a real TV) run after Amazon approves 1.0.0, on the **store build** installed from the Amazon Appstore, not a sideloaded APK. Nobody outside Hightop Challenge is told about the app before then, so a device bug found late reaches no one. Phase 8's dashboard link waits for Phase 5 to pass, because that link is how partners find the app (planner's call, to keep the app unannounced until reviewed). | Andrew, 2026-11-23 ("I don't have a firestick currently, but no one is going to use the Fire TV app before us anyway … let's just move the review phases to the end of this plan and we'll review the app ourselves when it is available on the Amazon Fire TV store.") |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -173,14 +174,14 @@ handoff of the row above it first."*
 | T3 | Stop the random star-tilt test from failing CI: seed its random numbers (D31) | Agent | Haiku 5.5 / low | Anytime; before N1 | One test file; `installSeededRandom` already exists in it. |
 | N1 | NHL Pick 'Em start time: investigate and choose the fix (read-only; D29) | Agent | Opus 5.5 / high | Done 2026-11-23 (D33; `_PHASE_N1_HANDOFF.md`) | Touches Pick 'Em `game_id`s that picks, frozen lines and reminders are keyed on; a wrong call strands players' picks. |
 | N2 | NHL Pick 'Em start time: the fix, tests, PR, deploy | Agent | Opus 5.5 / high | Built 2026-11-23 (PR #48 green, awaiting merge; `_PHASE_N2_HANDOFF.md`) | Shared Pick 'Em engine (`lib/pickem.ts`) and pick locking; any id change is a data change. |
-| N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | First NHL game day after N2 deploys | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
-| 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | After N3 | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
-| 12 | Real-TV check of the sports screens on a game day, then record results | **Andrew** + agent | Haiku 5.5 / low | A game day after Phase 11 deploys | Andrew checks; agent only records results and files fixes. |
-| 5 | Install a test build on your Fire Stick and test it | **Andrew** + agent | Sonnet 5.5 / medium | When you have a Fire Stick. Do it as soon as one arrives, even out of order | Agent runs install commands and fixes small bugs; the device checklist is well defined. |
-| 8 | After approval: store link on `/owner/display` | Agent | Haiku 5.5 / low | After Amazon approves 1.0.0 | One link and copy. Use Sonnet 5.5 / medium if the contract test needs new cases. |
+| 11 | Build the carousel, ticker, "Get the app" QR on every screen, and the pre-game "LIVE TRIVIA" title | Agent | Sonnet 5.5 / high | Done; merged 2026-11-23 (PR #49; ran before N3 at Andrew's request; `_PHASE_11_HANDOFF.md`) | Same reason; the QR touches existing Live Trivia and Category Blitz screens. |
+| N3 | NHL Pick 'Em start time: check on the next NHL game day after N2 deploys, record results | Agent | Haiku 5.5 / low | **Next.** First NHL game day after N2 deploys (N2 merged 2026-11-23) | Read-only check against a written checklist. Use Sonnet 5.5 / medium if it finds a bug to fix. |
 | 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | After Amazon approves 1.0.0 | New SDK and toolchain, little prior art. |
+| 5 | Review the app: install **Hightop Challenge TV from the Amazon Appstore** on your Fire Stick and test it (D34) | **Andrew** + agent | Sonnet 5.5 / medium | After Amazon approves 1.0.0 and you have a Fire Stick | Agent reads crash logs if needed and fixes small bugs; the device checklist is well defined. |
+| 12 | Review the sports screens on a real TV on a game day, then record results (D34) | **Andrew** + agent | Haiku 5.5 / low | Same sitting as Phase 5 if it's a game day; otherwise the next game day | Andrew checks; agent only records results and files fixes. |
+| 8 | Store link on `/owner/display` | Agent | Haiku 5.5 / low | After Phase 5 passes (D34: this link is how partners find the app) | One link and copy. Use Sonnet 5.5 / medium if the contract test needs new cases. |
 | 14 | Test on a Vega stick, then add the Vega build to the listing | **Andrew** + agent | Sonnet 5.5 / medium | After Phase 13, with a Vega stick | Device install and console steps with agent help. |
-| 15 | Close-out: usage vs. baseline, standing rules, docs | Agent | Haiku 5.5 / low | Last | Doc-only, plus one read-only usage comparison. |
+| 15 | Close-out: usage vs. baseline, standing rules, docs | Agent | Haiku 5.5 / low | Last (about 2 weeks after Phase 8) | Doc-only, plus one read-only usage comparison. |
 | R1 | **Reserved, runs only when Andrew says go (D17):** Bingo "Closest to Bingo" slide: data read, ranking of cards, UI, BINGO! moment | Agent | Opus 5.5 / high | Only when you say go (D17) | Adds a read to the shared state engine and a moment that must never replay on a poll; one phase does both. |
 | R2 | **Reserved, runs only when Andrew says go (D21):** turn the Category Blitz, Super Bowl Squares and March Madness TV screens back on, add the corner "Get the app" QR to them (D16), add them to Try demo, real-TV check | Agent | Sonnet 5.5 / high | Only when you say go (D21) | Phase 9 leaves a single switch in `selectVenueScreenState`, so this is a small change, but it touches the shared engine and four display screens; high effort for the precedence and QR-placement rules. |
 
@@ -188,8 +189,9 @@ handoff of the row above it first."*
 - **T1 first:** two tests fail on `main`, so every PR's CI is red until it merges.
 - **N1–N3 before Phase 11:** the NHL bug hurts players now (picks lock at 7 AM New York on every NHL game day). Phase 11
   only adds TV screens. The NHL phases are independent of the TV phases, so if you'd rather do 11 first, swap them.
-- **Phase 5** needs a Fire Stick and **8 / 13** need Amazon's approval. They sit where they're likely to become possible,
-  but run them as soon as they can.
+- **Reviews last (D34, 2026-11-23):** Phases 5 and 12 wait until the app is live in the Amazon Appstore and you have a
+  Fire Stick; you test the store build, not a sideloaded one. **Phase 8** (the dashboard link) waits for Phase 5, because
+  it's how partners find the app. **13** needs Amazon's approval; **14** needs a Vega stick.
 - **R1 and R2** run only when you say go.
 
 ## Cost estimates
@@ -446,12 +448,18 @@ phase.
    `HightopChallengeApp/`. If possible, run an Android TV emulator smoke test (optional; the real check is Phase 5).
 7. PR (website changes, if any, plus `native-tv/`). Merge only after Andrew's OK. The handoff lists the APK path.
 
-### Phase 5 — Device test (Andrew + agent, Sonnet 5.5 / medium)
+### Phase 5 — Device review of the store build (Andrew + agent, Sonnet 5.5 / medium)
+
+Runs after Amazon approves 1.0.0 (D34). Andrew installs the app from the Amazon Appstore; no sideloading.
 
 **Agent:**
-1. When Andrew gives the Fire Stick's IP, run `adb connect <ip>:5555`. Andrew approves the TV prompt.
-2. Install the APK and watch `adb logcat` for crashes.
-3. Go through the checklist in **Andrew's steps → Phase 5** with him. Fix small bugs, rebuild and reinstall.
+1. Go through the checklist in **Andrew's steps → Phase 5** with him.
+2. Only if something crashes or misbehaves: have Andrew turn on developer mode and ADB debugging (his steps, "If the
+   agent asks for crash logs"), run `~/Library/Android/sdk/platform-tools/adb connect <ip>:5555` and read
+   `adb logcat`. Andrew approves the TV prompt.
+3. Fix small bugs. A website fix ships by deploy. A shell fix (`native-tv/`) ships with `npm run fire-tv:release`;
+   to try it first, sideload the release APK with `adb install -r <path>` (the store copy is signed by Amazon, so
+   uninstall it first).
 4. Record results in the handoff.
 5. Add a "Fire TV app" section to `docs/tv-display-physical-device-checklist.md`.
 
@@ -835,10 +843,16 @@ for history.
    4. Tap **Connect**. Within a few seconds the laptop should switch to your venue display.
    5. Tell the agent what happened. Say "it worked", or describe what you saw.
 
-### Phase 5: install the test app on your Fire Stick
+### Phase 5: install the app from the Amazon Appstore and test it
 
-**Get ready:** your Mac and the Fire Stick must be on the **same Wi-Fi**. Start the Phase 5 chat first; the agent
-will ask for the IP address in step 3.
+Do this once Amazon has approved the app and you have a Fire Stick (D34). Start the Phase 5 chat first.
+
+1. **Install it:** on the TV, search the Appstore for **Hightop Challenge TV** (or open the store link from Amazon's
+   approval email on your phone and choose your Fire Stick), then **Get**. Open it from **Your Apps & Channels**.
+2. **Test it:** go through the checks in step 6 below and tell the agent the result of each.
+3. **If the agent asks for crash logs,** do steps 1–4 below (developer mode). Otherwise skip them.
+
+**If the agent asks for crash logs:** your Mac and the Fire Stick must be on the **same Wi-Fi**.
 
 1. **Turn on developer mode:**
    1. On the TV: **Settings → My Fire TV → About**.
@@ -855,7 +869,7 @@ will ask for the IP address in step 3.
    1. The TV shows **"Allow USB debugging?"**.
    2. Tick **Always allow from this computer** and choose **OK**.
    3. If you miss it, tell the agent and it will try again.
-5. **Open the app:**
+5. **Open the app** (after the agent installs a fix):
    1. The agent installs it.
    2. On the TV press **Home**, then open **Your Apps & Channels** (the icon of small squares) and scroll to the end.
       You'll find **Hightop Challenge TV** there.
@@ -920,7 +934,8 @@ something doesn't match, take a screenshot and show the agent.
     3. Then come back.
 12. Click **Submit App**. The status changes to **Under review**.
 13. **Wait 3–10 working days.** It sometimes takes up to 2–3 weeks. Amazon emails you either way.
-    - **Approved:** the email or the console has the app's store link. Start Phase 8 and paste the link.
+    - **Approved:** the email or the console has the app's store link. Save it. Start Phase 13 (Vega) and, when you
+      have a Fire Stick, Phase 5 (D34); paste the link into Phase 8 after Phase 5 passes.
     - **Rejected:** start a new chat: *"Fire TV app was rejected. Fix it per docs/fire-tv-app-plan.md."* Paste the
       whole rejection email. Don't argue with Amazon in the console until the agent has read it.
 14. If the console stops you with a **tax or payment interview**, stop and tell the agent. Free apps usually don't

@@ -42,6 +42,13 @@ describe("TvLiveTriviaPregame", () => {
     expect(render(startMs)).toContain("0:00");
   });
 
+  it("carries the LIVE TRIVIA title and handles the first second of the final hour (D13)", () => {
+    expect(render(startMs - 600_000)).toContain('data-testid="pregame-title"');
+    expect(render(startMs - 600_000)).toContain("LIVE TRIVIA");
+    expect(render(startMs - 3_600_000)).toContain("60:00");
+    expect(render(startMs - 3_599_000)).toContain("59:59");
+  });
+
   it("shows the three steps in order, and says Tap (phones)", () => {
     const html = render(startMs - 600_000);
     const order = ["Get the app", "Sign in", "Tap Live Trivia"].map((s) => html.indexOf(s));
@@ -61,7 +68,7 @@ describe("TvLiveTriviaPregame", () => {
     for (const word of gameTileTitleLines("live_trivia")) expect(html).toContain(`>${word}<`);
     expect(html).toContain(VENUE_HUB_TILE_SUBTITLE_BY_KEY.live_trivia);
     expect(html).toContain(GAME_TILE_THEMES.live_trivia.surfaceClass);
-    expect(html).toMatch(/aria-hidden="true"[^>]*style="width:836px/);
+    expect(html).toMatch(/aria-hidden="true"[^>]*style="width:760px/);
   });
 
   it("names Round 1 only when the category is known (D13)", () => {
@@ -118,9 +125,9 @@ describe("the app QR is never covered, and settles on weak TVs", () => {
   const idle = readFileSync("components/venue-screen/TvIdleAttract.tsx", "utf8");
   const client = readFileSync("components/venue-screen/VenueScreenClient.tsx", "utf8");
 
-  it("keeps the stage twinkles (a canvas above the stage) off the idle and pre-game screens", () => {
-    expect(client).toContain(
-      'introPlaying || state.mode === "idle" || state.mode === "live-trivia-pregame" ? null : <StageTwinkles />',
+  it("keeps the stage twinkles (a canvas above the stage) off every screen with the QR", () => {
+    expect(client).toMatch(
+      /introPlaying \|\| state\.mode === "idle" \|\| state\.mode === "live-trivia-pregame" \|\| showsCornerQr \? null : \(\s*<StageTwinkles \/>/,
     );
   });
 

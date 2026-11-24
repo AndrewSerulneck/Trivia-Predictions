@@ -55,7 +55,12 @@ export const TvDemo = () => {
 
   return (
     <>
-      <VenueScreenClient venueId={TV_DEMO_VENUE.id} initialState={state} poll={false} />
+      <VenueScreenClient
+        venueId={TV_DEMO_VENUE.id}
+        initialState={state}
+        previewSlide={TV_DEMO_STEPS[step.index].slide ?? null}
+        poll={false}
+      />
       <div
         className="pointer-events-none fixed bottom-4 left-4 z-[60] rounded-full border border-white/25 bg-black/60 px-4 py-1 text-base font-black uppercase tracking-[0.16em] text-white/80"
         data-testid="tv-demo-tag"

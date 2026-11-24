@@ -10,12 +10,12 @@ import { FlipChar } from "@/components/venue-screen/fx/FlipChar";
 import { LightStreak, OneShotShine } from "@/components/venue-screen/fx/MomentOverlays";
 import { useFxMoment, useFxTier } from "@/components/venue-screen/fx/useFx";
 import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
-import { formatIdleCountdown } from "@/components/venue-screen/IdleVenueScreen";
 import type { VenueScreenState } from "@/lib/venueScreen";
 import { SCREEN_COLORS } from "@/lib/venueScreenBrand";
+import { formatPregameCountdown } from "@/lib/venueScreenIdleLine";
 
-// The 15 minutes before a Live Trivia game (docs/live-trivia-pregame-and-display-cleanup-plan.md, Phase 3):
-// one focal countdown, then three steps (get the app, sign in, tap Live Trivia). The QR stays still, high-contrast
+// The hour before a Live Trivia game (docs/live-trivia-pregame-and-display-cleanup-plan.md, Phase 3; 60 minutes since
+// docs/fire-tv-app-plan.md D13): a "LIVE TRIVIA" title, one focal countdown, then three steps (get the app, sign in, tap Live Trivia). The QR stays still, high-contrast
 // and uncovered (AppDownloadQr). The Live Trivia button is the real Venue Home tile (GameTileFace), scaled up.
 // Precedence and the window itself live in `selectVenueScreenState`; this only draws what it is handed.
 
@@ -24,8 +24,8 @@ export const PREGAME_HEARTBEAT_UNDER_S = 300;
 
 const TILE_WIDTH = 380; // the phone tile's width; the TV replica is this, scaled
 const TILE_HEIGHT = 176;
-const TILE_SCALE = 2.2;
-const QR_SIZE = 400;
+const TILE_SCALE = 2;
+const QR_SIZE = 270;
 
 type PregameState = Extract<VenueScreenState, { mode: "live-trivia-pregame" }>;
 
@@ -66,7 +66,7 @@ export function TvLiveTriviaPregame({ state, nowMs, accent }: TvLiveTriviaPregam
   const entered = useFxMoment(`pregame:${gameId}`);
 
   const seconds = Math.max(0, Math.ceil((Date.parse(startsAt) - nowMs) / 1_000));
-  const text = formatIdleCountdown(seconds);
+  const text = formatPregameCountdown(seconds);
   const heartbeat = seconds < PREGAME_HEARTBEAT_UNDER_S;
   const theme = GAME_TILE_THEMES.live_trivia;
 
@@ -76,6 +76,25 @@ export function TvLiveTriviaPregame({ state, nowMs, accent }: TvLiveTriviaPregam
 
       {/* ---- Countdown: the one focal point ---- */}
       <div className="flex flex-col items-center text-center">
+        <p
+          data-testid="pregame-title"
+          className="font-black"
+          style={{
+            fontSize: 150,
+            letterSpacing: "-0.045em",
+            lineHeight: 0.94,
+            // Gradient text paints only inside its own box: pad it so descenders keep their tails.
+            paddingBottom: "0.22em",
+            marginBottom: "-0.22em",
+            backgroundImage: `linear-gradient(100deg, #ffffff 0%, ${SCREEN_COLORS.cyan400} 46%, ${SCREEN_COLORS.amber400} 100%)`,
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
+            whiteSpace: "nowrap",
+          }}
+        >
+          LIVE TRIVIA
+        </p>
         <p className="font-black uppercase text-slate-300" style={{ fontSize: 44, letterSpacing: "0.3em" }}>
           Starts in
         </p>

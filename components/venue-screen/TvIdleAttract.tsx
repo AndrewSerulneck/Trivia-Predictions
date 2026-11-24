@@ -7,13 +7,14 @@ import { ShineSweep } from "@/components/venue-screen/fx/ShineSweep";
 import { useFx, useFxTier } from "@/components/venue-screen/fx/useFx";
 import { useHydrated } from "@/components/venue-screen/fx/useHydrated";
 import { APP_DOWNLOAD_DISPLAY_URL } from "@/lib/appDownloadLink";
-import { formatNextLiveTriviaLine } from "@/lib/venueScreenIdleLine";
+import { formatNextLiveTriviaSentence, formatNextLiveTriviaWhen } from "@/lib/venueScreenIdleLine";
 import { SCREEN_COLORS, SCREEN_EASE as EASE } from "@/lib/venueScreenBrand";
 
 /* ------------------------------------------------------------------ *
  * <TvIdleAttract />  — the screen that runs for hours: get the app.
  *
- * One focal point, a still high-contrast QR to hightopchallenge.com/app (AppDownloadQr). Everything that
+ * Slide 5 of the idle carousel (docs/fire-tv-app-plan.md D20, Phase 11), and the whole idle screen when nothing else
+ * has anything to show. One focal point, a still high-contrast QR to hightopchallenge.com/app (AppDownloadQr). Everything that
  * moves does so around it: the ambient wash, the breathing halo and rings behind the plate, the wordmark
  * shine, and the slow burn-in drift. The QR plate itself never animates and nothing is layered over it.
  * (Andrew 2026-11-14, D12: idle is an animated app-download screen; no game card, no tagline.)
@@ -28,8 +29,10 @@ export const IDLE_MOMENT_MS = 75_000;
 
 export type TvIdleAttractProps = {
   venueName: string;
-  /** ISO start of the next scheduled Live Trivia game, if any (drives the one small line). */
-  nextLiveTriviaStartsAt?: string | null;
+  /** The next scheduled Live Trivia game, if any (drives the one small line). */
+  nextLiveTrivia?: { startsAt: string; recurringDays: readonly string[] } | null;
+  /** The carousel's ticker and dots are showing: keep the bottom 200 px clear and drop the footer line. */
+  tickerVisible?: boolean;
   /** The parent's ticking clock (VenueScreenClient's `nowMs`). */
   nowMs: number;
   /** Peak pixel-shift amplitude for burn-in mitigation. */
@@ -52,7 +55,13 @@ const DRIFT_Y_MS = 149_000;
 const QR_SIZE = 520;
 const PLATE_PX = appDownloadQrPlatePx(QR_SIZE);
 
-export function TvIdleAttract({ venueName, nextLiveTriviaStartsAt = null, nowMs, driftPx = 26 }: TvIdleAttractProps) {
+export function TvIdleAttract({
+  venueName,
+  nextLiveTrivia = null,
+  tickerVisible = false,
+  nowMs,
+  driftPx = 26,
+}: TvIdleAttractProps) {
   const reduceMotion = useReducedMotion();
   // Tier `off` (the frame watchdog found the TV too slow): the QR halo and rings stop, like BrandStage.
   const tier = useFxTier();
@@ -71,14 +80,15 @@ export function TvIdleAttract({ venueName, nextLiveTriviaStartsAt = null, nowMs,
   }, [fx, momentKey, firstMomentKey]);
 
   /* Burn-in: shift the whole composition along a slow open curve. */
-  const drift = reduceMotion
+  // Wall-clock positions differ between the server's render and the TV's first one, so it starts after hydration.
+  const drift = reduceMotion || !hydrated
     ? { x: 0, y: 0 }
     : {
         x: Math.sin((nowMs / DRIFT_X_MS) * Math.PI * 2) * driftPx,
         y: Math.cos((nowMs / DRIFT_Y_MS) * Math.PI * 2) * driftPx * 0.7,
       };
 
-  const nextLine = hydrated ? formatNextLiveTriviaLine(nextLiveTriviaStartsAt, nowMs) : null;
+  const nextLine = hydrated ? formatNextLiveTriviaSentence(formatNextLiveTriviaWhen(nextLiveTrivia, nowMs)) : null;
 
   return (
     <div className="relative h-full w-full overflow-hidden" style={{ color: "#f8fafc" }}>
@@ -107,7 +117,7 @@ export function TvIdleAttract({ venueName, nextLiveTriviaStartsAt = null, nowMs,
           style={{ top: 0, height: 6, opacity: 0.5, background: `linear-gradient(90deg, ${BRAND.cyan}, ${BRAND.amber} 85%)` }}
         />
 
-        <div className="flex h-full items-center" style={{ padding: "96px 130px" }}>
+        <div className="flex h-full items-center" style={{ padding: `96px 130px ${tickerVisible ? 200 : 96}px` }}>
           {/* ---- Left: wordmark, venue, next game ---- */}
           <div className="flex flex-1 flex-col justify-center" style={{ minWidth: 0 }}>
             <motion.div
@@ -138,6 +148,8 @@ export function TvIdleAttract({ venueName, nextLiveTriviaStartsAt = null, nowMs,
                 }}
               >
                 Hightop
+                <br />
+                Challenge
               </motion.div>
             </motion.div>
 
@@ -198,12 +210,14 @@ export function TvIdleAttract({ venueName, nextLiveTriviaStartsAt = null, nowMs,
           </div>
         </div>
 
-        <footer
-          className="absolute inset-x-0 bottom-0 text-center"
-          style={{ paddingBottom: 24, fontSize: 22, fontWeight: 800, color: "#475569" }}
-        >
-          Brought to you by Hightop Challenge&trade;
-        </footer>
+        {tickerVisible ? null : (
+          <footer
+            className="absolute inset-x-0 bottom-0 text-center"
+            style={{ paddingBottom: 24, fontSize: 22, fontWeight: 800, color: "#475569" }}
+          >
+            Brought to you by Hightop Challenge&trade;
+          </footer>
+        )}
       </div>
     </div>
   );
