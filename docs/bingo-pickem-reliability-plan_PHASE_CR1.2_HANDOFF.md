@@ -38,7 +38,7 @@ plan's CR1 review (`docs/fire-tv-app-plan.md`, "CR1 review findings").
 - **Commits:**
   - `53e5c22c`: the code and the test.
   - A second commit: these docs.
-- **PR:** listed in this plan's status line once opened. Merge follows the auto-merge rule (CI green + verified).
+- **PR:** #58. Merge follows the auto-merge rule (CI green + verified).
 - **No migration and no data change.** Only one read-only production select was run (§6). No undo log needed.
 
 ### 3. Decisions (don't re-ask)
