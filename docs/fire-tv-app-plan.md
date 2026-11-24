@@ -914,7 +914,7 @@ are on `main` `75b47740`. Every check that passed is listed in `docs/fire-tv-app
 | F38 | The season probe asks for 1 row with `maxPages: 1`, and `page_limit` then marks it failed and returns `[]` whenever a `next_cursor` exists, so the in-season check is always false and re-probes every 5 min. Verified (T2 run log `page_limit`; mock). | `lib/sportsBingo.ts:1245`; `lib/ballDontLieClient.ts` (`page_limit`) | Pre-existing (`62f027cd`) | Low | First-page-only probe that keeps its rows. | CR1.6 (Pick 'Em plan) |
 | F39 | The guard doesn't refuse a shrunken prior slate (602 → 12) or rows from the wrong season. Verified (mock). | `scripts/refresh-nfl-star-index.cjs:56-63` | Introduced (#46) | Low (snapshot is read by tests and scripts, not at runtime) | 50 % rule for `prior` too; refuse > 5 % wrong-season rows. | CR1.3 |
 | F40 | A rebase conflict on the JSON leaves the rebase stopped; all 3 attempts fail with a misleading message. Safe (nothing pushed). Verified (throwaway repo). | `nfl-star-index-weekly.yml:61-64` | Introduced (#46) | Nit | `git rebase --abort` and say "conflict with a concurrent snapshot change". | CR1.3 |
-| F41 | Each weekly bot commit builds a production deploy on Vercel (~17 a season), though the file isn't read at runtime. Disclosed only after the fact. | `nfl-star-index-weekly.yml:62`; no ignored-build step | Introduced (#46) | Nit (cost) | Ignored Build Step for that one file; needs `vercel.json` or the dashboard → **Andrew decides**. | CR1.3 asks |
+| F41 | Each weekly bot commit builds a production deploy on Vercel (~17 a season), though the file isn't read at runtime. Disclosed only after the fact. | `nfl-star-index-weekly.yml:62`; no ignored-build step | Introduced (#46) | Nit (cost) | Ignored Build Step for that one file; needs `vercel.json` or the dashboard → **Andrew decides**. | **Done 2026-11-24** in PR `chore/fewer-builds` (`scripts/vercel-ignore-build.cjs`), not CR1.3 |
 | F42 | The phase table's T2, T3 and N2 rows were stale. | this file | Doc | Nit | Fixed in this review. | Done |
 | F43 | `actions/checkout` keeps the `contents: write` token in `.git/config` during `npm ci`; a compromised npm postinstall could push to `main`. Plausible, standard exposure. | `nfl-star-index-weekly.yml:26` | Introduced (#46) | Nit | `persist-credentials: false`; give the token to the commit step only. | CR1.3 |
 
@@ -961,7 +961,8 @@ possible. Branch `fix/nfl-star-workflow-hardening`.
    or `pipefail`; a schedule fires on Sep 1; checkout has `persist-credentials: false`); guard unit tests (prior
    602 → 12 refused; wrong-season rows refused; 571 → 292 current still allowed).
 4. Correct `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`'s "the run fails … and GitHub emails you" (true only after this fix).
-5. **F41 — Andrew said yes (2026-11-24):** skip the Vercel build when the only changed file is
+5. **F41 — already done (2026-11-24, PR `chore/fewer-builds`; skip this step).** `vercel.json` now runs
+   `scripts/vercel-ignore-build.cjs`, which skips docs-only and snapshot-only commits. Original step: **Andrew said yes (2026-11-24):** skip the Vercel build when the only changed file is
    `data/sports-bingo/nfl-star-index.json` (saves ~17 production builds a season). This is his instruction to add a
    `vercel.json` `ignoreCommand` for exactly that case; change nothing else in `vercel.json`. Short handoff note.
 

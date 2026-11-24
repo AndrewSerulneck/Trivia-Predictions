@@ -1,10 +1,23 @@
 name: CI
 
+# One run per PR update (pull_request) plus one on main after a merge; a branch push alone no longer
+# runs a duplicate. Docs-only changes skip CI, except docs a test reads (re-included after the "!" lines;
+# enforced by tests/build-skip-contract.test.ts). Keep both lists identical. Andrew, 2026-11-24.
 on:
   push:
     branches:
+      - main
+    paths:
       - "**"
+      - "!docs/**"
+      - "!*.md"
+      - "docs/native-app-store-plan.md"
   pull_request:
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!*.md"
+      - "docs/native-app-store-plan.md"
 
 jobs:
   validate:

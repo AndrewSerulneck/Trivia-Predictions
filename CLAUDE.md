@@ -58,6 +58,16 @@ without being asked; a review isn't finished until its fixes are in the plans.
 - Build: `npm run build` · Lint: `npm run lint` · Tests: `npm run test` (Vitest)
 - Typecheck: `npx tsc --noEmit` (fresh clone: `npx next typegen` first). Never run typecheck and build at the same time.
 
+## Fewer PRs and builds (Andrew, 2026-11-24)
+Each PR update runs CI and a Vercel preview; each merge runs a production build and CI on `main`.
+- Plan, handoff and status updates go in the same PR as the code they describe. No follow-up docs-only PR to record
+  a PR number or "merged": add it as another commit on the same PR, or in the next PR that touches that plan.
+- Commit locally; push once when the PR is ready, then only for fixes. Small phases of one plan that are ready
+  together ship as one PR.
+- Docs-only changes skip Vercel (`scripts/vercel-ignore-build.cjs`) and CI (`ci.yml` `paths`); Railway rebuilds the
+  heartbeat worker only for its own files (`railway.json`). A test that reads a doc must be re-included in `ci.yml`
+  (`tests/build-skip-contract.test.ts`). The old `trivia-predictions` Vercel project is paused; never unpause it.
+
 ## Native app releases — automatic (Andrew, 2026-11-23)
 When you finish a change to a native app's **shell** (anything under `native/` or `native-tv/`: plugins, config,
 icons, permissions, version), release it yourself to every store it ships in. Don't wait to be asked. Website changes

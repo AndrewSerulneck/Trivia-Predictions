@@ -1,4 +1,7 @@
 {
-  "build": { "builder": "NIXPACKS" },
+  "build": {
+    "builder": "NIXPACKS",
+    "watchPatterns": ["/scripts/heartbeat.ts", "/package.json", "/package-lock.json", "/tsconfig.json", "/railway.json"]
+  },
   "deploy": { "startCommand": "node --import tsx scripts/heartbeat.ts" }
 }
