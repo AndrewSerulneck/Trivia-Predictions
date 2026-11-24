@@ -30,7 +30,7 @@ import {
   readVenueGameSettingsForPick,
 } from "@/lib/pickemPickWindowGate";
 import { pickAheadHorizonMs, pickWindowViewForGames, type PickEmPickWindowView } from "@/lib/pickemPickWindow";
-import { getVenueTimezone } from "@/lib/timezone";
+import { getLocalDateKey, getVenueTimezone } from "@/lib/timezone";
 import { countProviderCall } from "@/lib/providerCallCounter";
 import {
   isSpreadLineSportKey,
@@ -199,6 +199,8 @@ type BallDontLieScoreEvent = {
   // The provider's own status words, unparsed (College Football grades from these; Phase 7.3).
   status?: string | null;
   status_state?: string | null;
+  // NHL's state word ("FUT", "PRE", "LIVE", "OFF", "PPD"); other leagues leave it null (CR1.2, F26).
+  game_state?: string | null;
 };
 
 type NormalizedBallDontLieEvent = {
@@ -410,6 +412,25 @@ function extractProviderEventIdFromGameId(gameId: string): string {
   const idx = raw.indexOf("__");
   return idx === -1 ? raw : raw.slice(0, idx);
 }
+
+/**
+ * A game id embeds the feed's start time, so a moved game gets a new id (CR1.2, F24). A player's pick
+ * is found by the exact id first, then by the provider's game id (`listUserPicksByGameId` keys both).
+ */
+function pickForGameId<T>(picksByGameId: Map<string, T>, gameId: string): T | undefined {
+  return picksByGameId.get(gameId) ?? picksByGameId.get(extractProviderEventIdFromGameId(gameId));
+}
+
+/** The feed calls the game off: postponed, cancelled, abandoned or forfeited (NHL: "PPD", "CNCL"). */
+function isPickEmFeedCalledOff(event: BallDontLieScoreEvent): boolean {
+  return [event.status, event.status_state, event.game_state].some((value) => {
+    const word = String(value ?? "").trim().toLowerCase();
+    return word === "ppd" || word === "cncl" || /cancel|postpon|abandon|forfeit/.test(word);
+  });
+}
+
+/** A start this far from a pick's stored start is a different game, even between the same two teams (F28). */
+const PICKEM_TEAM_MATCH_WINDOW_MS = 12 * 60 * 60 * 1000;
 
 function normalizeLeagueLabel(value: string): string {
   const cleaned = value
@@ -1412,6 +1433,7 @@ async function fetchScoresForSportKey(sportKey: string): Promise<PickEmScoreFetc
       ],
       status: String(eventRecord.status ?? "").trim() || null,
       status_state: String(eventRecord.status_state ?? "").trim() || null,
+      game_state: String(eventRecord.game_state ?? "").trim() || null,
     });
   }
 
@@ -1528,6 +1550,8 @@ type PickEmWinGroup = {
   teams: string[];
   totalPoints: number;
   localDate: string;
+  /** `localDate` is today at the pick's venue: the link then opens that sport. */
+  isToday: boolean;
   sportSlug: PickEmSportSlug;
 };
 
@@ -1662,11 +1686,10 @@ async function insertPickEmWinGroupNotifications(groups: Map<string, PickEmWinGr
     return;
   }
 
-  const todayUtc = new Date().toISOString().slice(0, 10);
   const rows: { user_id: string; type: string; message: string; link_url: string }[] = [];
 
   for (const group of groups.values()) {
-    const { userId, teams, totalPoints, localDate, sportSlug } = group;
+    const { userId, teams, totalPoints, localDate, isToday, sportSlug } = group;
     if (teams.length === 0 || totalPoints <= 0) {
       continue;
     }
@@ -1680,7 +1703,6 @@ async function insertPickEmWinGroupNotifications(groups: Map<string, PickEmWinGr
       message = `${teams[0]}, ${teams[1]}, and others won. +${totalPoints} pts.`;
     }
 
-    const isToday = localDate === todayUtc;
     const linkUrl = isToday
       ? `/pickem?date=${localDate}&sport=${sportSlug}`
       : `/pickem?date=${localDate}`;
@@ -1733,10 +1755,15 @@ async function listUserPicksByGameId(
     throw new Error(error.message ?? "Failed to load Pick 'Em picks.");
   }
 
+  // Keyed by the exact id AND the provider's game id (CR1.2, F24): a moved game has a new id, and the
+  // pick must still show on it. A canceled pick (e.g. a postponed game) is never carried to the new id.
   const byGameId = new Map<string, PickEmPickRow>();
   for (const row of (data ?? []) as PickEmPickRow[]) {
-    if (row.game_id) {
-      byGameId.set(row.game_id, row);
+    if (!row.game_id) continue;
+    byGameId.set(row.game_id, row);
+    const providerEventId = extractProviderEventIdFromGameId(row.game_id);
+    if (providerEventId && providerEventId !== row.game_id && row.status !== "canceled" && !byGameId.has(providerEventId)) {
+      byGameId.set(providerEventId, row);
     }
   }
   return byGameId;
@@ -2051,7 +2078,7 @@ export async function listPickEmGames(params: {
       status = "live";
     }
 
-    const pick = picksByGameId.get(event.id) ?? picksByGameId.get(event.providerEventId);
+    const pick = pickForGameId(picksByGameId, event.id);
 
     games.push({
       id: event.id,
@@ -2259,7 +2286,7 @@ async function applyCollegeFootballLines(params: {
   const settings = await readVenueGameSettingsForDisplay(params.venueId);
   const mode = settings?.cfbPickEmScoringMode ?? DEFAULT_CFB_PICKEM_SCORING_MODE;
   const pickModeOf = (game: PickEmGame): NFLPickEmScoringMode => {
-    const pick = params.picksByGameId.get(game.id);
+    const pick = pickForGameId(params.picksByGameId, game.id);
     return pick?.scoring_mode ?? mode;
   };
   const spreadGames = params.games.filter((game) => pickModeOf(game) === "spread");
@@ -2308,7 +2335,7 @@ async function applyCollegeFootballLines(params: {
     const gameMode = pickModeOf(game);
     game.scoringMode = gameMode;
     if (gameMode !== "spread") continue;
-    const pick = params.picksByGameId.get(game.id);
+    const pick = pickForGameId(params.picksByGameId, game.id);
     const line = lineShownForGame({ pick, frozen: frozen.get(game.id), global: lines.get(game.id) });
     game.homeSpread = line?.homeSpread ?? null;
     game.awaySpread = line?.awaySpread ?? null;
@@ -2316,6 +2343,39 @@ async function applyCollegeFootballLines(params: {
   }
 
   return { mode, linesUnavailable };
+}
+
+/** How far a pick's stored start can sit from its game's current start and still be looked up (F24). */
+const PICKEM_MOVED_GAME_LOOKUP_MS = 21 * 24 * 60 * 60 * 1000;
+
+/**
+ * The player's pick on this real game under an older id, at any venue (the unique index is per user):
+ * same sport and provider game id, not canceled. A pending pick older than 8 days is already canceled,
+ * so ±21 days around the game's current start finds every one that can still matter. One bounded read.
+ */
+async function findMovedGamePick(params: { userId: string; game: PickEmGame }): Promise<PickEmPickRow | null> {
+  const providerEventId = extractProviderEventIdFromGameId(params.game.id);
+  const startsAtMs = Date.parse(params.game.startsAt);
+  if (!supabaseAdmin || !providerEventId || providerEventId === params.game.id || !Number.isFinite(startsAtMs)) {
+    return null;
+  }
+  const { data, error } = await supabaseAdmin
+    .from("pickem_picks")
+    .select(PICKEM_PICK_SELECT)
+    .eq("user_id", params.userId)
+    .eq("sport_key", params.game.sportKey)
+    .gte("starts_at", new Date(startsAtMs - PICKEM_MOVED_GAME_LOOKUP_MS).toISOString())
+    .lte("starts_at", new Date(startsAtMs + PICKEM_MOVED_GAME_LOOKUP_MS).toISOString());
+  if (error) {
+    throw new Error(error.message ?? "Failed to verify existing Pick 'Em pick.");
+  }
+  const matches = ((data ?? []) as PickEmPickRow[]).filter(
+    (row) =>
+      row.game_id !== params.game.id &&
+      row.status !== "canceled" &&
+      extractProviderEventIdFromGameId(row.game_id) === providerEventId
+  );
+  return matches.find((row) => row.status === "pending") ?? matches[0] ?? null;
 }
 
 export async function submitPickEmPick(params: {
@@ -2395,7 +2455,7 @@ export async function submitPickEmPick(params: {
   const selectedTeamId = selectedSide === "home" ? game.homeTeamId : game.awayTeamId;
   const gameLabel = `${game.awayTeam} vs ${game.homeTeam}`;
 
-  const { data: existing, error: existingError } = await supabaseAdmin
+  const { data: exactPick, error: existingError } = await supabaseAdmin
     .from("pickem_picks")
     .select(PICKEM_PICK_SELECT)
     .eq("user_id", userId)
@@ -2410,8 +2470,16 @@ export async function submitPickEmPick(params: {
     throw new Error(existingError.message ?? "Failed to verify existing Pick 'Em pick.");
   }
 
+  // The same real game under an older id (its start time moved, CR1.2 F24) is the same pick: switch
+  // its side, never insert a second one that would also be paid.
+  const existing = exactPick ?? (await findMovedGamePick({ userId, game }));
+  if (existing && existing.venue_id !== venueId) {
+    throw new Error("You already made a pick for this game.");
+  }
+
   if (existing) {
-    const startsAtMs = new Date(existing.starts_at).getTime();
+    // A moved game locks at its current start, not the one stored with the pick.
+    const startsAtMs = Math.max(new Date(existing.starts_at).getTime(), new Date(game.startsAt).getTime());
     if (!Number.isFinite(startsAtMs) || Date.now() >= startsAtMs + PICKEM_LOCK_GRACE_MS) {
       throw new Error("This pick is locked because the game has started.");
     }
@@ -2880,6 +2948,18 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
   const staleFinalizeMs = 4 * 60 * 60 * 1000;
   const nowMs = Date.now();
 
+  // Win notifications group and link by the venue's own date, not the UTC one (CR1.2, F27): a 7 PM ET
+  // game is the next day in UTC. One cached read per venue; a failed read falls back to Eastern.
+  const venueTimeZones = new Map<string, Promise<string>>();
+  const venueTimeZoneOf = (venueId: string): Promise<string> => {
+    let zone = venueTimeZones.get(venueId);
+    if (!zone) {
+      zone = getVenueTimezone(venueId).catch(() => "America/New_York");
+      venueTimeZones.set(venueId, zone);
+    }
+    return zone;
+  };
+
   const recordSettlement = async (
     row: PickEmPickRow,
     settlement: PickEmSettlementResult,
@@ -2910,7 +2990,11 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
 
     if (settlement.status === "won") {
       won += 1;
-      const localDate = row.starts_at.slice(0, 10);
+      const timeZone = await venueTimeZoneOf(row.venue_id);
+      const startsAt = new Date(row.starts_at);
+      const localDate = Number.isFinite(startsAt.getTime())
+        ? getLocalDateKey(startsAt, timeZone)
+        : row.starts_at.slice(0, 10);
       const groupKey = `${row.user_id}:${localDate}:${row.sport_slug}`;
       const existing = winGroups.get(groupKey);
       if (existing) {
@@ -2922,6 +3006,7 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
           teams: [row.selected_team],
           totalPoints: PICKEM_REWARD_POINTS,
           localDate,
+          isToday: localDate === getLocalDateKey(new Date(nowMs), timeZone),
           sportSlug: row.sport_slug,
         });
       }
@@ -2934,7 +3019,34 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     settledCount += 1;
   };
 
+  // One pick per player per real game (CR1.2, F24): before the fix a moved game's new id let a player
+  // pick it twice. The first pick made is graded; one under another id of that game is canceled, so
+  // only one can be paid. (Two under the same id can't exist: the unique index is user + game_id.)
+  const duplicatePickIds = new Set<string>();
+  const firstPickGameIdByGame = new Map<string, string>();
+  const byCreation = [...pending].sort(
+    (a, b) => Date.parse(a.created_at) - Date.parse(b.created_at) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  );
+  for (const row of byCreation) {
+    const providerEventId = extractProviderEventIdFromGameId(row.game_id);
+    if (!providerEventId) continue;
+    const gameKey = `${row.user_id}|${row.sport_key}|${providerEventId}`;
+    const firstGameId = firstPickGameIdByGame.get(gameKey);
+    if (firstGameId === undefined) firstPickGameIdByGame.set(gameKey, row.game_id);
+    else if (firstGameId !== row.game_id) duplicatePickIds.add(row.id);
+  }
+
   for (const row of pending) {
+    if (duplicatePickIds.has(row.id)) {
+      console.warn(`[Pick 'Em] duplicate-pick-canceled pick=${row.id} game=${row.game_id}: the player already has a pick on this game.`);
+      await recordSettlement(
+        row,
+        { status: "canceled", winningTeamId: null, scoringMode: row.scoring_mode ?? null, homeSpread: null, awaySpread: null },
+        null,
+        null
+      );
+      continue;
+    }
     const scoreFetch = scoresBySportKey.get(row.sport_key);
     const scoreMap = scoreFetch?.events;
     const providerEventId = extractProviderEventIdFromGameId(row.game_id);
@@ -2945,10 +3057,17 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     if (!scoreEvent && scoreMap) {
       const rowHomeKey = normalizeTeamKey(row.home_team);
       const rowAwayKey = normalizeTeamKey(row.away_team);
+      const rowStartMs = Date.parse(row.starts_at);
       for (const candidate of scoreMap.values()) {
         const homeKey = normalizeTeamKey(String(candidate.home_team ?? ""));
         const awayKey = normalizeTeamKey(String(candidate.away_team ?? ""));
-        if (homeKey && awayKey && homeKey === rowHomeKey && awayKey === rowAwayKey) {
+        // The same two teams days apart are different games (F28); an unknown start never matches.
+        const candidateStartMs = Date.parse(String(candidate.commence_time ?? ""));
+        const sameGameTime =
+          Number.isFinite(rowStartMs) &&
+          Number.isFinite(candidateStartMs) &&
+          Math.abs(candidateStartMs - rowStartMs) <= PICKEM_TEAM_MATCH_WINDOW_MS;
+        if (homeKey && awayKey && homeKey === rowHomeKey && awayKey === rowAwayKey && sameGameTime) {
           scoreEvent = candidate;
           break;
         }
@@ -2983,10 +3102,16 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
     const providerWinnerTeamId = String(scoreEvent.winner_team_id ?? "").trim();
     const providerWinnerTeamName = String(scoreEvent.winner_team ?? "").trim();
     const startsAtMs = Date.parse(row.starts_at);
-    const isStale = Number.isFinite(startsAtMs) && nowMs - startsAtMs >= staleFinalizeMs;
-    // A game the feed still calls "scheduled" hasn't started, so it can't be over: NHL sends 0–0 before puck-drop,
-    // which would grade as a push (D33). College Football has its own gate below.
-    const feedSaysScheduled = String(scoreEvent.status_state ?? "").trim().toLowerCase() === "scheduled";
+    // The 4-hour rule counts from the game's real start: the later of the pick's stored start and the
+    // feed's, so a game moved later is never graded mid-game on its live score (CR1.2, F25).
+    const feedStartsAtMs = Date.parse(String(scoreEvent.commence_time ?? ""));
+    const realStartsAtMs = Number.isFinite(feedStartsAtMs) ? Math.max(startsAtMs, feedStartsAtMs) : startsAtMs;
+    const isStale = Number.isFinite(realStartsAtMs) && nowMs - realStartsAtMs >= staleFinalizeMs;
+    // A game the feed still calls scheduled hasn't started, so it can't be over: NHL sends 0–0 before puck-drop,
+    // which would grade as a push (D33). Read like the TV does: `status_state`, else NHL's `game_state` (F26).
+    // College Football has its own gate below.
+    const feedSaysScheduled =
+      extractTvFeedState({ status_state: scoreEvent.status_state, game_state: scoreEvent.game_state }) === "scheduled";
     const canFinalizeFromScores = homeScore !== null && awayScore !== null && isStale && !feedSaysScheduled;
     const canFinalizeFromProviderWinner = providerWinnerTeamId.length > 0 || providerWinnerTeamName.length > 0;
     const collegeGate =
@@ -3009,6 +3134,19 @@ export async function settlePendingPickEmPicks(params: { userId?: string } = {})
           `[Pick 'Em] College game ${row.game_id} is "post" but not a gradeable final (status_state ${JSON.stringify(scoreEvent.status_state ?? null)}, score ${homeScore ?? "?"}–${awayScore ?? "?"}); waiting (cancelled 48 h after kickoff).`
         );
       }
+      continue;
+    }
+    if (collegeGate === null && isPickEmFeedCalledOff(scoreEvent)) {
+      // Postponed or called off: nobody played, so the pick is canceled, never a 0–0 push (F26).
+      console.warn(
+        `[Pick 'Em] Canceling pick ${row.id} (game ${row.game_id}): the provider says ${JSON.stringify(scoreEvent.game_state ?? scoreEvent.status_state ?? scoreEvent.status ?? null)}.`
+      );
+      await recordSettlement(
+        row,
+        { status: "canceled", winningTeamId: null, scoringMode: row.scoring_mode ?? null, homeSpread: null, awaySpread: null },
+        null,
+        null
+      );
       continue;
     }
     if (collegeGate === null && !scoreEvent.completed && !canFinalizeFromScores && !canFinalizeFromProviderWinner) {

@@ -2,7 +2,7 @@
 
 Created: 2026-09-12. Requested by Andrew Serulneck.
 
-**Reopened 2026-11-24 for two remedial phases from the Fire TV plan's CR1 code review: CR1.2 (Pick 'Em game id and grading guards, F24–F28) and CR1.6 (BallDontLie season probe, F38). Both approved by Andrew 2026-11-24.** Findings: `docs/fire-tv-app-plan.md` "CR1 review findings"; review handoff `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`. Phase details: "Remedial phases from the CR1 code review" below. Everything else in this plan stays complete.
+**Reopened 2026-11-24 for two remedial phases from the Fire TV plan's CR1 code review: CR1.2 (Pick 'Em game id and grading guards, F24–F28) and CR1.6 (BallDontLie season probe, F38). Both approved by Andrew 2026-11-24. CR1.2 done 2026-11-24 (PR #58, branch `fix/pickem-game-id-and-grading`; handoff `docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md`); it found F44 (the dedicated NFL screen has the same moved-id bug) → remedial phase CR1.2.1, awaiting Andrew's OK.** Findings: `docs/fire-tv-app-plan.md` "CR1 review findings"; review handoff `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`. Phase details: "Remedial phases from the CR1 code review" below. Everything else in this plan stays complete.
 
 **Status: Complete and developer-accepted, 2026-09-19. Andrew confirmed authenticated Prop Bingo works after the atomic-grading migration and explicitly closed the plan. Phase 6 historical reconciliation was intentionally skipped; no past results will be repaired. All offline gates pass (2,620 tests, zero failures; NFL 288/288; MLB 142/142; build 179 pages), and the 16-game NFL provider validator passes. The additive migration is applied and verified on linked Supabase project `pkmxupsayzshvpirkaav`; no board/reward result was changed. Physical-device layout and real-game timing remain useful routine operational monitoring, not open phases or release blockers. Final handoff: [Phase 7](bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md). Release record: [2026-09-19](bingo-pickem-reliability-release-record-2026-09-19.md). Phase 6 decision: [skipped handoff](bingo-pickem-reliability-plan_PHASE_6_HANDOFF.md). Earlier handoffs: [Phase 5](bingo-pickem-reliability-plan_PHASE_5_HANDOFF.md), [Phase 4](bingo-pickem-reliability-plan_PHASE_4_HANDOFF.md), [Phase 3](bingo-pickem-reliability-plan_PHASE_3_HANDOFF.md), [Phase 2](bingo-pickem-reliability-plan_PHASE_2_HANDOFF.md), [Phase 1](bingo-pickem-reliability-plan_PHASE_1_HANDOFF.md), [Phase 0](bingo-pickem-reliability-plan_PHASE_0_HANDOFF.md).**
 
@@ -36,7 +36,8 @@ These are task-specific recommendations, checked against [OpenAI's Codex model g
 | 5 | Interesting, varied, calibrated boards | GPT-5.6 Sol (`gpt-5.6-sol`) | High | Balance verified props, pacing, player variety, and correlation |
 | 6 | Reconcile affected stored boards and results | GPT-6 Astra (`gpt-6-astra`) | Extra High | Idempotent repair with venue-scoped points and auditability |
 | 7 | Integrated verification, release record, and final documentation | GPT-5.6 Sol (`gpt-5.6-sol`) | High | Cross-feature regressions, live evidence, and accurate handoff |
-| CR1.2 | **Remedial (CR1 review, 2026-11-24; awaiting Andrew's OK):** a moved start time can't hide a pick or allow a second paid one; grading waits for the real start; postponed ≠ push; local-date notifications | Claude Opus 5.5 | High | Points and pick matching in the shared Pick 'Em engine (planned by a Claude agent, so Claude models) |
+| CR1.2 | **Remedial (CR1 review, 2026-11-24). Done 2026-11-24** (`_PHASE_CR1.2_HANDOFF.md`): a moved start time can't hide a pick or allow a second paid one; grading waits for the real start; postponed ≠ push; local-date notifications | Claude Opus 5.5 | High | Points and pick matching in the shared Pick 'Em engine (planned by a Claude agent, so Claude models) |
+| CR1.2.1 | **Remedial (found in CR1.2, F44; awaiting Andrew's OK):** the dedicated NFL Pick 'Em screen shows and finds a pick on a moved game | Claude Sonnet 5.5 | Medium | Same pattern as CR1.2 in one file; payment is already protected by CR1.2's settlement de-dupe |
 | CR1.6 | **Remedial (CR1 review, 2026-11-24; awaiting Andrew's OK):** the BallDontLie season probe keeps its one row | Claude Sonnet 5.5 | Medium | One fetch option and a test |
 
 The original order was 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7. On 2026-09-19 Andrew explicitly skipped Phase 6 because past boards/rewards do not need reconciliation, then directed Phase 7 execution. Phase 3's UI work did not depend technically on grading. No automatic subagent delegation is required.
@@ -232,7 +233,7 @@ line numbers on `main` `75b47740`). The bugs live in this plan's code (`lib/pick
 remedial phases). Production on 2026-11-24: 137 picks (NBA, WNBA, MLB, NFL), 0 NHL, 0 duplicate picks on one real game,
 0 provider games under more than one `game_id` — so no data repair is needed today.
 
-### Phase CR1.2 — Pick 'Em game id and grading guards (Agent, Claude Opus 5.5 / high) — Approved by Andrew 2026-11-24
+### Phase CR1.2 — Pick 'Em game id and grading guards (Agent, Claude Opus 5.5 / high) — Approved by Andrew 2026-11-24 — **Done 2026-11-24** (`docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md`)
 
 **Fixes F24–F28.** Branch `fix/pickem-game-id-and-grading` from up-to-date `main`. No migration expected; if one turns
 out to be needed it becomes its own phase and needs Andrew's yes before `supabase db push`. Standing rules that apply:
@@ -263,6 +264,21 @@ each assertion to the correct behaviour, watch it fail, then fix.
    green; merge. After deploy, re-run the production select from the CR1 handoff §6 (duplicate user + provider-game
    pairs, provider games with more than one id) and record the counts. Full handoff
    `docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md` (points path).
+
+### Phase CR1.2.1 — Dedicated NFL Pick 'Em: a moved game keeps its pick (Agent, Claude Sonnet 5.5 / medium) — Awaiting Andrew's OK
+
+**Fixes F44** (found while doing CR1.2, 2026-11-24; verified by reading the code, no repro yet).
+
+| # | Finding | Where | Introduced / pre-existing | Severity | Failure scenario | Fix | Phase |
+|---|---|---|---|---|---|---|---|
+| F44 | The dedicated NFL game builds its id as `<provider id>__<startsAt>__<away>__<home>` and its week list finds a pick only by the exact id; its submit checks only the exact id. | `lib/nflPickEm.ts:1389` (id), `:1438` (`pickMap` keyed by `game_id`), `:1649` (`.eq("game_id", params.gameId)` existing-pick read) | Pre-existing | Low (CR1.2's settlement de-dupe already stops the second pick being paid) | The feed moves an NFL kickoff after a player picks: the week list shows the game as unpicked, the player picks again, and a second row is saved (it is canceled at grading, so it never pays). | Same as CR1.2: key `pickMap` by the provider id too (skip canceled picks); in `submitNFLPickEmPick`, when the exact read finds nothing, look up the player's non-canceled pick on the same provider id (user + `sport_slug` nfl, `starts_at` ±21 days, filter by provider id in JS) and switch its side; another venue's → "You already made a pick for this game."; lock at the later of the stored and current start. | CR1.2.1 |
+
+1. Test that fails today (new `tests/lib.nfl-pickem-moved-game.test.ts`, mock modelled on `tests/lib.pickem-game-id-and-grading.test.ts`):
+   a pick stored under the 13:00Z id, feed now says 17:00Z → the week list shows `userPickTeam`; a submit on the
+   new id updates the one row (no insert).
+2. Keep `tests/pickem-frozen-lines-contract.test.ts` passing: the side-switch `.update(` must still carry no line columns,
+   and `nflFrozenLineColumnsForPick(` must stay after the update and before the insert.
+3. Tests, lint, typecheck; can share a PR with CR1.6. Short handoff `docs/bingo-pickem-reliability-plan_PHASE_CR1.2.1_HANDOFF.md`.
 
 ### Phase CR1.6 — BallDontLie season probe keeps its row (Agent, Claude Sonnet 5.5 / medium) — Approved by Andrew 2026-11-24
 

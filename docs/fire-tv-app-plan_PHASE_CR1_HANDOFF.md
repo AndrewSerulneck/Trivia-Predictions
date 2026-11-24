@@ -189,6 +189,6 @@ Nothing in the app changed. Review targets, as of `main` `75b47740`:
 - For CR2: read `docs/fire-tv-app-plan.md` "Phases CR1–CR3" and the CR2 bullet list.
 - Do what CR1 did: one review agent per PR, each running `/code-review high <N>` plus the plan's checks, then
   re-check the main findings yourself.
-- Continue numbering at **F44**.
+- Continue numbering at **F45** (F44 was taken by CR1.2 on 2026-11-24).
 - Follow `CLAUDE.md` §Code review findings become remedial phases.
 - Model: Sonnet 5.5 / high, as named in the table.
