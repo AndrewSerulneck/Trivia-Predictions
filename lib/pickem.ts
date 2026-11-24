@@ -235,9 +235,22 @@ type NormalizedBallDontLieEvent = {
   tvPeriodLabel?: string | null;
 };
 
-/** The first full start timestamp a feed row gives (never a date-only field). */
+/**
+ * The first full start timestamp a feed row gives (never a date-only field). NFL, college football, WNBA, MLB and
+ * club soccer give theirs only in `date` (a full ISO string); NBA's `date` and NHL's `game_date` are date-only, so
+ * they're skipped and `datetime` / `start_time_utc` win (checked against the live feed 2026-11-24, CR1.4).
+ */
 function extractTvStartIso(event: Record<string, unknown>): string | null {
-  for (const candidate of [event.start_time_utc, event.datetime, event.scheduled_time, event.starts_at, event.commence_time, event.start_time]) {
+  for (const candidate of [
+    event.start_time_utc,
+    event.datetime,
+    event.scheduled_time,
+    event.starts_at,
+    event.commence_time,
+    event.start_time,
+    event.date,
+    event.game_date,
+  ]) {
     const raw = String(candidate ?? "").trim();
     if (!raw || /^\d{4}-\d{2}-\d{2}$/.test(raw)) continue;
     const ms = Date.parse(raw);
@@ -255,11 +268,16 @@ function extractTvFeedState(event: Record<string, unknown>): "scheduled" | "live
   return null;
 }
 
-/** NHL (Pick 'Em and the venue TV): "P2 9:22", "Int 2" between periods, "OT"; null when the feed has no clock. */
-function formatHockeyPeriodLabel(event: Record<string, unknown>): string | null {
+/**
+ * NHL (Pick 'Em and the venue TV): "P2 9:22", "Int 2" between periods, "OT"; null when the feed has no period.
+ * Period 5+ is a shootout in the regular season ("SO", no clock: the feed sends "00:00") and more overtime in the
+ * playoffs (period 5 → "2OT", 6 → "3OT"). CR1.4, F18.
+ */
+export function formatHockeyPeriodLabel(event: Record<string, unknown>): string | null {
   const period = Number(event.period);
   if (!Number.isFinite(period) || period < 1) return null;
-  const name = period <= 3 ? `P${period}` : period === 4 ? "OT" : "SO";
+  if (period >= 5 && event.postseason !== true) return "SO";
+  const name = period <= 3 ? `P${period}` : period === 4 ? "OT" : `${period - 3}OT`;
   if (event.in_intermission === true) return period <= 3 ? `Int ${period}` : name;
   const clock = String(event.time_remaining ?? "").trim().replace(/^0(\d:)/, "$1");
   return clock ? `${name} ${clock}` : name;
@@ -879,12 +897,21 @@ function getTeamsPathForSportKey(sportKey: string): string | null {
   return `${base}/teams`;
 }
 
-async function fetchTeamNameMapForSportKey(sportKey: string): Promise<Map<string, string>> {
+async function fetchTeamNameMapForSportKey(
+  sportKey: string,
+  failure?: { failed: boolean }
+): Promise<Map<string, string>> {
   const path = getTeamsPathForSportKey(sportKey);
   if (!path) {
     return new Map();
   }
-  const rows = await fetchBallDontLieList<Record<string, unknown>>(path, new URLSearchParams({ per_page: "200" }), 2);
+  const rows = await fetchBallDontLieList<Record<string, unknown>>(
+    path,
+    new URLSearchParams({ per_page: "200" }),
+    2,
+    undefined,
+    failure
+  );
   const map = new Map<string, string>();
   for (const row of rows) {
     const id = String(row.id ?? "").trim();
@@ -955,11 +982,17 @@ async function fetchMmaFighterProfileById(fighterId: string): Promise<Record<str
   return payload?.data && typeof payload.data === "object" ? payload.data : null;
 }
 
+/**
+ * `feedFailure`, if passed, is set to `failed: true` when any request the result depends on didn't answer (a network
+ * error, a non-2xx reply, a throw). Only the venue TV passes it, to tell "no games" from "no reply" (CR1.4, F15);
+ * Pick 'Em callers pass nothing and get exactly what they always did.
+ */
 async function fetchBallDontLieEventsForSportKey(
   sportKey: string,
   fromIso: string,
   toIso: string,
-  leagueLabel: string
+  leagueLabel: string,
+  feedFailure?: { failed: boolean }
 ): Promise<NormalizedBallDontLieEvent[]> {
   if (sportKey === "mma_ufc") {
     const mmaProvider = BDL_PATH_BY_SPORT_KEY[sportKey];
@@ -975,8 +1008,13 @@ async function fetchBallDontLieEventsForSportKey(
       const rows = await fetchBallDontLieList<Record<string, unknown>>(
         "/mma/v1/events",
         new URLSearchParams({ year: String(year), per_page: "100" }),
-        2
-      ).catch(() => []);
+        2,
+        undefined,
+        feedFailure
+      ).catch(() => {
+        if (feedFailure) feedFailure.failed = true;
+        return [];
+      });
       for (const row of rows) {
         const id = Number(row.id);
         if (Number.isFinite(id)) {
@@ -1007,7 +1045,16 @@ async function fetchBallDontLieEventsForSportKey(
     for (const eventId of relevantEventIds.slice(0, 50)) {
       query.append("event_ids[]", String(eventId));
     }
-    const fights = await fetchBallDontLieList<Record<string, unknown>>("/mma/v1/fights", query, 2).catch(() => []);
+    const fights = await fetchBallDontLieList<Record<string, unknown>>(
+      "/mma/v1/fights",
+      query,
+      2,
+      undefined,
+      feedFailure
+    ).catch(() => {
+      if (feedFailure) feedFailure.failed = true;
+      return [];
+    });
     const fighterIds = Array.from(
       new Set(
         fights.flatMap((fight) => {
@@ -1044,6 +1091,8 @@ async function fetchBallDontLieEventsForSportKey(
       const homeTeam = enrichedHomeName || (isInvalidMmaDisplayName(rawHomeName) ? "" : rawHomeName);
       const awayTeam = enrichedAwayName || (isInvalidMmaDisplayName(rawAwayName) ? "" : rawAwayName);
       const startsAt = normalizeBallDontLieGameStartIso(String(event.date ?? ""));
+      // The TV never shows a made-up noon start (F17): a date-only event date gives no TV start.
+      const tvStartsAt = /^\d{4}-\d{2}-\d{2}$/.test(String(event.date ?? "").trim()) ? null : startsAt;
       if (homeTeamId && isInvalidMmaDisplayName(rawHomeName)) {
         console.warn("[pickem][mma] upstream fight payload missing/invalid fighter1.name", {
           fightId,
@@ -1111,6 +1160,7 @@ async function fetchBallDontLieEventsForSportKey(
         winnerTeam: winnerId === homeTeamId ? homeTeam : winnerId === awayTeamId ? awayTeam : null,
         isCompleted,
         periodLabel: null,
+        tvStartsAt,
       });
     }
 
@@ -1128,16 +1178,19 @@ async function fetchBallDontLieEventsForSportKey(
   const [batchResults, teamNameMap] = await Promise.all([
     Promise.allSettled(
       pathVariants.flatMap((path) =>
-        queryVariants.map((query) => fetchBallDontLieList<BallDontLieGame>(path, query, 2))
+        queryVariants.map((query) => fetchBallDontLieList<BallDontLieGame>(path, query, 2, undefined, feedFailure))
       )
     ),
-    fetchTeamNameMapForSportKey(sportKey),
+    fetchTeamNameMapForSportKey(sportKey, feedFailure),
   ]);
 
   const payload: BallDontLieGame[] = [];
   const seenKeys = new Set<string>();
   for (const result of batchResults) {
-    if (result.status !== "fulfilled") continue;
+    if (result.status !== "fulfilled") {
+      if (feedFailure) feedFailure.failed = true;
+      continue;
+    }
     for (const row of result.value) {
       const key = `${String(row.id ?? "")}::${String(row.date ?? row.datetime ?? row.starts_at ?? row.commence_time ?? "")}`;
       if (!key || seenKeys.has(key)) continue;
@@ -1873,8 +1926,9 @@ export function pickEmFeedGameKey(sportKey: string, gameIdOrProviderId: string):
 
 /**
  * One league's games starting in [fromIso, toIso), for the venue TV. The same feed reads Pick 'Em uses (counted by
- * `[provider-calls]`). `ok` is false when the feed returned nothing at all, which can't be told apart from a
- * failure, so the caller keeps what it already has.
+ * `[provider-calls]`). `ok` is true only when every request the feed needed answered (CR1.4, F15): then an empty
+ * list really means no games. Any failed request → `ok: false`, so the caller keeps its rows and retries sooner.
+ * A row with no full start time (a date-only feed) is left off the TV rather than shown at a made-up noon (F17).
  */
 export async function listPickEmTvFeedGames(
   sportKey: string,
@@ -1883,12 +1937,21 @@ export async function listPickEmTvFeedGames(
 ): Promise<{ ok: boolean; games: PickEmTvFeedGame[] }> {
   const fromMs = Date.parse(fromIso);
   const toMs = Date.parse(toIso);
-  const events = await fetchBallDontLieEventsForSportKey(sportKey, fromIso, toIso, getLeagueLabelForSportKey(sportKey)).catch(
-    () => [] as NormalizedBallDontLieEvent[],
-  );
+  const feedFailure = { failed: false };
+  const events = await fetchBallDontLieEventsForSportKey(
+    sportKey,
+    fromIso,
+    toIso,
+    getLeagueLabelForSportKey(sportKey),
+    feedFailure,
+  ).catch(() => {
+    feedFailure.failed = true;
+    return [] as NormalizedBallDontLieEvent[];
+  });
   const games: PickEmTvFeedGame[] = [];
   for (const event of events) {
-    const startsMs = Date.parse(event.tvStartsAt ?? event.startsAt);
+    if (!event.tvStartsAt) continue;
+    const startsMs = Date.parse(event.tvStartsAt);
     const feedGameKey = pickEmFeedGameKey(sportKey, event.providerEventId);
     if (!feedGameKey || !Number.isFinite(startsMs) || startsMs < fromMs || startsMs >= toMs) continue;
     games.push({
@@ -1908,7 +1971,7 @@ export async function listPickEmTvFeedGames(
       feedState: event.tvFeedState ?? null,
     });
   }
-  return { ok: events.length > 0, games };
+  return { ok: !feedFailure.failed, games };
 }
 
 export async function listPickEmGames(params: {

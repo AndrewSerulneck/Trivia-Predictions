@@ -4,6 +4,8 @@
 //   [tv-state] minutes=10 requests=31 idle=30 live-trivia-pregame=1 avgMs=84 maxMs=412 avgBytes=1830 maxBytes=6120
 // It counts requests that reach the function: responses served from the CDN cache (idle `s-maxage=15`) are not
 // counted, so it measures origin work (function time and DB reads), not bandwidth. No venue ids or payloads are logged.
+// Limit (CR1.4, F19): an instance's last partial window is never logged, so compare rates (requests ÷ minutes), not
+// totals; see docs/fire-tv-app-plan.md Phase 15 step 1.
 
 const FLUSH_MS = 10 * 60 * 1000;
 

@@ -153,7 +153,9 @@ describe("NHL period labels", () => {
     expect(await labelFor(live({ period: 2, time_remaining: "09:22", in_intermission: false }))).toBe("P2 9:22");
     expect(await labelFor(live({ period: 2, time_remaining: "00:00", in_intermission: true }))).toBe("Int 2");
     expect(await labelFor(live({ period: 4, time_remaining: "03:10", in_intermission: false }))).toBe("OT 3:10");
-    expect(await labelFor(live({ period: 5, time_remaining: "00:00", in_intermission: false }))).toBe("SO 0:00");
+    // CR1.4 (F18): a regular-season shootout has no clock; playoff period 5 is double overtime.
+    expect(await labelFor(live({ period: 5, time_remaining: "00:00", in_intermission: false }))).toBe("SO");
+    expect(await labelFor(live({ period: 5, time_remaining: "06:07", postseason: true }))).toBe("2OT 6:07");
     expect(await labelFor(nhlScheduled)).toBeNull();
   });
 
