@@ -71,6 +71,15 @@ export const todayWinPointsOf = (games: PickEmGame[]): number =>
     0
   );
 
+/**
+ * The server's feed copy refreshes in the background (`revalidate: 60` in `lib/balldontlie.ts`), so the first load
+ * after a quiet spell can be a pre-game copy: started games show "live" with no score. One reload shortly after
+ * gets the copy that first load refreshed (no extra provider call). Only a started, unfinished game can be stale.
+ */
+export const FRESH_RECHECK_DELAY_MS = 5_000;
+export const needsFreshRecheck = (games: Pick<PickEmGame, "status">[]): boolean =>
+  games.some((game) => game.status === "live");
+
 type SportsResponse = {
   ok: boolean;
   sports?: PickEmSport[];
@@ -278,6 +287,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   const loadGamesRef = useRef<((opts?: { background?: boolean }) => Promise<void>) | null>(null);
   const hasLiveGamesRef = useRef(false);
   const refreshTimerRef = useRef<number | null>(null);
+  const recheckTimerRef = useRef<number | null>(null);
   const [pickPulseByGameId, setPickPulseByGameId] = useState<Record<string, string | undefined>>({});
   const [today, setToday] = useState<PickEmTodaySummary | null>(null);
   const [collegeScoring, setCollegeScoring] = useState<CollegeScoring | null>(null);
@@ -349,6 +359,9 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
     return () => {
       if (refreshTimerRef.current !== null) {
         window.clearTimeout(refreshTimerRef.current);
+      }
+      if (recheckTimerRef.current !== null) {
+        window.clearTimeout(recheckTimerRef.current);
       }
     };
   }, []);
@@ -465,6 +478,15 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         setLastDebugProbes(payload.debug?.probes ?? []);
         if (!background) {
           setErrorMessage("");
+          // One recheck per load the player asked for; background reloads never schedule another.
+          if (recheckTimerRef.current !== null) window.clearTimeout(recheckTimerRef.current);
+          recheckTimerRef.current = null;
+          if (needsFreshRecheck(nextGames)) {
+            recheckTimerRef.current = window.setTimeout(() => {
+              recheckTimerRef.current = null;
+              void loadGamesRef.current?.({ background: true });
+            }, FRESH_RECHECK_DELAY_MS);
+          }
         }
       } catch (error) {
         setLastDebugProbes([]);
