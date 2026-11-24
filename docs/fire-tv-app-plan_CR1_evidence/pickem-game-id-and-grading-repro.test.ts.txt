@@ -1,0 +1,355 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import saturday from "@/tests/fixtures/pickem-ncaaf/games-2026-10-24.json";
+
+// Pick 'Em Phase 7.4 (docs/pickem-college-football-and-prize-plan.md, finding F4): settlement reads
+// only the 500 OLDEST started pending picks, and a pick whose game is outside the ±7-day score
+// fetch can never be found. Such picks must be cancelled, or they fill the read and nobody is
+// graded or paid. A college pick whose game the provider no longer lists still gets its 48-hour
+// cancel, but never because of a failed or cut-off fetch.
+//
+// This mock honours order + limit (unlike the older settlement mocks), so the head-of-queue test
+// fails on the pre-7.4 code: the 500-row read would hold only stuck picks.
+
+vi.mock("server-only", () => ({}));
+
+type MockRow = Record<string, unknown>;
+type FailureBox = { failed: boolean };
+type TruncationBox = { truncated: boolean };
+
+const store = vi.hoisted(() => ({
+  tables: {} as Record<string, MockRow[]>,
+  fetchBallDontLieList: vi.fn(),
+  pickReads: 0,
+  cursorReads: 0,
+  updateError: null as { message: string } | null,
+  updateMatchesNothing: false,
+}));
+
+vi.mock("@/lib/balldontlie", () => ({
+  fetchBallDontLieList: store.fetchBallDontLieList,
+}));
+
+vi.mock("@/lib/venueGameSettings", () => ({
+  DEFAULT_CFB_PICKEM_SCORING_MODE: "spread",
+  getVenueNFLPickEmScoringMode: vi.fn(() => Promise.resolve("standard")),
+  getVenueCollegeFootballPickEmScoringMode: vi.fn(() => Promise.resolve("spread")),
+}));
+
+vi.mock("@/lib/challengeCampaigns", () => ({
+  applyChallengeCampaignPoints: vi.fn(),
+}));
+
+vi.mock("@/lib/supabaseAdmin", () => {
+  const createBuilder = (table: string) => {
+    const filters: Array<(row: MockRow) => boolean> = [];
+    let patch: MockRow | null = null;
+    let insertRows: MockRow[] | null = null;
+    const orderBy: Array<{ column: string; ascending: boolean }> = [];
+    let limitTo: number | null = null;
+
+    // Timestamps compare as instants, anything else (ids) as text.
+    const compare = (a: unknown, b: unknown) => {
+      const iso = /^\d{4}-\d{2}-\d{2}T/;
+      if (iso.test(String(a)) && iso.test(String(b))) return Date.parse(String(a)) - Date.parse(String(b));
+      return String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0;
+    };
+    const currentRows = () => store.tables[table] ?? [];
+    const filteredRows = () => {
+      const rows = currentRows().filter((row) => filters.every((filter) => filter(row)));
+      rows.sort((a, b) => {
+        for (const { column, ascending } of orderBy) {
+          const cmp = compare(a[column], b[column]);
+          if (cmp !== 0) return ascending ? cmp : -cmp;
+        }
+        return 0;
+      });
+      return limitTo === null ? rows : rows.slice(0, limitTo);
+    };
+    const resolve = () => {
+      if (insertRows) {
+        store.tables[table] = [...currentRows(), ...insertRows];
+        return Promise.resolve({ data: insertRows, error: null });
+      }
+      if (patch) {
+        if (store.updateError) return Promise.resolve({ data: null, error: store.updateError });
+        // A concurrent run graded the pick first: the conditional update changes no row.
+        if (store.updateMatchesNothing) return Promise.resolve({ data: [], error: null });
+        const rows = filteredRows();
+        for (const row of rows) Object.assign(row, patch);
+        return Promise.resolve({ data: rows.map((row) => ({ ...row })), error: null });
+      }
+      if (table === "pickem_picks") store.pickReads += 1;
+      return Promise.resolve({ data: filteredRows(), error: null });
+    };
+
+    // Timestamps compare as instants (PostgREST compares timestamptz, not strings).
+    const at = (value: unknown) => Date.parse(String(value ?? ""));
+    const builder = {
+      select: () => builder,
+      eq: (column: string, value: unknown) => {
+        filters.push((row) => row[column] === value);
+        return builder;
+      },
+      is: (column: string, value: unknown) => {
+        filters.push((row) => row[column] === value);
+        return builder;
+      },
+      lte: (column: string, value: unknown) => {
+        filters.push((row) => at(row[column]) <= at(value));
+        return builder;
+      },
+      lt: (column: string, value: unknown) => {
+        filters.push((row) => at(row[column]) < at(value));
+        return builder;
+      },
+      gte: (column: string, value: unknown) => {
+        filters.push((row) => at(row[column]) >= at(value));
+        return builder;
+      },
+      order: (column: string, options?: { ascending?: boolean }) => {
+        orderBy.push({ column, ascending: options?.ascending !== false });
+        return builder;
+      },
+      // Only the settlement's keyset cursor: (starts_at, id) > (S, I).
+      or: (expression: string) => {
+        const match = /^starts_at\.gt\."([^"]+)",and\(starts_at\.eq\."([^"]+)",id\.gt\."([^"]+)"\)$/.exec(expression);
+        if (!match || match[1] !== match[2]) throw new Error(`unexpected or(): ${expression}`);
+        const [, startsAt, , id] = match;
+        filters.push((row) => {
+          const cmp = compare(row.starts_at, startsAt);
+          return cmp > 0 || (cmp === 0 && compare(row.id, id) > 0);
+        });
+        store.cursorReads += 1;
+        return builder;
+      },
+      limit: (count: number) => {
+        limitTo = count;
+        return builder;
+      },
+      returns: () => builder,
+      update: (value: MockRow) => {
+        patch = value;
+        return builder;
+      },
+      insert: (value: MockRow | MockRow[]) => {
+        insertRows = Array.isArray(value) ? value : [value];
+        return builder;
+      },
+      then: (
+        onfulfilled?: ((value: { data: MockRow[] | null; error: { message: string } | null }) => unknown) | null,
+        onrejected?: ((reason: unknown) => unknown) | null
+      ) => resolve().then(onfulfilled, onrejected),
+    };
+    return builder;
+  };
+
+  return {
+    supabaseAdmin: {
+      from: (table: string) => createBuilder(table),
+      rpc: vi.fn(() => Promise.resolve({ data: [], error: null })),
+    },
+  };
+});
+
+import {
+  collegeFootballMissingGameGate,
+  COLLEGE_FOOTBALL_NO_FINAL_CANCEL_MS,
+} from "@/lib/pickemCollegeFootball";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import {
+  PICKEM_SETTLE_PAGE_CAP,
+  PICKEM_SETTLE_PAGE_SIZE,
+  PICKEM_UNFINDABLE_PENDING_MS,
+  settlePendingPickEmPicks,
+  listPickEmGames,
+} from "@/lib/pickem";
+
+type Game = (typeof saturday)[number];
+const bostonCollege = (saturday as Game[]).find((game) => game.id === 457383)!; // final: BC 49 at GT 27
+
+const collegePick = (overrides: MockRow = {}): MockRow => ({
+  id: "fresh",
+  user_id: "user-1",
+  venue_id: "venue-1",
+  sport_slug: "ncaaf",
+  sport_key: "americanfootball_ncaaf",
+  league: "College Football",
+  game_id: `${bostonCollege.id}__${bostonCollege.date}__x__y`,
+  home_team_id: String(bostonCollege.home_team.id),
+  away_team_id: String(bostonCollege.visitor_team.id),
+  selected_team_id: String(bostonCollege.visitor_team.id),
+  winning_team_id: null,
+  game_label: `${bostonCollege.visitor_team.full_name} at ${bostonCollege.home_team.full_name}`,
+  home_team: bostonCollege.home_team.full_name,
+  away_team: bostonCollege.visitor_team.full_name,
+  starts_at: bostonCollege.date,
+  selected_team: bostonCollege.visitor_team.full_name,
+  selected_side: "away",
+  status: "pending",
+  home_score: null,
+  away_score: null,
+  created_at: "2026-10-24T12:00:00.000Z",
+  updated_at: "2026-10-24T12:00:00.000Z",
+  resolved_at: null,
+  reward_points: 10,
+  reward_claimed_at: null,
+  scoring_mode: "winner",
+  ...overrides,
+});
+
+// A pick on a college game the provider doesn't list (neither id nor teams are in the fixture).
+const missingCollegePick = (overrides: MockRow = {}): MockRow =>
+  collegePick({
+    id: "missing",
+    game_id: "999999__2026-10-24T16:00:00.000Z__x__y",
+    home_team_id: "9001",
+    away_team_id: "9002",
+    selected_team_id: "9002",
+    home_team: "Nowhere State Owls",
+    away_team: "Missing Tech Ghosts",
+    game_label: "Missing Tech Ghosts at Nowhere State Owls",
+    selected_team: "Missing Tech Ghosts",
+    starts_at: "2026-10-24T16:00:00.000Z",
+    ...overrides,
+  });
+
+// The live shape: NFL picks pending since 2026-07-30 (4 in production on 2026-11-01).
+const stuckNflPicks = (count: number, userId = "user-stuck"): MockRow[] =>
+  Array.from({ length: count }, (_, i) => ({
+    ...collegePick(),
+    id: `stuck-${userId}-${i}`,
+    user_id: userId,
+    sport_slug: "nfl",
+    sport_key: "americanfootball_nfl",
+    league: "NFL",
+    game_id: `nfl-${i}__2026-07-30T20:20:00+00:00__a__b`,
+    starts_at: i % 2 === 0 ? "2026-07-30T20:20:00+00:00" : "2026-08-02T13:00:00+00:00",
+    scoring_mode: null,
+  }));
+
+const pickById = (id: string) => store.tables.pickem_picks.find((row) => row.id === id)!;
+const at = (iso: string) => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(iso));
+};
+type LogSpy = { mock: { calls: unknown[][] } };
+const logLines = (spy: LogSpy) => spy.mock.calls.map((call) => String(call[0]));
+const staleLines = (spy: LogSpy) => logLines(spy).filter((line) => line.includes("stale-pending-canceled"));
+
+let warn: ReturnType<typeof vi.spyOn>;
+let errorSpy: ReturnType<typeof vi.spyOn>;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.useRealTimers();
+  store.tables = { pickem_picks: [], notifications: [] };
+  store.pickReads = 0;
+  store.cursorReads = 0;
+  store.updateError = null;
+  store.updateMatchesNothing = false;
+  store.fetchBallDontLieList.mockResolvedValue(saturday);
+  warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  warn.mockRestore();
+  errorSpy.mockRestore();
+});
+
+// CR1 repro (read-only review of PR #48): an NHL game id moves when the feed's start time moves.
+describe("CR1 repro", () => {
+  const nhlRow = (overrides: MockRow = {}): MockRow => ({
+    id: 3328426,
+    game_date: "2026-11-23",
+    start_time_utc: "2026-11-24T00:00:00.000Z",
+    home_team: { id: 1, full_name: "New Jersey Devils", tricode: "NJD" },
+    away_team: { id: 9, full_name: "Columbus Blue Jackets", tricode: "CBJ" },
+    home_score: 0,
+    away_score: 0,
+    game_state: "FUT",
+    status_state: "scheduled",
+    time_remaining: "00:00",
+    ...overrides,
+  });
+  const nhlPick = (overrides: MockRow = {}): MockRow => ({
+    ...collegePick(),
+    id: "nhl",
+    sport_slug: "nhl",
+    sport_key: "icehockey_nhl",
+    league: "NHL",
+    game_id: "3328426__2026-11-24T00:00:00.000Z__newjerseydevils__columbusbluejackets",
+    home_team_id: "1",
+    away_team_id: "9",
+    selected_team_id: "1",
+    selected_team: "New Jersey Devils",
+    selected_side: "home",
+    home_team: "New Jersey Devils",
+    away_team: "Columbus Blue Jackets",
+    game_label: "x",
+    starts_at: "2026-11-24T00:00:00.000Z",
+    scoring_mode: null,
+    ...overrides,
+  });
+  const feed = (row: MockRow) =>
+    store.fetchBallDontLieList.mockImplementation((path: string) => Promise.resolve(path === "/nhl/v1/games" ? [row] : []));
+
+  it("A: a time change moves the game id; the list no longer shows the player's pick", async () => {
+    // Pick made while the feed said 00:00Z; the feed later says 01:00Z (time change).
+    store.tables.pickem_picks = [nhlPick()];
+    feed(nhlRow({ start_time_utc: "2026-11-24T01:00:00.000Z" }));
+    at("2026-11-23T18:00:00.000Z");
+    const list = await listPickEmGames({ sportSlug: "nhl", date: "2026-11-23", tzOffsetMinutes: 300, userId: "user-1", skipLines: true });
+    expect(list.games.map((g) => g.id)).toEqual(["3328426__2026-11-24T01:00:00.000Z__newjerseydevils__columbusbluejackets"]);
+    // BUG: the pick exists but isn't attached, so the player can pick again (new id passes the unique index).
+    expect(list.games[0].userPickTeam).toBeUndefined();
+    expect(list.games[0].isLocked).toBe(false);
+  });
+
+  it("A0 control: unchanged time shows the pick", async () => {
+    store.tables.pickem_picks = [nhlPick()];
+    feed(nhlRow());
+    at("2026-11-23T18:00:00.000Z");
+    const list = await listPickEmGames({ sportSlug: "nhl", date: "2026-11-23", tzOffsetMinutes: 300, userId: "user-1", skipLines: true });
+    expect(list.games[0].userPickTeam).toBe("New Jersey Devils");
+  });
+
+  it("A2: start_time_utc missing then set also moves the id (noon fallback)", async () => {
+    store.tables.pickem_picks = [];
+    feed(nhlRow({ start_time_utc: null }));
+    at("2026-11-23T10:00:00.000Z");
+    const before = await listPickEmGames({ sportSlug: "nhl", date: "2026-11-23", tzOffsetMinutes: 300, skipLines: true });
+    expect(before.games[0].id).toBe("3328426__2026-11-23T12:00:00.000Z__newjerseydevils__columbusbluejackets");
+  });
+
+  it("B: two picks on one real game (old id + new id) are both graded won", async () => {
+    store.tables.pickem_picks = [
+      nhlPick({ id: "old" }),
+      nhlPick({ id: "new", game_id: "3328426__2026-11-24T01:00:00.000Z__newjerseydevils__columbusbluejackets", starts_at: "2026-11-24T01:00:00.000Z" }),
+    ];
+    feed(nhlRow({ start_time_utc: "2026-11-24T01:00:00.000Z", home_score: 3, away_score: 2, game_state: "OFF", status_state: "final" }));
+    at("2026-11-24T04:00:00.000Z");
+    const result = await settlePendingPickEmPicks();
+    expect(pickById("old").status).toBe("won");
+    expect(pickById("new").status).toBe("won");
+    expect(result.won).toBe(2);
+  });
+
+  it("C: a pick whose stored start is earlier than the real one is graded mid-game from the live score", async () => {
+    // Stored start 00:00Z; real puck-drop moved to 02:30Z; at 04:15Z the game is in progress, 1-0.
+    store.tables.pickem_picks = [nhlPick()];
+    feed(nhlRow({ start_time_utc: "2026-11-24T02:30:00.000Z", home_score: 1, away_score: 0, game_state: "LIVE", status_state: "in_progress", period: 2 }));
+    at("2026-11-24T04:15:00.000Z");
+    await settlePendingPickEmPicks();
+    expect(pickById("nhl").status).toBe("won"); // graded on a mid-game score
+  });
+
+  it("D: a postponed game (status_state not 'scheduled') 0-0 is graded push 4 h after start", async () => {
+    store.tables.pickem_picks = [nhlPick()];
+    feed(nhlRow({ game_state: "PPD", status_state: "postponed" }));
+    at("2026-11-24T04:30:00.000Z");
+    await settlePendingPickEmPicks();
+    expect(pickById("nhl").status).toBe("push");
+  });
+});

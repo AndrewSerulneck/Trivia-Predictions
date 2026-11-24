@@ -2,6 +2,8 @@
 
 Created: 2026-09-12. Requested by Andrew Serulneck.
 
+**Reopened 2026-11-24 for two remedial phases from the Fire TV plan's CR1 code review: CR1.2 (Pick 'Em game id and grading guards, F24–F28) and CR1.6 (BallDontLie season probe, F38). Both awaiting Andrew's OK.** Findings: `docs/fire-tv-app-plan.md` "CR1 review findings"; review handoff `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`. Phase details: "Remedial phases from the CR1 code review" below. Everything else in this plan stays complete.
+
 **Status: Complete and developer-accepted, 2026-09-19. Andrew confirmed authenticated Prop Bingo works after the atomic-grading migration and explicitly closed the plan. Phase 6 historical reconciliation was intentionally skipped; no past results will be repaired. All offline gates pass (2,620 tests, zero failures; NFL 288/288; MLB 142/142; build 179 pages), and the 16-game NFL provider validator passes. The additive migration is applied and verified on linked Supabase project `pkmxupsayzshvpirkaav`; no board/reward result was changed. Physical-device layout and real-game timing remain useful routine operational monitoring, not open phases or release blockers. Final handoff: [Phase 7](bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md). Release record: [2026-09-19](bingo-pickem-reliability-release-record-2026-09-19.md). Phase 6 decision: [skipped handoff](bingo-pickem-reliability-plan_PHASE_6_HANDOFF.md). Earlier handoffs: [Phase 5](bingo-pickem-reliability-plan_PHASE_5_HANDOFF.md), [Phase 4](bingo-pickem-reliability-plan_PHASE_4_HANDOFF.md), [Phase 3](bingo-pickem-reliability-plan_PHASE_3_HANDOFF.md), [Phase 2](bingo-pickem-reliability-plan_PHASE_2_HANDOFF.md), [Phase 1](bingo-pickem-reliability-plan_PHASE_1_HANDOFF.md), [Phase 0](bingo-pickem-reliability-plan_PHASE_0_HANDOFF.md).**
 
 Application release commit `62f027cd46528d771e154ccb5cc75df24f6d8173` is pushed to
@@ -34,6 +36,8 @@ These are task-specific recommendations, checked against [OpenAI's Codex model g
 | 5 | Interesting, varied, calibrated boards | GPT-5.6 Sol (`gpt-5.6-sol`) | High | Balance verified props, pacing, player variety, and correlation |
 | 6 | Reconcile affected stored boards and results | GPT-6 Astra (`gpt-6-astra`) | Extra High | Idempotent repair with venue-scoped points and auditability |
 | 7 | Integrated verification, release record, and final documentation | GPT-5.6 Sol (`gpt-5.6-sol`) | High | Cross-feature regressions, live evidence, and accurate handoff |
+| CR1.2 | **Remedial (CR1 review, 2026-11-24; awaiting Andrew's OK):** a moved start time can't hide a pick or allow a second paid one; grading waits for the real start; postponed ≠ push; local-date notifications | Claude Opus 5.5 | High | Points and pick matching in the shared Pick 'Em engine (planned by a Claude agent, so Claude models) |
+| CR1.6 | **Remedial (CR1 review, 2026-11-24; awaiting Andrew's OK):** the BallDontLie season probe keeps its one row | Claude Sonnet 5.5 | Medium | One fetch option and a test |
 
 The original order was 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7. On 2026-09-19 Andrew explicitly skipped Phase 6 because past boards/rewards do not need reconciliation, then directed Phase 7 execution. Phase 3's UI work did not depend technically on grading. No automatic subagent delegation is required.
 
@@ -219,6 +223,59 @@ Release checks:
 - Preserve old plans as dated history; add cross-references resolving overlapping unfinished activation/live-observation items so the next agent does not repeat outdated work.
 - **Update all three actual repository files:** `CLAUDE.md`, `AGENTS.md`, `SYSTEM_CONTEXT.md` (uppercase filenames; do not create case-variant copies). Replace this plan's “planned” pointers with verified as-built contracts and paths. `CLAUDE.md`: availability/gradation/correction boundaries and commands. `AGENTS.md`: adding a supported square requires capability evidence and regression fixtures; phase handoff procedure. `SYSTEM_CONTEXT.md`: actual eligibility path, supported leagues/flags, shared dropdown, regular-vs-NFL Pick ’Em split, grading/retry pipeline, and deployment state.
 - Write the final Phase 7 handoff for maintenance even though no new implementation phase is planned. List any remaining monitoring or device check with its owner. On 2026-09-19 Andrew accepted the verified implementation and made those observations non-blocking operational monitoring.
+
+## Remedial phases from the CR1 code review (2026-11-24)
+
+Found by the Fire TV plan's CR1 review of PRs #48 and #46 (`docs/fire-tv-app-plan.md`, "CR1 review findings";
+line numbers on `main` `75b47740`). The bugs live in this plan's code (`lib/pickem.ts` matching and settlement,
+`lib/ballDontLieClient.ts` / `lib/sportsBingo.ts`), so the fixes live here (`CLAUDE.md` §Code review findings become
+remedial phases). Production on 2026-11-24: 137 picks (NBA, WNBA, MLB, NFL), 0 NHL, 0 duplicate picks on one real game,
+0 provider games under more than one `game_id` — so no data repair is needed today.
+
+### Phase CR1.2 — Pick 'Em game id and grading guards (Agent, Claude Opus 5.5 / high) — Awaiting Andrew's OK
+
+**Fixes F24–F28.** Branch `fix/pickem-game-id-and-grading` from up-to-date `main`. No migration expected; if one turns
+out to be needed it becomes its own phase and needs Andrew's yes before `supabase db push`. Standing rules that apply:
+points move only via `pay_pickem_points`; never re-grade won/lost picks; missing data is unknown, never zero.
+
+Start from the reproduction test `docs/fire-tv-app-plan_CR1_evidence/pickem-game-id-and-grading-repro.test.ts.txt`
+(copy it to `tests/`, rename to `.test.ts`). On today's `main` all 6 cases pass *because they assert the bugs*; flip
+each assertion to the correct behaviour, watch it fail, then fix.
+
+1. **F24 (medium):** `buildPickEmGameId` (`lib/pickem.ts:396`) embeds the start time, so a feed time change makes a new
+   id. (a) In the picks loader (≈ `:1736`), also key the map by `extractProviderEventIdFromGameId(row.game_id)` so the
+   existing fallback at `:2054` (`picksByGameId.get(event.providerEventId)`) works. (b) In `submitPickEmPick`
+   (≈ `:2403`), find an existing pick by user + venue + same provider id (`game_id like '<providerId>__%'`, same
+   `sport_key`), not the exact id, and refuse or update it rather than insert a second pick. Repro cases A (pick shows
+   after a 00:00Z → 01:00Z move) and B (old-id + new-id picks must not both pay) must fail first.
+2. **F25 (medium):** the 4-hour stale rule (≈ `:2986`) counts from `row.starts_at`; count from the later of
+   `row.starts_at` and the feed's `commence_time`. Repro C (stored 00:00Z, real 02:30Z, `in_progress` 1–0 at 04:15Z
+   must stay pending).
+3. **F26 (low):** `feedSaysScheduled` (≈ `:2989`) reads only `status_state`. Decide "not started" from `status_state`
+   and `game_state` the way `extractTvFeedState` (≈ `:248`) does; postponed / called-off → `canceled`, not `push`.
+   Repro D.
+4. **F27 (low):** win notifications group by `row.starts_at.slice(0, 10)` (≈ `:2913`); group and link by the
+   venue-local date (`toLocalDateKey` with the venue's offset). Add a test with a 7 PM ET game.
+5. **F28 (low, plausible):** the team-name settlement fallback (≈ `:2948`) also requires the feed start within 12 h
+   of `row.starts_at`. Test: same teams, two games 2 days apart, only the second final → the first-game pick stays pending.
+6. Keep every existing Pick 'Em test passing unchanged (`tests/lib.pickem-nhl-start-time.test.ts`,
+   `tests/lib.pickem-stale-pending.test.ts` and the rest). `npm run test`, `npm run lint`, `npx tsc --noEmit`; PR; CI
+   green; merge. After deploy, re-run the production select from the CR1 handoff §6 (duplicate user + provider-game
+   pairs, provider games with more than one id) and record the counts. Full handoff
+   `docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md` (points path).
+
+### Phase CR1.6 — BallDontLie season probe keeps its row (Agent, Claude Sonnet 5.5 / medium) — Awaiting Andrew's OK
+
+**Fixes F38.** `hasUpcomingGamesInWindow` (`lib/sportsBingo.ts:1245`) calls `fetchBallDontLieList(path, query,
+{ maxPages: 1, failure })` with `per_page: 1`. `lib/ballDontLieClient.ts` treats "a `next_cursor` exists after the last
+allowed page" as `page_limit`: it sets `failure.failed = true` and returns `[]`. So whenever two or more games are in
+the window the probe reports failure; season status falls back to the hard-coded calendar, and the 5-minute failure
+TTL re-probes ~12× more often than intended. Seen in the T2 run log (`reason: 'page_limit'`).
+1. Add a `firstPageOnly` (or `probe`) option to `fetchBallDontLieList` that returns page 1's rows without marking a
+   failure, and use it in `hasUpcomingGamesInWindow`. Don't change other callers.
+2. Test that fails today (in `tests/lib.league-season-status.test.ts`): `fetch` mocked to
+   `{data: [{id: 1}], meta: {next_cursor: 2}}` → `hasUpcomingGamesInWindow` is true and the success TTL is used.
+3. Tests, lint, typecheck, PR, CI, merge. Short handoff note `docs/bingo-pickem-reliability-plan_PHASE_CR1.6_HANDOFF.md`.
 
 ## Mandatory handoff contract — every phase, including partial phases
 
