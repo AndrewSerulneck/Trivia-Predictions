@@ -96,6 +96,16 @@ describe("Live Quick Review", () => {
     expect(posts.map((p) => p.action)).toEqual(["reject", "undo"]);
   });
 
+  it("undoes with Z pressed the instant a reject renders (no stale key handler)", async () => {
+    waiting = [waiting[1]];
+    render(createElement(LiveTriviaQuickReview));
+    await waitFor(() => expect(card()).toBeTruthy());
+    fireEvent.keyDown(window, { key: "ArrowLeft" });
+    await waitFor(() => expect(screen.getByText("Nothing left.")).toBeTruthy());
+    fireEvent.keyDown(window, { key: "z" });
+    await waitFor(() => expect(card().textContent).toContain("Live question 2?"));
+  });
+
   it("edits the answer and acceptable answers with E", async () => {
     render(createElement(LiveTriviaQuickReview));
     await waitFor(() => expect(card()).toBeTruthy());

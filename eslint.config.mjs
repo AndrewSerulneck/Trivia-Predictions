@@ -5,6 +5,8 @@ const config = [
     ignores: [
       'design-system/**',
       'native/**',
+      'tmp/**',
+      '.claude/worktrees/**',
     ],
   },
   ...nextVitals,

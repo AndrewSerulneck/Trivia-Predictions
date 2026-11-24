@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { adminField, adminLabel } from "@/lib/adminStyles";
 import { getErrorMessage } from "@/lib/errors";
 import type { LivePublishResult, LiveReviewItem, LiveReviewPage } from "@/types/liveTriviaReview";
@@ -185,8 +185,12 @@ export const LiveTriviaQuickReview = () => {
     }
   }, [busy, draft, kept, reload]);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
+  // The listener is bound once and calls the newest handler. The handler is swapped in a layout
+  // effect (before paint), so a key pressed the moment a decision renders never meets a stale
+  // handler that still sees the previous save as busy or an empty history.
+  const onKeyRef = useRef<(event: KeyboardEvent) => void>(() => undefined);
+  useLayoutEffect(() => {
+    onKeyRef.current = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey || event.altKey || isTyping(event.target) || draft) return;
       const actions: Record<string, () => void> = {
         arrowright: () => void decide("keep"),
@@ -200,9 +204,12 @@ export const LiveTriviaQuickReview = () => {
       event.preventDefault();
       action();
     };
+  }, [decide, skip, startEdit, undo, draft]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => onKeyRef.current(event);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [decide, skip, startEdit, undo, draft]);
+  }, []);
 
   const buttonBase = "rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50";
 
