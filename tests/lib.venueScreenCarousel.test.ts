@@ -11,6 +11,7 @@ import {
   TV_CAROUSEL_DATA_ENABLED,
   tvPrizeHeadline,
 } from "@/lib/venueScreenCarousel";
+import { hasPointsTarget, isCampaignWindowOpen } from "@/lib/challengeCampaigns";
 import { debugCarousel, EMPTY_CAROUSEL } from "@/lib/venueScreenCarouselShared";
 import { applyVenueScreenDebugMode } from "@/lib/venueScreenDebug";
 import type { VenueScreenState } from "@/lib/venueScreen";
@@ -147,5 +148,23 @@ describe("usage counter (Phase 9 step 2)", () => {
       "[tv-state] minutes=10 requests=3 idle=2 live-trivia-pregame=1 avgMs=80 maxMs=120 avgBytes=1500 maxBytes=2500",
     );
     info.mockRestore();
+  });
+});
+
+describe("TV Prizes slide: real targets, open prizes only (CR1.1)", () => {
+  it("shows a points target only for progress + points_threshold", () => {
+    expect(hasPointsTarget("progress", "points_threshold")).toBe(true);
+    expect(hasPointsTarget("progress", null)).toBe(true);
+    expect(hasPointsTarget("progress", "game_winner")).toBe(false);
+    expect(hasPointsTarget("leaderboard", "points_threshold")).toBe(false);
+    expect(hasPointsTarget("progress", "ranked_places")).toBe(false);
+  });
+  it("drops closed and not-yet-open prizes", () => {
+    const nowMs = Date.parse("2026-11-24T12:00:00.000Z");
+    const one = { scheduleType: "one_time" as const, recurringType: "none" as const };
+    expect(isCampaignWindowOpen({ ...one, startDate: "2026-11-20", endDate: "2026-11-23" }, nowMs)).toBe(false);
+    expect(isCampaignWindowOpen({ ...one, startDate: "2026-11-30", endDate: "2026-12-02" }, nowMs)).toBe(false);
+    expect(isCampaignWindowOpen({ ...one, startDate: "2026-11-20", endDate: "2026-11-30" }, nowMs)).toBe(true);
+    expect(isCampaignWindowOpen({ scheduleType: "recurring" as never, recurringType: "none" as const }, nowMs)).toBe(true);
   });
 });

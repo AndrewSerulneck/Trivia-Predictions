@@ -11,7 +11,8 @@ import "server-only";
 // A failed read is unknown, never zero: that part comes back null and its slide is skipped.
 
 import { pickEmFeedGameKey } from "@/lib/pickem";
-import { resolveRewardPrize } from "@/lib/challengeCampaigns";
+import type { ChallengeCampaign } from "@/types";
+import { hasPointsTarget, isCampaignWindowOpen, resolveRewardPrize } from "@/lib/challengeCampaigns";
 import { discountLabel, formatPrizeDollars, menuItemLabel } from "@/lib/prizeCardFace";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getVenueTimezone } from "@/lib/timezone";
@@ -113,10 +114,22 @@ type PrizeRow = {
   prize_discount_value: number | null;
   prize_gift_certificate_amount: number | null;
   points_required_to_win: number | null;
+  challenge_mode: string | null;
+  win_condition: string | null;
+  schedule_type: string | null;
+  recurring_type: string | null;
+  start_date: string | null;
+  start_time: string | null;
+  end_date: string | null;
+  end_time: string | null;
 };
 
+type ScheduleColumns =
+  | "challenge_mode" | "win_condition" | "schedule_type" | "recurring_type"
+  | "start_date" | "start_time" | "end_date" | "end_time";
+
 /** The prize's headline, as its gift card says it ("Free Appetizer", "$25 Gift Card"); null without a prize. */
-export const tvPrizeHeadline = (row: PrizeRow): string | null => {
+export const tvPrizeHeadline = (row: Omit<PrizeRow, ScheduleColumns>): string | null => {
   const resolved = resolveRewardPrize(row as Parameters<typeof resolveRewardPrize>[0]);
   if (resolved.prizeKind === "gift_card") {
     const dollars = Number(row.prize_gift_certificate_amount);
@@ -132,13 +145,13 @@ export const tvPrizeHeadline = (row: PrizeRow): string | null => {
 
 const RESERVED_PRIZE_DEFINITIONS = new Set([SQUARES_PRIZE_DEFINITION_ID, BRACKET_PRIZE_DEFINITION_ID]);
 
-async function readPrizes(venueId: string): Promise<TvPrize[] | null> {
+export async function readPrizes(venueId: string): Promise<TvPrize[] | null> {
   if (!supabaseAdmin) return null;
   // Read only: listChallengeCampaigns also finalizes closed cycles, which a TV poll must never do.
   const { data, error } = await supabaseAdmin
     .from("challenge_campaigns")
     .select(
-      "id, name, reward_definition_id, venue_ids, prize_type, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, prize_gift_certificate_amount, points_required_to_win",
+      "id, name, reward_definition_id, venue_ids, prize_type, prize_kind, prize_menu_item, prize_menu_item_name, prize_discount_kind, prize_discount_value, prize_gift_certificate_amount, points_required_to_win, challenge_mode, win_condition, schedule_type, recurring_type, start_date, start_time, end_date, end_time",
     )
     .eq("is_active", true)
     .is("winner_user_id", null)
@@ -149,12 +162,30 @@ async function readPrizes(venueId: string): Promise<TvPrize[] | null> {
     .returns<PrizeRow[]>();
   if (error || !data) return null;
   const prizes: TvPrize[] = [];
+  const nowMs = Date.now();
   for (const row of data) {
+    if (
+      !isCampaignWindowOpen(
+        {
+          scheduleType: row.schedule_type as ChallengeCampaign["scheduleType"],
+          recurringType: row.recurring_type as ChallengeCampaign["recurringType"],
+          startDate: row.start_date ?? undefined,
+          startTime: row.start_time ?? undefined,
+          endDate: row.end_date ?? undefined,
+          endTime: row.end_time ?? undefined,
+        },
+        nowMs,
+      )
+    ) {
+      continue;
+    }
     // A prize for a game the TV doesn't show yet (D21) isn't advertised on it either.
     if (!VENUE_SCREEN_RESERVED_GAMES_ENABLED && RESERVED_PRIZE_DEFINITIONS.has(String(row.reward_definition_id ?? ""))) continue;
     const prize = tvPrizeHeadline(row);
     if (!prize) continue;
-    const points = Math.floor(Number(row.points_required_to_win ?? 0));
+    const points = hasPointsTarget(row.challenge_mode, row.win_condition)
+      ? Math.floor(Number(row.points_required_to_win ?? 0))
+      : 0;
     prizes.push({
       id: row.id,
       prize,

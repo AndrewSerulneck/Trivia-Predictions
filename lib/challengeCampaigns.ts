@@ -1007,7 +1007,9 @@ function campaignExistedAt(campaign: ChallengeCampaign, occurredAt: Date): boole
 // Exported for the game-winner resolver (lib/liveTriviaWinnerRewards.ts), which
 // needs the same close boundary to avoid awarding a game that ran after the
 // campaign's end date — kept here rather than copied so the two can't drift.
-export function getCampaignCloseTimestampMs(campaign: ChallengeCampaign): number | null {
+export function getCampaignCloseTimestampMs(
+  campaign: Pick<ChallengeCampaign, "scheduleType" | "recurringType" | "endDate" | "endTime">,
+): number | null {
   const isMultiDay = campaign.scheduleType === "multi_day" || campaign.scheduleType === "one_time";
   if (isMultiDay) {
     // Recurring multi-day campaigns have no fixed close — they repeat each period.
@@ -1025,6 +1027,35 @@ export function getCampaignCloseTimestampMs(campaign: ChallengeCampaign): number
     : `${campaign.endDate}T23:59:59.999Z`;
   const parsed = Date.parse(boundary);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+/**
+ * Is this campaign inside its stored window right now? Closed (past its end) or not yet open (a
+ * one-time window that starts later) → false. Read only: it never finalizes anything, so the TV
+ * Prizes slide can use it. Time-of-day and weekday gates are ignored on purpose (a prize is
+ * advertised all day).
+ */
+export function isCampaignWindowOpen(
+  campaign: Pick<ChallengeCampaign, "scheduleType" | "recurringType" | "startDate" | "startTime" | "endDate" | "endTime">,
+  nowMs: number,
+): boolean {
+  const closeAt = getCampaignCloseTimestampMs(campaign);
+  if (closeAt !== null && nowMs > closeAt) return false;
+  const isOneTime =
+    (campaign.scheduleType === "multi_day" || campaign.scheduleType === "one_time") &&
+    (!campaign.recurringType || campaign.recurringType === "none");
+  if (isOneTime && campaign.startDate) {
+    const startMs = Date.parse(
+      campaign.startTime ? `${campaign.startDate}T${campaign.startTime}:00` : `${campaign.startDate}T00:00:00`,
+    );
+    if (Number.isFinite(startMs) && nowMs < startMs) return false;
+  }
+  return true;
+}
+
+/** A points target is real only for a points-target prize; game-winner and ranked prizes store a placeholder. */
+export function hasPointsTarget(challengeMode: string | null | undefined, winCondition: string | null | undefined): boolean {
+  return challengeMode === "progress" && normalizeWinCondition(winCondition) === "points_threshold";
 }
 
 function isLeaderboardCampaignClosed(campaign: ChallengeCampaign, now: Date): boolean {
