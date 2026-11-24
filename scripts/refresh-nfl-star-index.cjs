@@ -47,19 +47,47 @@ function parseArgs(argv) {
   };
 }
 
+// --guard: refuse when more than this share of fetched rows carry a different `season` than asked for.
+const GUARD_MAX_WRONG_SEASON_RATIO = 0.05;
+
+function wrongSeasonRatio(rows, season) {
+  if (!rows || rows.length === 0) return 0;
+  const wrong = rows.filter((row) => row.season != null && row.season !== season).length;
+  return wrong / rows.length;
+}
+
 // Returns a reason to refuse writing, or null. `fetchNFLSeasonStats` swallows errors into [], so a
-// BallDontLie outage would otherwise overwrite the snapshot with empty slates.
-function guardFailure({ failed, previous, snapshot }) {
+// BallDontLie outage would otherwise overwrite the snapshot with empty slates. `rows` are the raw
+// season_stats rows ({ current, prior }); they are optional so callers without them skip that check.
+function guardFailure({ failed, previous, snapshot, rows }) {
   if (failed.current || failed.prior) {
     return `a season_stats fetch failed (current=${failed.current}, prior=${failed.prior})`;
   }
   if (snapshot.prior.players.length === 0) {
     return "the prior slate came back empty";
   }
+  if (rows) {
+    for (const [label, season] of [["current", snapshot.season], ["prior", snapshot.priorSeason]]) {
+      const ratio = wrongSeasonRatio(rows[label], season);
+      if (ratio > GUARD_MAX_WRONG_SEASON_RATIO) {
+        return `${Math.round(ratio * 100)}% of the ${label} rows are not season ${season}`;
+      }
+    }
+  }
   const previousCount = previous?.season === snapshot.season ? previous.current.players.length : 0;
   const nextCount = snapshot.current.players.length;
   if (previousCount > 0 && nextCount < previousCount * GUARD_MIN_CURRENT_RATIO) {
     return `the current slate shrank from ${previousCount} to ${nextCount} players`;
+  }
+  // The prior slate is last season's finished stats: compare with the same season's old slate. At
+  // rollover (the old "current" is the new "prior") compare against that.
+  let previousPrior = null;
+  if (previous?.priorSeason === snapshot.priorSeason) previousPrior = previous.prior.players;
+  else if (previous?.season === snapshot.priorSeason) previousPrior = previous.current.players;
+  const priorBefore = previousPrior?.length ?? 0;
+  const priorAfter = snapshot.prior.players.length;
+  if (priorBefore > 0 && priorAfter < priorBefore * GUARD_MIN_CURRENT_RATIO) {
+    return `the prior slate shrank from ${priorBefore} to ${priorAfter} players`;
   }
   return null;
 }
@@ -194,6 +222,7 @@ async function main() {
       failed: { current: currentFailure.failed, prior: priorFailure.failed },
       previous,
       snapshot,
+      rows: { current: currentRows, prior: priorRows },
     });
     if (reason) {
       console.error(`\n[bingo:stars:nfl] --guard: not writing, ${reason}.`);
@@ -214,7 +243,11 @@ async function main() {
   console.log(`\nWrote ${SNAPSHOT_PATH}`);
 }
 
-main().catch((error) => {
-  console.error("[bingo:stars:nfl] failed:", error);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error("[bingo:stars:nfl] failed:", error);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { guardFailure };
