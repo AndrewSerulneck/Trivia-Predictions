@@ -73,7 +73,8 @@ export const SpeedTriviaQuickReview = () => {
   const [counts, setCounts] = useState<QuickReviewCounts>({ queued: 0, needsLook: 0, repeats: 0 });
   const [writerStopped, setWriterStopped] = useState(false);
   const [exhausted, setExhausted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  // True from the first paint, so "Nothing left." never flashes before the first load.
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -82,6 +83,10 @@ export const SpeedTriviaQuickReview = () => {
   const [bulk, setBulk] = useState<{ decision: QuickReviewDecision; done: number; of: number } | null>(null);
   const loadSeq = useRef(0);
   const refilling = useRef(false);
+  // A Keep / Reject save in flight (kept until the render after it commits) and a Z pressed meanwhile (D36).
+  const inFlightRef = useRef<{ id: string; done: boolean } | null>(null);
+  const queuedUndoRef = useRef<string | null>(null);
+  const decidedRef = useRef<UndoEntry | null>(null);
 
   const current = items[0] ?? null;
   // The id whose "why it's true" note is open; a new question starts closed (D30).
@@ -111,6 +116,9 @@ export const SpeedTriviaQuickReview = () => {
     setLoading(true);
     setError("");
     setDraft(null);
+    // Nothing from the old list stays on screen to be decided while the new one loads.
+    setItems([]);
+    setTotal(0);
     try {
       const page = await fetchPage(null);
       if (seq !== loadSeq.current) return;
@@ -128,6 +136,8 @@ export const SpeedTriviaQuickReview = () => {
 
   useEffect(() => {
     setHistory([]);
+    queuedUndoRef.current = null;
+    decidedRef.current = null;
     setNotice("");
     void reload();
   }, [reload]);
@@ -161,12 +171,17 @@ export const SpeedTriviaQuickReview = () => {
         needsLook: Math.max(0, prev.needsLook - (filter.view === "needs_look" ? 1 : 0)),
       }));
     }
-    setHistory((prev) => [...prev.slice(-49), { item, kind, queued, live }]);
+    const entry: UndoEntry = { item, kind, queued, live };
+    decidedRef.current = entry;
+    setHistory((prev) => [...prev.slice(-49), entry]);
   }, [filter.view]);
 
   // live (L): after the Keep, queue the question for Live; only a Keep that was approved or queued is sent.
   const keep = useCallback(async (live = false) => {
-    if (!current || busy || draft || repeats) return;
+    if (!current || busy || loading || draft || repeats) return;
+    const flight = { id: current.id, done: false };
+    inFlightRef.current = flight;
+    decidedRef.current = null;
     setBusy(true);
     setError("");
     try {
@@ -210,12 +225,16 @@ export const SpeedTriviaQuickReview = () => {
     } catch (err) {
       setError(getErrorMessage(err, "Keep failed."));
     } finally {
+      flight.done = true;
       setBusy(false);
     }
-  }, [current, busy, draft, repeats, advance, reload]);
+  }, [current, busy, loading, draft, repeats, advance, reload]);
 
   const reject = useCallback(async (reason: "quality" | "wrong") => {
-    if (!current || busy || draft || repeats) return;
+    if (!current || busy || loading || draft || repeats) return;
+    const flight = { id: current.id, done: false };
+    inFlightRef.current = flight;
+    decidedRef.current = null;
     setBusy(true);
     setError("");
     try {
@@ -231,13 +250,14 @@ export const SpeedTriviaQuickReview = () => {
     } catch (err) {
       setError(getErrorMessage(err, "Reject failed."));
     } finally {
+      flight.done = true;
       setBusy(false);
     }
-  }, [current, busy, draft, repeats, advance]);
+  }, [current, busy, loading, draft, repeats, advance]);
 
   // Repeats view: put a question the overnight check retired back in the waiting list.
   const restore = useCallback(async () => {
-    if (!current || busy || !repeats) return;
+    if (!current || busy || loading || !repeats) return;
     setBusy(true);
     setError("");
     try {
@@ -251,17 +271,17 @@ export const SpeedTriviaQuickReview = () => {
     } finally {
       setBusy(false);
     }
-  }, [current, busy, repeats]);
+  }, [current, busy, loading, repeats]);
 
   const skip = useCallback(() => {
-    if (!current || busy || draft) return;
+    if (!current || busy || loading || draft) return;
     advance(current, "skip");
     setNotice("");
-  }, [current, busy, draft, advance]);
+  }, [current, busy, loading, draft, advance]);
 
   const undo = useCallback(async () => {
     const last = history[history.length - 1];
-    if (!last || busy || draft) return;
+    if (!last || busy || loading || draft) return;
     setBusy(true);
     setError("");
     try {
@@ -287,14 +307,28 @@ export const SpeedTriviaQuickReview = () => {
     } finally {
       setBusy(false);
     }
-  }, [history, busy, draft, filter.view]);
+  }, [history, busy, loading, draft, filter.view]);
+
+  // A Z pressed while a Keep / Reject was saving runs when that save finishes, only if it saved and its entry is
+  // still the last one: a failed, changed or "Already decided." save never undoes an older decision (D36).
+  useEffect(() => {
+    if (busy) return;
+    const flight = inFlightRef.current;
+    if (flight && !flight.done) return;
+    inFlightRef.current = null;
+    const queued = queuedUndoRef.current;
+    if (queued === null) return;
+    queuedUndoRef.current = null;
+    const last = history[history.length - 1];
+    if (last && last === decidedRef.current && last.item.id === queued && last.kind !== "skip") void undo();
+  }, [busy, history, undo]);
 
   const startEdit = useCallback(() => {
-    if (!current || busy || repeats) return;
+    if (!current || busy || loading || repeats) return;
     setDraft({ question: current.question, options: [...current.options], correctAnswer: current.correctAnswer });
     setError("");
     setNotice("");
-  }, [current, busy, repeats]);
+  }, [current, busy, loading, repeats]);
 
   const saveEdit = useCallback(async () => {
     if (!current || !draft) return;
@@ -319,7 +353,8 @@ export const SpeedTriviaQuickReview = () => {
   }, [current, draft, reload]);
 
   const runBulk = useCallback(async (decision: QuickReviewDecision) => {
-    if (busy || draft || total === 0 || repeats) return;
+    if (busy || loading || draft || total === 0 || repeats) return;
+    queuedUndoRef.current = null;
     const count = total;
     const label = decision === "reject" ? `Reject ${count.toLocaleString()} questions?` : `Keep ${count.toLocaleString()} questions? Older ones are approved after the repeat check.`;
     if (!window.confirm(label)) return;
@@ -355,7 +390,7 @@ export const SpeedTriviaQuickReview = () => {
       setBusy(false);
       await reload();
     }
-  }, [busy, draft, total, repeats, filter, reload]);
+  }, [busy, loading, draft, total, repeats, filter, reload]);
 
   // The listener is bound once and calls the newest handler. The handler is swapped in a layout
   // effect (before the new question paints), so a key pressed the moment it appears is never
@@ -372,7 +407,11 @@ export const SpeedTriviaQuickReview = () => {
         w: () => void reject("wrong"),
         s: skip,
         e: startEdit,
-        z: () => void undo(),
+        z: () => {
+          // A save is running: remember the Z for when it finishes. Any other key stays ignored while busy.
+          if (inFlightRef.current) { queuedUndoRef.current = inFlightRef.current.id; return; }
+          void undo();
+        },
       };
       const action = actions[key];
       if (!action) return;
@@ -439,16 +478,16 @@ export const SpeedTriviaQuickReview = () => {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-slate-700" role="status" aria-live="polite">
-          {bulk ? `${bulk.decision === "reject" ? "Rejecting" : "Keeping"}… ${bulk.done.toLocaleString()} / ${bulk.of.toLocaleString()}`
+        <p className="min-h-5 text-sm font-semibold text-slate-700" role="status" aria-live="polite">
+          {loading ? null : bulk ? `${bulk.decision === "reject" ? "Rejecting" : "Keeping"}… ${bulk.done.toLocaleString()} / ${bulk.of.toLocaleString()}`
             : `${total.toLocaleString()} ${repeats ? "retired" : "left"}${counts.queued ? ` · ${counts.queued.toLocaleString()} queued` : ""}`}
         </p>
         {repeats ? null : <div className="flex flex-wrap gap-2">
-          <button type="button" disabled={busy || total === 0} onClick={() => void runBulk("reject")}
+          <button type="button" disabled={busy || loading || total === 0} onClick={() => void runBulk("reject")}
             className={`${buttonBase} bg-rose-50 text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100`}>
             Reject all shown ({total.toLocaleString()})
           </button>
-          <button type="button" disabled={busy || total === 0} onClick={() => void runBulk("keep")}
+          <button type="button" disabled={busy || loading || total === 0} onClick={() => void runBulk("keep")}
             className={`${buttonBase} bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100`}>
             Keep all shown ({total.toLocaleString()})
           </button>
@@ -540,26 +579,26 @@ export const SpeedTriviaQuickReview = () => {
 
       {repeats ? (
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" disabled={!current || busy} onClick={skip}
+          <button type="button" disabled={!current || busy || loading} onClick={skip}
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Skip (S)</button>
-          <button type="button" disabled={!current || busy} onClick={() => void restore()}
+          <button type="button" disabled={!current || busy || loading} onClick={() => void restore()}
             className={`${buttonBase} ml-auto bg-slate-900 text-white hover:bg-slate-700`}>Restore</button>
         </div>
       ) : !draft ? (
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" disabled={!current || busy} onClick={() => void reject("quality")}
+          <button type="button" disabled={!current || busy || loading} onClick={() => void reject("quality")}
             className={`${buttonBase} bg-rose-600 text-white hover:bg-rose-700`}>← Reject</button>
-          <button type="button" disabled={!current || busy} onClick={() => void reject("wrong")}
+          <button type="button" disabled={!current || busy || loading} onClick={() => void reject("wrong")}
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Wrong answer (W)</button>
-          <button type="button" disabled={!current || busy} onClick={skip}
+          <button type="button" disabled={!current || busy || loading} onClick={skip}
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Skip (S)</button>
-          <button type="button" disabled={!current || busy} onClick={startEdit}
+          <button type="button" disabled={!current || busy || loading} onClick={startEdit}
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Edit (E)</button>
-          <button type="button" disabled={history.length === 0 || busy} onClick={() => void undo()}
+          <button type="button" disabled={history.length === 0 || busy || loading} onClick={() => void undo()}
             className={`${buttonBase} bg-slate-100 text-slate-700 hover:bg-slate-200`}>Undo (Z)</button>
-          <button type="button" disabled={!current || busy} onClick={() => void keep(true)}
+          <button type="button" disabled={!current || busy || loading} onClick={() => void keep(true)}
             className={`${buttonBase} ml-auto bg-slate-100 text-slate-700 hover:bg-slate-200`}>Keep + Live (L)</button>
-          <button type="button" disabled={!current || busy} onClick={() => void keep()}
+          <button type="button" disabled={!current || busy || loading} onClick={() => void keep()}
             className={`${buttonBase} bg-emerald-600 text-white hover:bg-emerald-700`}>Keep →</button>
         </div>
       ) : null}

@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SpeedTriviaQuickReview } from "@/components/admin/sections/SpeedTriviaQuickReview";
 
 // Quick Review keyboard flow against a fake in-memory server (no network, no database).
@@ -391,5 +392,121 @@ describe("Speed Trivia Quick Review: Keep + Live (L)", () => {
     press("l");
     expect(await screen.findByText("Subject full.")).toBeTruthy();
     expect(liveCalls).toEqual([]);
+  });
+});
+
+// D36 (phase T4.2): keys while a save runs or a list loads. A held request is a promise the test settles by hand.
+type Held = { release: (status?: number, payload?: unknown) => Promise<void> };
+/** Hold every request `match` picks; the rest go to the fake server. `sent` lists each quick-review POST when it is sent. */
+const hold = (match: (url: string, init?: RequestInit) => boolean) => {
+  const held: Held[] = [];
+  const sent: string[] = [];
+  vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    const body = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : null;
+    if (init?.method === "POST" && body && String(input).endsWith("/quick-review")) sent.push(String(body.action));
+    if (!match(String(input), init)) return fakeFetch(input, init);
+    return new Promise<Response>((resolve) => {
+      held.push({
+        release: async (status, payload) => {
+          await act(async () => {
+            resolve(payload ? await respond(payload) : status ? await respond({ ok: false, error: "Server error." }, status) : await fakeFetch(input, init));
+          });
+        },
+      });
+    });
+  }));
+  return { held, sent };
+};
+const isPost = (action: string) => (_url: string, init?: RequestInit) => init?.method === "POST" && JSON.parse(String(init.body)).action === action;
+const isList = (_url: string, init?: RequestInit) => !init?.method || init.method === "GET";
+const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+const page = (rows: Row[]) => ({ ok: true, total: rows.length, items: rows, counts: { queued: 0, needsLook: 0, repeats: 0 } });
+
+describe("Speed Trivia Quick Review: keys while a save runs or a list loads (D36)", () => {
+  it("runs a Z pressed during a Reject save once the save finishes", async () => {
+    render(createElement(SpeedTriviaQuickReview));
+    expect(await screen.findByText("Question 1?")).toBeTruthy();
+    const { held, sent } = hold(isPost("reject"));
+    press("ArrowLeft");
+    press("z");
+    expect(sent).toEqual(["reject"]);
+    await held[0].release();
+    expect(await screen.findByText("Undone.")).toBeTruthy();
+    expect(screen.getByText("Question 1?")).toBeTruthy();
+    expect(sent).toEqual(["reject", "undo"]);
+  });
+
+  it("drops a Z queued during a failed Keep; the earlier decision stays", async () => {
+    render(createElement(SpeedTriviaQuickReview));
+    expect(await screen.findByText("Question 1?")).toBeTruthy();
+    press("ArrowLeft");
+    expect(await screen.findByText("Question 2?")).toBeTruthy();
+    const { held, sent } = hold(isPost("keep"));
+    press("ArrowRight");
+    press("z");
+    await held[0].release(500);
+    expect(await screen.findByText("Server error.")).toBeTruthy();
+    await settle();
+    expect(sent).toEqual(["keep"]);
+    expect(screen.getByText("Question 2?")).toBeTruthy();
+  });
+
+  it("ignores → pressed during a save: the next question was never seen", async () => {
+    render(createElement(SpeedTriviaQuickReview));
+    expect(await screen.findByText("Question 1?")).toBeTruthy();
+    const { held, sent } = hold(isPost("reject"));
+    press("ArrowLeft");
+    press("ArrowRight");
+    await held[0].release();
+    expect(await screen.findByText("Question 2?")).toBeTruthy();
+    await settle();
+    expect(sent).toEqual(["reject"]);
+  });
+
+  it("decides nothing while a new list loads, then shows it", async () => {
+    render(createElement(SpeedTriviaQuickReview));
+    expect(await screen.findByText("Question 1?")).toBeTruthy();
+    const { held, sent } = hold(isList);
+    fireEvent.change(screen.getByLabelText("Category"), { target: { value: "science" } });
+    expect(screen.getByText("Loading…")).toBeTruthy();
+    expect(screen.queryByTestId("quick-review-card")).toBeNull();
+    expect(screen.queryByText(/ left/)).toBeNull();
+    for (const key of ["ArrowRight", "l", "ArrowLeft", "w", "s", "e", "z"]) press(key);
+    expect(screen.getByRole("button", { name: "Keep →" }).hasAttribute("disabled")).toBe(true);
+    expect(sent).toEqual([]);
+    await held[0].release(undefined, page([row(8)]));
+    expect(await screen.findByText("Question 8?")).toBeTruthy();
+    expect(sent).toEqual([]);
+  });
+
+  it("shows the last list asked for when the first answer arrives last", async () => {
+    render(createElement(SpeedTriviaQuickReview));
+    expect(await screen.findByText("Question 1?")).toBeTruthy();
+    const { held } = hold(isList);
+    fireEvent.change(screen.getByLabelText("Source"), { target: { value: "older" } });
+    fireEvent.change(screen.getByLabelText("Source"), { target: { value: "recent" } });
+    expect(held).toHaveLength(2);
+    await held[1].release(undefined, page([row(6)]));
+    expect(await screen.findByText("Question 6?")).toBeTruthy();
+    await held[0].release(undefined, page([row(5)]));
+    await settle();
+    expect(screen.getByText("Question 6?")).toBeTruthy();
+    expect(screen.queryByText("Loading…")).toBeNull();
+  });
+
+  it("paints Loading…, not Nothing left., on the very first render", () => {
+    // Server-side render = the first paint; a client effect that sets loading comes too late to count.
+    const html = renderToString(createElement(SpeedTriviaQuickReview));
+    expect(html).toContain("Loading…");
+    expect(html).not.toContain("Nothing left.");
+  });
+
+  it("shows Loading…, not Nothing left., before the first list arrives", async () => {
+    const { held } = hold(isList);
+    render(createElement(SpeedTriviaQuickReview));
+    expect(screen.getByText("Loading…")).toBeTruthy();
+    expect(screen.queryByText("Nothing left.")).toBeNull();
+    await held[0].release();
+    expect(await screen.findByText("Question 1?")).toBeTruthy();
   });
 });
