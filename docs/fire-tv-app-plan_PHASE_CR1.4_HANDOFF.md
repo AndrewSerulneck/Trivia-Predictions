@@ -119,4 +119,5 @@ Read "Phase CR1.5" in `docs/fire-tv-app-plan.md` and findings F7–F11 and F35. 
 PR #60 (`fix/tv-sports-feed-review`): CI `validate` and the Vercel preview passed on `20e4f44f`, merged under the
 auto-merge rule. **The post-deploy check is still to record:** after one idle carousel state request on production,
 `tv_sports_refresh` due times should show the empty leagues about 6 h out, not 30 min (select only). The agent that
-did CR1.4 reported the result in chat. The next PR that touches this plan records it here (no docs-only PR).
+did CR1.4 reported the result in chat. The next PR that touches this plan records it here (no docs-only PR). PR #60 merged as `ddad2a3a`. The select-only
+check is still not recorded: do it once, and write the result here.

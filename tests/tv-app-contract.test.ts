@@ -117,7 +117,10 @@ describe("tv_device_pairings", () => {
   it("the TV polls only while visible and never regenerates a code by itself", () => {
     const screen = read("components/venue-screen/TvConnectScreen.tsx");
     expect(screen).toMatch(/document\.visibilityState === "visible"/);
-    expect(screen).toMatch(/window\.addEventListener\("keydown", renew\)/);
+    // Renews only on OK / Enter (CR1.5, F11), never on any key or on focus.
+    expect(screen).toMatch(/window\.addEventListener\("keydown", onKeyDown\)/);
+    expect(screen).toMatch(/event\.key === "Enter"/);
+    expect(screen).not.toMatch(/addEventListener\("focus"/);
     expect(screen).not.toMatch(/setInterval/);
   });
 });

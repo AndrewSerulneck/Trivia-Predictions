@@ -12,6 +12,7 @@ import {
   TV_CONNECT_COPY,
   TV_PAIR_POLL_MS,
   TV_PAIR_SECRET_HEADER,
+  TV_PAIR_TTL_MS,
   tvConnectUrl,
   type TvDisplayCodeResult,
   type TvPairingCreated,
@@ -24,7 +25,8 @@ import { getVenueScreenTheme, SCREEN_COLORS } from "@/lib/venueScreenBrand";
 // display code with the remote. Try demo sits top right. Authored at 1920×1080 and scaled to the viewport.
 //
 // Cost (plan "Connecting a TV"): one create, then one status read every 3 s only while this screen is visible and
-// the code is unexpired (≤ 200 per code). An expired code waits for a key press; it never regenerates by itself.
+// the code is unexpired (≤ 200 per code, plus one last read at the deadline). An expired code waits for OK; it never
+// regenerates by itself. The deadline is receipt time + TTL (the TV's clock may be off); the server's `expired` wins.
 
 const CANVAS_W = 1920;
 const CANVAS_H = 1080;
@@ -44,7 +46,7 @@ export const tvDisplayHref = (venueId: string): string => gameHref(`/venue/${enc
 
 type Pairing =
   | { state: "loading" }
-  | { state: "ready"; pairCode: string; pollSecret: string; expiresAtMs: number }
+  | { state: "ready"; pairCode: string; pollSecret: string; deadlineMs: number }
   | { state: "expired" }
   | { state: "error" };
 
@@ -175,6 +177,7 @@ export const TvConnectScreen = () => {
   const codeRef = useRef<HTMLInputElement>(null);
   const demoRef = useRef<HTMLButtonElement>(null);
   const creatingRef = useRef(false);
+  const retryAfterMsRef = useRef(0);
   const reopenKeyboardRef = useRef(false);
 
   const goToDisplay = useCallback((venueId: string) => {
@@ -190,12 +193,16 @@ export const TvConnectScreen = () => {
     try {
       const response = await fetch("/api/tv-app/pairings", { method: "POST", cache: "no-store" });
       const json = (await response.json()) as TvPairingCreated | { ok: false };
-      if (!response.ok || !json.ok) throw new Error("create failed");
+      if (!response.ok || !json.ok) {
+        const seconds = Number(response.headers.get("Retry-After"));
+        if (Number.isFinite(seconds) && seconds > 0) retryAfterMsRef.current = Date.now() + seconds * 1000;
+        throw new Error("create failed");
+      }
       setPairing({
         state: "ready",
         pairCode: json.pairCode,
         pollSecret: json.pollSecret,
-        expiresAtMs: Date.parse(json.expiresAt),
+        deadlineMs: Date.now() + TV_PAIR_TTL_MS,
       });
     } catch {
       setPairing({ state: "error" });
@@ -231,16 +238,20 @@ export const TvConnectScreen = () => {
     if (view !== "connect" || pairing.state !== "ready") return;
     let active = true;
     let timer: number | null = null;
-    const { pollSecret, expiresAtMs } = pairing;
+    const { pollSecret, deadlineMs } = pairing;
+    let inFlight = false;
+
+    const schedule = () => {
+      if (active) timer = window.setTimeout(tick, TV_PAIR_POLL_MS);
+    };
 
     const tick = async () => {
-      if (!active) return;
-      if (Date.now() >= expiresAtMs) {
-        setPairing({ state: "expired" });
-        return;
-      }
-      if (document.visibilityState === "visible") {
-        try {
+      if (!active || inFlight) return;
+      inFlight = true;
+      // At the deadline, read once more even if hidden: a partner may have connected in the last seconds.
+      const pastDeadline = Date.now() >= deadlineMs;
+      try {
+        if (pastDeadline || document.visibilityState === "visible") {
           const response = await fetch("/api/tv-app/pairings/status", {
             cache: "no-store",
             headers: { [TV_PAIR_SECRET_HEADER]: pollSecret },
@@ -255,16 +266,23 @@ export const TvConnectScreen = () => {
             setPairing({ state: "expired" });
             return;
           }
-        } catch {
-          // A dropped request just waits for the next tick.
         }
+      } catch {
+        // A dropped request just waits for the next tick.
+        if (!active) return;
+      } finally {
+        inFlight = false;
       }
-      if (active) timer = window.setTimeout(tick, TV_PAIR_POLL_MS);
+      if (pastDeadline) {
+        setPairing({ state: "expired" });
+        return;
+      }
+      schedule();
     };
 
     timer = window.setTimeout(tick, TV_PAIR_POLL_MS);
     const onVisible = () => {
-      if (document.visibilityState !== "visible" || !active) return;
+      if (document.visibilityState !== "visible" || !active || inFlight) return;
       if (timer !== null) window.clearTimeout(timer);
       void tick();
     };
@@ -276,17 +294,21 @@ export const TvConnectScreen = () => {
     };
   }, [goToDisplay, pairing, view]);
 
-  // An expired or failed code renews only on a key press, a tap or the window regaining focus.
+  // An expired or failed code renews only on OK / Enter (or a tap), and not before a 429's Retry-After has passed.
   useEffect(() => {
     if (view !== "connect" || (pairing.state !== "expired" && pairing.state !== "error")) return;
-    const renew = () => void createPairing();
-    window.addEventListener("keydown", renew);
+    const renew = () => {
+      if (Date.now() < retryAfterMsRef.current) return;
+      void createPairing();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter") renew();
+    };
+    window.addEventListener("keydown", onKeyDown);
     window.addEventListener("pointerdown", renew);
-    window.addEventListener("focus", renew);
     return () => {
-      window.removeEventListener("keydown", renew);
+      window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("pointerdown", renew);
-      window.removeEventListener("focus", renew);
     };
   }, [createPairing, pairing.state, view]);
 
