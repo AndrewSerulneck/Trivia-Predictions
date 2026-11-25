@@ -53,6 +53,19 @@ vi.mock("@/lib/supabaseAdmin", () => {
       eq: (column: string, value: unknown) => (filters.push((row) => row[column] === value), query),
       is: (column: string, value: unknown) => (filters.push((row) => (row[column] ?? null) === value), query),
       lt: (column: string, value: string) => (filters.push((row) => String(row[column]) < value), query),
+      // Only the shape the module uses: "claimed_at.is.null,claimed_at.lt.<iso>".
+      or: (expression: string) => (
+        filters.push((row) =>
+          expression.split(",").some((part) => {
+            const [column, operator, ...rest] = part.split(".");
+            const value = rest.join(".");
+            if (operator === "is" && value === "null") return (row[column] ?? null) === null;
+            if (operator === "lt") return row[column] != null && String(row[column]) < value;
+            throw new Error(`unsupported or(): ${part}`);
+          }),
+        ),
+        query
+      ),
       gt: (column: string, value: string) => (filters.push((row) => String(row[column]) > value), query),
       maybeSingle: async () => {
         const result = run();
@@ -109,6 +122,20 @@ describe("createTvPairing", () => {
     expect(db.rows.map((row) => row.id)).toEqual(["live", "row-1"]);
   });
 
+  it("spares a row claimed in the last 60 s, then deletes it (F7)", async () => {
+    const claimedRow = (id: string, claimedAt: number) => ({
+      id,
+      pair_code: id,
+      poll_secret_hash: id,
+      venue_id: "venue-1",
+      claimed_at: new Date(claimedAt).toISOString(),
+      expires_at: new Date(T0 - 1_000).toISOString(),
+    });
+    db.rows.push(claimedRow("recent", T0 - 30_000), claimedRow("stale", T0 - 90_000));
+    await create();
+    expect(db.rows.map((row) => row.id)).toEqual(["recent", "row-1"]);
+  });
+
   it("retries a code collision, then gives up after 3 tries", async () => {
     db.collisionsLeft = 2;
     expect(await createTvPairing(T0)).not.toBeNull();
@@ -134,6 +161,14 @@ describe("claim and status", () => {
     // Read once: the row is gone, so a replayed secret learns nothing.
     expect(db.rows).toHaveLength(0);
     expect(await readTvPairingStatus(pollSecret, T0 + 9_000)).toEqual({ ok: true, state: "expired" });
+  });
+
+  it("a retry by the same venue after a lost response is ok, another venue is not (F10)", async () => {
+    const { pairCode } = await create();
+    const claim = (venueId: string) => claimTvPairing({ rawPairCode: pairCode, venueId, ownerVenueIds: OWNER_VENUES }, T0 + 1);
+    expect(await claim("venue-1")).toEqual({ ok: true });
+    expect(await claim("venue-1")).toEqual({ ok: true });
+    expect(await claim("venue-2")).toMatchObject({ ok: false, code: "expired" });
   });
 
   it("accepts a typed code with look-alikes and lowercase", async () => {

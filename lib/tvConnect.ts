@@ -27,6 +27,8 @@ type PairingRow = { id: string; venue_id: string | null; expires_at: string };
 
 const UNIQUE_VIOLATION = "23505";
 const CREATE_ATTEMPTS = 3;
+/** A claimed row survives cleanup this long past its expiry, so the TV's next poll still delivers it (F7). */
+const CLAIMED_GRACE_MS = 60_000;
 
 /** SHA-256 hex of the TV's raw secret. Only this is stored. */
 export const hashPollSecret = (secret: string): string => createHash("sha256").update(secret).digest("hex");
@@ -50,8 +52,14 @@ export type CreatedPairing = { pairCode: string; pollSecret: string; expiresAt: 
 export const createTvPairing = async (nowMs: number = Date.now()): Promise<CreatedPairing | null> => {
   if (!supabaseAdmin) return null;
   const nowIso = new Date(nowMs).toISOString();
-  // Housekeeping instead of a cron: one bounded delete (indexed on expires_at).
-  const cleanup = await supabaseAdmin.from("tv_device_pairings").delete().lt("expires_at", nowIso);
+  // Housekeeping instead of a cron: one bounded delete (indexed on expires_at). A row claimed in the last minute is
+  // spared: its TV hasn't read it yet.
+  const claimedBeforeIso = new Date(nowMs - CLAIMED_GRACE_MS).toISOString();
+  const cleanup = await supabaseAdmin
+    .from("tv_device_pairings")
+    .delete()
+    .lt("expires_at", nowIso)
+    .or(`claimed_at.is.null,claimed_at.lt.${claimedBeforeIso}`);
   if (cleanup.error) console.error("[TvConnect] cleanup-failed", { message: cleanup.error.message });
 
   const expiresAt = new Date(nowMs + TV_PAIR_TTL_MS).toISOString();
@@ -136,6 +144,13 @@ export const claimTvPairing = async (
     return { ok: false, code: "unavailable", error: "Something went wrong. Try again." };
   }
   if (!data || data.length === 0) {
+    // A retry after a lost response: the code is already claimed for this same venue (F10).
+    const existing = await supabaseAdmin
+      .from("tv_device_pairings")
+      .select("id, venue_id, expires_at")
+      .eq("pair_code", pairCode)
+      .maybeSingle<PairingRow>();
+    if (!existing.error && existing.data?.venue_id === venueId) return { ok: true };
     return { ok: false, code: "expired", error: TV_CONNECT_COPY.expired };
   }
   return { ok: true };

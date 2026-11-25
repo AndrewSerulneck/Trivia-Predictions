@@ -92,7 +92,10 @@ export const useKeepScreenAwake = (enabled = true): void => {
     status = INITIAL_STATUS;
     if (isTvApp()) {
       setStatus({ method: "native", visibility: document.visibilityState });
+      const onNativeVisibility = () => setStatus({ visibility: document.visibilityState });
+      document.addEventListener("visibilitychange", onNativeVisibility);
       return () => {
+        document.removeEventListener("visibilitychange", onNativeVisibility);
         startedAt = 0;
         status = INITIAL_STATUS;
         listeners.forEach((listener) => listener());
