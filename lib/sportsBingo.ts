@@ -1238,11 +1238,11 @@ export async function hasUpcomingGamesInWindow(sportKey: string, days: number): 
     return false;
   }
 
-  // `per_page: 1` with `maxPages: 1`: one row anywhere in the window settles the question, and
-  // there is nothing to gain from walking the cursor.
+  // `per_page: 1` with `firstPageOnly`: one row anywhere in the window settles the question, and
+  // there is nothing to gain from walking the cursor (a `next_cursor` is not a failure here).
   const failure: BallDontLieFailureBox = { failed: false };
   const query = buildBallDontLieDatesQuery(now, now + days * 24 * 60 * 60 * 1000, "1");
-  const rows = await fetchBallDontLieList(path, query, { maxPages: 1, failure });
+  const rows = await fetchBallDontLieList(path, query, { firstPageOnly: true, failure });
   const hasGames = rows.length > 0;
 
   // A failure-derived `false` is not an answer, so it does not get an answer's TTL.

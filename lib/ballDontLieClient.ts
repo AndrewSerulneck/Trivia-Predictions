@@ -99,13 +99,16 @@ export async function fetchBallDontLieJson(
  * it hit that cap (the odds feed fans out one row per game *per sportsbook*, so it is the one
  * endpoint here that realistically can).
  *
+ * `firstPageOnly` returns page 1's rows and stops, even when a `next_cursor` exists; that is not a
+ * failure (use it for existence probes). A failed page 1 is still a failure.
+ *
  * Pass `failure` when the caller caches the result: it is set when any page of the walk failed, so
  * "provider said empty" can be told apart from "provider was down" (see {@link BallDontLieFailureBox}).
  */
 export async function fetchBallDontLieList<T>(
   path: string,
   baseQuery: URLSearchParams,
-  options?: { maxPages?: number; truncation?: { truncated: boolean }; failure?: BallDontLieFailureBox }
+  options?: { maxPages?: number; firstPageOnly?: boolean; truncation?: { truncated: boolean }; failure?: BallDontLieFailureBox }
 ): Promise<T[]> {
   const maxPages = Math.max(1, options?.maxPages ?? DEFAULT_MAX_PAGES);
   const allRows: T[] = [];
@@ -132,7 +135,7 @@ export async function fetchBallDontLieList<T>(
     allRows.push(...rows);
 
     const nextCursor = payload?.meta?.next_cursor;
-    if (typeof nextCursor !== "number") {
+    if (options?.firstPageOnly || typeof nextCursor !== "number") {
       return allRows;
     }
     if (seenCursors.has(nextCursor)) {
