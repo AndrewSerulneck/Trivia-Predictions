@@ -11,3 +11,5 @@
 **State:** approved by Andrew 2026-11-25; cherry-picked onto `fix/cr2-connect-privacy` (not pushed; original local branch `fix/nfl-pickem-moved-game` can be deleted). No migration, env or cost change (one extra bounded read per new NFL pick).
 
 **Next:** push `fix/cr2-connect-privacy` as one PR, CI, merge, deploy. CR1.6 is already done; CR1.7 waits for Amazon.
+
+**Shipped 2026-11-25:** PR #66 merged (`ca0576b5`), CI green, Vercel `hightop-challenge` production build succeeded. Read-only production check after deploy: `pickem_picks` 137 rows (133 not canceled); 0 duplicate user + provider-game pairs; 0 provider games under more than one id. Same as the CR1 baseline (137 / 0 / 0).
