@@ -288,6 +288,10 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
   const hasLiveGamesRef = useRef(false);
   const refreshTimerRef = useRef<number | null>(null);
   const recheckTimerRef = useRef<number | null>(null);
+  // F67: the sport:day on screen, and the newest player-asked load. A reply for a sport or day the player has
+  // left, or one a newer load replaced, is dropped.
+  const currentKeyRef = useRef("");
+  const normalLoadSeqRef = useRef(0);
   const [pickPulseByGameId, setPickPulseByGameId] = useState<Record<string, string | undefined>>({});
   const [today, setToday] = useState<PickEmTodaySummary | null>(null);
   const [collegeScoring, setCollegeScoring] = useState<CollegeScoring | null>(null);
@@ -406,6 +410,8 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
     void run();
   }, [normalizedInitialSportSlug]);
 
+  currentKeyRef.current = `${selectedSportSlug}:${selectedDate}`;
+
   const loadGames = useCallback(
     async ({ background = false }: { background?: boolean } = {}) => {
       if (!selectedSportSlug) {
@@ -415,8 +421,13 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
         return;
       }
 
+      const requestKey = `${selectedSportSlug}:${selectedDate}`;
       const isSportChange = selectedSportSlug !== loadedSportSlugRef.current;
       const effectiveBackground = background || (!isSportChange && gamesRef.current.length > 0);
+
+      const seq = effectiveBackground ? normalLoadSeqRef.current : ++normalLoadSeqRef.current;
+      const isStale = () =>
+        requestKey !== currentKeyRef.current || (!effectiveBackground && seq !== normalLoadSeqRef.current);
 
       if (!effectiveBackground) {
         setLoadingGames(true);
@@ -440,6 +451,7 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           cache: "no-store",
         });
         const payload = await readJsonResponse<GamesResponse>(response, "/api/pickem/games");
+        if (isStale()) return;
         if (!payload.ok) {
           throw new Error(payload.error ?? "Failed to load Pick 'Em games.");
         }
@@ -482,20 +494,24 @@ export function PickEmGameList({ initialSportSlug = "", initialDate = "", onBack
           if (recheckTimerRef.current !== null) window.clearTimeout(recheckTimerRef.current);
           recheckTimerRef.current = null;
           if (needsFreshRecheck(nextGames)) {
+            const recheckKey = `${selectedSportSlug}:${servedOtherDay ? servedDate : selectedDate}`;
             recheckTimerRef.current = window.setTimeout(() => {
               recheckTimerRef.current = null;
+              if (recheckKey !== currentKeyRef.current) return;
               void loadGamesRef.current?.({ background: true });
             }, FRESH_RECHECK_DELAY_MS);
           }
         }
       } catch (error) {
+        if (isStale()) return;
         setLastDebugProbes([]);
         const message = error instanceof Error ? error.message : "Failed to load Pick 'Em games.";
         if (!background || gamesRef.current.length === 0) {
           setErrorMessage(message);
         }
       } finally {
-        if (!effectiveBackground) {
+        // A newer load owns the spinner.
+        if (!effectiveBackground && seq === normalLoadSeqRef.current) {
           setLoadingGames(false);
         }
       }
