@@ -42,7 +42,9 @@ export const TvPrizesSlide = ({ prizes }: TvPrizesSlideProps) => (
           >
             <div className="flex flex-col" style={{ gap: 18 }}>
               <div style={{ fontSize: 56, fontWeight: 900, lineHeight: 1.05 }}>{prize.prize}</div>
-              <div style={{ fontSize: 34, fontWeight: 700, color: "#94a3b8" }}>{prize.name}</div>
+              {prize.name.trim() && prize.name.trim() !== prize.prize.trim() ? (
+                <div style={{ fontSize: 34, fontWeight: 700, color: "#94a3b8" }}>{prize.name}</div>
+              ) : null}
             </div>
             {prize.pointsRequired !== null ? (
               <div style={{ fontSize: 44, fontWeight: 900, color: "#fcd34d" }}>{formatPoints(prize.pointsRequired)} pts</div>

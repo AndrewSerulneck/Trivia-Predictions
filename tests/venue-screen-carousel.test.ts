@@ -11,8 +11,8 @@ import {
   TV_CAROUSEL_ORDER,
   TV_CAROUSEL_SLIDE_MS,
   carouselShowsCornerQr,
-  carouselSlideAt,
   carouselSlidesOf,
+  nextCarouselSlide,
   tickerLoopSeconds,
   tickerRepeatsFor,
   tickerSegmentsOf,
@@ -65,13 +65,19 @@ describe("carousel order and skipping (D20)", () => {
 
   it("changes slide in whole 15 s steps from the mount, so a poll tick never moves it", () => {
     const slides = carouselSlidesOf(sunday, true);
-    expect(carouselSlideAt(slides, 0)).toBe("next");
-    expect(carouselSlideAt(slides, 14_999)).toBe("next");
-    expect(carouselSlideAt(slides, 15_000)).toBe("pick-em");
-    expect(carouselSlideAt(slides, 74_999)).toBe("app");
-    expect(carouselSlideAt(slides, 75_000)).toBe("next");
-    expect(carouselSlideAt(slides, -5)).toBe("next");
-    expect(carouselSlideAt([], 1_000)).toBe("app");
+    // Walks the clock the way the carousel does: one tick a second from slide 1.
+    const at = (elapsedMs: number): TvCarouselSlideId => {
+      let position = nextCarouselSlide(slides, null, 0, 0);
+      for (let ms = 1_000; ms <= elapsedMs; ms += 1_000) position = nextCarouselSlide(slides, position.slide, position.shownAtMs, ms);
+      return position.slide;
+    };
+    expect(at(0)).toBe("next");
+    expect(at(14_000)).toBe("next");
+    expect(at(15_000)).toBe("pick-em");
+    expect(at(74_000)).toBe("app");
+    expect(at(75_000)).toBe("next");
+    expect(nextCarouselSlide(slides, "next", 0, -5).slide).toBe("next");
+    expect(nextCarouselSlide([], null, 0, 1_000).slide).toBe("app");
   });
 
   it("puts the corner QR on every slide but Get the app (D16: one QR per screen)", () => {

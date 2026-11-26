@@ -282,3 +282,6 @@ Q3 → yes, small, only if known. Q4 → no domain yet.
   1–4, the pre-game (its step 1), and the Live Trivia round break and final standings; never on a question, a reveal, a
   Category Blitz round or the Connect screen. It never moves, is never covered, and the stage twinkles stay off every screen
   that carries it. Every display screen says "Hightop Challenge" in full, never "Hightop" alone. Rules in `lib/tvCarousel.ts`.
+  A slide keeps its 15 s when the slide set changes (`nextCarouselSlide`); the corner QR waits for the "Get the app" slide to finish
+  fading out (never two QRs); effects that fall over the screen end above the dock (`appDockClearArea`); the score flash queues
+  one per game, each its own `useFxMoment` token.

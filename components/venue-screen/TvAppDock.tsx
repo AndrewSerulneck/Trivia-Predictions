@@ -18,6 +18,22 @@ const RIGHT_PX = 70;
 const BOTTOM_PX = 130;
 const BOTTOM_LOW_PX = 44;
 
+/** The dock's test id: effects measure its box (`appDockClearArea`), so nothing falls over the QR (CR2.1 F52). */
+export const TV_APP_DOCK_TEST_ID = "tv-app-dock";
+
+/**
+ * The part of the viewport above the dock, as an FX area: confetti falls in it and never reaches the QR (D16: never
+ * covered). Measured from the dock itself, so letterboxing and the stage scale are already in it. Without a dock on
+ * screen (or in a test) the whole viewport.
+ */
+export const appDockClearArea = (): { x: number; y: number; w: number; h: number } => {
+  const whole = { x: 0, y: 0, w: window.innerWidth, h: window.innerHeight };
+  const dock = document.querySelector(`[data-testid="${TV_APP_DOCK_TEST_ID}"]`);
+  if (!dock) return whole;
+  const top = dock.getBoundingClientRect().top;
+  return top > 0 && top < whole.h ? { ...whole, h: top } : whole;
+};
+
 type TvAppDockProps = {
   /** Sits lower (44 px up), for screens with no dots or ticker. */
   low?: boolean;
@@ -25,7 +41,7 @@ type TvAppDockProps = {
 
 export const TvAppDock = ({ low = false }: TvAppDockProps) => (
   <div
-    data-testid="tv-app-dock"
+    data-testid={TV_APP_DOCK_TEST_ID}
     className="absolute flex items-center"
     style={{ right: RIGHT_PX, bottom: low ? BOTTOM_LOW_PX : BOTTOM_PX, gap: 26, zIndex: 3 }}
   >
