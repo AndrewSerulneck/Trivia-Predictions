@@ -12,7 +12,8 @@ val debugStartUrl = (findProperty("tvStartUrl") as String?)?.trim()?.takeIf { it
 fun quoted(value: String) = "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
 // Release signing (Phase 6): the upload key lives outside the repo, created once by scripts/create-upload-key.cjs.
-// Never print these values. Without the files a release build is left unsigned (and can't be uploaded).
+// Never print these values. Without the files, building a release APK or bundle stops (see the guard below): an
+// unsigned APK looks normal but can't be uploaded.
 val signingDir = File(System.getProperty("user.home"), "Library/Application Support/Hightop Challenge/signing")
 val uploadKeystore = File(signingDir, "fire-tv-upload.p12")
 val uploadCredentials = File(signingDir, "fire-tv-upload-credentials.json")
@@ -23,6 +24,18 @@ val uploadSecrets: Map<String, String>? =
     } else {
         null
     }
+
+// Release builds that make an APK or bundle need the upload key. (lintRelease and unit tests don't; debug is unchanged.)
+gradle.taskGraph.whenReady {
+    val needsKey = allTasks.any { it.project == project && it.name in setOf("assembleRelease", "bundleRelease", "packageRelease") }
+    if (needsKey && uploadSecrets == null) {
+        throw GradleException(
+            "Release build needs the Fire TV upload key in ~/Library/Application Support/Hightop Challenge/signing/ " +
+                "(fire-tv-upload.p12 and fire-tv-upload-credentials.json). Restore it from the password manager; " +
+                "never create a new one for an existing store listing.",
+        )
+    }
+}
 
 android {
     namespace = "com.hightopchallenge.tv"

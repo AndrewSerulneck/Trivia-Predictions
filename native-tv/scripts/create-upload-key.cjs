@@ -31,6 +31,14 @@ const run = (tool, toolArgs, credentials) =>
     },
   });
 
+const createKeystore = (credentials) =>
+  run("keytool", [
+    "-genkeypair", "-noprompt", "-keystore", keystore, "-storetype", credentials.storeType,
+    "-storepass:env", "HIGHTOP_TV_STORE_PASSWORD", "-keypass:env", "HIGHTOP_TV_KEY_PASSWORD",
+    "-alias", credentials.alias, "-keyalg", "RSA", "-keysize", "3072", "-sigalg", "SHA256withRSA",
+    "-validity", "10000", "-dname", "CN=Hightop Challenge, O=Hightop Challenge LLC, C=US",
+  ], credentials);
+
 const main = () => {
   if (fs.existsSync(keystore) || fs.existsSync(credentialsFile)) {
     throw new Error("Fire TV upload key files already exist; refusing to replace them.");
@@ -41,12 +49,13 @@ const main = () => {
   const credentials = { alias: "hightop-tv-upload", storeType: "PKCS12", storePassword: password, keyPassword: password };
   process.umask(0o077);
   fs.writeFileSync(credentialsFile, JSON.stringify(credentials, null, 2) + "\n", { flag: "wx", mode: 0o600 });
-  run("keytool", [
-    "-genkeypair", "-noprompt", "-keystore", keystore, "-storetype", credentials.storeType,
-    "-storepass:env", "HIGHTOP_TV_STORE_PASSWORD", "-keypass:env", "HIGHTOP_TV_KEY_PASSWORD",
-    "-alias", credentials.alias, "-keyalg", "RSA", "-keysize", "3072", "-sigalg", "SHA256withRSA",
-    "-validity", "10000", "-dname", "CN=Hightop Challenge, O=Hightop Challenge LLC, C=US",
-  ], credentials);
+  try {
+    createKeystore(credentials);
+  } catch (error) {
+    // A half-made key must not block the re-run: no keystore means no key was made, so the credentials go too.
+    if (!fs.existsSync(keystore)) fs.rmSync(credentialsFile, { force: true });
+    throw error;
+  }
   fs.chmodSync(keystore, 0o600);
   run("keytool", [
     "-exportcert", "-rfc", "-keystore", keystore, "-storetype", credentials.storeType,
