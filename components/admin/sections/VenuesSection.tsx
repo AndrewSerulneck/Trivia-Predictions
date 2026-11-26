@@ -797,23 +797,31 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
   }, [venues]);
 
   // Display codes (Hightop Challenge TV app, Option 2). Reloaded when the list grows, so a new venue shows its code.
+  // A failed load says so, with Retry (F48); the table still works without codes.
   const [displayCodes, setDisplayCodes] = useState<Record<string, string>>({});
+  const [codesFailed, setCodesFailed] = useState(false);
+  const [codesAttempt, setCodesAttempt] = useState(0);
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
+      let loaded = false;
       try {
         const res = await fetch("/api/admin?resource=venue-display-codes", { cache: "no-store" });
         const payload = (await res.json()) as { ok: boolean; codes?: Record<string, string> };
-        if (!cancelled && payload.ok && payload.codes) setDisplayCodes(payload.codes);
+        if (res.ok && payload.ok && payload.codes) {
+          loaded = true;
+          if (!cancelled) setDisplayCodes(payload.codes);
+        }
       } catch {
-        // Codes are a convenience; the table works without them.
+        // Falls through to the failed state below.
       }
+      if (!cancelled) setCodesFailed(!loaded);
     };
     void load();
     return () => {
       cancelled = true;
     };
-  }, [venueList.length]);
+  }, [venueList.length, codesAttempt]);
 
   const sortedVenues = useMemo(() => {
     // Dedupe by id defensively — a duplicate id would otherwise collide as a
@@ -977,6 +985,14 @@ export function VenuesSection({ venues, onVenueCreated, onVenueUpdated, onVenueD
     <div className="space-y-4">
       {successMsg ? <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{successMsg}</div> : null}
       {error ? <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
+      {codesFailed ? (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span>Codes didn&apos;t load.</span>
+          <button type="button" onClick={() => setCodesAttempt((n) => n + 1)} className="min-h-[44px] font-semibold hover:underline">
+            Retry
+          </button>
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col items-start justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:px-6">

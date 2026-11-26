@@ -78,9 +78,9 @@ export default function PrivacyPage() {
 
       <LegalSection heading="Hightop Challenge TV app">
         <p>
-          The TV app shows a venue&apos;s game display. It has no sign-in and collects no personal information. It
-          remembers which venue it is connected to on the TV itself. When you connect a TV, we keep a short code that
-          expires after 10 minutes and, once used, the venue it was connected to. Like any website visit, our servers
+          The TV app shows a venue&apos;s game display. It has no sign-in and asks for no account or contact details.
+          It remembers which venue it is connected to on the TV itself. When you connect a TV, we keep a short code
+          that expires after 10 minutes and is deleted once the TV connects. Like any website visit, our servers
           receive the TV&apos;s IP address and device type.
         </p>
       </LegalSection>

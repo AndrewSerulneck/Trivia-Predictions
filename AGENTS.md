@@ -22,6 +22,8 @@ them; it documents recurring processes and active implementation-plan pointers b
 
 Tests and lint must pass first. Report and record what you submitted. Website-only changes need no store release. Full rule: `CLAUDE.md` §Native app releases.
 
+**Batch pushes, PRs and deploys (Andrew, 2026-11-25).** Every PR push runs CI and a paid Vercel preview build; every merge runs a production build. Commit after every phase, locally, on the plan's branch, and prove it with local `npm run test`, `npm run lint`, `npx tsc --noEmit`. Don't push, open a PR, wait on checks or merge per phase. Push once per batch (the phases of one plan done together), wait on CI once (`gh pr checks <n> --watch`), merge. Ship early only for a live security/data/points/picks problem, a next phase that needs it in production, or when Andrew asks. Full rule: `CLAUDE.md` §Batch pushes, PRs and deploys.
+
 **Code review findings become remedial phases, automatically (Andrew, 2026-11-24).** Every code review (a plan's review phase such as CR1, a `/code-review` run, or one Andrew asks for) ends by writing each verified finding worth fixing, with its fix, into the plan that owns the affected code as a remedial phase (`CR1.1`, `CR1.2`, …): a findings row, a phase-table row with model, effort and reason, and a "Phase details" section a fresh agent can follow, including the test that must fail before the fix. Code owned by another feature goes in that feature's plan, with a pointer in the reviewed plan. Don't ask before adding them; doing them waits for Andrew's OK, except a live security hole, data leak, wrong points or lost picks, which is reported to him at once. Full rule: `CLAUDE.md` §Code review findings become remedial phases.
 
 ## Models in phased plans — always

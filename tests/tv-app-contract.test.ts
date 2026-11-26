@@ -161,10 +161,15 @@ describe("Connect screen copy (D10)", () => {
   // Phase 5 (emulator): a programmatic focus on the input right after a remote press opens the on-screen keyboard
   // over the QR, and the keyboard eats the next Back. Focus lands on the boxes; only OK/tap/typing enters the input.
   it("never auto-focuses the code input; the boxes take focus and OK opens it", () => {
-    expect(screen).toMatch(/if \(view === "connect"\) boxesRef\.current\?\.focus\(\);/);
-    expect(screen).not.toMatch(/if \(view === "connect"\) codeRef\.current\?\.focus\(\)/);
-    expect(screen).toMatch(/ref=\{boxesRef\}\s+tabIndex=\{0\}/);
-    expect(screen).toMatch(/event\.key === "Enter"[^}]*\n\s*event\.preventDefault\(\);\n\s*codeRef\.current\?\.focus\(\);/);
+    // F64: tokens, not exact lines. The original Phase 5 bug was `autoFocus` on the input.
+    expect(screen).not.toMatch(/autoFocus/);
+    const connectEffect = screen.match(/useEffect\(\(\) => \{\s*if \(view === "connect"\)([^}]*)\}, \[view\]\)/);
+    expect(connectEffect?.[1]).toContain("boxesRef.current?.focus()");
+    expect(connectEffect?.[1]).not.toContain("codeRef");
+    expect(screen).toContain("ref={boxesRef}");
+    expect(screen).toContain("tabIndex={0}");
+    const boxesHandler = screen.slice(screen.indexOf("const onBoxesKeyDown"), screen.indexOf("if (view === \"checking\")"));
+    expect(boxesHandler).toMatch(/event\.key === "Enter"[\s\S]*codeRef\.current\?\.focus\(\)/);
     // inputmode="none" is not a fix: Android's WebView keeps the remote's OK on a focused input.
     expect(screen).not.toMatch(/inputMode=\{?["']none/);
   });
