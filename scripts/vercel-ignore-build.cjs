@@ -6,6 +6,10 @@
 // lib/ never reads it at runtime). Tailwind only scans app/, components/ and lib/, so docs can't change CSS.
 // Anything unexpected (no earlier deployment, shallow clone, git error, empty diff) builds.
 // Andrew, 2026-11-24: fewer builds, with zero risk to Hightop Challenge.
+//
+// Preview builds are opt-in (Andrew, 2026-11-25): CI already runs the tests on every PR, so a preview deploy is
+// built only when asked for, by a branch named `preview/…` or a commit message containing `[preview]`.
+// Production builds are unaffected.
 
 const { execFileSync } = require("node:child_process");
 
@@ -20,6 +24,9 @@ const isSkippablePath = (file) => SKIPPABLE.some((re) => re.test(file));
 
 /** True only for a non-empty list in which every path is skippable. */
 const canSkipBuild = (files) => files.length > 0 && files.every(isSkippablePath);
+
+/** A preview deploy is wanted only for a `preview/…` branch or a `[preview]` commit message. */
+const previewRequested = ({ ref = "", message = "" }) => ref.startsWith("preview/") || /\[preview\]/i.test(message);
 
 const git = (args) => execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
 
@@ -48,6 +55,13 @@ const baseCommit = () => {
 };
 
 const main = () => {
+  if (
+    process.env.VERCEL_ENV === "preview" &&
+    !previewRequested({ ref: process.env.VERCEL_GIT_COMMIT_REF, message: process.env.VERCEL_GIT_COMMIT_MESSAGE })
+  ) {
+    console.log("Preview not requested (branch preview/… or [preview] in the commit message): skipping build.");
+    return 0;
+  }
   try {
     const base = baseCommit();
     if (!base) {
@@ -69,4 +83,4 @@ const main = () => {
 
 if (require.main === module) process.exit(main());
 
-module.exports = { canSkipBuild, isSkippablePath };
+module.exports = { canSkipBuild, isSkippablePath, previewRequested };

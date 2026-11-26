@@ -2,7 +2,7 @@
 
 Created: 2026-09-12. Requested by Andrew Serulneck.
 
-**Reopened 2026-11-24 for two remedial phases from the Fire TV plan's CR1 code review: CR1.2 (Pick 'Em game id and grading guards, F24–F28) and CR1.6 (BallDontLie season probe, F38; done 2026-11-25, `docs/bingo-pickem-reliability-plan_PHASE_CR1.6_HANDOFF.md`). Both approved by Andrew 2026-11-24. CR1.2 done 2026-11-24 (PR #58, branch `fix/pickem-game-id-and-grading`; handoff `docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md`); it found F44 (the dedicated NFL screen has the same moved-id bug) → remedial phase CR1.2.1, awaiting Andrew's OK.** Findings: `docs/fire-tv-app-plan.md` "CR1 review findings"; review handoff `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`. Phase details: "Remedial phases from the CR1 code review" below. Everything else in this plan stays complete.
+**Reopened 2026-11-24 for two remedial phases from the Fire TV plan's CR1 code review: CR1.2 (Pick 'Em game id and grading guards, F24–F28) and CR1.6 (BallDontLie season probe, F38; done 2026-11-25, `docs/bingo-pickem-reliability-plan_PHASE_CR1.6_HANDOFF.md`). Both approved by Andrew 2026-11-24. CR1.2 done 2026-11-24 (PR #58, branch `fix/pickem-game-id-and-grading`; handoff `docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md`); it found F44 (the dedicated NFL screen has the same moved-id bug) → remedial phase CR1.2.1, approved by Andrew 2026-11-25 and done 2026-11-25 (committed on `fix/cr2-connect-privacy`, not pushed; `docs/bingo-pickem-reliability-plan_PHASE_CR1.2.1_HANDOFF.md`). The CR3 review (2026-11-25) added CR3.1 (F67, Pick 'Em list shows a stale reply after a sport switch); approved by Andrew 2026-11-25 and done 2026-11-25 (committed on `fix/cr2-connect-privacy`, not pushed; `docs/bingo-pickem-reliability-plan_PHASE_CR3.1_HANDOFF.md`).** Findings: `docs/fire-tv-app-plan.md` "CR1 review findings"; review handoff `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`. Phase details: "Remedial phases from the CR1 code review" below. Everything else in this plan stays complete.
 
 **Status: Complete and developer-accepted, 2026-09-19. Andrew confirmed authenticated Prop Bingo works after the atomic-grading migration and explicitly closed the plan. Phase 6 historical reconciliation was intentionally skipped; no past results will be repaired. All offline gates pass (2,620 tests, zero failures; NFL 288/288; MLB 142/142; build 179 pages), and the 16-game NFL provider validator passes. The additive migration is applied and verified on linked Supabase project `pkmxupsayzshvpirkaav`; no board/reward result was changed. Physical-device layout and real-game timing remain useful routine operational monitoring, not open phases or release blockers. Final handoff: [Phase 7](bingo-pickem-reliability-plan_PHASE_7_HANDOFF.md). Release record: [2026-09-19](bingo-pickem-reliability-release-record-2026-09-19.md). Phase 6 decision: [skipped handoff](bingo-pickem-reliability-plan_PHASE_6_HANDOFF.md). Earlier handoffs: [Phase 5](bingo-pickem-reliability-plan_PHASE_5_HANDOFF.md), [Phase 4](bingo-pickem-reliability-plan_PHASE_4_HANDOFF.md), [Phase 3](bingo-pickem-reliability-plan_PHASE_3_HANDOFF.md), [Phase 2](bingo-pickem-reliability-plan_PHASE_2_HANDOFF.md), [Phase 1](bingo-pickem-reliability-plan_PHASE_1_HANDOFF.md), [Phase 0](bingo-pickem-reliability-plan_PHASE_0_HANDOFF.md).**
 
@@ -37,8 +37,9 @@ These are task-specific recommendations, checked against [OpenAI's Codex model g
 | 6 | Reconcile affected stored boards and results | GPT-6 Astra (`gpt-6-astra`) | Extra High | Idempotent repair with venue-scoped points and auditability |
 | 7 | Integrated verification, release record, and final documentation | GPT-5.6 Sol (`gpt-5.6-sol`) | High | Cross-feature regressions, live evidence, and accurate handoff |
 | CR1.2 | **Remedial (CR1 review, 2026-11-24). Done 2026-11-24** (`_PHASE_CR1.2_HANDOFF.md`): a moved start time can't hide a pick or allow a second paid one; grading waits for the real start; postponed ≠ push; local-date notifications | Claude Opus 5.5 | High | Points and pick matching in the shared Pick 'Em engine (planned by a Claude agent, so Claude models) |
-| CR1.2.1 | **Remedial (found in CR1.2, F44; awaiting Andrew's OK):** the dedicated NFL Pick 'Em screen shows and finds a pick on a moved game | Claude Sonnet 5.5 | Medium | Same pattern as CR1.2 in one file; payment is already protected by CR1.2's settlement de-dupe |
+| CR1.2.1 | **Remedial (found in CR1.2, F44; approved and done 2026-11-25):** the dedicated NFL Pick 'Em screen shows and finds a pick on a moved game | Claude Sonnet 5.5 | Medium | Same pattern as CR1.2 in one file; payment is already protected by CR1.2's settlement de-dupe |
 | CR1.6 | **Remedial (CR1 review, 2026-11-24; awaiting Andrew's OK):** the BallDontLie season probe keeps its one row | Claude Sonnet 5.5 | Medium | One fetch option and a test |
+| CR3.1 | **Remedial (Fire TV plan CR3 review, F67; done 2026-11-25):** the Pick 'Em list ignores a slow reply for a sport or day the player has left | Claude Sonnet 5.5 | Medium | Small client fix with one race test; display only, no picks or points |
 
 The original order was 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7. On 2026-09-19 Andrew explicitly skipped Phase 6 because past boards/rewards do not need reconciliation, then directed Phase 7 execution. Phase 3's UI work did not depend technically on grading. No automatic subagent delegation is required.
 
@@ -265,7 +266,7 @@ each assertion to the correct behaviour, watch it fail, then fix.
    pairs, provider games with more than one id) and record the counts. Full handoff
    `docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md` (points path).
 
-### Phase CR1.2.1 — Dedicated NFL Pick 'Em: a moved game keeps its pick (Agent, Claude Sonnet 5.5 / medium) — Awaiting Andrew's OK
+### Phase CR1.2.1 — Dedicated NFL Pick 'Em: a moved game keeps its pick (Agent, Claude Sonnet 5.5 / medium) — Done 2026-11-25
 
 **Fixes F44** (found while doing CR1.2, 2026-11-24; verified by reading the code, no repro yet).
 
@@ -292,6 +293,22 @@ TTL re-probes ~12× more often than intended. Seen in the T2 run log (`reason: '
 2. Test that fails today (in `tests/lib.league-season-status.test.ts`): `fetch` mocked to
    `{data: [{id: 1}], meta: {next_cursor: 2}}` → `hasUpcomingGamesInWindow` is true and the success TTL is used.
 3. Tests, lint, typecheck, PR, CI, merge. Short handoff note `docs/bingo-pickem-reliability-plan_PHASE_CR1.6_HANDOFF.md`.
+
+### Phase CR3.1 — Pick 'Em list ignores replies for a sport or day the player left (Agent, Claude Sonnet 5.5 / medium) — Done 2026-11-25
+
+**Fixes F67** (Fire TV plan CR3 review; finding, repro and evidence: `docs/fire-tv-app-plan.md` "CR3 review findings". Introduced before #50; #50's 5 s recheck makes it slightly likelier). Web only, no store release, no data. Branch `fix/pickem-stale-reply`.
+1. Add the failing test first in `tests/components.pickem-fresh-recheck.test.ts`: first load NCAAF with a `live` game;
+   advance 5 s so the recheck is in flight (hold its reply with a deferred promise); click the MLB button
+   (`getByLabelText("MLB")`); wait for MLB's games; then release the NCAAF reply. Assert the MLB games are still shown.
+   It fails today (shows the NCAAF game).
+2. In `PickEmGameList.tsx`: add `loadSeqRef`; at the start of `loadGames` take `const seq = ++loadSeqRef.current` and
+   capture the sport and day; after the `await`s, `if (seq !== loadSeqRef.current) return` (also in the `catch` and
+   `finally` loading flag: keep `setLoadingGames(false)` correct when a newer load owns the spinner). Keep a
+   background poll for the *same* sport/day from being dropped by an unrelated state change: compare sport and day,
+   not only the counter, if a poll can start while a normal load is in flight.
+3. Clear `recheckTimerRef` when the sport or day changes.
+4. `npm run test` (the existing recheck, R9 served-day and graded-toast tests must still pass), `npm run lint`,
+   `npx tsc --noEmit`; commit; short handoff `docs/bingo-pickem-reliability-plan_PHASE_CR3.1_HANDOFF.md`. PR at the end of the batch.
 
 ## Mandatory handoff contract — every phase, including partial phases
 

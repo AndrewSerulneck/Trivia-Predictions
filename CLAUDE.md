@@ -58,12 +58,24 @@ without being asked; a review isn't finished until its fixes are in the plans.
 - Build: `npm run build` · Lint: `npm run lint` · Tests: `npm run test` (Vitest)
 - Typecheck: `npx tsc --noEmit` (fresh clone: `npx next typegen` first). Never run typecheck and build at the same time.
 
-## Fewer PRs and builds (Andrew, 2026-11-24)
-Each PR update runs CI and a Vercel preview; each merge runs a production build and CI on `main`.
+## Batch pushes, PRs and deploys (Andrew, 2026-11-24; tightened 2026-11-25)
+Each push to a PR runs CI and a Vercel preview build; each merge runs a production build and CI on `main`. They cost
+money (his Vercel bill), so a phase is **not** a deploy.
+- **Commit after every phase, locally, on the plan's branch.** The phase's proof is local: `npm run test`,
+  `npm run lint`, `npx tsc --noEmit` (free). Don't push, open a PR, wait on checks or merge per phase. The next phase
+  continues on the same branch; the handoff names the branch and its unpushed commits.
+- **Push once per batch:** the run of phases of one plan done together (e.g. CR2.1–CR2.3), or a plan's group of
+  remedial phases. Push, open one PR, wait on CI once (`gh pr checks <n> --watch`, a single blocking call, not
+  repeated polls), merge. Push again only to fix a CI failure.
+- **Ship before the batch ends only when needed:** a live security hole, data leak, wrong points or lost picks; a
+  next phase that needs the change in production (deploy check, real-TV or device test, a store build that loads the
+  live site); or Andrew asks for it live. Say so in the handoff.
 - Plan, handoff and status updates go in the same PR as the code they describe. No follow-up docs-only PR to record
   a PR number or "merged": add it as another commit on the same PR, or in the next PR that touches that plan.
-- Commit locally; push once when the PR is ready, then only for fixes. Small phases of one plan that are ready
-  together ship as one PR.
+- A plan's "PR; CI green; merge" step means "at the end of the batch" under this rule.
+- **Vercel preview builds are opt-in (2026-11-25):** a PR push builds no preview unless the branch is `preview/…` or
+  the commit message contains `[preview]` (`scripts/vercel-ignore-build.cjs`). Ask for one only when a person or
+  device must open the preview URL; CI does the testing. Production builds are unchanged.
 - Docs-only changes skip Vercel (`scripts/vercel-ignore-build.cjs`) and CI (`ci.yml` `paths`); Railway rebuilds the
   heartbeat worker only for its own files (`railway.json`). A test that reads a doc must be re-included in `ci.yml`
   (`tests/build-skip-contract.test.ts`). The old `trivia-predictions` Vercel project is paused; never unpause it.

@@ -112,6 +112,35 @@ describe("Pick 'Em list rechecks a stale first load (N3 follow-up)", () => {
     expect(calls).toHaveLength(2);
   });
 
+  it("a slow recheck reply for a sport the player left doesn't replace the new sport's games (F67)", async () => {
+    let release: (() => void) | null = null;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let ncaafCalls = 0;
+    stubFetch(async (url) => {
+      if (url.searchParams.get("sportSlug") === "mlb") {
+        return { sport: sportOf(url), date: TODAY, games: [{ ...game("m"), sportSlug: "mlb" }] };
+      }
+      ncaafCalls += 1;
+      if (ncaafCalls === 1) return { sport: sportOf(url), date: TODAY, games: [{ ...game("a"), status: "live", isLocked: true }] };
+      await held;
+      return { sport: sportOf(url), date: TODAY, games: [{ ...game("a"), awayTeam: "Stale A" }] };
+    });
+    render(React.createElement(PickEmGameList, { initialSportSlug: "ncaaf", initialDate: TODAY }));
+    await screen.findByText("Away a");
+    await wait(FRESH_RECHECK_DELAY_MS + 500);
+    expect(ncaafCalls).toBe(2);
+    fireEvent.click(screen.getByLabelText("MLB"));
+    await screen.findByText("Away m");
+    await act(async () => {
+      release?.();
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    expect(screen.getByText("Away m")).toBeTruthy();
+    expect(screen.queryByText("Stale A")).toBeNull();
+  });
+
   it("a list with no started game doesn't reload", async () => {
     const calls = stubFetch((url) => ({ sport: sportOf(url), date: TODAY, games: [game("a")] }));
     render(React.createElement(PickEmGameList, { initialSportSlug: "ncaaf", initialDate: TODAY }));

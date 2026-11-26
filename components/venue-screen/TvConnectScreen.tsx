@@ -369,11 +369,16 @@ export const TvConnectScreen = () => {
   };
 
   // On the boxes: OK opens the input (and the keyboard); a typed character (a real keyboard) goes straight in.
+  // One OK does one thing (F66): on an expired / failed code it renews ("Press OK for a new code"), unless a 429's
+  // Retry-After is still running, when it opens the input. Either way the window's renew handler doesn't also run.
   const onBoxesKeyDown = (event: React.KeyboardEvent) => {
     if (event.target !== event.currentTarget) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      codeRef.current?.focus();
+      event.stopPropagation();
+      const renewable = pairing.state === "expired" || pairing.state === "error";
+      if (renewable && Date.now() >= retryAfterMsRef.current) void createPairing();
+      else codeRef.current?.focus();
     } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
       codeRef.current?.focus();
@@ -510,7 +515,11 @@ export const TvConnectScreen = () => {
                   if (event.key === "Enter") void submitCode(code);
                 }}
                 onFocus={() => setFocused("code")}
-                onBlur={() => setFocused(null)}
+                onBlur={(event) => {
+                  setFocused(null);
+                  // Back to the boxes so the remote still has a target (F66); never steal focus from Try demo.
+                  if (event.relatedTarget !== demoRef.current) boxesRef.current?.focus();
+                }}
                 disabled={codeBusy}
                 tabIndex={-1}
                 inputMode="text"

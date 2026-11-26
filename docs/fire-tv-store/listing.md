@@ -103,10 +103,10 @@ Answer each question with the facts below. Amazon's wording varies; the reason c
 
 ## Privacy and data questions
 
-- **Does the app collect user data?** No personal data. The app stores one value on the TV: the id of the venue it
-  is connected to.
+- **Does the app collect user data?** No account or contact details. The app stores one value on the TV: the id of
+  the venue it is connected to.
 - **What reaches our servers?** The same as any website visit: the TV's IP address and device type. When a TV is
-  connected, a one-time code that expires after 10 minutes and, once used, the venue id are stored.
+  connected, a one-time code is stored; it expires after 10 minutes and is deleted once the TV connects.
 - **Shared with third parties?** No. **Sold?** No. **Used for ads or tracking?** No.
 - **Encrypted in transit?** Yes, HTTPS only (the app refuses plain http).
 - **Can users ask for deletion?** There is no user data in the TV app. Menu → Change venue removes the stored venue

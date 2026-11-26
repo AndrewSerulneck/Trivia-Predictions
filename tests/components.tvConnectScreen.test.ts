@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 // docs/fire-tv-app-plan.md Phase CR1.5 (F7, F8, F9, F11): the Connect screen's poll loop under fake timers.
 
@@ -146,5 +146,43 @@ describe("TvConnectScreen renewing", () => {
     await press("Enter");
     expect(createCalls()).toBe(2);
     expect(screen.queryByTestId("tv-connect-qr")).not.toBeNull();
+  });
+
+  // F66: one OK on the boxes does one thing.
+  it("F66: OK on the boxes with an expired code renews once and doesn't open the input", async () => {
+    await mount();
+    await advance(TV_PAIR_TTL_MS + TV_PAIR_POLL_MS);
+    expect(screen.queryByText("Code expired")).not.toBeNull();
+    const boxes = screen.getByTestId("tv-connect-code-boxes");
+    expect(document.activeElement).toBe(boxes);
+    await act(async () => {
+      fireEvent.keyDown(boxes, { key: "Enter" });
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(createCalls()).toBe(2);
+    expect(document.activeElement).not.toBe(screen.getByTestId("tv-connect-code"));
+  });
+
+  it("F66: inside a 429's Retry-After, OK on the boxes opens the input and renews nothing", async () => {
+    createReplies = [() => reply({ status: 429, headers: { "Retry-After": "30" }, body: { ok: false } })];
+    await mount();
+    await act(async () => {
+      fireEvent.keyDown(screen.getByTestId("tv-connect-code-boxes"), { key: "Enter" });
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(createCalls()).toBe(1);
+    expect(document.activeElement).toBe(screen.getByTestId("tv-connect-code"));
+  });
+
+  it("F66: leaving the input returns focus to the boxes, but not when going to Try demo", async () => {
+    await mount();
+    const boxes = screen.getByTestId("tv-connect-code-boxes");
+    const input = screen.getByTestId("tv-connect-code");
+    act(() => input.focus());
+    act(() => input.blur());
+    expect(document.activeElement).toBe(boxes);
+    act(() => input.focus());
+    act(() => screen.getByText("Try demo").focus());
+    expect(document.activeElement).toBe(screen.getByText("Try demo"));
   });
 });
