@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **Phase 11 merged and deployed 2026-11-23** (PR #49; carousel, ticker, "Get the app" QR, pre-game title; carousel data switched ON; `docs/fire-tv-app-plan_PHASE_11_HANDOFF.md`). **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** **T4 built 2026-11-23 (PR #51 merged 2026-11-24, `72ff0638` + `287a1951`; `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`; D35).** **T4 reviewed 2026-11-23 (two passes): the fix is right, but its new test can't catch the bug, plus four smaller issues → remedial phases T4.1 (finish T4 on PR #51) and T4.2 (pre-existing Quick Review bugs); D36.** **2026-11-23: no other phase of this plan has had a code review** (no PR review, no handoff mentions one), so review phases CR1–CR3 were added (D37). **T4.1 done 2026-11-24 (on PR #51; `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`).** **T4.2 done 2026-11-24 (PR #52 merged; `docs/fire-tv-app-plan_PHASE_T4.2_HANDOFF.md`).** **CR1 done 2026-11-24 (PR #54; read-only; nothing urgent; findings F7–F43 under "CR1 review findings"; remedial phases CR1.1–CR1.7 approved by Andrew 2026-11-24, F41 yes, CR1.2 and CR1.6 in `docs/bingo-pickem-reliability-plan.md`; `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`).** **CR1.1 done 2026-11-24 (`docs/fire-tv-app-plan_PHASE_CR1.1_HANDOFF.md`).** **CR1.2 done 2026-11-24 (`docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md`); it added CR1.2.1 (F44, NFL screen) to the Pick 'Em plan, awaiting Andrew's OK.** **CR1.3 done 2026-11-24 (PR #59 merged; `docs/fire-tv-app-plan_PHASE_CR1.3_HANDOFF.md`).** **CR1.4 done 2026-11-24 (PR #60 merged; D38; `docs/fire-tv-app-plan_PHASE_CR1.4_HANDOFF.md`).** **CR1.5 done 2026-11-25 (PR #61 merged; `docs/fire-tv-app-plan_PHASE_CR1.5_HANDOFF.md`).** **CR1.6 done 2026-11-25 (`docs/bingo-pickem-reliability-plan_PHASE_CR1.6_HANDOFF.md`).** Next: CR1.7 (waits for Amazon), CR2, CR3; everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** **T4 built 2026-11-23 (PR #51 merged 2026-11-24, `72ff0638` + `287a1951`; `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`; D35).** **T4 reviewed 2026-11-23 (two passes): the fix is right, but its new test can't catch the bug, plus four smaller issues → remedial phases T4.1 (finish T4 on PR #51) and T4.2 (pre-existing Quick Review bugs); D36.** **2026-11-23: no other phase of this plan has had a code review** (no PR review, no handoff mentions one), so review phases CR1–CR3 were added (D37). **T4.1 done 2026-11-24 (on PR #51; `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`).** **T4.2 done 2026-11-24 (PR #52 merged; `docs/fire-tv-app-plan_PHASE_T4.2_HANDOFF.md`).** **CR1 done 2026-11-24 (PR #54; read-only; nothing urgent; findings F7–F43 under "CR1 review findings"; remedial phases CR1.1–CR1.7 approved by Andrew 2026-11-24, F41 yes, CR1.2 and CR1.6 in `docs/bingo-pickem-reliability-plan.md`; `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`).** **CR1.1 done 2026-11-24 (`docs/fire-tv-app-plan_PHASE_CR1.1_HANDOFF.md`).** **CR1.2 done 2026-11-24 (`docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md`); it added CR1.2.1 (F44, NFL screen) to the Pick 'Em plan, awaiting Andrew's OK.** **CR1.3 done 2026-11-24 (PR #59 merged; `docs/fire-tv-app-plan_PHASE_CR1.3_HANDOFF.md`).** **CR1.4 done 2026-11-24 (PR #60 merged; D38; `docs/fire-tv-app-plan_PHASE_CR1.4_HANDOFF.md`).** **CR1.5 done 2026-11-25 (PR #61 merged; `docs/fire-tv-app-plan_PHASE_CR1.5_HANDOFF.md`).** **CR1.6 done 2026-11-25 (`docs/bingo-pickem-reliability-plan_PHASE_CR1.6_HANDOFF.md`).** **CR2 done 2026-11-25 (read-only; nothing urgent; findings F45–F66 under "CR2 review findings"; remedial phases CR2.1–CR2.3 awaiting Andrew's OK; `docs/fire-tv-app-plan_PHASE_CR2_HANDOFF.md`).** Next: CR3; CR2.1–CR2.3 once Andrew says yes (CR2.2 before CR1.7); CR1.7 waits for Amazon; everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -191,7 +191,10 @@ handoff of the row above it first."*
 | CR1.6 | **Remedial (CR1, F38), in `docs/bingo-pickem-reliability-plan.md`:** the BallDontLie season probe keeps its one row | Agent | Sonnet 5.5 / medium | **Approved by Andrew 2026-11-24** | One fetch option and a test. |
 | CR1.7 | **Remedial (CR1, F29–F34):** Fire TV shell 1.0.1: a 5xx or certificate error shows "Can't connect." and retries; bridge limited to site frames; no retries in background; crash-restart cap | Agent | Opus 5.5 / high | **Approved by Andrew 2026-11-24.** After Amazon approves 1.0.0 (a release can't be submitted while one is in review) | WebView callback order, security hardening and a store release. |
 | T4.2 | **Remedial (T4 review, pre-existing bugs):** Quick Review: Z pressed while a save runs is kept (D36); no Keep / Reject while "Loading…" or from a stale category; "Loading…" (not "Nothing left.") before the first load. Live, and Speed where the same code exists | Agent | Sonnet 5.5 / high | Done; merged 2026-11-24 (PR #52; `_PHASE_T4.2_HANDOFF.md`) | Admin UI only, well specified, but async ordering: a mistake undoes or decides the wrong question, so high effort. No data, migration or store release. |
-| CR2 | **Code review, display and release (D37):** PRs #41 (Phase 10 slides, plus Phase 8b's `native-tv/scripts/release.cjs`, commit `e69bc60e`), #49 (Phase 11: carousel, ticker, QR, pre-game title), #38 (Phase 6: release build, store pack, keyboard fix) | Agent | Sonnet 5.5 / high | After CR1 | Screens with written standing rules (effects keys, no replay on poll, precedence, one QR) and one script that handles signing keys and store credentials; high effort to check each rule. |
+| CR2 | **Code review, display and release (D37):** PRs #41 (Phase 10 slides, plus Phase 8b's `native-tv/scripts/release.cjs`, commit `e69bc60e`), #49 (Phase 11: carousel, ticker, QR, pre-game title), #38 (Phase 6: release build, store pack, keyboard fix) | Agent | Sonnet 5.5 / high | **Done 2026-11-25** (F45–F66; nothing urgent; `_PHASE_CR2_HANDOFF.md`) | Screens with written standing rules (effects keys, no replay on poll, precedence, one QR) and one script that handles signing keys and store credentials; high effort to check each rule. |
+| CR2.1 | **Remedial (CR2, F45–F47, F49–F53):** TV display polish: unknown picks aren't "No picks yet", every score change flashes once, no stale flash after a gap, a slide isn't cut short when the slide set changes, steady ticker, one QR during cross-fades, confetti misses the QR, no doubled prize line | Agent | Sonnet 5.5 / high | **Awaiting Andrew's OK** | Web only, no data; but it touches the carousel rotation and FX timing, which carry standing rules (nothing replays on a poll, one QR, keep-out), so high effort. |
+| CR2.2 | **Remedial (CR2, F55–F63):** `npm run fire-tv:release` and the upload-key script: undo the bump on every failure, delete a half-made Amazon edit, never reuse a version code, stop on an unknown Amazon state or validate errors, keep the Amazon secret out of Gradle; Gradle refuses an unsigned release | Agent | Sonnet 5.5 / high | **Awaiting Andrew's OK.** Before CR1.7 (its release runs this script) | One Node script with mocked tests plus a build guard; no change to the app itself, so no store release. High effort: a mistake stalls a store release or reuses a version code. |
+| CR2.3 | **Remedial (CR2, F48, F64–F66):** Connect-screen contract test guards `autoFocus`; one OK does one thing on an expired code; privacy and listing text match the code; admin Venues says when display codes didn't load | Agent | Sonnet 5.5 / medium | **Awaiting Andrew's OK** | Small, well-specified test, copy and admin-UI fixes. Web only. |
 | CR3 | **Code review, small fixes (D37):** PRs #43 (T1), #45 (T3), #47 (flavor-squares timeout), #50 (Pick 'Em stale-load recheck, N3) | Agent | Sonnet 5.5 / medium | After CR2 | Small test and client fixes; Haiku tends to miss whether a test really guards what it claims (the T4 lesson), so mid tier. |
 | 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | After Amazon approves 1.0.0 | New SDK and toolchain, little prior art. |
 | 5 | Review the app: install **Hightop Challenge TV from the Amazon Appstore** on your Fire Stick and test it (D34) | **Andrew** + agent | Sonnet 5.5 / medium | After Amazon approves 1.0.0 and you have a Fire Stick | Agent reads crash logs if needed and fixes small bugs; the device checklist is well defined. |
@@ -1041,6 +1044,125 @@ versionCode 2.
 5. Verify on the emulator with a debug build: `-PtvStartUrl` pointing at a tiny local server that returns 503 → overlay
    stays and retries at 2 / 4 / 8 / 16 / 30 s; emulator clock set to 2020 → overlay and retries. Then tests, lint,
    `npm run fire-tv:release`. Record version and submission in this plan and a full handoff.
+
+### CR2 review findings (2026-11-25, on `main` `7105f5f7`)
+
+Three Sonnet 5.5 / high review agents, one each for #41 (slides), #49 (carousel) and #38 + `release.cjs`. Each ran
+`/code-review high <N>` and then the CR2 checks. The reviewing session (Opus 5.5) re-read the code behind F45–F47,
+F49–F53, F55–F57 and F62–F65. **Nothing urgent:** no security hole, leaked secret, data leak, wrong points or lost
+picks. Repros the agents ran: F45 (render with `picks: null` shows "No picks yet"), F46 (two scoring games → one
+flash), F49 (`carouselSlideAt` at 35 s gives `all-time` with 5 slides, `prizes` with 4), F55 / F56 (mocked
+`fetch` / `child_process`: bump left in `build.gradle.kts`, Amazon edit left open), F64 (adding `autoFocus` keeps all 21
+contract tests green). Production: all 7 active prizes have a name, so F53 shows nowhere today. Checks that passed are
+in `docs/fire-tv-app-plan_PHASE_CR2_HANDOFF.md` §6.
+
+| # | Finding | Where | Kind | Severity | Failure scenario → fix | Phase |
+|---|---|---|---|---|---|---|
+| F45 | Pick 'Em board: an unknown pick count shows "No picks yet" (unknown shown as zero). Verified (render repro). | `components/venue-screen/TvPickEmBoard.tsx:175`; `lib/tvPickEmBoard.ts:62` | Introduced (#41) | Low | Pick read fails → `picks: null` on every game → every tile says "No picks yet" → show that text only when `picks === 0`; null shows nothing. | CR2.1 |
+| F46 | Two games scoring in one poll flash only one; the other is lost for good. Verified (repro). | `lib/tvPickEmBoard.ts:155` (`return` in the loop); `usePickEmScoreFlash.ts:27-28` | Introduced (#41) | Nit | Two touchdowns between polls → only the higher-ranked game flashes → return every change and queue them (each its own `useFxMoment` token). | CR2.1 |
+| F47 | After polls with no Pick 'Em data, the next poll is compared with the old snapshot, so a stale "+14" flashes. | `components/venue-screen/usePickEmScoreFlash.ts:22` | Introduced (#41) | Nit | Feed gap of several polls → old-news flash → on `!games` set `previous.current = null` (next look is a first look). | CR2.1 |
+| F48 | Admin Venues: a failed display-codes load is silent; codes just aren't there. Route auth is fine. | `components/admin/sections/VenuesSection.tsx:805` | Introduced (#41) | Nit | Admin session expired → blank codes, no reason → short "Codes didn't load." with Retry. | CR2.3 |
+| F49 | The carousel jumps to another slide when the set of non-empty slides changes between polls (index = elapsed ÷ 15 s mod count). Verified (repro). | `lib/tvCarousel.ts:40-44`; `components/venue-screen/TvCarousel.tsx:77, :88` | Introduced (#49) | Low | All-Time read returns null at 35 s → slide jumps to Prizes mid-dwell; also when games or prizes come and go → keep the current slide id and its start time; advance after 15 s, or at once if its slide is gone. | CR2.1 |
+| F50 | The ticker's content swaps at the Pick 'Em slide boundary (board games removed, D15), so the scroll jumps; with ≤ 4 games and no leader the bar unmounts and remounts. Its comment says it "keeps scrolling across … slide changes". Verified (repro: 9 → 5 segments). | `components/venue-screen/TvCarousel.tsx:92`; `TvTicker.tsx:12, :63` | Introduced (#49) | Nit | Sunday, slide 1 → 2 → ticker text jumps → cross-fade the track on a content change (key it by the segment list) and fix the comment. | CR2.1 |
+| F51 | During the 0.6 s cross-fade into or out of "Get the app", two QRs show (big one fading, corner dock instant). Verified by reading. | `components/venue-screen/TvCarousel.tsx:97, :129` | Introduced (#49) | Nit (D16 for ~0.6 s) | Slide 5 → 1 → dock appears under the fading big QR → hide the dock until the `app` slide's exit finishes (`onExitComplete`), and show it only after. | CR2.1 |
+| F52 | Live Trivia final standings: the 3.6 s confetti shower covers the corner QR (no `area`; FX canvas z 60 over the dock). Disclosed in the Phase 11 handoff. | `components/venue-screen/TvFinalStandings.tsx:75`; `VenueScreenClient.tsx:442` | Introduced (#49) | Nit (keep-out standing rule) | Final screen → confetti over the QR for 3.6 s → pass an `area` that stops left of the dock, or show the dock after the shower. | CR2.1 |
+| F53 | A prize with a blank name prints its headline twice (name falls back to the headline). 0 rows today. | `lib/venueScreenCarousel.ts:197`; `components/venue-screen/TvPrizesSlide.tsx:44-45` | Introduced (#49) | Nit | Partner leaves the name blank → "Free Pint / Free Pint" → skip the second line when it equals the first. | CR2.1 |
+| F54 | New venue-screen files hard-code hex colours instead of `SCREEN_COLORS`; `TvSlideCanvas` repeats the 2304 stage width. Same as the folder's existing convention. | `TvCarousel.tsx`, `TvTicker.tsx`, `TvAppDock.tsx`, `TvPrizesSlide.tsx`, `TvPickEmBoard.tsx`; `TvSlideCanvas.tsx:11` | Introduced (#41, #49) | Nit | Drift only → convert when next touched. | None |
+| F55 | `fire-tv:release`: a wrong signing certificate exits without undoing the version bump (`fail()` exits before the `catch`). Verified (mock). | `native-tv/scripts/release.cjs:99` (revert at `:126-129`) | Introduced (`e69bc60e`) | Low | Key mismatch → `build.gradle.kts` left at vc2 → a later run or commit skips a code → `build()` throws; revert in one `finally`. | CR2.2 |
+| F56 | Any failure after the bump (upload, validate, commit, Ctrl-C) leaves the bump, and any failure after `POST /edits` leaves an open Amazon edit, so the next run refuses until someone deletes it in the console. Verified (mock: replace → 500). | `release.cjs:36-39, :67, :142-159` | Introduced (`e69bc60e`) | Low–medium | Network blip during upload → release blocked → on failure after the edit opens, delete the edit (confirm the API allows it) and revert; SIGINT / SIGTERM revert. | CR2.2 |
+| F57 | The next version code comes only from the local file, and the script never commits the bump (it only says to). A forgotten commit or another checkout rebuilds the same code and fails late, after opening an edit. | `release.cjs:104-106, :160` | Introduced (`e69bc60e`) | Low–medium | Release from clean `main` after an uncommitted bump → same vc → Amazon rejects after the build → use `max(local, highest vcN in the releases folder, Amazon's current APK versionCode)`; refuse before the upload if Amazon's ≥ next. | CR2.2 |
+| F58 | The in-review guard treats any 200 without `id` as "no edit"; what `GET /edits` returns while a release is in review is unproven (the dry run passed with 1.0.0 in review). Plausible, unverified. | `release.cjs:110-116` | Introduced (`e69bc60e`) | Low | Amazon wraps or changes the response → guard skipped → script builds and fails at `POST /edits` → only `{}` or 404 mean "none"; anything else stops. Investigate first (one read-only `GET /edits`). | CR2.2 |
+| F59 | The `validate` response body is ignored; a 200 listing errors goes on to `commit`. Plausible, unverified (Amazon's shape unknown). | `release.cjs:157` | Introduced (`e69bc60e`) | Low | Invalid edit submitted, or a vague commit error → fail on any errors in the body. | CR2.2 |
+| F60 | Gradle (and every plugin and test it runs) gets the whole environment, including `AMAZON_APPSTORE_CLIENT_SECRET`. Nothing prints it. | `release.cjs:95` | Introduced (`e69bc60e`) | Nit | A build task that dumps its env would leak it → pass a copy without `AMAZON_*`. | CR2.2 |
+| F61 | Small robustness: `apksigner` runs without `JAVA_HOME`; build-tools version and cache paths hard-coded; a saved APK of the same name is overwritten; no lock against two runs. | `release.cjs:26-29, :97, :132-133` | Introduced (`e69bc60e`) | Nit | Fails on another machine / overwritten archive → pass `JAVA_HOME`; refuse to overwrite; lockfile. | CR2.2 |
+| F62 | `create-upload-key.cjs` writes the credentials file before running `keytool`; if `keytool` fails, a re-run is refused and Gradle builds unsigned. | `native-tv/scripts/create-upload-key.cjs:43-44` | Introduced (#38) | Nit | Missing JAVA_HOME on first run → stray file, manual cleanup → delete the credentials file if the keystore wasn't made. | CR2.2 |
+| F63 | A release build with no key files is silently unsigned (not debug-signed). The release script catches it (`apksigner`), a manual `assembleRelease` doesn't. | `native-tv/app/build.gradle.kts:20, :48, :71` | Introduced (#38) | Nit | Manual release build on a new machine → unsigned APK that looks normal → fail release tasks with a clear message when `uploadSecrets == null`. | CR2.2 |
+| F64 | The contract test "never auto-focuses the code input" doesn't check `autoFocus`; adding it to the input (the original Phase 5 bug) keeps all 21 tests green. Verified (mutation). It also pins exact line breaks. | `tests/tv-app-contract.test.ts:163-170`; fix at `components/venue-screen/TvConnectScreen.tsx:233` | Introduced (#38) | Low | Someone adds `autoFocus` → keyboard over the QR again, test passes → assert no `autoFocus` on the input; match tokens, not lines. | CR2.3 |
+| F65 | Privacy page and store listing say the app "collects no personal information", then mention the IP address; and say the connected venue is kept once used, but the row is deleted when the TV reads it. | `app/privacy/page.tsx:81-84`; `docs/fire-tv-store/listing.md:98`; `lib/tvConnect.ts:105` | Introduced (#38) | Nit | Text disagrees with itself and with the code → "no account or contact details"; "deleted once the TV connects, or after 10 minutes". Keep the Amazon answer "No" (the app stores only a venue id on the TV). | CR2.3 |
+| F66 | On an expired / failed code, one OK press both renews the QR (window handler) and opens the code input (boxes handler); after the input blurs, focus isn't returned to the boxes. Plausible, unverified on a device. | `components/venue-screen/TvConnectScreen.tsx:298-304, :372-376, :513` | Introduced (#38, with CR1.5) | Nit | OK after "Code expired." → QR flickers and keyboard opens → `stopPropagation` when the boxes handle Enter; on input blur (not to the demo button) refocus the boxes. | CR2.3 |
+
+**Dropped after checking:** the old `IdleVenueScreen` rendering an empty board (Phase 11 replaced it); a stale flash on
+slide re-entry (`useFxMoment` claims the key once); `formatNextLiveTriviaShort` untested (covered in
+`tests/lib.nextLiveTriviaWhen.test.ts:83-88`); burn-in drift of the dock (existing design); the plan status calling
+#38 merged while its handoff said "not merged" (written before the merge).
+**Question for Andrew (not a finding):** the corner QR sits higher on carousel slides (`bottom: 130`, above the
+ticker) than on Live Trivia (`bottom: 44`). Is that fine for D16's "one fixed spot"? The review thinks yes (the ticker
+needs the room).
+
+### Phase CR2.1 — TV display polish (Agent, Sonnet 5.5 / high) — Awaiting Andrew's OK
+
+**Fixes F45–F47, F49–F53.** Web only; no migration, data change or store release. Branch `fix/tv-display-polish` from
+up-to-date `main`. Read the standing rules at the end of `docs/venue-display-hype-and-intro-stinger-plan.md` and
+`docs/live-trivia-pregame-and-display-cleanup-plan.md` first. Write each test first and see it fail on `main`.
+1. **F45** `TvPickEmBoard.tsx:175`: render "No picks yet" only when `game.picks === 0` (add `picksKnown` or the raw
+   count to `TvTileView` in `lib/tvPickEmBoard.ts`); null → empty caption. Test: `picks: null, homePickPct: null` →
+   markup has no "No picks yet"; `picks: 0` → it does.
+2. **F46** `detectScoreFlash` → `detectScoreFlashes` returning every change (board order). `usePickEmScoreFlash` keeps
+   a short queue and hands the board one at a time (each held until played, or `TV_SCORE_FLASH_KEEP_MS`); each keeps
+   its own `pickem-score:<key>:<a>-<h>` token, so `useFxMoment` still plays each once. Test: two games score in one
+   poll → both tokens come out, one after the other; an identical poll adds nothing.
+3. **F47** `usePickEmScoreFlash.ts:22`: `if (!games) { previous.current = null; return; }`. `renderHook` test: KC 14
+   → `undefined` → KC 28 → no flash.
+4. **F49** Make the rotation stateful in `TvCarousel` with a pure helper in `lib/tvCarousel.ts`
+   (`nextCarouselSlide(slides, current, shownAtMs, nowMs)`): stay on the current slide for 15 s even if the list
+   changes; if the current slide is gone, go to the next one in `TV_CAROUSEL_ORDER` that is present. Keep a pinned
+   `?slide=` and "a poll tick never moves it". Tests: All-Time on screen at 35 s and Pick 'Em drops out of the list →
+   All-Time stays for its full 15 s; All-Time itself drops out → the next present slide (Prizes) shows at once.
+5. **F50** `TvTicker`: key the scrolling track by the joined segment keys and cross-fade on change; keep the bar
+   mounted (its "next Live Trivia" segment, or empty bar) when segments go to zero mid-carousel. Fix the header comment.
+6. **F51** `TvCarousel.tsx:129`: show the dock only when neither the entering nor the leaving slide is `app` (track
+   the leaving slide until `AnimatePresence` `onExitComplete`). RTL test with fake timers through 5 → 1: at most one
+   `[data-testid=app-download-qr]` at every step.
+7. **F52** `TvFinalStandings.tsx:75`: give the shower an `area` that ends left of the dock's box (use the dock's
+   constants, not new numbers), or delay the dock until the shower ends (~4.6 s). Contract test either way.
+8. **F53** `TvPrizesSlide.tsx:45`: skip the second line when `prize.name === prize.prize`. Render test.
+9. `npm run test`, `npm run lint`, `npx tsc --noEmit`; check `/venue/<id>/screen?mode=carousel` from a scratchpad
+   clone with mocked routes (CLAUDE.md §Manual Testing); PR; CI green; merge (auto-merge rule). Short handoff note.
+
+### Phase CR2.2 — Release script hardening (Agent, Sonnet 5.5 / high) — Awaiting Andrew's OK
+
+**Fixes F55–F63.** Tooling only: `native-tv/scripts/release.cjs`, `native-tv/scripts/create-upload-key.cjs`,
+`native-tv/app/build.gradle.kts` (build guard only). The app itself doesn't change, so **no store release**; the next
+real release (CR1.7, 1.0.1) uses the hardened script, so do this first. Never run the script for real in this phase,
+never print or open keys (`~/Library/Application Support/Hightop Challenge/signing/`) or `.env.local` values.
+1. Investigate F58 first with one read-only call: a tiny script (run with `node --env-file=.env.local`) that gets a
+   token and prints only the **shape** of `GET /edits` (keys and `status`, never the token). Record what it returns
+   while 1.0.0 is in review (or after approval). If Amazon documents edit deletion and validate errors, note the links.
+2. Refactor `release.cjs` so nothing calls `process.exit` below `main()`: helpers throw; `main()` has one
+   `try / finally` that restores the original `build.gradle.kts` unless the commit succeeded, and a `catch` that deletes
+   the open edit (`DELETE /edits/{id}`, with `if-match`) when one was opened and not committed (F55, F56). Add
+   `SIGINT` / `SIGTERM` handlers that do the same.
+3. F57: before the bump, `next.code = max(local, highest vcN in the releases folder, Amazon's live APK versionCode) + 1`
+   (read the live APK from the last committed edit or the apks endpoint found in step 1); after upload, the saved
+   APK name must not exist yet (F61). After a successful commit, print the exact `git commit` line to run.
+4. F58: "no edit" only for `{}` / empty body / 404; anything else without an `id` → stop with the shape. F59: fail on
+   any `errors` in the validate body. F60: Gradle gets `process.env` minus every `AMAZON_*` key. F61: pass `JAVA_HOME`
+   to `apksigner`; a lockfile in the releases folder.
+5. F62: in `create-upload-key.cjs`, delete the credentials file if `keytool` fails and the keystore doesn't exist.
+   F63: in `build.gradle.kts`, fail any `assembleRelease` / `bundleRelease` task with a clear message when
+   `uploadSecrets == null` (a `gradle.taskGraph.whenReady` check); debug builds unchanged.
+6. Tests: `tests/fire-tv-release-script.test.ts` running the script in a child process with a preload that mocks
+   `fetch` and `child_process` (the CR2 agent's approach): wrong cert, gradle failure, upload 500, validate errors,
+   `GET /edits` returning `[]`, Amazon's versionCode ahead of local → each exits 1, gradle file byte-identical, edit
+   deleted where one was opened, sentinel secret never in output or in Gradle's env. Each must fail on `main` first.
+7. `npm run test`, `npm run lint`; `npm run fire-tv:release -- --dry-run` only after Amazon has no release in review
+   (it builds and reverts; it uploads nothing). PR; CI green; merge. Short handoff note.
+
+### Phase CR2.3 — Connect test, privacy text, admin codes (Agent, Sonnet 5.5 / medium) — Awaiting Andrew's OK
+
+**Fixes F48, F64–F66.** Web and docs only. Branch `fix/cr2-connect-privacy`.
+1. **F64** `tests/tv-app-contract.test.ts:163`: add `expect(screen).not.toMatch(/autoFocus/)`; loosen the other
+   regexes to tokens (`boxesRef.current?.focus()` inside the `view === "connect"` effect, `ref={boxesRef}`,
+   `tabIndex={0}`, `codeRef.current?.focus()` inside the Enter branch). Prove: adding `autoFocus` to the input fails it.
+2. **F66** `TvConnectScreen.tsx`: when the boxes handle Enter, `event.stopPropagation()` so the window handler doesn't
+   also renew; on the input's blur (unless focus goes to the demo button) refocus the boxes. Fake-timer RTL test: Enter
+   on the boxes with an expired code → one create call and the input opened, not both.
+3. **F65** `app/privacy/page.tsx:81-84`: "It has no sign-in and asks for no account or contact details. … We keep a
+   short connect code for up to 10 minutes; it's deleted once the TV connects." Match `docs/fire-tv-store/listing.md`
+   "Privacy and data" notes (keep the "Collects personal information: No" answer). Fewest words (CLAUDE.md).
+4. **F48** `VenuesSection.tsx:805`: on a failed load show "Codes didn't load." with Retry (refetch). Test with a
+   rejected fetch.
+5. `npm run test`, `npm run lint`, `npx tsc --noEmit`; PR; CI green; merge. Short handoff note.
 
 ### Phase N1 — NHL Pick 'Em start time: investigate and decide (Agent, Opus 5.5 / high)
 
