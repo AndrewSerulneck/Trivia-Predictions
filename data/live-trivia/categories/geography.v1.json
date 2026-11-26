@@ -5959,6 +5959,146 @@
       "category": "Geography",
       "difficulty": "easy",
       "subcategory": "physical-geography"
+    },
+    {
+      "slug": "at-the-south-pole-youre-standing-on-what-ice-covered-continent",
+      "question": "At the South Pole, you're standing on what ice-covered continent?",
+      "answer": "Antarctica",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "polar-regions"
+    },
+    {
+      "slug": "what-pacific-country-has-two-main-islands-called-the-north-island-and-the-south-island",
+      "question": "What Pacific country has two main islands called the North Island and the South Island?",
+      "answer": "New Zealand",
+      "acceptableAnswers": [
+        "NZ"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "australia-and-the-pacific"
+    },
+    {
+      "slug": "crossing-the-border-south-from-san-diego-brings-you-to-what-mexican-city",
+      "question": "Crossing the border south from San Diego brings you to what Mexican city?",
+      "answer": "Tijuana",
+      "acceptableAnswers": [
+        "TJ"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "canada-and-mexico"
+    },
+    {
+      "slug": "paella-the-saffron-rice-dish-cooked-in-a-wide-shallow-pan-originated-in-what-country",
+      "question": "Paella, the saffron rice dish cooked in a wide, shallow pan, originated in what country?",
+      "answer": "Spain",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "foods-by-country"
+    },
+    {
+      "slug": "havana-is-the-capital-of-what-caribbean-island-nation",
+      "question": "Havana is the capital of what Caribbean island nation?",
+      "answer": "Cuba",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "latin-america-and-the-caribbean"
+    },
+    {
+      "slug": "what-river-flows-past-big-ben-and-under-londons-tower-bridge",
+      "question": "What river flows past Big Ben and under London's Tower Bridge?",
+      "answer": "Thames",
+      "acceptableAnswers": [
+        "River Thames",
+        "Thames River"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "rivers-and-lakes"
+    },
+    {
+      "slug": "what-us-city-is-nicknamed-the-city-of-brotherly-love",
+      "question": "What U.S. city is nicknamed the 'City of Brotherly Love'?",
+      "answer": "Philadelphia",
+      "acceptableAnswers": [
+        "Philly"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "us-cities-and-nicknames"
+    },
+    {
+      "slug": "what-european-capital-is-home-to-the-parthenon-atop-the-acropolis",
+      "question": "What European capital is home to the Parthenon atop the Acropolis?",
+      "answer": "Athens",
+      "acceptableAnswers": [
+        "Athina"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "world-cities"
+    },
+    {
+      "slug": "what-rainforest-covers-much-of-northern-brazil-and-shares-its-name-with-a-major-river",
+      "question": "What rainforest covers much of northern Brazil and shares its name with a major river?",
+      "answer": "Amazon",
+      "acceptableAnswers": [
+        "Amazon rainforest",
+        "Amazon rain forest",
+        "The Amazon"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "deserts-forests-and-natural-wonders"
+    },
+    {
+      "slug": "what-countrys-square-red-national-flag-has-a-white-cross-at-its-center",
+      "question": "What country's square red national flag has a white cross at its center?",
+      "answer": "Switzerland",
+      "acceptableAnswers": [
+        "Swiss Confederation"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "medium",
+      "subcategory": "flags"
+    },
+    {
+      "slug": "the-great-wall-stretches-for-thousands-of-miles-across-what-country",
+      "question": "The Great Wall stretches for thousands of miles across what country?",
+      "answer": "China",
+      "acceptableAnswers": [
+        "People's Republic of China",
+        "PRC"
+      ],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "easy",
+      "subcategory": "asia"
+    },
+    {
+      "slug": "what-is-the-capital-of-new-mexico-known-for-its-adobe-buildings",
+      "question": "What is the capital of New Mexico, known for its adobe buildings?",
+      "answer": "Santa Fe",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Geography",
+      "difficulty": "hard",
+      "subcategory": "us-state-capitals"
     }
   ]
 }

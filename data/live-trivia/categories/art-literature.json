@@ -4538,6 +4538,153 @@
         "Im Westen nichts Neues"
       ],
       "subcategory": "classic-literature"
+    },
+    {
+      "slug": "in-what-broadway-musical-does-the-orphaned-title-character-sing-tomorrow",
+      "question": "In what Broadway musical does the orphaned title character sing 'Tomorrow'?",
+      "answer": "Annie",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "subcategory": "broadway-musicals"
+    },
+    {
+      "slug": "in-charlottes-web-what-kind-of-farm-animal-is-wilbur-whom-charlotte-saves-with-her-writing",
+      "question": "In 'Charlotte's Web,' what kind of farm animal is Wilbur, whom Charlotte saves with her writing?",
+      "answer": "Pig",
+      "acceptableAnswers": [
+        "Hog",
+        "Swine"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "subcategory": "childrens-books"
+    },
+    {
+      "slug": "in-grant-woods-american-gothic-what-farm-tool-is-the-man-holding",
+      "question": "In Grant Wood's 'American Gothic,' what farm tool is the man holding?",
+      "answer": "Pitchfork",
+      "acceptableAnswers": [
+        "A pitchfork"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "famous-paintings"
+    },
+    {
+      "slug": "to-end-a-feud-you-might-bury-what-tool-according-to-a-common-idiom",
+      "question": "To end a feud, you might bury what tool, according to a common idiom?",
+      "answer": "Hatchet",
+      "acceptableAnswers": [
+        "A hatchet"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "subcategory": "idioms-and-word-origins"
+    },
+    {
+      "slug": "in-a-streetcar-named-desire-what-name-does-stanley-famously-shout-outside-his-home",
+      "question": "In 'A Streetcar Named Desire,' what name does Stanley famously shout outside his home?",
+      "answer": "Stella",
+      "acceptableAnswers": [
+        "Stella Kowalski",
+        "Kowalski"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "adaptations-theater"
+    },
+    {
+      "slug": "in-mary-shelleys-novel-what-scientist-creates-a-living-being-from-dead-tissue",
+      "question": "In Mary Shelley's novel, what scientist creates a living being from dead tissue?",
+      "answer": "Victor Frankenstein",
+      "acceptableAnswers": [
+        "Frankenstein",
+        "Dr. Frankenstein",
+        "Doctor Frankenstein"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "subcategory": "science-fiction"
+    },
+    {
+      "slug": "what-greek-goddess-of-wisdom-was-the-patron-goddess-of-athens",
+      "question": "What Greek goddess of wisdom was the patron goddess of Athens?",
+      "answer": "Athena",
+      "acceptableAnswers": [
+        "Athene",
+        "Pallas Athena"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "greek-and-roman-mythology"
+    },
+    {
+      "slug": "andy-warhols-paintings-of-soup-cans-feature-what-brand",
+      "question": "Andy Warhol's paintings of soup cans feature what brand?",
+      "answer": "Campbell's",
+      "acceptableAnswers": [
+        "Campbells",
+        "Campbell",
+        "Campbell's Soup"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "easy",
+      "subcategory": "modern-and-pop-art"
+    },
+    {
+      "slug": "in-stephen-kings-it-what-name-does-the-evil-clown-use",
+      "question": "In Stephen King's 'It,' what name does the evil clown use?",
+      "answer": "Pennywise",
+      "acceptableAnswers": [
+        "Pennywise the Dancing Clown"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "mystery-and-horror"
+    },
+    {
+      "slug": "what-poet-wrote-the-road-not-taken-about-two-paths-diverging-in-a-yellow-wood",
+      "question": "What poet wrote 'The Road Not Taken,' about two paths diverging in a yellow wood?",
+      "answer": "Robert Frost",
+      "acceptableAnswers": [
+        "Frost"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "poetry-and-poets"
+    },
+    {
+      "slug": "what-newspaper-employs-both-clark-kent-and-lois-lane",
+      "question": "What newspaper employs both Clark Kent and Lois Lane?",
+      "answer": "Daily Planet",
+      "acceptableAnswers": [
+        "The Daily Planet"
+      ],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "dc-heroes-and-villains"
+    },
+    {
+      "slug": "in-rumpelstiltskin-what-material-must-the-millers-daughter-spin-into-gold",
+      "question": "In 'Rumpelstiltskin,' what material must the miller's daughter spin into gold?",
+      "answer": "Straw",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "Art, Literature and Comics",
+      "difficulty": "medium",
+      "subcategory": "fairy-tales-fables-and-nursery-rhymes"
     }
   ]
 }
