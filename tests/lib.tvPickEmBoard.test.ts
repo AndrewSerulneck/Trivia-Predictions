@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   allTimeColumns,
   boardGamesOf,
-  detectScoreFlash,
+  detectScoreFlashes,
   formatLeaderRecord,
   formatPoints,
   pickEmBoardLabel,
@@ -99,35 +99,35 @@ describe("board helpers", () => {
   });
 });
 
-describe("detectScoreFlash", () => {
+describe("detectScoreFlashes", () => {
   const before = [game()];
 
   it("flashes nothing on the first look", () => {
-    expect(detectScoreFlash(null, before)).toBeNull();
+    expect(detectScoreFlashes(null, before)).toEqual([]);
   });
 
   it("flashes the side that scored, with the points and the venue's pick share", () => {
-    const flash = detectScoreFlash(scoreSnapshotOf(before), [game({ awayScore: 28 })]);
+    const [flash] = detectScoreFlashes(scoreSnapshotOf(before), [game({ awayScore: 28 })]);
     expect(flash).toMatchObject({ gameKey: "g1", side: "away", ribbon: "KC +7", caption: "61% here picked KC" });
     expect(flash?.token).toBe("pickem-score:g1:28-17");
   });
 
   it("says who scored when the venue has no picks on the game", () => {
     const quiet = [game({ picks: 0, homePickPct: null })];
-    const flash = detectScoreFlash(scoreSnapshotOf(quiet), [game({ homeScore: 20, picks: 0, homePickPct: null })]);
+    const [flash] = detectScoreFlashes(scoreSnapshotOf(quiet), [game({ homeScore: 20, picks: 0, homePickPct: null })]);
     expect(flash?.caption).toBe("SEA scores");
   });
 
   it("does not flash an unchanged poll, a new game, an unknown earlier score, or a game off the board", () => {
-    expect(detectScoreFlash(scoreSnapshotOf(before), before)).toBeNull();
-    expect(detectScoreFlash(scoreSnapshotOf([]), before)).toBeNull();
-    expect(detectScoreFlash(scoreSnapshotOf([game({ awayScore: null, homeScore: null })]), before)).toBeNull();
+    expect(detectScoreFlashes(scoreSnapshotOf(before), before)).toEqual([]);
+    expect(detectScoreFlashes(scoreSnapshotOf([]), before)).toEqual([]);
+    expect(detectScoreFlashes(scoreSnapshotOf([game({ awayScore: null, homeScore: null })]), before)).toEqual([]);
     const games = ["a", "b", "c", "d", "e"].map((key) => game({ key }));
     const bumped = games.map((g) => (g.key === "e" ? { ...g, awayScore: 99 } : g));
-    expect(detectScoreFlash(scoreSnapshotOf(games), bumped)).toBeNull();
+    expect(detectScoreFlashes(scoreSnapshotOf(games), bumped)).toEqual([]);
   });
 
   it("does not flash a score that went down (a correction)", () => {
-    expect(detectScoreFlash(scoreSnapshotOf(before), [game({ awayScore: 14 })])).toBeNull();
+    expect(detectScoreFlashes(scoreSnapshotOf(before), [game({ awayScore: 14 })])).toEqual([]);
   });
 });

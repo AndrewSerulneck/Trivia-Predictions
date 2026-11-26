@@ -35,8 +35,10 @@ type TvPickEmBoardProps = {
   leaders: readonly TvPickEmLeader[] | null;
   /** The TV's ticking clock. */
   nowMs: number;
-  /** The latest score change (usePickEmScoreFlash), played once through useFxMoment. */
+  /** The score change up next (usePickEmScoreFlash), played once through useFxMoment. */
   flash?: TvScoreFlash | null;
+  /** The flash's turn is over (played, or not on this board): the next one can come up. */
+  onFlashEnd?: (token: string) => void;
 };
 
 const FLASH_ON_MS = 6_500;
@@ -172,7 +174,8 @@ const Tile = ({ view, hydrated, flash, flashOn, reduceMotion }: TileProps) => {
             </span>
           </>
         ) : (
-          <span>No picks yet</span>
+          // Only a count of 0 is "no picks"; an unknown count (the read failed) says nothing.
+          view.picks === 0 ? <span>No picks yet</span> : null
         )}
       </div>
     </motion.div>
@@ -210,7 +213,7 @@ const LeaderRow = ({ leader }: { leader: TvPickEmLeader }) => {
   );
 };
 
-export const TvPickEmBoard = ({ venueName, games, leaders, nowMs, flash = null }: TvPickEmBoardProps) => {
+export const TvPickEmBoard = ({ venueName, games, leaders, nowMs, flash = null, onFlashEnd }: TvPickEmBoardProps) => {
   const reduceMotion = Boolean(useReducedMotion());
   const hydrated = useHydrated();
   const board = boardGamesOf(games).map(tileViewOf);
@@ -228,6 +231,14 @@ export const TvPickEmBoard = ({ venueName, games, leaders, nowMs, flash = null }
       window.clearTimeout(offId);
     };
   }, [played]);
+
+  // The flash leaves the queue after its turn (or at once when its game isn't on this board), so the next one comes up.
+  const flashToken = flash?.token ?? null;
+  useEffect(() => {
+    if (!flashToken || !onFlashEnd) return undefined;
+    const id = window.setTimeout(() => onFlashEnd(flashToken), onBoard ? FLASH_ON_MS : 0);
+    return () => window.clearTimeout(id);
+  }, [flashToken, onBoard, onFlashEnd]);
 
   return (
     <TvSlideCanvas testId="tv-pickem-board" background={TV_SLIDE_BACKGROUNDS.pickEm}>

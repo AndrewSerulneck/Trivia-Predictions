@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useReducedMotionAfterHydration } from "@/components/venue-screen/fx/useReducedMotionAfterHydration";
 import { AutoScaleToFit } from "@/components/venue-screen/AutoScaleToFit";
 import { EmptyBoard } from "@/components/venue-screen/TvEmptyBoard";
+import { appDockClearArea } from "@/components/venue-screen/TvAppDock";
 import { stageScale, useFxAt, useFxMoment } from "@/components/venue-screen/fx/useFx";
 import { SCREEN_COLORS, SCREEN_EASE as EASE, getPodiumAccent } from "@/lib/venueScreenBrand";
 
@@ -72,7 +73,8 @@ export function TvFinalStandings({ leaderboard, venueName, gameId, maxRunnersUp 
   const moment = useFxMoment(champion ? `${revealKey}:final` : null);
   const crownRef = useRef<HTMLDivElement>(null);
   useFxAt(moment, 600, (fx) => {
-    fx.shower({ key: `${revealKey}:final:shower`, kind: "mixed", colors: CONFETTI_COLORS, count: 64, duration: 3.6 });
+    // Above the corner QR (D16: never covered): the shower ends where the dock begins.
+    fx.shower({ key: `${revealKey}:final:shower`, area: appDockClearArea(), kind: "mixed", colors: CONFETTI_COLORS, count: 64, duration: 3.6 });
   });
   useFxAt(moment, 1000, (fx) => {
     fx.burst({ key: `${revealKey}:final:burst`, at: crownRef.current, size: 520 * stageScale(), coins: 22, sparks: 34, shockwave: true });

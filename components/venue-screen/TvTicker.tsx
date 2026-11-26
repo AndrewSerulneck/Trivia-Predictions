@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useHydrated } from "@/components/venue-screen/fx/useHydrated";
 import { formatGameTime } from "@/lib/tvPickEmBoard";
 import { tickerLoopSeconds, tickerRepeatsFor, type TvTickerSegment } from "@/lib/tvCarousel";
@@ -9,8 +9,10 @@ import { formatNextLiveTriviaShort } from "@/lib/venueScreenIdleLine";
 /* ------------------------------------------------------------------ *
  * <TvTicker /> — the score ticker along the bottom of the idle carousel (docs/fire-tv-app-plan.md D15, Phase 11).
  * Drawn in the mockups' 1920×1080 design pixels, 96 px tall (the slides keep the bottom 150 free). Only the carousel
- * mounts it: never on a Live Trivia or Category Blitz screen. The track keeps scrolling across polls and slide
- * changes (the loop is not keyed on the data), so nothing replays; under reduced motion it holds still.
+ * mounts it: never on a Live Trivia or Category Blitz screen. The track keeps scrolling across polls (it is keyed on
+ * which segments it carries, not on their scores). When that list changes (the Pick 'Em board takes its games for one
+ * slide) the new track cross-fades in rather than jumping; the bar itself stays up, empty if there is nothing to say.
+ * Under reduced motion it holds still.
  * Fixed right segment: the next Live Trivia in its short form, in the TV's own time after hydration.
  * ------------------------------------------------------------------ */
 
@@ -60,10 +62,10 @@ const Segment = ({ segment, hydrated }: { segment: TvTickerSegment; hydrated: bo
 export const TvTicker = ({ segments, nextLiveTriviaStartsAt, nowMs }: TvTickerProps) => {
   const reduceMotion = Boolean(useReducedMotion());
   const hydrated = useHydrated();
-  if (segments.length === 0) return null;
 
   const repeats = tickerRepeatsFor(segments.length);
   const half = Array.from({ length: repeats }, (_, repeat) => segments.map((segment) => ({ segment, repeat })));
+  const trackKey = segments.map((segment) => segment.key).join("|");
   const anyLive = segments.some((segment) => segment.kind === "game" && segment.live);
   const next = hydrated ? formatNextLiveTriviaShort(nextLiveTriviaStartsAt, nowMs) : null;
 
@@ -99,20 +101,31 @@ export const TvTicker = ({ segments, nextLiveTriviaStartsAt, nowMs }: TvTickerPr
         {anyLive ? "LIVE" : "TODAY"}
       </div>
       <div style={{ flex: 1, overflow: "hidden", whiteSpace: "nowrap", minWidth: 0 }}>
-        <motion.div
-          className="will-change-transform"
-          style={{ display: "inline-block" }}
-          animate={reduceMotion ? undefined : { x: ["0%", "-50%"] }}
-          transition={
-            reduceMotion ? undefined : { duration: tickerLoopSeconds(segments.length), repeat: Infinity, ease: "linear" }
-          }
-        >
-          {[0, 1].map((copy) =>
-            half.flat().map(({ segment, repeat }) => (
-              <Segment key={`${copy}:${repeat}:${segment.key}`} segment={segment} hydrated={hydrated} />
-            )),
-          )}
-        </motion.div>
+        <AnimatePresence initial={false} mode="wait">
+          <motion.div
+            key={trackKey}
+            data-testid="tv-ticker-track"
+            className="will-change-transform"
+            style={{ display: "inline-block" }}
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, x: ["0%", "-50%"] }}
+            exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : {
+                    opacity: { duration: 0.4 },
+                    x: { duration: tickerLoopSeconds(segments.length), repeat: Infinity, ease: "linear" },
+                  }
+            }
+          >
+            {[0, 1].map((copy) =>
+              half.flat().map(({ segment, repeat }) => (
+                <Segment key={`${copy}:${repeat}:${segment.key}`} segment={segment} hydrated={hydrated} />
+              )),
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
       {next ? (
         <div

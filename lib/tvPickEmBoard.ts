@@ -45,6 +45,8 @@ export type TvTileView = {
   startsAt: string;
   /** "29 picks"; null with no picks or an unknown count. */
   picksText: string | null;
+  /** The venue's pick count; null when the feed couldn't read it (unknown is not "no picks"). */
+  picks: number | null;
   away: TvTileSide;
   home: TvTileSide;
 };
@@ -64,6 +66,7 @@ export const tileViewOf = (game: TvPickEmGame): TvTileView => {
       game.status === "live" ? game.periodLabel?.trim() || "Live" : game.status === "final" ? "Final" : null,
     startsAt: game.startsAt,
     picksText: picks === null || picks <= 0 ? null : picks === 1 ? "1 pick" : `${picks} picks`,
+    picks,
     away: {
       label: teamLabel(game.awayAbbr, game.awayTeam),
       score: scoreText(game.awayScore),
@@ -135,14 +138,16 @@ export type TvScoreFlash = {
 };
 
 /**
- * The first board game whose score went up since `previous` (both scores known then and now). Null on the first
- * look (`previous` null): a TV that has just opened flashes nothing. Only games already on the board can flash.
+ * Every board game whose score went up since `previous` (both scores known then and now), in board order, one flash
+ * per game. Empty on the first look (`previous` null): a TV that has just opened flashes nothing. Only games already
+ * on the board can flash.
  */
-export const detectScoreFlash = (
+export const detectScoreFlashes = (
   previous: TvScoreSnapshot | null,
   games: readonly TvPickEmGame[],
-): TvScoreFlash | null => {
-  if (!previous) return null;
+): TvScoreFlash[] => {
+  if (!previous) return [];
+  const flashes: TvScoreFlash[] = [];
   for (const game of boardGamesOf(games)) {
     if (game.status !== "live") continue;
     const before = previous.get(game.key);
@@ -154,14 +159,34 @@ export const detectScoreFlash = (
       const view = tileViewOf(game);
       const label = view[side].label;
       const pct = view[side].pickPct;
-      return {
+      flashes.push({
         token: `pickem-score:${game.key}:${game.awayScore ?? "x"}-${game.homeScore ?? "x"}`,
         gameKey: game.key,
         side,
         ribbon: `${label} +${now - was}`,
         caption: pct === null ? `${label} scores` : `${pct}% here picked ${label}`,
-      };
+      });
+      break;
     }
   }
-  return null;
+  return flashes;
+};
+
+/** At most this many score flashes wait their turn; the oldest are dropped past it (the board shows four games). */
+export const TV_SCORE_FLASH_MAX_QUEUE = TV_PICKEM_BOARD_SIZE;
+
+export type TvQueuedFlash = { flash: TvScoreFlash; at: number };
+
+/** Adds new flashes behind the waiting ones; a token already waiting is not added twice. */
+export const enqueueScoreFlashes = (
+  queue: readonly TvQueuedFlash[],
+  found: readonly TvScoreFlash[],
+  nowMs: number,
+): TvQueuedFlash[] => {
+  const next = [...queue];
+  for (const flash of found) {
+    if (next.some((entry) => entry.flash.token === flash.token)) continue;
+    next.push({ flash, at: nowMs });
+  }
+  return next.slice(-TV_SCORE_FLASH_MAX_QUEUE);
 };

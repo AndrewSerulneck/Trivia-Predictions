@@ -33,14 +33,32 @@ export const carouselSlidesOf = (
     return true;
   });
 
+export type TvCarouselPosition = { slide: TvCarouselSlideId; shownAtMs: number };
+
 /**
- * Which slide is up `elapsedMs` after the carousel mounted. Counted from the mount (a game ending remounts the
- * carousel, so it restarts at slide 1) and in whole steps, so a poll tick never moves it.
+ * Which slide is up now, and since when. The slide on screen stays for its whole 15 s even when the set of slides
+ * changes between polls (a leaderboard that arrives late or a prize that expires must not cut it short or jump the
+ * rotation). A slide that is no longer in the list goes at once, to the next slide in D20 order that is present. A
+ * late clock tick advances whole steps, so a poll tick never moves a slide. `current` null: first look, slide 1.
  */
-export const carouselSlideAt = (slides: readonly TvCarouselSlideId[], elapsedMs: number): TvCarouselSlideId => {
-  if (slides.length === 0) return "app";
-  const step = Math.max(0, Math.floor(elapsedMs / TV_CAROUSEL_SLIDE_MS));
-  return slides[step % slides.length];
+export const nextCarouselSlide = (
+  slides: readonly TvCarouselSlideId[],
+  current: TvCarouselSlideId | null,
+  shownAtMs: number,
+  nowMs: number,
+): TvCarouselPosition => {
+  if (slides.length === 0) return { slide: "app", shownAtMs: current === "app" ? shownAtMs : nowMs };
+  if (current === null) return { slide: slides[0], shownAtMs: nowMs };
+  const at = slides.indexOf(current);
+  if (at === -1) {
+    // Gone: the next present slide after it in D20 order, wrapping to the first.
+    const order = TV_CAROUSEL_ORDER.indexOf(current);
+    const after = TV_CAROUSEL_ORDER.slice(order + 1).find((id) => slides.includes(id));
+    return { slide: after ?? slides[0], shownAtMs: nowMs };
+  }
+  const steps = Math.floor((nowMs - shownAtMs) / TV_CAROUSEL_SLIDE_MS);
+  if (steps < 1) return { slide: current, shownAtMs };
+  return { slide: slides[(at + steps) % slides.length], shownAtMs: shownAtMs + steps * TV_CAROUSEL_SLIDE_MS };
 };
 
 /** D16: the corner QR shows on every carousel slide but "Get the app", which carries a big one. */
