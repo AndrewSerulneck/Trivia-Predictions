@@ -5887,6 +5887,131 @@
       "category": "History & Government",
       "difficulty": "medium",
       "subcategory": "famous-figures-quotes"
+    },
+    {
+      "slug": "what-federal-agency-formed-in-2001-screens-passengers-and-luggage-at-us-airports",
+      "question": "What federal agency, formed in 2001, screens passengers and luggage at U.S. airports?",
+      "answer": "TSA",
+      "acceptableAnswers": [
+        "Transportation Security Administration",
+        "T.S.A."
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "us-history-government"
+    },
+    {
+      "slug": "who-became-the-first-hispanic-justice-on-the-us-supreme-court-in-2009",
+      "question": "Who became the first Hispanic justice on the U.S. Supreme Court in 2009?",
+      "answer": "Sonia Sotomayor",
+      "acceptableAnswers": [
+        "Sotomayor"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "the-constitution-and-supreme-court"
+    },
+    {
+      "slug": "who-commanded-the-union-armies-in-the-civil-war-before-becoming-president-in-1869",
+      "question": "Who commanded the Union armies in the Civil War before becoming president in 1869?",
+      "answer": "Ulysses Grant",
+      "acceptableAnswers": [
+        "Grant",
+        "Ulysses S. Grant",
+        "U. S. Grant",
+        "US Grant"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "presidents-and-first-ladies"
+    },
+    {
+      "slug": "which-first-lady-launched-the-lets-move-campaign-to-fight-childhood-obesity",
+      "question": "Which first lady launched the \"Let's Move!\" campaign to fight childhood obesity?",
+      "answer": "Michelle Obama",
+      "acceptableAnswers": [
+        "Obama",
+        "Michelle"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "presidents-and-first-ladies"
+    },
+    {
+      "slug": "how-many-amendments-were-added-to-the-constitution-in-1791-as-the-bill-of-rights",
+      "question": "How many amendments were added to the Constitution in 1791 as the Bill of Rights?",
+      "answer": "10",
+      "acceptableAnswers": [
+        "Ten"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "the-constitution-and-supreme-court"
+    },
+    {
+      "slug": "before-becoming-king-in-2022-charles-iii-was-prince-of-what-country",
+      "question": "Before becoming king in 2022, Charles III was Prince of what country?",
+      "answer": "Wales",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "medium",
+      "subcategory": "royalty-and-empires"
+    },
+    {
+      "slug": "english-nobles-forced-king-john-to-seal-what-charter-in-1215-limiting-the-kings-power",
+      "question": "English nobles forced King John to seal what charter in 1215, limiting the king's power?",
+      "answer": "Magna Carta",
+      "acceptableAnswers": [
+        "The Magna Carta",
+        "Magna Charta"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "hard",
+      "subcategory": "ancient-medieval"
+    },
+    {
+      "slug": "nasas-curiosity-rover-landed-in-2012-to-explore-the-surface-of-what-planet",
+      "question": "NASA's Curiosity rover landed in 2012 to explore the surface of what planet?",
+      "answer": "Mars",
+      "acceptableAnswers": [],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "explorers-and-discoveries"
+    },
+    {
+      "slug": "the-teddy-bear-was-named-in-honor-of-which-us-president",
+      "question": "The teddy bear was named in honor of which U.S. president?",
+      "answer": "Theodore Roosevelt",
+      "acceptableAnswers": [
+        "Roosevelt",
+        "Teddy Roosevelt",
+        "Theodore 'Teddy' Roosevelt"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "presidents-and-first-ladies"
+    },
+    {
+      "slug": "edmund-hillary-and-tenzing-norgay-became-the-first-confirmed-climbers-to-summit-what",
+      "question": "Edmund Hillary and Tenzing Norgay became the first confirmed climbers to summit what mountain in 1953?",
+      "answer": "Mount Everest",
+      "acceptableAnswers": [
+        "Everest",
+        "Mt. Everest"
+      ],
+      "answer_format": "write_in",
+      "category": "History & Government",
+      "difficulty": "easy",
+      "subcategory": "explorers-and-discoveries"
     }
   ]
 }
