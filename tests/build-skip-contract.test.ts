@@ -9,8 +9,9 @@ import { describe, expect, it } from "vitest";
 const ROOT = process.cwd();
 const read = (path: string): string => readFileSync(join(ROOT, path), "utf8");
 const require = createRequire(import.meta.url);
-const { canSkipBuild } = require(join(ROOT, "scripts/vercel-ignore-build.cjs")) as {
+const { canSkipBuild, previewRequested } = require(join(ROOT, "scripts/vercel-ignore-build.cjs")) as {
   canSkipBuild: (files: string[]) => boolean;
+  previewRequested: (input: { ref?: string; message?: string }) => boolean;
 };
 
 describe("Vercel Ignored Build Step", () => {
@@ -39,6 +40,28 @@ describe("Vercel Ignored Build Step", () => {
     [["public/brand/web/logo.png"]],
   ])("builds for %j", (files) => {
     expect(canSkipBuild(files)).toBe(false);
+  });
+});
+
+// Preview builds are opt-in (Andrew, 2026-11-25); production always goes through the path check.
+describe("Vercel preview builds", () => {
+  it.each([
+    [{ ref: "preview/tv-check", message: "x" }],
+    [{ ref: "fix/cr3", message: "CR3: device check [preview]" }],
+    [{ ref: "fix/cr3", message: "[Preview] look" }],
+  ])("build when requested: %j", (input) => {
+    expect(previewRequested(input)).toBe(true);
+  });
+
+  it.each([[{ ref: "fix/cr3", message: "CR3: fixes" }], [{}], [{ ref: "main", message: "preview the page" }]])(
+    "skip otherwise: %j",
+    (input) => {
+      expect(previewRequested(input)).toBe(false);
+    },
+  );
+
+  it("the skip applies only when VERCEL_ENV is preview", () => {
+    expect(read("scripts/vercel-ignore-build.cjs")).toMatch(/process\.env\.VERCEL_ENV === "preview" &&\s*!previewRequested/);
   });
 });
 

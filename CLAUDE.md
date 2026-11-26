@@ -73,6 +73,9 @@ money (his Vercel bill), so a phase is **not** a deploy.
 - Plan, handoff and status updates go in the same PR as the code they describe. No follow-up docs-only PR to record
   a PR number or "merged": add it as another commit on the same PR, or in the next PR that touches that plan.
 - A plan's "PR; CI green; merge" step means "at the end of the batch" under this rule.
+- **Vercel preview builds are opt-in (2026-11-25):** a PR push builds no preview unless the branch is `preview/…` or
+  the commit message contains `[preview]` (`scripts/vercel-ignore-build.cjs`). Ask for one only when a person or
+  device must open the preview URL; CI does the testing. Production builds are unchanged.
 - Docs-only changes skip Vercel (`scripts/vercel-ignore-build.cjs`) and CI (`ci.yml` `paths`); Railway rebuilds the
   heartbeat worker only for its own files (`railway.json`). A test that reads a doc must be re-included in `ci.yml`
   (`tests/build-skip-contract.test.ts`). The old `trivia-predictions` Vercel project is paused; never unpause it.
