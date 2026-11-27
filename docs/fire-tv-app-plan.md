@@ -1279,7 +1279,7 @@ reached any other way (unchanged: it keeps its signup and Home links).
      account. There is nothing to buy in the app, and no account can be created in the app or through its QR codes.`
      (drop "Learn more at hightopchallenge.com").
    - Reviewer notes: replace the line "Option 1 on the Connect screen (scan the QR) needs a venue owner's phone…" with:
-     `The Connect QR opens a sign-in page for existing Hightop Challenge partners only; it offers no sign-up, pricing or purchase. The "Get the app" QR on display screens is for guests' phones. It opens our free player app, which has no purchases. Option 1 needs a venue owner's signed-in phone, so please use the display code above.`
+     `The Connect QR opens a sign-in page for existing Hightop Challenge partners only; it offers no sign-up, pricing or purchase. The "Get the app" QR on display screens is only for guests' phones. It opens our free player app, a mobile app that can't be installed on Fire TV and has no purchases. Option 1 needs a venue owner's signed-in phone, so please use the display code above.`
 10. `npm run test`, `npm run lint`, `npx tsc --noEmit`. **Ship at once** (CLAUDE.md §Batch pushes exception: AZ2 needs
     it live, because Amazon's reviewer scans against production): push, one PR, `gh pr checks <n> --watch`, merge. Then
     check production read-only with Playwright on a phone viewport: `https://hightopchallenge.com/owner/display/connect?c=ABCDEF`
