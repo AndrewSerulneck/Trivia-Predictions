@@ -24,10 +24,10 @@ import {
 type Venue = { id: string; name: string };
 type Outcome = { kind: "connected" } | { kind: "expired" } | { kind: "error"; message: string } | null;
 
-/** A 401 from an owner API: signed in with no venue (say so here), or not signed in (sign in, then come back). */
-const unauthorizedReason = async (res: Response): Promise<"no_venue" | "sign_in"> => {
+/** A 401 from an owner API: true when signed in with no venue (say so here); false → sign in, then come back. */
+const isNoVenue401 = async (res: Response): Promise<boolean> => {
   const body = (await res.json().catch(() => ({}))) as { code?: string };
-  return body.code === OWNER_AUTH_NO_VENUE ? "no_venue" : "sign_in";
+  return body.code === OWNER_AUTH_NO_VENUE;
 };
 
 const OwnerDisplayConnectPage = () => {
@@ -50,7 +50,7 @@ const OwnerDisplayConnectPage = () => {
       try {
         const res = await fetch("/api/owner/venues");
         if (res.status === 401) {
-          if ((await unauthorizedReason(res)) === "sign_in") {
+          if (!(await isNoVenue401(res))) {
             router.replace(ownerLoginWithReturn(`${TV_CONNECT_PATH}?c=${code}`));
           }
           return;
@@ -79,7 +79,7 @@ const OwnerDisplayConnectPage = () => {
         body: JSON.stringify({ pairCode, venueId }),
       });
       if (res.status === 401) {
-        if ((await unauthorizedReason(res)) === "sign_in") {
+        if (!(await isNoVenue401(res))) {
           router.replace(ownerLoginWithReturn(`${TV_CONNECT_PATH}?c=${pairCode}`));
         } else {
           setVenues([]);

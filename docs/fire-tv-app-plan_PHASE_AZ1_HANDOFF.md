@@ -70,7 +70,7 @@ app file, `npm run fire-tv:release` builds and uploads one (it stops if a releas
   `window.location` (unchanged).
 - `app/owner/forgot-password/page.tsx` + `OwnerForgotPasswordForm.tsx` — same split; "Back to sign in" →
   `ownerLoginWithReturn(returnPath)` when there is one.
-- `app/owner/display/connect/page.tsx` — `unauthorizedReason(res)` (module level): `no_venue` → shows "No venue found
+- `app/owner/display/connect/page.tsx` — `isNoVenue401(res)` (module level): `no_venue` → shows "No venue found
   for this account." (GET and the Connect POST), anything else → sign-in with `next`. `OwnerShell … hideMenu`, no
   `backTo`.
 - `components/owner/OwnerShell.tsx` — new `hideMenu` prop (dark variant, no `backTo`): passes a spacer as the app bar's
@@ -96,6 +96,9 @@ app file, `npm run fire-tv:release` builds and uploads one (it stops if a releas
 - `/owner/reset-password` "Link Expired" links to `/owner/forgot-password` (no `next`); only reachable from an email.
 - **Test trap:** mocking `useRouter` to return a new object per call makes the Connect page's `[router]` effect loop
   forever (the test hangs at 5 s). Return one shared router object.
+- **Trap (cost one CI run):** `tests/self-serve-signup-contract.test.ts` fails if any app/lib/components file writes the
+  literal `"no_venue"` (or `"no_session"`); compare against `OWNER_AUTH_NO_VENUE`. Rerun the full suite after any
+  refactor, even a lint fix.
 - **Test trap:** `ExitBackButton` renders a `<button>` (navigation via `useExitNavigation`), not a link: assert on
   `router.push`/`replace`, not `href`.
 
@@ -128,7 +131,7 @@ app file, `npm run fire-tv:release` builds and uploads one (it stops if a releas
 
 ### 9. PR and deploy
 
-Pushed once; one PR from `fix/amazon-connect-signin-only`; CI watched once; merged under the auto-merge rule.
+PR #68. Pushed twice (the second push fixed the CI failure above); one PR from `fix/amazon-connect-signin-only`; CI watched once; merged under the auto-merge rule.
 The production check (Playwright, phone viewport, read-only, signed out:
 `https://hightopchallenge.com/owner/display/connect?c=ABCDEF`) is reported to Andrew in chat and recorded here by the
 next PR that touches this plan.
