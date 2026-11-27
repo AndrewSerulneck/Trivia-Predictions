@@ -22,7 +22,9 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(""),
 }));
 
-const { default: OwnerLoginPage } = await import("@/app/owner/login/page");
+const { OwnerLoginForm } = await import("@/app/owner/login/OwnerLoginForm");
+// The page itself is a server component that reads `?next=`; these tests drive the form it renders.
+const OwnerLoginPage = () => createElement(OwnerLoginForm, { returnPath: null });
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });

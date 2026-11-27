@@ -5,6 +5,7 @@
 
 import { DISPLAY_CODE_ALPHABET, DISPLAY_CODE_LENGTH } from "@/lib/displayCode";
 import { marketingUrl } from "@/lib/domainSplit";
+import { safeOwnerReturnPath } from "@/lib/ownerAuthCodes";
 
 /** A connect code lives this long; the TV then shows "Press OK for a new code". */
 export const TV_PAIR_TTL_MS = 10 * 60_000;
@@ -22,6 +23,16 @@ export const TV_VENUE_STORAGE_KEY = "tp_tv_venue_id";
 
 /** The partner's phone page. On the apex (an /owner page), which the phone app never claims as an app link. */
 export const TV_CONNECT_PATH = "/owner/display/connect";
+
+/**
+ * "TV mode" (plan D40, Phase AZ1): the sign-in pages were reached from a TV's Connect QR, because their `?next=`
+ * returns to the Connect page. In TV mode they offer sign-in, password reset and Connect only: no signup, pricing,
+ * billing or home link (Amazon's "consumption only" rule for the TV app). No separate query parameter.
+ */
+export const isTvConnectReturn = (next: unknown): boolean => {
+  const safe = safeOwnerReturnPath(next);
+  return safe !== null && new URL(safe, "https://example.invalid").pathname === TV_CONNECT_PATH;
+};
 
 /**
  * Uppercase, drop spaces and hyphens, and read look-alikes the Crockford way: O → 0, I and L → 1.

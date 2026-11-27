@@ -119,5 +119,7 @@ Read "Phase CR1.5" in `docs/fire-tv-app-plan.md` and findings F7–F11 and F35. 
 PR #60 (`fix/tv-sports-feed-review`): CI `validate` and the Vercel preview passed on `20e4f44f`, merged under the
 auto-merge rule. **The post-deploy check is still to record:** after one idle carousel state request on production,
 `tv_sports_refresh` due times should show the empty leagues about 6 h out, not 30 min (select only). The agent that
-did CR1.4 reported the result in chat. The next PR that touches this plan records it here (no docs-only PR). PR #60 merged as `ddad2a3a`. The select-only
-check is still not recorded: do it once, and write the result here.
+did CR1.4 reported the result in chat. The next PR that touches this plan records it here (no docs-only PR). PR #60 merged as `ddad2a3a`. **Post-deploy check
+(recorded 2026-11-27 in the AZ1 PR, from the CR1.4 agent's chat report): PASSED.** The refresh at 2026-11-25 00:41 UTC
+set MLB, WNBA, UFC, every empty soccer league and tennis to about +6 h (was 30 min) and NFL to +6 h (18 h horizon); a
+request at about 01:03 UTC refreshed NBA to +2 min (live games) while MLB stayed at +6 h.

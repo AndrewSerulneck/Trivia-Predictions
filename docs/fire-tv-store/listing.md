@@ -60,7 +60,7 @@ Built for a TV that runs all night:
 
 New to Hightop Challenge? Press Try demo to see a full trivia game on screen.
 
-Hightop Challenge TV is for venues that run Hightop Challenge games. Learn more at hightopchallenge.com.
+Hightop Challenge TV is for venues that already have a Hightop Challenge partner account. There is nothing to buy in the app, and no account can be created in the app or through its QR codes.
 ```
 
 ## Product feature bullets
@@ -70,7 +70,7 @@ Shows live trivia questions, timers, answers and standings on your venue's TV
 Connect in seconds: scan a QR with your phone or type a 4-character code
 Stays awake all night and reconnects by itself after a Wi-Fi drop
 Try demo shows a full game without an account
-Free for Hightop Challenge venues
+For venues with a Hightop Challenge partner account
 ```
 
 ## Keywords
@@ -127,7 +127,7 @@ Connect to a real test venue:
 2. Type the display code J6NK. The TV opens the "Hightop Test Bar" display.
 3. Press the Menu (☰) button: "Change venue" returns to the Connect screen; "Reload" reloads the display.
 
-Option 1 on the Connect screen (scan the QR) needs a venue owner's phone, so please use the display code above.
+The Connect QR opens a sign-in page for existing Hightop Challenge partners only; it offers no sign-up, pricing or purchase. The "Get the app" QR on display screens is only for guests' phones. It opens our free player app, a mobile app that can't be installed on Fire TV and has no purchases. Option 1 needs a venue owner's signed-in phone, so please use the display code above.
 
 Other features: the screen stays awake (no screensaver), and if the network drops the app shows "Can't connect." and reconnects by itself when the network returns.
 ```

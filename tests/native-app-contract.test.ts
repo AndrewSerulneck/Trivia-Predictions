@@ -124,7 +124,8 @@ describe("homeHref", () => {
 
   it("the R5 home controls go through homeHref or the Back button's home option", () => {
     expect(read("components/legal/LegalPage.tsx")).toMatch(/backTo=\{\{[^}]*home: true/);
-    expect(read("app/owner/login/page.tsx")).toMatch(/backTo=\{\{[^}]*home: true/);
+    // TV mode (fire-tv-app-plan AZ1) drops the Back button: `backTo={tvMode ? undefined : { home: true, … }}`.
+    expect(read("app/owner/login/OwnerLoginForm.tsx")).toMatch(/backTo=\{[^}]*\{[^}]*home: true/);
     expect(read("components/signup/SignupShell.tsx")).toContain("{ home: true }");
     expect(read("components/signup/SignupWizard.tsx")).toContain("homeHref(isNativeApp())");
     expect(read("app/owner/billing/setup/page.tsx")).toContain("homeHref(isNativeApp())");

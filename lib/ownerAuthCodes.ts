@@ -70,3 +70,11 @@ export const ownerLoginWithReturn = (returnPath: string): string => {
   const safe = safeOwnerReturnPath(returnPath);
   return safe ? `${OWNER_LOGIN_PATH}?next=${encodeURIComponent(safe)}` : OWNER_LOGIN_PATH;
 };
+
+export const OWNER_FORGOT_PASSWORD_PATH = "/owner/forgot-password";
+
+/** "Forgot your password?", keeping the sign-in page's return path so "Back to sign in" can carry it on. */
+export const ownerForgotPasswordWithReturn = (returnPath: unknown): string => {
+  const safe = safeOwnerReturnPath(returnPath);
+  return safe ? `${OWNER_FORGOT_PASSWORD_PATH}?next=${encodeURIComponent(safe)}` : OWNER_FORGOT_PASSWORD_PATH;
+};

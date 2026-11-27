@@ -45,6 +45,11 @@ type OwnerShellProps = {
   barCenter?: React.ReactNode;
   /** Dark variant: let the first content panel meet the compact header. */
   flushHeader?: boolean;
+  /**
+   * Dark variant, no `backTo`: show no logo menu either, so the page has no way into the rest of the dashboard.
+   * The TV Connect page uses it: nothing reached from the TV app's QR may lead to billing (fire-tv-app-plan D40).
+   */
+  hideMenu?: boolean;
 };
 
 export const OwnerShell = ({
@@ -57,6 +62,7 @@ export const OwnerShell = ({
   showAccountMenu = false,
   barCenter,
   flushHeader = false,
+  hideMenu = false,
 }: OwnerShellProps) => {
   const widthClass = maxWidth === "lg" ? "max-w-2xl" : "max-w-sm";
 
@@ -65,7 +71,15 @@ export const OwnerShell = ({
     // there is no backTo, i.e. the dashboard), title in the bar, no big logo.
     return (
       <div className="min-h-screen bg-ht-canvas">
-        <OwnerAppBar leading={backTo ? <ExitBackButton {...backTo} /> : undefined}>
+        <OwnerAppBar
+          leading={
+            backTo ? (
+              <ExitBackButton {...backTo} />
+            ) : hideMenu ? (
+              <span aria-hidden="true" className="h-10 w-10 shrink-0" />
+            ) : undefined
+          }
+        >
           {barCenter ? (
             <>
               <h1 className="sr-only">{title}</h1>

@@ -1,70 +1,11 @@
-"use client";
+import { OwnerForgotPasswordForm } from "@/app/owner/forgot-password/OwnerForgotPasswordForm";
+import { safeOwnerReturnPath } from "@/lib/ownerAuthCodes";
 
-import { useState } from "react";
-import { OwnerShell, ownerInputClass, ownerLabelClass, ownerPrimaryButtonClass } from "@/components/owner/OwnerShell";
-
-const OwnerForgotPasswordPage = () => {
-  const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSubmitting(true);
-    try {
-      const response = await fetch("/api/owner/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = (await response.json()) as { ok: boolean; error?: string };
-      if (!data.ok) {
-        setError(data.error ?? "Something went wrong. Please try again.");
-        return;
-      }
-      setSent(true);
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <OwnerShell
-      title="Reset Your Password"
-      subtitle="We'll send a reset link to your email"
-      backTo={{ href: "/owner/login", label: "Back to sign in", preferHref: true, showLabel: true }}
-    >
-      {sent ? (
-        <div className="space-y-4 text-center">
-          <p className="text-sm text-slate-600">
-            If that email is associated with an owner account, you&apos;ll receive a password reset link shortly. Check your inbox (and spam folder).
-          </p>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className={ownerLabelClass}>Email Address</label>
-            <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={ownerInputClass}
-              placeholder="you@example.com"
-            />
-          </div>
-          {error ? <p className="text-sm font-medium text-rose-600">{error}</p> : null}
-          <button type="submit" disabled={submitting} className={ownerPrimaryButtonClass}>
-            {submitting ? "Sending…" : "Send Reset Link"}
-          </button>
-        </form>
-      )}
-    </OwnerShell>
-  );
+// `?next=` is read on the server so "Back to sign in" returns to the same sign-in page (from a TV's Connect QR:
+// the sign-in-only one, docs/fire-tv-app-plan.md Phase AZ1, D40).
+const OwnerForgotPasswordPage = async ({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) => {
+  const { next } = await searchParams;
+  return <OwnerForgotPasswordForm returnPath={safeOwnerReturnPath(next)} />;
 };
 
 export default OwnerForgotPasswordPage;

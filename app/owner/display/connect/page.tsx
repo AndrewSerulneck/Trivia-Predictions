@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { OwnerShell } from "@/components/owner/OwnerShell";
 import { Dropdown } from "@/components/ui/Dropdown";
 import { HightopLoader } from "@/components/ui/HightopLoader";
-import { OWNER_LOGIN_PATH, ownerAuthRecoveryPath, ownerLoginWithReturn } from "@/lib/ownerAuthCodes";
+import { OWNER_AUTH_NO_VENUE, ownerLoginWithReturn } from "@/lib/ownerAuthCodes";
 import {
   parsePairCode,
   TV_CONNECT_COPY,
@@ -16,9 +16,19 @@ import {
 // /owner/display/connect?c=<pairCode> — the page a partner's phone opens from the QR on a Hightop Challenge TV
 // (docs/fire-tv-app-plan.md Phase 3). Pick the venue (only when there are several) and tap Connect; the TV
 // switches to that venue's display within a few seconds. Signed out → sign in, then back here with the code.
+//
+// Sign-in and Connect only (plan D40, Phase AZ1): Amazon treats this page as part of the TV app, so nothing on it
+// leads to signup, pricing or billing. No Back to the dashboard, no partner menu, and a signed-in partner with no
+// venue is told so here instead of being sent to signup (ownerAuthRecoveryPath is deliberately not used).
 
 type Venue = { id: string; name: string };
 type Outcome = { kind: "connected" } | { kind: "expired" } | { kind: "error"; message: string } | null;
+
+/** A 401 from an owner API: true when signed in with no venue (say so here); false → sign in, then come back. */
+const isNoVenue401 = async (res: Response): Promise<boolean> => {
+  const body = (await res.json().catch(() => ({}))) as { code?: string };
+  return body.code === OWNER_AUTH_NO_VENUE;
+};
 
 const OwnerDisplayConnectPage = () => {
   const router = useRouter();
@@ -40,11 +50,9 @@ const OwnerDisplayConnectPage = () => {
       try {
         const res = await fetch("/api/owner/venues");
         if (res.status === 401) {
-          const body = (await res.json().catch(() => ({}))) as { code?: string };
-          const recovery = ownerAuthRecoveryPath(body.code);
-          router.replace(
-            recovery === OWNER_LOGIN_PATH ? ownerLoginWithReturn(`${TV_CONNECT_PATH}?c=${code}`) : recovery,
-          );
+          if (!(await isNoVenue401(res))) {
+            router.replace(ownerLoginWithReturn(`${TV_CONNECT_PATH}?c=${code}`));
+          }
           return;
         }
         const json = (await res.json()) as { ok: boolean; venues?: Venue[] };
@@ -71,7 +79,12 @@ const OwnerDisplayConnectPage = () => {
         body: JSON.stringify({ pairCode, venueId }),
       });
       if (res.status === 401) {
-        router.replace(ownerLoginWithReturn(`${TV_CONNECT_PATH}?c=${pairCode}`));
+        if (!(await isNoVenue401(res))) {
+          router.replace(ownerLoginWithReturn(`${TV_CONNECT_PATH}?c=${pairCode}`));
+        } else {
+          setVenues([]);
+          setVenueId("");
+        }
         return;
       }
       const json = (await res.json()) as TvConnectResult;
@@ -88,11 +101,7 @@ const OwnerDisplayConnectPage = () => {
   const selected = venues.find((venue) => venue.id === venueId);
 
   return (
-    <OwnerShell
-      title="Connect TV"
-      variant="dark"
-      backTo={{ href: "/owner/display", label: "Venue Display", preferHref: true }}
-    >
+    <OwnerShell title="Connect TV" variant="dark" hideMenu>
       {loading || pairCode === undefined ? (
         <HightopLoader size="lg" className="py-10" />
       ) : (
