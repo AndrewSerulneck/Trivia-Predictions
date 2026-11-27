@@ -22,8 +22,8 @@ What we changed:
   partner account.
 
 For context: the app has no in-app purchases and sells no digital content. It shows a venue's trivia game on the
-venue's TV, and guests play free on their phones. The other QR code on the display screens ("Get the app") opens our
-free player app in the phone's app store, and that app has no purchases.
+venue's TV, and guests play free on their phones. The other QR code on the display screens ("Get the app") is for
+guests' phones. It opens our free player app, which has no purchases.
 
 You can review the app without an account. Choose "Try demo" on the Connect screen, or type the display code J6NK to
 open our test venue.
