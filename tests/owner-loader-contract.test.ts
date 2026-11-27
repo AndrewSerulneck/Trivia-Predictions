@@ -84,7 +84,7 @@ describe("partner route transitions (Phase 4a)", () => {
   });
 
   it("owner sign-in success covers the form with the loader before it navigates", () => {
-    const login = read("app/owner/login/page.tsx");
+    const login = read("app/owner/login/OwnerLoginForm.tsx");
     expect(login).toMatch(/<HightopLoader\b[^>]*variant="fullScreen"/);
     // The loader must be raised before the push, not after it.
     const loaderAt = login.indexOf("setNavigating(true)");
