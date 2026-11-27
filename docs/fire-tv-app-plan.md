@@ -14,7 +14,7 @@ Phase 11 flips `TV_CAROUSEL_DATA_ENABLED`; migration `20261122174439_tv_sports_s
 via `?mode=carousel&slide=pick-em|all-time`, until Phase 11 rotates them). See `docs/fire-tv-app-plan_PHASE_10_HANDOFF.md`.
 **Phase 11 merged and deployed 2026-11-23** (PR #49; carousel, ticker, "Get the app" QR, pre-game title; carousel data switched ON; `docs/fire-tv-app-plan_PHASE_11_HANDOFF.md`). **2026-11-23:** Andrew answered the Phase 9/10 questions: the Prizes slide drops its progress bar (D28); the NHL Pick 'Em
 start-time bug is now phases N1–N3 of this plan (D29). Two tests fail on `main` and turn every PR's CI red
-(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** **T4 built 2026-11-23 (PR #51 merged 2026-11-24, `72ff0638` + `287a1951`; `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`; D35).** **T4 reviewed 2026-11-23 (two passes): the fix is right, but its new test can't catch the bug, plus four smaller issues → remedial phases T4.1 (finish T4 on PR #51) and T4.2 (pre-existing Quick Review bugs); D36.** **2026-11-23: no other phase of this plan has had a code review** (no PR review, no handoff mentions one), so review phases CR1–CR3 were added (D37). **T4.1 done 2026-11-24 (on PR #51; `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`).** **T4.2 done 2026-11-24 (PR #52 merged; `docs/fire-tv-app-plan_PHASE_T4.2_HANDOFF.md`).** **CR1 done 2026-11-24 (PR #54; read-only; nothing urgent; findings F7–F43 under "CR1 review findings"; remedial phases CR1.1–CR1.7 approved by Andrew 2026-11-24, F41 yes, CR1.2 and CR1.6 in `docs/bingo-pickem-reliability-plan.md`; `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`).** **CR1.1 done 2026-11-24 (`docs/fire-tv-app-plan_PHASE_CR1.1_HANDOFF.md`).** **CR1.2 done 2026-11-24 (`docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md`); it added CR1.2.1 (F44, NFL screen) to the Pick 'Em plan; approved and done 2026-11-25 (committed on `fix/cr2-connect-privacy`, not pushed).** **CR1.3 done 2026-11-24 (PR #59 merged; `docs/fire-tv-app-plan_PHASE_CR1.3_HANDOFF.md`).** **CR1.4 done 2026-11-24 (PR #60 merged; D38; `docs/fire-tv-app-plan_PHASE_CR1.4_HANDOFF.md`).** **CR1.5 done 2026-11-25 (PR #61 merged; `docs/fire-tv-app-plan_PHASE_CR1.5_HANDOFF.md`).** **CR1.6 done 2026-11-25 (`docs/bingo-pickem-reliability-plan_PHASE_CR1.6_HANDOFF.md`).** **CR2 done 2026-11-25 (read-only; nothing urgent; findings F45–F66 under "CR2 review findings"; remedial phases CR2.1–CR2.3 approved by Andrew 2026-11-25, corner-QR heights OK for D16; `docs/fire-tv-app-plan_PHASE_CR2_HANDOFF.md`).** **CR2.2 done 2026-11-25 (release script hardened; PR #64 merged; `docs/fire-tv-app-plan_PHASE_CR2.2_HANDOFF.md`).** **CR2.1 done 2026-11-25 (on PR for `fix/tv-display-polish`; `docs/fire-tv-app-plan_PHASE_CR2.1_HANDOFF.md`).** **CR2.3 done 2026-11-25 (committed on `fix/cr2-connect-privacy`, not pushed: batched with CR3 under CLAUDE.md §Batch pushes, PRs and deploys; `docs/fire-tv-app-plan_PHASE_CR2.3_HANDOFF.md`).** **CR3 done 2026-11-25 (read-only; nothing urgent; one finding F67 under "CR3 review findings"; remedial phase CR3.1 approved and done 2026-11-25 (`docs/bingo-pickem-reliability-plan_PHASE_CR3.1_HANDOFF.md`), filed in `docs/bingo-pickem-reliability-plan.md`; D39: no per-phase code review; `docs/fire-tv-app-plan_PHASE_CR3_HANDOFF.md`).** Next: push `fix/cr2-connect-privacy` (CR2.3 + CR3 docs + CR3.1) as one PR; CR1.7 waits for Amazon; everything else waits for Amazon's approval. The phase table under "Phases, model and effort" is in
+(including #41); the fixes are phases T1–T2 (D30). **T1 done 2026-11-23 (PR #43 merged; `docs/fire-tv-app-plan_PHASE_T1_HANDOFF.md`).** #41 merged 2026-11-23. **T3 done 2026-11-23 (PR #45; `docs/fire-tv-app-plan_PHASE_T3_HANDOFF.md`).** **T2 done and live 2026-11-23 (PRs #45, #46 merged; first run 45268818494 committed `467fcd35`; `docs/fire-tv-app-plan_PHASE_T2_HANDOFF.md`).** **N1 done 2026-11-23 (read-only; fix chosen, D33; no NHL picks exist; `docs/fire-tv-app-plan_PHASE_N1_HANDOFF.md`).** **N2 merged 2026-11-23 (PR #48; `docs/fire-tv-app-plan_PHASE_N2_HANDOFF.md`).** **2026-11-23: device reviews (Phases 5 and 12) moved to the end, on the store build (D34).** **N3 done 2026-11-23 (`docs/fire-tv-app-plan_PHASE_N3_HANDOFF.md`; D29 closed; one follow-up oddity noted).** **T4 built 2026-11-23 (PR #51 merged 2026-11-24, `72ff0638` + `287a1951`; `docs/fire-tv-app-plan_PHASE_T4_HANDOFF.md`; D35).** **T4 reviewed 2026-11-23 (two passes): the fix is right, but its new test can't catch the bug, plus four smaller issues → remedial phases T4.1 (finish T4 on PR #51) and T4.2 (pre-existing Quick Review bugs); D36.** **2026-11-23: no other phase of this plan has had a code review** (no PR review, no handoff mentions one), so review phases CR1–CR3 were added (D37). **T4.1 done 2026-11-24 (on PR #51; `docs/fire-tv-app-plan_PHASE_T4.1_HANDOFF.md`).** **T4.2 done 2026-11-24 (PR #52 merged; `docs/fire-tv-app-plan_PHASE_T4.2_HANDOFF.md`).** **CR1 done 2026-11-24 (PR #54; read-only; nothing urgent; findings F7–F43 under "CR1 review findings"; remedial phases CR1.1–CR1.7 approved by Andrew 2026-11-24, F41 yes, CR1.2 and CR1.6 in `docs/bingo-pickem-reliability-plan.md`; `docs/fire-tv-app-plan_PHASE_CR1_HANDOFF.md`).** **CR1.1 done 2026-11-24 (`docs/fire-tv-app-plan_PHASE_CR1.1_HANDOFF.md`).** **CR1.2 done 2026-11-24 (`docs/bingo-pickem-reliability-plan_PHASE_CR1.2_HANDOFF.md`); it added CR1.2.1 (F44, NFL screen) to the Pick 'Em plan; approved and done 2026-11-25 (committed on `fix/cr2-connect-privacy`, not pushed).** **CR1.3 done 2026-11-24 (PR #59 merged; `docs/fire-tv-app-plan_PHASE_CR1.3_HANDOFF.md`).** **CR1.4 done 2026-11-24 (PR #60 merged; D38; `docs/fire-tv-app-plan_PHASE_CR1.4_HANDOFF.md`).** **CR1.5 done 2026-11-25 (PR #61 merged; `docs/fire-tv-app-plan_PHASE_CR1.5_HANDOFF.md`).** **CR1.6 done 2026-11-25 (`docs/bingo-pickem-reliability-plan_PHASE_CR1.6_HANDOFF.md`).** **CR2 done 2026-11-25 (read-only; nothing urgent; findings F45–F66 under "CR2 review findings"; remedial phases CR2.1–CR2.3 approved by Andrew 2026-11-25, corner-QR heights OK for D16; `docs/fire-tv-app-plan_PHASE_CR2_HANDOFF.md`).** **CR2.2 done 2026-11-25 (release script hardened; PR #64 merged; `docs/fire-tv-app-plan_PHASE_CR2.2_HANDOFF.md`).** **CR2.1 done 2026-11-25 (on PR for `fix/tv-display-polish`; `docs/fire-tv-app-plan_PHASE_CR2.1_HANDOFF.md`).** **CR2.3 done 2026-11-25 (committed on `fix/cr2-connect-privacy`, not pushed: batched with CR3 under CLAUDE.md §Batch pushes, PRs and deploys; `docs/fire-tv-app-plan_PHASE_CR2.3_HANDOFF.md`).** **CR3 done 2026-11-25 (read-only; nothing urgent; one finding F67 under "CR3 review findings"; remedial phase CR3.1 approved and done 2026-11-25 (`docs/bingo-pickem-reliability-plan_PHASE_CR3.1_HANDOFF.md`), filed in `docs/bingo-pickem-reliability-plan.md`; D39: no per-phase code review; `docs/fire-tv-app-plan_PHASE_CR3_HANDOFF.md`).** That batch merged as PR #66. **2026-11-27: Amazon rejected 1.0.0** (Monetization policy: the Connect QR's sign-in page links to paid signup; D40). **Next: AZ1** (sign-in-only Connect QR pages, branch `fix/amazon-connect-signin-only`), then **AZ2** (Andrew resubmits; reply to Amazon in `docs/fire-tv-store/amazon-reply-2026-11-27.md`). CR1.7 and everything else wait for Amazon's approval. The phase table under "Phases, model and effort" is in
 run order (2026-11-23); work down it.
 Handoff notes go next to this file as `docs/fire-tv-app-plan_PHASE_<N>_HANDOFF.md`.
 
@@ -147,6 +147,7 @@ different browser, you'll be asked to sign in once.
 | D37 | **Every merged phase of this plan gets a code review (CR1–CR3)**, riskiest first. Reviews are read-only: they record verified findings and propose fixes as remedial phases marked "awaiting Andrew's OK". Nothing is fixed without his yes, except that a live security or data-loss problem is reported to him at once. | Andrew, 2026-11-23 ("Yes, add the review phase to the plan"), after the T4 review showed no other phase had been reviewed. Split into three phases and their order: planner. |
 | D38 | **CR1.4 departs from two written steps, for correctness (agent, 2026-11-24).** (1) F15: a league's feed is `ok` only when **every** request it needed answered (each day, the soccer teams list, UFC events and fights), not when "any" did: with "any", one failed day plus an empty other day would read as "no games", delete that league's live rows and wait 6 h. All 24 request types answered 200 on 2026-11-24, so no league is stuck on the 30-minute retry. (2) F17: before skipping rows with no TV start, `extractTvStartIso` also reads `date` / `game_date` (date-only values still skipped): NFL, college football, WNBA, MLB and club soccer give their kickoff only in `date`, so the literal step would have blanked them. UFC rows now carry their event timestamp as the TV start. | Agent, 2026-11-24 (CR1.4), from live-feed checks |
 | D39 | **Code reviews are planned per plan, not per phase (Andrew, 2026-11-25).** Most multi-phase plans get one `/code-review` over the whole plan; a long or complicated plan may get two. The planner puts them in the plan's phase table when the plan is written, or Andrew asks for one himself. No automatic review at the end of every code phase or PR. | Andrew's answer to CR3's last step ("I don't necessarily want to run code reviews after every phase… just put those in the plan when you make them, or I can decide when to do them myself"). Replaces the question's proposed rule; the T4 test gap is what a planned review is for. |
+| D40 | **The TV app is "consumption only" (AZ1).** Amazon rejected 1.0.0 on 2026-11-27 (Monetization policy): the Connect QR leads a signed-out phone to the partner sign-in page, whose "Create an account" link leads to paid signup outside Amazon IAP. Fix: every page reached from the Connect QR offers sign-in, password reset and Connect only. No signup, pricing, billing or home-page link, and a signed-in partner with no venue sees "No venue found for this account." instead of being sent to signup. **No Amazon IAP** (a B2B venue subscription sold on the web; IAP would mean selling the venue plan through Amazon and giving it a cut). The "Get the app" QR stays (free player app, no purchases); if Amazon objects to it too, the fallback is to hide it inside the TV app only. | Andrew, 2026-11-27 ("add a fix to the plan"); Amazon's own two options were "integrate IAP" or "remove the option to purchase". |
 
 If you disagree with D5–D9, say so at the start of any phase.
 
@@ -197,6 +198,8 @@ handoff of the row above it first."*
 | CR2.2 | **Remedial (CR2, F55–F63):** `npm run fire-tv:release` and the upload-key script: undo the bump on every failure, delete a half-made Amazon edit, never reuse a version code, stop on an unknown Amazon state or validate errors, keep the Amazon secret out of Gradle; Gradle refuses an unsigned release | Agent | Sonnet 5.5 / high | **Done 2026-11-25** (`_PHASE_CR2.2_HANDOFF.md`). Before CR1.7 (its release runs this script) | One Node script with mocked tests plus a build guard; no change to the app itself, so no store release. High effort: a mistake stalls a store release or reuses a version code. |
 | CR2.3 | **Remedial (CR2, F48, F64–F66):** Connect-screen contract test guards `autoFocus`; one OK does one thing on an expired code; privacy and listing text match the code; admin Venues says when display codes didn't load | Agent | Sonnet 5.5 / medium | **Done 2026-11-25** (unpushed; rides with CR3) | Small, well-specified test, copy and admin-UI fixes. Web only. |
 | CR3 | **Code review, small fixes (D37):** PRs #43 (T1), #45 (T3), #47 (flavor-squares timeout), #50 (Pick 'Em stale-load recheck, N3) | Agent | Sonnet 5.5 / medium | **Done 2026-11-25** (unpushed; rides with CR2.3) | Small test and client fixes; Haiku tends to miss whether a test really guards what it claims (the T4 lesson), so mid tier. |
+| AZ1 | **Next. Amazon rejection fix (D40):** the Connect QR's phone pages offer sign-in only: no "Create an account", no home or billing link, no automatic jump to signup; listing and reviewer notes updated; ship to production | Agent | Opus 5.5 / high | **Next. Approved by Andrew 2026-11-27.** Branch `fix/amazon-connect-signin-only` | Partner sign-in and auth-recovery redirects (`lib/ownerAuthCodes.ts`, `/owner/login`), and the result decides a store review; a missed path means another 1–3 week rejection. |
+| AZ2 | Resubmit 1.0.0 in the Amazon console with the new listing text and the reply to Amazon (see "Andrew's steps → AZ2") | **Andrew** | — | After AZ1 is live in production | Console steps only Andrew can do. |
 | 13 | Vega OS build (React Native for Vega + Vega WebView around `/tv-app`) | Agent | Opus 5.5 / high | After Amazon approves 1.0.0 | New SDK and toolchain, little prior art. |
 | 5 | Review the app: install **Hightop Challenge TV from the Amazon Appstore** on your Fire Stick and test it (D34) | **Andrew** + agent | Sonnet 5.5 / medium | After Amazon approves 1.0.0 and you have a Fire Stick | Agent reads crash logs if needed and fixes small bugs; the device checklist is well defined. |
 | 12 | Review the sports screens on a real TV on a game day, then record results (D34) | **Andrew** + agent | Haiku 5.5 / low | Same sitting as Phase 5 if it's a game day; otherwise the next game day | Andrew checks; agent only records results and files fixes. |
@@ -1216,6 +1219,73 @@ fix. **Nothing urgent.** One finding.
 Not findings: the 30 s timeout is a ceiling, not a fix for slow code (the tests take ~1.4 s locally); the star-index
 file is regenerated weekly by T2 (a 2026-11-24 bot commit is in `main`), so #43's snapshot staleness is handled.
 
+### Phase AZ1 — Amazon rejection fix: the Connect QR offers sign-in only (Agent, Opus 5.5 / high) — Approved by Andrew 2026-11-27
+
+**Why.** Amazon rejected 1.0.0 (vc1) on 2026-11-27 under its Monetization and Advertising Policy: *"the QR code allows
+account creation and app supports both free, paid content and doesn't support amazon IAP… Developer needs to remove the
+QR Code or implement Amazon IAP… or make the app consumption only."* The path the reviewer followed (verified by
+reading the code, 2026-11-27):
+
+1. The TV's Connect QR encodes `https://hightopchallenge.com/owner/display/connect?c=<code>` (`lib/tvConnectShared.ts:53`).
+2. Signed out → `app/owner/display/connect/page.tsx:41-47` sends the phone to `/owner/login?next=…`.
+3. `/owner/login` shows **"New venue owner? Create an account"** (`app/owner/login/page.tsx:137-142`, `signupEntryPath()`)
+   → paid self-serve signup (Stripe). Its back button is "Back to Home Page" (`:94`) → `/info`, which also links to signup
+   (`app/info/page.tsx:24`).
+4. Signed in with no venue → `ownerAuthRecoveryPath(OWNER_AUTH_NO_VENUE)` returns `signupEntryPath()`
+   (`lib/ownerAuthCodes.ts:46-47`), so the connect page jumps straight to signup (`connect/page.tsx:44-47`).
+5. `/owner/forgot-password` has "Back to sign in" → bare `/owner/login` (`app/owner/forgot-password/page.tsx:39`), which
+   drops `next` and shows the signup link again.
+
+**Goal (D40).** No page reachable from the Connect QR leads to creating a partner account, pricing, billing or checkout.
+Sign-in, forgot / reset password and Connect still work. Partners who scan while signed in see no change.
+
+**Out of scope:** Amazon IAP; the TV app file (the QR URL doesn't change, so **no new APK and no store release**; CR1.7
+still waits for approval); the "Get the app" QR (D40 fallback only if Amazon objects again); the normal `/owner/login`
+reached any other way (unchanged: it keeps its signup and Home links).
+
+**Steps**
+1. Branch `fix/amazon-connect-signin-only` already exists (created 2026-11-27 from `fix/cr2-connect-privacy`; it holds
+   this plan edit and the unpushed docs commit `65263347`). `git merge origin/main` first (PR #67 landed after it).
+2. **One pure helper**, in `lib/tvConnectShared.ts`: `isTvConnectReturn(next: unknown): boolean`, true when
+   `safeOwnerReturnPath(next)`'s pathname is exactly `TV_CONNECT_PATH`. This is "TV mode"; no new query parameter.
+3. **`/owner/login` in TV mode:** no "Create an account" paragraph; back button goes to nothing that leaves the flow
+   (drop `backTo`, or point it at the same connect URL; never `/info`). The "Forgot your password?" link carries `next`
+   (`/owner/forgot-password?next=…`).
+4. **`/owner/forgot-password` in TV mode:** "Back to sign in" keeps `next`. Check the reset email's link and
+   `/owner/reset-password`: after a reset, a partner must not land on a page with a signup link while in TV mode (if the
+   email link can't carry `next`, it's acceptable that reset ends on the normal sign-in page, since that's a separate
+   visit from an email, not from the app; record which).
+5. **Connect page:** a 401 with `OWNER_AUTH_NO_VENUE` shows the existing "No venue found for this account." text instead of
+   redirecting to signup (any other recovery code: sign-in with `next`, as today). Remove `backTo` to `/owner/display`
+   (the dashboard links to billing); after "Connected." nothing else is needed (CLAUDE.md minimal copy). Read every other
+   redirect the page or `/api/owner/venues` / `/api/owner/tv-app/connect` can cause (lapsed billing, pending
+   / unpaid signup in `lib/pendingSignup.ts`, `proxy.ts` owner gating) and make sure none lands on signup, billing or
+   checkout from this page; if one would, show a one-line message instead. Record what you found.
+6. **Login submit path:** read `app/owner/login/page.tsx` submit and its API route. If sign-in for an unpaid pending signup
+   redirects to finish payment, TV mode must not follow it; show "No venue found for this account." on the connect page.
+7. **Test first, then fix:** `tests/tv-connect-signin-only-contract.test.ts` (Vitest + Testing Library, like the other
+   owner-page tests). Cases: login with `?next=/owner/display/connect?c=ABCDEF` renders no link whose href is
+   `signupEntryPath()`, `/owner/signup`, `/owner/register`, `/info` or starts with `/owner/billing`; forgot-password's
+   back link keeps `next`; connect page given a `401 {code: OWNER_AUTH_NO_VENUE}` never calls `router.replace` with a
+   signup path and shows "No venue found for this account."; login with no `next` still shows "Create an account".
+   Run it on the current code and record that it fails, then fix.
+8. **Browser check** from a scratchpad clone with no `.env.local` and mocked `/api/owner/*` routes (CLAUDE.md §Manual
+   testing; never Andrew's :3000 server): 390×844 viewport, signed out, open `/owner/display/connect?c=ABCDEF` → the
+   login page shows email, password, Sign In, Forgot your password? and nothing else; no-venue mock → "No venue found for
+   this account."; signed-in mock → venue name + Connect → "Connected.".
+9. **Listing text** in `docs/fire-tv-store/listing.md` (Andrew pastes it in AZ2):
+   - Feature bullet `Free for Hightop Challenge venues` → `For venues with a Hightop Challenge partner account`.
+   - Long description, last paragraph → `Hightop Challenge TV is for venues that already have a Hightop Challenge partner
+     account. There is nothing to buy in the app, and no account can be created in the app or through its QR codes.`
+     (drop "Learn more at hightopchallenge.com").
+   - Reviewer notes: replace the line "Option 1 on the Connect screen (scan the QR) needs a venue owner's phone…" with:
+     `The Connect QR opens a sign-in page for existing Hightop Challenge partners only; it offers no sign-up, pricing or purchase. The "Get the app" QR on display screens opens the free player app in the phone's app store; that app has no purchases. Option 1 needs a venue owner's signed-in phone, so please use the display code above.`
+10. `npm run test`, `npm run lint`, `npx tsc --noEmit`. **Ship at once** (CLAUDE.md §Batch pushes exception: AZ2 needs
+    it live, because Amazon's reviewer scans against production): push, one PR, `gh pr checks <n> --watch`, merge. Then
+    check production read-only with Playwright on a phone viewport: `https://hightopchallenge.com/owner/display/connect?c=ABCDEF`
+    signed out → no "Create an account" and no Home link.
+11. Handoff `docs/fire-tv-app-plan_PHASE_AZ1_HANDOFF.md`; mark AZ1 done in the table; tell Andrew AZ2 is ready.
+
 ### Phase N1 — NHL Pick 'Em start time: investigate and decide (Agent, Opus 5.5 / high)
 
 **The bug (found in Phase 9; see `docs/fire-tv-app-plan_PHASE_9_HANDOFF.md`):** `extractEventStartIso` in
@@ -1500,6 +1570,26 @@ something doesn't match, take a screenshot and show the agent.
       whole rejection email. Don't argue with Amazon in the console until the agent has read it.
 14. If the console stops you with a **tax or payment interview**, stop and tell the agent. Free apps usually don't
     need it, but Amazon sometimes asks anyway.
+
+### AZ2: resubmit after the 2026-11-27 rejection
+
+Do this only after the agent says AZ1 is live. The app file stays the same; only the website and the listing text
+changed.
+
+1. **Check the fix yourself (2 minutes).** On your phone, sign out of the partner dashboard (or use a private browser tab).
+   On a laptop, open `hightopchallenge.com/tv-app` (the TV app's Connect screen) and scan its QR with the phone. You should see
+   only a sign-in form and "Forgot your password?". No "Create an account", no Home link.
+2. Go to **developer.amazon.com → Developer Console → Apps & Services → My Apps → Hightop Challenge TV**.
+3. Open the rejected version (status *Rejected* or *Needs attention*). If the console offers **Edit** or **Create a new
+   version**, pick the one that keeps the current app file.
+4. **App File(s):** leave the existing file. If the console insists on a new file, stop and tell the agent; it will
+   build one with a higher version code (`npm run fire-tv:release`).
+5. **Description:** paste the new long description and feature bullets from `docs/fire-tv-store/listing.md`. Save.
+6. **Notes for the reviewer (Testing instructions):** paste the new reviewer notes from the same file. Save.
+7. Click **Submit App**. The status changes to **Under review**.
+8. **Reply to Amazon's support email** (the thread that explained the rejection) with the message in
+   `docs/fire-tv-store/amazon-reply-2026-11-27.md`. Send it only after step 7.
+9. Wait 3–10 working days. If it's rejected again, start a new chat and paste the whole email, as in Phase 7 step 13.
 
 ### Phase 12: check the sports screens on a real TV
 
